@@ -19,8 +19,8 @@
 # TODO make GNU compatible
 
 # Oak
-OAK_VERSION_CURRENT=1.3.15
-OAK_VERSION_NEW=1.3.16
+OAK_VERSION_CURRENT=1.3.16
+OAK_VERSION_NEW=1.4.0
 
 sed -i '' "s/<oak.version>$OAK_VERSION_CURRENT<\/oak.version>/<oak.version>$OAK_VERSION_NEW<\/oak.version>/1" "bundles/jcr/oak-server/pom.xml"
 sed -i '' "s/<oak.version>$OAK_VERSION_CURRENT<\/oak.version>/<oak.version>$OAK_VERSION_NEW<\/oak.version>/1" "bundles/jcr/it-jackrabbit-oak/pom.xml"
