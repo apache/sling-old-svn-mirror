@@ -243,6 +243,9 @@ public abstract class AbstractJobHandlingTest {
             // ignore
         } catch (final PersistenceException e) {
             // ignore
+        } catch ( final Exception e ) {
+            // sometimes an NPE is thrown from the repository, as we
+            // are in the cleanup, we can ignore this
         } finally {
             if ( resolver != null ) {
                 resolver.close();
