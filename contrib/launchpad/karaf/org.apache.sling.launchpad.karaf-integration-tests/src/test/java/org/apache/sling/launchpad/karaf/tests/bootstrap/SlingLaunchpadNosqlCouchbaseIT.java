@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import de.flapdoodle.embed.process.runtime.Network;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 // import org.couchbase.mock.CouchbaseMock;
@@ -73,7 +72,7 @@ public class SlingLaunchpadNosqlCouchbaseIT extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() throws IOException, InterruptedException {
-        final int port = Network.getFreeServerPort();
+        final int port = findFreePort();
         startCouchbase(port);
         final String couchbaseHosts = String.format("localhost:%s", port);
         return OptionUtils.combine(baseConfiguration(),
