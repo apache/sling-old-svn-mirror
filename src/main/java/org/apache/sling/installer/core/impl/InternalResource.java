@@ -100,6 +100,7 @@ public class InternalResource extends InstallableResource {
                 throw (IOException)new IOException("Unable to read dictionary from input stream: " + resource.getId()).initCause(ioe);
             }
             is = null;
+            useResourceUri = false;
         }
 
         File dataFile = null;
