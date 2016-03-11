@@ -34,6 +34,10 @@
     <name>Apache Sling Oak-Based Discovery Service</name>
     <description>Implementation of Apache Sling Discovery based on Jackrabbit Oak using its discovery-lite descriptor for in-cluster view detection and a TopologyView through HTTP POST heartbeats announcing sub-topologies to each other.</description>
 
+    <properties>
+      <jackrabbit.version>2.12.1</jackrabbit.version>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/oak</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/oak</developerConnection>
@@ -108,7 +112,7 @@
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
 			<artifactId>jackrabbit-api</artifactId>
-			<version>2.2.4</version>
+			<version>${jackrabbit.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -292,13 +296,7 @@
         <dependency>
         	<groupId>org.apache.jackrabbit</groupId>
         	<artifactId>jackrabbit-jcr-commons</artifactId>
-        	<version>2.11.0</version>
-        	<scope>test</scope>
-        </dependency>
-        <dependency>
-        	<groupId>org.apache.jackrabbit</groupId>
-        	<artifactId>jackrabbit-api</artifactId>
-        	<version>2.11.0</version>
+        	<version>${jackrabbit.version}</version>
         	<scope>test</scope>
         </dependency>
         <dependency>
