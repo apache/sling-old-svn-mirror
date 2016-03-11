@@ -56,7 +56,7 @@ public class RegexValidator implements Validator<String> {
             if (pattern.matcher((String)data).matches()) {
                 return DefaultValidationResult.VALID;
             }
-            return new DefaultValidationResult(context.getLocation(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+            return new DefaultValidationResult(context.getLocation(), context.getSeverity(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
         } catch (PatternSyntaxException e) {
             throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }

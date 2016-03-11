@@ -178,14 +178,14 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && childResource.isRequired()) {
-                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, pattern.toString());
+                    result.addFailure(relativePath, null, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 Resource expectedResource = resource.getChild(childResource.getName());
                 if (expectedResource != null) {
                     validateChildResource(expectedResource, relativePath, childResource, result);
                 } else if (childResource.isRequired()) {
-                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, childResource.getName());
+                    result.addFailure(relativePath, null, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, childResource.getName());
                 }
             } 
         }
@@ -236,7 +236,7 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && resourceProperty.isRequired()) {
-                    result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, pattern.toString());
+                    result.addFailure(relativePath, null, I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 validatePropertyValue(resourceProperty.getName(), valueMap, resource, relativePath, resourceProperty, result);
@@ -248,14 +248,14 @@ public class ValidationServiceImpl implements ValidationService{
         Object fieldValues = valueMap.get(property);
         if (fieldValues == null) {
             if (resourceProperty.isRequired()) {
-                result.addFailure(relativePath, I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, property);
+                result.addFailure(relativePath, null, I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, property);
             }
             return;
         }
         List<ParameterizedValidator> validators = resourceProperty.getValidators();
         if (resourceProperty.isMultiple()) {
             if (!fieldValues.getClass().isArray()) {
-                result.addFailure(relativePath + property, I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY);
+                result.addFailure(relativePath + property, null, I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY);
                 return;
             }
         }
@@ -276,7 +276,7 @@ public class ValidationServiceImpl implements ValidationService{
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
             if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
-                result.addFailure(relativePath + property, I18N_KEY_WRONG_PROPERTY_TYPE, validator.getType());
+                result.addFailure(relativePath + property, validator.getSeverity(), I18N_KEY_WRONG_PROPERTY_TYPE, validator.getType());
                 return;
             }
             
@@ -303,7 +303,7 @@ public class ValidationServiceImpl implements ValidationService{
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator) {
         try {
             @SuppressWarnings("unchecked")
-            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, valueMap, resource);
+            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, validator.getSeverity(), valueMap, resource);
             ValidationResult validatorResult = ((Validator)validator.getValidator()).validate(value, validationContext, validator.getParameters());
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {

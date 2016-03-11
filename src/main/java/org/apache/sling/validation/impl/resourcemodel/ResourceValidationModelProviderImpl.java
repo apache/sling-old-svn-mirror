@@ -83,6 +83,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final String MODELS_HOME = "validation/";
     public static final String APPLICABLE_PATHS = "applicablePaths";
     public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
+    public static final String SEVERITY = "severity";
 
     @Reference
     private ResourceResolverFactory rrf = null;
@@ -210,7 +211,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     /**
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
-     * @param validatorsMap      a map containing {@link Validator}s as values and their class names as values
+     * @param validatorsMap      a map containing {@link Validator}s as values and their class names as keys
      * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty
@@ -239,7 +240,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                         if (v == null) {
                             throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
                         }
-                        // get type of validator
+                        // get arguments for validator
                         String[] validatorArguments = validatorProperties.get(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS, String[].class);
                         Map<String, Object> validatorArgumentsMap = new HashMap<String, Object>();
                         if (validatorArguments != null) {
@@ -251,7 +252,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                                 validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
                             }
                         }
-                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
+                        // get severity
+                        Integer severity = validatorProperties.get(SEVERITY, Integer.class);
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap, severity));
                     }
                 }
                 ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, propertyRequired, parameterizedValidators);
