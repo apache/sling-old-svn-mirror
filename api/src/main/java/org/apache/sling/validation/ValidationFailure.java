@@ -32,7 +32,7 @@ public interface ValidationFailure {
      * @return the failure message
      */
     @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
-    
+
     /**
      * Returns the relative location of the property/resource/value which triggered this validation failure.
      * The location 
@@ -43,5 +43,10 @@ public interface ValidationFailure {
      * @return the location (usually the validated resource's property path).
      */
     @Nonnull String getLocation();
+
+    /**
+     * @return the severity of this validation failure. If no explicit severity was set either in the validation model or in the validator, this returns {@code 0}.
+     */
+    int getSeverity();
 
 }

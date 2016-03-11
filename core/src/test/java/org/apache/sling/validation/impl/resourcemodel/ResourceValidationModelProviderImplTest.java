@@ -145,7 +145,7 @@ public class ResourceValidationModelProviderImplTest {
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.setApplicablePath("/content/site1");
         ResourcePropertyBuilder propertyBuilder = new ResourcePropertyBuilder();
-        propertyBuilder.validator(new RegexValidator(), RegexValidator.REGEX_PARAM, "prefix.*");
+        propertyBuilder.validator(new RegexValidator(), 10, RegexValidator.REGEX_PARAM, "prefix.*");
         ResourceProperty property = propertyBuilder.build("field1");
         modelBuilder.resourceProperty(property);
 
@@ -357,6 +357,10 @@ public class ResourceValidationModelProviderImplTest {
                             // convert to right format
                             validatorProperties.put(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS,
                                     convertMapToJcrValidatorArguments(parameters));
+                        }
+                        Integer severity = validator.getSeverity();
+                        if (severity != null) {
+                            validatorProperties.put(ResourceValidationModelProviderImpl.SEVERITY, severity);
                         }
                         ResourceUtil.getOrCreateResource(rr, validators.getPath() + "/"
                                 + validator.getValidator().getClass().getName(), validatorProperties, null, true);
