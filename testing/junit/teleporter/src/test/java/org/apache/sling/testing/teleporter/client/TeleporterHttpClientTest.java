@@ -28,6 +28,7 @@ import java.net.MalformedURLException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,7 +59,7 @@ public class TeleporterHttpClientTest {
         
         assertEquals(404, client.getHttpGetStatus(baseUrl + TEST_PATH));
         activateLater(TEST_PATH, 1000);
-        client.waitForStatus(testUrl, 200, 2000);
+        client.waitForStatus(testUrl, 200, TimeoutsProvider.getInstance().getTimeout(2000));
         assertEquals(200, client.getHttpGetStatus(baseUrl + TEST_PATH));
     }
     
