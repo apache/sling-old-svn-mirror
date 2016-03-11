@@ -42,12 +42,13 @@ public class DefaultValidationResult implements ValidationResult {
      * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param location the location.
+     * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
      * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull String location, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationResult(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
-        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, messageKey, messageArguments));
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, messageKey, messageArguments));
     }
 
     public DefaultValidationResult(ValidationFailure... failures) {

@@ -43,8 +43,8 @@ public class CompositeValidationResult implements ValidationResult {
         results.add(result);
     }
 
-    public void addFailure(@Nonnull String location, @Nonnull String message, Object... messageArguments) {
-        results.add(new DefaultValidationResult(location, message, messageArguments));
+    public void addFailure(@Nonnull String location, Integer severity, @Nonnull String message, Object... messageArguments) {
+        results.add(new DefaultValidationResult(location, severity, message, messageArguments));
     }
 
     @Override

@@ -48,4 +48,10 @@ public interface ValidationContext {
      * @return the resource on which the validation was triggered. {@code null} in case the validation was triggered on a {@link ValueMap} (via {@link ValidationService#validate(ValueMap, org.apache.sling.validation.model.ValidationModel)}).
      */
     @CheckForNull Resource getResource();
+
+    /**
+     * Returns the severity to be issued for validation failures in this context.
+     * @return the severity of the validation failure. May be {@code null} when no explicit severity has been set in the model.
+     */
+    @CheckForNull Integer getSeverity();
 }

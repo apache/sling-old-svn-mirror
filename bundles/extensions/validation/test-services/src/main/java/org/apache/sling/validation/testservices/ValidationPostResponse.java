@@ -62,6 +62,7 @@ public class ValidationPostResponse extends AbstractPostResponse {
                     JSONObject failureJson = new JSONObject();
                     failureJson.put("message", failure.getMessage(resourceBundle));
                     failureJson.put("location", failure.getLocation());
+                    failureJson.put("severity", failure.getSeverity());
                     failures.put(failureJson);
                 }
                 jsonResponse.put("failures", failures);

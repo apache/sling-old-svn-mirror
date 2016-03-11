@@ -47,6 +47,9 @@
         optionally using -Dmaven.surefire.debug to enable debugging.
      -->
     <properties>
+        <!-- API and Core bundle require Java 8 -->
+        <sling.java.version>8</sling.java.version>
+    
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
          -->

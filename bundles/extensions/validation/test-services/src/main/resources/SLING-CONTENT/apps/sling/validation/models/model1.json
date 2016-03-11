@@ -13,7 +13,8 @@
                 "jcr:primaryType" : "nt:unstructured",
                 "org.apache.sling.validation.impl.validators.RegexValidator": {
                     "jcr:primaryType" : "nt:unstructured",
-                    "validatorArguments" : ["regex=^\\\p{Upper}+$"]
+                    "validatorArguments" : ["regex=^\\\p{Upper}+$"],
+                    "severity" : "10"
                 }
             }
         },
