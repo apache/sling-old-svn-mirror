@@ -27,6 +27,9 @@ import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/*
+Break the build to test CI on pull request, 
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
@@ -34,6 +37,7 @@ import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+*/
 
 /**
  * The <code>DefaultErrorHandler</code> is used by the
