@@ -97,16 +97,13 @@ public class SightlyJavaCompilerService {
      * @return object instance of the requested class
      * @throws CompilerException in case of any runtime exception
      */
-    public Object getInstance(RenderContext renderContext, String className, boolean pojoHint) {
+    public Object getInstance(RenderContext renderContext, String className) {
         if (className.contains(".")) {
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
                 Object result = compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
                 unitChangeMonitor.clearJavaUseObject(className);
                 return result;
-            }
-            if (pojoHint) {
-                return compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
             }
             try {
                 // the object either comes from a bundle or from the repo but it was not registered by the UnitChangeMonitor
@@ -118,7 +115,7 @@ public class SightlyJavaCompilerService {
         } else {
             Resource pojoResource = UseProviderUtils.locateScriptResource(renderContext, className + ".java");
             if (pojoResource != null) {
-                return getInstance(renderContext, Utils.getJavaNameFromPath(pojoResource.getPath()), false);
+                return getInstance(renderContext, Utils.getJavaNameFromPath(pojoResource.getPath()));
             }
         }
         throw new SightlyException("Cannot find class " + className + ".");
@@ -128,25 +125,24 @@ public class SightlyJavaCompilerService {
      * Compiles a class using the passed fully qualified class name and its source code.
      *
      * @param sourceCode the source code from which to generate the class
-     * @param fqcn       fully qualified name of the class to compile
      * @return object instance of the class to compile
      * @throws CompilerException in case of any runtime exception
      */
-    public Object compileSource(SourceIdentifier sourceIdentifier, String sourceCode, String fqcn) {
+    public Object compileSource(SourceIdentifier sourceIdentifier, String sourceCode) {
         readLock.lock();
         try {
-            if (sourceIdentifier == null || sourceIdentifier.needsUpdate()) {
+            if (sourceIdentifier.needsUpdate()) {
                 readLock.unlock();
                 writeLock.lock();
                 try {
-                    return internalCompileSource(sourceCode, fqcn);
+                    return internalCompileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
                 } finally {
                     // downgrade write lock since we've probably compiled the source code by now
                     readLock.lock();
                     writeLock.unlock();
                 }
             } else {
-                return classLoaderWriter.getClassLoader().loadClass(fqcn).newInstance();
+                return classLoaderWriter.getClassLoader().loadClass(sourceIdentifier.getFullyQualifiedName()).newInstance();
             }
         } catch (Exception e) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
@@ -156,13 +152,12 @@ public class SightlyJavaCompilerService {
     }
 
     private Object internalCompileSource(String sourceCode, String fqcn) throws Exception {
-        if (sightlyEngineConfiguration.isDevMode()) {
+        if (sightlyEngineConfiguration.keepGenerated()) {
             String path = "/" + fqcn.replaceAll("\\.", "/") + ".java";
             OutputStream os = classLoaderWriter.getOutputStream(path);
             IOUtils.write(sourceCode, os, "UTF-8");
             IOUtils.closeQuietly(os);
         }
-
         String[] sourceCodeLines = sourceCode.split("\\r\\n|[\\n\\x0B\\x0C\\r\\u0085\\u2028\\u2029]");
         boolean foundPackageDeclaration = false;
         for (String line : sourceCodeLines) {
@@ -207,7 +202,9 @@ public class SightlyJavaCompilerService {
         Resource pojoResource = resolver.getResource(pojoPath);
         if (pojoResource != null) {
             try {
-                return compileSource(null, IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"), className);
+                SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, unitChangeMonitor,
+                        classLoaderWriter, pojoResource);
+                return compileSource(sourceIdentifier, IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"));
             } catch (IOException e) {
                 throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoPath), e);
             }

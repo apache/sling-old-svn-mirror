@@ -91,7 +91,7 @@ public class JavaUseProvider implements UseProvider {
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
                 // the object is a POJO that was changed in the repository but not recompiled;
-                result = sightlyJavaCompilerService.getInstance(renderContext, identifier, true);
+                result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
                 if (result instanceof Use) {
                     ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
                 }
@@ -124,7 +124,7 @@ public class JavaUseProvider implements UseProvider {
             /**
              * this object is either not exported from a bundle, or it's a POJO from the repository that wasn't loaded before
              */
-            result = sightlyJavaCompilerService.getInstance(renderContext, identifier, true);
+            result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
             if (result instanceof Use) {
                 ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
             }
