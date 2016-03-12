@@ -19,6 +19,7 @@
 
 package org.apache.sling.scripting.sightly.impl.engine.compiled;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
@@ -27,7 +28,8 @@ import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration
 import org.apache.sling.scripting.sightly.impl.utils.JavaEscapeUtils;
 
 /**
- * Identifies a Java source file in a JCR repository.
+ * Identifies a Java source file based on a {@link Resource}. Depending on the used constructor this class might provide the abstraction
+ * for either a Java source file generated for a Sightly HTML script or for a Sightly {@link Resource}-based Java Use-API Object.
  */
 public class SourceIdentifier {
 
@@ -38,16 +40,25 @@ public class SourceIdentifier {
     private SightlyEngineConfiguration configuration;
     private UnitChangeMonitor unitChangeMonitor;
     private ClassLoaderWriter writer;
+    private boolean scriptSource = false;
+
+    public SourceIdentifier(SightlyEngineConfiguration configuration, UnitChangeMonitor unitChangeMonitor, ClassLoaderWriter writer,
+                            Resource resource) {
+        this(configuration, unitChangeMonitor, writer, resource, null);
+    }
 
     public SourceIdentifier(SightlyEngineConfiguration configuration, UnitChangeMonitor unitChangeMonitor, ClassLoaderWriter writer,
                             Resource resource, String classNamePrefix) {
         this.resource = resource;
-        this.className = buildClassName(resource, classNamePrefix);
-        this.packageName = buildPackageName(resource);
-        this.fullyQualifiedName = buildFullyQualifiedName(packageName, className);
         this.configuration = configuration;
         this.unitChangeMonitor = unitChangeMonitor;
         this.writer = writer;
+        if (StringUtils.isNotEmpty(classNamePrefix)) {
+            scriptSource = true;
+        }
+        this.className = buildClassName(resource, classNamePrefix);
+        this.packageName = buildPackageName(resource);
+        this.fullyQualifiedName = buildFullyQualifiedName(packageName, className);
     }
 
     public String getClassName() {
@@ -84,7 +95,12 @@ public class SourceIdentifier {
     private String buildClassName(Resource resource, String classNamePrefix) {
         String scriptName = ResourceUtil.getName(resource.getPath());
         scriptName = scriptName.substring(0, scriptName.lastIndexOf(getExtension(scriptName)));
-        String className = classNamePrefix + scriptName;
+        String className;
+        if (StringUtils.isNotEmpty(classNamePrefix)) {
+            className = classNamePrefix + scriptName;
+        } else {
+            className = scriptName;
+        }
         return className.replaceAll("-", "_").replaceAll("\\.", "_");
     }
 
@@ -99,7 +115,10 @@ public class SourceIdentifier {
                 sb.append(".");
             }
         }
-        return sb.toString();
+        if (!scriptSource) {
+            return sb.toString();
+        }
+        return configuration.getBundleSymbolicName() + "." + sb.toString();
     }
 
     private String getExtension(String scriptName) {
