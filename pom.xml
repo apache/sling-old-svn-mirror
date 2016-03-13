@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>maven-sling-plugin</artifactId>
-    <version>2.1.7-SNAPSHOT</version>
+    <version>2.1.8</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling Maven Plugin for Supporting Bundle Development</name>
@@ -41,9 +41,9 @@
     </prerequisites>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/maven-sling-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/maven-sling-plugin-2.1.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/maven-sling-plugin-2.1.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/maven-sling-plugin-2.1.8</url>
     </scm>
 
     <build>
