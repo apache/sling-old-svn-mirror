@@ -49,7 +49,7 @@ public final class SlingDialect extends AbstractProcessorDialect {
     @Override
     public Set<IProcessor> getProcessors(final String prefix) {
         final Set<IProcessor> processors = new HashSet<IProcessor>();
-        processors.add(new SlingIncludeAttributeTagProcessor(this, prefix));
+        processors.add(new SlingIncludeAttributeTagProcessor(prefix));
         return processors;
     }
 
