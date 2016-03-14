@@ -39,6 +39,9 @@
     org.apache.sling.commons.log.file="logs/error.log"
     org.apache.sling.commons.log.level="error"
 
+  org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl
+    resource.resolver.searchpath=["/apps", "/libs", "/sightlytck/scripts"]
+
 [settings]
   sling.system.packages.class.com.vladium.emma.rt.RT=com.vladium.emma.rt
   org.apache.sling.commons.log.julenabled=true
