@@ -45,21 +45,23 @@
     org.apache.sling/org.apache.sling.commons.threads/3.2.5-SNAPSHOT
     org.apache.sling/org.apache.sling.discovery.api/1.0.2
     org.apache.sling/org.apache.sling.discovery.support/1.0.0
-    org.apache.sling/org.apache.sling.discovery.commons/1.0.4
-    org.apache.sling/org.apache.sling.discovery.base/1.1.0
-    org.apache.sling/org.apache.sling.discovery.oak/1.1.0
+    org.apache.sling/org.apache.sling.discovery.commons/1.0.10
+    org.apache.sling/org.apache.sling.discovery.base/1.1.2
+    org.apache.sling/org.apache.sling.discovery.oak/1.2.6
     org.apache.sling/org.apache.sling.engine/2.4.7-SNAPSHOT
     org.apache.sling/org.apache.sling.event/4.0.0
     org.apache.sling/org.apache.sling.event.dea/1.0.4
     org.apache.sling/org.apache.sling.fsresource/1.1.5-SNAPSHOT
-    org.apache.sling/org.apache.sling.i18n/2.4.4
+    org.apache.sling/org.apache.sling.hc.core/1.2.2
+    org.apache.sling/org.apache.sling.hc.webconsole/1.1.2
+    org.apache.sling/org.apache.sling.i18n/2.4.6
     org.apache.sling/org.apache.sling.installer.console/1.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.17-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.resource/2.7.4
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
     org.apache.sling/org.apache.sling.models.api/1.2.2
-    org.apache.sling/org.apache.sling.models.impl/1.2.4
+    org.apache.sling/org.apache.sling.models.impl/1.2.6
     org.apache.sling/org.apache.sling.resourceresolver/1.4.8
     org.apache.sling/org.apache.sling.scripting.api/2.1.8
     org.apache.sling/org.apache.sling.scripting.core/2.0.36
@@ -74,7 +76,7 @@
     org.apache.sling/org.apache.sling.servlets.get/2.1.14
     org.apache.sling/org.apache.sling.servlets.post/2.3.8
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.2
-    org.apache.sling/org.apache.sling.xss/1.0.6
+    org.apache.sling/org.apache.sling.xss/1.0.8
     javax.mail/mail/1.4.7
     org.apache.geronimo.bundles/jstl/1.2_1
     org.apache.felix/org.apache.felix.http.whiteboard/3.0.0
