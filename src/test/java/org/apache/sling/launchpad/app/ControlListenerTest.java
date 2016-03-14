@@ -68,6 +68,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait for server to stop
+
         TestCase.assertTrue(main.stopCalled);
 
         delay();
@@ -88,6 +90,7 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait for server to stop
         TestCase.assertTrue(main.stopCalled);
 
         TestCase.assertEquals(0, new ControlListener(main, null).statusServer());
@@ -218,11 +221,11 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
-        delay(); // wait for sever to start
+        delay(); // wait for sever to stop
 
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
-        delay(); // wait for sever to start
+        delay(); // wait for sever to stop
 
         TestCase.assertTrue(main1.stopCalled);
         TestCase.assertTrue(main2.stopCalled);
@@ -251,7 +254,7 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
 
-        delay();
+        delay(); // wait for server to stop
 
         TestCase.assertTrue(main1.stopCalled);
 
@@ -265,7 +268,7 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
 
-        delay();
+        delay(); // wait for server to stop
 
         TestCase.assertTrue(main2.stopCalled);
 
@@ -291,7 +294,7 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(3, new ControlListener(main, null).shutdownServer());
 
-        delay();
+        delay(); // wait for server to stop
 
         TestCase.assertFalse(main.stopCalled);
 
@@ -308,7 +311,7 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(4, new ControlListener(main, String.valueOf(port)).shutdownServer());
 
-        delay();
+        delay(); // wait for server to stop
 
         TestCase.assertFalse(main.stopCalled);
 
@@ -332,18 +335,18 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(4, new ControlListener(main, null).shutdownServer());
 
-        delay();
+        delay(); // wait server to stop
 
         TestCase.assertFalse(main.stopCalled);
 
         TestCase.assertTrue(ctlFile1.exists());
     }
-    
+
     public void test_generateKey() throws Throwable {
         Pattern pattern = Pattern.compile("([a-zA-Z0-9-_=]+)");
         MyMain main = new MyMain(SLING1);
         ControlListener cl = new ControlListener(main, null);
-        
+
         String secretkey = (String) PrivateAccessor.invoke(cl, "generateKey", new Class[] {}, new Object[] {});
         Assert.assertTrue(secretkey.length() >= 32);
         Matcher matcher = pattern.matcher(secretkey);
@@ -351,7 +354,7 @@ public class ControlListenerTest extends TestCase {
             Assert.fail();
         }
     }
-    
+
     //-------------------- private section -----------------------------
 
     private int getPort() {
@@ -382,7 +385,7 @@ public class ControlListenerTest extends TestCase {
 
     private static class MyMain extends Main {
 
-        boolean stopCalled;
+        volatile boolean stopCalled;
 
         MyMain(final String slingHome) {
             super(new HashMap<String, String>() {
