@@ -31,12 +31,9 @@
     for(final Resource current : resource.getChildren()) {
         count++;
     }
-%><div class="tile double ui-slingshot-clickable" data-link="<%= request.getContextPath() %><%=resource.getPath()%>.html">
-    <div class="tile-content icon">
-        <i class="icon-pictures fg-blue"></i>
-    </div>
-    <div class="brand">
-        <span class="label fg-black"><%= ResponseUtil.escapeXml(itemTitle) %></span>
-        <span class="badge bg-orange"><%= count %></span>
-    </div>
+%>
+<div class="col-md-4">
+   <h2><%= ResponseUtil.escapeXml(itemTitle) %></h2>
+   <!--  <img class="img-responsive" style="padding-top: 5px" src="<%= request.getContextPath() %>"/>  -->
+   <p><a class="btn btn-default" href="<%= request.getContextPath() %><%=resource.getPath()%>.html" role="button">View details &raquo;</a> <span class="badge"><%= count %></span></p>
 </div>

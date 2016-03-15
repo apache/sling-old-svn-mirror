@@ -30,12 +30,16 @@
     <title><%= title %></title>
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
-  <body class="ui-slingshot-main">
-  <div>
+  <body>
     <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
-    <h1><%= title %></h1>
-    <hr/>
-    <sling:include resource="<%= resource.getChild("content") %>" replaceSelectors="itemlist"/>
-  </div>
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <h1><%= title %></h1>
+        <p>Explore the world of bla....</p>
+      </div>
+    </div>
+    <sling:include resource="<%= resource %>" replaceSelectors="itemlist"/>
+    <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
 </body>
 </html>

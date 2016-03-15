@@ -44,13 +44,21 @@
     <title><%= title %></title>
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
-  <body class="ui-slingshot-main">
+  <body>
     <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
-    <h1><%= title %></h1>
-    <div style="width:100%; display:block; float:left;">
-      <div style="width:70%; float:left; display:block;">
-        <img src="<%= request.getContextPath() %><%= imagePath %>"/>
+    <div class="jumbotron">
+      <div class="container">
+        <h1><%= title %></h1>
+        <p>Explore the world of bla....</p>
       </div>
+    </div>
+    <div class="container">
+    <ul class="nav nav-tabs">
+      <li role="presentation" class="active"><a href="#">Home</a></li>
+      <li role="presentation"><a href="#">Comments</a></li>
+      <li role="presentation"><a href="#">Edit</a></li>
+    </ul>
+        <img class="img-responsive center-block" src="<%= request.getContextPath() %><%= imagePath %>"/>
       <div style="width:30%; float:left; padding:15px; display:block;">
         <p><%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_DESCRIPTION, ""))%></p>
         <% if ( attributes.get(SlingshotConstants.PROPERTY_LOCATION) != null ) { %>
@@ -94,8 +102,9 @@
                     </script>
         </div>
       </div>
-    </div>
     <hr/>
     <sling:include resource="<%= resource %>" replaceSelectors="comments"/>
+    </div>
+    <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
   </body>
 </html>

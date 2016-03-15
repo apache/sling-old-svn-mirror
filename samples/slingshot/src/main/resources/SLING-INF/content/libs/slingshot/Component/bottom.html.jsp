@@ -16,23 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="java.util.Iterator,
-                  java.util.List,
-                  org.apache.sling.api.resource.Resource,
-                  org.apache.sling.sample.slingshot.SlingshotConstants" %><%
-%><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
-%><sling:defineObjects/><%
-%><div class="container">
- <%
-     int i = 0;
-     final Iterator<Resource> fi = resource.listChildren();
-     while ( fi.hasNext()) {
-         final Resource current = fi.next();
-         if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_CATEGORY)) {
-             %>
-             <sling:include resource="<%= current %>" replaceSelectors="user"/>
-             <%
-         }
-     } 
-  %>
-</div>
+%><%@page import="org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+%><script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-2.2.0.min.js"></script>
+<script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/bootstrap.min.js"></script>
+<script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/ie10-viewport-bug-workaround.js"></script>
+<script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/slingshot.js"></script>
