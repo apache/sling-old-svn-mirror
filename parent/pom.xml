@@ -117,7 +117,7 @@
     <build>
         <plugins>
 
-            <!-- Require Java 6 or higher for building -->
+            <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -132,9 +132,9 @@
                                 <requireJavaVersion>
                                     <message>
                                         Apache Sling must be compiled with Java
-                                        6 or higher
+                                        7 or higher
                                     </message>
-                                    <version>1.6.0</version>
+                                    <version>1.7.0</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
