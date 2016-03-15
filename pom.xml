@@ -42,7 +42,8 @@
     <org.thymeleaf.version>3.0.0.BETA02</org.thymeleaf.version>
     <org.attoparser.version>2.0.0.BETA05</org.attoparser.version>
     <org.unbescape.version>1.1.2.RELEASE</org.unbescape.version>
-    <ognl.version>3.1</ognl.version>
+    <ognl.version>3.1.2</ognl.version>
+    <com.fasterxml.jackson.version>2.6.3</com.fasterxml.jackson.version>
   </properties>
 
   <scm>
@@ -162,6 +163,10 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+          	<Import-Package>
+              com.fasterxml.jackson.*;version=${com.fasterxml.jackson.version};resolution:=optional,
+              *
+          	</Import-Package>
             <Export-Package>
               org.apache.sling.scripting.thymeleaf,
               org.thymeleaf.*;version=${org.thymeleaf.version};-split-package:=merge-first,
