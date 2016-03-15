@@ -1,15 +1,15 @@
 {
-    "jcr:primaryType":"sling:OrderedFolder",
+    "jcr:primaryType":"sling:Folder",
     "sling:resourceType":"slingshot/Item",
     "title":"Strange",
     "description":"This guy looks really strange...",
     
     comments : {
-      "jcr:primaryType":"sling:OrderedFolder",
+      "jcr:primaryType":"sling:Folder",
       "sling:resourceType":"slingshot/Comments"
     },
     ratings : {
-      "jcr:primaryType":"sling:OrderedFolder",
+      "jcr:primaryType":"sling:Folder",
       "sling:resourceType":"slingshot/Ratings"
     }
 }

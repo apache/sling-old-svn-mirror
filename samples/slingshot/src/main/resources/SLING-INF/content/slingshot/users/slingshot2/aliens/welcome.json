@@ -1,15 +1,15 @@
 {
-    "jcr:primaryType":"sling:OrderedFolder",
+    "jcr:primaryType":"sling:Folder",
     "sling:resourceType":"slingshot/Item",
     "title":"Welcome",
     "description":"This guy looks charming",
     
     comments : {
-      "jcr:primaryType":"sling:OrderedFolder",
+      "jcr:primaryType":"sling:Folder",
       "sling:resourceType":"slingshot/Comments"
     },
     ratings : {
-      "jcr:primaryType":"sling:OrderedFolder",
+      "jcr:primaryType":"sling:Folder",
       "sling:resourceType":"slingshot/Ratings"
     }
 }

@@ -1,3 +1,4 @@
 {
-    "jcr:primaryType":"sling:Folder"
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Userinfo"
 }
