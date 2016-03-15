@@ -89,7 +89,6 @@ public class SlingLaunchpadNosqlMongoIT extends KarafTestSupport {
             wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").versionAsInProject()),
             wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").versionAsInProject()),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-compress").versionAsInProject(),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject(),
             addSlingFeatures("sling-launchpad-nosql-mongodb")
         );
     }
