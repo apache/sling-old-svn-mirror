@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streaminfo",
+    "title":"Travel",
+    "description":"Stuff related to travel."
+}
