@@ -14,19 +14,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.ui-form { width:470px; margin: 0 auto;}
-.ui-form .ui-widget-header h1 { margin:10px; text-align:center;}
-.ui-form .ui-widget-content {padding:10px;}
-.ui-form .ui-form-label {display: inline-block; width:150px; height: 25px; margin:10px;border: 1px solid #000000; color: #ffffff; background-color: #33cc33; text-align:center; font-weight: bold; vertical-align:middle;}
-.ui-form .ui-form-field {display: inline-block; width:244px; height: 25px; margin:10px;border: 1px solid #000000; vertical-align:middle;}
-.ui-form .ui-form-label label {vertical-align:middle; line-height:25px;}
-.ui-form-field input {width: 100%;}
-.ui-form-button {width:200px; height: 25px; margin:10px; border: 1px solid #000000; color: #ffffff; vertical-align:middle; background-color: #33cc33;}
-.ui-form-button-login { width:418px;}
-.ui-form-button-new {background-color: #aaaaff; width:197px;}
-.ui-form-button-help {background-color: #aaaaff; width:197px;}
-.ui-body-app {background: url("images/background.jpg") no-repeat center center fixed; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;}
-.ui-slingshot-content {margin: 20px; padding: 10px;}
-.ui-slingshot-main {margin: 20px; padding: 10px; background-color: #dddddd; }
-.ui-slingshot-main h1 {margin: 10px; text-align:center; }
-.ui-slingshot-comments {float:none; margin:10px; padding: 10px; display:block; width:100%;}
+body {
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+body.login {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #eee;
+  background: url('../images/background.jpg');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: normal;
+}
+.form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
