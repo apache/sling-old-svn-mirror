@@ -26,6 +26,7 @@
     commons-collections/commons-collections/3.2.2
     commons-codec/commons-codec/1.9
     commons-lang/commons-lang/2.6
+    org.apache.commons/commons-lang3/3.4
     org.apache.commons/commons-math/2.2
     org.apache.geronimo.bundles/commons-httpclient/3.1_1
     org.apache.httpcomponents/httpcore-osgi/4.4.1
