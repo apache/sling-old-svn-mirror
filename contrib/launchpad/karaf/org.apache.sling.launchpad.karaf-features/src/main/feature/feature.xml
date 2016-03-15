@@ -51,6 +51,7 @@
     <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
     <bundle dependency="true">mvn:commons-io/commons-io/2.4</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/2.6</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
@@ -163,7 +164,6 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.4</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
   </feature>
   <feature name="sling-extension-threaddump" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2</bundle>
@@ -516,7 +516,6 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.nosql.generic/1.1.0</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
-    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
   </feature>
   <feature name="sling-nosql-couchbase" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.nosql.couchbase-client/1.0.2</bundle>
@@ -575,6 +574,5 @@
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-scripting-jsp</feature>
-    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
   </feature>
 </features>
