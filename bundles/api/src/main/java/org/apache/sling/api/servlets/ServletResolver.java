@@ -57,7 +57,7 @@ public interface ServletResolver {
      * @param request The {@link SlingHttpServletRequest} object used to drive
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request. Never {@code null}.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
@@ -84,7 +84,7 @@ public interface ServletResolver {
      *                   extension. In this case only a script with the
      *                   matching extension is used.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request. Never {@code null}.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
@@ -111,7 +111,7 @@ public interface ServletResolver {
      *                   extension. In this case only a script with the
      *                   matching extension is used.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request. Never {@code null}.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
