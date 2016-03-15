@@ -133,23 +133,23 @@ public class SetupService {
     }
 
     private void setupUsers(final BundleContext bc, final ResourceResolver resolver) throws RepositoryException, IOException {
-        final UserManager um = AccessControlUtil.getUserManager(resolver.adaptTo(Session.class));
+        final Session session = resolver.adaptTo(Session.class);
+        final UserManager um = AccessControlUtil.getUserManager(session);
         for(final String userName : USERS) {
             Authorizable user = um.getAuthorizable(userName);
             if ( user == null ) {
                 logger.info("Creating user {}", userName);
                 um.createUser(userName, userName);
+                session.save();
             }
         }
 
         // create a service user
         Authorizable user = um.getAuthorizable(InternalConstants.SERVICE_USER_NAME);
         if ( user == null ) {
-            logger.info("Creating user {}", InternalConstants.SERVICE_USER_NAME);
-            // TODO - jackrabbit 2 does not support creating a system user
-            // um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
-
-            um.createUser(InternalConstants.SERVICE_USER_NAME, InternalConstants.SERVICE_USER_NAME);
+            logger.info("Creating service user {}", InternalConstants.SERVICE_USER_NAME);
+            um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
+            session.save();
         }
 
         // check for service user config
