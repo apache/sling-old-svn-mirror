@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.servlets;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.Servlet;
 
@@ -57,13 +58,13 @@ public interface ServletResolver {
      * @param request The {@link SlingHttpServletRequest} object used to drive
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request or {@code null} if no appropriate servlet was found.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
      */
-    @Nonnull Servlet resolveServlet(@Nonnull SlingHttpServletRequest request);
+    @CheckForNull Servlet resolveServlet(@Nonnull SlingHttpServletRequest request);
 
     /**
      * Resolves a <code>javax.servlet.Servlet</code> whose
@@ -84,14 +85,14 @@ public interface ServletResolver {
      *                   extension. In this case only a script with the
      *                   matching extension is used.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request or {@code null} if no appropriate servlet was found.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    @Nonnull Servlet resolveServlet(@Nonnull Resource resource, @Nonnull String scriptName);
+    @CheckForNull Servlet resolveServlet(@Nonnull Resource resource, @Nonnull String scriptName);
 
     /**
      * Resolves a <code>javax.servlet.Servlet</code> whose
@@ -111,13 +112,13 @@ public interface ServletResolver {
      *                   extension. In this case only a script with the
      *                   matching extension is used.
      * @return The servlet whose <code>service</code> method may be called to
-     *         handle the request.
+     *         handle the request or {@code null} if no appropriate servlet was found.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
      *             while trying to find an appropriate servlet to handle the
      *             request or if no servlet could be resolved to handle the
      *             request.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
-    @Nonnull Servlet resolveServlet(@Nonnull ResourceResolver resolver, @Nonnull String scriptName);
+    @CheckForNull Servlet resolveServlet(@Nonnull ResourceResolver resolver, @Nonnull String scriptName);
 
 }
