@@ -44,12 +44,14 @@
     if ( slingRequest.getAuthType() != null ) {
         %>
         <hr/><p>Leave a comment...</p>
-        <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>.comments">
-        <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
-        <p>Title: <input name="<%= CommentsUtil.PROPERTY_TITLE %>"/></p>
-        <p>Text: <input name="<%= CommentsUtil.PROPERTY_TEXT %>"/></p>
-        <button class="ui-button ui-form-button" type="submit">Add</button>
-      </form>
+<form class="navbar-form navbar-left" role="comment" method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>.comments">
+  <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
+  <div class="form-group">
+    <input type="text" class="form-control" placeholder="Title" name="<%= CommentsUtil.PROPERTY_TITLE %>"/>
+    <input type="text" class="form-control" placeholder="Text" name="<%= CommentsUtil.PROPERTY_TEXT %>"/>
+  </div>
+  <button type="submit" class="ui-button ui-form-button">Add</button>
+</form>
       <%
     }
 %>
