@@ -18,8 +18,6 @@ package org.apache.sling.sample.slingshot.ratings.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 
@@ -33,7 +31,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
-import org.apache.sling.sample.slingshot.impl.InternalConstants;
 import org.apache.sling.sample.slingshot.ratings.RatingsService;
 import org.apache.sling.sample.slingshot.ratings.RatingsUtil;
 import org.slf4j.Logger;
@@ -68,12 +65,7 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
         // save rating
         ResourceResolver resolver = null;
         try {
-            // TODO - switch to service user with Oak
-            final Map<String, Object> authInfo = new HashMap<String, Object>();
-            authInfo.put(ResourceResolverFactory.USER, InternalConstants.SERVICE_USER_NAME);
-            authInfo.put(ResourceResolverFactory.PASSWORD, InternalConstants.SERVICE_USER_NAME.toCharArray());
-            resolver = factory.getResourceResolver(authInfo);
-//            resolver = factory.getServiceResourceResolver(null);
+            resolver = factory.getServiceResourceResolver(null);
 
             final Resource reqResource = resolver.getResource(request.getResource().getPath());
 
