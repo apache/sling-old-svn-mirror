@@ -24,6 +24,7 @@
 
 [artifacts]
     commons-collections/commons-collections/3.2.2
+    org.apache.commons/commons-collections4/4.1
     commons-codec/commons-codec/1.9
     commons-lang/commons-lang/2.6
     org.apache.commons/commons-lang3/3.4
