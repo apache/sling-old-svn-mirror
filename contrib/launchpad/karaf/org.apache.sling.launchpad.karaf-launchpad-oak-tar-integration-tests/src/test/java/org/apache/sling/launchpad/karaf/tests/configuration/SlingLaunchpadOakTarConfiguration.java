@@ -48,6 +48,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-launchpad-oak-tar",
                 "sling-extension-discovery-standalone",
                 "sling-extension-event",
+                "sling-extension-healthcheck",
                 "sling-launchpad-content",
                 "sling-auth-form",
                 "sling-auth-openid",
