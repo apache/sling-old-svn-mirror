@@ -484,9 +484,9 @@ public class ResourceResolverFactoryActivator {
                         }
 
                         @Override
-                        public void providerRemoved(final String pid, final boolean stateful) {
+                        public void providerRemoved(final String pid, final boolean stateful, final boolean isUsed) {
                             if ( factoryRegistration != null ) {
-                                if ( stateful || paranoidProviderHandling ) {
+                                if ( isUsed && (stateful || paranoidProviderHandling) ) {
                                     unregisterFactory();
                                 }
                                 checkFactoryPreconditions(pid);
