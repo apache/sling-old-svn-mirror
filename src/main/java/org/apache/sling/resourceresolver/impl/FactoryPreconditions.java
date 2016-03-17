@@ -47,38 +47,42 @@ public class FactoryPreconditions {
 
     private volatile List<RequiredProvider> requiredProviders;
 
-    public void activate(final BundleContext bc, final String[] configuration, ResourceProviderTracker tracker) {
-        this.tracker = tracker;
+    public void activate(final BundleContext bc, final String[] configuration, final ResourceProviderTracker tracker) {
+        synchronized ( this ) {
+            this.tracker = tracker;
 
-        final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
-        if ( configuration != null ) {
-            final Logger logger = LoggerFactory.getLogger(getClass());
-            for(final String r : configuration) {
-                if ( r != null && r.trim().length() > 0 ) {
-                    final String value = r.trim();
-                    RequiredProvider rp = new RequiredProvider();
-                    if ( value.startsWith("(") ) {
-                        try {
-                            rp.filter = bc.createFilter(value);
-                        } catch (final InvalidSyntaxException e) {
-                            logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
-                            rp = null;
+            final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
+            if ( configuration != null ) {
+                final Logger logger = LoggerFactory.getLogger(getClass());
+                for(final String r : configuration) {
+                    if ( r != null && r.trim().length() > 0 ) {
+                        final String value = r.trim();
+                        RequiredProvider rp = new RequiredProvider();
+                        if ( value.startsWith("(") ) {
+                            try {
+                                rp.filter = bc.createFilter(value);
+                            } catch (final InvalidSyntaxException e) {
+                                logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
+                                rp = null;
+                            }
+                        } else {
+                            rp.pid = value;
                         }
-                    } else {
-                        rp.pid = value;
-                    }
-                    if ( rp != null ) {
-                        rps.add(rp);
+                        if ( rp != null ) {
+                            rps.add(rp);
+                        }
                     }
                 }
             }
+            this.requiredProviders = rps;
         }
-        this.requiredProviders = rps;
     }
 
     public void deactivate() {
-        this.requiredProviders = null;
-        this.tracker = null;
+        synchronized ( this ) {
+            this.requiredProviders = null;
+            this.tracker = null;
+        }
     }
 
     public boolean checkPreconditions(final String unavailableServicePid) {

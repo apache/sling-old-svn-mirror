@@ -119,7 +119,7 @@ public class ResourceProviderTrackerTest {
             }
 
             @Override
-            public void providerRemoved(String pid) {
+            public void providerRemoved(String pid, boolean stateful) {
                 removedCalled.set(true);
             }
 
@@ -177,7 +177,7 @@ public class ResourceProviderTrackerTest {
             }
 
             @Override
-            public void providerRemoved(String pid) {
+            public void providerRemoved(String pid, boolean stateful) {
                 removedCalled.set(true);
             }
 
@@ -291,7 +291,7 @@ public class ResourceProviderTrackerTest {
         }
 
         @Override
-        public void providerRemoved(String pid) {
+        public void providerRemoved(String pid, boolean stateful) {
             // TODO Auto-generated method stub
 
         }
