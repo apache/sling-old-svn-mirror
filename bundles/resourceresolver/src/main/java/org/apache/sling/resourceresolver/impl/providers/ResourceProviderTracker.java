@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.path.PathSet;
+import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.api.resource.runtime.dto.FailureReason;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
@@ -68,7 +69,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
         void providerAdded();
 
-        void providerRemoved(String pid);
+        void providerRemoved(String pid, boolean stateful);
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -128,6 +129,9 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
     }
 
     public void deactivate() {
+        this.listener = null;
+        this.eventAdmin = null;
+        this.providerReporter = null;
         if ( this.tracker != null ) {
             this.tracker.close();
             this.tracker = null;
@@ -135,7 +139,6 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
         this.infos.clear();
         this.handlers.clear();
         this.invalidProviders.clear();
-        this.listener = null;
     }
 
     public void setObservationReporterGenerator(final ObservationReporterGenerator generator) {
@@ -182,11 +185,12 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                        }
                        events.add(new ProviderEvent(true, info));
                        if ( matchingHandlers.size() > 1 ) {
+                           final ResourceProviderInfo removeInfo = matchingHandlers.get(1).getInfo();
                            if ( cl != null ) {
-                               cl.providerRemoved((String)matchingHandlers.get(1).getInfo().getServiceReference().getProperty(Constants.SERVICE_PID));
+                               cl.providerRemoved((String)removeInfo.getServiceReference().getProperty(Constants.SERVICE_PID), info.getAuthType() != AuthType.no);
                            }
                            this.deactivate(matchingHandlers.get(1));
-                           events.add(new ProviderEvent(false, matchingHandlers.get(1).getInfo()));
+                           events.add(new ProviderEvent(false, removeInfo));
                        }
                    }
                }
@@ -221,7 +225,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                         doActivateNext = true;
                         final ChangeListener cl = this.listener;
                         if ( cl != null ) {
-                            cl.providerRemoved(pid);
+                            cl.providerRemoved(pid, info.getAuthType() != AuthType.no);
                         }
                         this.deactivate(firstHandler);
                         events.add(new ProviderEvent(false, firstHandler.getInfo()));
@@ -303,13 +307,16 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
      * @param event
      */
     private void postOSGiEvent(final ProviderEvent event) {
-        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-        eventProps.put(SlingConstants.PROPERTY_PATH, event.path);
-        if (event.pid != null) {
-            eventProps.put(Constants.SERVICE_PID, event.pid);
+        final EventAdmin ea = this.eventAdmin;
+        if ( ea != null ) {
+            final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+            eventProps.put(SlingConstants.PROPERTY_PATH, event.path);
+            if (event.pid != null) {
+                eventProps.put(Constants.SERVICE_PID, event.pid);
+            }
+            ea.postEvent(new Event(event.isAdd ? SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED : SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
+                    eventProps));
         }
-        eventAdmin.postEvent(new Event(event.isAdd ? SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED : SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
-                eventProps));
     }
 
     /**
@@ -318,9 +325,12 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
      * @param info The resource provider
      */
     private void postResourceProviderChange(final ProviderEvent event) {
-        final ResourceChange change = new ResourceChange(event.isAdd ? ChangeType.PROVIDER_ADDED : ChangeType.PROVIDER_REMOVED,
-                event.path, false, null, null, null);
-        this.providerReporter.reportChanges(Collections.singletonList(change), false);
+        final ObservationReporter or = this.providerReporter;
+        if ( or != null ) {
+            final ResourceChange change = new ResourceChange(event.isAdd ? ChangeType.PROVIDER_ADDED : ChangeType.PROVIDER_REMOVED,
+                    event.path, false, null, null, null);
+            or.reportChanges(Collections.singletonList(change), false);
+        }
     }
 
     public void fill(final RuntimeDTO dto) {
@@ -415,6 +425,9 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
     private void postEvents(final List<ProviderEvent> events) {
         if ( events.isEmpty() ) {
+            return;
+        }
+        if ( this.listener == null && this.providerReporter == null ) {
             return;
         }
         final Thread t = new Thread(new Runnable() {
