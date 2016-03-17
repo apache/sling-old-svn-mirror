@@ -465,36 +465,6 @@ public class ResourceResolverFactoryActivator {
         if (searchPath == null) {
             searchPath = new String[] { "/" };
         }
-        // for testing: if we run unit test, both trackers are set from the outside
-        if ( this.resourceProviderTracker == null ) {
-            this.resourceProviderTracker = new ResourceProviderTracker();
-            this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
-            this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
-                this.resourceProviderTracker, searchPath);
-            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
-                    this.eventAdmin,
-                    new ChangeListener() {
-
-                        @Override
-                        public void providerAdded() {
-                            if ( factoryRegistration == null ) {
-                                checkFactoryPreconditions(null);
-                            }
-
-                        }
-
-                        @Override
-                        public void providerRemoved(final String pid, final boolean stateful, final boolean isUsed) {
-                            if ( factoryRegistration != null ) {
-                                if ( isUsed && (stateful || paranoidProviderHandling) ) {
-                                    unregisterFactory();
-                                }
-                                checkFactoryPreconditions(pid);
-                            }
-                        }
-                    });
-        }
-
         // namespace mangling
         mangleNamespacePrefixes = PropertiesUtil.toBoolean(properties.get(PROP_MANGLE_NAMESPACES), false);
 
@@ -555,9 +525,40 @@ public class ResourceResolverFactoryActivator {
 
         // check for required property
         final String[] requiredResourceProviders = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
-        this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
 
-        this.checkFactoryPreconditions(null);
+        // for testing: if we run unit test, both trackers are set from the outside
+        if ( this.resourceProviderTracker == null ) {
+            this.resourceProviderTracker = new ResourceProviderTracker();
+            this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
+            this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
+            this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
+                this.resourceProviderTracker, searchPath);
+            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
+                    this.eventAdmin,
+                    new ChangeListener() {
+
+                        @Override
+                        public void providerAdded() {
+                            if ( factoryRegistration == null ) {
+                                checkFactoryPreconditions(null);
+                            }
+
+                        }
+
+                        @Override
+                        public void providerRemoved(final String pid, final boolean stateful, final boolean isUsed) {
+                            if ( factoryRegistration != null ) {
+                                if ( isUsed && (stateful || paranoidProviderHandling) ) {
+                                    unregisterFactory();
+                                }
+                                checkFactoryPreconditions(pid);
+                            }
+                        }
+                    });
+        } else {
+            this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
+            this.checkFactoryPreconditions(null);
+         }
     }
 
     /**
@@ -565,9 +566,9 @@ public class ResourceResolverFactoryActivator {
      */
     @Deactivate
     protected void deactivate() {
-        this.componentContext = null;
-
         this.unregisterFactory();
+
+        this.componentContext = null;
 
         this.changeListenerWhiteboard.deactivate();
         this.resourceProviderTracker.deactivate();
@@ -627,6 +628,9 @@ public class ResourceResolverFactoryActivator {
 
                     @Override
                     public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                        if ( ResourceResolverFactoryActivator.this.componentContext == null ) {
+                            return null;
+                        }
                         final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
                                 local.commonFactory, bundle,
                             ResourceResolverFactoryActivator.this.serviceUserMapper);
@@ -658,7 +662,17 @@ public class ResourceResolverFactoryActivator {
         if ( localContext != null ) {
             final boolean result = this.preconds.checkPreconditions(unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
-                this.registerFactory(localContext);
+                boolean create = true;
+                synchronized ( this ) {
+                    if ( this.factoryRegistration == null ) {
+                        this.factoryRegistration = new FactoryRegistration();
+                    } else {
+                        create = false;
+                    }
+                }
+                if ( create ) {
+                    this.registerFactory(localContext);
+                }
             } else if ( !result && this.factoryRegistration != null ) {
                 this.unregisterFactory();
             }
