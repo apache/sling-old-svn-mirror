@@ -69,7 +69,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
         void providerAdded();
 
-        void providerRemoved(String pid, boolean stateful);
+        void providerRemoved(String pid, boolean stateful, boolean used);
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -185,11 +185,14 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                        }
                        events.add(new ProviderEvent(true, info));
                        if ( matchingHandlers.size() > 1 ) {
-                           final ResourceProviderInfo removeInfo = matchingHandlers.get(1).getInfo();
+                           final ResourceProviderHandler removeHandler = matchingHandlers.get(1);
+                           final ResourceProviderInfo removeInfo = removeHandler.getInfo();
                            if ( cl != null ) {
-                               cl.providerRemoved((String)removeInfo.getServiceReference().getProperty(Constants.SERVICE_PID), info.getAuthType() != AuthType.no);
+                               cl.providerRemoved((String)removeInfo.getServiceReference().getProperty(Constants.SERVICE_PID),
+                                       removeInfo.getAuthType() != AuthType.no,
+                                       removeHandler.isUsed());
                            }
-                           this.deactivate(matchingHandlers.get(1));
+                           this.deactivate(removeHandler);
                            events.add(new ProviderEvent(false, removeInfo));
                        }
                    }
@@ -225,7 +228,9 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                         doActivateNext = true;
                         final ChangeListener cl = this.listener;
                         if ( cl != null ) {
-                            cl.providerRemoved(pid, info.getAuthType() != AuthType.no);
+                            cl.providerRemoved(pid,
+                                    info.getAuthType() != AuthType.no,
+                                    firstHandler.isUsed());
                         }
                         this.deactivate(firstHandler);
                         events.add(new ProviderEvent(false, firstHandler.getInfo()));

@@ -36,6 +36,7 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     private volatile ResourceProvider<Object> provider;
 
+    private volatile boolean isUsed = false;
 
     public ResourceProviderHandler(final BundleContext bc, final ResourceProviderInfo info) {
         this.info = info;
@@ -62,10 +63,20 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         this.info = null;
         this.bundleContext = null;
         this.context = null;
+        this.isUsed = false;
     }
 
     public ResourceProvider<Object> getResourceProvider() {
         return this.provider;
+    }
+
+    public ResourceProvider<Object> useResourceProvider() {
+        this.isUsed = true;
+        return this.provider;
+    }
+
+    public boolean isUsed() {
+        return this.isUsed;
     }
 
     public void deactivate() {

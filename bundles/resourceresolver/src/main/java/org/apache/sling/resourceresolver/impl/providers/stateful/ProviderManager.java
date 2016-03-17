@@ -81,7 +81,7 @@ public class ProviderManager {
     throws LoginException {
         AuthenticatedResourceProvider provider = this.contextMap.get(handler);
         if (provider == null) {
-            final ResourceProvider<Object> resourceProvider = handler.getResourceProvider();
+            final ResourceProvider<Object> resourceProvider = handler.useResourceProvider();
             if ( resourceProvider != null ) {
                 try {
                     provider = authenticate(handler, resourceProvider, control);
