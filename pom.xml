@@ -72,6 +72,7 @@
                         <exclude>src/main/resources/SLING-INF/content/slingshot/resources/js/*.js</exclude>
                         <exclude>src/main/resources/SLING-INF/content/slingshot/resources/fonts/*.svg</exclude>
                         <exclude>src/test/resources/**.json</exclude>
+                        <exclude>**/*.woff2</exclude>
                     </excludes>
                 </configuration>
             </plugin>
