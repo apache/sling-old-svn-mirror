@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Category",
-    "title":"Travel",
-    "description":"Stuff related to travel."
-}

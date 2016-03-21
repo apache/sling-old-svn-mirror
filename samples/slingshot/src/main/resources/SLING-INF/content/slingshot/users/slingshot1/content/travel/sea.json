@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Item",
-    "title":"The Sea",
-    "description":"You can see my boat in the distance"
-}

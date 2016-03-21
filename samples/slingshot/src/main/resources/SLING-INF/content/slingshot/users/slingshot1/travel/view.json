@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Item",
+    "title":"Nice View",
+    "description":"A view from the top of my home"
+}

@@ -98,9 +98,9 @@ public class UnitLoader {
         String encoding = unitChangeMonitor.getScriptEncoding(scriptResource.getPath());
         if (sourceIdentifier.needsUpdate()) {
             String sourceCode = getSourceCodeForScript(adminResolver, sourceIdentifier, renderContext.getBindings(), encoding);
-            obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode, sourceIdentifier.getFullyQualifiedName());
+            obj = sightlyJavaCompilerService.compileSource(sourceIdentifier, sourceCode);
         } else {
-            obj = sightlyJavaCompilerService.getInstance(renderContext, sourceIdentifier.getFullyQualifiedName(), false);
+            obj = sightlyJavaCompilerService.getInstance(renderContext, sourceIdentifier.getFullyQualifiedName());
         }
         if (!(obj instanceof RenderUnit)) {
             throw new SightlyException("Class is not a RenderUnit instance");

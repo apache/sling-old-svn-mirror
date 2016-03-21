@@ -15,15 +15,7 @@
  * limitations under the License.
  */
 $( document ).ready(function() {
-	$(".ui-slingshot-clickable").click(function() { 
-	    var $input = $( this );
-	    window.location.href=$input.attr("data-link");
-    });
-	$("#breadcrumbs").breadcrumbs("home");
-	$(".breadcrumb_icon_home").click(function() {
-		window.location.href=$("#breadcrumbs").attr("data-home");
-	});
-	$(".ui-form-form").submit(function(event) {
+	$(".form-signin").submit(function(event) {
         event.preventDefault();
         var form = this;
 	    var path = form.action;
@@ -62,10 +54,10 @@ $( document ).ready(function() {
         });
         return true;
 	});
-	$(".ui-form-button-new").click(function() {
+	$(".form-button-new").click(function() {
 		alert("Self registration is not implemented yet. Try username slingshot1 or slingshot2 with the password being the same as the username.");
 	});
-	$(".ui-form-button-help").click(function() {
+	$(".form-button-help").click(function() {
 		alert("Help function is not implemented yet. Try username slingshot1 or slingshot2 with the password being the same as the username.");
 	});
 });

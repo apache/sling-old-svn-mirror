@@ -22,17 +22,30 @@
                   org.apache.sling.sample.slingshot.SlingshotConstants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-%><div class="metro ui-slingshot-content">
+%><div class="container">
  <%
+     boolean openedRow = false;
      int i = 0;
      final Iterator<Resource> fi = resource.listChildren();
      while ( fi.hasNext()) {
          final Resource current = fi.next();
          if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_ITEM)) {
+             if ( !openedRow ) {
+                 openedRow = true;
+                 %><div class="row"><%
+             }
              %>
              <sling:include resource="<%= current %>" replaceSelectors="main"/>
              <%
+             i++;
+             if ( i % 3 == 0 ) {
+                 openedRow = false;
+                 %></div><%
+             }
          }
      } 
+     if ( openedRow ) {
+         %></div><%
+     }
   %>
 </div>

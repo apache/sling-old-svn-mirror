@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>maven-sling-plugin</artifactId>
-    <version>2.1.7-SNAPSHOT</version>
+    <version>2.1.9-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling Maven Plugin for Supporting Bundle Development</name>
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.17-SNAPSHOT</version>
+            <version>2.0.16</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

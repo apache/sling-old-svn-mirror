@@ -117,7 +117,7 @@
     <build>
         <plugins>
 
-            <!-- Require Java 6 or higher for building -->
+            <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -132,9 +132,9 @@
                                 <requireJavaVersion>
                                     <message>
                                         Apache Sling must be compiled with Java
-                                        6 or higher
+                                        7 or higher
                                     </message>
-                                    <version>1.6.0</version>
+                                    <version>1.7.0</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -328,7 +328,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-sling-plugin</artifactId>
-                    <version>2.1.2</version>
+                    <version>2.1.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
@@ -981,6 +981,25 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                                 <ignore />
                                             </action>
                                         </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>
+                                                    org.apache.avro
+                                                </groupId>
+                                                <artifactId>
+                                                    avro-maven-plugin
+                                                </artifactId>
+                                                <versionRange>
+                                                    [1.7.7,)
+                                                </versionRange>
+                                                <goals>
+                                                    <goal>schema</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
                                     </pluginExecutions>
                                 </lifecycleMappingMetadata>
                             </configuration>
@@ -1099,6 +1118,13 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>biz.aQute.bndlib</artifactId>
                 <version>3.0.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.1</version>
                 <scope>provided</scope>
             </dependency>
 

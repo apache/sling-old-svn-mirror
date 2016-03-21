@@ -26,7 +26,7 @@ import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import javax.annotation.Nonnull;
 
 public abstract class DistributionQueueWrapper implements DistributionQueue {
-    protected final DistributionQueue wrappedQueue;
+    private final DistributionQueue wrappedQueue;
 
     public DistributionQueueWrapper(DistributionQueue wrappedQueue) {
 

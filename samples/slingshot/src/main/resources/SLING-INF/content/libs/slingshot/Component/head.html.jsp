@@ -17,15 +17,9 @@
     under the License.
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.sample.slingshot.SlingshotConstants" %><%
-%><link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-ui.min.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-ui.structure.min.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-ui.theme.min.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/metro-bootstrap.min.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-breadcrumbs.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/iconFont.css" rel="stylesheet"/>
-  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/slingshot.css" rel="stylesheet"/>
-  <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery.js" type="text/javascript" ></script>
-  <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-ui.min.js" type="text/javascript" ></script>
-  <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/metro.min.js" type="text/javascript" ></script>
-  <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-breadcrumbs.js" type="text/javascript" ></script>
-  <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/slingshot.js"> type="text/javascript" </script>  
+%><meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/bootstrap.min.css" rel="stylesheet">
+  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/slingshot.css" rel="stylesheet">

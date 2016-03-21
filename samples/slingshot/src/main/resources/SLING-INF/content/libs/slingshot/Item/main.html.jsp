@@ -26,27 +26,21 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><%
-    final RatingsService ratingsService = sling.getService(RatingsService.class);
     final ValueMap attr = resource.getValueMap();
     final String itemTitle = attr.get(SlingshotConstants.PROPERTY_TITLE, resource.getName());
     
     String imagePath = null;
-    int count = 0;
     final Resource imagesResource = resource.getResourceResolver().getResource(resource, "images");
     if ( imagesResource != null ) {
         for(final Resource imgResource : imagesResource.getChildren()) {
             if ( imagePath == null ) {
                 imagePath = imgResource.getPath();
+                break;
             }
-            count++;
         }
     }
-%><div class="tile double ui-slingshot-clickable" data-link="<%= request.getContextPath() %><%=resource.getPath()%>.html">
-    <div class="tile-content image">
-        <img src="<%= request.getContextPath() %><%=imagePath%>"/>
-    </div>
-    <div class="brand">
-        <span class="label fg-white"><%= ResponseUtil.escapeXml(itemTitle) %></span>
-        <span class="badge bg-orange"><%= ratingsService.getRating(resource) %></span>
-    </div>
-</div>
+%><div class="col-md-4">
+          <h2><%= ResponseUtil.escapeXml(itemTitle) %></h2>
+          <img class="img-responsive" style="padding-top: 5px" src="<%= request.getContextPath() %><%=imagePath%>"/>
+          <p><a class="btn btn-default" href="<%= request.getContextPath() %><%=resource.getPath()%>.html" role="button">View details &raquo;</a></p>
+        </div>

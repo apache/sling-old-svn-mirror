@@ -22,7 +22,7 @@
                   org.apache.sling.sample.slingshot.SlingshotConstants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-%><div class="metro ui-slingshot-content">
+%><div class="container">
  <%
      int i = 0;
      final Iterator<Resource> fi = resource.listChildren();

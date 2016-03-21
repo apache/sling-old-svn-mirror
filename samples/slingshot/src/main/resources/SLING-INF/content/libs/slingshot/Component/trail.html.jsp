@@ -26,9 +26,8 @@
                   org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-%><ul id="breadcrumbs" data-home="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/public/<%= request.getRemoteUser() %>.html">
-  <li class="ui-slingshot-clickable" data-link="<%= request.getContextPath() %>/system/sling/logout.html?resource=<%= SlingshotConstants.APP_ROOT_PATH %>.html">Logout</li>
-  <%
+    final boolean isUser = request.getRemoteUser() != null && !request.getRemoteUser().equals("anonymous");
+
     final ValueMap attributes = resource.getValueMap();
     // let's create the trail
     final List<Object[]> parents = new ArrayList<Object[]>();
@@ -50,11 +49,38 @@
             }
         } while ( continueProcessing);
     }  
+%><nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Slingshot</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav"><%
     for(int k=parents.size()-1;k>=0;k--) {
       %>
-        <li class="ui-slingshot-clickable" data-link="<%= parents.get(k)[0] %>.html"><%= parents.get(k)[1] %></li>
+        <li><a href="<%= parents.get(k)[0] %>.html"><%= parents.get(k)[1] %></a></li>
       <%
     }
-  %>
-</ul>
-
+            %>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+          <% if ( isUser ) {
+          %>
+            <li><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/users/<%= request.getRemoteUser() %>.html"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+            <li><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/users/<%= request.getRemoteUser() %>.html"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a></li>
+            <li><a href="<%= request.getContextPath() %>/system/sling/logout.html?resource=<%= SlingshotConstants.APP_ROOT_PATH %>.html"><span class="glyphicon glyphicon-off" aria-hidden="true"></span></a></li>
+          <%
+          } else { %>
+          <li><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>.html"><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span></a></li>
+          <%
+          } %>
+          </ul>
+        </div>
+      </div>
+    </nav>
