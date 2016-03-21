@@ -29,15 +29,15 @@
 
     <artifactId>org.apache.sling.discovery.commons</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.12</version>
+    <version>1.0.13-SNAPSHOT</version>
 
     <name>Apache Sling Discovery Commons</name>
     <description>Common services related to Sling Discovery</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.commons-1.0.12</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.commons-1.0.12</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.discovery.commons-1.0.12</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/commons</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/commons</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/discovery/commons</url>
     </scm>
 
     <build>
