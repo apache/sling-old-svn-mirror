@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 
 public class DummyScheduler implements Scheduler {
@@ -104,6 +105,41 @@ public class DummyScheduler implements Scheduler {
 
     public void failMode() {
         failMode = true;
+    }
+
+    @Override
+    public boolean schedule(Object job, ScheduleOptions options) {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public boolean unschedule(String jobName) {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public ScheduleOptions NOW() {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public ScheduleOptions NOW(int times, long period) {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public ScheduleOptions AT(Date date) {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public ScheduleOptions AT(Date date, int times, long period) {
+        throw new IllegalStateException("not yet impl");
+    }
+
+    @Override
+    public ScheduleOptions EXPR(String expression) {
+        throw new IllegalStateException("not yet impl");
     }
 
 }
