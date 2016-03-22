@@ -38,6 +38,8 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     private volatile boolean isUsed = false;
 
+    private volatile long activationCount;
+
     public ResourceProviderHandler(final BundleContext bc, final ResourceProviderInfo info) {
         this.info = info;
         this.bundleContext = bc;
@@ -49,14 +51,26 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     @SuppressWarnings("unchecked")
     public boolean activate() {
-        this.provider = (ResourceProvider<Object>) this.bundleContext.getService(this.info.getServiceReference());
-        if ( this.provider != null ) {
-            this.provider.start(context);
+        this.activationCount++;
+        if ( this.provider == null ) {
+            this.provider = (ResourceProvider<Object>) this.bundleContext.getService(this.info.getServiceReference());
+            if ( this.provider != null ) {
+                this.provider.start(context);
+            }
         }
         return this.provider != null;
     }
 
-    /**C
+    public void deactivate() {
+        if ( this.provider != null ) {
+            this.provider.stop();
+            this.provider = null;
+            this.context.update(null, null);
+            this.bundleContext.ungetService(this.info.getServiceReference());
+        }
+    }
+
+    /**
      * Clear all references.
      */
     public void dispose() {
@@ -64,6 +78,10 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
         this.bundleContext = null;
         this.context = null;
         this.isUsed = false;
+    }
+
+    public long getActivationCount() {
+        return this.activationCount;
     }
 
     public ResourceProvider<Object> getResourceProvider() {
@@ -77,15 +95,6 @@ public class ResourceProviderHandler implements Comparable<ResourceProviderHandl
 
     public boolean isUsed() {
         return this.isUsed;
-    }
-
-    public void deactivate() {
-        if ( this.provider != null ) {
-            this.provider.stop();
-            this.provider = null;
-            this.context.update(null, null);
-            this.bundleContext.ungetService(this.info.getServiceReference());
-        }
     }
 
     @Override
