@@ -65,6 +65,7 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
+                <version>0.12.0-SNAPSHOT</version>
                 <configuration>
                     <excludes>
                         <exclude>src/main/resources/SLING-INF/content/**/*.json</exclude>
@@ -72,7 +73,6 @@
                         <exclude>src/main/resources/SLING-INF/content/slingshot/resources/js/*.js</exclude>
                         <exclude>src/main/resources/SLING-INF/content/slingshot/resources/fonts/*.svg</exclude>
                         <exclude>src/test/resources/**.json</exclude>
-                        <exclude>**/*.woff2</exclude>
                     </excludes>
                 </configuration>
             </plugin>
