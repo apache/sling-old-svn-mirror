@@ -257,22 +257,24 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                     storage = null;
 
                     final List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
-                    final ResourceProviderHandler firstHandler = matchingHandlers.get(0);
-                    boolean doActivateNext = firstHandler.getInfo() == info;
+                    if ( matchingHandlers != null && !matchingHandlers.isEmpty() ) {
+                        final ResourceProviderHandler firstHandler = matchingHandlers.get(0);
+                        boolean doActivateNext = firstHandler.getInfo() == info;
 
-                    if (removeHandlerByInfo(info, matchingHandlers)) {
-                        while (doActivateNext && !matchingHandlers.isEmpty()) {
-                            if (this.activate(matchingHandlers.get(0))) {
-                                doActivateNext = false;
-                                events.add(new ProviderEvent(true, matchingHandlers.get(0).getInfo()));
-                                providerAdded = true;
-                            } else {
-                                matchingHandlers.remove(0);
+                        if (removeHandlerByInfo(info, matchingHandlers)) {
+                            while (doActivateNext && !matchingHandlers.isEmpty()) {
+                                if (this.activate(matchingHandlers.get(0))) {
+                                    doActivateNext = false;
+                                    events.add(new ProviderEvent(true, matchingHandlers.get(0).getInfo()));
+                                    providerAdded = true;
+                                } else {
+                                    matchingHandlers.remove(0);
+                                }
                             }
                         }
-                    }
-                    if (matchingHandlers.isEmpty()) {
-                        this.handlers.remove(info.getPath());
+                        if (matchingHandlers.isEmpty()) {
+                            this.handlers.remove(info.getPath());
+                        }
                     }
                 }
                 if ( providerAdded && cl != null ) {
