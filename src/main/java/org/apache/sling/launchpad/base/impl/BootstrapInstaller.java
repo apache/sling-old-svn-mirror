@@ -488,6 +488,12 @@ class BootstrapInstaller {
                 logger.log(Logger.LOG_INFO, "Bundle "
                     + installedBundle.getSymbolicName()
                     + " updated from " + bundleJar);
+
+                // optionally set the start level
+                if (startLevel > 0) {
+                    startLevelService.setBundleStartLevel(installedBundle,
+                        startLevel);
+                }
             } catch (BundleException be) {
                 logger.log(Logger.LOG_ERROR, "Bundle update from "
                     + bundleJar + " failed", be);
@@ -568,7 +574,7 @@ class BootstrapInstaller {
     }
 
     private boolean isSystemBundleFragment(final Bundle installedBundle) {
-        final String fragmentHeader = (String) installedBundle.getHeaders().get(
+        final String fragmentHeader = installedBundle.getHeaders().get(
             Constants.FRAGMENT_HOST);
         return fragmentHeader != null
             && fragmentHeader.indexOf(Constants.EXTENSION_DIRECTIVE) > 0;
@@ -639,7 +645,7 @@ class BootstrapInstaller {
             Constants.BUNDLE_VERSION);
         Version newVersion = Version.parseVersion(versionProp);
 
-        String installedVersionProp = (String) installedBundle.getHeaders().get(
+        String installedVersionProp = installedBundle.getHeaders().get(
             Constants.BUNDLE_VERSION);
         Version installedVersion = Version.parseVersion(installedVersionProp);
 
@@ -675,7 +681,7 @@ class BootstrapInstaller {
      *         fails for some reason
      */
     private boolean isNewerSnapshot(final Bundle installedBundle, final Manifest manifest) {
-        String installedDate = (String) installedBundle.getHeaders().get(
+        String installedDate = installedBundle.getHeaders().get(
             BND_LAST_MODIFIED_HEADER);
         String toBeInstalledDate = manifest.getMainAttributes().getValue(
             BND_LAST_MODIFIED_HEADER);
