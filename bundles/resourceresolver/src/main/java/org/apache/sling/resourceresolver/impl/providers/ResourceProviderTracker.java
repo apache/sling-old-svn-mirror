@@ -165,7 +165,6 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
            final List<ProviderEvent> events = new ArrayList<ResourceProviderTracker.ProviderEvent>();
            boolean providerAdded = false;
            ResourceProviderHandler deactivateHandler = null;
-           long deactivateHandlerCount = 0;
 
            synchronized ( this.handlers ) {
                List<ResourceProviderHandler> matchingHandlers = this.handlers.get(info.getPath());
@@ -187,7 +186,6 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                        events.add(new ProviderEvent(true, info));
                        if ( matchingHandlers.size() > 1 ) {
                            deactivateHandler = matchingHandlers.get(1);
-                           deactivateHandlerCount = deactivateHandler.getActivationCount();
                        }
                        storage = null;
                    }
@@ -206,11 +204,9 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                                        deactivateHandler.isUsed());
                }
                synchronized ( this.handlers ) {
-                   if ( deactivateHandlerCount == deactivateHandler.getActivationCount() ) {
-                       this.deactivate(deactivateHandler);
-                       events.add(new ProviderEvent(false, handlerInfo));
-                       storage = null;
-                   }
+                   this.deactivate(deactivateHandler);
+                   events.add(new ProviderEvent(false, handlerInfo));
+                   storage = null;
                }
            }
            this.postEvents(events);
