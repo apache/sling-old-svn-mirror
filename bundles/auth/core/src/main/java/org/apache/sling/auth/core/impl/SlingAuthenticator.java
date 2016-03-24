@@ -1414,7 +1414,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // redirect to there
         try {
-            response.sendRedirect(request.getContextPath() + target);
+            response.sendRedirect(target);
         } catch (IOException e) {
             log.error("Failed to redirect to the page: " + target, e);
         }
