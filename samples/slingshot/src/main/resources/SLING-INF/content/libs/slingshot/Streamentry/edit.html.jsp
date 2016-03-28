@@ -40,7 +40,7 @@
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
   <body class="ui-slingshot-main">
-    <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
+    <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
     <h1><%= title %></h1>
     <img src="<%= request.getContextPath() %><%= imagePath %>"/>
     <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>">

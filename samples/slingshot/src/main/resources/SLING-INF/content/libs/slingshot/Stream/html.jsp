@@ -16,24 +16,28 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="org.apache.sling.api.resource.Resource,
-                org.apache.sling.api.resource.ResourceUtil,
+%><%@page import="org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.sample.slingshot.SlingshotConstants,
-                org.apache.sling.api.request.ResponseUtil" %><%
+                org.apache.sling.api.request.ResponseUtil,
+                org.apache.sling.sample.slingshot.model.Stream" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-%><%
-    final ValueMap attr = resource.getValueMap();
-    final String itemTitle = attr.get(SlingshotConstants.PROPERTY_TITLE, resource.getName());
-    
-    int count = 0;
-    for(final Resource current : resource.getChildren()) {
-        count++;
-    }
-%>
-<div class="col-md-4">
-   <h2><%= ResponseUtil.escapeXml(itemTitle) %></h2>
-   <!--  <img class="img-responsive" style="padding-top: 5px" src="<%= request.getContextPath() %>"/>  -->
-   <p><a class="btn btn-default" href="<%= request.getContextPath() %><%=resource.getPath()%>.html" role="button">View details &raquo;</a> <span class="badge"><%= count %></span></p>
-</div>
+
+    final Stream stream = new Stream(resource);
+%><html>
+  <head>
+    <title><%= ResponseUtil.escapeXml(stream.getInfo().getTitle()) %></title>
+    <sling:include resource="<%= resource %>" replaceSelectors="head"/>
+  </head>
+  <body>
+    <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
+    <div class="jumbotron">
+      <div class="container">
+        <h1><%= ResponseUtil.escapeXml(stream.getInfo().getTitle()) %></h1>
+        <p><%= ResponseUtil.escapeXml(stream.getInfo().getDescription()) %></p>
+      </div>
+    </div>
+    <sling:include resource="<%= resource %>" replaceSelectors="itemlist"/>
+    <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
+</body>
+</html>

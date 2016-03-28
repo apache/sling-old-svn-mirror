@@ -19,7 +19,7 @@
 %><%@page import="java.util.Iterator,
                   java.util.List,
                   org.apache.sling.api.resource.Resource,
-                  org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+                  org.apache.sling.sample.slingshot.model.Stream" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="container">
@@ -28,7 +28,7 @@
      final Iterator<Resource> fi = resource.listChildren();
      while ( fi.hasNext()) {
          final Resource current = fi.next();
-         if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_CATEGORY)) {
+         if ( current.isResourceType(Stream.RESOURCETYPE)) {
              %>
              <sling:include resource="<%= current %>" replaceSelectors="user"/>
              <%

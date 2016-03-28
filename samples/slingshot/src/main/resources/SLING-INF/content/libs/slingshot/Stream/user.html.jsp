@@ -16,36 +16,18 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="java.util.Iterator,
-                  java.util.List,
-                  org.apache.sling.api.resource.Resource,
-                  org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+%><%@page import="org.apache.sling.api.resource.Resource,
+                org.apache.sling.api.resource.ResourceUtil,
+                org.apache.sling.api.resource.ValueMap,
+                org.apache.sling.sample.slingshot.model.Stream,
+                org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-%><div class="container">
- <%
-     boolean openedRow = false;
-     int i = 0;
-     final Iterator<Resource> fi = resource.listChildren();
-     while ( fi.hasNext()) {
-         final Resource current = fi.next();
-         if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_ITEM)) {
-             if ( !openedRow ) {
-                 openedRow = true;
-                 %><div class="row"><%
-             }
-             %>
-             <sling:include resource="<%= current %>" replaceSelectors="main"/>
-             <%
-             i++;
-             if ( i % 3 == 0 ) {
-                 openedRow = false;
-                 %></div><%
-             }
-         }
-     } 
-     if ( openedRow ) {
-         %></div><%
-     }
-  %>
+%><%
+    final Stream stream = new Stream(resource);
+%>
+<div class="col-md-4">
+   <h2><%= ResponseUtil.escapeXml(stream.getInfo().getTitle()) %></h2>
+   <!--  <img class="img-responsive" style="padding-top: 5px" src="<%= request.getContextPath() %>"/>  -->
+   <p><a class="btn btn-default" href="<%= request.getContextPath() %><%=resource.getPath()%>.html" role="button">View details &raquo;</a> <span class="badge"><%= stream.getInfo().getEntryCount() %></span></p>
 </div>

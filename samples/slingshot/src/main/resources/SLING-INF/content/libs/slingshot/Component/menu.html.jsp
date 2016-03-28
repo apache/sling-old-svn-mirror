@@ -26,29 +26,6 @@
                   org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-    final boolean isUser = request.getRemoteUser() != null && !request.getRemoteUser().equals("anonymous");
-
-    final ValueMap attributes = resource.getValueMap();
-    // let's create the trail
-    final List<Object[]> parents = new ArrayList<Object[]>();
-    if ( resource.getPath().startsWith(SlingshotConstants.APP_ROOT_PATH) && !resource.isResourceType(SlingshotConstants.RESOURCETYPE_USER)) {
-        Resource parent = resource.getParent();
-        String prefix = "../";
-        boolean continueProcessing = true;
-        do {
-            if ( !parent.isResourceType(SlingshotConstants.RESOURCETYPE_CONTENT) ) {
-                final ValueMap parentAttr = parent.getValueMap();
-                final String parentName = parent.getName();
-                parents.add(new Object[] {prefix + parentName, ResponseUtil.escapeXml(parentAttr.get(SlingshotConstants.PROPERTY_TITLE, parentName))});
-            }
-            if ( parent.isResourceType(SlingshotConstants.RESOURCETYPE_USER) ) {
-                continueProcessing = false;
-            } else {
-                parent = parent.getParent();
-                prefix = prefix + "../";
-            }
-        } while ( continueProcessing);
-    }  
 %><nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -61,16 +38,11 @@
           <a class="navbar-brand" href="#">Slingshot</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav"><%
-    for(int k=parents.size()-1;k>=0;k--) {
-      %>
-        <li><a href="<%= parents.get(k)[0] %>.html"><%= parents.get(k)[1] %></a></li>
-      <%
-    }
-            %>
+          <ul class="nav navbar-nav">
+            <li><a href="timelinenotimplemented.html">Timeline</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-          <% if ( isUser ) {
+          <% if ( SlingshotUtil.isUser(slingRequest) ) {
           %>
             <li><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/users/<%= request.getRemoteUser() %>.html"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
             <li><a href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/users/<%= request.getRemoteUser() %>.html"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a></li>

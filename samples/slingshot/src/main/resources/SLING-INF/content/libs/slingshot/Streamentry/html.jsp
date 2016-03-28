@@ -29,7 +29,7 @@
     final RatingsService ratingsService = sling.getService(RatingsService.class);
     final ValueMap attributes = resource.getValueMap();
     final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
-    final String categoryName = ResponseUtil.escapeXml(resource.getParent().getValueMap().get(SlingshotConstants.PROPERTY_TITLE, resource.getParent().getName()));
+    final String streamName = ResponseUtil.escapeXml(resource.getParent().getValueMap().get(SlingshotConstants.PROPERTY_TITLE, resource.getParent().getName()));
 
     String imagePath = null;
     final Resource imagesResource = resource.getResourceResolver().getResource(resource, "images");
@@ -45,7 +45,7 @@
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
   <body>
-    <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
+    <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
     <div class="jumbotron">
       <div class="container">
         <h1><%= title %></h1>

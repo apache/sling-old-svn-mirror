@@ -14,17 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.sample.slingshot;
+package org.apache.sling.sample.slingshot.model;
 
+import org.apache.sling.api.resource.Resource;
 
-public abstract class StreamInfo {
+public class User {
 
-    /** The resource type for a stream info. */
-    public static final String RESOURCETYPE = "slingshot/Streaminfo";
+    /** The resource type for a user. */
+    public static final String RESOURCETYPE = "slingshot/User";
 
-    public static final String PROPERTY_TITLE = "title";
+    private final Resource resource;
 
-    public static final String PROPERTY_DESCRIPTION = "description";
+    private volatile UserInfo info;
 
-    public static final String PATH_PHOTO = "photo";
+    public User(final Resource resource) {
+        this.resource = resource;
+    }
+
+    public UserInfo getInfo() {
+        if ( info == null ) {
+            info = new UserInfo(this.resource.getChild("info"));
+        }
+        return info;
+    }
 }

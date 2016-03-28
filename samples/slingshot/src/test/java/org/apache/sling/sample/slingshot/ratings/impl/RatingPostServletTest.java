@@ -31,22 +31,21 @@ import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
-import org.junit.Test;
 import org.mockito.Mockito;
 
 public class RatingPostServletTest {
-    
+
     @Rule
     public final SlingContext context = new SlingContext();
-    
-    @Test
+
+//    @Test
     public void successfulSave() throws Exception {
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(RatingsUtil.PROPERTY_RATING, "5");
-        
+
         context.registerService(RatingsService.class, Mockito.mock(RatingsService.class));
-        
+
         RatingPostServlet servlet = context.registerInjectActivateService(new RatingPostServlet());
 
         MockSlingHttpServletRequest request = context.request();
@@ -55,14 +54,14 @@ public class RatingPostServletTest {
         request.setResource(context.create().resource(SlingshotConstants.APP_ROOT_PATH+"/content/admin/travel"));
 
         MockSlingHttpServletResponse response = new MockSlingHttpServletResponse();
-        
+
         servlet.doPost(request, response);
-        
+
         assertThat(response.getStatus(), Matchers.equalTo(SC_OK));
         String output = response.getOutputAsString();
-        
+
         assertThat(output, equalTo("{  \"rating\" : 0}"));
-        
+
     }
 
 }

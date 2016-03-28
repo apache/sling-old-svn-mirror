@@ -35,44 +35,44 @@ public class SlingshotUtilTest {
     public void loadData() {
         context.load().json("/slingshot.json", SlingshotConstants.APP_ROOT_PATH);
     }
-    
+
     @Test
     public void getUserId_deepPath() {
-        
-        Resource resource = context.resourceResolver().getResource("/slingshot/users/admin/content");
-        
+
+        Resource resource = context.resourceResolver().getResource("/slingshot/users/admin/hobby");
+
         assertThat(SlingshotUtil.getUserId(resource), equalTo("admin"));
     }
 
     @Test
     public void getUserId_exactPath() {
-        
+
         Resource resource = context.resourceResolver().getResource("/slingshot/users/admin");
-        
+
         assertThat(SlingshotUtil.getUserId(resource), equalTo("admin"));
     }
-    
+
     @Test
     public void getUserId_noMatch() {
-        
+
         Resource resource = context.resourceResolver().getResource("/slingshot/users");
-        
+
         assertThat(SlingshotUtil.getUserId(resource), nullValue());
     }
-    
+
     @Test
     public void getContentPath_match() {
-        
-        Resource resource = context.resourceResolver().getResource("/slingshot/users/admin/content/hobby");
-        
+
+        Resource resource = context.resourceResolver().getResource("/slingshot/users/admin/hobby");
+
         assertThat(SlingshotUtil.getContentPath(resource), equalTo("/hobby"));
     }
-    
+
     @Test
     public void getContentPath_noMatch() {
-        
+
         Resource resource = context.resourceResolver().getResource("/slingshot/users/admin");
-        
+
         assertThat(SlingshotUtil.getContentPath(resource), nullValue());
     }
 }
