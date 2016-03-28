@@ -26,7 +26,7 @@ public interface CommentsService {
 
     /**
      * Return the path to the comments resource for a resource.
-     * @param resource The content resource, this is usually an item.
+     * @param resource The content resource, this is usually an entry.
      * @return The path to the comments resource or {@code null} if
      *         the passed in content resource is not part of
      *         Slingshot.

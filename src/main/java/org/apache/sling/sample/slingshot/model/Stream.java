@@ -16,5 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@org.osgi.annotation.versioning.Version("1.0")
-package org.apache.sling.sample.slingshot.comments;
+package org.apache.sling.sample.slingshot.model;
+
+import org.apache.sling.api.resource.Resource;
+
+public class Stream {
+
+    /** The resource type for a stream. */
+    public static final String RESOURCETYPE = "slingshot/Stream";
+
+    private final Resource resource;
+
+    private volatile StreamInfo info;
+
+    public Stream(final Resource resource) {
+        this.resource = resource;
+    }
+
+    public StreamInfo getInfo() {
+        if ( info == null ) {
+            info = new StreamInfo(this.resource.getChild("info"));
+        }
+        return info;
+    }
+}

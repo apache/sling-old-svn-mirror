@@ -26,7 +26,7 @@ public interface RatingsService {
 
     /**
      * Return the path to the ratings resource for a resource.
-     * @param resource The content resource, this is usually an item.
+     * @param resource The content resource, this is usually an entry.
      * @return The path to the ratings resource or {@code null} if
      *         the passed in content resource is not part of
      *         Slingshot.
@@ -36,7 +36,7 @@ public interface RatingsService {
 
     /**
      * Get the overall rating for a resource.
-     * @param resource The content resource, this is usually an item.
+     * @param resource The content resource, this is usually an entry.
      * @return The rating or {@code 0} if
      *         the passed in content resource is not part of
      *         Slingshot.
@@ -45,7 +45,7 @@ public interface RatingsService {
 
     /**
      * Get the rating of a user for a resource.
-     * @param resource The content resource, this is usually an item.
+     * @param resource The content resource, this is usually an entry.
      * @param userId The user id
      * @return The rating or {@code 0} if
      *         the passed in content resource is not part of
@@ -55,7 +55,7 @@ public interface RatingsService {
 
     /**
      * Set the rating of a user for a resource.
-     * @param resource The content resource, this is usually an item.
+     * @param resource The content resource, this is usually an entry.
      * @param userId The user id
      * @return The rating or {@code 0} if
      *         the passed in content resource is not part of

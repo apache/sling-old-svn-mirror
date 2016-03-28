@@ -14,10 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.sample.slingshot;
+package org.apache.sling.sample.slingshot.model;
 
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 
-public abstract class UserInfo {
+public class UserInfo {
 
     /** The resource type for a user info. */
     public static final String RESOURCETYPE = "slingshot/Userinfo";
@@ -27,4 +29,36 @@ public abstract class UserInfo {
     public static final String PROPERTY_ABOUT = "about";
 
     public static final String PATH_PHOTO = "photo";
+
+    private final Resource resource;
+
+    private volatile ValueMap properties;
+
+    public UserInfo(final Resource resource) {
+        this.resource = resource;
+    }
+
+    private ValueMap getProperties() {
+        if ( this.properties == null ) {
+            this.properties = resource.getValueMap();
+        }
+        return this.properties;
+    }
+
+    public String getName() {
+        String value = this.getProperties().get(PROPERTY_NAME, String.class);
+        if ( value == null ) {
+            if ( resource != null ) {
+                value = resource.getParent().getName();
+            } else {
+                value = "No Title";
+            }
+        }
+        return value;
+    }
+
+    public String getAbout() {
+        final String value = this.getProperties().get(PROPERTY_ABOUT, "About...");
+        return value;
+    }
 }

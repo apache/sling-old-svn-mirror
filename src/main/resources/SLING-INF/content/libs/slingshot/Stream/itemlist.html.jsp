@@ -19,20 +19,33 @@
 %><%@page import="java.util.Iterator,
                   java.util.List,
                   org.apache.sling.api.resource.Resource,
-                  org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+                  org.apache.sling.sample.slingshot.model.StreamEntry" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="container">
  <%
+     boolean openedRow = false;
      int i = 0;
      final Iterator<Resource> fi = resource.listChildren();
      while ( fi.hasNext()) {
          final Resource current = fi.next();
-         if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_CATEGORY)) {
+         if ( current.isResourceType(StreamEntry.RESOURCETYPE)) {
+             if ( !openedRow ) {
+                 openedRow = true;
+                 %><div class="row"><%
+             }
              %>
-             <sling:include resource="<%= current %>" replaceSelectors="user"/>
+             <sling:include resource="<%= current %>" replaceSelectors="stream"/>
              <%
+             i++;
+             if ( i % 3 == 0 ) {
+                 openedRow = false;
+                 %></div><%
+             }
          }
      } 
+     if ( openedRow ) {
+         %></div><%
+     }
   %>
 </div>

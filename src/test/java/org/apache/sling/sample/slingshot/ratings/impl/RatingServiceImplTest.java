@@ -27,33 +27,33 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class RatingServiceImplTest {
-    
+
     @Rule
     public SlingContext context = new SlingContext();
-    
+
     @Test
     public void getRatingsResourcePath() {
-        
+
         context.load().json("/slingshot.json", SlingshotConstants.APP_ROOT_PATH);
-        
+
         RatingsServiceImpl service = new RatingsServiceImpl();
-        Resource resource = context.resourceResolver().getResource(SlingshotConstants.APP_ROOT_PATH+"/users/admin/content/hobby");
-        
+        Resource resource = context.resourceResolver().getResource(SlingshotConstants.APP_ROOT_PATH+"/users/admin/hobby");
+
         String ratingsResourcePath = service.getRatingsResourcePath(resource);
         assertThat(ratingsResourcePath, equalTo("/slingshot/users/admin/ugc/ratings/hobby"));
     }
 
     @Test
     public void getRatingsResourcePath_missing() {
-        
+
         context.load().json("/slingshot.json", SlingshotConstants.APP_ROOT_PATH);
-        
+
         RatingsServiceImpl service = new RatingsServiceImpl();
         Resource resource = context.resourceResolver().getResource(SlingshotConstants.APP_ROOT_PATH+"/users/admin");
-        
+
         String ratingsResourcePath = service.getRatingsResourcePath(resource);
         assertThat(ratingsResourcePath, nullValue());
     }
-    
+
 
 }

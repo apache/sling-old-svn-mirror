@@ -1,6 +1,4 @@
 {
     "jcr:primaryType":"sling:Folder",
-    "sling:resourceType":"slingshot/Category",
-    "title":"Travel",
-    "description":"Stuff related to travel."
+    "sling:resourceType":"slingshot/Stream"
 }

@@ -1,6 +1,6 @@
 {
     "jcr:primaryType":"sling:Folder",
-    "sling:resourceType":"slingshot/Stream",
+    "sling:resourceType":"slingshot/Streaminfo",
     "title":"Places",
     "description":"Mysterious places around the globe."
 }

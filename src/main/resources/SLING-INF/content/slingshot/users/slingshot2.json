@@ -1,6 +1,4 @@
 {
     "jcr:primaryType":"sling:Folder",
-    "sling:resourceType":"slingshot/User",
-    "description":"This is the user space of slingshot2!",
-    "title":"The Truth Is Out There"
+    "sling:resourceType":"slingshot/User"
 }
