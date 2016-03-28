@@ -19,7 +19,7 @@ package org.apache.sling.sample.slingshot.model;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 
-public class StreamInfo {
+public class StreamInfo extends PropertiesSupport {
 
     /** The resource type for a stream info. */
     public static final String RESOURCETYPE = "slingshot/Streaminfo";
@@ -30,21 +30,10 @@ public class StreamInfo {
 
     public static final String PATH_PHOTO = "photo";
 
-    private final Resource resource;
-
-    private volatile ValueMap properties;
-
     private volatile long entryCount = -1;
 
     public StreamInfo(final Resource resource) {
-        this.resource = resource;
-    }
-
-    private ValueMap getProperties() {
-        if ( this.properties == null ) {
-            this.properties = resource.getValueMap();
-        }
-        return this.properties;
+        super(resource);
     }
 
     public String getTitle() {

@@ -19,24 +19,28 @@
 package org.apache.sling.sample.slingshot.model;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 
-public class Stream {
+public abstract class PropertiesSupport {
 
-    /** The resource type for a stream. */
-    public static final String RESOURCETYPE = "slingshot/Stream";
+    protected final Resource resource;
 
-    private final Resource resource;
+    private volatile ValueMap properties;
 
-    private volatile StreamInfo info;
-
-    public Stream(final Resource resource) {
+    public PropertiesSupport(final Resource resource) {
         this.resource = resource;
     }
 
-    public StreamInfo getInfo() {
-        if ( info == null ) {
-            info = new StreamInfo(this.resource == null ? null : this.resource.getChild("info"));
+    protected ValueMap getProperties() {
+        if ( this.properties == null ) {
+            if ( this.resource == null ) {
+                this.properties = ResourceUtil.getValueMap(null);
+            } else {
+                this.properties = resource.getValueMap();
+            }
         }
-        return info;
+        return this.properties;
     }
+
 }

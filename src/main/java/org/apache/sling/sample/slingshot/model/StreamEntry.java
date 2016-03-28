@@ -20,14 +20,58 @@ package org.apache.sling.sample.slingshot.model;
 
 import org.apache.sling.api.resource.Resource;
 
-public class StreamEntry {
+public class StreamEntry extends PropertiesSupport {
 
     /** The resource type for a stream entry. */
     public static final String RESOURCETYPE = "slingshot/Streamentry";
 
-    private final Resource resource;
+    public static final String PROPERTY_TITLE = "title";
+
+    public static final String PROPERTY_DESCRIPTION = "description";
+
+    public static final String PROPERTY_LOCATION = "location";
+
+    public static final String PROPERTY_TAGS = "tags";
+
+    private volatile Stream stream;
 
     public StreamEntry(final Resource resource) {
-        this.resource = resource;
+        super(resource);
+    }
+
+    public String getTitle() {
+        String value = this.getProperties().get(PROPERTY_TITLE, String.class);
+        if ( value == null ) {
+            if ( resource != null ) {
+                value = resource.getName();
+            } else {
+                value = "No Title";
+            }
+        }
+        return value;
+    }
+
+    public String getDescription() {
+        final String value = this.getProperties().get(PROPERTY_DESCRIPTION, "");
+        return value;
+    }
+
+    public Stream getStream() {
+        if ( this.stream == null ) {
+            if ( resource == null ) {
+                stream = new Stream(null);
+            } else {
+                Resource rsrc = this.resource.getParent();
+                while (rsrc != null && !rsrc.isResourceType(Stream.RESOURCETYPE) ) {
+                    rsrc = rsrc.getParent();
+                }
+                stream = new Stream(rsrc);
+            }
+        }
+        return stream;
+    }
+
+    public String getLocation() {
+        return this.getProperties().get(PROPERTY_LOCATION, String.class);
     }
 }
