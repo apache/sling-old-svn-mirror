@@ -31,7 +31,10 @@ body.login {
   -o-background-size: cover;
   background-size: cover;
 }
-
+.jumbotron {
+    padding-bottom: 10px;
+    padding-top: 8px;
+}
 .form-signin {
   max-width: 330px;
   padding: 15px;

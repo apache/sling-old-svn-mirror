@@ -20,16 +20,15 @@
                   org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.api.resource.ValueMap,
                   org.apache.sling.api.request.ResponseUtil,
-                  org.apache.sling.sample.slingshot.SlingshotConstants,
+                  org.apache.sling.sample.slingshot.model.StreamEntry,
                   org.apache.sling.sample.slingshot.SlingshotUtil,
                   org.apache.sling.sample.slingshot.ratings.RatingsService,
                   org.apache.sling.sample.slingshot.ratings.RatingsUtil"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
+    final StreamEntry entry = new StreamEntry(resource);
+
     final RatingsService ratingsService = sling.getService(RatingsService.class);
-    final ValueMap attributes = resource.getValueMap();
-    final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
-    final String streamName = ResponseUtil.escapeXml(resource.getParent().getValueMap().get(SlingshotConstants.PROPERTY_TITLE, resource.getParent().getName()));
 
     String imagePath = null;
     final Resource imagesResource = resource.getResourceResolver().getResource(resource, "images");
@@ -41,35 +40,24 @@
     }
 %><html>
   <head>
-    <title><%= title %></title>
+    <title><%= ResponseUtil.escapeXml(entry.getTitle()) %></title>
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
   <body>
     <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
     <div class="jumbotron">
       <div class="container">
-        <h1><%= title %></h1>
-        <p>Explore the world of bla....</p>
+        <h1><%= ResponseUtil.escapeXml(entry.getStream().getInfo().getTitle()) %></h1>
+        <p><%= ResponseUtil.escapeXml(entry.getStream().getInfo().getDescription()) %></p>
       </div>
     </div>
     <div class="container">
-    <ul class="nav nav-tabs">
-      <li role="presentation" class="active"><a href="#">Home</a></li>
-      <li role="presentation"><a href="#">Comments</a></li>
-      <li role="presentation"><a href="#">Edit</a></li>
-    </ul>
-        <img class="img-responsive center-block" src="<%= request.getContextPath() %><%= imagePath %>"/>
-      <div style="width:30%; float:left; padding:15px; display:block;">
-        <p><%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_DESCRIPTION, ""))%></p>
-        <% if ( attributes.get(SlingshotConstants.PROPERTY_LOCATION) != null ) { %>
-            <p>Location</p>
-            <p><%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_LOCATION, ""))%></p>
-        <% } %>
-        <% if ( slingRequest.getRemoteUser() != null && slingRequest.getRemoteUser().equals(SlingshotUtil.getUserId(resource)) )  { %>
-        <button class="ui-button ui-form-button ui-slingshot-clickable" 
-                data-link="<%= request.getContextPath() %><%=resource.getName() %>.edit.html" type="button">Edit</button>
-        <% } %>
-        <div class="metro">
+      <h1><%= ResponseUtil.escapeXml(entry.getTitle()) %></h1>
+      <div class="row">
+        <div class="col-xs-12 col-md-8">
+           <img class="img-responsive center-block" src="<%= request.getContextPath() %><%= imagePath %>"/>
+        </div>
+        <div class="col-xs-6 col-md-4">
           <div id="rating" 
                data-score-hint="Rating: " 
                data-show-score="true" 
@@ -82,8 +70,9 @@
                <span class="score-hint">Rating: <%= ratingsService.getRating(resource) %></span>
           </div>
           <div class="fg-green rating active" id="own_rating" style="height: auto;">
-          <ul><li title="bad" class="rated"></li><li title="poor"></li><li title="regular"></li><li title="good"></li><li title="gorgeous"></li></ul><span class="score-hint">Current score: <%= ratingsService.getRating(resource, request.getRemoteUser()) %></span></div>
-                    <script>
+            <ul><li title="bad" class="rated"></li><li title="poor"></li><li title="regular"></li><li title="good"></li><li title="gorgeous"></li></ul><span class="score-hint">Current score: <%= ratingsService.getRating(resource, request.getRemoteUser()) %></span>
+          </div>
+          <script>
                         $(function(){
                             $("#own_rating").rating({
                                 static: false,
@@ -93,17 +82,27 @@
                                 showScore: true,
                                 click: function(value, rating) {
                                     rating.rate(value);
-                                	$.post( "<%= resource.getName() %>.ratings", { <%= RatingsUtil.PROPERTY_RATING %> : value }, function( data ) {
-                                		  $("#rating").rating("rate", data.rating);
-                                		}, "json");
+                                    $.post( "<%= resource.getName() %>.ratings", { <%= RatingsUtil.PROPERTY_RATING %> : value }, function( data ) {
+                                          $("#rating").rating("rate", data.rating);
+                                        }, "json");
                                 }
                             });
                         });
-                    </script>
+          </script>
         </div>
       </div>
-    <hr/>
-    <sling:include resource="<%= resource %>" replaceSelectors="comments"/>
+      <div class="row">
+          <p><%=ResponseUtil.escapeXml(entry.getDescription())%></p>
+          <% if ( entry.getLocation() != null ) { %>
+            <p>Location</p>
+            <p><%=ResponseUtil.escapeXml(entry.getLocation())%></p>
+          <% } %>
+          <% if ( slingRequest.getRemoteUser() != null && slingRequest.getRemoteUser().equals(SlingshotUtil.getUserId(resource)) )  { %>
+          <button class="ui-button ui-form-button ui-slingshot-clickable" 
+                data-link="<%= request.getContextPath() %><%=resource.getName() %>.edit.html" type="button">Edit</button>
+          <% } %>
+      </div>
+      <sling:include resource="<%= resource %>" replaceSelectors="comments"/>
     </div>
     <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
   </body>
