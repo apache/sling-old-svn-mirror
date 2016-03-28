@@ -177,7 +177,7 @@ public class SlingAuthenticator implements Authenticator,
      * return <code>true</code>.
      */
     private static final String DEFAULT_AUTH_URI_SUFFIX = "/j_security_check";
-    
+
     /**
      * The name of the form submission parameter providing the new password of
      * the user (value is "j_newpassword").
@@ -431,6 +431,7 @@ public class SlingAuthenticator implements Authenticator,
      *         is assumed a response has been sent to the client and the request
      *         is terminated.
      */
+    @Override
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -516,6 +517,7 @@ public class SlingAuthenticator implements Authenticator,
      * @throws NoAuthenticationHandlerException If no authentication handler
      *             claims responsibility to authenticate the request.
      */
+    @Override
     public void login(HttpServletRequest request, HttpServletResponse response) {
 
         // ensure the response is not committed yet
@@ -575,6 +577,7 @@ public class SlingAuthenticator implements Authenticator,
      * {@link org.apache.sling.auth.core.spi.AuthenticationHandler}
      * authentication handlers.
      */
+    @Override
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
         // ensure the response is not committed yet
@@ -617,10 +620,12 @@ public class SlingAuthenticator implements Authenticator,
 
     // ---------- ServletRequestListener
 
+    @Override
     public void requestInitialized(ServletRequestEvent sre) {
         // don't care
     }
 
+    @Override
     public void requestDestroyed(ServletRequestEvent sre) {
         ServletRequest request = sre.getServletRequest();
         Object resolverAttr = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
@@ -959,7 +964,7 @@ public class SlingAuthenticator implements Authenticator,
                 processRequest = getAnonymousResolver(request, response, new AuthenticationInfo(null));
             } else {
                 // request authentication information and send 403 (Forbidden)
-                // if no handler can request authentication information.            
+                // if no handler can request authentication information.
 
                 AuthenticationHandler.FAILURE_REASON_CODES code = AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN;
                 String message = "User name and password do not match";
@@ -1409,12 +1414,12 @@ public class SlingAuthenticator implements Authenticator,
         String target = AuthUtil.getLoginResource(request, request.getContextPath());
         if (!AuthUtil.isRedirectValid(request, target)) {
             log.warn("redirectAfterLogout: Desired redirect target '{}' is invalid; redirecting to '/'", target);
-            target = "/";
+            target = request.getContextPath() + "/";
         }
 
         // redirect to there
         try {
-            response.sendRedirect(request.getContextPath() + target);
+            response.sendRedirect(target);
         } catch (IOException e) {
             log.error("Failed to redirect to the page: " + target, e);
         }
@@ -1539,6 +1544,7 @@ public class SlingAuthenticator implements Authenticator,
             this.authenticator = authenticator;
         }
 
+        @Override
         public void serviceChanged(final ServiceEvent event) {
             synchronized ( props ) {
                 // modification of service properties, unregistration of the
