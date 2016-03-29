@@ -40,7 +40,9 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.InitDelayingTopologyEventListener;
 import org.apache.sling.event.impl.TestUtil;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -207,6 +209,14 @@ public class JobManagerConfigurationTest {
         final JobManagerConfiguration config = new JobManagerConfiguration();
         TestUtil.setFieldValue(config, "scheduler", scheduler);
         ((AtomicBoolean)TestUtil.getFieldValue(config, "active")).set(true);
+        InitDelayingTopologyEventListener startupDelayListener = new InitDelayingTopologyEventListener(1, new TopologyEventListener() {
+            
+            @Override
+            public void handleTopologyEvent(TopologyEvent event) {
+                config.doHandleTopologyEvent(event);
+            }
+        }, scheduler);;
+        TestUtil.setFieldValue(config, "startupDelayListener", startupDelayListener);
 
         config.addListener(ccl);
         ccl.await();
