@@ -42,6 +42,8 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.discovery.commons.InitDelayingTopologyEventListener;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.Utility;
@@ -73,6 +75,11 @@ import org.slf4j.LoggerFactory;
               boolValue=JobManagerConfiguration.DEFAULT_LOG_DEPRECATION_WARNINGS,
               label="Deprecation Warnings",
               description="If this switch is enabled, deprecation warnings will be logged with the INFO level."),
+    @Property(name=JobManagerConfiguration.PROPERTY_STARTUP_DELAY,
+              longValue=JobManagerConfiguration.DEFAULT_STARTUP_DELAY,
+              label="Startup Delay",
+              description="Specify amount in seconds that job manager waits on startup before starting with job handling. "
+                        + "This can be used to allow enough time to restart a cluster before jobs are eventually reassigned."),
     @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
               value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
     @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
@@ -94,6 +101,9 @@ public class JobManagerConfiguration {
     /** Default background load delay. */
     public static final long DEFAULT_BACKGROUND_LOAD_DELAY = 10;
 
+    /** Default startup delay. */
+    public static final long DEFAULT_STARTUP_DELAY = 30;
+    
     /** Default for disabling the distribution. */
     public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
 
@@ -106,6 +116,9 @@ public class JobManagerConfiguration {
     /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
     public static final String PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
 
+    /** The entire job handling waits time amount of seconds until it starts - to allow avoiding reassign on restart of a cluster */
+    public static final String PROPERTY_STARTUP_DELAY = "startup.delay";
+    
     /** Configuration switch for distributing the jobs. */
     public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
 
@@ -141,6 +154,10 @@ public class JobManagerConfiguration {
     private String previousVersionIdentifiedPath;
 
     private volatile long backgroundLoadDelay;
+
+    private volatile long startupDelay;
+    
+    private volatile InitDelayingTopologyEventListener startupDelayListener;
 
     private volatile boolean disabledDistribution;
 
@@ -216,6 +233,20 @@ public class JobManagerConfiguration {
             resolver.close();
         }
         this.active.set(true);
+        
+        // SLING-5560 : use an InitDelayingTopologyEventListener
+        if (this.startupDelay > 0) {
+            logger.warn("activate: job manager will start in {} sec. ({})", this.startupDelay, PROPERTY_STARTUP_DELAY);
+            this.startupDelayListener = new InitDelayingTopologyEventListener(startupDelay, new TopologyEventListener() {
+
+                @Override
+                public void handleTopologyEvent(TopologyEvent event) {
+                    doHandleTopologyEvent(event);
+                }
+            }, this.scheduler, logger);
+        } else {
+            logger.warn("activate: job manager will start without delay. ({}:{})", PROPERTY_STARTUP_DELAY, this.startupDelay);
+        }
     }
 
     /**
@@ -225,6 +256,10 @@ public class JobManagerConfiguration {
     protected void update(final Map<String, Object> props) {
         this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
         this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+        // SLING-5560: note that currently you can't change the startupDelay to have
+        // an immediate effect - it will only have an effect on next activation.
+        // (as 'startup delay runnable' is already scheduled in activate)
+        this.startupDelay = PropertiesUtil.toLong(props.get(PROPERTY_STARTUP_DELAY), DEFAULT_STARTUP_DELAY);
         Utility.LOG_DEPRECATION_WARNINGS = PropertiesUtil.toBoolean(props.get(PROPERTY_LOG_DEPRECATION_WARNINGS), DEFAULT_LOG_DEPRECATION_WARNINGS);
     }
 
@@ -234,6 +269,10 @@ public class JobManagerConfiguration {
     @Deactivate
     protected void deactivate() {
         this.active.set(false);
+        if ( this.startupDelayListener != null) {
+            this.startupDelayListener.dispose();
+            this.startupDelayListener = null;
+        }
         this.stopProcessing();
     }
 
@@ -517,8 +556,18 @@ public class JobManagerConfiguration {
      * Therefore this method can't be invoked concurrently
      * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
      */
-    public void handleTopologyEvent(final TopologyEvent event) {
-        this.logger.debug("Received topology event {}", event);
+    public void handleTopologyEvent(TopologyEvent event) {
+        if ( this.startupDelayListener != null ) {
+            // with startup.delay > 0
+            this.startupDelayListener.handleTopologyEvent(event);
+        } else {
+            // classic (startup.delay <= 0)
+            this.logger.debug("Received topology event {}", event);
+            doHandleTopologyEvent(event);
+        }
+    }
+    
+    void doHandleTopologyEvent(final TopologyEvent event) {
 
         // check if there is a change of properties which doesn't affect us
         // but we need to use the new view !
