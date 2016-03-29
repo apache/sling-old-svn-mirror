@@ -236,7 +236,7 @@ public class JobManagerConfiguration {
         
         // SLING-5560 : use an InitDelayingTopologyEventListener
         if (this.startupDelay > 0) {
-            logger.warn("activate: job manager will start in {} sec. ({})", this.startupDelay, PROPERTY_STARTUP_DELAY);
+            logger.debug("activate: job manager will start in {} sec. ({})", this.startupDelay, PROPERTY_STARTUP_DELAY);
             this.startupDelayListener = new InitDelayingTopologyEventListener(startupDelay, new TopologyEventListener() {
 
                 @Override
@@ -245,7 +245,7 @@ public class JobManagerConfiguration {
                 }
             }, this.scheduler, logger);
         } else {
-            logger.warn("activate: job manager will start without delay. ({}:{})", PROPERTY_STARTUP_DELAY, this.startupDelay);
+            logger.debug("activate: job manager will start without delay. ({}:{})", PROPERTY_STARTUP_DELAY, this.startupDelay);
         }
     }
 
