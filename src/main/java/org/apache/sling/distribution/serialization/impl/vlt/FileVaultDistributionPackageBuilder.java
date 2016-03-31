@@ -63,16 +63,19 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
     private final AccessControlHandling aclHandling;
 
     private final String[] packageRoots;
+    private final int autosaveThreshold;
     private final File tempDirectory;
     private final TreeMap<String, List<String>> filters;
     private final boolean useBinaryReferences;
 
-    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences) {
+    public FileVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling,
+                                               String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences, int autosaveThreshold) {
         super(type);
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
+        this.autosaveThreshold = autosaveThreshold;
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.filters = VltUtils.parseFilters(filterRules);
@@ -148,7 +151,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             File file = new File(distributionPackage.getId());
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
-                ImportOptions opts = VltUtils.getImportOptions(aclHandling, importMode);
+                ImportOptions opts = VltUtils.getImportOptions(aclHandling, importMode, autosaveThreshold);
 
                 log.debug("using import mode {} and acl {}", opts.getImportMode(), opts.getAccessControlHandling());
                 pkg.extract(session, opts);
