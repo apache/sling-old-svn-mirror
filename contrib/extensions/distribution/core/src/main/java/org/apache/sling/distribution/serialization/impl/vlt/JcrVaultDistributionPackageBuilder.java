@@ -151,18 +151,21 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     @Override
     protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         Session session = null;
+        VaultPackage vaultPackage = null;
         try {
             session = getSession(resourceResolver);
 
-            JcrPackage jcrPackage = ((JcrVaultDistributionPackage) distributionPackage).getJcrPackage();
+            InputStream stream = distributionPackage.createInputStream();
+            vaultPackage = VltUtils.readPackage(packaging.getPackageManager(), stream, tempDirectory);
 
             ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode);
-            jcrPackage.extract(importOptions);
+            vaultPackage.extract(session, importOptions);
 
             return true;
         } catch (Exception e) {
             throw new DistributionException(e);
         } finally {
+            VltUtils.deletePackage(vaultPackage);
             ungetSession(session);
         }
     }
