@@ -111,6 +111,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
     @Property(label="Use Binary References", description = "If activated, it avoids sending binaries in the distribution package.", boolValue = false)
     public static final String USE_BINARY_REFERENCES = "useBinaryReferences";
+
+    @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
+    public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
     
     @Reference
     private Packaging packaging;
@@ -131,7 +134,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
         boolean useBinaryReferences = PropertiesUtil.toBoolean(config.get(USE_BINARY_REFERENCES), false);
-        
+        int autosaveThreshold = PropertiesUtil.toInteger(config.get(AUTOSAVE_THRESHOLD), -1);
+
+
         ImportMode importMode = null;
         if (importModeString != null) {
             importMode = ImportMode.valueOf(importModeString.trim());
@@ -143,9 +148,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         }
 
         if ("filevlt".equals(type)) {
-            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences);
+            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences, autosaveThreshold);
         } else {
-            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences);
+            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences, autosaveThreshold);
         }
     }
 

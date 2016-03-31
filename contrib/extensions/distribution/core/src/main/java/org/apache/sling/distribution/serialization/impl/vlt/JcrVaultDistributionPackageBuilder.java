@@ -73,6 +73,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
     private final ImportMode importMode;
     private final AccessControlHandling aclHandling;
     private final String[] packageRoots;
+    private final int autosaveThreshold;
     private final String tempPackagesNode;
     private final File tempDirectory;
     private final TreeMap<String, List<String>> filters;
@@ -80,7 +81,8 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
 
     private final Object repolock = new Object();
 
-    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences) {
+    public JcrVaultDistributionPackageBuilder(String type, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling,
+                                              String[] packageRoots, String[] filterRules, String tempFilesFolder, boolean useBinaryReferences, int autosaveThreshold) {
         super(type);
 
         this.packaging = packaging;
@@ -88,6 +90,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
+        this.autosaveThreshold = autosaveThreshold;
         this.tempPackagesNode = type + "/data";
 
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
@@ -158,7 +161,7 @@ public class JcrVaultDistributionPackageBuilder extends AbstractDistributionPack
             InputStream stream = distributionPackage.createInputStream();
             vaultPackage = VltUtils.readPackage(packaging.getPackageManager(), stream, tempDirectory);
 
-            ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode);
+            ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode, autosaveThreshold);
             vaultPackage.extract(session, importOptions);
 
             return true;
