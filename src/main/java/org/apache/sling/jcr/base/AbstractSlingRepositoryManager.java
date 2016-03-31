@@ -48,14 +48,13 @@ import aQute.bnd.annotation.ProviderType;
  * implementations of this class provide actual integration into the runtime
  * context. The livecycle of the repository instance is defined as follows:
  * <p>
- * To start the repository instance, the implemetation calls the
+ * To start the repository instance, the implementation calls the
  * {@link #start(BundleContext, String, boolean)}method which goes through the
  * steps of instantiating the repository, setting things up, and registering the
  * repository as an OSGi service:
  * <ol>
  * <li>{@link #acquireRepository()}</li>
  * <li>{@link #create(Bundle)}</li>
- * <li>{@link #setup(BundleContext, SlingRepository)}</li>
  * <li>{@link #registerService()}</li>
  * </ol>
  * <p>
@@ -64,7 +63,6 @@ import aQute.bnd.annotation.ProviderType;
  * tearing all special settings down and finally shutting down the repository:
  * <ol>
  * <li>{@link #unregisterService(ServiceRegistration)}</li>
- * <li>{@link #tearDown()}</li>
  * <li>{@link #destroy(AbstractSlingRepository2)}</li>
  * <li>{@link #disposeRepository(Repository)}</li>
  * </ol>
