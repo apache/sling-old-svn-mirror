@@ -100,7 +100,6 @@
        class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadRuntime">
        <moduleType types="sling.content" versions="1.0"/> 
        <moduleType types="sling.bundle" versions="1.0"/> 
-       <moduleType types="jst.web" versions="2.2, 2.3, 2.4, 2.5, 3.0, 3.1"/>
     </runtimeType>
   </extension>
   
@@ -139,7 +138,7 @@
         sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
   </extension>
     
-	<!-- Declare that the launchpad runtime type, supporting content and web modules -->
+	<!-- Declare that the launchpad runtime type, supporting content modules -->
 	<extension point="org.eclipse.wst.common.project.facet.core.runtimes">
 		<runtime-component-type id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
 		<runtime-component-version type="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
@@ -157,31 +156,6 @@
   			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
   			<facet id="sling.content" version="1.0"/>
   		</supported>
-  		
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="2.2"/>
-  		</supported>
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="2.3"/>
-  		</supported>
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="2.4"/>
-  		</supported>
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="2.5"/>
-  		</supported>
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="3.0"/>
-  		</supported>
-  		<supported>
-  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
-       		<facet id="jst.web" version="3.1"/>
-  		</supported>
 	</extension>
 
 
@@ -195,7 +169,6 @@
       <runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
       <facet id="sling.bundle" version="1.0"/>
     </default-facets>
-    
   </extension>
   	
 	<!-- Map from the launchpad runtime type to our runtime components -->
