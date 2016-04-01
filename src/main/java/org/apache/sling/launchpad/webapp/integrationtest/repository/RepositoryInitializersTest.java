@@ -21,13 +21,11 @@ import java.io.IOException;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Verify that the SlingRepositoryInitializer provided by our test
  *  services bundle have run.
  */
-@Ignore("TODO reactivate once jcr.base 2.3.2 is released")
 public class RepositoryInitializersTest {
 
     private final HttpTest H = new HttpTest();
