@@ -16,15 +16,29 @@
  */
 package org.apache.sling.launchpad.testservices.repository;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
+import javax.jcr.Session;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepositoryInitializer;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
+import org.apache.sling.repoinit.parser.RepoInitParser;
+import org.apache.sling.repoinit.parser.operations.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SlingRepositoryInitializer that creates system users and sets their ACLs.
  * Meant to be used for our integration tests until we can create those from
  * the provisioning model.
  */
-
-public class SystemUsersInitializer {}
-/** TODO reactivate once jcr.base 2.3.2 is released
 @Component
 @Service(SlingRepositoryInitializer.class)
 public class SystemUsersInitializer implements SlingRepositoryInitializer {
@@ -59,4 +73,3 @@ public class SystemUsersInitializer implements SlingRepositoryInitializer {
         }
     }
 }
-*/

@@ -16,15 +16,22 @@
  */
 package org.apache.sling.launchpad.testservices.repository;
 
+import javax.jcr.Session;
 
-public class SecondRepositoryInitializer {}
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepositoryInitializer;
+import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SlingRepositoryInitializer that adds a property to the node created by 
  * FirstRepositoryInitializer.
  */
-/** TODO reactivate once jcr.base 2.3.2 is released
-
 @Component
 @Service(SlingRepositoryInitializer.class)
 @Properties({
@@ -54,4 +61,3 @@ public class SecondRepositoryInitializer implements SlingRepositoryInitializer {
         }
     }
 }
-*/
