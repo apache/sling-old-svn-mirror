@@ -53,6 +53,10 @@ import org.eclipse.wst.server.core.ServerCore;
 
 public class SetupServerWizardPage extends WizardPage {
 	
+    private static final String RUNTIME_TYPE_LAUNCHPAD = "org.apache.sling.ide.launchpadRuntimeType";
+
+    private static final String SERVER_TYPE_LAUNCHPAD = "org.apache.sling.ide.launchpadServer";
+
     private static final int HORIZONTAL_INDENT = 10;
 
     private Button useExistingServer;
@@ -303,23 +307,13 @@ public class SetupServerWizardPage extends WizardPage {
 		if (useExistingServer.getSelection()) {
             return existingServerCombo.getServer();
 		} else {
-			IServerType serverType = ServerCore.findServerType("org.apache.sling.ide.launchpadServer");
-			@SuppressWarnings("unused")
-			IRuntime existingRuntime = null;//ServerCore.findRuntime("org.apache.sling.ide.launchpadRuntimeType");
-			IRuntime[] existingRuntimes = ServerCore.getRuntimes();
-			for (IRuntime runtime : existingRuntimes) {
-				if (runtime.getRuntimeType().getId().equals("org.apache.sling.ide.launchpadRuntimeType")) {
-					existingRuntime = runtime;
-				}
-			}
+		    
+			IServerType serverType = ServerCore.findServerType(SERVER_TYPE_LAUNCHPAD);
+			IRuntime slingRuntime = getOrCreateSlingRuntime(monitor);
 			
-			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
                 // TODO there should be a nicer API for creating this
-                // TODO - we should not be creating runtimes, but maybe matching against existing ones
-                IRuntime runtime = serverRuntime.createRuntime(null, monitor);
-                runtime = runtime.createWorkingCopy().save(true, monitor);
-                IServerWorkingCopy wc = serverType.createServer(null, null, runtime, monitor);
+                IServerWorkingCopy wc = serverType.createServer(null, null, slingRuntime, monitor);
 				wc.setHost(getHostname());
                 wc.setName(newServerName.getText());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
@@ -329,7 +323,7 @@ public class SetupServerWizardPage extends WizardPage {
                 
                 SlingLaunchpadConfigurationDefaults.applyDefaultValues(wc);
                 
-				wc.setRuntime(runtime);
+				wc.setRuntime(slingRuntime);
                 server = wc.save(true, monitor);
                 return server;
 			} catch (CoreException e) {
@@ -339,6 +333,18 @@ public class SetupServerWizardPage extends WizardPage {
 			}
 		}
 	}
+
+    private IRuntime getOrCreateSlingRuntime(IProgressMonitor monitor) throws CoreException {
+        
+        for ( IRuntime runtime : ServerCore.getRuntimes()) {
+            if ( runtime.getRuntimeType().getId().equals(RUNTIME_TYPE_LAUNCHPAD)) {
+                return runtime;
+            }
+        }
+        
+        IRuntimeType serverRuntime = ServerCore.findRuntimeType(RUNTIME_TYPE_LAUNCHPAD);
+        return serverRuntime.createRuntime(null, monitor).createWorkingCopy().save(true, monitor);
+    }
 
 	private int getPort() {
 		return Integer.parseInt(newServerPort.getText());
