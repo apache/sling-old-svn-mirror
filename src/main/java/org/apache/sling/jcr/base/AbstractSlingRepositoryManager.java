@@ -57,6 +57,8 @@ import aQute.bnd.annotation.ProviderType;
  * <li>{@link #create(Bundle)}</li>
  * <li>{@link #registerService()}</li>
  * </ol>
+ * Earlier versions of this class had an additional <code>setup</code> method, 
+ * whatever code was there can be moved to the <core>create</code> method.
  * <p>
  * To stop the repository instance, the implementation calls the {@link #stop()}
  * method which goes through the setps of unregistering the OSGi service,
