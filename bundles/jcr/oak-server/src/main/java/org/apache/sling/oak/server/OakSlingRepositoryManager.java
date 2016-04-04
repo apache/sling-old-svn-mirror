@@ -163,8 +163,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private ComponentContext componentContext;
 
-    private Map<Long, NamespaceMapper> namespaceMapperRefs = new TreeMap<Long, NamespaceMapper>();
-
     private String adminUserName;
 
     @Reference
@@ -335,7 +333,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     private void deactivate() {
         super.stop();
         this.componentContext = null;
-        this.namespaceMapperRefs.clear();
         this.threadPoolManager.release(this.threadPool);
         this.threadPool = null;
         this.nodeAggregator.unregister();
