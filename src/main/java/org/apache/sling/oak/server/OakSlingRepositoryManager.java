@@ -27,8 +27,6 @@ import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefi
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.Executor;
 
 import javax.jcr.Repository;
@@ -72,7 +70,6 @@ import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
