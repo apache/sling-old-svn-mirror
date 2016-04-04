@@ -37,8 +37,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Client side include generator - using Ajax/JQuery.
- * 
- * @author tomasz.rekawek
  */
 @Component
 @Service

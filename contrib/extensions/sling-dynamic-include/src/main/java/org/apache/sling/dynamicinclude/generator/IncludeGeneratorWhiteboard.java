@@ -30,8 +30,6 @@ import org.apache.felix.scr.annotations.Service;
 
 /**
  * Service that provides include generator of given type.
- * 
- * @author tomasz.rekawek
  */
 
 @Component

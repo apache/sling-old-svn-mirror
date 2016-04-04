@@ -25,9 +25,6 @@ import org.apache.sling.dynamicinclude.generator.IncludeGenerator;
 
 /**
  * Apache SSI include generator
- * 
- * @author tomasz.rekawek
- * 
  */
 @Component
 @Service
