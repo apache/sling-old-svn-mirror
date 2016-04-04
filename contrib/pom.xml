@@ -123,6 +123,7 @@
           <module>extensions/tracer</module>
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
+          <module>extensions/sling-dynamic-include</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
