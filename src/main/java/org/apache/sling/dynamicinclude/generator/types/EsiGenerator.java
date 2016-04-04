@@ -26,9 +26,6 @@ import org.apache.sling.dynamicinclude.generator.IncludeGenerator;
 
 /**
  * ESI include generator
- * 
- * @author tomasz.rekawek
- * 
  */
 @Component
 @Service

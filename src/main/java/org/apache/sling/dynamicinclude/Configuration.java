@@ -39,9 +39,6 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * Include filter configuration.
- * 
- * @author tomasz.rekawek
- * 
  */
 @Component(metatype = true, configurationFactory = true, label = "Apache Sling Dynamic Include - Configuration", immediate = true, policy = ConfigurationPolicy.REQUIRE)
 @Service(Configuration.class)
