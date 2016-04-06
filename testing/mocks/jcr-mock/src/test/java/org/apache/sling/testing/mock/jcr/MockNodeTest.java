@@ -18,26 +18,16 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.jcr.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class MockNodeTest {
 
@@ -159,9 +149,68 @@ public class MockNodeTest {
 
     @Test
     public void testNtFileNode() throws RepositoryException {
-        Node ntFile = this.session.getRootNode().addNode("testFile", JcrConstants.NT_FILE);
+        Node ntFile = rootNode.addNode("testFile", JcrConstants.NT_FILE);
         assertNotNull(ntFile.getProperty(JcrConstants.JCR_CREATED).getDate());
         assertNotNull(ntFile.getProperty("jcr:createdBy").getString());
     }
-    
+
+    @Test
+    public void testAddMixinAndGetMixinTypes() throws RepositoryException {
+        String mixinName = "mixinName";
+        Node nodeWithMixin = rootNode.addNode("nodeWithMixin");
+        assertTrue(ArrayUtils.isEmpty(nodeWithMixin.getMixinNodeTypes()));
+        nodeWithMixin.addMixin(mixinName);
+        assertTrue(nodeWithMixin.getMixinNodeTypes().length == 1);
+        assertEquals(mixinName, nodeWithMixin.getMixinNodeTypes()[0].getName());
+    }
+
+    @Test
+    public void testGetIndex() throws RepositoryException {
+        Node parentNode = rootNode.addNode("parent");
+        Node node1 = parentNode.addNode("node1");
+        Node node2 = parentNode.addNode("node2");
+        Node node3 = parentNode.addNode("node3");
+        assertEquals(0, node1.getIndex());
+        assertEquals(1, node2.getIndex());
+        assertEquals(2, node3.getIndex());
+    }
+
+    @Test
+    public void testNodeRepositioning() throws  RepositoryException {
+        Node parent = rootNode.addNode("parent");
+        String node1Name = "a";
+        String node2Name = "b";
+        String node3Name = "c";
+        String node4Name = "d";
+        Node node1 = parent.addNode(node1Name);
+        Node node2 = parent.addNode(node2Name);
+        Node node3 = parent.addNode(node3Name);
+        Node node4 = parent.addNode(node4Name);
+        assertEquals(0, node1.getIndex());
+        assertEquals(1, node2.getIndex());
+        assertEquals(2, node3.getIndex());
+        assertEquals(3, node4.getIndex());
+
+        parent.orderBefore(node3Name, node2Name);
+        assertEquals(0, node1.getIndex());
+        assertEquals(1, node3.getIndex());
+        assertEquals(2, node2.getIndex());
+        assertEquals(3, node4.getIndex());
+
+        parent.orderBefore(node1Name, node4Name);
+        assertEquals(0, node3.getIndex());
+        assertEquals(1, node2.getIndex());
+        assertEquals(2, node1.getIndex());
+        assertEquals(3, node4.getIndex());
+    }
+
+    @Test
+    public void testRemoveMixin() throws RepositoryException {
+        String mixinName = "mixinName";
+        Node nodeWithMixin = rootNode.addNode("nodeWithMixin");
+        nodeWithMixin.addMixin(mixinName);
+        assertFalse(ArrayUtils.isEmpty(nodeWithMixin.getMixinNodeTypes()));
+        nodeWithMixin.removeMixin(mixinName);
+        assertTrue(ArrayUtils.isEmpty(nodeWithMixin.getMixinNodeTypes()));
+    }
 }

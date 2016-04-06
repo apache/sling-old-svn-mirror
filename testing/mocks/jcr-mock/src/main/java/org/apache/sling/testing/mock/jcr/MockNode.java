@@ -476,38 +476,20 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public void orderBefore(final String srcChildRelPath, final String destChildRelPath) throws RepositoryException {
-        NodeIterator nodes = getNodes();
-        int count = 0;
-        Integer srcNodeIndex = null;
-        Integer destNodeIndex = null;
-        while (nodes.hasNext()) {
-            Node nextNode = nodes.nextNode();
-            if (nextNode.getName().equals(srcChildRelPath)) {
-                srcNodeIndex = count;
-            } else if (nextNode.getPath().equals(destChildRelPath)) {
-                destNodeIndex = count;
-            }
-            count++;
-        }
-        if (srcNodeIndex != null && destNodeIndex != null &&
-                destNodeIndex != srcNodeIndex + 1) {
-            if (srcNodeIndex < destNodeIndex) {
-                getSession().move(srcChildRelPath, srcChildRelPath);
-            }
-            nodes = getNodes();
-            boolean move = false;
-            count = 0;
-            while (nodes.hasNext()) {
-                Node nextNode = nodes.nextNode();
-                if (count == destNodeIndex || nextNode.getName().equals(srcChildRelPath)) {
-                    move = !move;
+        Node srcChildNode = getNode(srcChildRelPath);
+        Node destChildNode = getNode(destChildRelPath);
+        int destIndex = srcChildNode.getIndex() > destChildNode.getIndex() ? destChildNode.getIndex() : destChildNode.getIndex() - 1;
+        if (srcChildNode.getIndex() != destIndex) {
+            getSession().move(srcChildNode.getPath(), srcChildNode.getPath());
+            NodeIterator nodes = getNodes();
+            int currentIndex = 0;
+            while (nodes.hasNext() && srcChildNode.getIndex() != destIndex) {
+                Node currentNode = nodes.nextNode();
+                if (currentIndex >= destIndex) {
+                    getSession().move(currentNode.getPath(), currentNode.getPath());
                 }
-                if (move) {
-                    getSession().move(nextNode.getPath(), nextNode.getPath());
-                }
-                count++;
+                currentIndex++;
             }
-
         }
     }
 

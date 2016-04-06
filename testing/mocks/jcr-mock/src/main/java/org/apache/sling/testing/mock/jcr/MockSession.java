@@ -348,11 +348,13 @@ class MockSession implements Session {
     public void move(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
         Node srcNode = getNode(srcAbsPath);
         if (srcNode.isNode()) {
+            removeItem(srcAbsPath);
+            save();
             ItemData itemData = ItemData.newNode(destAbsPath, new MockNodeType(srcNode.getPrimaryNodeType().getName()));
             addItem(itemData);
+            save();
             Node newNode = getNode(destAbsPath);
             copyNode(newNode, srcNode);
-            removeItem(srcAbsPath);
             save();
         }
     }

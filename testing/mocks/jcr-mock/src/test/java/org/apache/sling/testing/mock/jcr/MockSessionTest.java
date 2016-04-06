@@ -18,26 +18,14 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import com.google.common.collect.ImmutableSet;
 import org.apache.jackrabbit.JcrConstants;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSet;
+import javax.jcr.*;
+
+import static org.junit.Assert.*;
 
 public class MockSessionTest {
 
@@ -281,6 +269,18 @@ public class MockSessionTest {
         assertTrue(session.isLive());
         session.logout();
         assertFalse(session.isLive());
+    }
+
+    @Test
+    public void testMove() throws RepositoryException {
+        String nodeNewName = "nodeMoved";
+        Node rootNode = this.session.getRootNode().addNode("parentNode");
+        Node node = rootNode.addNode("node");
+        assertTrue(rootNode.hasNode(node.getName()));
+        this.session.move(node.getPath(), rootNode.getPath() + '/' + nodeNewName);
+        assertFalse(rootNode.hasNode("node"));
+        assertTrue(rootNode.hasNode(nodeNewName));
+        assertNotNull(rootNode.getNode(nodeNewName));
     }
     
 }
