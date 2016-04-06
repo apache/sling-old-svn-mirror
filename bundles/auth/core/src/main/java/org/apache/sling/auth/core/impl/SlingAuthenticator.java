@@ -1378,7 +1378,7 @@ public class SlingAuthenticator implements Authenticator,
                 path = path.substring(ctxPath.length());
             }
         } else {
-            path = request.getPathInfo();
+            path = getPath(request);
         }
 
         if (path == null || path.length() == 0) {
