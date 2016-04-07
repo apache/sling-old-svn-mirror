@@ -172,6 +172,7 @@ class ControlListener implements Runnable {
      * Implements the server thread receiving commands from clients and acting
      * upon them.
      */
+    @Override
     public void run() {
         this.configure(false);
 
@@ -242,6 +243,7 @@ class ControlListener implements Runnable {
                             writeLine(s, RESPONSE_STOPPING);
                         } else {
                             this.shutdownThread = new Thread("Apache Sling Control Listener: Shutdown") {
+                                @Override
                                 public void run() {
                                     slingMain.doStop();
                                     try {
@@ -538,22 +540,12 @@ class ControlListener implements Runnable {
         if (fromConfigFile) {
             final File configFile = this.getConfigFile();
             if (configFile.canRead()) {
-                FileReader fr = null;
-                try {
-                    fr = new FileReader(configFile);
-                    final LineNumberReader lnr = new LineNumberReader(fr);
+                try ( final LineNumberReader lnr = new LineNumberReader(new FileReader(configFile))) {
                     this.socketAddress = getSocketAddress(lnr.readLine());
                     this.secretKey = lnr.readLine();
                     result = true;
                 } catch (final IOException ignore) {
                     // ignore
-                } finally {
-                    if (fr != null) {
-                        try {
-                            fr.close();
-                        } catch (final IOException ignore) {
-                        }
-                    }
                 }
             }
         } else {

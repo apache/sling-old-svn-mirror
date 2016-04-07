@@ -43,9 +43,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
 
 /**
  * The <code>BootstrapInstaller</code> class is installed into the OSGi
@@ -387,37 +386,23 @@ class BootstrapInstaller {
             final Map<String, Bundle> currentBundles,
             final List<Bundle> installed) {
 
-        // get the start level service (if possible) so we can set the initial start level
-        ServiceReference ref = bundleContext.getServiceReference(StartLevel.class.getName());
-        StartLevel startLevelService = (ref != null)
-                ? (StartLevel) bundleContext.getService(ref)
-                : null;
-
         boolean requireRestart = false;
-        try {
-            File[] directories = slingStartupDir.listFiles(DirectoryUtil.DIRECTORY_FILTER);
-            for (File levelDir : directories) {
-                // get startlevel from dir name
-                String dirName = levelDir.getName();
-                int startLevel;
-                try {
-                    startLevel = Integer.decode(dirName);
-                } catch (NumberFormatException e) {
-                    startLevel = 0;
-                }
-
-                // iterate through all files in the startlevel dir
-                File[] bundleFiles = levelDir.listFiles(DirectoryUtil.BUNDLE_FILE_FILTER);
-                for (File bundleFile : bundleFiles) {
-                    requireRestart |= installBundle(bundleFile, startLevel,
-                        currentBundles, installed, startLevelService);
-                }
+        File[] directories = slingStartupDir.listFiles(DirectoryUtil.DIRECTORY_FILTER);
+        for (File levelDir : directories) {
+            // get startlevel from dir name
+            String dirName = levelDir.getName();
+            int startLevel;
+            try {
+                startLevel = Integer.decode(dirName);
+            } catch (NumberFormatException e) {
+                startLevel = 0;
             }
 
-        } finally {
-            // release the start level service
-            if (ref != null) {
-                bundleContext.ungetService(ref);
+            // iterate through all files in the startlevel dir
+            File[] bundleFiles = levelDir.listFiles(DirectoryUtil.BUNDLE_FILE_FILTER);
+            for (File bundleFile : bundleFiles) {
+                requireRestart |= installBundle(bundleFile, startLevel,
+                    currentBundles, installed);
             }
         }
 
@@ -440,8 +425,7 @@ class BootstrapInstaller {
     private boolean installBundle(final File bundleJar,
             final int startLevel,
             final Map<String, Bundle> currentBundles,
-            final List<Bundle> installed,
-            final StartLevel startLevelService) {
+            final List<Bundle> installed) {
         // get the manifest for the bundle information
         Manifest manifest = getManifest(bundleJar);
         if (manifest == null) {
@@ -491,8 +475,7 @@ class BootstrapInstaller {
 
                 // optionally set the start level
                 if (startLevel > 0) {
-                    startLevelService.setBundleStartLevel(installedBundle,
-                        startLevel);
+                    installedBundle.adapt(BundleStartLevel.class).setStartLevel(startLevel);
                 }
             } catch (BundleException be) {
                 logger.log(Logger.LOG_ERROR, "Bundle update from "
@@ -520,8 +503,7 @@ class BootstrapInstaller {
 
                 // optionally set the start level
                 if (startLevel > 0) {
-                    startLevelService.setBundleStartLevel(theBundle,
-                        startLevel);
+                    theBundle.adapt(BundleStartLevel.class).setStartLevel(startLevel);
                 }
 
             } catch (BundleException be) {
