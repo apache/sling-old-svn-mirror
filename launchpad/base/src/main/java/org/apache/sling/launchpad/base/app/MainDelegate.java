@@ -95,9 +95,6 @@ public class MainDelegate implements Launcher {
      */
     private static final String PROP_PORT = "org.osgi.service.http.port";
 
-    /** The default port on which the HTTP service listens. */
-    private static final String DEFAULT_PORT = "8080";
-
     private Notifiable notifiable;
 
     /** The parsed command line mapping (Sling) option name to option value */
@@ -387,7 +384,7 @@ public class MainDelegate implements Launcher {
     private static class SlingLogger extends Logger {
 
         @Override
-        protected void doLog(Bundle bundle, ServiceReference sr, int level, String msg, Throwable throwable) {
+        protected void doLog(Bundle bundle, @SuppressWarnings("rawtypes") ServiceReference sr, int level, String msg, Throwable throwable) {
 
             // unwind throwable if it is a BundleException
             if ((throwable instanceof BundleException) && (((BundleException) throwable).getNestedException() != null)) {

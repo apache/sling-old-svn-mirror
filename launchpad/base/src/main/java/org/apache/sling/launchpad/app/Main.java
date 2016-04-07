@@ -869,6 +869,7 @@ public class Main {
      * scheduler bundle</a></li>
      * </ul>
      */
+    @SuppressWarnings("deprecation")
     static void cleanupThreads() {
 
         // the current thread is the SlingNotifier thread part of
@@ -904,6 +905,7 @@ public class Main {
     }
 
     private class ShutdownHook implements Runnable {
+        @Override
         public void run() {
             Main.info("Java VM is shutting down", null);
             Main.this.doStop();
@@ -917,6 +919,7 @@ public class Main {
          * <code>Bundle.stop()</code> on the system bundle. This actually
          * terminates the Sling Standalone application.
          */
+        @Override
         public void stopped() {
             /**
              * This method is called if the framework is stopped from within by
@@ -946,6 +949,7 @@ public class Main {
          *            jar file. If <code>null</code> the existing launcher jar
          *            will be used again.
          */
+        @Override
         public void updated(File updateFile) {
 
             Main.this.sling = null;

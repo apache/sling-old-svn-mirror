@@ -28,8 +28,7 @@ import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
  * A Command that uninstalls a bundle, see
@@ -128,17 +127,8 @@ class UninstallBundleCommand implements Command {
                 }
             }
             if ( bundles.size() > 0 ) {
-                final ServiceReference<PackageAdmin> paRef = ctx.getServiceReference(PackageAdmin.class);
-                if ( paRef != null ) {
-                    try {
-                        final PackageAdmin pa = ctx.getService(paRef);
-                        if ( pa != null ) {
-                            pa.refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
-                        }
-                    } finally {
-                        ctx.ungetService(paRef);
-                    }
-                }
+                final FrameworkWiring fw = ctx.getBundle().adapt(FrameworkWiring.class);
+                fw.refreshBundles(bundles);
             }
         }
         return refreshSystemBundle;

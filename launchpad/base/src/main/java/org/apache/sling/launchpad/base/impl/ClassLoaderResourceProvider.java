@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 
 /**
- * The <code>ClassLoaderResourceProvider</code> TODO
+ * The <code>ClassLoaderResourceProvider</code>
  */
 public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
 
@@ -45,6 +45,7 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
                 : this.getClass().getClassLoader();
     }
 
+    @Override
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
@@ -52,7 +53,7 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
         if(path.endsWith("/") && path.length() > 1) {
             path = path.substring(0, path.length()-1);
         }
-        
+
         URL url = this.classLoader.getResource(path);
         if (url != null) {
             Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+/?$");
@@ -80,6 +81,7 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
         return children.iterator();
     }
 
+    @Override
     public URL getResource(String path) {
         // ensure path
         if (path == null || path.length() == 0) {
@@ -94,6 +96,7 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
         return (this.classLoader != null) ? this.classLoader.getResource(path) : null;
     }
 
+    @Override
     public InputStream getResourceAsStream(String path) {
         URL res = this.getResource(path);
         if (res != null) {

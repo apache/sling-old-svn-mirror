@@ -23,7 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -388,11 +388,7 @@ public class ControlListenerTest extends TestCase {
         volatile boolean stopCalled;
 
         MyMain(final String slingHome) {
-            super(new HashMap<String, String>() {
-                {
-                    put(SharedConstants.SLING_HOME, slingHome);
-                }
-            });
+            super(Collections.singletonMap(SharedConstants.SLING_HOME, slingHome));
         }
 
         @Override
