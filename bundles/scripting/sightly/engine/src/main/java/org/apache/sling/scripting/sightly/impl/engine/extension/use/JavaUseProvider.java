@@ -88,9 +88,11 @@ public class JavaUseProvider implements UseProvider {
 
         Object result;
         try {
+            LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
                 // the object is a POJO that was changed in the repository but not recompiled;
+                LOG.debug("Class {} was available in the classloader cache but it needs to be recompiled.");
                 result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
                 if (result instanceof Use) {
                     ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
@@ -124,6 +126,7 @@ public class JavaUseProvider implements UseProvider {
             /**
              * this object is either not exported from a bundle, or it's a POJO from the repository that wasn't loaded before
              */
+            LOG.debug("Class {} was not found in the classloader cache.", identifier);
             result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
             if (result instanceof Use) {
                 ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));

@@ -126,4 +126,8 @@ public class SourceIdentifier {
         return scriptName.substring(lastDotIndex);
     }
 
+    @Override
+    public String toString() {
+        return "SourceIdentifier { resourcePath=" + resource.getPath() + ", fqcn=" + fullyQualifiedName + " }";
+    }
 }

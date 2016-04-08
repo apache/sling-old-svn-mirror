@@ -98,24 +98,31 @@ public class SightlyJavaCompilerService {
      * @throws CompilerException in case of any runtime exception
      */
     public Object getInstance(RenderContext renderContext, String className) {
+        LOG.debug("Attempting to load class {}.", className);
         if (className.contains(".")) {
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
+                LOG.debug("Class {} identifies a POJO from the repository that was changed since the last time it was instantiated.",
+                        className);
                 Object result = compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
                 unitChangeMonitor.clearJavaUseObject(className);
                 return result;
             }
             try {
                 // the object either comes from a bundle or from the repo but it was not registered by the UnitChangeMonitor
+                LOG.debug("Attempting to load class {} from the classloader cache.", className);
                 return loadObject(className);
             } catch (CompilerException cex) {
                 // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
+                LOG.debug("Class {} identifies a POJO from the repository and it needs to be compiled.", className);
                 return compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
             }
         } else {
             Resource pojoResource = UseProviderUtils.locateScriptResource(renderContext, className + ".java");
             if (pojoResource != null) {
-                return getInstance(renderContext, Utils.getJavaNameFromPath(pojoResource.getPath()));
+                String fqcn = Utils.getJavaNameFromPath(pojoResource.getPath());
+                LOG.debug("Class {} has FQCN {}.", className, fqcn);
+                return getInstance(renderContext, fqcn);
             }
         }
         throw new SightlyException("Cannot find class " + className + ".");
@@ -135,6 +142,7 @@ public class SightlyJavaCompilerService {
                 readLock.unlock();
                 writeLock.lock();
                 try {
+                    LOG.debug("Need to recompile {}.", sourceIdentifier.toString());
                     return internalCompileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
                 } finally {
                     // downgrade write lock since we've probably compiled the source code by now
@@ -142,6 +150,7 @@ public class SightlyJavaCompilerService {
                     writeLock.unlock();
                 }
             } else {
+                LOG.debug("No need to recompile {}, loading it from the classloader cache.", sourceIdentifier.toString());
                 return classLoaderWriter.getClassLoader().loadClass(sourceIdentifier.getFullyQualifiedName()).newInstance();
             }
         } catch (Exception e) {
@@ -187,9 +196,8 @@ public class SightlyJavaCompilerService {
         if (errors != null && errors.size() > 0) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, createErrorMsg(errors));
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("script compiled: {}", compilationResult.didCompile());
-            LOG.debug("compilation took {}ms", end - start);
+        if (compilationResult.didCompile()) {
+            LOG.debug("Class {} was compiled in {}ms.", fqcn, end - start);
         }
         /**
          * the class loader might have become dirty, so let the {@link ClassLoaderWriter} decide which class loader to return
