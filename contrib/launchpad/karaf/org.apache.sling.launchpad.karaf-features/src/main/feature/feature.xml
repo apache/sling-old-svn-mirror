@@ -63,6 +63,19 @@
     <feature version="${feature.version}">sling</feature>
   </feature>
   <!-- Apache Sling Commons -->
+  <feature name="sling-commons-messaging" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.messaging/0.0.1-SNAPSHOT</bundle>
+  </feature>
+  <feature name="sling-commons-messaging-mail" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.messaging.mail/0.0.1-SNAPSHOT</bundle>
+    <!-- dependencies -->
+    <feature>scr</feature>
+    <feature>sling-commons-messaging</feature>
+    <feature>sling-commons-threads</feature>
+    <bundle dependency="true">mvn:com.sun.mail/javax.mail/1.5.5</bundle>
+    <bundle dependency="true">mvn:javax.mail/javax.mail-api/1.5.5</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-email/1.4</bundle>
+  </feature>
   <feature name="sling-commons-metrics" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.metrics/1.0.0</bundle>
     <!-- dependencies -->
@@ -78,7 +91,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-commons-threads" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.7-SNAPSHOT</bundle>
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${feature.version}">

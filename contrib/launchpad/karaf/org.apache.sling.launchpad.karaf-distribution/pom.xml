@@ -112,6 +112,8 @@
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
             <!-- Apache Sling Commons -->
+            <feature>sling-commons-messaging</feature>
+            <feature>sling-commons-messaging-mail</feature>
             <feature>sling-commons-metrics</feature>
             <feature>sling-commons-scheduler</feature>
             <feature>sling-commons-threads</feature>

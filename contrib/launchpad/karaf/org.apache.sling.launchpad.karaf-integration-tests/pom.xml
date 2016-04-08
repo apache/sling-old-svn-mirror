@@ -93,6 +93,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.messaging</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
       <version>${project.version}</version>
       <type>xml</type>
@@ -286,6 +292,8 @@
             </executions>
             <configuration>
               <excludes>
+                <!-- SLING-5651 -->
+                <exclude>**/SlingCommonsMessaging*.*</exclude>
                 <!-- SLING-5122, SLING-5123 -->
                 <exclude>**/SlingAuthXing*.*</exclude>
               </excludes>
