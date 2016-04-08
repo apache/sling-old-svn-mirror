@@ -19,7 +19,7 @@
 package org.apache.sling.commons.messaging;
 
 import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nonnull;
 
@@ -33,7 +33,7 @@ public interface MessageService {
      * @param recipient the recipient of the message
      * @return result of sending the message
      */
-    Future<Result> send(@Nonnull final String message, @Nonnull final String recipient);
+    CompletableFuture<Result> send(@Nonnull final String message, @Nonnull final String recipient);
 
     /**
      * @param message   the message to send
@@ -41,6 +41,6 @@ public interface MessageService {
      * @param data      additional information (e.g. attachments) and/or parameters (e.g. sender) for the message
      * @return result of sending the message
      */
-    Future<Result> send(@Nonnull final String message, @Nonnull final String recipient, @Nonnull final Map data);
+    CompletableFuture<Result> send(@Nonnull final String message, @Nonnull final String recipient, @Nonnull final Map data);
 
 }

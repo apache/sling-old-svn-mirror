@@ -13,11 +13,3 @@ Simple API for sending *message*​s to *recipient*​s.
 `Result<T>`
 -----------
   * `getMessage():T` - should return a serialized form of the sent *message*
-  * `hasFailures():boolean` - should return `true` in case of failures, `false` otherwise
-  * `getFailures():Collection<Failure>` - should return the failures occurred when processing or sending the message
-
-`Failure`
----------
- * `getCode():String` - should return a failure code when available, e.g. an [SMTP Status Code](https://tools.ietf.org/html/rfc5248)
- * `getType():String` - should return a failure type when available, e.g. invalid input (message too big) or transport failure (host unavailable)
- * `getMessage():String` - should return a human readable failure message

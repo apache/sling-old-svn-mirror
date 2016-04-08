@@ -18,8 +18,6 @@
  */
 package org.apache.sling.commons.messaging;
 
-import java.util.Collection;
-
 import javax.annotation.CheckForNull;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -31,15 +29,5 @@ public interface Result<T> {
      * @return serialized form of the sent message
      */
     @CheckForNull T getMessage();
-
-    /**
-     * @return <code>true</code> in case of failures, <code>false</code> otherwise
-     */
-    boolean hasFailures();
-
-    /**
-     * @return the failures occurred when processing or sending the message
-     */
-    @CheckForNull Collection<Failure> getFailures();
 
 }
