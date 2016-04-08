@@ -55,7 +55,7 @@ public class JcrQueryBuilder {
 		Formula formula = prepareAlternativeConditions(segments);
 		if (StringUtils.isNotBlank(rootPath) && !"/".equals(rootPath)) {
 			List<Term> conditions = new ArrayList<Term>();
-			conditions.add(new Atomic(String.format("ISDESCENDANTNODE([%s])", rootPath)));
+			conditions.add(new Atomic(String.format("ISDESCENDANTNODE('%s')", rootPath)));
 			if (formula != null) {
 				conditions.add(formula);
 			}

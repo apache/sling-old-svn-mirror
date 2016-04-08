@@ -47,7 +47,7 @@ public class JcrSelectorTest {
 	@Test
 	public void parsePath() {
 		final String selector = "cq:Page";
-		final String jcrQuery = "SELECT * FROM [cq:Page] AS s WHERE ISDESCENDANTNODE([/content])";
+		final String jcrQuery = "SELECT * FROM [cq:Page] AS s WHERE ISDESCENDANTNODE('/content')";
 		Assert.assertEquals(jcrQuery, parse(selector, "/content"));
 	}
 
@@ -117,14 +117,14 @@ public class JcrSelectorTest {
 	@Test
 	public void parseMultipleConditionsWithResourceTypeAndPath() {
 		final String selector = "foundation/components/parsys[key1=value1][key2=value2]";
-		final String jcrQuery = "SELECT * FROM [nt:base] AS s WHERE (ISDESCENDANTNODE([/content]) AND (s.[sling:resourceType] = 'foundation/components/parsys' AND s.[key1] = 'value1' AND s.[key2] = 'value2'))";
+		final String jcrQuery = "SELECT * FROM [nt:base] AS s WHERE (ISDESCENDANTNODE('/content') AND (s.[sling:resourceType] = 'foundation/components/parsys' AND s.[key1] = 'value1' AND s.[key2] = 'value2'))";
 		Assert.assertEquals(jcrQuery, parse(selector, "/content"));
 	}
 
 	@Test
 	public void parseAttributeWithSubresource() {
 		final String selector = "cq:Page[jcr:content/cq:template=xyz]";
-		final String jcrQuery = "SELECT * FROM [cq:Page] AS s WHERE ISDESCENDANTNODE([/content])";
+		final String jcrQuery = "SELECT * FROM [cq:Page] AS s WHERE ISDESCENDANTNODE('/content')";
 		Assert.assertEquals(jcrQuery, parse(selector, "/content"));
 	}
 
