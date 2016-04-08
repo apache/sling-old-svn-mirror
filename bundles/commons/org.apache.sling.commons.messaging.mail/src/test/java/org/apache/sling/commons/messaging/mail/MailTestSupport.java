@@ -66,6 +66,7 @@ public abstract class MailTestSupport {
         final org.osgi.service.cm.Configuration configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
         configuration.setBundleLocation(null);
         configuration.update(properties);
+        Thread.sleep(1000);
         logger.debug("configuration: {}", configurationAdmin.getConfiguration(factoryPid));
     }
 
@@ -85,6 +86,7 @@ public abstract class MailTestSupport {
                 mavenBundle().groupId("com.sun.mail").artifactId("javax.mail").versionAsInProject(),
                 mavenBundle().groupId("javax.mail").artifactId("javax.mail-api").versionAsInProject(),
                 mavenBundle().groupId("org.apache.commons").artifactId("commons-email").versionAsInProject(),
+                mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject(),
                 mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.messaging").versionAsInProject(),
                 mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.threads").versionAsInProject(),
                 bundle("reference:file:" + filename)

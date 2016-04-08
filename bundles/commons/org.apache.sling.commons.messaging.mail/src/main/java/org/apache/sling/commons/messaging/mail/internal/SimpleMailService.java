@@ -18,16 +18,21 @@
  */
 package org.apache.sling.commons.messaging.mail.internal;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+import javax.annotation.Nonnull;
+import javax.mail.MessagingException;
 
 import org.apache.commons.mail.Email;
-import org.apache.sling.commons.messaging.Failure;
+import org.apache.commons.mail.EmailException;
 import org.apache.sling.commons.messaging.MessageService;
 import org.apache.sling.commons.messaging.Result;
 import org.apache.sling.commons.messaging.mail.MailBuilder;
+import org.apache.sling.commons.messaging.mail.MailResult;
 import org.apache.sling.commons.messaging.mail.MailUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -103,57 +108,24 @@ public class SimpleMailService implements MessageService {
     }
 
     @Override
-    public Future<Result> send(final String message, final String recipient) {
+    public CompletableFuture<Result> send(@Nonnull final String message, @Nonnull final String recipient) {
         return send(message, recipient, Collections.emptyMap());
     }
 
     @Override
-    public Future<Result> send(final String message, final String recipient, final Map data) {
-        final Mailing mailing = new Mailing(message, recipient, data, mailBuilder);
-        return threadPool.submit(mailing);
+    public CompletableFuture<Result> send(@Nonnull final String message, @Nonnull final String recipient, @Nonnull final Map data) {
+        return CompletableFuture.supplyAsync(() -> sendMail(message, recipient, data, mailBuilder), threadPool);
     }
 
-    private class Mailing implements Callable<Result> {
-
-        private final String message;
-
-        private final String recipient;
-
-        private final Map data;
-
-        private MailBuilder mailBuilder;
-
-        Mailing(final String message, final String recipient, final Map data, final MailBuilder mailBuilder) {
-            this.message = message;
-            this.recipient = recipient;
-            this.data = data;
-            this.mailBuilder = mailBuilder;
-        }
-
-        @Override
-        public Result call() {
-            Email mail = null;
-            // build mail
-            try {
-                mail = mailBuilder.build(message, recipient, data);
-            } catch (Exception e) {
-                logger.error("building mail failed: {}", e.getMessage(), e);
-                final Failure failure = new MailFailure(null, null, e.getMessage());
-                return new MailResult(null, failure);
-            } finally {
-                mailBuilder = null;
-            }
-            // send mail
-            try {
-                final String messageId = mail.send();
-                logger.info("mail '{}' sent", messageId);
-                final byte[] bytes = MailUtil.toByteArray(mail);
-                return new MailResult(bytes);
-            } catch (Exception e) {
-                logger.error("sending mail failed: {}", e.getMessage(), e);
-                final Failure failure = new MailFailure(null, null, e.getMessage());
-                return new MailResult(null, failure);
-            }
+    private MailResult sendMail(final String message, final String recipient, final Map data, final MailBuilder mailBuilder) {
+        try {
+            final Email email = mailBuilder.build(message, recipient, data);
+            final String messageId = email.send();
+            logger.info("mail '{}' sent", messageId);
+            final byte[] bytes = MailUtil.toByteArray(email);
+            return new MailResult(bytes);
+        } catch (EmailException | MessagingException | IOException e) {
+            throw new CompletionException(e);
         }
     }
 

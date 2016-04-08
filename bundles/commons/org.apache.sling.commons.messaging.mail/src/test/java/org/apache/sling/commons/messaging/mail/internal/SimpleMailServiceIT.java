@@ -18,14 +18,19 @@
  */
 package org.apache.sling.commons.messaging.mail.internal;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
+import javax.mail.AuthenticationFailedException;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.sling.commons.messaging.MessageService;
 import org.apache.sling.commons.messaging.Result;
 import org.apache.sling.commons.messaging.mail.MailBuilderConfigurations;
+import org.apache.sling.commons.messaging.mail.MailResult;
 import org.apache.sling.commons.messaging.mail.MailTestSupport;
 import org.junit.After;
 import org.junit.Before;
@@ -38,13 +43,15 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.subethamail.wiser.Wiser;
 
-import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class SimpleMailServiceIT extends MailTestSupport {
 
     protected Wiser wiser;
+
+    public static final String FACTORY_PID = "org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder";
 
     @Configuration
     public Option[] configuration() {
@@ -56,9 +63,6 @@ public class SimpleMailServiceIT extends MailTestSupport {
         final int smtpPort = findFreePort();
         wiser = new Wiser(smtpPort);
         wiser.start();
-        final String factoryPid = "org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder";
-        final Dictionary<String, Object> properties = MailBuilderConfigurations.full(smtpPort);
-        createFactoryConfiguration(factoryPid, properties);
     }
 
     @After
@@ -69,20 +73,40 @@ public class SimpleMailServiceIT extends MailTestSupport {
 
     @Test
     public void send() throws Exception {
+        final Dictionary<String, Object> properties = MailBuilderConfigurations.full(wiser.getServer().getPort());
+        createFactoryConfiguration(FACTORY_PID, properties);
         final MessageService messageService = getService(MessageService.class);
-        final Future<Result> future = messageService.send("simple test message", "recipient@example.net");
-        final Result result = future.get();
-        assertFalse(result.hasFailures());
+        final CompletableFuture<Result> future = messageService.send("simple test message", "recipient@example.net");
+        final MailResult result = (MailResult) future.get();
+        final String message = new String(result.getMessage(), StandardCharsets.UTF_8);
+        logger.info("message: {}", message); // TODO assert
     }
 
     @Test
     public void sendWithData() throws Exception {
+        final Dictionary<String, Object> properties = MailBuilderConfigurations.full(wiser.getServer().getPort());
+        createFactoryConfiguration(FACTORY_PID, properties);
         final MessageService messageService = getService(MessageService.class);
         final Map configuration = Collections.singletonMap("mail.subject", "Testing the Simple Mail Service with a custom subject");
         final Map data = Collections.singletonMap("mail", configuration);
-        final Future<Result> future = messageService.send("simple test message", "recipient@example.net", data);
-        final Result result = future.get();
-        assertFalse(result.hasFailures());
+        final CompletableFuture<Result> future = messageService.send("simple test message", "recipient@example.net", data);
+        final MailResult result = (MailResult) future.get();
+        final String message = new String(result.getMessage(), StandardCharsets.UTF_8);
+        logger.info("message: {}", message); // TODO assert
+    }
+
+    @Test
+    public void sendWithoutAuthentication() throws Exception {
+        final Dictionary<String, Object> properties = MailBuilderConfigurations.minimal();
+        createFactoryConfiguration(FACTORY_PID, properties);
+        final MessageService messageService = getService(MessageService.class);
+        final CompletableFuture<Result> future = messageService.send("simple test message", "recipient@example.net");
+        try {
+            future.get();
+        } catch (Exception e) {
+            logger.info(e.getMessage(), e);
+            assertTrue(ExceptionUtils.getRootCause(e) instanceof AuthenticationFailedException);
+        }
     }
 
 }

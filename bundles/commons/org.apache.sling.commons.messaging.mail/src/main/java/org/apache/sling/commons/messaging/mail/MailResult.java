@@ -16,41 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.messaging.mail.internal;
+package org.apache.sling.commons.messaging.mail;
 
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.apache.sling.commons.messaging.Failure;
 import org.apache.sling.commons.messaging.Result;
+import org.osgi.annotation.versioning.ConsumerType;
 
+@ConsumerType
 public class MailResult implements Result<byte[]> {
 
     private final byte[] message;
 
-    private final Collection<Failure> failures;
-
-    public MailResult(final byte[] message, final Failure... failures) {
+    public MailResult(final byte[] message) {
         this.message = message;
-        this.failures = Arrays.asList(failures);
     }
 
     /**
-     * @return the message in <a href="https://tools.ietf.org/html/rfc822">RFC 822</a> format
+     * @return the sent message in <a href="https://tools.ietf.org/html/rfc822">RFC 822</a> format
      */
     @Override
     public byte[] getMessage() {
         return message;
-    }
-
-    @Override
-    public boolean hasFailures() {
-        return !(failures == null || failures.isEmpty());
-    }
-
-    @Override
-    public Collection<Failure> getFailures() {
-        return failures;
     }
 
 }
