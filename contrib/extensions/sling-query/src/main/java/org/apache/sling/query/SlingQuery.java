@@ -32,8 +32,6 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * SlingQuery is a Sling resource tree traversal tool inspired by the jQuery.
- * 
- * @author Tomasz Rękawek
  */
 @ProviderType
 public class SlingQuery extends AbstractQuery<Resource, SlingQuery> {
