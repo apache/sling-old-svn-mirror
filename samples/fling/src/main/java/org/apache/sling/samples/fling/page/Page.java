@@ -16,20 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.samples.fling;
+package org.apache.sling.samples.fling.page;
 
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
+import org.apache.sling.models.annotations.injectorspecific.Self;
 
 import static org.apache.sling.query.SlingQuery.$;
 
 @Model(adaptables = Resource.class)
 public class Page {
 
-    private final Resource resource;
+    @Self
+    protected Resource resource;
 
     @Inject
     private String title;
@@ -38,8 +40,7 @@ public class Page {
     @Optional
     private String content;
 
-    public Page(final Resource resource) {
-        this.resource = resource;
+    public Page() {
     }
 
     public String getName() {

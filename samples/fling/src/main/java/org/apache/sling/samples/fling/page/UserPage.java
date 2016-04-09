@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.samples.fling;
+package org.apache.sling.samples.fling.page;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -36,12 +37,15 @@ import org.apache.sling.models.annotations.Model;
 @Model(adaptables = Resource.class)
 public class UserPage extends Page {
 
-    private final User user;
+    private User user;
 
-    private final Map<String, String> userProperties;
+    private Map<String, String> userProperties;
 
-    public UserPage(Resource resource) throws Exception {
-        super(resource);
+    public UserPage() {
+    }
+
+    @PostConstruct
+    public void init() throws Exception {
         final Session session = resource.getResourceResolver().adaptTo(Session.class);
         final UserManager userManager = AccessControlUtil.getUserManager(session);
         user = (User) userManager.getAuthorizable(session.getUserID());
