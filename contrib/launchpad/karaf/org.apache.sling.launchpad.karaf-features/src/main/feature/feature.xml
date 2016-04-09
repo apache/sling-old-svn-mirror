@@ -574,9 +574,22 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting-thymeleaf</feature>
+    <feature version="${feature.version}">sling-commons-messaging</feature>
+    <feature version="${feature.version}">sling-commons-messaging-mail</feature>
     <feature version="${feature.version}">sling-extension-models</feature>
     <feature version="${feature.version}">sling-extension-query</feature>
     <feature version="${feature.version}">sling-auth-form</feature>
+    <config name="org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder">
+      subject=message\ from\ fling
+      from=fling@sling.apache.org
+      smtpHostname=localhost
+      smtpPort=8025
+      smtpUsername=sling
+      smtpPassword=fling
+    </config>
+    <config name="org.apache.sling.samples.fling.internal.WiserSmtpService">
+      smtpPort=8025
+    </config>
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
