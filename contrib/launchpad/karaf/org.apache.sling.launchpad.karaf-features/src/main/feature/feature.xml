@@ -91,7 +91,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-commons-threads" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.2.6</bundle>
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${feature.version}">
