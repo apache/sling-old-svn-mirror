@@ -114,7 +114,7 @@ public class SimpleMailService implements MessageService {
 
     @Override
     public CompletableFuture<Result> send(@Nonnull final String message, @Nonnull final String recipient, @Nonnull final Map data) {
-        return CompletableFuture.supplyAsync(() -> sendMail(message, recipient, data, mailBuilder), threadPool);
+        return CompletableFuture.supplyAsync(() -> sendMail(message, recipient, data, mailBuilder), runnable -> threadPool.submit(runnable));
     }
 
     private MailResult sendMail(final String message, final String recipient, final Map data, final MailBuilder mailBuilder) {
