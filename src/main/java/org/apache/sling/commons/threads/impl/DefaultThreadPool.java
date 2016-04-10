@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -229,7 +230,7 @@ public class DefaultThreadPool
 
     private void checkExecutor() {
         if ( this.executor == null ) {
-            throw new IllegalStateException("Thread pool " + this.name + " is already shutdown.");
+            throw new RejectedExecutionException("Thread pool " + this.name + " is already shutdown.");
         }
     }
 

@@ -19,6 +19,7 @@ package org.apache.sling.commons.threads;
 import aQute.bnd.annotation.ProviderType;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 /**
@@ -26,13 +27,7 @@ import java.util.concurrent.Future;
  * getting threads from a managed pool.
  */
 @ProviderType
-public interface ThreadPool {
-
-    /**
-     * Execute a runnable
-     * @param runnable The {@link Runnable} to execute
-     */
-    void execute(Runnable runnable);
+public interface ThreadPool extends Executor {
 
     /**
      * Submits a callable for execution
