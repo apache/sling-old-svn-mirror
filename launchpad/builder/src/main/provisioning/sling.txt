@@ -76,7 +76,7 @@
     org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.2
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.14
-    org.apache.sling/org.apache.sling.servlets.post/2.3.11-SNAPSHOT
+    org.apache.sling/org.apache.sling.servlets.post/2.3.10
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.2
     org.apache.sling/org.apache.sling.xss/1.0.8
     javax.mail/mail/1.4.7
