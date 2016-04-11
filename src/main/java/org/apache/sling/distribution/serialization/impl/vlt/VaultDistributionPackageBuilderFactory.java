@@ -42,6 +42,7 @@ import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.FileDistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.impl.ResourceDistributionPackageBuilder;
 
@@ -180,5 +181,11 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         return packageBuilder.installPackage(resourceResolver, distributionPackage);
+    }
+
+    @Nonnull
+    @Override
+    public DistributionPackageInfo installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        return packageBuilder.installPackage(resourceResolver, stream);
     }
 }

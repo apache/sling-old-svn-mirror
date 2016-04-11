@@ -62,20 +62,9 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
 
     @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
-        DistributionPackage distributionPackage = null;
-        try {
-            distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
+        DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
 
-            boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
-
-            if (!success) {
-                log.warn("could not install distribution package {}", distributionPackage.getId());
-            }
-
-            return distributionPackage.getInfo();
-        } finally {
-            DistributionPackageUtils.deleteSafely(distributionPackage);
-        }
+        return packageInfo;
     }
 
 }
