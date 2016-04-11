@@ -112,16 +112,9 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         }
 
         for (String id: ids) {
-            DistributionQueueEntry targetEntry =  targetQueue.getItem(id);
-
-            if (targetEntry != null) {
-                log.warn("item {} already in queue {}", id, targetQueue.getName());
-                continue;
-            }
-
             DistributionQueueEntry entry = sourceQueue.getItem(id);
             if (entry != null) {
-                targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
+                targetQueue.add(entry.getItem());
                 DistributionPackage distributionPackage = getPackage(resourceResolver, entry.getItem());
                 DistributionPackageUtils.acquire(distributionPackage, targetQueue.getName());
             }
@@ -143,7 +136,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
     private void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueEntry entry) {
         DistributionQueueItem item = entry.getItem();
-        String id = item.getId();
+        String id = entry.getId();
         queue.remove(id);
 
         DistributionPackage distributionPackage = getPackage(resourceResolver, item);
@@ -159,7 +152,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         if (packageBuilder != null) {
 
             try {
-                return packageBuilder.getPackage(resourceResolver, item.getId());
+                return packageBuilder.getPackage(resourceResolver, item.getPackageId());
             } catch (DistributionException e) {
                 log.error("cannot get package", e);
             }

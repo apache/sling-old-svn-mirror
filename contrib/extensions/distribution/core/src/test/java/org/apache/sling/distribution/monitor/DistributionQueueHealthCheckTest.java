@@ -81,8 +81,8 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(1);
-        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(item, status));
-        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, status));
+        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(null, item, status));
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(null, item, status));
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
         List<String> queues = new ArrayList<String>();
@@ -106,8 +106,8 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(10);
-        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(item, status));
-        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, status));
+        when(queue.getItem(any(String.class))).thenReturn(new DistributionQueueEntry(null, item, status));
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(null, item, status));
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
         List<String> queues = new ArrayList<String>();

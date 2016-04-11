@@ -147,8 +147,8 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 List<String> nameList = new ArrayList<String>();
                 Map<String, Map<String, Object>> propertiesMap = new HashMap<String, Map<String, Object>>();
                 for (DistributionQueueEntry entry : queue.getItems(0, MAX_QUEUE_DEPTH)) {
-                    nameList.add(entry.getItem().getId());
-                    propertiesMap.put(entry.getItem().getId(), getItemProperties(entry));
+                    nameList.add(entry.getId());
+                    propertiesMap.put(entry.getId(), getItemProperties(entry));
                 }
 
                 result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
@@ -190,7 +190,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             DistributionQueueItem item = entry.getItem();
             DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
-            result.put("id", item.getId());
+            result.put("id", entry.getId());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
             result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));

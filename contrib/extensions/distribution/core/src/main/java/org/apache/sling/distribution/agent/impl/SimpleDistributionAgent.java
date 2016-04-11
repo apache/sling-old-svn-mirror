@@ -430,7 +430,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             final long startTime = System.currentTimeMillis();
 
-            distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
+            distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getPackageId());
 
             if (distributionPackage != null) {
                 final long packageSize = distributionPackage.getSize();
@@ -464,7 +464,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 }
             } else {
                 removeItemFromQueue = true; // return success if package does not exist in order to clear the queue.
-                log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getId());
+                log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getPackageId());
             }
         } finally {
             if (removeItemFromQueue) {

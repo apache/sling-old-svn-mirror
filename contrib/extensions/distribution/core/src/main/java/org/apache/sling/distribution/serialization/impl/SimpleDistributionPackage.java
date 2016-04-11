@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple {@link DistributionPackage} is used for deletion of certain paths on the target instance
  */
-public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+public class SimpleDistributionPackage extends AbstractDistributionPackage implements SharedDistributionPackage {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
 
@@ -152,5 +152,15 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         }
 
         return null;
+    }
+
+    @Override
+    public void acquire(@Nonnull String[] holderNames) {
+
+    }
+
+    @Override
+    public void release(@Nonnull String[] holderNames) {
+
     }
 }
