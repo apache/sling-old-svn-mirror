@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl.avro;
+package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -28,75 +28,79 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
-
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 
 /**
- * Factory for {@link DistributionPackageBuilder}s based on Apache Avro.
+ * A factory for package builders
  */
 @Component(metatype = true,
-        label = "Apache Sling Distribution Packaging - Avro Package Builder Factory",
-        description = "OSGi configuration for Avro package builders",
+        label = "Apache Sling Distribution Packaging - Package Builder Factory",
+        description = "OSGi configuration for package builders",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionPackageBuilder.class)
-public class AvroDistributionPackageBuilderFactory implements DistributionPackageBuilder {
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Builder name: {name}")
+public class DistributionPackageBuilderFactory implements DistributionPackageBuilder {
 
     /**
      * name of this package builder.
      */
     @Property(label = "Name", description = "The name of the package builder.")
-    public static final String NAME = "name";
-
-    public static final String JCRAVRO = "jcravro";
-
-    public static final String RESOURCEAVRO = "resourceavro";
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     /**
      * type of this package builder.
      */
     @Property(options = {
-            @PropertyOption(name = JCRAVRO,
-                    value = "Avro JCR packages"
+            @PropertyOption(name = "resource",
+                    value = "resource packages"
             ),
-            @PropertyOption(name = RESOURCEAVRO,
-                    value = "Avro Resource packages"
+            @PropertyOption(name = "file",
+                    value = "file packages"
             )},
-            value = RESOURCEAVRO, label = "type", description = "The type of this package builder")
-    public static final String TYPE = "type";
+            value = "resource", label = "type", description = "The persistence type used by this package builder")
+    private static final String PERSISTENCE = DistributionComponentConstants.PN_TYPE;
+
+    @Property(name = "format.target", label = "Content Serializer", description = "The target reference for the DistributionSerializationFormat used to (de)serialize packages, " +
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
+    @Reference(name = "format")
+    private DistributionContentSerializer contentSerializer;
+
 
     /**
      * Temp file folder
      */
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
-    public static final String TEMP_FS_FOLDER = "tempFsFolder";
+    private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
     private DistributionPackageBuilder packageBuilder;
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Activate
     public void activate(Map<String, Object> config) {
 
-        String type = PropertiesUtil.toString(config.get(TYPE), null);
-        log.info("starting avro package builder of type {}", type);
+        String persistenceType = PropertiesUtil.toString(config.get(PERSISTENCE), null);
+        String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
 
-        if (RESOURCEAVRO.equals(type)) {
-            packageBuilder = new AvroDistributionPackageBuilder();
-            log.info("started avro resource package builder");
+
+        if ("file".equals(persistenceType)) {
+            packageBuilder = new FileDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
         } else {
-            throw new RuntimeException(type + " package builder not supported with Avro");
+            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
         }
+
+
     }
 
     public String getType() {

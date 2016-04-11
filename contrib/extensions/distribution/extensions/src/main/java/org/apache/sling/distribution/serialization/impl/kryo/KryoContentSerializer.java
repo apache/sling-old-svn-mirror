@@ -18,11 +18,8 @@
  */
 package org.apache.sling.distribution.serialization.impl.kryo;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,31 +44,25 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.FileDistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder}
- * based on {@link Kryo} (de)serializer for Sling {@link Resource}s.
+ * Kryo based {@link DistributionContentSerializer}
  */
-public class KryoResourceDistributionPackageBuilder implements DistributionPackageBuilder {
-
-    private final Kryo kryo = new Kryo();
+public class KryoContentSerializer implements DistributionContentSerializer {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private final String name;
+    private final Kryo kryo = new Kryo();
     private final Set<String> ignoredProperties;
     private final Set<String> ignoredNodeNames;
 
-    public String getType() {
-        return "kryo-resource";
-    }
-
-    public KryoResourceDistributionPackageBuilder() {
+    public KryoContentSerializer(String name) {
+        this.name = name;
         kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
         kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
         kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
@@ -92,67 +83,29 @@ public class KryoResourceDistributionPackageBuilder implements DistributionPacka
         ignoredNodeNames = Collections.unmodifiableSet(iNames);
     }
 
-    @Nonnull
-    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
-        DistributionPackage distributionPackage;
-        try {
-            String[] paths = request.getPaths();
-            File file = File.createTempFile("dp_" + System.nanoTime(), ".kryo");
-            Output output = new Output(new FileOutputStream(file));
-            LinkedList<Resource> resources = new LinkedList<Resource>();
-            for (String p : paths) {
-                Resource resource = resourceResolver.getResource(p);
-                if (resource != null) {
-                    addResource(request.isDeep(p), resources, resource);
-                }
-            }
-            kryo.writeObject(output, resources);
-            output.close();
-            distributionPackage = new FileDistributionPackage(file, getType());
+    @Override
+    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
 
-        } catch (Exception e) {
-            throw new DistributionException(e);
-        }
-        return distributionPackage;
-    }
-
-    private void addResource(boolean deep, LinkedList<Resource> resources, Resource resource) {
-        resources.add(resource);
-        for (Resource child : resource.getChildren()) {
-            if (deep && !ignoredNodeNames.contains(resource.getName())) {
-                addResource(true, resources, child);
+        String[] paths = request.getPaths();
+        Output output = new Output(outputStream);
+        LinkedList<Resource> resources = new LinkedList<Resource>();
+        for (String p : paths) {
+            Resource resource = resourceResolver.getResource(p);
+            if (resource != null) {
+                addResource(request.isDeep(p), resources, resource);
             }
         }
+        kryo.writeObject(output, resources);
+        output.flush();
+        byte[] buffer = output.getBuffer();
+        output.close();
+
     }
 
-    @Nonnull
-    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+    @Override
+    public void importFromStream(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
         try {
-            File file = File.createTempFile("dp_" + System.nanoTime(), ".kryo");
-            OutputStream output = new FileOutputStream(file);
-            int copied = IOUtils.copy(stream, output);
-
-            log.debug("copied {} bytes", copied);
-
-            return new FileDistributionPackage(file, getType());
-        } catch (Exception e) {
-            throw new DistributionException(e);
-        }
-    }
-
-    @CheckForNull
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        File file = new File(id);
-        if (file.exists()) {
-            return new FileDistributionPackage(file, getType());
-        } else {
-            return null;
-        }
-    }
-
-    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
-        try {
-            Input input = new Input(distributionPackage.createInputStream());
+            Input input = new Input(stream);
             LinkedList<Resource> resources = (LinkedList<Resource>) kryo.readObject(input, LinkedList.class);
             input.close();
             for (Resource resource : resources) {
@@ -162,7 +115,11 @@ public class KryoResourceDistributionPackageBuilder implements DistributionPacka
         } catch (Exception e) {
             throw new DistributionException(e);
         }
-        return true;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     private void persistResource(@Nonnull ResourceResolver resourceResolver, Resource resource) throws PersistenceException {
@@ -270,6 +227,15 @@ public class KryoResourceDistributionPackageBuilder implements DistributionPacka
             byte[] bytes = new byte[size];
             input.readBytes(bytes);
             return new ByteArrayInputStream(bytes);
+        }
+    }
+
+    private void addResource(boolean deep, LinkedList<Resource> resources, Resource resource) {
+        resources.add(resource);
+        for (Resource child : resource.getChildren()) {
+            if (deep && !ignoredNodeNames.contains(resource.getName())) {
+                addResource(true, resources, child);
+            }
         }
     }
 }

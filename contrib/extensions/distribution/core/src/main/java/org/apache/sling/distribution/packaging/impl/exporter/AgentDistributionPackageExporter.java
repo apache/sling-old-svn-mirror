@@ -88,6 +88,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
                 if (packageBuilder != null) {
                     distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    distributionPackage.getInfo().putAll(info);
 
                     log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
@@ -113,7 +114,8 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting package from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueEntry entry = queue.getHead();
+            String itemId = distributionPackageId;
+            DistributionQueueEntry entry = queue.getItem(itemId);
             DistributionPackage distributionPackage;
 
             if (entry != null) {
@@ -124,6 +126,8 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
                 if (packageBuilder != null) {
                     distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    distributionPackage.getInfo().putAll(info);
+
                     log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
                         return new AgentDistributionPackage(distributionPackage, queue);

@@ -19,55 +19,82 @@
 package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.FileInputStream;
+import javax.jcr.RepositoryException;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 
 /**
- * A {@link DistributionPackage} based on a {@link File}.
+ * {@link Resource} based {@link DistributionPackage}
  */
-public class FileDistributionPackage implements DistributionPackage {
+public class ResourceDistributionPackage implements DistributionPackage {
 
-    private final File file;
     private final String type;
+    private final Resource resource;
+    private final ResourceResolver resourceResolver;
     private final DistributionPackageInfo info;
 
-    public FileDistributionPackage(@Nonnull File file, @Nonnull String type) {
+    ResourceDistributionPackage(Resource resource, String type, ResourceResolver resourceResolver) {
         this.info = new DistributionPackageInfo(type);
-        this.file = file;
+        this.resourceResolver = resourceResolver;
         this.type = type;
+        ValueMap valueMap = resource.getValueMap();
+        assert type.equals(valueMap.get("type")) : "wrong resource type";
+        this.resource = resource;
+
+        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
 
     @Nonnull
+    @Override
     public String getId() {
-        return file.getAbsolutePath();
+        return resource.getPath();
     }
 
     @Nonnull
+    @Override
     public String getType() {
         return type;
     }
 
     @Nonnull
+    @Override
     public InputStream createInputStream() throws IOException {
-        return new FileInputStream(file);
+        try {
+            return new BufferedInputStream(DistributionPackageUtils.getStream(resource));
+        } catch (RepositoryException e) {
+            throw new IOException("Cannot create stream", e);
+        }
     }
 
     @Override
     public long getSize() {
-        return file.length();
+        Object size = resource.getValueMap().get("size");
+        return size == null ? -1 : Long.parseLong(size.toString());
     }
 
+    @Override
     public void close() {
         // do nothing
     }
 
+    @Override
     public void delete() {
-        assert file.delete();
+        try {
+            resourceResolver.delete(resource);
+            resourceResolver.commit();
+        } catch (PersistenceException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Nonnull
@@ -75,5 +102,4 @@ public class FileDistributionPackage implements DistributionPackage {
     public DistributionPackageInfo getInfo() {
         return info;
     }
-
 }
