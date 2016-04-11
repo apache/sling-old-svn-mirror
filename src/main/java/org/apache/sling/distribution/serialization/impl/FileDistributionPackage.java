@@ -27,35 +27,28 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link DistributionPackage} based on a {@link File}.
  */
-public class FileDistributionPackage implements DistributionPackage {
+public class FileDistributionPackage extends AbstractDistributionPackage {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
 
     private final File file;
-    private final String type;
-    private final DistributionPackageInfo info;
 
     public FileDistributionPackage(@Nonnull File file, @Nonnull String type) {
-        this.info = new DistributionPackageInfo(type);
+        super(file.getAbsolutePath(), type);
         this.file = file;
-        this.type = type;
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
 
-    @Nonnull
-    public String getId() {
-        return file.getAbsolutePath();
-    }
-
-    @Nonnull
-    public String getType() {
-        return type;
-    }
 
     @Nonnull
     public InputStream createInputStream() throws IOException {
@@ -72,17 +65,41 @@ public class FileDistributionPackage implements DistributionPackage {
     }
 
     public void delete() {
-        assert file.delete();
-    }
-
-    @Nonnull
-    @Override
-    public DistributionPackageInfo getInfo() {
-        return info;
+        FileUtils.deleteQuietly(file);
+        FileUtils.deleteQuietly(getStatusFile());
     }
 
     public File getFile() {
         return file;
+    }
+
+    @Override
+    public void acquire(@Nonnull String[] holderNames) {
+        try {
+            DistributionPackageUtils.acquire(getStatusFile(), holderNames);
+
+        } catch (IOException e) {
+            log.error("cannot release package", e);
+        }
+    }
+
+    @Override
+    public void release(@Nonnull String[] holderNames) {
+        try {
+            boolean doDelete = DistributionPackageUtils.release(getStatusFile(), holderNames);
+
+            if (doDelete) {
+                delete();
+            }
+        } catch (IOException e) {
+            log.error("cannot release package", e);
+        }
+    }
+
+
+    File getStatusFile() {
+        String statusFilePath = file.getAbsolutePath() + ".status";
+        return new File(statusFilePath);
     }
 
 

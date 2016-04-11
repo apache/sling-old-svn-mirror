@@ -52,7 +52,6 @@ import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
@@ -215,7 +214,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
 
 
-        DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(new DefaultSharedDistributionPackageBuilder(packageBuilder));
+        DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;

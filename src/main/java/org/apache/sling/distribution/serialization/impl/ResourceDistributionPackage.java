@@ -32,38 +32,27 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link Resource} based {@link DistributionPackage}
  */
-public class ResourceDistributionPackage implements DistributionPackage {
+public class ResourceDistributionPackage extends AbstractDistributionPackage {
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String type;
+
     private final Resource resource;
     private final ResourceResolver resourceResolver;
-    private final DistributionPackageInfo info;
 
     ResourceDistributionPackage(Resource resource, String type, ResourceResolver resourceResolver) {
-        this.info = new DistributionPackageInfo(type);
+        super(resource.getPath(), type);
         this.resourceResolver = resourceResolver;
-        this.type = type;
         ValueMap valueMap = resource.getValueMap();
         assert type.equals(valueMap.get("type")) : "wrong resource type";
         this.resource = resource;
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
-    }
-
-    @Nonnull
-    @Override
-    public String getId() {
-        return resource.getPath();
-    }
-
-    @Nonnull
-    @Override
-    public String getType() {
-        return type;
     }
 
     @Nonnull
@@ -97,9 +86,37 @@ public class ResourceDistributionPackage implements DistributionPackage {
         }
     }
 
-    @Nonnull
     @Override
-    public DistributionPackageInfo getInfo() {
-        return info;
+    public void acquire(@Nonnull String[] holderNames) {
+        try {
+            DistributionPackageUtils.acquire(resource, holderNames);
+            if (resourceResolver.hasChanges()) {
+                resourceResolver.commit();
+            }
+
+        } catch (RepositoryException e) {
+            log.error("cannot release package", e);
+        } catch (PersistenceException e) {
+            log.error("cannot release package", e);
+        }
+    }
+
+    @Override
+    public void release(@Nonnull String[] holderNames) {
+        try {
+            boolean doDelete = DistributionPackageUtils.release(resource, holderNames);
+
+            if (doDelete) {
+                delete();
+            }
+
+            if (resourceResolver.hasChanges()) {
+                resourceResolver.commit();
+            }
+        } catch (RepositoryException e) {
+            log.error("cannot release package", e);
+        } catch (PersistenceException e) {
+            log.error("cannot release package", e);
+        }
     }
 }

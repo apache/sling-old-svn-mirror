@@ -25,10 +25,12 @@ import javax.annotation.Nonnull;
  */
 public final class DistributionQueueEntry {
 
+    private final String id;
     private final DistributionQueueItem item;
     private final DistributionQueueItemStatus status;
 
-    public DistributionQueueEntry(@Nonnull DistributionQueueItem item, @Nonnull DistributionQueueItemStatus status) {
+    public DistributionQueueEntry(String id, @Nonnull DistributionQueueItem item, @Nonnull DistributionQueueItemStatus status) {
+        this.id = id;
         this.item = item;
         this.status = status;
     }
@@ -53,4 +55,7 @@ public final class DistributionQueueEntry {
         return item;
     }
 
+    public String getId() {
+        return id;
+    }
 }
