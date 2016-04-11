@@ -16,66 +16,89 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl.vlt;
+package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.jackrabbit.vault.packaging.VaultPackage;
+import org.apache.commons.io.FileUtils;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * a FileVault {@link DistributionPackage}
+ * A {@link DistributionPackage} based on a {@link File}.
  */
-public class FileVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+public class FileDistributionPackage implements DistributionPackage {
 
-    private final Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
+    private final File file;
+    private final String type;
+    private final DistributionPackageInfo info;
 
-    private final VaultPackage pkg;
+    public FileDistributionPackage(@Nonnull File file, @Nonnull String type) {
+        this.info = new DistributionPackageInfo(type);
+        this.file = file;
+        this.type = type;
 
-    public FileVaultDistributionPackage(String type, VaultPackage pkg) {
-        super(pkg.getFile().getAbsolutePath(), type);
-        this.pkg = pkg;
-        String[] paths = VltUtils.getPaths(pkg.getMetaInf());
-
-        this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
 
     @Nonnull
+    public String getId() {
+        return file.getAbsolutePath();
+    }
+
+    @Nonnull
+    public String getType() {
+        return type;
+    }
+
+    @Nonnull
     public InputStream createInputStream() throws IOException {
-        return new FileInputStream(pkg.getFile());
+        return new PackageInputStream(file);
     }
 
     @Override
     public long getSize() {
-        return pkg.getFile().length();
+        return file.length();
     }
 
     public void close() {
-        pkg.close();
+        // do nothing
     }
 
     public void delete() {
-        try {
-            VltUtils.deletePackage(pkg);
-        } catch (Throwable e) {
-            log.error("cannot delete file", e);
+        assert file.delete();
+    }
+
+    @Nonnull
+    @Override
+    public DistributionPackageInfo getInfo() {
+        return info;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+
+    public class PackageInputStream extends BufferedInputStream {
+        private final File file;
+
+        public PackageInputStream(File file) throws IOException {
+            super(FileUtils.openInputStream(file));
+
+            this.file = file;
+        }
+
+
+        public File getFile() {
+            return file;
         }
     }
 
-    @Override
-    public String toString() {
-        return "FileVaultDistributionPackage{" +
-                "id='" + getId() + '\'' +
-                ", pkg=" + pkg +
-                '}';
-    }
 }

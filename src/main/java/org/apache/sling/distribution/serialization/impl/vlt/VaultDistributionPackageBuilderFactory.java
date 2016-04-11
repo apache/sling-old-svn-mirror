@@ -36,12 +36,14 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.FileDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.ResourceDistributionPackageBuilder;
 
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.
@@ -147,10 +149,13 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             aclHandling = AccessControlHandling.valueOf(aclHandlingString.trim());
         }
 
+        DistributionContentSerializer contentSerializer = new FileVaultContentSerializer(name, packaging, importMode, aclHandling,
+                packageRoots, packageFilters, useBinaryReferences, autosaveThreshold);
+
         if ("filevlt".equals(type)) {
-            packageBuilder = new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences, autosaveThreshold);
+            packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         } else {
-            packageBuilder = new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder, useBinaryReferences, autosaveThreshold);
+            packageBuilder = new ResourceDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         }
     }
 

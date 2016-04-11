@@ -433,13 +433,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
             if (distributionPackage != null) {
-                final long getTime = System.currentTimeMillis();
+                final long packageSize = distributionPackage.getSize();
+                DistributionPackageUtils.mergeQueueEntry(distributionPackage.getInfo(), queueEntry);
 
                 final DistributionRequestType requestType = distributionPackage.getInfo().getRequestType();
-                final long packageSize = distributionPackage.getSize();
                 final String[] paths = distributionPackage.getInfo().getPaths();
-
-                DistributionPackageUtils.mergeQueueEntry(distributionPackage.getInfo(), queueEntry);
 
                 try {
                     distributionPackageImporter.importPackage(agentResourceResolver, distributionPackage);
@@ -668,7 +666,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             final long endTime = System.currentTimeMillis();
 
-            log.debug("PACKAGE-QUEUED {}: packageId={}, queueTime={}ms, responses={}", requestId, distributionPackage.getId(), endTime - startTime, responses.size());
+            log.debug("PACKAGE-QUEUED {}: packageId={}, paths={}, queueTime={}ms, responses={}", requestId, distributionPackage.getId(),
+                    distributionPackage.getInfo().getPaths(), endTime - startTime, responses.size());
         }
     }
 

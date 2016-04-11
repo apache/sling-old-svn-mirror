@@ -24,6 +24,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
@@ -85,6 +87,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
+        Map<String, Object> headerInfo = new HashMap<String, Object>();
+        DistributionPackageUtils.readInfo(stream, headerInfo);
+
         DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
         stream.mark(-1);
@@ -93,6 +98,8 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (distributionPackage == null) {
             distributionPackage = readPackageInternal(resourceResolver, stream);
         }
+
+        distributionPackage.getInfo().putAll(headerInfo);
         return distributionPackage;
     }
 
