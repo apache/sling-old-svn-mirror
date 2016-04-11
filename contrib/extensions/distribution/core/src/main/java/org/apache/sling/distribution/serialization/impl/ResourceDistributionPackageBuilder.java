@@ -117,15 +117,12 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream  inputStream)
             throws DistributionException {
-        InputStream  inputStream = null;
         try {
-            inputStream = distributionPackage.createInputStream();
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
+
             return true;
-        } catch (IOException e) {
-            throw new DistributionException(e);
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
