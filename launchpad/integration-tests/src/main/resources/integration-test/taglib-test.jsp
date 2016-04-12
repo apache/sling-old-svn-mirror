@@ -13,6 +13,11 @@ AdaptTo Tag
     Test 3: Test Non-Adaptable Handling
     result: <c:catch var="adaptionException"><sling:adaptTo adaptable="res" adaptTo="org.apache.sling.api.resource.ValueMap" var="props3" /></c:catch><c:choose><c:when test="${not empty adaptionException}">SUCCESS: ${adaptionException}</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
 
+    Test 4: Test adapting when the class name is a run-time expression
+    <c:set var="dest" value="org.apache.sling.api.resource.ValueMap"/>
+    <sling:adaptTo adaptable="${resource}" adaptTo="${dest}" var="props5"/>
+    result: <c:choose><c:when test="${not empty props5 and props5['jcr:primaryType'] eq 'nt:unstructured'}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+
 Encode Tag
     Test 1: HTML Encode
     Result: HTML_ENCODE:<sling:encode value="&amp;Hello World!<script></script>" mode="HTML" />

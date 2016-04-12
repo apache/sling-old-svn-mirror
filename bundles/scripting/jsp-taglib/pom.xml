@@ -53,7 +53,10 @@
                             !org.apache.log4j.*,
 							*
 						</Import-Package>
-						<Embed-Dependency>esapi;inline=true</Embed-Dependency>
+						<Embed-Dependency>
+							esapi;inline=true,
+							org.apache.sling.scripting.core;inline=org/apache/sling/scripting/core/servlet/CaptureResponseWrapper.class
+						</Embed-Dependency>
 					</instructions>
 				</configuration>
 			</plugin>
