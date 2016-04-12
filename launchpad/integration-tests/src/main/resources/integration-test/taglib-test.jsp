@@ -58,6 +58,11 @@ Get Property Tag
 
     Test 4: Default Value
     Result: <sling:getProperty properties="${componentProps}" key="emptyKey" var="property4" defaultValue="bob" /><c:choose><c:when test="${not empty property4}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+
+    Test 5: Test adapting when returnClass name is a run-time expression
+    <c:set var="returnClass5" value="java.util.Calendar"/>
+    <sling:getProperty properties="${componentProps}" key="jcr:created" var="property5" returnClass="${returnClass5}" />
+    result: <c:choose><c:when test="${not empty property5}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
     
 Get Resource Tag
     Test 1: Get Resource
