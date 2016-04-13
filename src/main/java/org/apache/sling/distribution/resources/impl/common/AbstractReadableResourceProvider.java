@@ -40,7 +40,9 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
     protected static final String INTERNAL_ADAPTABLE = "internal:adaptable";
 
-    protected static final String INTERNAL_ITEMS_PROPERTIES = "internal:propertiesMap";
+    public static final String INTERNAL_NAME = "internal:adaptable";
+
+    protected static final String INTERNAL_ITEMS_ITERATOR = "internal:itemsIterator";
 
     protected static final String ITEMS = "items";
 
@@ -79,7 +81,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         if (properties != null) {
             Object adaptable = properties.remove(INTERNAL_ADAPTABLE);
-            properties.remove(INTERNAL_ITEMS_PROPERTIES);
+            properties.remove(INTERNAL_ITEMS_ITERATOR);
 
             resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
         }
@@ -137,7 +139,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         List<Resource> resourceList = new ArrayList<Resource>();
         Iterable<String> childrenList = getResourceChildren(pathInfo);
-        Map<String, Map<String, Object>> childrenProperties = new HashMap<String, Map<String, Object>>();
+        Iterator<Map<String,Object>> childrenProperties = null;
 
         if (childrenList == null) {
             Map<String, Object> properties = getResourceProperties(pathInfo);
@@ -148,27 +150,21 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                 childrenList = Arrays.asList(itemsArray);
             }
 
-            if (properties != null && properties.containsKey(INTERNAL_ITEMS_PROPERTIES)) {
-                childrenProperties = (Map) properties.get(INTERNAL_ITEMS_PROPERTIES);
+            if (properties != null && properties.containsKey(INTERNAL_ITEMS_ITERATOR)) {
+                childrenProperties = (Iterator<Map<String,Object>>) properties.get(INTERNAL_ITEMS_ITERATOR);
             }
         }
 
-        if (childrenList != null) {
+        if (childrenProperties != null) {
+            return new SimpleReadableResourceIterator(childrenProperties, resourceResolver, path);
+        } else if (childrenList != null) {
             for (String childResourceName : childrenList) {
-
-                Resource childResource;
-                if (childrenProperties.containsKey(childResourceName)) {
-                    Map<String, Object> childProperties = childrenProperties.get(childResourceName);
-                    SimplePathInfo childPathInfo = extractPathInfo(path + "/" + childResourceName);
-                    childResource = buildMainResource(resourceResolver, childPathInfo, childProperties);
-
-                } else {
-                    childResource = getResource(resourceResolver, path + "/" + childResourceName);
-
-                }
+                Resource childResource = getResource(resourceResolver, path + "/" + childResourceName);;
                 resourceList.add(childResource);
             }
         }
+
+
 
         return resourceList.listIterator();
     }
