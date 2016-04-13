@@ -61,7 +61,7 @@ import aQute.bnd.annotation.ConsumerType;
  * {@link #stop()} method is called. Whenever
  * information concerning the provider is changed while the provider
  * is used, the {@link #update()} method is called. The provider context
- * instance which is passed to the {@link #start(ProviderContext} method
+ * instance which is passed to the {@link #start(ProviderContext)} method
  * contains the updated state.
  * <p>
  * Some resource providers might require (user) authentication. For example
