@@ -45,7 +45,6 @@ class DistributionAgentJobConsumer implements JobConsumer {
         boolean processingResult = false;
         if (entry != null) {
             String queueName = entry.getStatus().getQueueName();
-            DistributionQueueItem item = entry.getItem();
             log.debug("processing item {} in queue {}", entry.getId(), queueName);
             processingResult = queueProcessor.process(queueName, entry);
             log.debug("item {} processed {}", entry.getId());
