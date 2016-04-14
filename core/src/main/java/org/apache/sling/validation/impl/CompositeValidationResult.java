@@ -49,7 +49,7 @@ public class CompositeValidationResult implements ValidationResult {
 
     @Override
     public boolean isValid() {
-        // this is only valid iff all aggregated results are valid
+        // this is only valid if all aggregated results are valid
         for (ValidationResult result : results) {
             if (!result.isValid()) {
                 return false;
