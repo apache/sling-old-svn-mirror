@@ -40,7 +40,7 @@ public @interface Self {
     /**
      * If set to true, the model can be instantiated even if there is no object that can be adapted from the adaptable itself. 
      * Default = false.
-     * @deprecated Use {@link injectionStrategy} instead
+     * @deprecated Use {@link #injectionStrategy} instead
      */
     @Deprecated
     public boolean optional() default false;
