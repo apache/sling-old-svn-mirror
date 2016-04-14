@@ -48,7 +48,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
      * @param node The underlying node.
      * @param cache The cache for this valuemap
      */
-    public JcrPropertyMap(final Node node, final ValueMapCache cache) {
+    public JcrPropertyMap(final Node node, final ValueMapCacheProvider cache) {
         this(node, null, cache);
     }
 
@@ -60,7 +60,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
      * @param cache The cache for this valuemap
      * @since 2.0.8
      */
-    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCache cache) {
+    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCacheProvider cache) {
         super(node, cache);
         this.dynamicClassLoader = dynamicCL;
     }

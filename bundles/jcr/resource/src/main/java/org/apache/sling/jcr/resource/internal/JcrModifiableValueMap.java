@@ -27,7 +27,7 @@ import javax.jcr.Value;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.jcr.resource.JcrCacheableValueMap;
-import org.apache.sling.jcr.resource.ValueMapCache;
+import org.apache.sling.jcr.resource.ValueMapCacheProvider;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**
@@ -45,8 +45,8 @@ public final class JcrModifiableValueMap extends JcrCacheableValueMap implements
      * @param node The underlying node.
      * @param helper Helper data object
      */
-    public JcrModifiableValueMap(final Node node, final HelperData helper, final ValueMapCache cache) {
-		super(node, cache);
+    public JcrModifiableValueMap(final Node node, final HelperData helper, final ValueMapCacheProvider cacheProvider) {
+		super(node, cacheProvider);
         this.helper = helper;
     }
 
@@ -93,7 +93,7 @@ public final class JcrModifiableValueMap extends JcrCacheableValueMap implements
         final Object oldValue = this.get(key);
         try {
             final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(value, this.node);
-            this.cache.getCache().put(key, entry);
+            this.cacheProvider.getCache().put(key, entry);
             final String name = escapeKeyName(key);
             if ( NodeUtil.MIXIN_TYPES.equals(name) ) {
                 NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, this.helper.dynamicClassLoader));
@@ -107,7 +107,7 @@ public final class JcrModifiableValueMap extends JcrCacheableValueMap implements
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
-        this.cache.getValueCache().put(key, value);
+        this.cacheProvider.getValueCache().put(key, value);
 
         return oldValue;
     }
@@ -132,8 +132,8 @@ public final class JcrModifiableValueMap extends JcrCacheableValueMap implements
     public Object remove(final Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
-        final Object oldValue = this.cache.getCache().remove(key);
-        this.cache.getValueCache().remove(key);
+        final Object oldValue = this.cacheProvider.getCache().remove(key);
+        this.cacheProvider.getValueCache().remove(key);
         try {
             final String name = escapeKeyName(key);
             if ( node.hasProperty(name) ) {

@@ -25,13 +25,13 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  *
  * @author mikolaj.manski
  */
-public class ValueMapCache {
+public class ValueMapCacheProvider {
 
 	private final Map<String, JcrPropertyMapCacheEntry> cache;
 
 	private final Map<String, Object> valueCache;
 
-	public ValueMapCache() {
+	public ValueMapCacheProvider() {
 		this.cache = new LinkedHashMap<String, JcrPropertyMapCacheEntry>();
 		this.valueCache = new HashMap<String, Object>();
 	}

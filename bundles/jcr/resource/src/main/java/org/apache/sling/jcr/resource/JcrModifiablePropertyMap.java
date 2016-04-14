@@ -49,19 +49,21 @@ public final class JcrModifiablePropertyMap
     /**
      * Constructor
      * @param node The underlying node.
+     * @param cacheProvider cacheProvider that holds the cache for this particular PropertyMap
      */
-    public JcrModifiablePropertyMap(final Node node, final ValueMapCache cache) {
-        super(node, cache);
+    public JcrModifiablePropertyMap(final Node node, final ValueMapCacheProvider cacheProvider) {
+        super(node, cacheProvider);
     }
 
     /**
      * Constructor
      * @param node The underlying node.
      * @param dynamicCL Dynamic class loader for loading serialized objects.
+     * @param cacheProvider cacheProvider that holds the cache for this particular PropertyMap
      * @since 2.0.6
      */
-    public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCache cache) {
-        super(node, dynamicCL, cache);
+    public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCacheProvider cacheProvider) {
+        super(node, dynamicCL, cacheProvider);
     }
 
     // ---------- Map
@@ -75,9 +77,9 @@ public final class JcrModifiablePropertyMap
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
-        this.changedProperties.addAll(this.cache.getCache().keySet());
-        this.cache.getCache().clear();
-        this.cache.getValueCache().clear();
+        this.changedProperties.addAll(this.cacheProvider.getCache().keySet());
+        this.cacheProvider.getCache().clear();
+        this.cacheProvider.getValueCache().clear();
     }
 
     /**
@@ -95,11 +97,11 @@ public final class JcrModifiablePropertyMap
         readFully();
         final Object oldValue = this.get(key);
         try {
-            this.cache.getCache().put(key, new JcrPropertyMapCacheEntry(value, this.getNode()));
+            this.cacheProvider.getCache().put(key, new JcrPropertyMapCacheEntry(value, this.getNode()));
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
-        this.cache.getValueCache().put(key, value);
+        this.cacheProvider.getValueCache().put(key, value);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
@@ -130,8 +132,8 @@ public final class JcrModifiablePropertyMap
     public Object remove(Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
-        final Object oldValue = this.cache.getCache().remove(key);
-        this.cache.getValueCache().remove(key);
+        final Object oldValue = this.cacheProvider.getCache().remove(key);
+        this.cacheProvider.getValueCache().remove(key);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
@@ -146,8 +148,8 @@ public final class JcrModifiablePropertyMap
         if ( this.changedProperties != null ) {
             this.changedProperties = null;
         }
-        this.cache.getCache().clear();
-        this.cache.getValueCache().clear();
+        this.cacheProvider.getCache().clear();
+        this.cacheProvider.getValueCache().clear();
         this.fullyRead = false;
     }
 
@@ -164,8 +166,8 @@ public final class JcrModifiablePropertyMap
             final Node node = getNode();
             // check for mixin types
             if ( this.changedProperties.contains(NodeUtil.MIXIN_TYPES) ) {
-                if ( cache.getCache().containsKey(NodeUtil.MIXIN_TYPES) ) {
-                    final JcrPropertyMapCacheEntry entry = cache.getCache().get(NodeUtil.MIXIN_TYPES);
+                if ( cacheProvider.getCache().containsKey(NodeUtil.MIXIN_TYPES) ) {
+                    final JcrPropertyMapCacheEntry entry = cacheProvider.getCache().get(NodeUtil.MIXIN_TYPES);
                     NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, dynamicClassLoader));
                 } else {
                     // remove all mixin types!
@@ -176,8 +178,8 @@ public final class JcrModifiablePropertyMap
             for(final String key : this.changedProperties) {
                 final String name = escapeKeyName(key);
                 if ( !NodeUtil.MIXIN_TYPES.equals(name) ) {
-                    if ( cache.getCache().containsKey(key) ) {
-                        final JcrPropertyMapCacheEntry entry = cache.getCache().get(key);
+                    if ( cacheProvider.getCache().containsKey(key) ) {
+                        final JcrPropertyMapCacheEntry entry = cacheProvider.getCache().get(key);
                         if ( entry.isArray() ) {
                             node.setProperty(name, entry.convertToType(Value[].class, node, dynamicClassLoader));
                         } else {

@@ -22,14 +22,14 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.jcr.resource.JcrPropertyMap;
-import org.apache.sling.jcr.resource.ValueMapCache;
+import org.apache.sling.jcr.resource.ValueMapCacheProvider;
 
 public class JcrValueMap extends JcrPropertyMap {
 
     private final HelperData helper;
 
-    public JcrValueMap(final Node node, final HelperData helper, final ValueMapCache cache) {
-        super(node, helper.dynamicClassLoader, cache);
+    public JcrValueMap(final Node node, final HelperData helper, final ValueMapCacheProvider cacheProvider) {
+        super(node, helper.dynamicClassLoader, cacheProvider);
         this.helper = helper;
     }
 

@@ -47,17 +47,18 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      */
     protected final Node node;
 
-    protected final ValueMapCache cache;
+    protected final ValueMapCacheProvider cacheProvider;
 
     /**
      * Has the node been read completely?
      */
     protected boolean fullyRead;
 
-    protected JcrCacheableValueMap(final Node node, final ValueMapCache cache) {
+    protected JcrCacheableValueMap(final Node node, final ValueMapCacheProvider cacheProvider) {
         this.node = node;
-        this.cache = cache;
+        this.cacheProvider = cacheProvider;
         this.fullyRead = false;
+        this.readFully();
     }
 
         protected String checkKey(final String key) {
@@ -116,7 +117,7 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      */
     public boolean containsValue(final Object value) {
         readFully();
-        return cache.getValueCache().containsValue(value);
+        return cacheProvider.getValueCache().containsValue(value);
     }
 
     /**
@@ -131,7 +132,7 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      */
     public int size() {
         readFully();
-        return cache.getCache().size();
+        return cacheProvider.getCache().size();
     }
 
     /**
@@ -140,10 +141,10 @@ public abstract class JcrCacheableValueMap implements ValueMap {
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.getCache().size() == cache.getValueCache().size()) {
-            sourceMap = cache.getValueCache();
+        if (cacheProvider.getCache().size() == cacheProvider.getValueCache().size()) {
+            sourceMap = cacheProvider.getValueCache();
         } else {
-            sourceMap = transformEntries(cache.getCache());
+            sourceMap = transformEntries(cacheProvider.getCache());
         }
         return Collections.unmodifiableSet(sourceMap.entrySet());
     }
@@ -153,7 +154,7 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      */
     public Set<String> keySet() {
         readFully();
-        return Collections.unmodifiableSet(cache.getCache().keySet());
+        return Collections.unmodifiableSet(cacheProvider.getCache().keySet());
     }
 
     /**
@@ -162,10 +163,10 @@ public abstract class JcrCacheableValueMap implements ValueMap {
     public Collection<Object> values() {
         readFully();
         final Map<String, Object> sourceMap;
-        if (cache.getCache().size() == cache.getValueCache().size()) {
-            sourceMap = cache.getValueCache();
+        if (cacheProvider.getCache().size() == cacheProvider.getValueCache().size()) {
+            sourceMap = cacheProvider.getValueCache();
         } else {
-            sourceMap = transformEntries(cache.getCache());
+            sourceMap = transformEntries(cacheProvider.getCache());
         }
         return Collections.unmodifiableCollection(sourceMap.values());
     }
@@ -189,7 +190,7 @@ public abstract class JcrCacheableValueMap implements ValueMap {
      * Read all properties.
      * @throws IllegalArgumentException if a repository exception occurs
      */
-    protected void readFully() {
+    protected final void readFully() {
         if (!fullyRead) {
             try {
                 final PropertyIterator pi = node.getProperties();
@@ -251,14 +252,14 @@ public abstract class JcrCacheableValueMap implements ValueMap {
             if (key == null) {
                 key = Text.unescapeIllegalJcrChars(name);
             }
-            JcrPropertyMapCacheEntry entry = cache.getCache().get(key);
-            if (entry == null) {
+            JcrPropertyMapCacheEntry entry = cacheProvider.getCache().get(key);
+            if (entry == null || !prop.equals(entry.getPropertyValueOrNull())) {
                 entry = new JcrPropertyMapCacheEntry(prop);
-                cache.getCache().put(key, entry);
+                cacheProvider.getCache().put(key, entry);
 
                 final Object defaultValue = entry.getPropertyValue();
                 if (defaultValue != null) {
-                    cache.getValueCache().put(key, entry.getPropertyValue());
+                    cacheProvider.getValueCache().put(key, entry.getPropertyValue());
                 }
             }
             return entry;
@@ -319,7 +320,7 @@ public abstract class JcrCacheableValueMap implements ValueMap {
         }
 
         // check cache
-        JcrPropertyMapCacheEntry cachedValued = cache.getCache().get(name);
+        JcrPropertyMapCacheEntry cachedValued = cacheProvider.getCache().get(name);
         if (fullyRead || cachedValued != null) {
             return cachedValued;
         }

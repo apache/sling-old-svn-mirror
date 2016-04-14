@@ -37,7 +37,7 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
-import org.apache.sling.jcr.resource.ValueMapCache;
+import org.apache.sling.jcr.resource.ValueMapCacheProvider;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
@@ -45,12 +45,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private static final String PROP_NAME_NIL = "prop_name_nil";
 
-	private final ValueMapCache cache = new ValueMapCache();
-
-
     private String rootPath;
 
     private Node rootNode;
+
+    private ValueMapCacheProvider valueMapCache = new ValueMapCacheProvider();
 
     @Override
     protected void setUp() throws Exception {
@@ -58,7 +57,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         rootPath = "/test" + System.currentTimeMillis();
         rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
-            "nt:unstructured");
+                "nt:unstructured");
         session.save();
     }
 
@@ -186,7 +185,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         rootNode.setProperty("bin", valueFactory.createBinary(instream));
         rootNode.getSession().save();
 
-        ValueMap map = new JcrPropertyMap(rootNode, cache);
+        ValueMap map = new JcrPropertyMap(rootNode, valueMapCache);
         instream = map.get("bin", InputStream.class);
         assertNotNull(instream);
         String read = IOUtils.toString(instream);
@@ -199,7 +198,6 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     // ---------- internal
-
     private void testValue(Node node, Object value, Object defaultValue) throws RepositoryException {
         ValueMap map = createProperty(rootNode, value);
         assertValueType(value, map.get(PROP_NAME, defaultValue), defaultValue.getClass());
@@ -247,7 +245,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     protected JcrPropertyMap createPropertyMap(final Node node) {
-        return new JcrPropertyMap(node, cache);
+        return new JcrPropertyMap(node, valueMapCache);
     }
 
     private void testValue(Node node, Object value) throws RepositoryException {
@@ -272,11 +270,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
             cal.setTime((Date) value);
             jcrValue = fac.createValue(cal);
         } else if (value instanceof Boolean) {
-            jcrValue = fac.createValue(((Boolean) value).booleanValue());
+            jcrValue = fac.createValue(((Boolean) value));
         } else if (value instanceof Double) {
-            jcrValue = fac.createValue(((Double) value).doubleValue());
+            jcrValue = fac.createValue(((Double) value));
         } else if (value instanceof Long) {
-            jcrValue = fac.createValue(((Long) value).longValue());
+            jcrValue = fac.createValue(((Long) value));
         } else if (value instanceof BigDecimal) {
             jcrValue = fac.createValue((BigDecimal) value);
         } else {
@@ -374,11 +372,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     protected void search(Iterator<?> i, Object value) {
         boolean found = false;
-        while ( !found && i.hasNext() ) {
+        while (!found && i.hasNext()) {
             final Object current = i.next();
             found = current.equals(value);
         }
-        if ( !found ) {
+        if (!found) {
             fail("Value " + value + " is not found in iterator.");
         }
     }
