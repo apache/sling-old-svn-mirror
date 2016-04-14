@@ -184,7 +184,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         Result<AdapterType> result = internalCreateModel(adaptable, type);
-        if (!result.wasSuccessfull()) {
+        if (!result.wasSuccessful()) {
             log.warn("Could not adapt to model", result.getThrowable());
             return null;
         } else {
@@ -196,7 +196,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     public @Nonnull <ModelType> ModelType createModel(@Nonnull Object adaptable, @Nonnull Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, ValidationException, InvalidModelException {
         Result<ModelType> result = internalCreateModel(adaptable, type);
-        if (!result.wasSuccessfull()) {
+        if (!result.wasSuccessful()) {
             throw result.getThrowable();
         }
         return result.getValue();
@@ -299,7 +299,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 }
                 if (modelClass.getType().isInterface()) {
                     Result<InvocationHandler> handlerResult = createInvocationHandler(adaptable, modelClass);
-                    if (handlerResult.wasSuccessfull()) {
+                    if (handlerResult.wasSuccessful()) {
                         ModelType model = (ModelType) Proxy.newProxyInstance(modelClass.getType().getClassLoader(), new Class<?>[] { modelClass.getType() }, handlerResult.getValue());
                         result = new Result<ModelType>(model);
                     } else {
@@ -442,7 +442,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         // if injection failed, use default
         if (!wasInjectionSuccessful) {
             Result<Boolean> defaultInjectionResult = injectDefaultValue(element, annotationProcessor, callback);
-            if (defaultInjectionResult.wasSuccessfull()) {
+            if (defaultInjectionResult.wasSuccessful()) {
                 // log previous injection error, if there was any
                 if (lastInjectionException != null) {
                     log.debug("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
@@ -523,7 +523,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             // if this fails, make sure resources that may be claimed by injectors are cleared up again
             try {
                 Result<ModelType> result = newInstanceWithConstructorInjection(constructorToUse, adaptable, modelClass, registry);
-                if (!result.wasSuccessfull()) {
+                if (!result.wasSuccessful()) {
                     registry.onDisposed();
                     return result;
                 } else {
@@ -756,7 +756,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private RuntimeException setField(InjectableField injectableField, Object createdObject, Object value) {
         Field field = injectableField.getField();
         Result<Object> result = adaptIfNecessary(value, field.getType(), field.getGenericType());
-        if (result.wasSuccessfull()) {
+        if (result.wasSuccessful()) {
             boolean accessible = field.isAccessible();
             try {
                 if (!accessible) {
@@ -779,7 +779,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private RuntimeException setMethod(InjectableMethod injectableMethod, Map<Method, Object> methods, Object value) {
         Method method = injectableMethod.getMethod();
         Result<Object> result = adaptIfNecessary(value, method.getReturnType(), method.getGenericReturnType());
-        if (result.wasSuccessfull()) {
+        if (result.wasSuccessful()) {
             methods.put(method, result.getValue());
             return null;
         } else {
@@ -790,7 +790,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private RuntimeException setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value) {
         if (constructorParameter.getParameterType() instanceof Class<?>) {
             Result<Object> result = adaptIfNecessary(value, (Class<?>) constructorParameter.getParameterType(), constructorParameter.getGenericType());
-            if (result.wasSuccessfull() ) {
+            if (result.wasSuccessful() ) {
                 parameterValues.set(constructorParameter.getParameterIndex(), result.getValue());
                 return null;
             } else {
@@ -806,7 +806,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         if (!isAcceptableType(type, genericType, value)) {
             if (isModelClass(value, type) && canCreateFromAdaptable(value, type)) {
                 Result<?> result = internalCreateModel(value, type);
-                if (result.wasSuccessfull()) {
+                if (result.wasSuccessful()) {
                     adaptedValue = result.getValue();
                 } else {
                     return new Result<Object>(new ModelClassException(
