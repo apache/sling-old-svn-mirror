@@ -310,7 +310,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     /**
      * Get the script engine manager.
-     * Refresh the manager if changes occured.
+     * Refresh the manager if changes occurred.
      */
     ScriptEngineManager getScriptEngineManager() {
         return this.scriptEngineManager;
