@@ -67,12 +67,4 @@ public class JobBuilderImpl implements JobBuilder {
                 UUID.randomUUID().toString(),
                 this.jobManager.getJobScheduler());
     }
-
-    public ScheduleBuilder schedule(final String name) {
-        return new JobScheduleBuilderImpl(
-                this.topic,
-                this.properties,
-                name,
-                this.jobManager.getJobScheduler());
-    }
 }
