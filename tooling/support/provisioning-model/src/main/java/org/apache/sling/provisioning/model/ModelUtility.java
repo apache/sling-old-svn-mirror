@@ -310,7 +310,8 @@ public abstract class ModelUtility {
                         artifact.getArtifactId(),
                         newVersion,
                         artifact.getClassifier(),
-                        artifact.getType());
+                        artifact.getType(),
+                        artifact.getMetadata());
             }
         };
 

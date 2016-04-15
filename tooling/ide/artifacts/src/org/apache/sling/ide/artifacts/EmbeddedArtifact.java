@@ -52,6 +52,10 @@ public class EmbeddedArtifact {
     public String getVersion() {
         return version;
     }
+    
+    public String getOsgiFriendlyVersion() {
+        return version.replace('-', '.');
+    }
 
     /**
      * 

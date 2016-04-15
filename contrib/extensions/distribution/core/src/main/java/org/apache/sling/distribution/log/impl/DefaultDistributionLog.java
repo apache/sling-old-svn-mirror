@@ -40,7 +40,6 @@ public class DefaultDistributionLog implements DistributionLog {
 
     private final DistributionComponentKind kind;
     private final String name;
-    private int maxLines = 1000;
     private final LinkedList<String> lines = new LinkedList<String>();
     private final Logger logger;
     private final LogLevel logLevel;
@@ -85,15 +84,14 @@ public class DefaultDistributionLog implements DistributionLog {
         Calendar cal = Calendar.getInstance();
 
 
-        StringBuffer logLine = new StringBuffer();
-        logLine.append(dateFormat.format(cal.getTime()));
-        logLine.append(" - ");
-        logLine.append(level.name());
-        logLine.append(" - ");
-        logLine.append(message);
-        String log = logLine.toString();
+        String log = dateFormat.format(cal.getTime()) +
+                " - " +
+                level.name() +
+                " - " +
+                message;
         synchronized (lines) {
             lines.add(log);
+            int maxLines = 1000;
             while (lines.size() > maxLines) {
                 lines.removeFirst();
             }

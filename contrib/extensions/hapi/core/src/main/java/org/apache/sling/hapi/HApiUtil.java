@@ -19,17 +19,14 @@
 
 package org.apache.sling.hapi;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-public interface HApiUtil {
-    public static final Logger LOG = LoggerFactory.getLogger(HApiUtil.class);
+import org.apache.sling.api.resource.ResourceResolver;
 
-    public static final String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";
+public interface HApiUtil {
+
+    String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";
 
     /**
      * <p>Get a HApi type object from a type identifier.</p>
@@ -43,7 +40,7 @@ public interface HApiUtil {
      * @return The first node that matches that type or null if none is found.
      * @throws RepositoryException
      */
-    public Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException;
+    Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException;
 
 
     /**
@@ -59,7 +56,7 @@ public interface HApiUtil {
      * @return The HApiType resolved from the type identifier
      * @throws javax.jcr.RepositoryException
      */
-    public HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException;
+    HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException;
 
     /**
      * <p>Get a HApi type object from the {@link javax.jcr.Node}.</p>
@@ -89,7 +86,7 @@ public interface HApiUtil {
      * @return The HApiType
      * @throws RepositoryException
      */
-    public HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException;
+    HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException;
 
     /**
      * Get a new instance of AttributeHelper for the type identified by 'type'
@@ -99,5 +96,5 @@ public interface HApiUtil {
      * @return
      * @throws RepositoryException
      */
-    public MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException;
+    MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException;
 }

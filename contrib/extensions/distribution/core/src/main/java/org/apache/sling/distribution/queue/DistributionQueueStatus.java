@@ -23,9 +23,9 @@ package org.apache.sling.distribution.queue;
  * The status of a certain {@link DistributionQueue}
  */
 public final class DistributionQueueStatus {
-    final int itemsCount;
+    private final int itemsCount;
 
-    final DistributionQueueState queueState;
+    private final DistributionQueueState queueState;
 
     public DistributionQueueStatus(int itemsCount, DistributionQueueState queueState) {
         this.itemsCount = itemsCount;

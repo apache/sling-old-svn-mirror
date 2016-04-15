@@ -51,14 +51,4 @@ public class JobHandlingUtilsTest {
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.request.type"));
     }
-
-    @Test
-    public void testIdPropertiesFromPackageCreation() throws Exception {
-        DistributionQueueItem distributionPackage = mock(DistributionQueueItem.class);
-        when(distributionPackage.getId()).thenReturn("an-id");
-        Map<String, Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(distributionPackage.getId());
-        assertNotNull(idPropertiesFromPackage);
-        assertEquals(1, idPropertiesFromPackage.size());
-        assertNotNull(idPropertiesFromPackage.get("distribution.item.id"));
-    }
 }

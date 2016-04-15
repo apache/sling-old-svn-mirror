@@ -29,6 +29,7 @@ import javax.jcr.Value;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the value map based on a JCR node.
@@ -38,9 +39,11 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  * @deprecated A (JCR) resource should be adapted to a {@link ValueMap}.
  */
 @Deprecated
-public class JcrPropertyMap extends JcrCacheableValueMap {
+public class JcrPropertyMap extends JcrCacheableValueMap implements ValueMap {
 
-    final ClassLoader dynamicClassLoader;
+    private static volatile boolean LOG_DEPRECATED = true;
+
+    private final ClassLoader dynamicClassLoader;
 
     /**
      * Create a new JCR property map based on a node.
@@ -63,6 +66,14 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
     public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCacheProvider cacheProvider) {
         super(node, cacheProvider);
         this.dynamicClassLoader = dynamicCL;
+        if ( LOG_DEPRECATED ) {
+            LOG_DEPRECATED = false;
+            LoggerFactory.getLogger(this.getClass()).warn("DEPRECATION WARNING: JcrPropertyMap is deprecated. Please switch to resource API.");
+        }
+    }
+
+    protected ClassLoader getDynamicClassLoader() {
+        return this.dynamicClassLoader;
     }
 
     /**
@@ -77,6 +88,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
     /**
      * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Class)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey, final Class<T> type) {
         final String key = checkKey(aKey);
@@ -88,12 +100,13 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
         if (entry == null) {
             return null;
         }
-        return entry.convertToType(type, this.node, this.dynamicClassLoader);
+        return entry.convertToType(type, this.node, this.getDynamicClassLoader());
     }
 
     /**
      * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey, final T defaultValue) {
         final String key = checkKey(aKey);
@@ -117,6 +130,7 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
     /**
      * @see java.util.Map#get(java.lang.Object)
      */
+    @Override
     public Object get(final Object aKey) {
         final String key = checkKey(aKey.toString());
         final JcrPropertyMapCacheEntry entry = this.read(key);
@@ -129,14 +143,17 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object put(String key, Object value) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void putAll(Map<? extends String, ? extends Object> t) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object remove(Object key) {
         throw new UnsupportedOperationException();
     }

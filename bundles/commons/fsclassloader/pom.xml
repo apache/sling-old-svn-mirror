@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -64,10 +64,6 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-                <configuration>
-                    <!-- TODO - remove after fixing SLING-4833-->
-                    <ignoreErrors>true</ignoreErrors>
-                </configuration>
             </plugin>
         </plugins>
     </build>

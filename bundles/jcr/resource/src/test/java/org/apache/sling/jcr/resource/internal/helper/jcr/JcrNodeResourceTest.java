@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -32,6 +34,7 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.PathMapperImpl;
@@ -39,7 +42,7 @@ import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(null, new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
     }
 
     public void testLinkedFile() throws Exception {

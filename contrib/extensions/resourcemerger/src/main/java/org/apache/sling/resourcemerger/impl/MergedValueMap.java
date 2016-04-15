@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,28 +52,32 @@ public class MergedValueMap extends ValueMapDecorator {
      */
     public MergedValueMap(final List<ValueMap> valueMaps) {
         super(new HashMap<String, Object>());
+        
+        List<String> propertyNamesToHide = new ArrayList<String>(EXCLUDED_PROPERTIES);
+        
         // Iterate over value maps
         for (final ValueMap vm : valueMaps) {
-            // Add all properties
-            this.putAll(vm);
-
-            // Get properties to hide
+            // Get properties to hide from local or underlying value maps
             final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
             if ( propertiesToHide != null ) {
                 for (final String propName : propertiesToHide) {
                     if (propName.equals("*")) {
+                        // hiding by wildcard only hides the underlying properties (not the local ones)
                         this.clear();
                         break;
                     } else {
-                        this.remove(propName);
+                        propertyNamesToHide.add(propName);
                     }
                 }
             }
+            
+            // Add all local properties
+            this.putAll(vm);
         }
 
         // Hide excluded properties
-        for (final String excludedProperty : EXCLUDED_PROPERTIES) {
-            this.remove(excludedProperty);
+        for (final String propertyNameToHide : propertyNamesToHide) {
+            this.remove(propertyNameToHide);
         }
     }
 }

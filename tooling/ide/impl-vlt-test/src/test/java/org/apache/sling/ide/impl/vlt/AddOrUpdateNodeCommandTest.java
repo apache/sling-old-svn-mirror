@@ -47,6 +47,7 @@ import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -399,6 +400,38 @@ public class AddOrUpdateNodeCommandTest {
                 return null;
             }
         });
+    }
+    
+    @Test
+    public void setEmptyMixinTypes() throws Exception {
+        setMixinTypes0();
+    }
+    
+    private void setMixinTypes0(final String... mixinTypeNames) throws Exception {
+        
+        doWithTransientRepository(new CallableWithSession() {
+            @Override
+            public Void call() throws Exception {
+                ResourceProxy resource = newResource("/content", "nt:unstructured");
+                resource.addProperty("jcr:mixinTypes", mixinTypeNames);
+
+                AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo(), credentials(), DEFAULT_CONTEXT, null, resource, logger);
+                cmd.execute().get();
+
+                session().refresh(false);
+
+                Node content = session().getRootNode().getNode("content");
+                assertThat(content.getMixinNodeTypes(), Matchers.arrayWithSize(mixinTypeNames.length));
+
+                return null;
+            }
+        });        
+    }
+
+    @Test
+    public void setMixinTypes() throws Exception {
+        
+        setMixinTypes0("mix:created");
     }
 
     private void doWithTransientRepository(CallableWithSession callable) throws Exception {

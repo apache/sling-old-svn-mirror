@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.compiler</artifactId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>2.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons Java Compiler</name>
@@ -42,6 +42,10 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/compiler</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/compiler</url>
     </scm>
+
+    <properties>
+        <sling.java.version>7</sling.java.version>
+    </properties>
 
     <build>
         <plugins>
@@ -105,7 +109,7 @@
         <dependency>
             <groupId>org.eclipse.jdt.core.compiler</groupId>
             <artifactId>ecj</artifactId>
-            <version>P20140317-1600</version>
+            <version>4.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

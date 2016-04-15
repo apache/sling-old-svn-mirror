@@ -33,6 +33,7 @@ import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,20 +103,17 @@ public class SightlyJavaCompilerServiceTest {
     }
 
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {
+        RenderContext renderContext = Mockito.mock(RenderContext.class);
         Resource pojoResource = Mockito.mock(Resource.class);
+        when(pojoResource.getPath()).thenReturn(pojoPath);
         ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
+        when(renderContext.getScriptResourceResolver()).thenReturn(resolver);
         when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
         when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY"));
         JavaCompiler javaCompiler = Mockito.mock(JavaCompiler.class);
         CompilationResult compilationResult = Mockito.mock(CompilationResult.class);
         when(compilationResult.getErrors()).thenReturn(new ArrayList<CompilerMessage>());
         when(javaCompiler.compile(Mockito.any(CompilationUnit[].class), Mockito.any(Options.class))).thenReturn(compilationResult);
-        when(compilationResult.loadCompiledClass(className)).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                return MockPojo.class;
-            }
-        });
         ClassLoaderWriter clw = Mockito.mock(ClassLoaderWriter.class);
         ClassLoader classLoader = Mockito.mock(ClassLoader.class);
         when(clw.getClassLoader()).thenReturn(classLoader);
@@ -127,7 +125,11 @@ public class SightlyJavaCompilerServiceTest {
         });
         Whitebox.setInternalState(compiler, "classLoaderWriter", clw);
         Whitebox.setInternalState(compiler, "javaCompiler", javaCompiler);
-        Object obj = compiler.getInstance(resolver, null, className, false);
+        SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
+        when(sightlyEngineConfiguration.getBundleSymbolicName()).thenReturn("org.apache.sling.scripting.sightly");
+        when(sightlyEngineConfiguration.getScratchFolder()).thenReturn("/org/apache/sling/scripting/sightly");
+        Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
+        Object obj = compiler.getInstance(renderContext, className);
         assertTrue("Expected to obtain a " + MockPojo.class.getName() + " object.", obj instanceof MockPojo);
     }
 }

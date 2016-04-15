@@ -186,7 +186,7 @@ public final class MockBundle implements Bundle {
     }
 
     @Override
-    public ServiceReference[] getRegisteredServices() {
+    public ServiceReference<?>[] getRegisteredServices() {
         throw new UnsupportedOperationException();
     }
 
@@ -201,7 +201,7 @@ public final class MockBundle implements Bundle {
     }
 
     @Override
-    public ServiceReference[] getServicesInUse() {
+    public ServiceReference<?>[] getServicesInUse() {
         throw new UnsupportedOperationException();
     }
 
@@ -250,27 +250,27 @@ public final class MockBundle implements Bundle {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi 4.2.0
+    @Override
     public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(final int signersType) {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi 4.2.0
+    @Override
     public Version getVersion() {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
+    @Override
     public int compareTo(Bundle o) {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
+    @Override
     public <A> A adapt(Class<A> type) {
         throw new UnsupportedOperationException();
     }
 
-    // this is part of org.osgi.core 6.0.0
+    @Override
     public File getDataFile(String filename) {
         throw new UnsupportedOperationException();
     }

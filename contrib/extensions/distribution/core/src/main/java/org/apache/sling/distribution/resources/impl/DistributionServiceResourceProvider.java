@@ -46,9 +46,9 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
     private static final String SERVICES_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
 
-    public DistributionServiceResourceProvider(String kind,
-                                               DistributionComponentProvider componentProvider,
-                                               String resourceRoot) {
+    DistributionServiceResourceProvider(String kind,
+                                        DistributionComponentProvider componentProvider,
+                                        String resourceRoot) {
         super(resourceRoot);
         this.kind = DistributionComponentKind.fromName(kind);
         this.componentProvider = componentProvider;
@@ -85,7 +85,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return null;
     }
 
-    protected Map<String, Object> getResourceProperties(String resourceName) {
+    private Map<String, Object> getResourceProperties(String resourceName) {
 
         DistributionComponent component = componentProvider.getComponent(kind, resourceName);
 
@@ -103,7 +103,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return null;
     }
 
-    protected Map<String, Object> getResourceRootProperties() {
+    private Map<String, Object> getResourceRootProperties() {
 
         List<DistributionComponent> componentList = componentProvider.getComponents(kind);
 
@@ -122,7 +122,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
     }
 
 
-    String getResourceType(DistributionComponentKind kind) {
+    private String getResourceType(DistributionComponentKind kind) {
         if (DistributionComponentKind.AGENT.equals(kind)) {
             return DistributionResourceTypes.AGENT_RESOURCE_TYPE;
         } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
@@ -136,7 +136,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return SERVICES_RESOURCE_TYPE;
     }
 
-    String getRootResourceType(DistributionComponentKind kind) {
+    private String getRootResourceType(DistributionComponentKind kind) {
         if (DistributionComponentKind.AGENT.equals(kind)) {
             return DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE;
         } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
@@ -150,11 +150,11 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return SERVICES_RESOURCE_TYPE;
     }
 
-    protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
+    Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
         return null;
     }
 
-    protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+    Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
         return null;
     }
 }

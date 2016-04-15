@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,6 +39,7 @@ import org.apache.sling.discovery.commons.providers.spi.base.AbstractServiceWith
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,4 +244,22 @@ public class TestOakSyncTokenService {
         assertEquals(3, l.countEvents());
     }
     
+    @Test
+    public void testRapidIdMapServiceActivateDeactivate() throws Exception {
+        BackgroundCheckRunnable bgCheckRunnable = getBackgroundCheckRunnable(idMapService1);
+        assertNotNull(bgCheckRunnable);
+        assertFalse(bgCheckRunnable.isDone());
+        idMapService1.deactivate();
+        assertFalse(idMapService1.waitForInit(2500));
+        bgCheckRunnable = getBackgroundCheckRunnable(idMapService1);
+        assertNotNull(bgCheckRunnable);
+        assertTrue(bgCheckRunnable.isDone());
+    }
+    
+    private BackgroundCheckRunnable getBackgroundCheckRunnable(IdMapService idMapService) throws NoSuchFieldException, IllegalAccessException {
+        Field field = idMapService.getClass().getSuperclass().getDeclaredField("backgroundCheckRunnable");
+        field.setAccessible(true);
+        Object backgroundCheckRunnable = field.get(idMapService);
+        return (BackgroundCheckRunnable) backgroundCheckRunnable;
+    }
 }

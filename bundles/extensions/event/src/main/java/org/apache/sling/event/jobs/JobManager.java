@@ -25,8 +25,17 @@ import aQute.bnd.annotation.ProviderType;
 
 
 /**
- * The job manager is the heart of the job event handling.
- * It can be used to manage and monitor the queues.
+ * The job manager is the heart of the job processing.
+ * <p>
+ * The job manager allows to create new jobs, search for
+ * jobs and get statistics about the current state.
+ * <p>
+ * The terminology used in the job manager is slightly
+ * different from common terminology:
+ * Each job has a topic and a topic is associated with
+ * a queue. Queues can be created through configuration
+ * and each queue can process one or more topics.
+ *
  * @since 3.0
  */
 @ProviderType
@@ -120,9 +129,9 @@ public interface JobManager {
     boolean removeJobById(String jobId);
 
     /**
-     * Find a job - either scheduled or active.
+     * Find a job - either queued or active.
      *
-     * This method searches for an event with the given topic and filter properties. If more than one
+     * This method searches for a job with the given topic and filter properties. If more than one
      * job matches, the first one found is returned which could be any of the matching jobs.
      *
      * The returned job object is a snapshot of the job state taken at the time of the call. Updates

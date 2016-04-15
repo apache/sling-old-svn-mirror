@@ -18,11 +18,6 @@
  */
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
-import javax.inject.Inject;
-import javax.jcr.Session;
-
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -31,17 +26,14 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Bundle;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingLaunchpadOakTarIT extends KarafTestSupport {
-
-    @Inject
-    @Filter(timeout = 300000)
-    public SlingRepository slingRepository;
+public class SlingLaunchpadOakTarIT extends AbstractSlingLaunchpadOakTestSupport {
 
     @Configuration
     public Option[] configuration() {
@@ -51,15 +43,10 @@ public class SlingLaunchpadOakTarIT extends KarafTestSupport {
     }
 
     @Test
-    public void testSlingRepository() throws Exception {
-        assertNotNull(slingRepository);
-    }
-
-    @Test
-    public void testVarSlingExists() throws Exception {
-        final Session session = slingRepository.loginAdministrative(null);
-        session.getRootNode().getNode("var/sling");
-        session.logout();
+    public void testOrgApacheJackrabbitOakSegment() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-segment");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
 }

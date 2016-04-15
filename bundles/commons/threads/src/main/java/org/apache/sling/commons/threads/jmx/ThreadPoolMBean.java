@@ -16,9 +16,12 @@
  */
 package org.apache.sling.commons.threads.jmx;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This is the management interface for a Sling Thread Pool.
  */
+@ProviderType
 public interface ThreadPoolMBean {
 
     /**
@@ -78,6 +81,13 @@ public interface ThreadPoolMBean {
      * @return the task count or -1 if the thread pool does not have an Executor
      */
     long getExecutorTaskCount();
+
+    /**
+     * Return the configured max thread age.
+     *
+     * @return The configured max thread age.
+     */
+    long getMaxThreadAge();
 
     /**
      * Return the configured keep alive time.

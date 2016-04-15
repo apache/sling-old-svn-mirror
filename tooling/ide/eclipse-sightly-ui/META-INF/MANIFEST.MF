@@ -1,18 +1,25 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-sightly-ui;singleton:=true
-Bundle-Version: 1.0.99.qualifier
+Bundle-Version: 1.1.1.qualifier
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
+ org.eclipse.jface,
  org.eclipse.swt
-Import-Package: org.apache.sling.ide.eclipse.sightly,
+Import-Package: org.apache.sling.ide.eclipse.core,
+ org.apache.sling.ide.eclipse.sightly,
  org.apache.sling.ide.eclipse.sightly.model,
  org.apache.sling.ide.eclipse.sightly.validation,
- org.eclipse.jface.resource,
+ org.eclipse.core.commands,
  org.eclipse.jface.text,
  org.eclipse.jface.text.contentassist,
+ org.eclipse.ui,
+ org.eclipse.ui.dialogs,
+ org.eclipse.ui.handlers,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.statushandlers,
  org.eclipse.wst.html.core.internal.validation,
  org.eclipse.wst.html.internal.validation,
  org.eclipse.wst.sse.core,
@@ -27,3 +34,4 @@ Import-Package: org.apache.sling.ide.eclipse.sightly,
  org.eclipse.wst.xml.core.internal.provisional.document,
  org.eclipse.wst.xml.core.internal.regions,
  org.eclipse.wst.xml.ui.internal.contentassist
+Export-Package: org.apache.sling.ide.eclipse.sightly.ui.internal;x-friends:="org.apache.sling.ide.eclipse-test"

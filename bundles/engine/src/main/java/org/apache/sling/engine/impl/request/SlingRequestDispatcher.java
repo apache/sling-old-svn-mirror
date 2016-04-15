@@ -61,6 +61,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         this.path = resource.getPath();
     }
 
+    @Override
     public void include(ServletRequest request, ServletResponse sResponse)
             throws ServletException, IOException {
 
@@ -117,6 +118,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
     }
 
+    @Override
     public void forward(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {
 
@@ -168,13 +170,6 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
     private void dispatch(ServletRequest request, ServletResponse sResponse,
             boolean include) throws ServletException, IOException {
-
-        /**
-         * TODO: I have made some quick fixes in this method for SLING-221 and
-         * SLING-222, but haven't had time to do a proper review. This method
-         * might deserve a more extensive rewrite.
-         */
-
         SlingHttpServletRequest cRequest = RequestData.unwrap(request);
         RequestData rd = RequestData.getRequestData(cRequest);
         String absPath = getAbsolutePath(cRequest, path);

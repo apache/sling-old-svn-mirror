@@ -26,12 +26,15 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.nosql.couchbase.client.CouchbaseClient;
 import org.apache.sling.nosql.couchbase.client.CouchbaseKey;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
@@ -57,14 +60,11 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
     
     private static final N1qlParams N1QL_PARAMS = N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS);
 
+    private static final Logger log = LoggerFactory.getLogger(CouchbaseNoSqlAdapter.class);
+
     public CouchbaseNoSqlAdapter(CouchbaseClient couchbaseClient, String cacheKeyPrefix) {
         this.couchbaseClient = couchbaseClient;
         this.cacheKeyPrefix = cacheKeyPrefix;
-        
-        // make sure primary index and index on parentPath is present - ignore error if it is already present
-        Bucket bucket = couchbaseClient.getBucket();
-        bucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + couchbaseClient.getBucketName() + "`"));
-        bucket.query(N1qlQuery.simple("CREATE INDEX " + PN_PARENT_PATH + " ON `" + couchbaseClient.getBucketName() + "`(" + PN_PARENT_PATH + ")"));
     }
 
     @Override
@@ -180,6 +180,32 @@ public final class CouchbaseNoSqlAdapter extends AbstractNoSqlAdapter {
         }
         if (!queryResult.finalSuccess()) {
             throw new RuntimeException("Couchbase query error: " + StringUtils.join(queryResult.errors(), "\n"));
+        }
+    }
+
+    @Override
+    public void checkConnection() throws LoginException {
+        // try to access root element to check connection
+        try {
+            Bucket bucket = couchbaseClient.getBucket();
+            String cacheKey = CouchbaseKey.build("/", cacheKeyPrefix);
+            bucket.exists(cacheKey);
+        }
+        catch (Throwable ex) {
+            throw new LoginException(ex);
+        }
+    }
+
+    @Override
+    public void createIndexDefinitions() {
+        // make sure primary index and index on parentPath is present - ignore error if it is already present
+        try {
+            Bucket bucket = couchbaseClient.getBucket();
+            bucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + couchbaseClient.getBucketName() + "`"));
+            bucket.query(N1qlQuery.simple("CREATE INDEX " + PN_PARENT_PATH + " ON `" + couchbaseClient.getBucketName() + "`(" + PN_PARENT_PATH + ")"));
+        }
+        catch (Throwable ex) {
+            log.debug("Unable to create/validate couchbase index definitions: " + ex.getMessage(), ex);
         }
     }
 

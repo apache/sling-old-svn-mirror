@@ -29,8 +29,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 
-import junit.framework.AssertionFailedError;
-
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +40,8 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.osgi.service.packageadmin.PackageAdmin;
+
+import junit.framework.AssertionFailedError;
 
 public class SlingFelixTest {
 
@@ -56,12 +56,12 @@ public class SlingFelixTest {
     public void setup() {
         startSling();
     }
-    
+
     @After
     public void tearDown() {
         stopSling();
     }
-    
+
     @Test
     public void testMultipleStop() {
         startSling();
@@ -85,7 +85,7 @@ public class SlingFelixTest {
         assertEquals(Bundle.ACTIVE, framework.getState());
 
         stopSling();
-        
+
         // as the notifiable is notified async we wait
         final long start = System.currentTimeMillis();
         while ( !this.notifiable.stoppedCalled ) {
@@ -176,7 +176,7 @@ public class SlingFelixTest {
             return null; // to keep the compiler cool
         }
     }
-    
+
     private void stopSling() {
         stopFramework(framework);
     }
@@ -211,10 +211,12 @@ public class SlingFelixTest {
 
         volatile File updatedCalledFile = null;
 
+        @Override
         public void stopped() {
             this.stoppedCalled = true;
         }
 
+        @Override
         public void updated(File tmpFile) {
             this.updatedCalled = true;
             this.updatedCalledFile = tmpFile;

@@ -1,15 +1,6 @@
 {
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Item",
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
     "title":"Landing Place",
-    "description":"Something happened here long time ago!",
-    
-    comments : {
-      "jcr:primaryType":"sling:OrderedFolder",
-      "sling:resourceType":"slingshot/Comments"
-    },
-    ratings : {
-      "jcr:primaryType":"sling:OrderedFolder",
-      "sling:resourceType":"slingshot/Ratings"
-    }
+    "description":"Something happened here long time ago!"
 }

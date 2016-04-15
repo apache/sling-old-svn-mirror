@@ -1,0 +1,15 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "name":"root",
+  "users":"[user1,user2]",
+  "user1" : {
+    "jcr:primaryType":"nt:unstructured",
+    "name":"user1",
+    "type":"user"
+  },
+  "user2" : {
+    "jcr:primaryType":"nt:unstructured",
+    "name":"user2",
+    "type":"user"
+  }
+}

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api;
 
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
+
 /**
  * The <code>SlingConstants</code> interface provides some symbolic constants
  * for well known constant strings in Sling. Even though these constants will
@@ -266,7 +268,10 @@ public class SlingConstants {
      * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
      * and {@link #PROPERTY_RESOURCE_TYPE} properties.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
+     * 
+     * @deprecated Register a {@link ResourceChangeListener} instead
      */
+    @Deprecated
     public static final String TOPIC_RESOURCE_ADDED = "org/apache/sling/api/resource/Resource/ADDED";
 
     /**
@@ -275,7 +280,10 @@ public class SlingConstants {
      * The event contains at least the {@link #PROPERTY_PATH}. As the resource has already been removed
      * no further information like resource type etc. might be available.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
+     * 
+     * @deprecated Register a {@link ResourceChangeListener} instead
      */
+    @Deprecated
     public static final String TOPIC_RESOURCE_REMOVED = "org/apache/sling/api/resource/Resource/REMOVED";
 
     /**
@@ -287,7 +295,10 @@ public class SlingConstants {
      * {@link #PROPERTY_REMOVED_ATTRIBUTES}, {@link #PROPERTY_CHANGED_ATTRIBUTES}. All of them are
      * optional.
      * @since 2.0.6 (Sling API Bundle 2.0.6)
+     * 
+     * @deprecated Register a {@link ResourceChangeListener} instead
      */
+    @Deprecated
     public static final String TOPIC_RESOURCE_CHANGED = "org/apache/sling/api/resource/Resource/CHANGED";
 
     /**

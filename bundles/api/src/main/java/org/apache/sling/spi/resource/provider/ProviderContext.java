@@ -20,12 +20,14 @@ package org.apache.sling.spi.resource.provider;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.PathSet;
+import org.apache.sling.api.resource.path.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 
 /**
  * The provider context...
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ProviderContext {

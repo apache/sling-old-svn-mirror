@@ -22,13 +22,17 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.validation.core</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
+
+    <properties>
+        <sling.java.version>8</sling.java.version>
+    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/core</connection>
@@ -51,10 +55,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Embed-Dependency>commons-lang3</Embed-Dependency>
                         <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html, 
                              to make this bundle compatible with older versions of Sling -->
                         <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
+                        <Bundle-Category>sling</Bundle-Category>
+                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>
@@ -127,13 +132,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.3.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
+            <version>3.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -175,6 +174,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <version>1.3.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

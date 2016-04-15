@@ -43,6 +43,7 @@ import org.osgi.framework.BundleContext;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class ResourceEventDistributionTriggerFactory implements DistributionTrigger {
 
 
@@ -53,9 +54,9 @@ public class ResourceEventDistributionTriggerFactory implements DistributionTrig
      * resource event path property
      */
     @Property(label = "Path", description = "The resource path for which changes are distributed")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
-    ResourceEventDistributionTrigger trigger;
+    private ResourceEventDistributionTrigger trigger;
 
     @Reference
     private SlingRepository repository;

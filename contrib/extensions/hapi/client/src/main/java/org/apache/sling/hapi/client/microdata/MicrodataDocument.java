@@ -133,12 +133,26 @@ public class MicrodataDocument implements Document {
 
         @Override
         public Items link(String rel) throws ClientException {
-            return new ItemsImpl(toItems(getProxy().el.select("link[rel=" + rel + "], a[rel=" + rel + "]")));
+            String selector = "link[rel=" + rel + "], a[rel=" + rel + "], link" + toClass(rel) + ", a" + toClass(rel);
+            return new ItemsImpl(toItems(getProxy().el.select(selector)));
+        }
+
+        @Override
+        public Items link() throws ClientException {
+            String selector = "link, a";
+            return new ItemsImpl(toItems(getProxy().el.select(selector)));
         }
 
         @Override
         public Items form(String rel) throws ClientException {
-            return new ItemsImpl(toItems(getProxy().el.select("form[data-rel=" + rel + "]")));
+            String selector = "form[data-rel=" + rel + "], form" + toClass(rel);
+            return new ItemsImpl(toItems(getProxy().el.select(selector)));
+        }
+
+        @Override
+        public Items form() throws ClientException {
+            String selector = "form";
+            return new ItemsImpl(toItems(getProxy().el.select(selector)));
         }
 
 
@@ -356,8 +370,18 @@ public class MicrodataDocument implements Document {
         }
 
         @Override
+        public Items link() throws ClientException {
+            return items.get(0).link();
+        }
+
+        @Override
         public Items form(String rel) throws ClientException {
             return items.get(0).form(rel);
+        }
+
+        @Override
+        public Items form() throws ClientException {
+            return items.get(0).form();
         }
 
         @Override

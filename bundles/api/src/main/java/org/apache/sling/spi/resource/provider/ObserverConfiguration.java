@@ -22,13 +22,15 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.path.PathSet;
 
 import aQute.bnd.annotation.ProviderType;
 
 /**
  * A observer configuration describes active configurations from registered listeners.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ObserverConfiguration {

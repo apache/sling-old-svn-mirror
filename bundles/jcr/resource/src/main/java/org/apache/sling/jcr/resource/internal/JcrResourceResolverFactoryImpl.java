@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -37,6 +38,7 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.Constants;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceResolverFactoryImpl</code> is the
@@ -63,6 +65,11 @@ public class JcrResourceResolverFactoryImpl implements
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
+    @Activate
+    protected void activate() {
+        LoggerFactory.getLogger(this.getClass()).warn("DEPRECATION WARNING: JcrResourceResolverFactory is deprecated. Please use ResourceResolverFactory instead.");
+    }
+
     /**
      * Get the dynamic class loader if available.
      *
@@ -79,6 +86,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(javax.jcr.Session)
      */
+    @Override
     public ResourceResolver getResourceResolver(final Session session) {
         final Map<String, Object> authInfo = new HashMap<String, Object>(1);
         authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
@@ -94,6 +102,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getServiceResourceResolver(Map)
      */
+    @Override
     public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
         return delegatee.getServiceResourceResolver(authenticationInfo);
     }
@@ -101,6 +110,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getAdministrativeResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
         return delegatee.getAdministrativeResourceResolver(authenticationInfo);
@@ -109,6 +119,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> arg0)
             throws LoginException {
         return delegatee.getResourceResolver(arg0);
@@ -117,6 +128,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
+    @Override
     public ResourceResolver getThreadResourceResolver() {
         return delegatee.getThreadResourceResolver();
     }

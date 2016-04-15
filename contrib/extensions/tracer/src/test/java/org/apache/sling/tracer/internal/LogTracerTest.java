@@ -20,11 +20,13 @@
 package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -39,9 +41,12 @@ import ch.qos.logback.core.read.ListAppender;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContextCallback;
+import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
@@ -50,12 +55,15 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.sling.tracer.internal.TestUtil.createTracker;
+import static org.apache.sling.tracer.internal.TestUtil.getRequestId;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -89,10 +97,69 @@ public class LogTracerTest {
         LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
                 ImmutableMap.<String, Object>of("enabled", "true"));
         assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNull(context.getService(Servlet.class));
 
         MockOsgi.deactivate(tracer);
         assertNull(context.getService(Filter.class));
     }
+
+    @Test
+    public void enableTracerLogServlet() throws Exception {
+        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+        assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNotNull(context.getService(Servlet.class));
+
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(true, logServlet.isCompressRecording());
+        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT, logServlet.getCacheSizeInMB());
+        assertEquals(LogTracer.PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT, logServlet.getCacheDurationInSecs());
+
+        MockOsgi.deactivate(tracer);
+        assertNull(context.getService(Filter.class));
+        assertNull(context.getService(Servlet.class));
+    }
+
+    @Test
+    public void enableTracerLogServletWithConfig() throws Exception {
+        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>builder()
+                        .put("enabled", "true")
+                        .put("servletEnabled", "true")
+                        .put("recordingCacheSizeInMB", "17")
+                        .put("recordingCacheDurationInSecs", "100")
+                        .put("recordingCompressionEnabled", "false")
+                        .put("gzipResponse", "true")
+                        .build()
+                );
+        assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNotNull(context.getService(Servlet.class));
+
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(false, logServlet.isCompressRecording());
+        assertEquals(false, logServlet.isGzipResponse());
+        assertEquals(17, logServlet.getCacheSizeInMB());
+        assertEquals(100, logServlet.getCacheDurationInSecs());
+    }
+
+    @Test
+    public void enableTracerLogServletWithConfigGzip() throws Exception {
+        LogTracer tracer = context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>builder()
+                        .put("enabled", "true")
+                        .put("servletEnabled", "true")
+                        .put("recordingCompressionEnabled", "true")
+                        .put("gzipResponse", "true")
+                        .build()
+        );
+        assertEquals(2, context.getServices(Filter.class, null).length);
+        assertNotNull(context.getService(Servlet.class));
+
+        TracerLogServlet logServlet = (TracerLogServlet) context.getService(Servlet.class);
+        assertEquals(true, logServlet.isCompressRecording());
+        assertEquals(true, logServlet.isGzipResponse());
+    }
+
 
     @Test
     public void noTurboFilterRegisteredUnlessTracingRequested() throws Exception {
@@ -206,10 +273,108 @@ public class LogTracerTest {
         rootLogger().setLevel(oldLevel);
     }
 
+    @Test
+    public void recordingWithoutTracing() throws Exception{
+        activateTracerAndServlet();
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(){
+            @Override
+            public RequestProgressTracker getRequestProgressTracker() {
+                return createTracker("x", "y");
+            }
+
+            @Override
+            public String getRequestURI() {
+                return "foo";
+            }
+        };
+        request.setHeader(TracerLogServlet.HEADER_TRACER_RECORDING, "true");
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest request, ServletResponse response)
+                    throws IOException, ServletException {
+                //No TurboFilter should be registered if tracing is not requested
+                assertNull(context.getService(TurboFilter.class));
+            }
+        };
+
+        prepareChain(chain).doFilter(request, response);
+
+        String requestId = getRequestId(response);
+        assertNotNull(requestId);
+        Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
+        assertTrue(r instanceof JSONRecording);
+        JSONRecording jr = (JSONRecording) r;
+
+        StringWriter sw = new StringWriter();
+        jr.render(sw);
+        JSONObject json = new JSONObject(sw.toString());
+
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+    }
+
+    @Test
+    public void recordingWithTracing() throws Exception{
+        activateTracerAndServlet();
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(){
+            @Override
+            public RequestProgressTracker getRequestProgressTracker() {
+                return createTracker("x", "y");
+            }
+
+            @Override
+            public String getRequestURI() {
+                return "foo";
+            }
+        };
+        request.setHeader(TracerLogServlet.HEADER_TRACER_RECORDING, "true");
+        request.setHeader(LogTracer.HEADER_TRACER_CONFIG, "a.b.c;level=trace,a.b;level=debug");
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest request, ServletResponse response)
+                    throws IOException, ServletException {
+                assertNotNull(context.getService(TurboFilter.class));
+                getLogContext().addTurboFilter(context.getService(TurboFilter.class));
+                getLogger("a.b").info("a.b-info");
+            }
+        };
+
+        prepareChain(chain).doFilter(request, response);
+
+        String requestId = getRequestId(response);
+        assertNotNull(requestId);
+        Recording r = ((TracerLogServlet)context.getService(Servlet.class)).getRecording(requestId);
+        assertTrue(r instanceof JSONRecording);
+        JSONRecording jr = (JSONRecording) r;
+
+        StringWriter sw = new StringWriter();
+        jr.render(sw);
+        JSONObject json = new JSONObject(sw.toString());
+
+        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        assertEquals(1, json.getJSONArray("logs").length());
+    }
+
 
     private void activateTracer() {
         context.registerInjectActivateService(new LogTracer(),
                 ImmutableMap.<String, Object>of("enabled", "true"));
+    }
+
+    private void activateTracerAndServlet() {
+        context.registerInjectActivateService(new LogTracer(),
+                ImmutableMap.<String, Object>of("enabled", "true", "servletEnabled", "true"));
+    }
+
+    private FilterChain prepareChain(FilterChain end) throws InvalidSyntaxException {
+        Filter servletFilter = getFilter(false);
+        Filter slingFilter = getFilter(true);
+        return new FilterChainImpl(end, servletFilter, slingFilter);
     }
 
     private Filter getFilter(boolean slingFilter) throws InvalidSyntaxException {
@@ -265,6 +430,26 @@ public class LogTracerTest {
             @Override
             protected void append(ILoggingEvent iLoggingEvent) {
                 msgs.add(iLoggingEvent.getFormattedMessage());
+            }
+        }
+    }
+
+    private static class FilterChainImpl implements FilterChain {
+        private final Filter[] filters;
+        private final FilterChain delegate;
+        private int pos;
+
+        public FilterChainImpl(FilterChain delegate, Filter ... filter){
+            this.delegate = delegate;
+            this.filters = filter;
+        }
+
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
+            if (pos == filters.length){
+                delegate.doFilter(request, response);
+            } else {
+                filters[pos++].doFilter(request, response, this);
             }
         }
     }

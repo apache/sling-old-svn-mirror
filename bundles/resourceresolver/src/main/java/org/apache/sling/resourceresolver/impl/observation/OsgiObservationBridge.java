@@ -46,10 +46,11 @@ import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(policy = ConfigurationPolicy.REQUIRE)
+@Component(policy = ConfigurationPolicy.REQUIRE, metatype = true,
+        label="Apache Sling OSGi Observation Bridge", description="Legacy bridge which converts resource change events to OSGi events")
 @Service(ResourceChangeListener.class)
 @Properties({ @Property(name = ResourceChangeListener.CHANGES, value = { "ADDED", "CHANGED", "REMOVED" }),
-        @Property(name = ResourceChangeListener.PATHS, value = ".") })
+        @Property(name = ResourceChangeListener.PATHS, value = "/") })
 public class OsgiObservationBridge implements ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OsgiObservationBridge.class);

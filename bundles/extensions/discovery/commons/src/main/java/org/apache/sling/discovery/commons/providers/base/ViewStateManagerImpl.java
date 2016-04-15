@@ -633,6 +633,9 @@ public class ViewStateManagerImpl implements ViewStateManager {
             if (oldInstance.isLeader() != newInstance.isLeader()) {
                 return false;
             }
+            if (!oldInstance.getClusterView().getId().equals(newInstance.getClusterView().getId())) {
+                return false;
+            }
         }
         return true;
     }

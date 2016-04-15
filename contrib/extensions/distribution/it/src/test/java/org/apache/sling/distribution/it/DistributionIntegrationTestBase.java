@@ -26,6 +26,7 @@ import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -45,16 +46,43 @@ import static org.junit.Assert.assertFalse;
  */
 public abstract class DistributionIntegrationTestBase {
 
-    protected static SlingInstance author;
-    protected static SlingInstance publish;
+    protected SlingInstance author;
+    protected SlingInstance publish;
 
-    protected static SlingClient authorClient;
-    protected static SlingClient publishClient;
+    protected SlingClient authorClient;
+    protected SlingClient publishClient;
 
-     static {
-        SlingInstanceManager slingInstances = new SlingInstanceManager("author", "publish");
-        author = slingInstances.getInstance("author");
-        publish = slingInstances.getInstance("publish");
+    static SlingInstanceManager slingInstancesManager = null;
+    static SlingInstanceManager sharedSlingInstancesManager = null;
+
+    protected DistributionIntegrationTestBase() {
+        this(false);
+    }
+
+    protected DistributionIntegrationTestBase(boolean useShared) {
+        init(useShared);
+    }
+
+
+    synchronized void init(boolean useShared) {
+
+        if (useShared) {
+            if (sharedSlingInstancesManager == null) {
+                sharedSlingInstancesManager = new SlingInstanceManager("author-shared", "publish-shared") ;
+
+            }
+            author = sharedSlingInstancesManager.getInstance("author-shared");
+            publish = sharedSlingInstancesManager.getInstance("publish-shared");
+
+        } else {
+            if (slingInstancesManager == null) {
+                slingInstancesManager = new SlingInstanceManager("author", "publish");
+
+            }
+
+            author = slingInstancesManager.getInstance("author");
+            publish = slingInstancesManager.getInstance("publish");
+        }
 
         authorClient = new SlingClient(author.getServerBaseUrl(), author.getServerUsername(), author.getServerPassword());
         publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
@@ -103,20 +131,20 @@ public abstract class DistributionIntegrationTestBase {
     }
 
 
-    @AfterClass
-    public static void checkNoPackagesLeft() throws IOException, JSONException {
+    @After
+    public void checkNoPackagesLeft() throws IOException, JSONException {
 
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/data");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(author, authorClient, "/etc/packages/sling/distribution");
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/vlt/data");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
     }
 
-    public static void registerPublish(String publishAgent, String remoteImporter) throws Exception {
+    public void registerPublish(String publishAgent, String remoteImporter) throws Exception {
         String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl(remoteImporter);
 
 
@@ -132,7 +160,7 @@ public abstract class DistributionIntegrationTestBase {
         assertExists(publishClient, importerUrl(remoteImporter));
     }
 
-    public static void registerReverse(String reverseAgent, String remoteExporter) throws Exception {
+    public void registerReverse(String reverseAgent, String remoteExporter) throws Exception {
         String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl(remoteExporter);
 
         assertExists(authorClient, authorAgentConfigUrl(reverseAgent));

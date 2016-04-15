@@ -16,6 +16,7 @@
  */
 package org.apache.sling.sample.slingshot;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 
 public abstract class SlingshotUtil {
@@ -39,9 +40,18 @@ public abstract class SlingshotUtil {
     }
 
     public static String getContentPath(final Resource resource) {
-        final String path = resource.getPath();
-        final int i = path.indexOf("/content/");
+        final String prefix = SlingshotConstants.APP_ROOT_PATH + "/users/" + getUserId(resource) + "/";
 
-        return (i == -1 ? null : path.substring(i + 8));
+        final String path = resource.getPath();
+        if ( path != null && path.startsWith(prefix) ) {
+            return path.substring(prefix.length() - 1);
+        }
+        return null;
     }
+
+    public static boolean isUser(final SlingHttpServletRequest request) {
+        final boolean isUser = request.getRemoteUser() != null && !request.getRemoteUser().equals("anonymous");
+        return isUser;
+    }
+
 }

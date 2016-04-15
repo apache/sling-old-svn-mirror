@@ -56,6 +56,7 @@ public class PostConstructTest {
         when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
         factory.activate(componentCtx);
         // no injectors are necessary
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SubClass.class, SubClassOverriddenPostConstruct.class, FailingPostConstuctModel.class);
     }
 
     @Test

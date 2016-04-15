@@ -36,11 +36,11 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.RankedServices;
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.model.MergedValidationModel;
 import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.ValidationModelProvider;
+import org.apache.sling.validation.model.spi.ValidationModelProvider;
+import org.apache.sling.validation.spi.Validator;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -73,7 +73,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
      * List of all known validators (key=classname of validator)
      */
     @Reference(name = "validator", referenceInterface = Validator.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
-    Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
+    @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -83,7 +83,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModel(java.lang.String, java.lang.String)
+     * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModels(java.lang.String, java.lang.String)
      */
     @Override
     public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath,
@@ -154,7 +154,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
             // fill trie with data from model providers (all models for the given resource type, independent of resource
             // path)
             for (ValidationModelProvider modelProvider : modelProviders) {
-                for (ValidationModel model : modelProvider.getModel(resourceType, validators, resourceResolver)) {
+                for (ValidationModel model : modelProvider.getModels(resourceType, validators, resourceResolver)) {
                     for (String applicablePath : model.getApplicablePaths()) {
                         modelsForResourceType.insert(applicablePath, model);
                     }

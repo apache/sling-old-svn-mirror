@@ -69,7 +69,20 @@ public class DeadCodeRemoval extends TrackingVisitor<Boolean> implements Emitter
 
     @Override
     public void visit(VariableBinding.Start variableBindingStart) {
-        Boolean truthValue = decodeConstantBool(variableBindingStart.getExpression());
+        Boolean truthValue = null;
+        ExpressionNode node = variableBindingStart.getExpression();
+        if (node instanceof StringConstant) {
+            truthValue = RenderUtils.toBoolean(((StringConstant) node).getText());
+        }
+        if (node instanceof BooleanConstant) {
+            truthValue = ((BooleanConstant) node).getValue();
+        }
+        if (node instanceof NumericConstant) {
+            truthValue = RenderUtils.toBoolean(((NumericConstant) node).getValue());
+        }
+        if (node instanceof NullLiteral) {
+           truthValue = RenderUtils.toBoolean(null);
+        }
         tracker.pushVariable(variableBindingStart.getVariableName(), truthValue);
         outStream.emit(variableBindingStart);
     }
@@ -108,7 +121,7 @@ public class DeadCodeRemoval extends TrackingVisitor<Boolean> implements Emitter
 
     @Override
     protected Boolean assignDefault(Command command) {
-        return null;
+        return false;
     }
 
     @Override
@@ -116,19 +129,4 @@ public class DeadCodeRemoval extends TrackingVisitor<Boolean> implements Emitter
         outStream.emit(command);
     }
 
-    private Boolean decodeConstantBool(ExpressionNode node) {
-        if (node instanceof StringConstant) {
-            return RenderUtils.toBoolean(((StringConstant) node).getText());
-        }
-        if (node instanceof BooleanConstant) {
-            return ((BooleanConstant) node).getValue();
-        }
-        if (node instanceof NumericConstant) {
-            return RenderUtils.toBoolean(((NumericConstant) node).getValue());
-        }
-        if (node instanceof NullLiteral) {
-            return RenderUtils.toBoolean(null);
-        }
-        return null;
-    }
 }

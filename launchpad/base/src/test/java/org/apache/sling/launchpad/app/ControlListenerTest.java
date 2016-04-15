@@ -23,12 +23,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.concurrent.locks.ReentrantLock;
-
-import junit.framework.TestCase;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.junit.Assert;
+
+import junit.framework.TestCase;
+import junitx.util.PrivateAccessor;
 
 public class ControlListenerTest extends TestCase {
 
@@ -64,6 +68,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait for server to stop
+
         TestCase.assertTrue(main.stopCalled);
 
         delay();
@@ -84,6 +90,7 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait for server to stop
         TestCase.assertTrue(main.stopCalled);
 
         TestCase.assertEquals(0, new ControlListener(main, null).statusServer());
@@ -214,11 +221,11 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
-        delay(); // wait for sever to start
+        delay(); // wait for sever to stop
 
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
-        delay(); // wait for sever to start
+        delay(); // wait for sever to stop
 
         TestCase.assertTrue(main1.stopCalled);
         TestCase.assertTrue(main2.stopCalled);
@@ -247,6 +254,8 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(0, new ControlListener(main1, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main1, null).shutdownServer());
 
+        delay(); // wait for server to stop
+
         TestCase.assertTrue(main1.stopCalled);
 
         delay();
@@ -258,6 +267,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(0, new ControlListener(main2, null).statusServer());
         TestCase.assertEquals(0, new ControlListener(main2, null).shutdownServer());
+
+        delay(); // wait for server to stop
 
         TestCase.assertTrue(main2.stopCalled);
 
@@ -283,6 +294,8 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(3, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait for server to stop
+
         TestCase.assertFalse(main.stopCalled);
 
         TestCase.assertTrue(ctlFile1.exists());
@@ -297,6 +310,8 @@ public class ControlListenerTest extends TestCase {
         TestCase.assertEquals(4, new ControlListener(main, String.valueOf(port)).statusServer());
 
         TestCase.assertEquals(4, new ControlListener(main, String.valueOf(port)).shutdownServer());
+
+        delay(); // wait for server to stop
 
         TestCase.assertFalse(main.stopCalled);
 
@@ -320,10 +335,27 @@ public class ControlListenerTest extends TestCase {
 
         TestCase.assertEquals(4, new ControlListener(main, null).shutdownServer());
 
+        delay(); // wait server to stop
+
         TestCase.assertFalse(main.stopCalled);
 
         TestCase.assertTrue(ctlFile1.exists());
     }
+
+    public void test_generateKey() throws Throwable {
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9-_=]+)");
+        MyMain main = new MyMain(SLING1);
+        ControlListener cl = new ControlListener(main, null);
+
+        String secretkey = (String) PrivateAccessor.invoke(cl, "generateKey", new Class[] {}, new Object[] {});
+        Assert.assertTrue(secretkey.length() >= 32);
+        Matcher matcher = pattern.matcher(secretkey);
+        if (!matcher.matches()) {
+            Assert.fail();
+        }
+    }
+
+    //-------------------- private section -----------------------------
 
     private int getPort() {
         ServerSocket s = null;
@@ -353,14 +385,10 @@ public class ControlListenerTest extends TestCase {
 
     private static class MyMain extends Main {
 
-        boolean stopCalled;
+        volatile boolean stopCalled;
 
         MyMain(final String slingHome) {
-            super(new HashMap<String, String>() {
-                {
-                    put(SharedConstants.SLING_HOME, slingHome);
-                }
-            });
+            super(Collections.singletonMap(SharedConstants.SLING_HOME, slingHome));
         }
 
         @Override

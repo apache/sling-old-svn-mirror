@@ -154,6 +154,8 @@ public class Sling {
 
     public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
+    public static final String PROP_EXTRA_CAPS = "org.apache.sling.launcher.system.capabilities.extra";
+
     /**
      * Timeout to wait for the initialized framework to actually stop for it to
      * be reinitialized. This is set to a second, which should be ample time to

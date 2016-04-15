@@ -33,14 +33,14 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.DeepReadValueMapDecorator;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 /**
  * {@inheritDoc}
  */
 public class CRUDMergedResource extends MergedResource {
 
-    private final MergedResourcePicker picker;
+    private final MergedResourcePicker2 picker;
 
     private final String relativePath;
 
@@ -57,7 +57,7 @@ public class CRUDMergedResource extends MergedResource {
                    final String relativePath,
                    final List<Resource> mappedResources,
                    final List<ValueMap> valueMaps,
-                   final MergedResourcePicker picker) {
+                   final MergedResourcePicker2 picker) {
         super(resolver, mergeRootPath, relativePath, mappedResources, valueMaps);
         this.picker = picker;
         this.relativePath = relativePath;
@@ -70,7 +70,7 @@ public class CRUDMergedResource extends MergedResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if (type == ModifiableValueMap.class) {
-            final Iterator<Resource> iter = this.picker.pickResources(this.getResourceResolver(), this.relativePath).iterator();
+            final Iterator<Resource> iter = this.picker.pickResources(this.getResourceResolver(), this.relativePath, null).iterator();
             Resource highestRsrc = null;
             while ( iter.hasNext() ) {
                 highestRsrc = iter.next();
@@ -109,40 +109,49 @@ public class CRUDMergedResource extends MergedResource {
             this.targetMap = targetMap;
         }
 
+        @Override
         public <T> T get(final String name, final Class<T> type) {
             return properties.get(name, type);
         }
 
+        @Override
         public <T> T get(final String name, final T defaultValue) {
             return properties.get(name, defaultValue);
         }
 
+        @Override
         public int size() {
             return properties.size();
         }
 
+        @Override
         public boolean isEmpty() {
             return properties.isEmpty();
         }
 
+        @Override
         public boolean containsKey(final Object key) {
             return properties.containsKey(key);
         }
 
+        @Override
         public boolean containsValue(final Object value) {
             return properties.containsValue(value);
         }
 
+        @Override
         public Object get(final Object key) {
             return properties.get(key);
         }
 
+        @Override
         public Object put(final String key, final Object value) {
             final Object result = this.properties.get(key);
             this.targetMap.put(key, value);
             return result;
         }
 
+        @Override
         public Object remove(final Object key) {
             final Object result = this.properties.get(key);
             if ( this.targetMap.remove(key) == null ) {
@@ -160,6 +169,7 @@ public class CRUDMergedResource extends MergedResource {
             return result;
         }
 
+        @Override
         public void putAll(final Map<? extends String, ? extends Object> m) {
             if ( m != null ) {
                 for(final Map.Entry<? extends String, ? extends Object> entry : m.entrySet()) {
@@ -168,18 +178,22 @@ public class CRUDMergedResource extends MergedResource {
             }
         }
 
+        @Override
         public void clear() {
             // not supported
         }
 
+        @Override
         public Set<String> keySet() {
             return this.properties.keySet();
         }
 
+        @Override
         public Collection<Object> values() {
             return this.properties.values();
         }
 
+        @Override
         public Set<Entry<String, Object>> entrySet() {
             return this.properties.entrySet();
         }

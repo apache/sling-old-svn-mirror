@@ -37,6 +37,7 @@ import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
+import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
@@ -276,11 +277,18 @@ public class QueueJobCache {
                     if ( list.size() == maxPreloadLimit ) {
                         scanTopic.set(true);
                     }
+                } else if ( job.getProcessingStarted() != null ) {
+                    logger.debug("Ignoring job {} - processing already started.", job);
                 } else {
-                    if ( job.hasReadErrors() ) {
-                        scanTopic.set(true);
+                    // error reading job
+                    scanTopic.set(true);
+                    if ( job.isReadErrorRecoverable() ) {
+                        logger.debug("Ignoring job {} due to recoverable read errors.", job);
+                    } else {
+                        logger.debug("Failing job {} due to unrecoverable read errors.", job);
+                        final JobHandler handler = new JobHandler(job, null, configuration);
+                        handler.finished(JobState.ERROR, true, null);
                     }
-                    logger.debug("Ignoring job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
                 }
                 return list.size() < maxPreloadLimit;
             }

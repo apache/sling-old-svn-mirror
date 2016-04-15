@@ -18,11 +18,21 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.it;
 
+import java.io.IOException;
+
+import javax.swing.text.html.HTML;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.sightly.tck.http.Client;
 import io.sightly.tck.html.HTMLExtractor;
+import io.sightly.tck.http.Client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -40,6 +50,13 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_JS_DEPENDENCY_RESOLUTION = "/sightly/use-sibling-dependency-resolution.html";
     private static final String SLING_USE_INHERITANCE_WITHOVERLAY = "/sightly/useinheritance.html";
     private static final String SLING_USE_INHERITANCE_WITHOUTOVERLAY = "/sightly/useinheritance.notoverlaid.html";
+    private static final String SLING_JAVA_USE_POJO_UPDATE = "/sightly/use.repopojo.html";
+    private static final String SLING_ATTRIBUTE_QUOTES = "/sightly/attributequotes.html";
+    private static final String SLING_CRLF = "/sightly/crlf";
+    private static final String SLING_CRLF_NOPKG = SLING_CRLF + ".nopkg.html";
+    private static final String SLING_CRLF_PKG = SLING_CRLF + ".pkg.html";
+    private static final String SLING_CRLF_WRONGPKG = SLING_CRLF + ".wrongpkg.html";
+
 
     @BeforeClass
     public static void init() {
@@ -133,6 +150,11 @@ public class SlingSpecificsSightlyIT {
         assertEquals("child.javascriptobject", HTMLExtractor.innerHTML(url, pageContent, "#javascriptobj"));
         assertEquals("child.ecmaobject", HTMLExtractor.innerHTML(url, pageContent, "#ecmaobj"));
         assertEquals("child.template", HTMLExtractor.innerHTML(url, pageContent, "#templateobj"));
+        assertEquals("child.partials.javascript", HTMLExtractor.innerHTML(url, pageContent, "#partialsjs"));
+        assertEquals("child.partials.ecmaobject", HTMLExtractor.innerHTML(url, pageContent, "#partialsecma"));
+        assertEquals("child.partials.template", HTMLExtractor.innerHTML(url, pageContent, "#partialstemplate"));
+        assertEquals("child.partials.included", HTMLExtractor.innerHTML(url, pageContent, "#partialsincluded"));
+        assertEquals("child.partials.javaobject", HTMLExtractor.innerHTML(url, pageContent, "#partialsjava"));
     }
 
     @Test
@@ -140,6 +162,69 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_USE_INHERITANCE_WITHOUTOVERLAY;
         String pageContent = client.getStringContent(url, 200);
         assertEquals("notoverlaid", HTMLExtractor.innerHTML(url, pageContent, "#notoverlaid"));
+    }
+
+    @Test
+    public void testRepositoryPojoUpdate() throws Exception {
+        String url = launchpadURL + SLING_JAVA_USE_POJO_UPDATE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+        uploadFile("RepoPojo.java.updated", "RepoPojo.java", "/apps/sightly/scripts/use");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("updated", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+        uploadFile("RepoPojo.java.original", "RepoPojo.java", "/apps/sightly/scripts/use");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+    }
+
+    @Test
+    public void testRepositoryPojoNoPkg() {
+        String url = launchpadURL + SLING_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("nopkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojo-nopkg"));
+    }
+
+    @Test
+    public void testAttributeQuotes() {
+        String url = launchpadURL + SLING_ATTRIBUTE_QUOTES;
+        String pageContent = client.getStringContent(url, 200);
+        // need to test against the raw content
+        assertTrue(pageContent.contains("<span data-resource='{\"resource\" : \"/sightly/attributequotes\"}'>/sightly/attributequotes</span>"));
+        assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
+        assertTrue(pageContent.contains("<span data-resource=\"/sightly/attributequotes\">/sightly/attributequotes</span>"));
+    }
+
+    @Test
+    public void testCRLFNoPkg() {
+        String url = launchpadURL + SLING_CRLF_NOPKG;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("nopkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojocrlf-nopkg"));
+    }
+
+    @Test
+    public void testCRLFPkg() {
+        String url = launchpadURL + SLING_CRLF_PKG;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("pkg", HTMLExtractor.innerHTML(url, pageContent, "#repopojocrlf-pkg"));
+    }
+
+    @Test
+    public void testCRLFWrongPkg() {
+        String url = launchpadURL + SLING_CRLF_WRONGPKG;
+        String pageContent = client.getStringContent(url, 500);
+        assertTrue(pageContent.contains("CompilerException"));
+    }
+
+    private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(launchpadURL + url);
+        post.setHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+        InputStreamBody inputStreamBody = new InputStreamBody(this.getClass().getClassLoader().getResourceAsStream(fileName),
+                ContentType.TEXT_PLAIN, fileName);
+        entityBuilder.addPart(serverFileName, inputStreamBody);
+        post.setEntity(entityBuilder.build());
+        httpClient.execute(post);
     }
 
 }

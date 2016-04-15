@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -34,6 +34,10 @@
 
     <name>Apache Sling Validation Framework API</name>
     <description>The Apache Sling Validation Framework API</description>
+
+    <properties>
+        <sling.java.version>8</sling.java.version>
+    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/api</connection>
@@ -63,13 +67,6 @@
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

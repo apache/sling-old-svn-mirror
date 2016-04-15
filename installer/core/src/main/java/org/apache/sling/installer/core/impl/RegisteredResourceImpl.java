@@ -235,6 +235,10 @@ public class RegisteredResourceImpl
 	    return this.dataFile != null;
 	}
 
+	public File getDataFile() {
+	    return this.dataFile;
+	}
+
 	/**
 	 * Remove the data file
 	 */
@@ -259,14 +263,16 @@ public class RegisteredResourceImpl
 	/**
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getURL()
 	 */
-	public String getURL() {
+	@Override
+    public String getURL() {
 		return this.url;
 	}
 
 	/**
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getInputStream()
 	 */
-	public InputStream getInputStream() throws IOException {
+	@Override
+    public InputStream getInputStream() throws IOException {
 	    if ( this.dataUri != null ) {
 	        try {
     	        final URI uri = new URI(this.dataUri);
@@ -284,20 +290,23 @@ public class RegisteredResourceImpl
 	/**
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDictionary()
 	 */
-	public Dictionary<String, Object> getDictionary() {
+	@Override
+    public Dictionary<String, Object> getDictionary() {
 		return dictionary;
 	}
 
 	/**
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDigest()
 	 */
-	public String getDigest() {
+	@Override
+    public String getDigest() {
 		return digest;
 	}
 
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getType()
      */
+    @Override
     public String getType() {
         return resourceType;
     }
@@ -305,6 +314,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getEntityId()
      */
+    @Override
     public String getEntityId() {
         return entity;
     }
@@ -312,6 +322,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#getAttribute(java.lang.String)
      */
+    @Override
     public Object getAttribute(final String key) {
         return this.attributes.get(key);
     }
@@ -319,6 +330,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#setAttribute(java.lang.String, java.lang.Object)
      */
+    @Override
     public void setAttribute(final String key, final Object value) {
         if ( value == null ) {
             this.attributes.remove(key);
@@ -330,6 +342,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getScheme()
      */
+    @Override
     public String getScheme() {
         return urlScheme;
     }
@@ -337,6 +350,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getPriority()
      */
+    @Override
     public int getPriority() {
         return priority;
     }
@@ -344,6 +358,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#getState()
      */
+    @Override
     public ResourceState getState() {
         return this.state;
     }
@@ -392,6 +407,7 @@ public class RegisteredResourceImpl
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(final RegisteredResourceImpl b) {
         return compare(this, b);
     }
@@ -426,14 +442,14 @@ public class RegisteredResourceImpl
      */
     public static int compare(final TaskResource a, final TaskResource b) {
         int result = 0;
-        
+
         // check entity id first
         final String aId = a.getEntityId();
         final String bId = b.getEntityId();
         if(aId != null && bId != null) {
             result = aId.compareTo(bId);
         }
-        
+
         boolean hasVersion = false;
         if ( result == 0 ) {
             // compare versions
@@ -486,6 +502,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#getTemporaryAttribute(java.lang.String)
      */
+    @Override
     public Object getTemporaryAttribute(final String key) {
         if ( this.temporaryAttributes != null ) {
             return this.temporaryAttributes.get(key);
@@ -496,6 +513,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttribute(java.lang.String, java.lang.Object)
      */
+    @Override
     public void setTemporaryAttribute(final String key, final Object value) {
         if ( this.temporaryAttributes == null ) {
             this.temporaryAttributes = new HashMap<String, Object>();
@@ -572,7 +590,7 @@ public class RegisteredResourceImpl
                     this.removeDataFile();
                 }
                 this.dataFile = rsrc.getPrivateCopyOfFile();
-                FileDataStore.SHARED.updateDigestCache(this.url, this.digest);
+                FileDataStore.SHARED.updateDigestCache(this.url, this.dataFile, this.digest);
             }
         }
     }
@@ -626,6 +644,7 @@ public class RegisteredResourceImpl
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#getVersion()
      */
+    @Override
     public Version getVersion() {
         final String vInfo = (String)this.getAttribute(Constants.BUNDLE_VERSION);
         return (vInfo == null ? null : new Version(vInfo));

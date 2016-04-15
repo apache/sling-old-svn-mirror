@@ -20,15 +20,10 @@ package org.apache.sling.discovery.impl.standalone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -37,26 +32,22 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
-import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This is a simple implementation of the discovery service
  * which can be used for a cluster less installation (= single instance).
- * It is disabled by default and can be enabled through a OSGi configuration.
  */
-@Component(immediate=true)
+@Component(immediate=true) // immediate as this is component is also handling the listeners
 @Service(value = {DiscoveryService.class})
 public class NoClusterDiscoveryService implements DiscoveryService {
 
@@ -90,9 +81,9 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     /**
      * The current topology view.
      */
-    private TopologyView topologyView;
+    private volatile TopologyViewImpl currentTopologyView;
 
-    private Map<String, String> cachedProperties = new HashMap<String, String>();
+    private volatile Map<String, String> cachedProperties = Collections.emptyMap();
 
     /**
      * Activate this service
@@ -101,96 +92,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     @Activate
     protected void activate() {
         logger.debug("NoClusterDiscoveryService started.");
-        final InstanceDescription myDescription = new InstanceDescription() {
-
-            public boolean isLocal() {
-                return true;
-            }
-
-            public boolean isLeader() {
-                return true;
-            }
-
-            public String getSlingId() {
-                return settingsService.getSlingId();
-            }
-
-            public String getProperty(final String name) {
-            	synchronized(lock) {
-            		return cachedProperties.get(name);
-            	}
-            }
-
-			public Map<String, String> getProperties() {
-				synchronized(lock) {
-					return Collections.unmodifiableMap(cachedProperties);
-				}
-			}
-
-			public ClusterView getClusterView() {
-				final Collection<ClusterView> clusters = topologyView.getClusterViews();
-				if (clusters==null || clusters.size()==0) {
-					return null;
-				}
-				return clusters.iterator().next();
-			}
-        };
-        final Set<InstanceDescription> instances = new HashSet<InstanceDescription>();
-        instances.add(myDescription);
-
-        final TopologyEventListener[] registeredServices;
-		synchronized ( lock ) {
-            registeredServices = this.listeners;
-            final ClusterView clusterView = new ClusterView() {
-
-                public InstanceDescription getLeader() {
-                    return myDescription;
-                }
-
-                public List<InstanceDescription> getInstances() {
-                    return new LinkedList<InstanceDescription>(instances);
-                }
-
-				public String getId() {
-					return "0";
-				}
-            };
-            this.topologyView = new TopologyView() {
-
-    			public InstanceDescription getLocalInstance() {
-    				return myDescription;
-    			}
-
-    			public boolean isCurrent() {
-    				return true;
-    			}
-
-    			public Set<InstanceDescription> getInstances() {
-    				return instances;
-    			}
-
-    			public Set<InstanceDescription> findInstances(InstanceFilter picker) {
-    				Set<InstanceDescription> result = new HashSet<InstanceDescription>();
-    				for (Iterator<InstanceDescription> it = getTopology().getInstances().iterator(); it.hasNext();) {
-    					InstanceDescription instance = it.next();
-    					if (picker.accept(instance)) {
-    						result.add(instance);
-    					}
-    				}
-    				return result;
-    			}
-
-    			public Set<ClusterView> getClusterViews() {
-    				Set<ClusterView> clusters = new HashSet<ClusterView>();
-    				clusters.add(clusterView);
-    				return clusters;
-    			}
-
-    		};
-        }
-        for(final TopologyEventListener da: registeredServices) {
-        	da.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_INIT, null, topologyView));
-        }
+        createNewView(Type.TOPOLOGY_INIT, true);
     }
 
     /**
@@ -198,32 +100,55 @@ public class NoClusterDiscoveryService implements DiscoveryService {
      */
     @Deactivate
     protected void deactivate() {
+        synchronized ( lock ) {
+            if ( this.currentTopologyView != null ) {
+                this.currentTopologyView.invalidate();
+                this.currentTopologyView = null;
+            }
+            this.cachedProperties = null;
+        }
         logger.debug("NoClusterDiscoveryService stopped.");
-        this.topologyView = null;
+    }
+
+    private void createNewView(final Type eventType, boolean inform) {
+        final TopologyEventListener[] registeredServices;
+        final TopologyView newView;
+        final TopologyView oldView;
+        synchronized ( lock ) {
+            // invalidate old view
+            if ( this.currentTopologyView != null ) {
+                this.currentTopologyView.invalidate();
+                oldView = currentTopologyView;
+            } else {
+                oldView = null;
+            }
+            final InstanceDescription myInstanceDescription = new InstanceDescriptionImpl(this.settingsService.getSlingId(),
+                    this.cachedProperties);
+            this.currentTopologyView = new TopologyViewImpl(myInstanceDescription);
+            registeredServices = this.listeners;
+            newView = this.currentTopologyView;
+
+            if ( inform ) {
+                for(final TopologyEventListener da: registeredServices) {
+                    da.handleTopologyEvent(new TopologyEvent(eventType, oldView, newView));
+                }
+            }
+        }
     }
 
     /**
      * Bind a new property provider.
      */
-    @SuppressWarnings("unused")
-	private void bindPropertyProvider(final PropertyProvider propertyProvider, final Map<String, Object> props) {
-    	logger.debug("bindPropertyProvider: Binding PropertyProvider {}", propertyProvider);
+    private void bindPropertyProvider(final PropertyProvider propertyProvider, final Map<String, Object> props) {
+    	logger.debug("Binding PropertyProvider {}", propertyProvider);
 
-        final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.add(info);
             Collections.sort(this.providerInfos);
             this.updatePropertiesCache();
-            if ( this.topologyView == null ) {
-                awares = null;
-            } else {
-                awares = this.listeners;
-            }
-        }
-        if ( awares != null ) {
-            for(final TopologyEventListener da : awares) {
-                da.handleTopologyEvent(new TopologyEvent(Type.PROPERTIES_CHANGED, this.topologyView, this.topologyView));
+            if ( this.currentTopologyView != null ) {
+                this.createNewView(Type.PROPERTIES_CHANGED, true);
             }
         }
     }
@@ -233,10 +158,12 @@ public class NoClusterDiscoveryService implements DiscoveryService {
      */
     @SuppressWarnings("unused")
     private void updatedPropertyProvider(final PropertyProvider propertyProvider, final Map<String, Object> props) {
-        logger.debug("bindPropertyProvider: Updating PropertyProvider {}", propertyProvider);
+        logger.debug("Updating PropertyProvider {}", propertyProvider);
 
-        this.unbindPropertyProvider(propertyProvider, props, false);
-        this.bindPropertyProvider(propertyProvider, props);
+        synchronized (lock) {
+            this.unbindPropertyProvider(propertyProvider, props, false);
+            this.bindPropertyProvider(propertyProvider, props);
+        }
     }
 
     /**
@@ -250,30 +177,24 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     /**
      * Unbind a property provider
      */
-    @SuppressWarnings("unused")
     private void unbindPropertyProvider(final PropertyProvider propertyProvider,
             final Map<String, Object> props,
             final boolean inform) {
-    	logger.debug("unbindPropertyProvider: Releasing PropertyProvider {}", propertyProvider);
+    	logger.debug("Releasing PropertyProvider {}", propertyProvider);
 
-    	final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.remove(info);
             this.updatePropertiesCache();
-            if ( this.topologyView == null ) {
-                awares = null;
-            } else {
-                awares = this.listeners;
-            }
-        }
-        if ( inform && awares != null ) {
-            for(final TopologyEventListener da : awares) {
-                da.handleTopologyEvent(new TopologyEvent(Type.PROPERTIES_CHANGED, this.topologyView, this.topologyView));
+            if ( this.currentTopologyView != null ) {
+                this.createNewView(Type.PROPERTIES_CHANGED, inform);
             }
         }
     }
 
+    /**
+     * Update the properties cache.
+     */
     private void updatePropertiesCache() {
         final Map<String, String> newProps = new HashMap<String, String>();
         for(final ProviderInfo info : this.providerInfos) {
@@ -286,35 +207,28 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     }
 
     @SuppressWarnings("unused")
-    private void bindTopologyEventListener(final TopologyEventListener clusterAware) {
-
-        logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}", clusterAware);
+    private void bindTopologyEventListener(final TopologyEventListener listener) {
+        logger.debug("Binding TopologyEventListener {}", listener);
 
         boolean inform = true;
         synchronized (lock) {
-            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
+            final List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
                 Arrays.asList(listeners));
-            currentList.add(clusterAware);
+            currentList.add(listener);
             this.listeners = currentList.toArray(new TopologyEventListener[currentList.size()]);
-            if ( this.topologyView == null ) {
-                inform = false;
+            if ( this.currentTopologyView != null ) {
+                listener.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_INIT, null, this.currentTopologyView));
             }
-        }
-
-        if ( inform ) {
-        	clusterAware.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_INIT, null, topologyView));
         }
     }
 
     @SuppressWarnings("unused")
-    private void unbindTopologyEventListener(final TopologyEventListener clusterAware) {
-
-        logger.debug("unbindTopologyEventListener: Releasing TopologyEventListener {}", clusterAware);
+    private void unbindTopologyEventListener(final TopologyEventListener listener) {
+        logger.debug("Releasing TopologyEventListener {}", listener);
 
         synchronized (lock) {
-            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
-                Arrays.asList(listeners));
-            currentList.remove(clusterAware);
+            final List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(Arrays.asList(listeners));
+            currentList.remove(listener);
             this.listeners = currentList.toArray(new TopologyEventListener[currentList.size()]);
         }
     }
@@ -322,70 +236,8 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     /**
      * @see DiscoveryService#getTopology()
      */
+    @Override
     public TopologyView getTopology() {
-    	return topologyView;
-    }
-
-    /**
-     * Internal class caching some provider infos like service id and ranking.
-     */
-    private final static class ProviderInfo implements Comparable<ProviderInfo> {
-
-        public final PropertyProvider provider;
-        public final int ranking;
-        public final long serviceId;
-        public final Map<String, String> properties = new HashMap<String, String>();
-
-        public ProviderInfo(final PropertyProvider provider, final Map<String, Object> serviceProps) {
-            this.provider = provider;
-            final Object sr = serviceProps.get(Constants.SERVICE_RANKING);
-            if ( sr == null || !(sr instanceof Integer)) {
-                this.ranking = 0;
-            } else {
-                this.ranking = (Integer)sr;
-            }
-            this.serviceId = (Long)serviceProps.get(Constants.SERVICE_ID);
-            final Object namesObj = serviceProps.get(PropertyProvider.PROPERTY_PROPERTIES);
-            if ( namesObj instanceof String ) {
-                final String val = provider.getProperty((String)namesObj);
-                if ( val != null ) {
-                    this.properties.put((String)namesObj, val);
-                }
-            } else if ( namesObj instanceof String[] ) {
-                for(final String name : (String[])namesObj ) {
-                    final String val = provider.getProperty(name);
-                    if ( val != null ) {
-                        this.properties.put(name, val);
-                    }
-                }
-            }
-        }
-
-        /**
-         * @see java.lang.Comparable#compareTo(java.lang.Object)
-         */
-        public int compareTo(final ProviderInfo o) {
-            // Sort by rank in ascending order.
-            if ( this.ranking < o.ranking ) {
-                return -1; // lower rank
-            } else if (this.ranking > o.ranking ) {
-                return 1; // higher rank
-            }
-            // If ranks are equal, then sort by service id in descending order.
-            return (this.serviceId < o.serviceId) ? 1 : -1;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if ( obj instanceof ProviderInfo ) {
-                return ((ProviderInfo)obj).serviceId == this.serviceId;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return provider.hashCode();
-        }
+    	return this.currentTopologyView;
     }
 }

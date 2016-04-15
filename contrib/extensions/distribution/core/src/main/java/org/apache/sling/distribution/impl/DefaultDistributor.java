@@ -46,6 +46,7 @@ public class DefaultDistributor implements Distributor {
 
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     @Nonnull

@@ -1,0 +1,28 @@
+# Complete example with several intermixed statement types
+
+create service user user1, u-ser_2
+set ACL on /libs,/apps
+    remove * for user1,u-ser_2
+    allow jcr:read for user1,u-ser_2
+
+    deny jcr:write for u-ser_2
+    deny jcr:lockManagement for user1
+    remove jcr:understand,some:other for u3
+end
+
+create service user bob_the_service
+
+# Verify that indent is not required
+set ACL on /tmp
+allow some:otherPrivilege for bob_the_service
+end
+
+set ACL for alice, bob,fred
+    remove * on /
+    allow jcr:read on /content,/var
+    deny jcr:write on /content/example.com
+    deny jcr:all on / nodetypes example:Page
+    
+end
+
+create service user the-last-one

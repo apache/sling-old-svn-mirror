@@ -29,7 +29,7 @@ public class JcrValueMap extends JcrPropertyMap {
     private final HelperData helper;
 
     public JcrValueMap(final Node node, final HelperData helper, final ValueMapCacheProvider cacheProvider) {
-        super(node, helper.dynamicClassLoader, cacheProvider);
+        super(node, helper.getDynamicClassLoader(), cacheProvider);
         this.helper = helper;
     }
 

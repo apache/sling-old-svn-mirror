@@ -17,39 +17,16 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<html data-th-with="page=${resource.adaptTo(@org.apache.sling.samples.fling.Page@class)}">
+<html data-th-with="page=${resource.adaptTo(@org.apache.sling.samples.fling.page.Page@class)}">
 <head data-th-replace="/apps/fling/page/fragments/head.html::default">
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIMPLE PAGE</title>
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="../../../../assets/css/fling.css"/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
 </head>
 <body>
 <div class="container">
   <nav class="nav-main">
     <div class="pull-left">
-      <ul class="breadcrumb" style="direction: rtl" data-th-replace="/apps/fling/page/fragments/navigation.html::breadcrumb">
-        <li class="active dropdown">
-          <span>2rd BAR</span>
-        </li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"><span class="caret"></span></a>
-          <a href="#">1st FOO</a>
-          <ul class="dropdown-menu" role="menu">
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">1st FOO CHILD</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">2nd FOO CHILD</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">3rd FOO CHILD</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">4th FOO CHILD</a></li>
-          </ul>
-        </li>
-      </ul>
+      <ul class="breadcrumb" style="direction: rtl" data-th-replace="/apps/fling/page/fragments/navigation.html::breadcrumb"></ul>
     </div>
-    <ul class="nav nav-pills" role="tablist" data-th-replace="/apps/fling/page/fragments/navigation.html::children">
-      <li><a href="../user/html.html">3rd BAZ</a></li>
-    </ul>
+    <ul class="nav nav-pills" role="tablist" data-th-replace="/apps/fling/page/fragments/navigation.html::children"></ul>
   </nav>
   <div class="panel panel-primary">
     <div class="panel-heading">
@@ -59,9 +36,7 @@
       <div data-th-utext="${page.content}"><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p><pre>At vero eos et accusam et justo duo dolores et ea rebum.</pre></div>
       <img src="../../../../assets/images/feather.png" width="355" height="111" data-th-attr="src='/fling/assets/images/feather.png'"/>
     </div>
-    <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer">
-      <span>user | auth type</span>
-    </div>
+    <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer"></div>
   </div>
 </div>
 </body>

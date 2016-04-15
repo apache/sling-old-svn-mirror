@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -43,8 +43,8 @@
     </scm>
 
     <properties>
-        <!-- Timeout when checking for Sling readyness before starting tests -->
-        <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
+        <!-- run modes for integration tests -->
+        <sling.run.modes>oak_tar</sling.run.modes>
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path/>
@@ -111,7 +111,9 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.19</version>
                 <!-- Version newer than the one declared in the parent pom -->
                 <executions>
                     <execution>
@@ -139,17 +141,14 @@
                         <io.sightly.tck.serverURL>http://${test.host}:${http.port}</io.sightly.tck.serverURL>
                         <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                         <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
-                        <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
-
-                        <!-- Additional readyness checks, SLING-3235 -->
-                        <launchpad.ready.1>GET:/index.html:200:.*Welcome to the Sling Launchpad.*</launchpad.ready.1>
+                        <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.4.2</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -165,14 +164,11 @@
                         <server>
                             <port>${http.port}</port>
                             <controlPort>${sling.control.port}</controlPort>
-                            <runmode>oak</runmode>
+                            <runmode>${sling.run.modes}</runmode>
                             <contextPath>${http.base.path}</contextPath>
                             <debug>${debug.options}</debug>
                         </server>
                     </servers>
-                    <!-- TODO
-                    <controlHost>${test.host}</controlHost>
-                    -->
                 </configuration>
             </plugin>
         </plugins>
@@ -203,7 +199,7 @@
         <dependency>
             <groupId>io.sightly</groupId>
             <artifactId>io.sightly.tck</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.2</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -217,7 +213,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.18</version>
+            <version>2.0.22</version>
             <exclusions>
                 <exclusion>
                     <groupId>junit</groupId>
@@ -268,6 +264,12 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.4</version>
             <scope>test</scope>
         </dependency>
 

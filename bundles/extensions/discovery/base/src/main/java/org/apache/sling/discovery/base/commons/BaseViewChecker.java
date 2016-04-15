@@ -33,8 +33,6 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
 import org.apache.sling.discovery.base.connectors.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
-import org.apache.sling.launchpad.api.StartupListener;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -49,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * Local heartbeats are stored in the repository. Remote heartbeats are POSTs to
  * remote TopologyConnectorServlets.
  */
-public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupListener {
+public abstract class BaseViewChecker implements ViewChecker, Runnable {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -80,9 +78,6 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     /** keep a reference to the component context **/
     protected ComponentContext context;
 
-    /** SLING-2968 : start issuing remote heartbeats only after startup finished **/
-    protected boolean startupFinished = false;
-
     /** SLING-3382 : force ping instructs the servlet to start the backoff from scratch again **/
     private boolean forcePing;
 
@@ -90,12 +85,6 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
     protected final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
 
     protected PeriodicBackgroundJob periodicPingJob;
-    
-    public void inform(StartupMode mode, boolean finished) {
-    	if (finished) {
-    		startupFinished(mode);
-    	}
-    }
     
     protected abstract SlingSettingsService getSlingSettingsService();
 
@@ -109,17 +98,6 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
 
     protected abstract BaseConfig getConnectorConfig();
 
-    public void startupFinished(StartupMode mode) {
-    	synchronized(lock) {
-    		startupFinished = true;
-    		issueHeartbeat();
-    	}
-    }
-
-    public void startupProgress(float ratio) {
-    	// we dont care
-    }
-
     @Activate
     protected void activate(ComponentContext context) {
     	synchronized(lock) {
@@ -130,6 +108,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
 
 	        doActivate();
 	        activated = true;
+            issueHeartbeat();
     	}
     }
 
@@ -222,10 +201,6 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable, StartupL
         if (getConnectorRegistry() == null) {
             logger.error("issueConnectorPings: connectorRegistry is null");
             return;
-        }
-        if (!startupFinished) {
-        	logger.debug("issueConnectorPings: not issuing remote heartbeat yet, startup not yet finished");
-        	return;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("issueConnectorPings: pinging outgoing topology connectors (if there is any) for "+slingId);

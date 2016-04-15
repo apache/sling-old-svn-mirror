@@ -26,4 +26,7 @@ public class SharedImages {
     public static final ImageDescriptor SIGHTLY_ICON = ImageDescriptor.createFromURL(
             FileLocator.find(FrameworkUtil.getBundle(SharedImages.class), Path.fromPortableString("icons/obj16/sightly.gif"), null));
 
+    public static final ImageDescriptor SIGHTLY_WIZARD_BANNER = ImageDescriptor.createFromURL(
+            FileLocator.find(FrameworkUtil.getBundle(SharedImages.class), Path.fromPortableString("icons/wizban/sightly.gif"), null));
+
 }

@@ -27,15 +27,14 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
@@ -63,27 +62,33 @@ import org.osgi.framework.Constants;
 public class RenderUnitProvider implements UseProvider {
 
     @Reference
-    private UnitLoader unitLoader = null;
+    private UnitLoader unitLoader;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
         if (identifier.endsWith("." + SightlyScriptEngineFactory.EXTENSION)) {
             Bindings globalBindings = renderContext.getBindings();
-            SlingHttpServletRequest request = (SlingHttpServletRequest) globalBindings.get(SlingBindings.REQUEST);
-            Resource resource = ResourceResolution.getResourceForRequest(renderContext.getScriptResourceResolver(), request);
-            Resource renderUnitResource = ResourceResolution.getResourceFromSearchPath(resource, identifier);
+            SlingScriptHelper sling = BindingsUtils.getHelper(globalBindings);
+            Resource renderUnitResource = UseProviderUtils.locateScriptResource(renderContext, identifier);
             if (renderUnitResource == null) {
-                String resourceSuperType = resource.getResourceSuperType();
-                StringBuilder errorMessage = new StringBuilder("Cannot find resource ");
-                errorMessage.append(identifier).append(" for base path ").append(resource.getPath());
-                if (StringUtils.isNotEmpty(resourceSuperType)) {
-                    errorMessage.append(" with resource super type ").append(resourceSuperType);
+                Resource caller = ResourceResolution.getResourceForRequest(sling.getRequest().getResourceResolver(), sling
+                        .getRequest());
+                if (caller != null) {
+                    String resourceSuperType = caller.getResourceSuperType();
+                    StringBuilder errorMessage = new StringBuilder("Cannot find resource ");
+                    errorMessage.append(identifier).append(" for base path ").append(caller.getPath());
+                    if (StringUtils.isNotEmpty(resourceSuperType)) {
+                        errorMessage.append(" with resource super type ").append(resourceSuperType);
+                    }
+                    errorMessage.append(".");
+                    return ProviderOutcome.failure(new SightlyException(errorMessage.toString()));
+                } else {
+                    return ProviderOutcome.failure(new SightlyException("Cannot resolve template " + identifier + " for script " + sling
+                            .getScript().getScriptResource().getPath()));
                 }
-                errorMessage.append(".");
-                return ProviderOutcome.failure(new SightlyException(errorMessage.toString()));
             }
             try {
-                RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, globalBindings, (RenderContextImpl) renderContext);
+                RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, renderContext);
                 return ProviderOutcome.success(renderUnit);
             } catch (Exception e) {
                 return ProviderOutcome.failure(e);

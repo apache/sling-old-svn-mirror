@@ -132,7 +132,7 @@ public class AdapterManagerTest {
         return ctx;
     }
 
-    public static <T> Matcher<T> any(@SuppressWarnings("unused") Class<T> type) {
+    public static <T> Matcher<T> any(Class<T> type) {
         return new IsAnything<T>();
     }
 
@@ -493,6 +493,7 @@ public class AdapterManagerTest {
 
     public class FirstImplementationAdapterFactory implements AdapterFactory {
 
+        @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
             if (adaptable instanceof AdapterObject) {
                 AdapterObject adapterObject = (AdapterObject) adaptable;
@@ -510,6 +511,7 @@ public class AdapterManagerTest {
 
     public class SecondImplementationAdapterFactory implements AdapterFactory {
 
+        @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
             if (adaptable instanceof AdapterObject) {
                 AdapterObject adapterObject = (AdapterObject) adaptable;

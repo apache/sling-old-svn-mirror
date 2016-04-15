@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -32,6 +31,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageExporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class LocalDistributionPackageExporterFactory implements DistributionPackageExporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -70,9 +71,8 @@ public class LocalDistributionPackageExporterFactory implements DistributionPack
         exporter = new LocalDistributionPackageExporter(packageBuilder);
     }
 
-    @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
-        return exporter.exportPackages(resourceResolver, distributionRequest);
+    public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
+        exporter.exportPackages(resourceResolver, distributionRequest, packageProcessor);
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {

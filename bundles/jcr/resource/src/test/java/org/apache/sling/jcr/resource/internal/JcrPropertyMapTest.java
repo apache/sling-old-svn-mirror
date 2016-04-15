@@ -39,6 +39,8 @@ import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.ValueMapCacheProvider;
 
+import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
+
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private static final String PROP_NAME = "prop_name";
@@ -49,7 +51,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private Node rootNode;
 
-    private ValueMapCacheProvider valueMapCache = new ValueMapCacheProvider();
+    private ValueMapCacheProvider valueMapCacheProvider;
 
     @Override
     protected void setUp() throws Exception {
@@ -57,8 +59,9 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         rootPath = "/test" + System.currentTimeMillis();
         rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
-                "nt:unstructured");
+            "nt:unstructured");
         session.save();
+        valueMapCacheProvider = new ValueMapCacheProvider();
     }
 
     @Override
@@ -185,7 +188,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         rootNode.setProperty("bin", valueFactory.createBinary(instream));
         rootNode.getSession().save();
 
-        ValueMap map = new JcrPropertyMap(rootNode, valueMapCache);
+        ValueMap map = new JcrPropertyMap(rootNode, valueMapCacheProvider);
         instream = map.get("bin", InputStream.class);
         assertNotNull(instream);
         String read = IOUtils.toString(instream);
@@ -198,6 +201,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     // ---------- internal
+
     private void testValue(Node node, Object value, Object defaultValue) throws RepositoryException {
         ValueMap map = createProperty(rootNode, value);
         assertValueType(value, map.get(PROP_NAME, defaultValue), defaultValue.getClass());
@@ -245,12 +249,17 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     protected JcrPropertyMap createPropertyMap(final Node node) {
-        return new JcrPropertyMap(node, valueMapCache);
+        return new JcrPropertyMap(node, valueMapCacheProvider);
     }
 
     private void testValue(Node node, Object value) throws RepositoryException {
         ValueMap map = createProperty(node, value);
         assertEquals(value, map.get(PROP_NAME));
+    }
+
+    private void testValue(Node node, Calendar value) throws RepositoryException {
+        ValueMap map = createProperty(node, value);
+        assertEqualsCalendar(value, map.get(PROP_NAME, Calendar.class));
     }
 
     private ValueMap createProperty(Node node, Object value)
@@ -270,11 +279,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
             cal.setTime((Date) value);
             jcrValue = fac.createValue(cal);
         } else if (value instanceof Boolean) {
-            jcrValue = fac.createValue(((Boolean) value));
+            jcrValue = fac.createValue(((Boolean) value).booleanValue());
         } else if (value instanceof Double) {
-            jcrValue = fac.createValue(((Double) value));
+            jcrValue = fac.createValue(((Double) value).doubleValue());
         } else if (value instanceof Long) {
-            jcrValue = fac.createValue(((Long) value));
+            jcrValue = fac.createValue(((Long) value).longValue());
         } else if (value instanceof BigDecimal) {
             jcrValue = fac.createValue((BigDecimal) value);
         } else {
@@ -372,11 +381,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     protected void search(Iterator<?> i, Object value) {
         boolean found = false;
-        while (!found && i.hasNext()) {
+        while ( !found && i.hasNext() ) {
             final Object current = i.next();
             found = current.equals(value);
         }
-        if (!found) {
+        if ( !found ) {
             fail("Value " + value + " is not found in iterator.");
         }
     }

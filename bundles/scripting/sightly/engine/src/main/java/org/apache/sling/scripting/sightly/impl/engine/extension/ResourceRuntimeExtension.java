@@ -229,10 +229,6 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return null;
     }
 
-    private String getOption(Map<String, Object> options, String property) {
-        return (String) options.get(property);
-    }
-
     private String getOption(String option, Map<String, Object> options, String defaultValue) {
         if (options.containsKey(option)) {
             return (String) options.get(option);

@@ -120,10 +120,22 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      */
     private ServiceRegistration dummyService;
 
+    /**
+     * Default value for the configuration {@link #PROP_PROTECTED_HANDLERS}
+     */
+    public static final String DEFAULT_PROTECTED_HANDLERS = "org.apache.jackrabbit.server.remoting.davex.AclRemoveHandler";
+
+    /**
+     * defines the Protected handlers for the Jcr Remoting Servlet
+     */
+    @Property(value=DEFAULT_PROTECTED_HANDLERS)
+    public static final String PROP_PROTECTED_HANDLERS = "dav.protectedhandlers";
+    
     @Activate
     protected void activate(final BundleContext bundleContext, final Map<String, ?> config) {
         final String davRoot = OsgiUtil.toString(config.get(PROP_DAV_ROOT), DEFAULT_DAV_ROOT);
         final boolean createAbsoluteUri = OsgiUtil.toBoolean(config.get(PROP_CREATE_ABSOLUTE_URI), DEFAULT_CREATE_ABSOLUTE_URI);
+        final String protectedHandlers = OsgiUtil.toString(config.get(PROP_PROTECTED_HANDLERS), DEFAULT_PROTECTED_HANDLERS);
 
         final AuthHttpContext context = new AuthHttpContext(davRoot);
         context.setAuthenticationSupport(authSupport);
@@ -139,6 +151,8 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
         // disable CSRF checks for now (should be handled by Sling)
         initProps.put(INIT_PARAM_CSRF_PROTECTION, CSRFUtil.DISABLED);
+        
+        initProps.put(INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedHandlers);
 
         // register and handle registration failure
         try {

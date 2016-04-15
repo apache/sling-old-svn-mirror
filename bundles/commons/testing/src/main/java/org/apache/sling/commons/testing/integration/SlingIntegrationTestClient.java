@@ -39,9 +39,20 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 /** Client functions to interact with Sling in integration tests */
 public class SlingIntegrationTestClient {
     private final HttpClient httpClient;
+    
+    /** Extension to use to check if a folder exists */
+    private String folderExistsTestExtension = ".txt";
 
     public SlingIntegrationTestClient(HttpClient client) {
         this.httpClient = client;
+    }
+    
+    public String getFolderExistsTestExtension() {
+        return folderExistsTestExtension;
+    }
+
+    public void setFolderExistsTestExtension(String folderExistsTestExtension) {
+        this.folderExistsTestExtension = folderExistsTestExtension;
     }
 
     /** Upload a file to the Sling repository
@@ -64,7 +75,7 @@ public class SlingIntegrationTestClient {
     /** Create the given directory via WebDAV, if needed, under given URL */
     public void mkdir(String url) throws IOException {
         int status = 0;
-        status = httpClient.executeMethod(new GetMethod(url + ".txt"));
+        status = httpClient.executeMethod(new GetMethod(url + folderExistsTestExtension));
         if(status != 200) {
             status = httpClient.executeMethod(new HttpAnyMethod("MKCOL",url));
             if(status!=201) {
@@ -90,7 +101,7 @@ public class SlingIntegrationTestClient {
         }
 
         final String url = baseUrl + path;
-        final int status = httpClient.executeMethod(new GetMethod(url + ".txt"));
+        final int status = httpClient.executeMethod(new GetMethod(url + folderExistsTestExtension));
         if(status!=200) {
             throw new HttpStatusCodeException(200, status, "GET", url);
         }

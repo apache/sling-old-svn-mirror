@@ -64,7 +64,7 @@ public class HealthCheckResultCache {
         final Iterator<HealthCheckMetadata> checksIt = metadatas.iterator();
         while (checksIt.hasNext()) {
             final HealthCheckMetadata md = checksIt.next();
-            final HealthCheckExecutionResult result = useValidCacheResults(md, resultCacheTtlInMs);
+            final HealthCheckExecutionResult result = getValidCacheResult(md, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
                 checksIt.remove();
@@ -77,7 +77,7 @@ public class HealthCheckResultCache {
     /**
      * Return the cached result if it's still valid.
      */
-    public HealthCheckExecutionResult useValidCacheResults(final HealthCheckMetadata metadata,
+    public HealthCheckExecutionResult getValidCacheResult(final HealthCheckMetadata metadata,
             final long resultCacheTtlInMs) {
         return get(metadata, resultCacheTtlInMs);
     }
@@ -101,7 +101,7 @@ public class HealthCheckResultCache {
                 return cachedResult;
             } else {
                 logger.debug("Outdated result: validUntil={} cachedResult={}", validUntil, cachedResult);
-                cache.remove(key);
+                // not removing result for key as out-dated results are shown for timed out checks if available
             }
         }
 

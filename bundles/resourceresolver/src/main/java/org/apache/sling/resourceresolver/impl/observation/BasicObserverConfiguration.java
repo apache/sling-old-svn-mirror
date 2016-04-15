@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 
 public class BasicObserverConfiguration implements ObserverConfiguration {

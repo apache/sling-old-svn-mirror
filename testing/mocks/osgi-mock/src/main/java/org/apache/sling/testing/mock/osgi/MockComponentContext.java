@@ -48,7 +48,7 @@ class MockComponentContext implements ComponentContext {
     }
 
     @Override
-    public Object locateService(final String name, final ServiceReference reference) {
+    public <S> S locateService(final String name, final ServiceReference<S> reference) {
         return this.bundleContext.locateService(name, reference);
     }
 
@@ -79,7 +79,7 @@ class MockComponentContext implements ComponentContext {
     }
 
     @Override
-    public ServiceReference getServiceReference() {
+    public ServiceReference<?> getServiceReference() {
         throw new UnsupportedOperationException();
     }
 

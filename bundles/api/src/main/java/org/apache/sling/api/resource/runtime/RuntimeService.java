@@ -22,6 +22,12 @@ import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 
 import aQute.bnd.annotation.ProviderType;
 
+/**
+ * Runtime service providing introspection of the state of the resource resolver
+ * and the resource providers.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
+ */
 @ProviderType
 public interface RuntimeService {
 

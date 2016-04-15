@@ -73,6 +73,7 @@ public class DiscoveryWithSyncTokenTest {
         b2.setDebugName("i2").useRepositoryOf(i1);
         b2.setConnectorPingInterval(1).setMinEventDelay(1).setConnectorPingTimeout(60);
         VirtualInstance i2 = b2.build();
+        instances.add(i2);
         
         i1.heartbeatsAndCheckView();
         i2.heartbeatsAndCheckView();

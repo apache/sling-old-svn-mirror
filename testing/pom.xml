@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>25</version>
+    <version>26</version>
     <relativePath/>
   </parent>
 
@@ -54,17 +54,9 @@
     <module>junit/remote</module>
     <module>junit/performance</module>
     <module>junit/teleporter</module>
-    <module>mocks/logging-mock</module>
-    <module>mocks/resourceresolver-mock</module>
-    <module>mocks/jcr-mock</module>
-    <module>mocks/osgi-mock</module>
-    <module>mocks/sling-mock</module>
-    <module>mocks/sling-mock-jackrabbit</module>
-    <module>mocks/sling-mock-oak</module>
+    <module>mocks</module>
     <module>sling-pax-util</module>
-    <module>samples/sample-tests</module>
-    <module>samples/failing-tests</module>
-    <module>samples/integration-tests</module>
+    <module>samples/bundle-with-it</module>
   </modules>
 
 </project>

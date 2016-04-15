@@ -96,4 +96,8 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
         }
         return options;
     }
+
+    protected File getStandaloneOutputDirectory() {
+        return new File(this.getTmpDir(), "standalone");
+    }
 }

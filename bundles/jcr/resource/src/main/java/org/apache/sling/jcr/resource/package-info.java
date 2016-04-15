@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.3")
+@Version("3.0")
 package org.apache.sling.jcr.resource;
 
 import aQute.bnd.annotation.Version;

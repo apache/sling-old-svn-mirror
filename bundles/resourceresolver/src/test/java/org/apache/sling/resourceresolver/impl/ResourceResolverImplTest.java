@@ -51,7 +51,7 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
@@ -72,12 +72,12 @@ public class ResourceResolverImplTest {
         ResourceProvider<?> rp = new ResourceProvider<Object>() {
 
             @Override
-            public Resource getResource(ResolverContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
+            public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
                 return null;
             }
 
             @Override
-            public Iterator<Resource> listChildren(ResolverContext<Object> ctx, Resource parent) {
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
                 return null;
             }
         };
@@ -88,6 +88,7 @@ public class ResourceResolverImplTest {
         when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
+        activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
         resResolver = resFac.getAdministrativeResourceResolver(null);
@@ -95,7 +96,7 @@ public class ResourceResolverImplTest {
 
     @SuppressWarnings("deprecation")
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker.getResourceProviderStorage());
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -207,7 +208,7 @@ public class ResourceResolverImplTest {
         ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
-        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker.getResourceProviderStorage());
+        final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -504,7 +505,7 @@ public class ResourceResolverImplTest {
 
     @Test public void testIsResourceType() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         final Resource r = resolver.add(new SyntheticResourceWithSupertype(resolver, "/a", "a:b", "d:e"));
         resolver.add(new SyntheticResourceWithSupertype(resolver, "/d/e", "x:y", "t:c"));
 
@@ -517,7 +518,7 @@ public class ResourceResolverImplTest {
 
     @Test public void testIsResourceTypeWithPaths() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1
@@ -553,7 +554,7 @@ public class ResourceResolverImplTest {
 
     @Test(expected=SlingException.class)  public void testIsResourceCyclicHierarchyDirect() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1  <---+
@@ -566,14 +567,14 @@ public class ResourceResolverImplTest {
 
         assertTrue(resolver.isResourceType(resource, "/types/1"));
         assertTrue(resolver.isResourceType(resource, "/types/2"));
-        
+
         // this should throw a SlingException when detecting the cyclic hierarchy
         resolver.isResourceType(resource, "/types/unknown");
     }
 
     @Test(expected=SlingException.class) public void testIsResourceCyclicHierarchyIndirect() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
-        
+
         /**
          * prepare resource type hierarchy
          * /types/1   <----+
@@ -617,11 +618,11 @@ public class ResourceResolverImplTest {
                         Map<String, Object> authenticationInfo) throws LoginException {
                     return resolvers.get(0);
                 }
-            }, resourceProviderTracker);            
+            }, resourceProviderTracker);
         }
-        
+
         public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
-            super(factory, false, null, resourceProviderTracker.getResourceProviderStorage());
+            super(factory, false, null, resourceProviderTracker);
         }
 
         public Resource add(final Resource r) {
@@ -642,20 +643,20 @@ public class ResourceResolverImplTest {
     }
 
     private static class SyntheticResourceWithSupertype extends SyntheticResource {
-        
+
         private final String resourceSuperType;
-        
+
         public SyntheticResourceWithSupertype(ResourceResolver resourceResolver, String path,
                 String resourceType, String resourceSuperType) {
             super(resourceResolver, path, resourceType);
             this.resourceSuperType = resourceSuperType;
         }
-     
+
         @Override
         public String getResourceSuperType() {
             return this.resourceSuperType;
         }
-        
+
     }
-    
+
 }

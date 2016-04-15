@@ -86,6 +86,7 @@
         <!-- Tooling Support -->
         <module>tooling/support/install</module>
         <module>tooling/support/provisioning-model</module>
+        <module>tooling/support/source</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
@@ -113,6 +114,8 @@
         <module>bundles/commons/testing</module>
         <module>bundles/commons/threaddump</module>
         <module>bundles/commons/threads</module>
+        <module>bundles/commons/metrics</module>
+        <module>bundles/commons/repoinit</module>
 
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
@@ -179,13 +182,13 @@
         <module>bundles/extensions/healthcheck</module>
         <module>bundles/resourceaccesssecurity/core</module>
         <module>bundles/resourceaccesssecurity/it</module>
-        <module>bundles/extensions/validation</module>
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
-        <module>bundles/extensions/models/validation-impl</module>
         <module>bundles/extensions/models/integration-tests</module>
         <module>bundles/extensions/i18n</module>
         <module>bundles/extensions/xss</module>
+        <module>bundles/extensions/resourcebuilder</module>
+        <module>bundles/extensions/servlet-helpers</module>
 
         <!-- Testing Support -->
         <module>testing</module>
@@ -211,6 +214,17 @@
     </modules>
 
     <profiles>
+        <profile>
+            <!-- build modules depending on Java 8 also -->
+            <id>java8</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <modules>
+                <module>bundles/extensions/validation</module>
+                <module>bundles/extensions/models/validation-impl</module>
+            </modules>
+        </profile>
         <profile>
             <!--
               Allow the integration tests to be excluded, as they might be slow

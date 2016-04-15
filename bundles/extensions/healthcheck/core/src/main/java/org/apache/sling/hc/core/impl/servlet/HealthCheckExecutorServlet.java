@@ -49,19 +49,22 @@ import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet that triggers the health check executor to return results via http. <br/>
- * <br/>
- * Parameters:<br/>
- * <br/>
- * tags: The health check tags to take into account<br/>
- * format: html|json|jsonp<br/>
- * includeDebug: If true, debug messages from result log are included.<br/>
- * callback: For jsonp, the JS callback function name (defaults to "processHealthCheckResults")<br/>
- * httpStatus: health check status to http status mapping in format httpStatus=WARN:418,CRITICAL:503,HEALTH_CHECK_ERROR:500. 
- * For omitted health check status values the next best code will be used (e.g. for httpStatus=CRITICAL:503 a result WARN will 
- * return 200, CRITICAL 503 and HEALTH_CHECK_ERROR also 503). By default all requests answer with an http status of 200. 
- * Useful in combination with load balancers.<br/>
+/** Servlet that triggers the health check executor to return results via http. 
  * 
+ * Parameters:
+ * <ul>
+ * <li>tags: The health check tags to take into account
+ * <li>format: html|json|jsonp
+ * <li>includeDebug: If true, debug messages from result log are included.
+ * <li>callback: For jsonp, the JS callback function name (defaults to "processHealthCheckResults")
+ * <li>httpStatus: health check status to http status mapping in format httpStatus=WARN:418,CRITICAL:503,HEALTH_CHECK_ERROR:500.
+ * </ul>
+ *  
+ * For omitted health check status values the next best code will be used (e.g. for httpStatus=CRITICAL:503 a result WARN will 
+ * return 200, CRITICAL 503 and HEALTH_CHECK_ERROR also 503). By default all requests answer with an http status of 200.
+ * <p> 
+ * Useful in combination with load balancers.
+ * <p>
  * NOTE: This servlet registers directly (low-level) at the HttpService and is not processed by sling (better performance, fewer dependencies, no authentication required, 503 can be sent without the progress tracker information). */
 @Service
 @Component(label = "Health Check Executor Servlet",

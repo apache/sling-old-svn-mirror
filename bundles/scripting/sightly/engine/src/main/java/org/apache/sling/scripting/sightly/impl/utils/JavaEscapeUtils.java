@@ -85,7 +85,7 @@ public class JavaEscapeUtils {
      * @return a valid Java token
      */
     public static String getEscapedToken(String token) {
-        String result = token.toLowerCase();
+        String result = token;
         if (reservedKeywords.contains(result)) {
             result = "_" + result;
         }

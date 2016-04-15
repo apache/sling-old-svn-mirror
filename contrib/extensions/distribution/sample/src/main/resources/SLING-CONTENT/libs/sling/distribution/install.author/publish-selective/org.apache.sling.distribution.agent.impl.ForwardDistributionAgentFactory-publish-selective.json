@@ -5,9 +5,7 @@
 
     "serviceName" : "distributionService",
 
-    "selectiveQueues": ["news|publisher.*=/content/news.*"],
-
-    "useMultipleQueues" : true,
+    "priorityQueues": ["news=/content/news.*"],
 
     "packageImporter.endpoints": [
         "publisher1=http://localhost:4503/libs/sling/distribution/services/importers/default"

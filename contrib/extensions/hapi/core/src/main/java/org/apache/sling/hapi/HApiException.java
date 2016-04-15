@@ -22,6 +22,9 @@ package org.apache.sling.hapi;
  * A Hypermedia API exception
  */
 public class HApiException extends RuntimeException {
+
+    private static final long serialVersionUID = 2626376214501558054L;
+
     public HApiException() {
     }
 

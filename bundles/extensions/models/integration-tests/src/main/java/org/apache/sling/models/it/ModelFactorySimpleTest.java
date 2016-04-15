@@ -106,11 +106,11 @@ public class ModelFactorySimpleTest {
     public void testCanCreateFromAdaptable() {
         assertTrue("Model is not detected as such", modelFactory.canCreateFromAdaptable(resource, ConstructorInjectionTestModel.class));
         assertTrue("Model is not detected as such", modelFactory.canCreateFromAdaptable(resource, SampleServiceInterface.class));
-        assertFalse("Model is not detected as such", modelFactory.canCreateFromAdaptable(new String(), ConstructorInjectionTestModel.class)); // invalid adaptable
+        assertFalse("Model is incorrectly detected", modelFactory.canCreateFromAdaptable(new String(), ConstructorInjectionTestModel.class)); // invalid adaptable
     }
     
-    @Test(expected=ModelClassException.class)
+    @Test()
     public void testCanCreateFromAdaptableWithModelExceptin() {
-        modelFactory.canCreateFromAdaptable(resource, DummyClass.class); // no model class
+        assertFalse("Model is incorrectly detected", modelFactory.canCreateFromAdaptable(resource, DummyClass.class)); // no model class
     }
 }

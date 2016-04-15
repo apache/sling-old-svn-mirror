@@ -29,8 +29,8 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 
 /**
@@ -40,7 +40,7 @@ public class CRUDMergingResourceProvider
     extends MergingResourceProvider {
 
     public CRUDMergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker,
+            final MergedResourcePicker2 picker,
             final boolean traverseHierarchie) {
         super(mergeRootPath, picker, false, traverseHierarchie);
     }
@@ -64,7 +64,7 @@ public class CRUDMergingResourceProvider
 
         // Loop over resources
         boolean isUnderlying = true;
-        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath).iterator();
+        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath, null).iterator();
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
@@ -78,7 +78,7 @@ public class CRUDMergingResourceProvider
                 // check parent for hiding
                 // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = rsrc.getParent();
-                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+                hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name, true));
             }
             if (hidden) {
                 holder.resources.clear();
@@ -91,7 +91,7 @@ public class CRUDMergingResourceProvider
     }
 
     @Override
-    public Resource create(final ResolverContext<Void> ctx, final String path, final Map<String, Object> properties) throws PersistenceException {
+    public Resource create(final ResolveContext<Void> ctx, final String path, final Map<String, Object> properties) throws PersistenceException {
         final ResourceResolver resolver = ctx.getResourceResolver();
 
         // check if the resource exists
@@ -128,7 +128,7 @@ public class CRUDMergingResourceProvider
     }
 
     @Override
-    public void delete(final ResolverContext<Void> ctx, final Resource resource) throws PersistenceException {
+    public void delete(final ResolveContext<Void> ctx, final Resource resource) throws PersistenceException {
         final ResourceResolver resolver = ctx.getResourceResolver();
         final String path = resource.getPath();
 
@@ -158,17 +158,17 @@ public class CRUDMergingResourceProvider
     }
 
     @Override
-    public void revert(final ResolverContext<Void> ctx) {
+    public void revert(final ResolveContext<Void> ctx) {
         // the provider for the merged resources will revert
     }
 
     @Override
-    public void commit(final ResolverContext<Void> ctx) throws PersistenceException {
+    public void commit(final ResolveContext<Void> ctx) throws PersistenceException {
         // the provider for the merged resources will commit
     }
 
     @Override
-    public boolean hasChanges(final ResolverContext<Void> ctx) {
+    public boolean hasChanges(final ResolveContext<Void> ctx) {
         // the provider for the merged resources will return changes
         return false;
     }

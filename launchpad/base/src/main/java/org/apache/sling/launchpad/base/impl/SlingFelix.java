@@ -194,7 +194,7 @@ public class SlingFelix extends Felix {
             try {
                 SlingFelix.this.waitForStop(0);
             } catch (InterruptedException ie) {
-                // TODO: log
+                Thread.currentThread().interrupt();
             }
 
             if (restart) {

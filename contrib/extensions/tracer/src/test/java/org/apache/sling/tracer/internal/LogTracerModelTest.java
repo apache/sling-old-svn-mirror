@@ -24,9 +24,8 @@ import ch.qos.logback.classic.Level;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 public class LogTracerModelTest {
 
@@ -56,9 +55,9 @@ public class LogTracerModelTest {
         TracerSet ts = new TracerSet("foo : a.b;level=trace, a.b.c;level=info");
         TracerContext tc = getContext(ts);
 
-        assertTrue(tc.shouldLog("a.b", Level.TRACE));
-        assertTrue(tc.shouldLog("a.b.d", Level.TRACE));
-        assertFalse(tc.shouldLog("a.b.c", Level.TRACE));
+        assertNotNull(tc.findMatchingConfig("a.b", Level.TRACE));
+        assertNotNull(tc.findMatchingConfig("a.b.d", Level.TRACE));
+        assertNull(tc.findMatchingConfig("a.b.c", Level.TRACE));
     }
 
     @Test
@@ -86,7 +85,7 @@ public class LogTracerModelTest {
     }
 
     private static TracerContext getContext(TracerSet ts) {
-        return new TracerContext(ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]));
+        return new TracerContext(ts.getConfigs().toArray(new TracerConfig[ts.getConfigs().size()]), Recording.NOOP);
     }
 
 }

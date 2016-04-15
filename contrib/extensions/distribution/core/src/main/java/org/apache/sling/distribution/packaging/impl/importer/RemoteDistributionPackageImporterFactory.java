@@ -26,7 +26,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -40,7 +39,6 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +51,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Importer name: {name}")
 public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -62,34 +61,19 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
      * name of this importer.
      */
     @Property(label = "Name", description = "The name of the importer.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
      * endpoints property
      */
     @Property(cardinality = 100, label = "Endpoints", description = "The list of endpoints to which the packages will be imported.")
-    public static final String ENDPOINTS = "endpoints";
-
-    /**
-     * endpoint strategy property
-     */
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "One",
-                    value = "one endpoint"
-            )},
-            value = "One",
-            label = "Endpoint Strategy", description = "Specifies whether to import packages to all endpoints or just to one."
-    )
-    public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
-
+    private static final String ENDPOINTS = "endpoints";
 
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "transportSecretProvider")
+    private
     DistributionTransportSecretProvider transportSecretProvider;
 
     private DistributionPackageImporter importer;
@@ -98,16 +82,12 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     protected void activate(Map<String, Object> config) {
 
         Map<String, String> endpoints = SettingsUtils.toUriMap(config.get(ENDPOINTS));
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
-
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
         String importerName = PropertiesUtil.toString(config.get(NAME), null);
 
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
-
-        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints, transportEndpointStrategyType);
+        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints);
 
     }
 

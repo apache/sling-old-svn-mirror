@@ -68,7 +68,7 @@ public class PackageMojo extends AbstractSlingStartMojo {
         @SuppressWarnings("unchecked")
         final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_STANDALONE);
 
-        final File buildOutputDirectory = new File(this.project.getBuild().getOutputDirectory());
+        final File buildOutputDirectory = this.getStandaloneOutputDirectory();
         final File manifestFile = new File(buildOutputDirectory, "META-INF/MANIFEST.MF");
         FileInputStream fis = null;
         try {

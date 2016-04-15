@@ -35,18 +35,18 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.api.ResourceMergerService;
 import org.apache.sling.resourcemerger.impl.MergedResource;
 import org.apache.sling.resourcemerger.impl.MergedResourceConstants;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 @Component(name="org.apache.sling.resourcemerger.impl.MergedResourceProviderFactory",
            label = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
-@Service(value={MergedResourcePicker.class, ResourceMergerService.class})
+@Service(value={MergedResourcePicker2.class, ResourceMergerService.class})
 @Properties({
-    @Property(name=MergedResourcePicker.MERGE_ROOT, value=MergingResourcePicker.DEFAULT_ROOT,
+    @Property(name=MergedResourcePicker2.MERGE_ROOT, value=MergingResourcePicker.DEFAULT_ROOT,
             label="Root",
             description="The mount point of merged resources"),
-    @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
+    @Property(name=MergedResourcePicker2.READ_ONLY, boolValue=true,
     label="Read Only",
     description="Specifies if the resources are read-only or can be modified.")
 
@@ -55,7 +55,7 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
  * The <code>MergedResourceProviderFactory</code> creates merged resource
  * providers and implements the <code>ResourceMergerService</code>.
  */
-public class MergingResourcePicker implements MergedResourcePicker, ResourceMergerService {
+public class MergingResourcePicker implements MergedResourcePicker2, ResourceMergerService {
 
     public static final String DEFAULT_ROOT = "/mnt/overlay";
 
@@ -122,14 +122,10 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
         return (resource != null) ? resource : new NonExistingResource(resolver, path);
     }
 
-    @Override
-    public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
-        return pickResources(resolver, relativePath, null);
-    }
-
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getMergedResourcePath(final String relativePath) {
         if (relativePath == null) {
             throw new IllegalArgumentException("Provided relative path is null");
@@ -145,6 +141,7 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
     /**
      * {@inheritDoc}
      */
+    @Override
     public Resource getMergedResource(final Resource resource) {
         if (resource != null) {
             final ResourceResolver resolver = resource.getResourceResolver();
@@ -162,6 +159,7 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isMergedResource(final Resource resource) {
         if (resource == null) {
             return false;
@@ -173,6 +171,7 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getResourcePath(final String searchPath, final String mergedResourcePath) {
         if( searchPath == null || !searchPath.startsWith("/") || !searchPath.endsWith("/") ) {
             throw new IllegalArgumentException("Provided path is not a valid search path: " + searchPath);

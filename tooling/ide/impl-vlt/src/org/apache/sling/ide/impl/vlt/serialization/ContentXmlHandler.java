@@ -263,6 +263,10 @@ public class ContentXmlHandler extends DefaultHandler {
 
         private static String[] splitValues(String rawValues) {
             
+            if ( rawValues.isEmpty() ) {
+                return new String[0];
+            }
+            
             List<String> values = new ArrayList<>();
             String[] firstPass = rawValues.split(",");
             for ( int i = 0 ; i < firstPass.length; i++) {

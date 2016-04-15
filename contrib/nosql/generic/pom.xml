@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.nosql.generic</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling NoSQL Generic Resource Provider</name>
@@ -71,6 +71,20 @@
             </plugin>
   
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>README.md</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     
     <dependencies>

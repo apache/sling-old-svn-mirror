@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>24</version>
+    <version>26</version>
     <relativePath/>
   </parent>
 
@@ -38,6 +38,7 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
+    <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
     <servicemix.specs.version>2.5.0</servicemix.specs.version>
     <xerces.version>2.11.0</xerces.version>
     <xalan.bundle.version>2.7.2_2</xalan.bundle.version>
@@ -48,13 +49,13 @@
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
       <artifactId>framework</artifactId>
-      <version>4.0.3</version>
+      <version>${org.apache.karaf.version}</version>
       <type>kar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
       <artifactId>standard</artifactId>
-      <version>4.0.3</version>
+      <version>${org.apache.karaf.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
       <scope>runtime</scope>
@@ -81,7 +82,7 @@
       <plugin>
         <groupId>org.apache.karaf.tooling</groupId>
         <artifactId>karaf-maven-plugin</artifactId>
-        <version>4.0.3</version>
+        <version>${org.apache.karaf.version}</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -102,11 +103,18 @@
           <installedFeatures>
             <!-- Apache Karaf -->
             <feature>wrapper</feature>
+            <feature>wrap</feature>
+            <feature>aries-blueprint</feature>
+            <feature>shell-compat</feature>
+            <feature>kar</feature>
             <!-- Apache Sling -->
             <feature>sling</feature>
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
             <!-- Apache Sling Commons -->
+            <feature>sling-commons-messaging</feature>
+            <feature>sling-commons-messaging-mail</feature>
+            <feature>sling-commons-metrics</feature>
             <feature>sling-commons-scheduler</feature>
             <feature>sling-commons-threads</feature>
             <!-- Apache Sling Extensions -->
@@ -114,6 +122,7 @@
             <feature>sling-extension-bundleresource</feature>
             <feature>sling-extension-discovery</feature>
             <feature>sling-extension-discovery-impl</feature>
+            <feature>sling-extension-discovery-oak</feature>
             <feature>sling-extension-discovery-standalone</feature>
             <feature>sling-extension-event</feature>
             <feature>sling-extension-explorer</feature>
@@ -156,6 +165,8 @@
             <!-- Apache Sling Auth (contrib) -->
             <feature>sling-auth-openid</feature>
             <feature>sling-auth-selector</feature>
+            <!-- Apache Sling Commons (contrib) -->
+            <feature>sling-commons-html</feature>
             <!-- Apache Sling Extensions (contrib) -->
             <feature>sling-extension-distribution</feature>
             <feature>sling-extension-healthcheck</feature>
@@ -163,17 +174,30 @@
             <feature>sling-extension-resourcemerger</feature>
             <feature>sling-extension-security</feature>
             <feature>sling-extension-urlrewriter</feature>
+            <!-- Apache Sling Launchpad (contrib) -->
+            <feature>sling-launchpad-nosql-couchbase</feature>
+            <feature>sling-launchpad-nosql-mongodb</feature>
+            <!-- Apache Sling NoSQL (contrib) -->
+            <feature>sling-nosql-generic</feature>
+            <feature>sling-nosql-couchbase</feature>
+            <feature>sling-nosql-mongodb</feature>
             <!-- Apache Sling Scripting (contrib) -->
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>
             <feature>sling-scripting-thymeleaf</feature>
+            <!-- Apache Sling Samples -->
+            <feature>sling-samples-fling</feature>
             <!-- Composum -->
             <feature>composum-sling</feature>
           </installedFeatures>
+          <startupFeatures>
+            <!-- <feature>eventadmin</feature> -->
+          </startupFeatures>
           <bootFeatures>
-            <feature>jaas</feature>
+            <feature>eventadmin</feature>
             <feature>shell</feature>
             <feature>feature</feature>
+            <feature>jaas</feature>
             <feature>ssh</feature>
             <feature>management</feature>
             <feature>bundle</feature>
@@ -181,7 +205,6 @@
             <feature>deployer</feature>
             <feature>diagnostic</feature>
             <feature>instance</feature>
-            <feature>kar</feature>
             <feature>log</feature>
             <feature>package</feature>
             <feature>service</feature>
@@ -191,7 +214,6 @@
             <feature>http</feature>
             <feature>http-whiteboard</feature>
             <feature>webconsole</feature>
-            <feature>eventadmin</feature>
           </bootFeatures>
           <libraries>
             <library>xerces-${xerces.version}.jar;url:="wrap:mvn:xerces/xercesImpl/${xerces.version}$Export-Package=org.apache.*;version=${xerces.version}";type:=endorsed;export:=true;delegate:=true</library>

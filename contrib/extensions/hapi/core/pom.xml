@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.hapi</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>HApi - Sling Hypermedia API tools</name>
@@ -37,6 +37,12 @@
     <properties>
         <sling.java.version>6</sling.java.version>
     </properties>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/hapi/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/hapi/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/hapi/core</url>
+    </scm>
 
     <build>
         <plugins>
@@ -119,9 +125,8 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
 </project>

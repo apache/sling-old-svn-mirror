@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>26-SNAPSHOT</version>
+    <version>27-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -117,7 +117,7 @@
     <build>
         <plugins>
 
-            <!-- Require Java 6 or higher for building -->
+            <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -132,9 +132,9 @@
                                 <requireJavaVersion>
                                     <message>
                                         Apache Sling must be compiled with Java
-                                        6 or higher
+                                        7 or higher
                                     </message>
-                                    <version>1.6.0</version>
+                                    <version>1.7.0</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -192,7 +192,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <script language="javascript"> <![CDATA[
                                     var System = java.lang.System;
                                     var bree = "JavaSE-1.6";
-                                    var skipAnimalSniffer = false;
                                     var animalSnifferSignaturesVersion = "6";
                                     var slingJavaVersion = System.getProperty("sling.java.version");
                                     if (!slingJavaVersion) {
@@ -203,18 +202,14 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                         bree = "JavaSE-1.7";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
 	                                } else if ( slingJavaVersion == "8") {
-                                        // there are no published signatures for Java 1.8, so skip execution. However, we also need a valid
-                                        // artifact in the signature, so fallback to the 1.6 signatures and skip checking entirely
-                                        // see also https://github.com/mojohaus/animal-sniffer/issues/1
-	                                    skipAnimalSniffer = true;
-	                                    bree = "JavaSE-1.8";
+                                        animalSnifferSignaturesVersion = "8";
+                                        bree = "JavaSE-1.8";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
 	                                } else if (slingJavaVersion != "6") {
                                         System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 6, 7 or 8.");
                                         throw "sling.java.version must be 6, 7 or 8";
                                     }
                                     project.setProperty("sling.bree", bree);
-                                    project.setProperty("animal.sniffer.skip", skipAnimalSniffer);
                                     project.setProperty("sling.animalSignatures.version", animalSnifferSignaturesVersion);
                                 ]]></script>
                             </target>
@@ -333,7 +328,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-sling-plugin</artifactId>
-                    <version>2.1.2</version>
+                    <version>2.1.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
@@ -986,6 +981,25 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                                 <ignore />
                                             </action>
                                         </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>
+                                                    org.apache.avro
+                                                </groupId>
+                                                <artifactId>
+                                                    avro-maven-plugin
+                                                </artifactId>
+                                                <versionRange>
+                                                    [1.7.7,)
+                                                </versionRange>
+                                                <goals>
+                                                    <goal>schema</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
                                     </pluginExecutions>
                                 </lifecycleMappingMetadata>
                             </configuration>
@@ -1099,10 +1113,18 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <version>1.9.12</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- this version must match the version being used by the maven-bundle-plugin -->
             <dependency>
-                <groupId>biz.aQute</groupId>
-                <artifactId>bndlib</artifactId>
-                <version>1.50.0</version>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>biz.aQute.bndlib</artifactId>
+                <version>3.0.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.0</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -1110,7 +1132,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.11</version>
+                <version>4.12</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -1137,8 +1159,8 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bndlib</artifactId>
         </dependency>
     </dependencies>
 

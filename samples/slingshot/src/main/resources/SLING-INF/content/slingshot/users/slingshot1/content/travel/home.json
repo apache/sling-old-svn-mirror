@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Item",
-    "title":"Home Sweet Home",
-    "description":"This is the place where I live..."
-}

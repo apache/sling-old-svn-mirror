@@ -23,18 +23,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.nosql.generic.adapter.AbstractNoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.MultiValueMode;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -49,6 +55,8 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
     private static final String PN_DATA = "data";
     
     private final MongoCollection<Document> collection;
+    
+    private static final Logger log = LoggerFactory.getLogger(MongoDBNoSqlAdapter.class);
     
     /**
      * @param mongoClient MongoDB client
@@ -111,6 +119,45 @@ public final class MongoDBNoSqlAdapter extends AbstractNoSqlAdapter {
         
         // return true if any document was deleted
         return result.getDeletedCount() > 0;
+    }
+
+    @Override
+    public void checkConnection() throws LoginException {
+        // the query is not relevant, just the successful round-trip
+        try {
+            collection.find(Filters.eq(PN_PATH, "/")).first();
+        } catch (MongoException e) {
+            throw new LoginException(e);
+        }
+    }
+
+    @Override
+    public void createIndexDefinitions() {
+        // create index on parent path field (if it does not exist yet)
+        try {
+            Document parenPathtIndex = new Document(PN_PARENT_PATH, 1);
+            this.collection.createIndex(parenPathtIndex);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create index on " + PN_PARENT_PATH + ": " + ex.getMessage(), ex);
+        }
+        
+        // create unique index on path field (if it does not exist yet)
+        try {
+            Document pathIndex = new Document(PN_PATH, 1);
+            IndexOptions idxOptions = new IndexOptions();
+            idxOptions.unique(true);
+            this.collection.createIndex(pathIndex, idxOptions);
+        }
+        catch (DuplicateKeyException ex) {
+            // index already exists, ignore
+        }
+        catch (Throwable ex) {
+            log.error("Unable to create unique index on " + PN_PATH + ": " + ex.getMessage(), ex);
+        }
     }
 
 }

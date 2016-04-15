@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-    <version>1.6.1-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing Sling Mock</name>
@@ -45,100 +45,118 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-            <version>1.7.0</version>
+            <version>2.0.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.jcr-mock</artifactId>
-            <version>1.1.10</version>
+            <version>1.1.12</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
-            <version>1.1.10</version>
+            <version>1.1.12</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.servlet-helpers</artifactId>
+            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.2</version>
             <scope>compile</scope>
         </dependency>
     
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.4.0</version>
+            <version>2.11.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.resourceresolver</artifactId>
-            <version>1.1.0</version>
+            <version>1.4.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.2.0</version>
+            <version>2.3.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.3.6</version>
+            <version>2.7.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.1.4</version>
+            <version>2.1.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.16</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.2.0</version>
+            <version>2.4.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
-            <version>1.3.0</version>
+            <version>1.3.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.settings</artifactId>
-            <version>1.2.2</version>
+            <version>1.3.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.i18n</artifactId>
-            <version>2.2.4</version>
+            <version>2.4.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.adapter</artifactId>
+            <version>2.1.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
+            <version>2.11.3</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
+            <version>3.2.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -191,17 +209,17 @@
         </dependency>
     
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>3.0.20100224</version>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
             <scope>compile</scope>
         </dependency>
     
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
-            <scope>compile</scope>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-atinject_1.0_spec</artifactId>
+          <version>1.0</version>
+          <scope>compile</scope>
         </dependency>
     
         <dependency>
@@ -261,25 +279,4 @@
         </plugins>
     </build>
   
-    <!-- Profiles to run unit tests against different JCR Resource versions -->
-    <profiles>
-        <profile>
-            <id>jcr.resource-2.5.4</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>org.apache.sling.api</artifactId>
-                    <version>2.9.0</version>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>org.apache.sling.jcr.resource</artifactId>
-                    <version>2.5.4</version>
-                    <scope>compile</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-    
 </project>

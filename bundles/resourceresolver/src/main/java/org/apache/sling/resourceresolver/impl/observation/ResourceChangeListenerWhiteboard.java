@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.api.resource.Path;
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.path.Path;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ObservationReporterGenerator;
 import org.apache.sling.spi.resource.provider.ObservationReporter;

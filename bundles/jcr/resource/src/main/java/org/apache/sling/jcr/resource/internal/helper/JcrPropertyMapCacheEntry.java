@@ -40,17 +40,13 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.sling.jcr.resource.JcrPropertyMap;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JcrPropertyMapCacheEntry {
 
-    /**
-     * Global logger
-     */
-    private static Logger LOGGER = LoggerFactory.getLogger(JcrPropertyMap.class);
+    /** Global logger */
+    private static Logger LOGGER = LoggerFactory.getLogger(JcrPropertyMapCacheEntry.class);
 
     /**
      * The JCR property - only set for existing values.

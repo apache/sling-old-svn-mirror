@@ -46,7 +46,10 @@ public interface SlingRequestProcessor {
     /**
      * Process an HTTP request through the Sling request processing engine.
      * <p>
-     * This method does <b>not</b> close the provided resource resolver !
+     * This method does <b>not</b> close the provided resource resolver!
+     * <p>
+     * The org.apache.sling.servlet-helpers module provides synthetic 
+     * request/response classes which can be useful when using this service. 
      *
      * @param request Usually a "synthetic" request, i.e. not supplied by
      *            servlet container

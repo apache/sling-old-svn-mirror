@@ -18,6 +18,8 @@
  */
  package org.apache.sling.validation.testservices;
 
+import java.util.Locale;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -33,7 +35,7 @@ public class ValidationPostResponseCreator implements PostResponseCreator {
     public PostResponse createPostResponse(SlingHttpServletRequest request) {
         String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
         if (operation != null && "validation".equals(operation)) {
-            return new ValidationPostResponse();
+            return new ValidationPostResponse(request.getResourceBundle(Locale.US));
         }
         return null;
     }

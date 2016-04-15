@@ -7,18 +7,22 @@ import java.io.IOException;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
+import org.apache.sling.crankstart.junit.CrankstartSetup;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Test our run modes support */ 
 public class RunModeAIT {
     
-    private static CrankstartSetup C = new CrankstartSetup();
-    private static WebconsoleClient osgiConsole;
+    @ClassRule
+    public static CrankstartSetup C = new CrankstartSetup().withModelResources(U.DEFAULT_MODELS);
+    
+    private WebconsoleClient osgiConsole;
     private DefaultHttpClient client;
     private static final String RUN_MODES = "foo,bar,A";
     
@@ -28,12 +32,11 @@ public class RunModeAIT {
     @BeforeClass
     public static void setupClass() throws Exception {
         System.setProperty(RunModeFilter.SLING_RUN_MODES, RUN_MODES);
-        C.setup();
-        osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);
     }
     
     @Before
     public void setup() throws IOException {
+        osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);
         client = new DefaultHttpClient();
     }
     

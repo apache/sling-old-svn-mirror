@@ -18,15 +18,19 @@
  */
 package org.apache.sling.validation.model;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
+import org.apache.sling.validation.spi.Validator;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * Defines a validator instance with information about the type and the parameterization of the validator.
  *
  */
+@ProviderType
 public interface ParameterizedValidator {
 
     /**
@@ -46,5 +50,11 @@ public interface ParameterizedValidator {
      * @return the type of the validator (i.e. the type of the data it can handle)
      */
     @Nonnull Class<?> getType();
+
+    /**
+     *
+     * @return the severity of validation failures emitted by this validator. May be {@code null} in case it is not specified.
+     */
+    @CheckForNull Integer getSeverity();
 
 }

@@ -23,7 +23,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.html.dom.MarkupHandler;
@@ -38,7 +37,7 @@ public class ElementContext {
     private final String openTagStartMarkup;
 
     private final List<PrioritizedInvoke> invokeList = new ArrayList<PrioritizedInvoke>();
-    private final List<Map.Entry<String, Object>> attributes = new ArrayList<Map.Entry<String, Object>>();
+    private final List<Attribute> attributes = new ArrayList<Attribute>();
     private PluginInvoke aggregateInvoke;
 
     public ElementContext(String tagName, String openTagStartMarkup) {
@@ -58,16 +57,16 @@ public class ElementContext {
         invokeList.add(new PrioritizedInvoke(invoke, priority));
     }
 
-    public void addAttribute(String name, String value) {
-        attributes.add(new AbstractMap.SimpleEntry<String, Object>(name, value));
+    public void addAttribute(String name, String value, char quoteChar) {
+        attributes.add(new Attribute(name, value, quoteChar));
     }
 
     public void addPluginCall(String name, PluginCallInfo info, Expression expression) {
-        attributes.add(new AbstractMap.SimpleEntry<String, Object>(name,
-                new AbstractMap.SimpleEntry<PluginCallInfo, Expression>(info, expression)));
+        attributes.add(new Attribute(name,
+                new AbstractMap.SimpleEntry<PluginCallInfo, Expression>(info, expression), '0'));
     }
 
-    public Iterable<Map.Entry<String, Object>> getAttributes() {
+    public Iterable<Attribute> getAttributes() {
         return attributes;
     }
 
@@ -81,6 +80,30 @@ public class ElementContext {
             aggregateInvoke = new AggregatePluginInvoke(result);
         }
         return aggregateInvoke;
+    }
+
+    public static class Attribute {
+        private String name;
+        private Object value;
+        private char quoteChar;
+
+        public Attribute(String name, Object value, char quoteChar) {
+            this.name = name;
+            this.value = value;
+            this.quoteChar = quoteChar;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public char getQuoteChar() {
+            return quoteChar;
+        }
     }
 
 
@@ -102,6 +125,21 @@ public class ElementContext {
                 return  0;
             }
             return 1;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof PrioritizedInvoke)) {
+                return false;
+            }
+            PrioritizedInvoke that = (PrioritizedInvoke) obj;
+            return this.priority == that.priority;
+        }
+
+        @Override
+        public int hashCode() {
+            assert false : "hashCode not designed";
+            return 42;
         }
     }
 }

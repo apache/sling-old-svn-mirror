@@ -41,6 +41,7 @@ import org.osgi.framework.BundleContext;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class DistributionEventDistributeDistributionTriggerFactory implements DistributionTrigger {
 
     @Property(label = "Name", description = "The name of the trigger.")
@@ -50,10 +51,10 @@ public class DistributionEventDistributeDistributionTriggerFactory implements Di
      * chain distribution path property
      */
     @Property(label = "Path", description = "The path for which the distribution events will be forwarded.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
 
-    DistributionEventDistributeDistributionTrigger trigger;
+    private DistributionEventDistributeDistributionTrigger trigger;
 
 
     @Activate

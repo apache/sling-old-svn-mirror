@@ -34,6 +34,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilderPro
 public class DefaultDistributionPackageBuilderProvider implements DistributionPackageBuilderProvider {
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     public DistributionPackageBuilder getPackageBuilder(String type) {

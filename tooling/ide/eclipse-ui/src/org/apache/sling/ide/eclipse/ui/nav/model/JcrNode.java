@@ -342,6 +342,12 @@ public class JcrNode implements IAdaptable {
                             it.remove();
                             continue;
                         }
+                        
+                        if (childShouldNotBeShown(iResource)) {
+                            it.remove();
+                            continue;
+                        }
+                        
 						if (isVaultFile(iResource)) {
 							GenericJcrRootFile gjrf;
                             try {
@@ -406,6 +412,10 @@ public class JcrNode implements IAdaptable {
         return Activator.getDefault().getSerializationManager()
                 .isSerializationFile(iResource.getLocation().toOSString());
 	}
+    
+    protected boolean childShouldNotBeShown(IResource resource) {
+        return false;
+    }
 
 	public void setResource(IResource resource) {
 		if (this.resource!=null) {
@@ -556,28 +566,7 @@ public class JcrNode implements IAdaptable {
 	}
 	
 	private Object doGetAdapter(Class adapter) {
-		if (adapter==IActionFilter.class) {
-			return new IActionFilter() {
-				
-				@Override
-				public boolean testAttribute(Object target, String name, String value) {
-					if (!(target instanceof JcrNode)) {
-						return false;
-					}
-					final JcrNode node = (JcrNode)target;
-					if ("domNode".equals(name)) {
-						return node.domElement!=null;	
-					}
-					if ("nonDomNode".equals(name)) {
-						return node.domElement==null;	
-					}
-					if ("browseableNode".equals(name)) {
-						return node.isBrowsable();
-					}
-					return false;
-				}
-			};
-		} else if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
+	    if (adapter==ITabbedPropertySheetPageContributor.class) {
 			return new ITabbedPropertySheetPageContributor() {
 
 				@Override
@@ -594,6 +583,12 @@ public class JcrNode implements IAdaptable {
 			} else {
 				return null;
 			}
+		} else if ( adapter == IFolder.class) {
+		    if ( resource instanceof IFolder ) {
+		        return (IFolder) resource;
+		    } else {
+		        return null;
+		    }
 		} else if (adapter == IContributorResourceAdapter.class) {
 			//if (resource==null) {
 			//	return null;

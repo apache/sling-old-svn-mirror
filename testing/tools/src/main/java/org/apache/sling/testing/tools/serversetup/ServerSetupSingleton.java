@@ -29,7 +29,7 @@ public class ServerSetupSingleton {
     
     private static ServerSetup instance;
     
-    /** Create an instance based on the {@CLASS_NAME_PROP)
+    /** Create an instance based on the <code>@CLASS_NAME_PROP</code>
      *  property if needed and return it.
      *  
      *  @param config Ignored unless an instance is created

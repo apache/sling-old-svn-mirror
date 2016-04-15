@@ -308,9 +308,9 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     public final void runMode(String... runModes) {
         Set<String> newRunModes = ImmutableSet.<String> builder().add(runModes).build();
-        ServiceReference ref = bundleContext().getServiceReference(SlingSettingsService.class.getName());
+        ServiceReference<SlingSettingsService> ref = bundleContext().getServiceReference(SlingSettingsService.class);
         if (ref != null) {
-            MockSlingSettingService slingSettings = (MockSlingSettingService) bundleContext().getService(ref);
+            MockSlingSettingService slingSettings = (MockSlingSettingService)bundleContext().getService(ref);
             slingSettings.setRunModes(newRunModes);
         }
     }

@@ -35,7 +35,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -66,7 +65,7 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
 
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
-        assertTrue(queue.add(distributionQueueItem));
+        assertNotNull(queue.add(distributionQueueItem));
     }
 
     @SuppressWarnings("unchecked")
@@ -80,15 +79,15 @@ public class JobHandlingDistributionQueueTest {
         when(builder.add()).thenReturn(job);
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
-        when(jobManager.getJob(anyString(), anyMap())).thenReturn(job);
+        when(jobManager.getJobById(anyString())).thenReturn(job);
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem("an-id", packageInfo);
-        assertTrue(queue.add(distributionQueueItem));
-        DistributionQueueItemStatus status = queue.getItem(distributionQueueItem.getId()).getStatus();
+        assertNotNull(queue.add(distributionQueueItem));
+        DistributionQueueItemStatus status = queue.getItem(job.getId()).getStatus();
         assertNotNull(status);
         assertEquals(DistributionQueueItemState.QUEUED, status.getItemState());
     }

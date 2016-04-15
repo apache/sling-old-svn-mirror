@@ -55,15 +55,17 @@ import org.slf4j.LoggerFactory;
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
+@Property(name="webconsole.configurationFactory.nameHint", value="Resource kind: {kind}")
 public class DistributionServiceResourceProviderFactory implements ResourceProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
     @Property
-    public final static String KIND = DistributionComponentConstants.PN_KIND;
+    private final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     private ResourceProvider resourceProvider;

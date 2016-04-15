@@ -27,36 +27,36 @@ public class RequestObjectTest extends ResolutionTestBase {
 
     private String path;
     private final String extension = ".TEST_SEL_1.txt";
-    
+
     private static class TestItem {
         final String requestSuffix;
         final String expectedURISuffix;
         final String expectedURLSuffix;
-        
+
         TestItem(String s,String uri,String url) {
             requestSuffix = s;
             expectedURISuffix = uri;
             expectedURLSuffix = url;
         }
-        
+
         public String info(String msg) {
             return msg + ":TestItem with suffix [" + requestSuffix + "]";
         }
     };
-    
+
     final TestItem [] TESTS = {
             new TestItem("","",""),
-            new TestItem(";v=1.1","",";v=1.1"),
-            new TestItem(";v=1.1?foo=bar","",";v=1.1"),
-            new TestItem(";v=1.1?foo=bar&ga+bu=zo+meu","",";v=1.1")
+            new TestItem(";v=1.1",";v=1.1",";v=1.1"),
+            new TestItem(";v=1.1?foo=bar",";v=1.1",";v=1.1"),
+            new TestItem(";v=1.1?foo=bar&ga+bu=zo+meu",";v=1.1",";v=1.1")
     };
-    
+
     @Override
     public void setUp() throws Exception {
         super.setUp();
         path = testNodeNORT.nodeUrl.substring(HttpTestBase.HTTP_BASE_URL.length()) + extension;
     }
-    
+
     public void testRequestPathInfo() throws IOException {
         for(TestItem t : TESTS) {
             final String content = getContent(testNodeNORT.nodeUrl + ".TEST_SEL_1.txt" + t.requestSuffix, CONTENT_TYPE_PLAIN);

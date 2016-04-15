@@ -176,6 +176,7 @@ public class StartupManager {
         long timeStamp = selfStamp;
         final ClassLoader loader = clazz.getClassLoader();
         if (loader instanceof URLClassLoader) {
+            @SuppressWarnings("resource")
             final URLClassLoader urlLoader = (URLClassLoader) loader;
             final URL[] urls = urlLoader.getURLs();
             if (urls.length > 0) {

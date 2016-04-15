@@ -20,31 +20,35 @@ package org.apache.sling.validation.impl.model;
 
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
 import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.spi.Validator;
 
 public class ParameterizedValidatorImpl implements ParameterizedValidator {
     private final @Nonnull Validator<?> validator;
     private final @Nonnull Map<String, Object> parameters;
     private final @Nonnull Class<?> type;
+    private final Integer severity;
     
     /**
      * 
      * Only the map has proper support for equals (see https://issues.apache.org/jira/browse/SLING-4784)
      * @param validator
      * @param parameters
+     * @param severity
      */
-    public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters) {
+    public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters, Integer severity) {
         super();
         this.validator = validator;
         this.parameters = parameters;
         // cache type information as this is using reflection
         this.type = ValidatorTypeUtil.getValidatorType(validator);
+        this.severity = severity;
     }
 
     /* (non-Javadoc)
@@ -72,18 +76,25 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
     }
 
     @Override
-    public String toString() {
-        return "ParameterizedValidatorImpl [validator=" + validator + ", parameters=" + parameters + ", type=" + type
-                + "]";
+    @CheckForNull
+    public Integer getSeverity() {
+        return severity;
     }
 
     @Override
+    public String toString() {
+        return "ParameterizedValidatorImpl [validator=" + validator + ", parameters=" + parameters + ", type=" + type
+                + ", severity=" + severity + "]";
+    }
+
+     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         result = prime * result + ((validator == null) ? 0 : validator.hashCode());
+        result = prime * result + ((severity == null) ? 0 : severity.hashCode());
         return result;
     }
 
@@ -102,7 +113,13 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
             return false;
         if (!validator.getClass().getName().equals(other.validator.getClass().getName()))
             return false;
+        if (severity == null && other.severity != null) {
+            return false;
+        } else if (severity != null && other.severity == null) {
+            return false;
+        } else if (severity != null && other.severity != null && !severity.equals(other.severity)) {
+            return false;
+        }
         return true;
     }
-    
 }

@@ -277,7 +277,9 @@ public class JobManagerImpl
         final StringBuilder buf = new StringBuilder(64);
         try {
 
-            buf.append("//element(*,");
+            buf.append("/jcr:root");
+            buf.append(this.configuration.getJobsBasePathWithSlash());
+            buf.append("/element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ResourceHelper.PROPERTY_JOB_ID);
@@ -366,7 +368,9 @@ public class JobManagerImpl
         final StringBuilder buf = new StringBuilder(64);
         try {
 
-            buf.append("//element(*,");
+            buf.append("/jcr:root");
+            buf.append(this.configuration.getJobsBasePathWithSlash());
+            buf.append("/element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_TOPIC));

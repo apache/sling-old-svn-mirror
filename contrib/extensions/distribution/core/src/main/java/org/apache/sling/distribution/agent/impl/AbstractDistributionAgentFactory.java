@@ -29,7 +29,6 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -42,29 +41,29 @@ import org.slf4j.LoggerFactory;
 /**
  * An abstract OSGi service factory for registering {@link org.apache.sling.distribution.agent.impl.SimpleDistributionAgent}s
  */
-public abstract class AbstractDistributionAgentFactory {
+abstract class AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     private static final String ENABLED = "enabled";
 
-    protected static final String DEFAULT_TRIGGER_TARGET = "(name=)";
+    static final String DEFAULT_TRIGGER_TARGET = "(name=)";
 
     private static final String TRIGGERS_TARGET = "triggers.target";
 
-    protected static final String LOG_LEVEL = "log.level";
+    static final String LOG_LEVEL = "log.level";
 
 
     private ServiceRegistration componentReg;
     private Map<String, Object> savedConfig;
     private String agentName;
-    private List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+    private final List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
     private boolean triggersEnabled = false;
 
     private SimpleDistributionAgent agent;
 
-    protected void activate(BundleContext context, Map<String, Object> config) {
+    void activate(BundleContext context, Map<String, Object> config) {
         log.info("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
 
         // inject configuration
@@ -131,7 +130,7 @@ public abstract class AbstractDistributionAgentFactory {
         }
     }
 
-    protected void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.add(distributionTrigger);
         if (agent != null && triggersEnabled) {
             agent.enableTrigger(distributionTrigger);
@@ -139,7 +138,7 @@ public abstract class AbstractDistributionAgentFactory {
 
     }
 
-    protected void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.remove(distributionTrigger);
 
         if (agent != null) {
@@ -148,7 +147,7 @@ public abstract class AbstractDistributionAgentFactory {
     }
 
 
-    protected void deactivate(BundleContext context) {
+    void deactivate(BundleContext context) {
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);

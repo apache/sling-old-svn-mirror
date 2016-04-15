@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,14 +34,20 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
 import org.apache.sling.launchpad.testservices.events.EventsCounter;
@@ -2725,6 +2732,67 @@ try {
         }
     }*/
 
+    @Ignore
+    @Test public void test_resolve_with_sling_alias_limited_access() throws Exception {
+        
+        Principal testUserPrincipal = new Principal() {
+            public String getName() {
+                return "testuser";
+            }
+        };
+        
+        AccessControlUtil.getUserManager(session).createUser("testuser", "password", testUserPrincipal, null);        
+        Node child = rootNode.addNode("child");
+        Node grandChild = child.addNode("grandChild");
+        grandChild.setProperty("sling:alias", "enkel");
+        saveMappings(session);
+        session.save();
+        
+        //deny jcr:all on /content
+        AccessControlUtil.replaceAccessControlEntry(session, "/", testUserPrincipal, null, new String[] {"jcr:all"}, null, "last");
+        //grant read on /content/child
+        AccessControlUtil.replaceAccessControlEntry(session, child.getPath(), testUserPrincipal, new String[] {"jcr:read"}, null, null, "last");
+        session.save();
+        
+        try {
+            final Map<String, Object> authInfo = new HashMap<String, Object>();
+            authInfo.put(ResourceResolverFactory.USER, "testuser");
+            authInfo.put(ResourceResolverFactory.PASSWORD, "password".toCharArray());
+            ResourceResolver testUserResolver = resourceResolverFactory.getResourceResolver(authInfo);
+
+            try {
+                //testing map
+                String path = grandChild.getPath();
+                String mapped = testUserResolver.map(path);
+                assertEquals("/child/enkel", mapped);
+                
+                //testing resolve
+                path = grandChild.getPath();
+                Resource res = testUserResolver.resolve(null, path);
+                assertNotNull(res);
+                assertFalse(res instanceof NonExistingResource);
+                assertEquals(path, res.getPath());
+                
+                path = child.getPath()+"/enkel";
+                res = testUserResolver.resolve(null, path);
+                assertNotNull(res);
+                assertFalse(res instanceof NonExistingResource);
+                assertEquals(grandChild.getPath(), res.getPath());
+            } finally {
+                if (testUserResolver != null && testUserResolver.isLive()) {
+                    testUserResolver.close();
+                } 
+            }
+        } finally {
+            removeAce(session, testUserPrincipal, "/");
+            child.remove();
+            Authorizable authorizable = AccessControlUtil.getUserManager(session).getAuthorizable("testuser");
+            authorizable.remove();
+            session.save();
+        }
+    }
+
+    
     @Test public void test_resolve_with_sling_alias_multi_value() throws Exception {
 
         Node child = rootNode.addNode("child");
@@ -2946,7 +3014,33 @@ try {
     }
 
     // ---------- internal
+    
+    private void removeAce(Session adminSession, Principal principal, String absPath) throws Exception{
+        
+        AccessControlManager accessControlManager = adminSession.getAccessControlManager();
+        AccessControlPolicy [] policies = accessControlManager.getPolicies(absPath);
 
+        for (AccessControlPolicy plc : policies) {
+            if (plc instanceof AccessControlList) {
+                boolean modified = false;
+                AccessControlList acl = ((AccessControlList) plc);
+                for (AccessControlEntry ace : acl.getAccessControlEntries()) {
+                    if (principal.equals(ace.getPrincipal())) {
+                        acl.removeAccessControlEntry(ace);
+                        modified = true;
+                    }
+                }
+                if (modified) {
+                    accessControlManager.setPolicy(absPath, acl);
+                }
+            }
+        }
+
+        if (adminSession.hasPendingChanges()) {
+            adminSession.save();
+        }
+    }
+    
     private void testStarResourceHelper(final String path, final String method) {
         final Resource res = resResolver.resolve(
             new FakeSlingHttpServletRequest(path, method), path);

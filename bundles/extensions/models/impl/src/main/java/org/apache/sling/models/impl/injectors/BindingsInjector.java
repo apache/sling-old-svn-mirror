@@ -49,10 +49,6 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         return "script-bindings";
     }
 
-    private static Object getValue(SlingBindings bindings, String name, Class<?> type) {
-        return bindings.get(name);
-    }
-
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
         SlingBindings bindings = getBindings(adaptable);
@@ -60,7 +56,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
             return null;
         }
         if (type instanceof Class<?>) {
-            return getValue(bindings, name, (Class<?>) type);
+            return bindings.get(name);
         } else {
             log.debug("BindingsInjector doesn't support non-class type {}", type);
             return null;

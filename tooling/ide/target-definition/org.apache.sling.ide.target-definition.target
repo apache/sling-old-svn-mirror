@@ -15,21 +15,11 @@
     See the License for the specific language governing permissions
     and limitations under the License.
 -->
-<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="44">
+<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="46">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.sonatype.tycho.m2e.feature.feature.group" version="0.6.0.201207302152"/>
 <repository location="http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.6.0/N/0.6.0.201207302152/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.junit" version="4.11.0.v201303080030"/>
-<unit id="org.hamcrest.core" version="1.3.0.v201303031735"/>
-<unit id="org.apache.commons.io" version="2.0.1.v201105210651"/>
-<unit id="org.apache.commons.httpclient" version="3.1.0.v201012070820"/>
-<unit id="org.json" version="1.0.0.v201011060100"/>
-<unit id="org.apache.commons.collections" version="3.2.0.v2013030210310"/>
-<unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
-<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20140114142710/repository/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.m2e.feature.feature.group" version="1.5.1.20150109-1820"/>
@@ -42,6 +32,23 @@
 <unit id="org.eclipse.jst.server_adapters.feature.feature.group" version="3.2.301.v201410241731"/>
 <unit id="org.eclipse.jst.enterprise_ui.feature.feature.group" version="3.6.3.v201501281502"/>
 <repository location="http://download.eclipse.org/releases/luna"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.swtbot.feature.group" version="2.3.0.201506081302"/>
+<unit id="org.eclipse.swtbot.eclipse.feature.group" version="2.3.0.201506081302"/>
+<unit id="org.eclipse.swtbot.eclipse.test.junit.feature.group" version="2.3.0.201506081302"/>
+<repository location="http://download.eclipse.org/technology/swtbot/releases/2.3.0/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.apache.commons.collections" version="3.2.0.v2013030210310"/>
+<unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
+<unit id="org.apache.commons.httpclient" version="3.1.0.v201012070820"/>
+<unit id="org.json" version="1.0.0.v201011060100"/>
+<unit id="org.junit" version="4.11.0.v201303080030"/>
+<unit id="org.apache.commons.io" version="2.0.1.v201105210651"/>
+<unit id="org.hamcrest.core" version="1.3.0.v201303031735"/>
+<unit id="org.apache.commons.lang" version="2.6.0.v201205030909"/>
+<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20140114142710/repository/"/>
 </location>
 </locations>
 </target>

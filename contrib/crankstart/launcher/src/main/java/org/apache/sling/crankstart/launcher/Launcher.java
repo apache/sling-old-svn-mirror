@@ -51,25 +51,22 @@ public class Launcher {
     
     public static final String CRANKSTART_FEATURE = ":crankstart";
     public static final String MODEL_KEY = "model";
+    public static final String LISTENER_KEY = "listener";
     public static final String FRAMEWORK_KEY = "framework";
     
     public static final String VARIABLE_OVERRIDE_PREFIX = "crankstart.model.";
 
-    /** Allow for overriding model variables with system properties */ 
-    private final VariableResolver overridingVariableResolver = new VariableResolver() {
-        @Override
-        public String resolve(Feature f, String variableName) {
-            final String overrideKey = VARIABLE_OVERRIDE_PREFIX + variableName;
-            final String sysProp = System.getProperty(overrideKey);
-            if(sysProp == null) {
-                return f.getVariables().get(variableName);
-            } else {
-                log.info("Overriding model variable {}={} (from system property {})", variableName, sysProp, overrideKey);
-                return sysProp;
+    /** Default variable resolver using system properties */
+    public static final VariableResolver DEFAULT_VARIABLE_RESOLVER = 
+        new PropertiesVariableResolver(System.getProperties(), VARIABLE_OVERRIDE_PREFIX) {
+            @Override
+            protected void onOverride(String variableName, String value, String propertyName) {
+                log.info("Overriding model variable {}={} (from system property {})", variableName, value, propertyName);
             }
-        }
-        
-    };
+        };
+    
+    /** Allow for overriding model variables */ 
+    private VariableResolver variableResolver; 
     
     public static final FeatureFilter NOT_CRANKSTART_FILTER = new FeatureFilter() {
         @Override
@@ -84,14 +81,33 @@ public class Launcher {
             return !Launcher.CRANKSTART_FEATURE.equals(f.getName());
         }
     };
-    
+    private LauncherListener listener;
+
     public Launcher(String ... args) throws Exception {
         MavenResolver.setup();
+        withVariableResolver(null);
+        withModelPaths(args);
+    }
+    
+    /** Use the supplied VariableResolver. Defaults to DEFAULT_VARIABLE_RESOLVER if v
+     *  is null or if this is not called. 
+     */
+    public Launcher withVariableResolver(VariableResolver v) {
+        variableResolver = (v == null ? DEFAULT_VARIABLE_RESOLVER : v);
+        return this;
+    }
 
+    public Launcher withListener(LauncherListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
+    /** Add models from the supplied paths, can be either files or folders */ 
+    public Launcher withModelPaths(String ... paths) throws Exception {
         // Find all files to read and sort the list, to be deterministic
         final SortedSet<File> toRead = new TreeSet<File>();
         
-        for(String name : args) {
+        for(String name : paths) {
             final File f = new File(name);
             if(f.isDirectory()) {
                 final String [] list = f.list();
@@ -109,11 +125,12 @@ public class Launcher {
         }
         
         computeEffectiveModel();
+        return this;
     }
     
     public void computeEffectiveModel() throws Exception {
         new NestedModelsMerger(model).visit();
-        model = ModelUtility.getEffectiveModel(model, overridingVariableResolver);
+        model = ModelUtility.getEffectiveModel(model, variableResolver);
     }
     
     public Model getModel() {
@@ -148,6 +165,7 @@ public class Launcher {
         final Callable<?> c = (Callable<?>) getClass().getClassLoader().loadClass("org.apache.sling.crankstart.launcher.FrameworkSetup").newInstance();
         @SuppressWarnings("unchecked") final Map<String, Object> cmap = (Map<String, Object>)c; 
         cmap.put(MODEL_KEY, model);
+        cmap.put(LISTENER_KEY, listener);
         c.call();
     }
     

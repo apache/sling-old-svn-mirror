@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +37,9 @@ public class JobConsoleIT {
     }
     
     @Test
-    public void testJobConsoleOutput() throws IOException,InterruptedException, JSONException {
+    public void testJobConsoleOutput() throws IOException,InterruptedException {
         // Create a job
-        T.getContent(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", "application/json");
+        T.assertPostStatus(HttpTest.HTTP_BASE_URL + "/tmp.json?sling:bg=true", 302, null, null);
         
         // Request must have created a job
         final long timeout = System.currentTimeMillis() + 10000L;

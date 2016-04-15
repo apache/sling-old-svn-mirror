@@ -33,12 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class TimedJobsTest extends AbstractJobHandlingTest {
 
     private static final String TOPIC = "timed/test/topic";
@@ -61,7 +57,7 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
     public void testTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
-        final ServiceRegistration ehReg = this.registerJobConsumer(TOPIC, new JobConsumer() {
+        this.registerJobConsumer(TOPIC, new JobConsumer() {
 
             @Override
             public JobResult process(final Job job) {
@@ -72,22 +68,19 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
             }
 
         });
-        try {
-            final Date d = new Date();
-            d.setTime(System.currentTimeMillis() + 3000); // run in 3 seconds
 
-            // create scheduled job
-            final ScheduledJobInfo info = this.getJobManager().createJob(TOPIC).schedule().at(d).add();
-            assertNotNull(info);
+        final Date d = new Date();
+        d.setTime(System.currentTimeMillis() + 3000); // run in 3 seconds
 
-            while ( counter.get() == 0 ) {
-                this.sleep(1000);
-            }
-            assertEquals(0, this.getJobManager().getScheduledJobs().size()); // job is not scheduled anymore
-            info.unschedule();
-        } finally {
-            ehReg.unregister();
+        // create scheduled job
+        final ScheduledJobInfo info = this.getJobManager().createJob(TOPIC).schedule().at(d).add();
+        assertNotNull(info);
+
+        while ( counter.get() == 0 ) {
+            this.sleep(1000);
         }
+        assertEquals(0, this.getJobManager().getScheduledJobs().size()); // job is not scheduled anymore
+        info.unschedule();
     }
 
 }

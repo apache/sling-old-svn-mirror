@@ -62,6 +62,7 @@ public class ParameterizedTypeFromRequestAttributeTest {
 
         RequestAttributeInjector injector = new RequestAttributeInjector();
         factory.bindInjector(injector, new ServicePropertiesMap(1, 1));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(TestModel.class);
     }
 
     @Test

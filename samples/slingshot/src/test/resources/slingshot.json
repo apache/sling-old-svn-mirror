@@ -5,12 +5,8 @@
     "admin": {
       "jcr:primaryType": "nt:unstructured",
       "sling:resourceType": "slingshot/User",
-      "content": {
-        "jcr:primaryType": "nt:unstructured",
-        "sling:resourceType": "slingshot/Content",
-        "hobby": {
-          "jcr:primaryType": "nt:unstructured"
-        }
+      "hobby": {
+         "jcr:primaryType": "nt:unstructured"
       },
       "ugc": {
         "jcr:primaryType": "sling:Folder",

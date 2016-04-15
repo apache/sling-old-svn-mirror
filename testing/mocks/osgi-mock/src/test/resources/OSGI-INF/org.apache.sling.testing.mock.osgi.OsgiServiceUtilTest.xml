@@ -43,6 +43,15 @@
     <reference name="reference2" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2" cardinality="1..n" policy="dynamic" bind="bindReference2" unbind="unbindReference2"/>
     <reference name="reference3" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface3" cardinality="0..n" policy="dynamic" bind="bindReference3" unbind="unbindReference3"/>
   </scr:component>
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3OsgiR6" activate="activate" deactivate="deactivate" modified="modified">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3OsgiR6"/>
+    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service3OsgiR6"/>
+    <reference name="reference1" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface1" cardinality="1..1" policy="dynamic" field="reference1"/>
+    <reference name="reference1Optional" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface1Optional" cardinality="0..1" policy="dynamic" field="reference1Optional"/>
+    <reference name="reference2" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface2" cardinality="1..n" policy="dynamic" field="references2" field-collection-type="reference"/>
+    <reference name="reference3" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface3" cardinality="0..n" policy="dynamic" field="references3" field-collection-type="service"/>
+    <reference name="references3Filtered" interface="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$ServiceInterface3" cardinality="0..n" policy="dynamic" field="references3Filtered" field-collection-type="service" target="(prop1=abc)"/>
+  </scr:component>
   <scr:component name="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service4_other_name">
     <implementation class="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service4"/>
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest$Service4"/>

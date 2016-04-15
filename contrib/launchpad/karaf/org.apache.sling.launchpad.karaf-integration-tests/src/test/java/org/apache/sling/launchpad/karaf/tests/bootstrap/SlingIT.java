@@ -137,20 +137,6 @@ public class SlingIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheSlingLaunchpadApi() {
-        final Bundle bundle = findBundle("org.apache.sling.launchpad.api");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testOrgApacheSlingLaunchpadKaraf() {
-        final Bundle bundle = findBundle("org.apache.sling.launchpad.karaf");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     @Ignore
     public void testJavaxJcr() {
         final Bundle bundle = findBundle("javax.jcr");

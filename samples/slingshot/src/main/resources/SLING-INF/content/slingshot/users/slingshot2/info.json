@@ -1,0 +1,5 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Userinfo",
+    "about":"The Truth Is Out There"
+}

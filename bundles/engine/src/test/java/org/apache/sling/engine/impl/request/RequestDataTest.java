@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.TooManyCallsException;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
@@ -36,6 +37,7 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import static org.junit.Assert.fail;
 
 @RunWith(JMock.class)
@@ -83,6 +85,9 @@ public class RequestDataTest {
             
             allowing(servletConfig).getServletName();
             will(returnValue("SERVLET_NAME"));
+            
+            allowing(req).getAttribute(RequestProgressTracker.class.getName());
+            will(returnValue(null));
         }});
         
         requestData = new RequestData(null, req, resp) {

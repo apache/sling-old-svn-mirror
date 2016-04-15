@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class HttpTransportUtils {
 
-    static final Logger log = LoggerFactory.getLogger(HttpTransportUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpTransportUtils.class);
 
     public final static String HEADER_DISTRIBUTION_ORIGINAL_ID = "X-Distribution-OriginalId";
 
@@ -76,14 +76,14 @@ public class HttpTransportUtils {
         return httpResponse.getStatusLine().getStatusCode() == 200;
     }
 
-    public static URI getFetchUri(URI uri) throws URISyntaxException {
+    private static URI getFetchUri(URI uri) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter("operation", "fetch");
 
         return uriBuilder.build();
     }
 
-    public static URI getDeleteUri(URI uri, String id) throws URISyntaxException {
+    private static URI getDeleteUri(URI uri, String id) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter("operation", "delete");
         uriBuilder.addParameter("id", id);

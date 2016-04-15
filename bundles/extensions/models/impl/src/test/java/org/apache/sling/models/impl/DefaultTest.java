@@ -16,8 +16,12 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,6 +62,7 @@ public class DefaultTest {
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(0, 0));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(DefaultStringModel.class, PropertyModelWithDefaults.class, DefaultPrimitivesModel.class, DefaultWrappersModel.class,  org.apache.sling.models.testmodels.classes.constructorinjection.DefaultPrimitivesModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.DefaultStringModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.DefaultWrappersModel.class);
     }
 
     @Test

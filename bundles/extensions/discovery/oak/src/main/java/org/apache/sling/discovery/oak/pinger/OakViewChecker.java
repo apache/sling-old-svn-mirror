@@ -41,8 +41,6 @@ import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.oak.Config;
 import org.apache.sling.discovery.oak.OakDiscoveryService;
-import org.apache.sling.launchpad.api.StartupListener;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.http.HttpService;
 
@@ -57,7 +55,7 @@ import org.osgi.service.http.HttpService;
  * discovery.base
  */
 @Component
-@Service(value = { OakViewChecker.class, StartupListener.class })
+@Service(value = OakViewChecker.class)
 @Reference(referenceInterface=HttpService.class,
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
            policy=ReferencePolicy.DYNAMIC)
@@ -156,19 +154,6 @@ public class OakViewChecker extends BaseViewChecker {
         }
     }
 
-    @Override
-    public void startupFinished(StartupMode mode) {
-        super.startupFinished(mode);
-        
-        synchronized(lock) {
-            if (activated) {
-                // only reset if activated
-                resetLeaderElectionId();
-            }
-        }
-
-    }
-    
     /**
      * The initialize method is called by the OakDiscoveryService.activate
      * as we require the discoveryService (and the discoveryService has

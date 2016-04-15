@@ -18,11 +18,9 @@
  */
 package org.apache.sling.distribution.it;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
+
 import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,7 +33,6 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
-import static org.apache.sling.distribution.it.DistributionUtils.getResource;
 import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**

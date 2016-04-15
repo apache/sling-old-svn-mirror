@@ -39,12 +39,27 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceUtil</code> class provides helper methods used
  * throughout this bundle.
+ *
+ * @deprecated Use the Resource API instead.
  */
+@Deprecated
 public class JcrResourceUtil {
+
+    private static volatile boolean LOG_DEPRECATED_QUERY = true;
+    private static volatile boolean LOG_DEPRECATED_TO_JAVA_OBJECT_1 = true;
+    private static volatile boolean LOG_DEPRECATED_TO_JAVA_OBJECT_2 = true;
+    private static volatile boolean LOG_DEPRECATED_CREATE_VALUE = true;
+    private static volatile boolean LOG_DEPRECATED_SET_PROPERTY = true;
+    private static volatile boolean LOG_DEPRECATED_CREATE_PATH_1 = true;
+    private static volatile boolean LOG_DEPRECATED_CREATE_PATH_2 = true;
+    private static volatile boolean LOG_DEPRECATED_GET_RST_1 = true;
+    private static volatile boolean LOG_DEPRECATED_GET_RST_2 = true;
+    private static volatile boolean LOG_DEPRECATED_RT_TO_PATH = true;
 
     /**
      * Helper method to execute a JCR query.
@@ -57,6 +72,10 @@ public class JcrResourceUtil {
      */
     public static QueryResult query(Session session, String query,
             String language) throws RepositoryException {
+        if ( LOG_DEPRECATED_QUERY ) {
+            LOG_DEPRECATED_QUERY = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.query is deprecated. Please use the resource resolver.");
+        }
         QueryManager qManager = session.getWorkspace().getQueryManager();
         Query q = qManager.createQuery(query, language);
         return q.execute();
@@ -70,6 +89,10 @@ public class JcrResourceUtil {
      * @throws RepositoryException if the value cannot be converted
      */
     public static Object toJavaObject(Value value) throws RepositoryException {
+        if ( LOG_DEPRECATED_TO_JAVA_OBJECT_1 ) {
+            LOG_DEPRECATED_TO_JAVA_OBJECT_1 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.toJavaObject(Value) is deprecated. Please use the resource resolver API.");
+        }
         switch (value.getType()) {
             case PropertyType.DECIMAL:
                 return value.getDecimal();
@@ -104,6 +127,10 @@ public class JcrResourceUtil {
      */
     public static Object toJavaObject(Property property)
             throws RepositoryException {
+        if ( LOG_DEPRECATED_TO_JAVA_OBJECT_2 ) {
+            LOG_DEPRECATED_TO_JAVA_OBJECT_2 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.toJavaObject(Property) is deprecated. Please use the resource resolver API.");
+        }
         // multi-value property: return an array of values
         if (property.isMultiple()) {
             Value[] values = property.getValues();
@@ -150,6 +177,10 @@ public class JcrResourceUtil {
      */
     public static Value createValue(final Object value, final Session session)
     throws RepositoryException {
+        if ( LOG_DEPRECATED_CREATE_VALUE ) {
+            LOG_DEPRECATED_CREATE_VALUE = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.createValue is deprecated. Please use the resource resolver API.");
+        }
         Value val;
         ValueFactory fac = session.getValueFactory();
         if(value instanceof Calendar) {
@@ -191,6 +222,10 @@ public class JcrResourceUtil {
                                    final String propertyName,
                                    final Object propertyValue)
     throws RepositoryException {
+        if ( LOG_DEPRECATED_SET_PROPERTY ) {
+            LOG_DEPRECATED_SET_PROPERTY = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.setProperty is deprecated. Please use the resource resolver API.");
+        }
         if ( propertyValue == null ) {
             node.setProperty(propertyName, (String)null);
         } else if ( propertyValue.getClass().isArray() ) {
@@ -217,6 +252,10 @@ public class JcrResourceUtil {
      */
     @Deprecated
     public static String resourceTypeToPath(String type) {
+        if ( LOG_DEPRECATED_RT_TO_PATH ) {
+            LOG_DEPRECATED_RT_TO_PATH = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.resourceTypeToPath is deprecated. Please use the resource resolver API.");
+        }
         return type.replaceAll("\\:", "/");
     }
 
@@ -242,9 +281,14 @@ public class JcrResourceUtil {
      *         adapting to a string.
      * @deprecated Use {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public static String getResourceSuperType(
             ResourceResolver resourceResolver, String resourceType) {
+        if ( LOG_DEPRECATED_GET_RST_1) {
+            LOG_DEPRECATED_GET_RST_1 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.getResourceSuperType(String) is deprecated. Please use the resource resolver API.");
+        }
         return ResourceUtil.getResourceSuperType(resourceResolver, resourceType);
     }
 
@@ -266,8 +310,13 @@ public class JcrResourceUtil {
      *         described above does not yield a resource super type.
      * @deprecated Call {@link ResourceUtil#findResourceSuperType(Resource)}
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public static String getResourceSuperType(Resource resource) {
+        if ( LOG_DEPRECATED_GET_RST_2) {
+            LOG_DEPRECATED_GET_RST_2 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.getResourceSuperType(Resource) is deprecated. Please use the resource resolver API.");
+        }
         String resourceSuperType = resource.getResourceSuperType();
         if ( resourceSuperType == null ) {
             final ResourceResolver resolver = resource.getResourceResolver();
@@ -300,6 +349,10 @@ public class JcrResourceUtil {
                                   Session session,
                                   boolean autoSave)
             throws RepositoryException {
+        if ( LOG_DEPRECATED_CREATE_PATH_1 ) {
+            LOG_DEPRECATED_CREATE_PATH_1 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.createPath(String, ...) is deprecated. Please use the resource resolver API.");
+        }
         if (path == null || path.length() == 0 || "/".equals(path)) {
             return session.getRootNode();
         }
@@ -352,6 +405,10 @@ public class JcrResourceUtil {
                                   String nodeType,
                                   boolean autoSave)
     throws RepositoryException {
+        if ( LOG_DEPRECATED_CREATE_PATH_2 ) {
+            LOG_DEPRECATED_CREATE_PATH_2 = false;
+            LoggerFactory.getLogger(JcrResourceUtil.class).warn("DEPRECATION WARNING: JcrResourceUtil.createPath(Node,...) is deprecated. Please use the resource resolver API.");
+        }
         if (relativePath == null || relativePath.length() == 0 || "/".equals(relativePath)) {
             return parentNode;
         }

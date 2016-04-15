@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.models.impl</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.3-SNAPSHOT</version>
+    <version>1.2.7-SNAPSHOT</version>
     <name>Apache Sling Models Implementation</name>
     <description>Apache Sling Models Implementation</description>
 
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.2.3-SNAPSHOT</version>
+            <version>1.2.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

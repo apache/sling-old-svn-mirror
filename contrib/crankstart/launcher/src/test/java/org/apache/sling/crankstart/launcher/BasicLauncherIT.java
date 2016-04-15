@@ -14,9 +14,11 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
+import org.apache.sling.crankstart.junit.CrankstartSetup;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -26,7 +28,9 @@ import org.junit.Test;
  */
 public class BasicLauncherIT {
     
-    private static CrankstartSetup C;
+    @ClassRule
+    public static CrankstartSetup C = new CrankstartSetup().withModelResources(U.DEFAULT_MODELS);
+    
     private DefaultHttpClient client;
     private static WebconsoleClient osgiConsole;
     
@@ -35,8 +39,6 @@ public class BasicLauncherIT {
     
     @BeforeClass
     public static void setupClass() throws Exception {
-        C = new CrankstartSetup();
-        C.setup();
         osgiConsole = new WebconsoleClient(C.getBaseUrl(), U.ADMIN, U.ADMIN);
     }
     

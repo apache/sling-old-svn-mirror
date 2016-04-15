@@ -26,15 +26,15 @@ import java.util.Map;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
+import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
+import org.apache.sling.distribution.transport.impl.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
@@ -42,32 +42,40 @@ import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyTyp
 public class RemoteDistributionPackageImporter implements DistributionPackageImporter {
 
 
-    private DistributionTransport transportHandler;
+    private final Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
+    private final DistributionTransportContext distributionContext = new DistributionTransportContext();
+
 
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
-                                             Map<String, String> endpointsMap,
-                                             TransportEndpointStrategyType transportEndpointStrategyType) {
+                                             Map<String, String> endpointsMap) {
         if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
-        Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
 
         for (Map.Entry<String, String> entry : endpointsMap.entrySet()) {
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
-                transportEndpointStrategyType);
-
     }
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
-        transportHandler.deliverPackage(resourceResolver, distributionPackage);
+        DistributionPackageInfo info = distributionPackage.getInfo();
+        String queueName = DistributionPackageUtils.getQueueName(info);
+
+        DistributionTransport distributionTransport = transportHandlers.get(queueName);
+
+        if (distributionTransport != null) {
+            distributionTransport.deliverPackage(resourceResolver, distributionPackage, distributionContext);
+        } else {
+            for(DistributionTransport transportHandler: transportHandlers.values()) {
+                transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionContext);
+            }
+        }
     }
 
     @Nonnull

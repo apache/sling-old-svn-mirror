@@ -31,12 +31,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.compiler.UnitChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -70,6 +70,9 @@ public class JavaUseProvider implements UseProvider {
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Reference
+    private UnitChangeMonitor unitChangeMonitor = null;
+
+    @Reference
     private ClassLoaderWriter classLoaderWriter = null;
 
     @Override
@@ -79,13 +82,23 @@ public class JavaUseProvider implements UseProvider {
             return ProviderOutcome.failure();
         }
         Bindings globalBindings = renderContext.getBindings();
-        SlingScriptHelper sling = UseProviderUtils.getHelper(globalBindings);
+        SlingScriptHelper sling = BindingsUtils.getHelper(globalBindings);
         SlingHttpServletRequest request = (SlingHttpServletRequest) globalBindings.get(SlingBindings.REQUEST);
         Map<String, Object> overrides = setRequestAttributes(request, arguments);
 
         Object result;
         try {
+            LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
+            if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
+                // the object is a POJO that was changed in the repository but not recompiled;
+                LOG.debug("Class {} was available in the classloader cache but it needs to be recompiled.");
+                result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
+                if (result instanceof Use) {
+                    ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
+                }
+                return ProviderOutcome.success(result);
+            }
             // attempt OSGi service load
             result = sling.getService(cls);
             if (result != null) {
@@ -105,7 +118,7 @@ public class JavaUseProvider implements UseProvider {
                  */
                 result = cls.newInstance();
                 if (result instanceof Use) {
-                    ((Use) result).init(UseProviderUtils.merge(globalBindings, arguments));
+                    ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
                 }
                 return ProviderOutcome.notNullOrFailure(result);
             }
@@ -113,11 +126,10 @@ public class JavaUseProvider implements UseProvider {
             /**
              * this object is either not exported from a bundle, or it's a POJO from the repository that wasn't loaded before
              */
-            ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-            Resource caller = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
-            result = sightlyJavaCompilerService.getInstance(adminResolver, caller, identifier, true);
+            LOG.debug("Class {} was not found in the classloader cache.", identifier);
+            result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
             if (result instanceof Use) {
-                ((Use) result).init(UseProviderUtils.merge(globalBindings, arguments));
+                ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
             }
             return ProviderOutcome.success(result);
         } catch (Exception e) {

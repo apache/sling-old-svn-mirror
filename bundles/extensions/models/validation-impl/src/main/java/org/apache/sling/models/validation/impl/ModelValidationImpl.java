@@ -27,7 +27,7 @@ import org.apache.sling.models.spi.ModelValidation;
 import org.apache.sling.models.validation.InvalidResourceException;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.model.ValidationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
