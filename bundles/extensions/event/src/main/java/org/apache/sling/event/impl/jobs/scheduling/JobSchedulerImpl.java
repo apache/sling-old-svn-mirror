@@ -191,7 +191,7 @@ public class JobSchedulerImpl
     }
 
     /**
-     * Remove a scheduled job
+     * Unschedule a scheduled job
      */
     public void unscheduleJob(final ScheduledJobInfoImpl info) {
         synchronized ( this.scheduledJobs ) {
@@ -199,6 +199,13 @@ public class JobSchedulerImpl
                 this.stopScheduledJob(info);
             }
         }
+    }
+
+    /**
+     * Remove a scheduled job
+     */
+    public void removeJob(final ScheduledJobInfoImpl info) {
+        this.scheduledJobHandler.remove(info);
     }
 
     /**
