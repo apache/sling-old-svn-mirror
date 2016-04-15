@@ -46,7 +46,7 @@ public final class JcrModifiableValueMap extends JcrCacheableValueMap implements
      * @param helper Helper data object
      */
     public JcrModifiableValueMap(final Node node, final HelperData helper, final ValueMapCacheProvider cacheProvider) {
-		super(node, cacheProvider);
+        super(node, cacheProvider);
         this.helper = helper;
     }
 

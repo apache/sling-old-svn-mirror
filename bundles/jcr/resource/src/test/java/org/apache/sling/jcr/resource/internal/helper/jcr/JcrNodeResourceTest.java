@@ -70,7 +70,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         String name = "file";
         Node file = rootNode.addNode(name, JcrConstants.NT_FILE);
         Node res = file.addNode(JcrConstants.JCR_CONTENT,
-                JcrConstants.NT_RESOURCE);
+            JcrConstants.NT_RESOURCE);
         setupResource(res);
         getSession().save();
 
@@ -88,7 +88,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         String name = "fileunstructured";
         Node file = rootNode.addNode(name, JcrConstants.NT_FILE);
         Node res = file.addNode(JcrConstants.JCR_CONTENT,
-                JcrConstants.NT_UNSTRUCTURED);
+            JcrConstants.NT_UNSTRUCTURED);
         setupResource(res);
         getSession().save();
 
@@ -280,7 +280,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         String name = "utf8file";
         Node file = rootNode.addNode(name, JcrConstants.NT_FILE);
         Node res = file.addNode(JcrConstants.JCR_CONTENT,
-                JcrConstants.NT_RESOURCE);
+            JcrConstants.NT_RESOURCE);
 
         res.setProperty(JcrConstants.JCR_LASTMODIFIED, TEST_MODIFIED);
         res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);
@@ -301,7 +301,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);
         res.setProperty(JcrConstants.JCR_ENCODING, TEST_ENCODING);
         res.setProperty(JcrConstants.JCR_DATA, new ByteArrayInputStream(
-                TEST_DATA));
+            TEST_DATA));
     }
 
     private void assertResourceMetaData(ResourceMetadata rm) {

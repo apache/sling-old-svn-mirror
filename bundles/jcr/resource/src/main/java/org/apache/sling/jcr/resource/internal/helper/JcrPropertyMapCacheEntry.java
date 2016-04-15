@@ -45,7 +45,9 @@ import org.slf4j.LoggerFactory;
 
 public class JcrPropertyMapCacheEntry {
 
-    /** Global logger */
+    /**
+     * Global logger
+     */
     private static Logger LOGGER = LoggerFactory.getLogger(JcrPropertyMapCacheEntry.class);
 
     /**
@@ -281,10 +283,10 @@ public class JcrPropertyMapCacheEntry {
 
     @SuppressWarnings("unchecked")
     private <T> T convertToType(final int index,
-            final Object initialValue,
-            final Class<T> type,
-            final Node node,
-            final ClassLoader dynamicClassLoader)
+                                final Object initialValue,
+                                final Class<T> type,
+                                final Node node,
+                                final ClassLoader dynamicClassLoader)
             throws RepositoryException {
         if (type.isInstance(initialValue)) {
             return (T) initialValue;
