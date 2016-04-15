@@ -57,11 +57,11 @@ public class JcrPropertyMap extends JcrCacheableValueMap {
      *
      * @param node The underlying node.
      * @param dynamicCL Dynamic class loader for loading serialized objects.
-     * @param cache The cache for this valuemap
+     * @param cacheProvider The cache for this valuemap
      * @since 2.0.8
      */
-    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCacheProvider cache) {
-        super(node, cache);
+    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL, final ValueMapCacheProvider cacheProvider) {
+        super(node, cacheProvider);
         this.dynamicClassLoader = dynamicCL;
     }
 

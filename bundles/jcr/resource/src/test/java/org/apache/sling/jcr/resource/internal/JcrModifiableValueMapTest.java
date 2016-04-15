@@ -92,7 +92,6 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         InputStream stream = new ByteArrayInputStream(TEST_BYTE_ARRAY_TO_STRING.getBytes());
         pvm.put("binary", stream);
         getSession().save();
-      //  stream.reset();
         final ModifiableValueMap modifiableValueMap2 = new JcrModifiableValueMap(this.rootNode, getHelperData(), valueMapCache);
         assertTrue("The read stream is not what we wrote.", IOUtils.toString(modifiableValueMap2.
                 get("binary", InputStream.class)).equals(TEST_BYTE_ARRAY_TO_STRING));
