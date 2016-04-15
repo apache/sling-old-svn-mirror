@@ -25,9 +25,9 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.spi.Validator;
 
 public class ResourcePropertyBuilder {
 
@@ -47,14 +47,13 @@ public class ResourcePropertyBuilder {
         this.nameRegex = nameRegex;
         return this;
     }
-    
+
     public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator) {
-        validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>()));
+        validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>(), null));
         return this;
     }
-    
-    
-    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, String... parametersNamesAndValues) {
+
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, Integer severity, String... parametersNamesAndValues) {
         if (parametersNamesAndValues.length % 2 != 0) {
             throw new IllegalArgumentException("array parametersNamesAndValues must be even! (first specify name then value, separated by comma)");
         }
@@ -63,7 +62,7 @@ public class ResourcePropertyBuilder {
         for (int i=0; i<parametersNamesAndValues.length; i=i+2) {
             parameterMap.put(parametersNamesAndValues[i], parametersNamesAndValues[i+1]);
         }
-        validators.add(new ParameterizedValidatorImpl(validator, parameterMap));
+        validators.add(new ParameterizedValidatorImpl(validator, parameterMap, severity));
         return this;
     }
 
@@ -71,12 +70,12 @@ public class ResourcePropertyBuilder {
         this.optional = true;
         return this;
     }
-    
+
     public @Nonnull ResourcePropertyBuilder multiple() {
         this.multiple = true;
         return this;
     }
-    
+
     public @Nonnull ResourceProperty build(String name) {
         return new ResourcePropertyImpl(name, nameRegex, multiple, !optional, validators);
     }

@@ -51,6 +51,13 @@ public class SlingExtensionResourceInventoryIT extends KarafTestSupport {
     }
 
     @Test
+    public void testOrgApacheFelixInventory() {
+        final Bundle bundle = findBundle("org.apache.felix.inventory");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testOrgApacheCommonsLang3() {
         final Bundle bundle = findBundle("org.apache.commons.lang3");
         assertNotNull(bundle);

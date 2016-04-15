@@ -19,8 +19,8 @@
 # TODO make GNU compatible
 
 # Oak
-OAK_VERSION_CURRENT=1.3.9
-OAK_VERSION_NEW=1.3.10
+OAK_VERSION_CURRENT=1.3.16
+OAK_VERSION_NEW=1.4.0
 
 sed -i '' "s/<oak.version>$OAK_VERSION_CURRENT<\/oak.version>/<oak.version>$OAK_VERSION_NEW<\/oak.version>/1" "bundles/jcr/oak-server/pom.xml"
 sed -i '' "s/<oak.version>$OAK_VERSION_CURRENT<\/oak.version>/<oak.version>$OAK_VERSION_NEW<\/oak.version>/1" "bundles/jcr/it-jackrabbit-oak/pom.xml"
@@ -40,14 +40,19 @@ sed -i '' "s/<bundle>mvn:org.apache.sling\/org.apache.sling.jcr.oak.server\/$OAK
 
 
 # Jackrabbit
-JACKRABBIT_VERSION_CURRENT=2.11.1
-JACKRABBIT_VERSION_NEW=2.11.2
+JACKRABBIT_VERSION_CURRENT=2.12.0
+JACKRABBIT_VERSION_NEW=2.12.1
 
 sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/it-jackrabbit-oak/pom.xml"
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/davex/pom.xml"
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/jcr/webdav/pom.xml"
 
 sed -i '' "s/jackrabbit.version=$JACKRABBIT_VERSION_CURRENT/jackrabbit.version=$JACKRABBIT_VERSION_NEW/1" "launchpad/builder/src/main/provisioning/sling.txt"
 sed -i '' "s/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/org.apache.jackrabbit.version>/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/org.apache.jackrabbit.version>/1" "contrib/launchpad/karaf/org.apache.sling.launchpad.karaf-features/pom.xml"
 
+sed -i '' "s/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/org.apache.jackrabbit.version>/<org.apache.jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/org.apache.jackrabbit.version>/1" "contrib/launchpad/karaf/org.apache.sling.launchpad.karaf-integration-tests/pom.xml"
+
+sed -i '' "s/<jackrabbit.version>$JACKRABBIT_VERSION_CURRENT<\/jackrabbit.version>/<jackrabbit.version>$JACKRABBIT_VERSION_NEW<\/jackrabbit.version>/1" "bundles/commons/testing/pom.xml"
 
 # Tika
 TIKA_VERSION_CURRENT=1.10

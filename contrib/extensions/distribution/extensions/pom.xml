@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
     </parent>
 
     <!-- ======================================================================= -->
@@ -128,6 +128,9 @@
                             !org.mortbay.jetty.*,
                             !org.mortbay.resource.*,
                             !org.apache.sling.api.resource,
+                            !org.apache.sling.distribution.component.*,
+                            !org.apache.sling.distribution.packaging.*,
+                            !org.apache.sling.distribution.serialization.impl.vlt.*,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -168,7 +171,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
-            <version>1.1.11-SNAPSHOT</version>
+            <version>1.1.12</version>
             <scope>test</scope>
         </dependency>
         <!-- SLING -->
@@ -180,12 +183,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.api</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
-            <version>0.1.11-SNAPSHOT</version>
+            <version>0.1.17-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

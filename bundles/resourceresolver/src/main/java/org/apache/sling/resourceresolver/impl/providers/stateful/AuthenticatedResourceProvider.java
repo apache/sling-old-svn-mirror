@@ -20,352 +20,425 @@ package org.apache.sling.resourceresolver.impl.providers.stateful;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.sling.api.resource.LoginException;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.query.Query;
-import org.apache.sling.api.resource.query.QueryInstructions;
-import org.apache.sling.api.resource.runtime.dto.AuthType;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
-import org.apache.sling.spi.resource.provider.QueryProvider;
-import org.apache.sling.spi.resource.provider.QueryResult;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.api.security.AccessSecurityException;
+import org.apache.sling.api.security.ResourceAccessSecurity;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
+import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.apache.sling.resourceresolver.impl.helper.AbstractIterator;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This {@link StatefulResourceProvider} implementation authenticates the
- * underlying {@link ResourceProvider}. The authentication can be done during
- * creation of the object (for {@link AuthType#required}) or before invoking the
- * first method (for {@link AuthType#lazy}).
+ * This {@link AuthenticatedResourceProvider} implementation keeps a resource
+ * provider and the authentication information (through the {@link ResolveContext}.
+ *
+ * The methods are similar to {@link ResourceProvider}.
  */
-public class AuthenticatedResourceProvider implements StatefulResourceProvider {
+public class AuthenticatedResourceProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticatedResourceProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
-    private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
+    public static final AuthenticatedResourceProvider UNAUTHENTICATED_PROVIDER = new AuthenticatedResourceProvider(null, false, null, null);
 
-    private final ResourceProvider<Object> rp;
+    private final ResourceProviderHandler providerHandler;
 
-    private final ResourceProviderInfo info;
+    private final ResolveContext<Object> resolveContext;
 
-    private final Map<String, Object> authInfo;
+    private final ResourceAccessSecurityTracker tracker;
 
-    private final ResourceResolver resolver;
+    private final boolean useRAS;
 
-    private boolean authenticated;
-
-    private Object contextData;
-
-    private ResolverContext<Object> cachedContext;
-
-    private final CombinedResourceProvider combinedProvider;
-
-    @SuppressWarnings("unchecked")
-    public AuthenticatedResourceProvider(ResourceProvider<?> rp,
-            ResourceProviderInfo info,
-            ResourceResolver resolver,
-            Map<String, Object> authInfo,
-            CombinedResourceProvider combinedProvider) throws LoginException {
-        this.rp = (ResourceProvider<Object>) rp;
-        this.info = info;
-        this.authInfo = authInfo;
-        this.resolver = resolver;
-        this.combinedProvider = combinedProvider;
-        if (info.getAuthType() == AuthType.required) {
-            authenticate();
-        }
+    public AuthenticatedResourceProvider(@Nonnull final ResourceProviderHandler providerHandler,
+            final boolean useRAS,
+            @Nonnull final ResolveContext<Object> resolveContext,
+            @Nonnull final ResourceAccessSecurityTracker tracker) {
+        this.providerHandler = providerHandler;
+        this.resolveContext = resolveContext;
+        this.tracker = tracker;
+        this.useRAS = useRAS;
     }
 
-    private Object authenticate() throws LoginException {
-        if (!authenticated && (info.getAuthType() == AuthType.required || info.getAuthType() == AuthType.lazy)) {
-            try {
-                contextData = rp.authenticate(authInfo);
-            } catch ( final LoginException le ) {
-                logger.debug("Unable to login into resource provider " + rp, le);
-                throw le;
-            }
-            authenticated = true;
-        }
-        return contextData;
+    /**
+     * Get the resolve context.
+     * @return The resolve context
+     */
+    public @Nonnull ResolveContext<Object> getResolveContext() {
+        return this.resolveContext;
     }
 
-    @Override
-    public ResolverContext<Object> getContext() throws LoginException {
-        if (cachedContext == null) {
-            cachedContext = new BasicResolveContext<Object>(resolver, authenticate(), ResourceUtil.getParent(info.getPath()), this.combinedProvider);
-        }
-        return cachedContext;
-    }
-
-    @Override
-    public void logout() {
-        if (authenticated) {
-            try {
-                rp.logout(getContext());
-            } catch (LoginException e) {
-                logger.error("Can't create context", e);
-            }
-            authenticated = false;
-            cachedContext = null;
-        }
-    }
-
-    @Override
+    /**
+     * #see {@link ResourceProvider#refresh(ResolveContext)}
+     */
     public void refresh() {
-        try {
-            rp.refresh(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.refresh(this.resolveContext);
         }
     }
 
-    @Override
+    /**
+     * #see {@link ResourceProvider#isLive(ResolveContext)}
+     */
     public boolean isLive() {
-        try {
-            return rp.isLive(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.isLive(this.resolveContext);
         }
+        return false;
     }
 
-    @Override
-    public Resource getParent(Resource child) {
-        try {
-            return rp.getParent(getContext(), child);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+    /**
+     * #see {@link ResourceProvider#getParent(ResolveContext, Resource)}
+     */
+    public Resource getParent(final Resource child) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return wrapResource(rp.getParent(this.resolveContext, child));
+        }
+        return null;
+    }
+
+    /**
+     * #see {@link ResourceProvider#getResource(ResolveContext, String, ResourceContext, Resource)}
+     */
+    public Resource getResource(final String path, final Resource parent, final Map<String, String> parameters) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp == null ) {
             return null;
         }
-    }
-
-    @Override
-    public Resource getResource(String path, Resource parent, final Map<String, String> parameters, boolean isResolve) {
-        ResourceContext resourceContext = ResourceContext.EMPTY_CONTEXT;
+        final ResourceContext resourceContext;
         if ( parameters != null ) {
             resourceContext = new ResourceContext() {
 
                 @Override
                 public Map<String, String> getResolveParameters() {
-                    // TODO Auto-generated method stub
                     return parameters;
                 }
             };
+        } else {
+            resourceContext = ResourceContext.EMPTY_CONTEXT;
         }
-        try {
-            return rp.getResource(getContext(), path, resourceContext, parent);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
-
+        return wrapResource(rp.getResource(this.resolveContext, path, resourceContext, parent));
     }
 
-    @Override
-    public Iterator<Resource> listChildren(Resource parent) {
-        try {
-            return rp.listChildren(getContext(), parent);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
+    /**
+     * #see {@link ResourceProvider#listChildren(ResolveContext, Resource)}
+     */
+    public Iterator<Resource> listChildren(final Resource parent) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return wrapIterator(rp.listChildren(this.resolveContext, parent));
         }
+        return null;
     }
 
-    @Override
-    public Collection<String> getAttributeNames() {
-        Set<String> attributeNames = new LinkedHashSet<String>();
-        Collection<String> rpAttributeNames = null;
-        try {
-            rpAttributeNames = rp.getAttributeNames(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
-        if (rpAttributeNames != null) {
-            attributeNames.addAll(rpAttributeNames);
-        }
-        if (authInfo != null) {
-            attributeNames.addAll(authInfo.keySet());
-        }
-        attributeNames.remove(FORBIDDEN_ATTRIBUTE);
-        return attributeNames;
-    }
-
-    @Override
-    public Object getAttribute(String name) {
-        if (FORBIDDEN_ATTRIBUTE.equals(name)) {
-            return null;
-        }
-        Object attribute = null;
-        try {
-            attribute = rp.getAttribute(getContext(), name);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-        }
-        if (attribute == null) {
-            attribute = authInfo.get(name);
-        }
-        return attribute;
-    }
-
-    @Override
-    public Resource create(String path, Map<String, Object> properties) throws PersistenceException {
-        try {
-            return rp.create(getContext(), path, properties);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
+    /**
+     * #see {@link ResourceProvider#getAttributeNames(ResolveContext)}
+     */
+    public void getAttributeNames(final Set<String> attributeNames) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            Collection<String> rpAttributeNames = rp.getAttributeNames(this.resolveContext);
+            if (rpAttributeNames != null) {
+                attributeNames.addAll(rpAttributeNames);
+            }
         }
     }
 
-    @Override
-    public void delete(Resource resource) throws PersistenceException {
-        try {
-            rp.delete(getContext(), resource);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+    /**
+     * #see {@link ResourceProvider#getAttribute(ResolveContext, String)}
+     */
+    public Object getAttribute(final String name) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.getAttribute(this.resolveContext, name);
+        }
+        return null;
+    }
+
+    /**
+     * #see {@link ResourceProvider#create(ResolveContext, String, Map)}
+     */
+    public Resource create(final ResourceResolver resolver,
+            final String path,
+            final Map<String, Object> properties)
+    throws PersistenceException {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null && this.canCreate(resolver, path) ) {
+            return rp.create(this.resolveContext, path, properties);
+        }
+        return null;
+    }
+
+    /**
+     * #see {@link ResourceProvider#delete(ResolveContext, Resource)}
+     */
+    public void delete(final Resource resource) throws PersistenceException {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null && this.canDelete(resource) ) {
+            rp.delete(this.resolveContext, resource);
+        } else {
+            throw new PersistenceException("Unable to delete resource " + resource.getPath());
         }
     }
 
-    @Override
+    /**
+     * #see {@link ResourceProvider#revert(ResolveContext)}
+     */
     public void revert() {
-        try {
-            rp.revert(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.revert(this.resolveContext);
         }
     }
 
-    @Override
+    /**
+     * #see {@link ResourceProvider#commit(ResolveContext)}
+     */
     public void commit() throws PersistenceException {
-        try {
-            rp.commit(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            rp.commit(this.resolveContext);
         }
     }
 
-    @Override
+    /**
+     * #see {@link ResourceProvider#hasChanges(ResolveContext)}
+     */
     public boolean hasChanges() {
-        try {
-            return rp.hasChanges(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return false;
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.hasChanges(this.resolveContext);
         }
+        return false;
     }
 
-    private QueryProvider<Object> getQueryProvider() {
-        return rp.getQueryProvider();
-    }
-
-    private JCRQueryProvider<Object> getJcrQueryProvider() {
-        return rp.getJCRQueryProvider();
-    }
-
-    @Override
-    public QueryResult find(Query q, QueryInstructions qi) {
-        final QueryProvider<Object> provider = getQueryProvider();
-        if (provider == null) {
-            return null;
+    /**
+     * #see {@link ResourceProvider#getQueryLanguageProvider()}
+     */
+    private QueryLanguageProvider<Object> getQueryLanguageProvider() {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.getQueryLanguageProvider();
         }
-        try {
-            return provider.find(getContext(), q, qi);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return null;
     }
 
-    @Override
+    /**
+     * #see {@link QueryLanguageProvider#getSupportedLanguages(ResolveContext)}
+     */
     public String[] getSupportedLanguages() {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return jcrQueryProvider.getSupportedLanguages(getContext());
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return ArrayUtils.EMPTY_STRING_ARRAY;
-        }
+        return jcrQueryProvider.getSupportedLanguages(this.resolveContext);
     }
 
-    @Override
-    public Iterator<Resource> findResources(String query, String language) {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+    /**
+     * #see {@link QueryLanguageProvider}{@link #findResources(String, String)}
+     */
+    public Iterator<Resource> findResources(final String query, final String language) {
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return jcrQueryProvider.findResources(getContext(), query, language);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
+        return wrapIterator(jcrQueryProvider.findResources(this.resolveContext, transformQuery(query, language), language));
     }
 
+    /**
+     * #see {@link QueryLanguageProvider#queryResources(ResolveContext, String, String)}
+     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public Iterator<Map<String, Object>> queryResources(String query, String language) {
-        final JCRQueryProvider<Object> jcrQueryProvider = getJcrQueryProvider();
+    public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
+        final QueryLanguageProvider<Object> jcrQueryProvider = getQueryLanguageProvider();
         if (jcrQueryProvider == null) {
             return null;
         }
-        try {
-            return (Iterator) jcrQueryProvider.queryResources(getContext(), query, language);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
+        return (Iterator) jcrQueryProvider.queryResources(this.resolveContext, transformQuery(query, language), language);
+    }
+
+    /**
+     * #see {@link ResourceProvider#adaptTo(ResolveContext, Class)}
+     */
+    public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.adaptTo(this.resolveContext, type);
+        }
+        return null;
+    }
+
+    /**
+     * #see {@link ResourceProvider#copy(ResolveContext, String, String)}
+     */
+    public boolean copy(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.copy(this.resolveContext, srcAbsPath, destAbsPath);
+        }
+        return false;
+    }
+
+    /**
+     * #see {@link ResourceProvider#move(ResolveContext, String, String)}
+     */
+    public boolean move(final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+        final ResourceProvider<Object> rp = this.providerHandler.getResourceProvider();
+        if ( rp != null ) {
+            return rp.move(this.resolveContext, srcAbsPath, destAbsPath);
+        }
+        return false;
+    }
+
+    private boolean canCreate(final ResourceResolver resolver, final String path) {
+        boolean allowed = true;
+        if ( this.useRAS ) {
+            final ResourceAccessSecurity security = tracker.getProviderResourceAccessSecurity();
+            if ( security != null ) {
+                allowed = security.canCreate(path, resolver);
+            } else {
+                allowed = false;
+            }
+        }
+
+        if ( allowed ) {
+            final ResourceAccessSecurity security = tracker.getApplicationResourceAccessSecurity();
+            if (security != null) {
+                allowed = security.canCreate(path, resolver);
+            }
+        }
+        return allowed;
+    }
+
+    private boolean canDelete(final Resource resource) {
+        boolean allowed = true;
+        if ( this.useRAS ) {
+            final ResourceAccessSecurity security = tracker.getProviderResourceAccessSecurity();
+            if ( security != null ) {
+                allowed = security.canDelete(resource);
+            } else {
+                allowed = false;
+            }
+        }
+
+        if ( allowed ) {
+            final ResourceAccessSecurity security = tracker.getApplicationResourceAccessSecurity();
+            if (security != null) {
+                allowed = security.canDelete(resource);
+            }
+        }
+        return allowed;
+    }
+
+    /**
+     * applies resource access security if configured
+     */
+    private String transformQuery ( final String query, final String language ) {
+        String returnValue = query;
+
+        if (this.useRAS) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker
+                    .getProviderResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                try {
+                    returnValue = resourceAccessSecurity.transformQuery(
+                            returnValue, language, this.resolveContext.getResourceResolver());
+                } catch (AccessSecurityException e) {
+                    logger.error(
+                            "AccessSecurityException occurred while trying to transform the query {} (language {}).",
+                            new Object[] { query, language }, e);
+                }
+            }
+        }
+
+        final ResourceAccessSecurity resourceAccessSecurity = tracker
+                .getApplicationResourceAccessSecurity();
+        if (resourceAccessSecurity != null) {
+            try {
+                returnValue = resourceAccessSecurity.transformQuery(
+                        returnValue, language, this.resolveContext.getResourceResolver());
+            } catch (AccessSecurityException e) {
+                logger.error(
+                        "AccessSecurityException occurred while trying to transform the query {} (language {}).",
+                        new Object[] { query, language }, e);
+            }
+        }
+
+        return returnValue;
+    }
+
+    /**
+     * Wrap a resource with additional resource access security
+     * @param rsrc The resource or {@code null}.
+     * @return The wrapped resource or {@code null}
+     */
+    private @CheckForNull Resource wrapResource(@CheckForNull Resource rsrc) {
+        Resource returnValue = null;
+
+        if (useRAS && rsrc != null) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker.getProviderResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                returnValue = resourceAccessSecurity.getReadableResource(rsrc);
+            }
+        } else {
+            returnValue = rsrc;
+        }
+
+        if ( returnValue != null ) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker.getApplicationResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                returnValue = resourceAccessSecurity.getReadableResource(returnValue);
+            }
+        }
+
+        return returnValue;
+    }
+
+    private Iterator<Resource> wrapIterator(Iterator<Resource> iterator) {
+        if (iterator == null) {
+            return iterator;
+        } else {
+            return new SecureIterator(iterator);
+        }
+    }
+
+    private class SecureIterator extends AbstractIterator<Resource> {
+
+        private final Iterator<Resource> iterator;
+
+        public SecureIterator(Iterator<Resource> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        protected Resource seek() {
+            while (iterator.hasNext()) {
+                final Resource resource = wrapResource(iterator.next());
+                if (resource != null) {
+                    return resource;
+                }
+            }
             return null;
         }
     }
 
     @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        try {
-            return rp.adaptTo(getContext(), type);
-        } catch (LoginException e) {
-            logger.error("Can't create context", e);
-            return null;
-        }
-    }
-
-    @Override
-    public boolean copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
-        try {
-            return rp.copy(getContext(), srcAbsPath, destAbsPath);
-        } catch (LoginException e) {
-            throw new PersistenceException("Unable to create context.", e);
-        }
-    }
-
-    @Override
-    public boolean move(String srcAbsPath, String destAbsPath) throws PersistenceException {
-        try {
-            return rp.move(getContext(), srcAbsPath, destAbsPath);
-        } catch (LoginException e) {
-            throw new PersistenceException("Unable to create context.", e);
-        }
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        return resolver;
-    }
-
-    @Override
-    public ResourceProvider<Object> getResourceProvider() {
-        return rp;
+    public String toString() {
+        return "[" + getClass().getSimpleName() + "# rp: " + this.providerHandler.getResourceProvider() + "]";
     }
 }

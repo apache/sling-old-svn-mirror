@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>25</version>
+    <version>26</version>
     <relativePath/>
   </parent>
 
@@ -36,8 +36,9 @@
   <description>Apache Sling Features for provisioning with Apache Karaf</description>
 
   <properties>
-    <org.apache.jackrabbit.version>2.11.2</org.apache.jackrabbit.version>
-    <org.apache.jackrabbit.oak.version>1.3.10</org.apache.jackrabbit.oak.version>
+    <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
+    <org.apache.jackrabbit.version>2.12.1</org.apache.jackrabbit.version>
+    <org.apache.jackrabbit.oak.version>1.4.0</org.apache.jackrabbit.oak.version>
     <org.apache.tika.version>1.11</org.apache.tika.version>
     <feature.version>0.1.1.SNAPSHOT</feature.version>
   </properties>
@@ -47,7 +48,7 @@
       <plugin>
         <groupId>org.apache.karaf.tooling</groupId>
         <artifactId>karaf-maven-plugin</artifactId>
-        <version>4.0.3</version>
+        <version>${org.apache.karaf.version}</version>
         <extensions>true</extensions>
         <executions>
           <execution>

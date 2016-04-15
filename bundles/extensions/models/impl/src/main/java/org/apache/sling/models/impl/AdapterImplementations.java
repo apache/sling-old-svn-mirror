@@ -84,6 +84,16 @@ final class AdapterImplementations {
         }
     }
     
+    /** Add implementation mapping for the given model class (implementation is the model class itself).
+     * Only used for testing purposes. Use {@link #add(Class, Class)} in case you want to register a different implementation.
+     * @param modelClasses the model classes to register
+     */
+    protected void addClassesAsAdapterAndImplementation(Class<?>... modelClasses) {
+        for (Class<?> modelClass : modelClasses) {
+            add(modelClass, modelClass);
+        }
+    }
+    
     /**
      * Add implementation mapping for the given adapter type.
      * @param adapterType Adapter type
@@ -186,10 +196,10 @@ final class AdapterImplementations {
     }
 
     /**
-     * 
      * @param adapterType the type to check
      * @return {@code true} in case the given type is a model (may be with a different adapter class)
      */
+    @SuppressWarnings("unchecked")
     public <ModelType> boolean isModelClass(Class<ModelType> adapterType) {
         String key = adapterType.getName();
         
@@ -206,4 +216,5 @@ final class AdapterImplementations {
         }
         return true;
     }
+
 }

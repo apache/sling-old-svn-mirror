@@ -3,18 +3,20 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-M2Eclipse-based-WST-plugin
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-m2e-ui;singleton:=true
 Bundle-Activator: org.apache.sling.ide.eclipse.m2e.internal.Activator
-Bundle-Version: 1.0.99.qualifier
+Bundle-Version: 1.1.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .
 Require-Bundle: org.eclipse.m2e.core;bundle-version="1.4.0",
  org.eclipse.m2e.archetype.common;bundle-version="1.4.0",
- org.eclipse.m2e.maven.runtime;bundle-version="1.4.0"
+ org.eclipse.m2e.maven.runtime;bundle-version="1.4.0",
+ org.eclipse.jst.j2ee 
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
  org.apache.commons.httpclient.methods;version="3.1.0",
  org.apache.commons.httpclient.methods.multipart;version="3.1.0",
  org.apache.commons.httpclient.params;version="3.1.0",
  org.apache.commons.io;version="2.0.1",
+ org.apache.commons.lang,
  org.apache.sling.ide.artifacts,
  org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.eclipse.core.debug,
@@ -36,6 +38,10 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.jface.resource,
  org.eclipse.jface.viewers,
  org.eclipse.jface.wizard,
+ org.eclipse.jst.common.project.facet.core,
+ org.eclipse.jst.common.project.facet.core.internal,
+ org.eclipse.jst.j2ee.project.facet,
+ org.eclipse.jst.j2ee.web.project.facet,
  org.eclipse.swt,
  org.eclipse.swt.events,
  org.eclipse.swt.layout,
@@ -44,6 +50,7 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.ui.actions,
  org.eclipse.ui.plugin,
  org.eclipse.ui.progress,
+ org.eclipse.wst.common.frameworks.datamodel,
  org.eclipse.wst.common.project.facet.core,
  org.eclipse.wst.server.core,
  org.osgi.framework;version="1.6.0",

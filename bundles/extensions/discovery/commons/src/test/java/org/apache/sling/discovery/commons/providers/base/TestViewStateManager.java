@@ -32,7 +32,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.sling.discovery.ClusterView;
+import org.apache.sling.discovery.DiscoveryService;
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
@@ -130,6 +134,35 @@ public class TestViewStateManager {
         TestHelper.randomEventLoop(mgr, null, 100, -1, random, listeners);
     }
     
+    @Test
+    public void testChangedPropertiesChanged() throws Exception {
+        final DummyListener listener = new DummyListener();
+        mgr.installMinEventDelayHandler(new DiscoveryService() {
+            
+            @Override
+            public TopologyView getTopology() {
+                throw new IllegalStateException("not yet impl");
+            }
+        }, new DummyScheduler(), 1);
+        mgr.handleActivated();
+        TestHelper.assertNoEvents(listener);
+        mgr.bind(listener);
+        TestHelper.assertNoEvents(listener);
+        mgr.handleChanging();
+        TestHelper.assertNoEvents(listener);
+        final BaseTopologyView view1 = new DummyTopologyView().addInstance();
+        InstanceDescription instance1 = view1.getInstances().iterator().next();
+        ClusterView cluster1 = instance1.getClusterView();
+        mgr.handleNewView(view1);
+        assertEvents(listener, EventHelper.newInitEvent(view1));
+        DefaultClusterView cluster2 = new DefaultClusterView(new String(cluster1.getId()));
+        final BaseTopologyView view2 = new DummyTopologyView(view1.getLocalClusterSyncTokenId()).addInstance(instance1.getSlingId(), cluster2, instance1.isLeader(), instance1.isLocal());
+        DefaultInstanceDescription instance2 = (DefaultInstanceDescription) view2.getLocalInstance();
+        instance2.setProperty("foo", "bar");
+        mgr.handleNewView(view2);
+        assertEvents(listener, EventHelper.newPropertiesChangedEvent(view1, view2));
+    }
+
     @Test
     public void testDuplicateListeners() throws Exception {
         final DummyListener listener = new DummyListener();

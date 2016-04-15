@@ -18,31 +18,12 @@
  */
 package org.apache.sling.testing.mock.sling.servlet;
 
-import javax.servlet.RequestDispatcher;
-
-import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.resource.Resource;
-
 /**
- * Interface to create a mock {@link RequestDispatcher} when calling the getRequestDispatcher methods
+ * Interface to create a mock {@link javax.servlet.RequestDispatcher} when calling the getRequestDispatcher methods
  * on {@link MockSlingHttpServletRequest} instances.
  */
-public interface MockRequestDispatcherFactory {
+public interface MockRequestDispatcherFactory extends org.apache.sling.servlethelpers.MockRequestDispatcherFactory {
 
-    /**
-     * Get request dispatcher for given path.
-     * @param path Path
-     * @param options Options. Null if no options are provided.
-     * @return Request dispatcher
-     */
-    RequestDispatcher getRequestDispatcher(String path, RequestDispatcherOptions options);
-
-    /**
-     * Get request dispatcher for given resource.
-     * @param resource Resource
-     * @param options Options. Null if no options are provided.
-     * @return Request dispatcher
-     */
-    RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options);
+    // inherit from superclass
 
 }

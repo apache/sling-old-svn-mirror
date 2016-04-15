@@ -57,4 +57,11 @@ public class SlingExtensionEventIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
+    @Test
+    public void testOrgApacheFelixInventory() {
+        final Bundle bundle = findBundle("org.apache.felix.inventory");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
 }

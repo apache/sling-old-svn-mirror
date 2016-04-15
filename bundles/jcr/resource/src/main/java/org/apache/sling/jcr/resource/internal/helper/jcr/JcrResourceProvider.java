@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -59,15 +60,13 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.OakResourceListener;
-import org.apache.sling.jcr.resource.internal.ObservationListenerSupport;
-import org.apache.sling.spi.resource.provider.JCRQueryProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
@@ -76,20 +75,26 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(immediate = true)
+@Component(metatype = true,
+        label = "Apache Sling JCR Resource Provider Factory",
+        description = "This provider adds JCR resources to the resource tree",
+        name="org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
 @Service(value = ResourceProvider.class)
-@Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
-        @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
-        @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED),
-        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true),
+@Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR", propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/", propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true, propertyPrivate=true),
 })
+@Reference(name = "dynamicClassLoaderManager",
+           referenceInterface = DynamicClassLoaderManager.class,
+           cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */
-    private static final Logger log = LoggerFactory.getLogger(JcrResourceProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(JcrResourceProvider.class);
 
     private static final String REPOSITORY_REFERNENCE_NAME = "repository";
 
@@ -120,28 +125,26 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference
     private PathMapper pathMapper;
 
-    /** The dynamic class loader */
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
-
     /** This service is only available on OAK, therefore optional and static) */
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private Executor executor;
 
     /** The JCR observation listener. */
-    private Closeable listener;
+    private volatile Closeable listener;
 
-    private SlingRepository repository;
+    private volatile SlingRepository repository;
 
     private int observationQueueLength;
 
-    private boolean optimizeForOak;
+    private volatile boolean optimizeForOak;
 
-    private String root;
+    private volatile String root;
 
-    private BundleContext bundleCtx;
+    private volatile BundleContext bundleCtx;
 
-    private JcrProviderStateFactory stateFactory;
+    private volatile JcrProviderStateFactory stateFactory;
+
+    private final AtomicReference<DynamicClassLoaderManager> classLoaderManagerReference = new AtomicReference<DynamicClassLoaderManager>();
 
     @Activate
     protected void activate(final ComponentContext context) throws RepositoryException {
@@ -151,7 +154,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             // concurrent unregistration of SlingRepository service
             // don't care, this component is going to be deactivated
             // so we just stop working
-            log.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
+            logger.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
             return;
         }
 
@@ -161,26 +164,40 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
         this.bundleCtx = context.getBundleContext();
 
-        HelperData helperData = new HelperData(dynamicClassLoaderManager.getDynamicClassLoader(), pathMapper);
-        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, helperData);
+        this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository, classLoaderManagerReference, pathMapper);
     }
 
     @Deactivate
     protected void deactivate() {
-        unregisterLegacyListener();
+        this.bundleCtx = null;
+        this.stateFactory = null;
     }
 
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
+        this.classLoaderManagerReference.set(dynamicClassLoaderManager);
+    }
+
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
+        this.classLoaderManagerReference.compareAndSet(dynamicClassLoaderManager, null);
+    }
 
     @Override
     public void start(final ProviderContext ctx) {
         super.start(ctx);
-        registerLegacyListener();
+        registerListener(ctx);
     }
 
     @Override
     public void stop() {
-        unregisterLegacyListener();
+        unregisterListener();
         super.stop();
+    }
+
+    @Override
+    public void update(long changeSet) {
+        super.update(changeSet);
+        unregisterListener();
+        registerListener(getProviderContext());
     }
 
     @SuppressWarnings("unused")
@@ -197,7 +214,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
     }
 
-    private void registerLegacyListener() {
+    private void registerListener(final ProviderContext ctx) {
         // check for Oak
         boolean isOak = false;
         if ( optimizeForOak ) {
@@ -206,38 +223,30 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                 if ( this.executor != null ) {
                     isOak = true;
                 } else {
-                   log.error("Detected Oak based repository but no executor service available! Unable to use improved JCR Resource listener");
+                    logger.error("Detected Oak based repository but no executor service available! Unable to use improved JCR Resource listener");
                 }
             }
         }
-        ObservationListenerSupport support = null;
-        boolean closeSupport = true;
         try {
-            support = new ObservationListenerSupport(bundleCtx, repository, this.getProviderContext().getExcludedPaths());
             if (isOak) {
                 try {
-                    this.listener = new OakResourceListener(root, support, bundleCtx, executor, pathMapper, observationQueueLength);
-                    log.info("Detected Oak based repository. Using improved JCR Resource Listener with observation queue length {}", observationQueueLength);
+                    this.listener = new OakResourceListener(root, ctx, bundleCtx, executor, pathMapper, observationQueueLength, repository);
+                    logger.info("Detected Oak based repository. Using improved JCR Resource Listener with observation queue length {}", observationQueueLength);
                 } catch ( final RepositoryException re ) {
                     throw new SlingException("Can't create the OakResourceListener", re);
                 } catch ( final Throwable t ) {
-                    log.error("Unable to instantiate improved JCR Resource listener for Oak. Using fallback.", t);
+                    logger.error("Unable to instantiate improved JCR Resource listener for Oak. Using fallback.", t);
                 }
             }
             if (this.listener == null) {
-                this.listener = new JcrResourceListener(root, support, pathMapper);
+                this.listener = new JcrResourceListener(ctx, root, pathMapper, repository);
             }
-            closeSupport = false;
         } catch (RepositoryException e) {
             throw new SlingException("Can't create the listener", e);
-        } finally {
-            if ( closeSupport && support != null ) {
-                support.dispose();
-            }
         }
     }
 
-    private void unregisterLegacyListener() {
+    private void unregisterListener() {
         if ( this.listener != null ) {
             try {
                 this.listener.close();
@@ -259,17 +268,17 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public void logout(final @Nonnull ResolverContext<JcrProviderState> ctx) {
-        ctx.getProviderState().logout();
+    public void logout(final @Nonnull JcrProviderState state) {
+        state.logout();
     }
 
     @Override
-    public boolean isLive(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+    public boolean isLive(final @Nonnull ResolveContext<JcrProviderState> ctx) {
         return ctx.getProviderState().getSession().isLive();
     }
 
     @Override
-    public Resource getResource(ResolverContext<JcrProviderState> ctx, String path, ResourceContext rCtx, Resource parent) {
+    public Resource getResource(ResolveContext<JcrProviderState> ctx, String path, ResourceContext rCtx, Resource parent) {
         try {
             return ctx.getProviderState().getResourceFactory().createResource(ctx.getResourceResolver(), path, parent, rCtx.getResolveParameters());
         } catch (RepositoryException e) {
@@ -278,7 +287,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public Iterator<Resource> listChildren(ResolverContext<JcrProviderState> ctx, Resource parent) {
+    public Iterator<Resource> listChildren(ResolveContext<JcrProviderState> ctx, Resource parent) {
         JcrItemResource<?> parentItemResource;
 
         // short cut for known JCR resources
@@ -303,7 +312,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public @CheckForNull Resource getParent(final @Nonnull ResolverContext<JcrProviderState> ctx, final @Nonnull Resource child) {
+    public @CheckForNull Resource getParent(final @Nonnull ResolveContext<JcrProviderState> ctx, final @Nonnull Resource child) {
         if (child instanceof JcrItemResource<?>) {
             try {
                 String version = null;
@@ -326,7 +335,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                             ctx.getProviderState().getHelperData());
                 }
             } catch (RepositoryException e) {
-                log.warn("Can't get parent for {}", child, e);
+                logger.warn("Can't get parent for {}", child, e);
                 return null;
             }
         }
@@ -334,7 +343,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public Collection<String> getAttributeNames(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<JcrProviderState> ctx) {
         final Set<String> names = new HashSet<String>();
         final String[] sessionNames = ctx.getProviderState().getSession().getAttributeNames();
         for(final String name : sessionNames) {
@@ -346,7 +355,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public Object getAttribute(final @Nonnull ResolverContext<JcrProviderState> ctx, final @Nonnull String name) {
+    public Object getAttribute(final @Nonnull ResolveContext<JcrProviderState> ctx, final @Nonnull String name) {
         if (isAttributeVisible(name)) {
             if (ResourceResolverFactory.USER.equals(name)) {
                 return ctx.getProviderState().getSession().getUserID();
@@ -357,7 +366,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public Resource create(final @Nonnull ResolverContext<JcrProviderState> ctx, final String path, final Map<String, Object> properties)
+    public Resource create(final @Nonnull ResolveContext<JcrProviderState> ctx, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         // check for node type
         final Object nodeObj = (properties != null ? properties.get(NodeUtil.NODE_TYPE) : null);
@@ -436,26 +445,36 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public void delete(final @Nonnull ResolverContext<JcrProviderState> ctx, final @Nonnull Resource resource)
+    public void delete(final @Nonnull ResolveContext<JcrProviderState> ctx, final @Nonnull Resource resource)
     throws PersistenceException {
+        // try to adapt to Item
+        Item item = resource.adaptTo(Item.class);
         try {
-            ((JcrItemResource<?>) resource).getItem().remove();
+            if ( item == null ) {
+                final String jcrPath = pathMapper.mapResourcePathToJCRPath(resource.getPath());
+                if (jcrPath == null) {
+                    logger.debug("delete: {} maps to an empty JCR path", resource.getPath());
+                    throw new PersistenceException("Unable to delete resource", null, resource.getPath(), null);
+                }
+                item = ctx.getProviderState().getSession().getItem(jcrPath);
+            }
+            item.remove();
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to delete resource", e, resource.getPath(), null);
         }
     }
 
     @Override
-    public void revert(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+    public void revert(final @Nonnull ResolveContext<JcrProviderState> ctx) {
         try {
             ctx.getProviderState().getSession().refresh(false);
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to revert pending changes.", ignore);
+            logger.warn("Unable to revert pending changes.", ignore);
         }
     }
 
     @Override
-    public void commit(final @Nonnull ResolverContext<JcrProviderState> ctx)
+    public void commit(final @Nonnull ResolveContext<JcrProviderState> ctx)
     throws PersistenceException {
         try {
             ctx.getProviderState().getSession().save();
@@ -465,27 +484,27 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public boolean hasChanges(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+    public boolean hasChanges(final @Nonnull ResolveContext<JcrProviderState> ctx) {
         try {
             return ctx.getProviderState().getSession().hasPendingChanges();
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to check session for pending changes.", ignore);
+            logger.warn("Unable to check session for pending changes.", ignore);
         }
         return false;
     }
 
     @Override
-    public void refresh(final @Nonnull ResolverContext<JcrProviderState> ctx) {
+    public void refresh(final @Nonnull ResolveContext<JcrProviderState> ctx) {
         try {
             ctx.getProviderState().getSession().refresh(true);
         } catch (final RepositoryException ignore) {
-            log.warn("Unable to refresh session.", ignore);
+            logger.warn("Unable to refresh session.", ignore);
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public @CheckForNull <AdapterType> AdapterType adaptTo(final @Nonnull ResolverContext<JcrProviderState> ctx,
+    public @CheckForNull <AdapterType> AdapterType adaptTo(final @Nonnull ResolveContext<JcrProviderState> ctx,
             final @Nonnull Class<AdapterType> type) {
         Session session = ctx.getProviderState().getSession();
         if (type == Session.class) {
@@ -502,23 +521,23 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                         }
                     }
                 }
-                log.debug("not able to adapto Resource to Principal, let the base class try to adapt");
+                logger.debug("not able to adapto Resource to Principal, let the base class try to adapt");
             } catch (RepositoryException e) {
-                log.warn("error while adapting Resource to Principal, let the base class try to adapt", e);
+                logger.warn("error while adapting Resource to Principal, let the base class try to adapt", e);
             }
         }
         return super.adaptTo(ctx, type);
     }
 
     @Override
-    public boolean copy(final  @Nonnull ResolverContext<JcrProviderState> ctx,
+    public boolean copy(final  @Nonnull ResolveContext<JcrProviderState> ctx,
             final String srcAbsPath,
             final String destAbsPath) throws PersistenceException {
         return false;
     }
 
     @Override
-    public boolean move(final  @Nonnull ResolverContext<JcrProviderState> ctx,
+    public boolean move(final  @Nonnull ResolveContext<JcrProviderState> ctx,
             final String srcAbsPath,
             final String destAbsPath) throws PersistenceException {
         final String srcNodePath = pathMapper.mapResourcePathToJCRPath(srcAbsPath);
@@ -532,10 +551,10 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     @Override
-    public @CheckForNull JCRQueryProvider<JcrProviderState> getJCRQueryProvider() {
+    public @CheckForNull QueryLanguageProvider<JcrProviderState> getQueryLanguageProvider() {
         final ProviderContext ctx = this.getProviderContext();
         if ( ctx != null ) {
-            return new BasicJcrQueryProvider(ctx);
+            return new BasicQueryLanguageProvider(ctx);
         }
         return null;
     }

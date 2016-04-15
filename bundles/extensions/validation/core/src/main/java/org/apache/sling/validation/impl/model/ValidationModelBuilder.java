@@ -34,8 +34,8 @@ import org.apache.sling.validation.model.ValidationModel;
  */
 public class ValidationModelBuilder {
 
-    private final List<ResourceProperty> resourceProperties;
-    private final List<ChildResource> children;
+    private final @Nonnull List<ResourceProperty> resourceProperties;
+    private final @Nonnull List<ChildResource> children;
     private final Collection<String> applicablePaths;
     
     public ValidationModelBuilder() {

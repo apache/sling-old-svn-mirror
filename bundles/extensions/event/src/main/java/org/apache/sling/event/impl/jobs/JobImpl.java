@@ -105,6 +105,22 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     }
 
     /**
+     * Is the error recoverable?
+     */
+    public boolean isReadErrorRecoverable() {
+        boolean result = true;
+        if ( this.readErrorList != null ) {
+            for(final Exception e : this.readErrorList) {
+                if ( e instanceof RuntimeException ) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * Get all properties
      */
     public Map<String, Object> getProperties() {

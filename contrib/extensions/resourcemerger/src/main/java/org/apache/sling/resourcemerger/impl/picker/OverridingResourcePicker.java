@@ -32,7 +32,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourcemerger.impl.StubResource;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 @Component(name = "org.apache.sling.resourcemerger.picker.overriding",
         label = "Apache Sling Overriding Resource Picker",
@@ -40,14 +40,14 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
     metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service
 @Properties({
-    @Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
+    @Property(name = MergedResourcePicker2.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
             label = "Root", description = "Root path at which merged resources will be available."),
-    @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
+    @Property(name=MergedResourcePicker2.READ_ONLY, boolValue=true,
     label="Read Only",
     description="Specifies if the resources are read-only or can be modified."),
-    @Property(name=MergedResourcePicker.TRAVERSE_PARENT, boolValue=true, propertyPrivate=true)
+    @Property(name=MergedResourcePicker2.TRAVERSE_PARENT, boolValue=true, propertyPrivate=true)
 })
-public class OverridingResourcePicker implements MergedResourcePicker {
+public class OverridingResourcePicker implements MergedResourcePicker2 {
 
     public static final String DEFAULT_ROOT = "/mnt/override";
 
@@ -96,11 +96,6 @@ public class OverridingResourcePicker implements MergedResourcePicker {
         Collections.reverse(resources);
 
         return resources;
-    }
-
-    @Override
-    public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
-        return pickResources(resolver, relativePath, null);
     }
 
     private void findInheritanceRoot(final Resource target, final InheritanceRootInfo info) {

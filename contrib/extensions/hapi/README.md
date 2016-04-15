@@ -170,7 +170,7 @@ After defining the types needed for the component in question, you can immediate
 This is how a sightly component using it looks like:
 
 ```html
-<div data-sly-use.card="${'org.apache.sling.hapi.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+<div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
                  data-sly-attribute="${card.itemtype}" class="card-asset">
                 <a rel="self" href="details.html">
                     <img data-sly-attribute="${card.itemprop.thumbnail}" class="show-grid" src="assets/preview-small.png" alt="">
@@ -181,7 +181,7 @@ This is how a sightly component using it looks like:
                         <p class="type">PSD</p>
 
                         <p data-sly-attribute="${card.itemprop.resolution}"
-                           data-sly-use.resolution="${'org.apache.sling.hapi.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
                             <span data-sly-attribute="${resolution.itemprop.width}">1620</span> x <span
                                 data-sly-attribute="${resolution.itemprop.height}">670</span>
                         </p>

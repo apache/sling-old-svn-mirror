@@ -34,4 +34,46 @@
             </action>
         </pluginExecution>
     </pluginExecutions>
+  
+  <lifecycleMappings>
+    <lifecycleMapping>
+      <packagingType>content-package</packagingType>
+      <lifecycleMappingId>org.apache.sling.ide.eclipse.m2e.contentPackageLifecycleMapping</lifecycleMappingId>
+      <pluginExecutions>
+        <pluginExecution>
+          <pluginExecutionFilter>
+            <groupId>com.day.jcr.vault</groupId>
+            <artifactId>content-package-maven-plugin</artifactId>
+            <versionRange>[0.0.10,2)</versionRange>
+            <goals>
+              <goal>package</goal>
+            </goals>
+          </pluginExecutionFilter>
+          <action>
+            <configurator>
+              <id>org.apache.sling.ide.eclipse.m2e.configurator</id>
+            </configurator>
+          </action>
+        </pluginExecution>
+           
+        <pluginExecution>
+          <pluginExecutionFilter>
+          
+            <groupId>com.day.jcr.vault</groupId>
+            <artifactId>content-package-maven-plugin</artifactId>
+            <versionRange>[0.0.10,2)</versionRange>
+            <goals>
+              <goal>install</goal>
+            </goals>
+          </pluginExecutionFilter>
+          <action>
+           <ignore>
+               <message>content-package-maven-plugin goal "install" is ignored</message>
+           </ignore>
+          </action>
+        </pluginExecution>
+      </pluginExecutions>
+    </lifecycleMapping>
+    
+  </lifecycleMappings>    
 </lifecycleMappingMetadata>

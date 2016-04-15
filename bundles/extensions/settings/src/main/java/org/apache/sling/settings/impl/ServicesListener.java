@@ -21,7 +21,6 @@ package org.apache.sling.settings.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -41,9 +40,6 @@ public class ServicesListener {
     /** The bundle context. */
     private final BundleContext bundleContext;
 
-    /** The listener for the startup handler. */
-    private final Listener startupListener;
-
     /** The listener for configuration admin. */
     private ConfigAdminListener configAdminListener;
 
@@ -59,25 +55,7 @@ public class ServicesListener {
      */
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
-        this.startupListener = new Listener(StartupHandler.class.getName());
-        this.startupListener.start();
-    }
-
-    /**
-     * Notify of service changes from the listeners.
-     * If all services are available, register listener and pass resources
-     * to the OSGi installer.
-     */
-    public synchronized void notifyChange() {
-        // check if all services are available
-        final StartupHandler handler = (StartupHandler)this.startupListener.getService();
-        if ( handler != null && this.settingsReg == null ) {
-            this.activate(handler);
-        }
-    }
-
-    private void activate(final StartupHandler handler) {
-        final SlingSettingsServiceImpl settingsService = new SlingSettingsServiceImpl(bundleContext, handler);
+        final SlingSettingsServiceImpl settingsService = new SlingSettingsServiceImpl(bundleContext);
 
         final Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -110,7 +88,6 @@ public class ServicesListener {
             this.configAdminListener.deactivate();
             this.configAdminListener = null;
         }
-        this.startupListener.deactivate();
         if ( this.settingsReg != null ) {
             this.settingsReg.unregister();
             this.settingsReg = null;
@@ -211,24 +188,6 @@ public class ServicesListener {
         }
 
         protected abstract void serviceChanged();
-    }
-
-    /**
-     * Helper class listening for service events for a defined service.
-     */
-    private final class Listener extends AbstractListener {
-
-        /**
-         * Constructor
-         */
-        public Listener(final String serviceName) {
-            super(serviceName);
-        }
-
-        @Override
-        protected void serviceChanged() {
-            notifyChange();
-        }
     }
 
     /**

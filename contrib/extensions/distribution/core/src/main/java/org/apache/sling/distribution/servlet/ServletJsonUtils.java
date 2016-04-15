@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Utility class for writing json data to http responses.
  */
-public class ServletJsonUtils {
+class ServletJsonUtils {
 
     private final static Logger log = LoggerFactory.getLogger(ServletJsonUtils.class);
 

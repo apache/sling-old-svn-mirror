@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
-    <version>1.1.11-SNAPSHOT</version>
+    <version>1.1.13-SNAPSHOT</version>
 
     <name>Apache Sling Testing Resource Resolver Mock</name>
     <description>

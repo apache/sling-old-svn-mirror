@@ -71,7 +71,7 @@ public class MockComponentContextTest {
         String clazz = String.class.getName();
         Object service = new Object();
         underTest.getBundleContext().registerService(clazz, service, null);
-        ServiceReference ref = underTest.getBundleContext().getServiceReference(clazz);
+        ServiceReference<?> ref = underTest.getBundleContext().getServiceReference(clazz);
 
         // test locate service
         Object locatedService = underTest.locateService(null, ref);

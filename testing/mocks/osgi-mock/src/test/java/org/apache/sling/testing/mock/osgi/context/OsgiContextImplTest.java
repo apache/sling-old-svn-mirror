@@ -75,7 +75,7 @@ public class OsgiContextImplTest {
         Set<String> myService = new HashSet<String>();
         context.registerService(Set.class, myService, props);
 
-        ServiceReference serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
+        ServiceReference<?> serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
         Object serviceResult = context.bundleContext().getService(serviceReference);
         assertSame(myService, serviceResult);
         assertEquals("value1", serviceReference.getProperty("prop1"));
@@ -88,9 +88,10 @@ public class OsgiContextImplTest {
         Set<String> myService2 = new HashSet<String>();
         context.registerService(Set.class, myService2);
 
+        // expected: descending order because ordering descending by service id
         Set[] serviceResults = context.getServices(Set.class, null);
-        assertSame(myService1, serviceResults[0]);
-        assertSame(myService2, serviceResults[1]);
+        assertSame(myService1, serviceResults[1]);
+        assertSame(myService2, serviceResults[0]);
     }
 
     @Test

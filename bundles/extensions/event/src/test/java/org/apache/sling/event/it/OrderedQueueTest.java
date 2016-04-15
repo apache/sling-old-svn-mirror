@@ -44,17 +44,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class OrderedQueueTest extends AbstractJobHandlingTest {
-
-    private String queueConfPid;
 
     @Override
     @Before
@@ -71,14 +65,12 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
         orderedConfig.update(orderedProps);
 
-        this.queueConfPid = orderedConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 
@@ -93,7 +85,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         final Barrier cb = new Barrier(2);
         final AtomicInteger count = new AtomicInteger(0);
         final AtomicInteger parallelCount = new AtomicInteger(0);
-        final ServiceRegistration jcReg = this.registerJobConsumer("sling/orderedtest/*",
+        this.registerJobConsumer("sling/orderedtest/*",
                 new JobConsumer() {
 
                     private volatile int lastCounter = -1;
@@ -130,7 +122,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -139,48 +131,43 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                     }
                 });
 
-        try {
-            // we first sent one event to get the queue started
-            final Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put("counter", -1);
-            jobManager.addJob("sling/orderedtest/start", properties);
-            assertTrue("No event received in the given time.", cb.block(5));
-            cb.reset();
+        // we first sent one event to get the queue started
+        final Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("counter", -1);
+        jobManager.addJob("sling/orderedtest/start", properties);
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
 
-            // get the queue
-            final Queue q = jobManager.getQueue("orderedtest");
-            assertNotNull("Queue 'orderedtest' should exist!", q);
+        // get the queue
+        final Queue q = jobManager.getQueue("orderedtest");
+        assertNotNull("Queue 'orderedtest' should exist!", q);
 
-            // suspend it
-            q.suspend();
+        // suspend it
+        q.suspend();
 
-            final int NUM_JOBS = 30;
+        final int NUM_JOBS = 30;
 
-            // we start "some" jobs:
-            for(int i = 0; i < NUM_JOBS; i++ ) {
-                final String subTopic = "sling/orderedtest/sub" + (i % 10);
-                properties.clear();
-                properties.put("counter", i);
-                jobManager.addJob(subTopic, properties);
-            }
-            // start the queue
-            q.resume();
-            while ( count.get() < NUM_JOBS +1 ) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
-            }
-            // we started one event before the test, so add one
-            assertEquals("Finished count", NUM_JOBS + 1, count.get());
-            assertEquals("Finished count", NUM_JOBS + 1, jobManager.getStatistics().getNumberOfFinishedJobs());
-            assertEquals("Finished count", NUM_JOBS + 1, q.getStatistics().getNumberOfFinishedJobs());
-            assertEquals("Failed count", NUM_JOBS / 10, q.getStatistics().getNumberOfFailedJobs());
-            assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
-        } finally {
-            jcReg.unregister();
-            ehReg.unregister();
+        // we start "some" jobs:
+        for(int i = 0; i < NUM_JOBS; i++ ) {
+            final String subTopic = "sling/orderedtest/sub" + (i % 10);
+            properties.clear();
+            properties.put("counter", i);
+            jobManager.addJob(subTopic, properties);
         }
+        // start the queue
+        q.resume();
+        while ( count.get() < NUM_JOBS +1 ) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        // we started one event before the test, so add one
+        assertEquals("Finished count", NUM_JOBS + 1, count.get());
+        assertEquals("Finished count", NUM_JOBS + 1, jobManager.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Finished count", NUM_JOBS + 1, q.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Failed count", NUM_JOBS / 10, q.getStatistics().getNumberOfFailedJobs());
+        assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
     }
 }

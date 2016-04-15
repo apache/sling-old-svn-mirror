@@ -195,6 +195,18 @@ public class ContentXmlHandlerTest {
         assertThat("properties[someProp]", (String[]) root.getProperties().get("someProp"),
                 Matchers.is(new String[] { "first,first", "second" }));
     }
+    
+    @Test
+    public void emptyMultivaluedProperties() throws Exception {
+        
+        ResourceProxy root = parseContentXmlFile("empty-multivalued-property.xml", "/");
+        
+        assertThat("properties[labels]", (String[]) root.getProperties().get("labels"),
+                Matchers.arrayWithSize(0));
+        assertThat("properties[values]", (Long[]) root.getProperties().get("values"),
+                Matchers.arrayWithSize(0));
+        
+    }
 
     private static Matcher<Calendar> millis(long millis) {
 

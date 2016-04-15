@@ -58,15 +58,15 @@ public class DeleteOperation extends AbstractPostOperation {
         // SLING-3203: selectors, extension and suffix make no sense here and
         // might lead to deleting other resources than the one the user means.
         final RequestPathInfo rpi = request.getRequestPathInfo();
-        if( (rpi.getSelectors() != null && rpi.getSelectors().length > 0) 
+        if( (rpi.getSelectors() != null && rpi.getSelectors().length > 0)
                 || (rpi.getExtension() != null && rpi.getExtension().length() > 0)
                 || (rpi.getSuffix() != null && rpi.getSuffix().length() > 0)) {
             response.setStatus(
-                    HttpServletResponse.SC_FORBIDDEN, 
+                    HttpServletResponse.SC_FORBIDDEN,
                     "DeleteOperation request cannot include any selectors, extension or suffix");
             return;
         }
-        
+
         final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
         final boolean deleteChunks = isDeleteChunkRequest(request);
         final Iterator<Resource> res = getApplyToResources(request);
@@ -100,19 +100,17 @@ public class DeleteOperation extends AbstractPostOperation {
             } else {
                 checkoutIfNecessary(node.getParent(), changes,
                     versioningConfiguration);
-                node.remove();
-            }
-
-        } else {
-            try {
-                resource.getResourceResolver().delete(resource);
-            } catch (final PersistenceException pe) {
-                if (pe.getCause() instanceof RepositoryException) {
-                    throw (RepositoryException) pe.getCause();
-                }
-                throw new RepositoryException(pe);
             }
         }
+        try {
+            resource.getResourceResolver().delete(resource);
+        } catch (final PersistenceException pe) {
+            if (pe.getCause() instanceof RepositoryException) {
+                throw (RepositoryException) pe.getCause();
+            }
+            throw new RepositoryException(pe);
+        }
+
         changes.add(Modification.onDeleted(resource.getPath()));
     }
 

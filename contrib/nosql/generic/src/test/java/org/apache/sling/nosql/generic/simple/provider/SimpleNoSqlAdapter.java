@@ -28,6 +28,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.nosql.generic.adapter.NoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 import org.apache.sling.nosql.generic.resource.impl.PathUtil;
@@ -112,6 +113,16 @@ public class SimpleNoSqlAdapter implements NoSqlAdapter {
             };
         }
         return Collections.<NoSqlData>emptyList().iterator();
+    }
+
+    @Override
+    public void checkConnection() throws LoginException {
+        // nothing to do
+    }
+
+    @Override
+    public void createIndexDefinitions() {
+        // nothing to do
     }
 
 }

@@ -56,8 +56,9 @@ public class ExpressionWrapper {
                 nodes.add(new StringConstant(fragment.getText()));
             } else {
                 Expression expression = fragment.getExpression();
-                nodes.add(adjustToContext(expression, markupContext, expressionContext).getRoot());
-                options.putAll(expression.getOptions());
+                Expression transformed = adjustToContext(expression, markupContext, expressionContext);
+                nodes.add(transformed.getRoot());
+                options.putAll(transformed.getOptions());
             }
         }
         ExpressionNode root = join(nodes);

@@ -251,7 +251,6 @@ public class OsgiServiceUtilTest {
         private ComponentContext componentContext;
         private Map<String, Object> config;
 
-        @SuppressWarnings("unchecked")
         @Activate
         private void activate(ComponentContext ctx) {
             this.componentContext = ctx;
@@ -278,7 +277,7 @@ public class OsgiServiceUtilTest {
 
         public List<ServiceInterface2> getReferences2() {
             List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
-            for (ServiceReference serviceReference : references2) {
+            for (ServiceReference<?> serviceReference : references2) {
                 services.add((ServiceInterface2)componentContext.getBundleContext().getService(serviceReference));
             }
             return services;
@@ -332,6 +331,67 @@ public class OsgiServiceUtilTest {
         protected void unbindReference3(ServiceSuperInterface3 service, Map<String, Object> serviceConfig) {
             references3.remove(service);
             reference3Configs.remove(serviceConfig);
+        }
+
+    }
+
+    public static class Service3OsgiR6 {
+
+        private ServiceInterface1 reference1;
+        private ServiceInterface1Optional reference1Optional;
+        private List<ServiceReference> references2;
+        private List<ServiceSuperInterface3> references3;
+        private List<ServiceSuperInterface3> references3Filtered;
+
+        private ComponentContext componentContext;
+        private Map<String, Object> config;
+
+        @Activate
+        private void activate(ComponentContext ctx) {
+            this.componentContext = ctx;
+            this.config = MapUtil.toMap(ctx.getProperties());
+        }
+
+        @Deactivate
+        private void deactivate(ComponentContext ctx) {
+            this.componentContext = null;
+        }
+
+        @Modified
+        private void modified(Map<String,Object> newConfig) {
+            this.config = newConfig;
+        }
+
+        public ServiceInterface1 getReference1() {
+            return this.reference1;
+        }
+
+        public ServiceInterface1Optional getReference1Optional() {
+            return this.reference1Optional;
+        }
+
+        public List<ServiceInterface2> getReferences2() {
+            List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
+            for (ServiceReference<?> serviceReference : references2) {
+                services.add((ServiceInterface2)componentContext.getBundleContext().getService(serviceReference));
+            }
+            return services;
+        }
+
+        public List<ServiceSuperInterface3> getReferences3() {
+            return this.references3;
+        }
+
+        public List<ServiceSuperInterface3> getReferences3Filtered() {
+            return this.references3Filtered;
+        }
+
+        public ComponentContext getComponentContext() {
+            return this.componentContext;
+        }
+
+        public Map<String, Object> getConfig() {
+            return config;
         }
 
     }

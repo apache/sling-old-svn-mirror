@@ -25,7 +25,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.agent.DistributionAgent;
@@ -51,6 +50,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
+    private
     DistributionPackageBuilderProvider packageBuilderProvider;
 
     @Override
@@ -90,6 +90,17 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
                 addItems(resourceResolver, queue, sourceQueue, idParam);
             }
+        } else if ("move".equals(operation)) {
+            String from = request.getParameter("from");
+            String[] idParam = request.getParameterValues("id");
+
+            if (idParam != null && from != null) {
+                DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
+                DistributionQueue sourceQueue = agent.getQueue(from);
+
+                addItems(resourceResolver, queue, sourceQueue, idParam);
+                deleteItems(resourceResolver, sourceQueue, idParam);
+            }
         }
     }
 
@@ -103,36 +114,36 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         for (String id: ids) {
             DistributionQueueEntry entry = sourceQueue.getItem(id);
             if (entry != null) {
-                targetQueue.add(new DistributionQueueItem(id, entry.getItem()));
+                targetQueue.add(entry.getItem());
                 DistributionPackage distributionPackage = getPackage(resourceResolver, entry.getItem());
                 DistributionPackageUtils.acquire(distributionPackage, targetQueue.getName());
             }
         }
     }
 
-    protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, int limit) {
+    private void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, int limit) {
         for (DistributionQueueEntry item : queue.getItems(0, limit)) {
             deleteItem(resourceResolver, queue, item);
         }
     }
 
-    protected void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, String[] ids) {
+    private void deleteItems(ResourceResolver resourceResolver, DistributionQueue queue, String[] ids) {
         for (String id : ids) {
             DistributionQueueEntry entry = queue.getItem(id);
             deleteItem(resourceResolver, queue, entry);
         }
     }
 
-    protected void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueEntry entry) {
+    private void deleteItem(ResourceResolver resourceResolver, DistributionQueue queue, DistributionQueueEntry entry) {
         DistributionQueueItem item = entry.getItem();
-        String id = item.getId();
+        String id = entry.getId();
         queue.remove(id);
 
         DistributionPackage distributionPackage = getPackage(resourceResolver, item);
         DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
     }
 
-    DistributionPackage getPackage(ResourceResolver resourceResolver, DistributionQueueItem item) {
+    private DistributionPackage getPackage(ResourceResolver resourceResolver, DistributionQueueItem item) {
         DistributionPackageInfo info = DistributionPackageUtils.fromQueueItem(item);
         String type = info.getType();
 
@@ -141,9 +152,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         if (packageBuilder != null) {
 
             try {
-                DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, item.getId());
-
-                return distributionPackage;
+                return packageBuilder.getPackage(resourceResolver, item.getPackageId());
             } catch (DistributionException e) {
                 log.error("cannot get package", e);
             }

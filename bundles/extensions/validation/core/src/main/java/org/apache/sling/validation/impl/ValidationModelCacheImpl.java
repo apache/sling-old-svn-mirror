@@ -21,7 +21,7 @@ package org.apache.sling.validation.impl;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.validation.spi.ValidationModelCache;
+import org.apache.sling.validation.model.spi.ValidationModelCache;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 

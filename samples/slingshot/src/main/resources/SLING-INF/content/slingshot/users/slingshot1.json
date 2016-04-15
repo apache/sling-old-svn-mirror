@@ -1,6 +1,4 @@
 {
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/User",
-    "description":"This is the user space of slingshot1!",
-    "title":"Welcome to my World"
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/User"
 }

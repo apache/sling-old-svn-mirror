@@ -46,11 +46,11 @@ class ScheduledDistributionQueueProcessorTask implements Runnable {
                 while ((entry = queue.getHead()) != null) {
 
                     if (queueProcessor.process(queue.getName(), entry)) {
-                        if (queue.remove(entry.getItem().getId()) != null) {
-                            log.info("item {} processed and removed from the queue", entry.getItem());
+                        if (queue.remove(entry.getId()) != null) {
+                            log.debug("item {} processed and removed from the queue", entry.getItem());
                         }
                     } else {
-                        log.warn("processing of item {} failed", entry.getItem().getId());
+                        log.warn("processing of item {} failed", entry.getId());
                     }
                 }
             }

@@ -23,7 +23,13 @@ import java.util.List;
 
 import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.resourceresolver.impl.providers.tree.PathTree;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
+/**
+ * The resource provider storage contains all available handlers
+ * and keeps a list of handlers for specific categories to avoid
+ * iterating over all handlers for the different use cases.
+ */
 public class ResourceProviderStorage {
 
     private final List<ResourceProviderHandler> allHandlers;
@@ -34,11 +40,7 @@ public class ResourceProviderStorage {
 
     private final List<ResourceProviderHandler> attributableHandlers;
 
-    private final List<ResourceProviderHandler> refreshableHandlers;
-
-    private final List<ResourceProviderHandler> jcrQuerableHandlers;
-
-    private final List<ResourceProviderHandler> nativeQuerableHandlers;
+    private final List<ResourceProviderHandler> languageQueryableHandlers;
 
     private final PathTree<ResourceProviderHandler> handlersTree;
 
@@ -47,9 +49,7 @@ public class ResourceProviderStorage {
         this.authRequiredHandlers = new ArrayList<ResourceProviderHandler>();
         this.adaptableHandlers = new ArrayList<ResourceProviderHandler>();
         this.attributableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.refreshableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.jcrQuerableHandlers = new ArrayList<ResourceProviderHandler>();
-        this.nativeQuerableHandlers = new ArrayList<ResourceProviderHandler>();
+        this.languageQueryableHandlers = new ArrayList<ResourceProviderHandler>();
         for (ResourceProviderHandler h : allHandlers) {
             ResourceProviderInfo info = h.getInfo();
             if (info.getAuthType() == AuthType.required) {
@@ -61,14 +61,9 @@ public class ResourceProviderStorage {
             if (info.isAttributable()) {
                 this.attributableHandlers.add(h);
             }
-            if (info.isRefreshable()) {
-                this.refreshableHandlers.add(h);
-            }
-            if (h.getResourceProvider().getJCRQueryProvider() != null) {
-                this.jcrQuerableHandlers.add(h);
-            }
-            if (h.getResourceProvider().getQueryProvider() != null) {
-                this.nativeQuerableHandlers.add(h);
+            final ResourceProvider<Object> rp = h.getResourceProvider();
+            if (rp != null && rp.getQueryLanguageProvider() != null) {
+                this.languageQueryableHandlers.add(h);
             }
         }
         this.handlersTree = new PathTree<ResourceProviderHandler>(handlers);
@@ -90,16 +85,8 @@ public class ResourceProviderStorage {
         return attributableHandlers;
     }
 
-    public List<ResourceProviderHandler> getRefreshableHandlers() {
-        return refreshableHandlers;
-    }
-
-    public List<ResourceProviderHandler> getJcrQuerableHandlers() {
-        return jcrQuerableHandlers;
-    }
-
-    public List<ResourceProviderHandler> getNativeQuerableHandlers() {
-        return nativeQuerableHandlers;
+    public List<ResourceProviderHandler> getLanguageQueryableHandlers() {
+        return languageQueryableHandlers;
     }
 
     public PathTree<ResourceProviderHandler> getTree() {

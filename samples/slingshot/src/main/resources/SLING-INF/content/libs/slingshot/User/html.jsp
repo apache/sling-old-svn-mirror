@@ -19,23 +19,25 @@
 %><%@page import="org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
                 org.apache.sling.api.request.ResponseUtil,
-                org.apache.sling.sample.slingshot.SlingshotConstants" %><%
+                org.apache.sling.sample.slingshot.model.User" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 
-    final ValueMap attributes = resource.getValueMap();
-    final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
+    final User user = new User(resource);
 %><html>
   <head>
-    <title><%= title %></title>
+    <title><%= ResponseUtil.escapeXml(user.getInfo().getName()) %></title>
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
-  <body class="ui-slingshot-main">
-  <div>
-    <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
-    <h1><%= title %></h1>
-    <hr/>
-    <sling:include resource="<%= resource.getChild("content") %>" replaceSelectors="itemlist"/>
-  </div>
+  <body>
+    <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
+    <div class="jumbotron">
+      <div class="container">
+        <h1><%= ResponseUtil.escapeXml(user.getInfo().getName()) %></h1>
+        <p><%= ResponseUtil.escapeXml(user.getInfo().getAbout()) %></p>
+      </div>
+    </div>
+    <sling:include resource="<%= resource %>" replaceSelectors="itemlist"/>
+    <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
 </body>
 </html>

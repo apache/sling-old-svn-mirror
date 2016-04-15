@@ -81,6 +81,9 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 					@Override
 					public void run() {
+					    if ( viewer.getTree().isDisposed()) {
+					        return;
+					    }
                         long start = System.currentTimeMillis();
                         viewer.refresh(project, true);
                         long end = System.currentTimeMillis();

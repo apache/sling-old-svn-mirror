@@ -16,5 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@aQute.bnd.annotation.Version("2.3")
+@aQute.bnd.annotation.Version("2.4")
 package org.apache.sling.commons.osgi;

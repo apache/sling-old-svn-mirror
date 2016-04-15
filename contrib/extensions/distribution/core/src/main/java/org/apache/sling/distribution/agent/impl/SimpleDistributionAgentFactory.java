@@ -63,6 +63,7 @@ import org.slf4j.LoggerFactory;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
+@Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
 public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -82,7 +83,7 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
 
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
             @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
@@ -94,7 +95,7 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
 
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
-    public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+    private static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
 
 
     @Property(name = "packageExporter.target", label = "Exporter", description = "The target reference for the DistributionPackageExporter used to receive (export) the distribution packages," +

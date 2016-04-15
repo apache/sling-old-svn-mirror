@@ -35,13 +35,14 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple {@link DistributionPackage} is used for deletion of certain paths on the target instance
  */
-public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+public class SimpleDistributionPackage extends AbstractDistributionPackage implements SharedDistributionPackage {
 
-    static Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
 
     private final static String PACKAGE_START = "DSTRPCK:";
     private final static String DELIM = "|";
     private final static String PATH_DELIM = ",";
+    private final long size;
 
     public SimpleDistributionPackage(DistributionRequest request, String type) {
         super(toIdString(request, type), type);
@@ -50,9 +51,10 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, paths);
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, requestType);
+        this.size = getId().toCharArray().length;
     }
 
-    public static String toIdString(DistributionRequest request, String type) {
+    private static String toIdString(DistributionRequest request, String type) {
 
         StringBuilder b = new StringBuilder();
 
@@ -111,6 +113,11 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         return IOUtils.toInputStream(getId(), "UTF-8");
     }
 
+    @Override
+    public long getSize() {
+        return size;
+    }
+
 
     public void close() {
         // there's nothing to close
@@ -145,5 +152,15 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         }
 
         return null;
+    }
+
+    @Override
+    public void acquire(@Nonnull String[] holderNames) {
+
+    }
+
+    @Override
+    public void release(@Nonnull String[] holderNames) {
+
     }
 }

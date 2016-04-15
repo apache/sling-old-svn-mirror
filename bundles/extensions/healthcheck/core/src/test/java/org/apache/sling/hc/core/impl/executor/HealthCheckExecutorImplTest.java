@@ -22,40 +22,49 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.Result.Status;
+import org.apache.sling.hc.api.ResultLog.Entry;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class HealthCheckExecutorImplTest {
 
-    private HealthCheckExecutorImpl healthCheckExecutorImpl;
+	@InjectMocks
+    private HealthCheckExecutorImpl healthCheckExecutorImpl = new HealthCheckExecutorImpl();;
 
     @Mock
     private HealthCheckFuture future;
 
     @Mock
     private HealthCheckMetadata HealthCheckMetadata;
+    
+    @Spy
+    private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        initMocks(this);
 
         when(future.getHealthCheckMetadata()).thenReturn(HealthCheckMetadata);
         when(HealthCheckMetadata.getTitle()).thenReturn("Test Check");
 
-        healthCheckExecutorImpl = new HealthCheckExecutorImpl();
+        
         // 2 sec normal timeout
         healthCheckExecutorImpl.setTimeoutInMs(2000L);
         // 10 sec timeout for critical
@@ -79,19 +88,21 @@ public class HealthCheckExecutorImplTest {
 
         assertEquals(1, results.size());
         assertTrue(results.contains(testResult));
-
     }
 
     @Test
     public void testCollectResultsFromFuturesTimeout() throws Exception {
 
+    	// add an earlier result with status ok (that will be shown as part of the log)
+    	addResultToCache(Status.OK);
+    	
         List<HealthCheckFuture> futures = new LinkedList<HealthCheckFuture>();
         futures.add(future);
         Set<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(false);
-        when(future.getCreatedTime()).thenReturn(new Date());
-
+        // simulating a future that was created 5sec ago
+        when(future.getCreatedTime()).thenReturn(new Date(new Date().getTime() - 1000 * 5));
 
         healthCheckExecutorImpl.collectResultsFromFutures(futures, results);
 
@@ -101,7 +112,9 @@ public class HealthCheckExecutorImplTest {
         HealthCheckExecutionResult result = results.iterator().next();
 
         assertEquals(Result.Status.WARN, result.getHealthCheckResult().getStatus());
-
+        
+        // 3 because previous result exists and is part of log
+        assertEquals(3, getLogEntryCount(result));
     }
 
     @Test
@@ -113,7 +126,7 @@ public class HealthCheckExecutorImplTest {
 
         when(future.isDone()).thenReturn(false);
 
-        // use an old date now (simulating a future that has run for a min)
+        // use an old date now (simulating a future that has run for an hour)
         when(future.getCreatedTime()).thenReturn(new Date(new Date().getTime() - 1000 * 60 * 60));
 
         healthCheckExecutorImpl.collectResultsFromFutures(futures, results);
@@ -123,7 +136,47 @@ public class HealthCheckExecutorImplTest {
         verify(future, times(0)).get();
 
         assertEquals(Result.Status.CRITICAL, result.getHealthCheckResult().getStatus());
-
+        assertEquals(1, getLogEntryCount(result));
     }
 
+    @Test
+    public void testCollectResultsFromFuturesWarnTimeoutWithPreviousCritical() throws Exception {
+
+        // an earlier result with critical
+    	addResultToCache(Status.CRITICAL);
+    	
+        List<HealthCheckFuture> futures = new LinkedList<HealthCheckFuture>();
+        futures.add(future);
+        Set<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
+
+        when(future.isDone()).thenReturn(false);
+        // simulating a future that was created 5sec ago
+        when(future.getCreatedTime()).thenReturn(new Date(new Date().getTime() - 1000 * 5));
+
+
+        healthCheckExecutorImpl.collectResultsFromFutures(futures, results);
+        assertEquals(1, results.size());
+        HealthCheckExecutionResult result = results.iterator().next();
+
+        verify(future, times(0)).get();
+
+        // expect CRITICAL because previous result (before timeout) was CRITICAL (and not only WARN)
+        assertEquals(Result.Status.CRITICAL, result.getHealthCheckResult().getStatus());
+        assertEquals(3, getLogEntryCount(result));
+    }
+    
+    
+    private int getLogEntryCount(HealthCheckExecutionResult result) {
+        int logEntryCount = 0;
+        final Iterator<Entry> it = result.getHealthCheckResult().iterator();
+        while(it.hasNext()) {
+            it.next();
+            logEntryCount++;
+        }
+        return logEntryCount;
+    }
+
+	private void addResultToCache(Status status) {
+		healthCheckResultCache.updateWith(new ExecutionResult(HealthCheckMetadata, new Result(status, "Status "+status), 1000));
+	}
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.9.0")
+@Version("2.9.1")
 package org.apache.sling.api.resource;
 
 import aQute.bnd.annotation.Version;

@@ -22,7 +22,9 @@ import aQute.bnd.annotation.ProviderType;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +36,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
 
     private final DistributionRequestType requestType;
     private final Set<String> deepPaths;
+    private final Map<String, String[]> pathFilters;
     private final String[] paths;
 
     /**
@@ -57,15 +60,28 @@ public final class SimpleDistributionRequest implements DistributionRequest {
 
 
     /**
-     * Creates a distribution request with "shallow" paths.
+     * Creates a distribution request with additional "deep" paths.
      * @param requestType the request type
      * @param paths the array of paths to be distributed
      * @param deepPaths the set of paths that are to be distributed in depth (with all their children)
      */
     public SimpleDistributionRequest(@Nonnull DistributionRequestType requestType, @Nonnull String[] paths, @Nonnull Set<String> deepPaths) {
+        this(requestType, paths, deepPaths, new HashMap<String, String[]>());
+    }
+
+
+    /**
+     * Creates a distribution request with "deep" paths and filters.
+     * @param requestType the request type
+     * @param paths the array of paths to be distributed
+     * @param deepPaths the set of paths that are to be distributed in depth (with all their children)
+     * @param pathFilters the filters applicable for each path
+     */
+    public SimpleDistributionRequest(@Nonnull DistributionRequestType requestType, @Nonnull String[] paths, @Nonnull Set<String> deepPaths, @Nonnull Map<String, String[]> pathFilters) {
         this.requestType = requestType;
         this.paths = paths;
         this.deepPaths = deepPaths;
+        this.pathFilters = pathFilters;
     }
 
     /**
@@ -96,12 +112,17 @@ public final class SimpleDistributionRequest implements DistributionRequest {
         return deepPaths.contains(path);
     }
 
+    @Nonnull
+    public String[] getFilters(String path) {
+        String[] filters = pathFilters.get(path);
+        return filters != null ? filters : new String[0];
+    }
+
     @Override
     public String toString() {
         return "SimpleDistributionRequest{" +
                 "requestType=" + requestType +
                 ", paths=" + Arrays.toString(paths) +
-                ", deep=" + Arrays.toString(deepPaths.toArray(new String[0])) +
                 '}';
     }
 

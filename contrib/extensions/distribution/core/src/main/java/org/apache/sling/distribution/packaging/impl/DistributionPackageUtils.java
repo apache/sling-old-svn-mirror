@@ -19,65 +19,124 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.serialization.impl.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.jcr.Binary;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Package related utility methods
  */
 public class DistributionPackageUtils {
 
-    static Logger log = LoggerFactory.getLogger(DistributionPackageUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(DistributionPackageUtils.class);
+
+    private final static String META_START = "DSTRPACKMETA";
+
+    private static Object repolock = new Object();
+    private static Object filelock = new Object();
+
+
+
 
     /**
      * distribution package origin queue
      */
-    public static String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
+    private static final String PACKAGE_INFO_PROPERTY_ORIGIN_QUEUE = "internal.origin.queue";
 
     /**
      * distribution request user
      */
-    public static String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_USER = "internal.request.user";
+
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_ID = "internal.request.id";
+
+    public static final String PACKAGE_INFO_PROPERTY_REQUEST_START_TIME = "internal.request.startTime";
+
+
 
 
     /**
-     * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String)}
+     * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String[])}
      * @param distributionPackage a distribution package
-     * @param queueName the name of the queue in which the package should be acquired
+     * @param queueNames the name of the queue in which the package should be acquired
      */
-    public static void acquire(DistributionPackage distributionPackage, String queueName) {
+    public static void acquire(DistributionPackage distributionPackage, String... queueNames) {
         if (distributionPackage instanceof SharedDistributionPackage) {
-            ((SharedDistributionPackage) distributionPackage).acquire(queueName);
+            ((SharedDistributionPackage) distributionPackage).acquire(queueNames);
+        }
+    }
+
+
+    /**
+     * Releases the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#release(String[])}
+     * @param distributionPackage a distribution package
+     * @param queueNames the name of the queue in which the package should be released
+     */
+    public static void release(DistributionPackage distributionPackage, String... queueNames) {
+        if (distributionPackage instanceof SharedDistributionPackage) {
+            ((SharedDistributionPackage) distributionPackage).release(queueNames);
         }
     }
 
     /**
      * Releases a distribution package if it's a {@link SharedDistributionPackage}, otherwise deletes it.
      * @param distributionPackage a distribution package
-     * @param queueName the name of the queue from which it should be eventually released
+     * @param queueNames the name of the queue from which it should be eventually released
      */
-    public static void releaseOrDelete(DistributionPackage distributionPackage, String queueName) {
-        if (distributionPackage instanceof SharedDistributionPackage) {
-            if (queueName != null) {
-                ((SharedDistributionPackage) distributionPackage).release(queueName);
-                log.debug("package {} released from queue {}", distributionPackage.getId(), queueName);
+    public static void releaseOrDelete(DistributionPackage distributionPackage, String... queueNames) {
+        if (distributionPackage == null) {
+            return;
+        }
+        try {
+            if (distributionPackage instanceof SharedDistributionPackage) {
+                if (queueNames != null) {
+                    ((SharedDistributionPackage) distributionPackage).release(queueNames);
+                    log.debug("package {} released from queue {}", distributionPackage.getId(), queueNames);
+                } else {
+                    log.error("package {} cannot be released from null queue", distributionPackage.getId());
+                }
             } else {
-                log.error("package {} cannot be released from null queue", distributionPackage.getId());
+                deleteSafely(distributionPackage);
+                log.debug("package {} deleted", distributionPackage.getId());
             }
-        } else {
-            deleteSafely(distributionPackage);
-            log.debug("package {} deleted", distributionPackage.getId());
+        } catch (Throwable t) {
+            log.error("cannot release package {}", t);
         }
     }
 
@@ -91,6 +150,16 @@ public class DistributionPackageUtils {
                 distributionPackage.delete();
             } catch (Throwable t) {
                 log.error("error deleting package", t);
+            }
+        }
+    }
+
+    public static void closeSafely(DistributionPackage distributionPackage) {
+        if (distributionPackage != null) {
+            try {
+                distributionPackage.close();
+            } catch (Throwable t) {
+                log.error("error closing package", t);
             }
         }
     }
@@ -130,7 +199,7 @@ public class DistributionPackageUtils {
         info.put(DistributionPackageInfo.PROPERTY_REQUEST_DEEP_PATHS, getDeepPaths(request));
     }
 
-    public static String[] getDeepPaths(DistributionRequest request) {
+    private static String[] getDeepPaths(DistributionRequest request) {
         List<String> deepPaths = new ArrayList<String>();
         for (String path : request.getPaths()) {
             if (request.isDeep(path)) {
@@ -138,7 +207,202 @@ public class DistributionPackageUtils {
             }
         }
 
-        return deepPaths.toArray(new String[0]);
+        return deepPaths.toArray(new String[deepPaths.size()]);
+    }
+
+    public static InputStream createStreamWithHeader(DistributionPackage distributionPackage) throws IOException {
+
+        DistributionPackageInfo packageInfo = distributionPackage.getInfo();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Map<String, Object> headerInfo = new HashMap<String, Object>();
+        headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, packageInfo.getRequestType());
+        headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, packageInfo.getPaths());
+        writeInfo(outputStream, headerInfo);
+
+        InputStream headerStream = new ByteArrayInputStream(outputStream.toByteArray());
+        InputStream bodyStream = distributionPackage.createInputStream();
+        return new SequenceInputStream(headerStream, bodyStream);
+    }
+
+
+    public static void readInfo(InputStream inputStream, Map<String, Object> info) {
+
+        try {
+            int size = META_START.getBytes("UTF-8").length;
+            inputStream.mark(size);
+            byte[] buffer = new byte[size];
+            int bytesRead = inputStream.read(buffer, 0, size);
+            String s = new String(buffer, "UTF-8");
+
+            if (bytesRead > 0 && buffer[0] > 0 && META_START.equals(s)) {
+                ObjectInputStream stream = new ObjectInputStream(inputStream);
+                HashMap<String, Object> map = (HashMap<String, Object>) stream.readObject();
+                info.putAll(map);
+            } else {
+                inputStream.reset();
+            }
+        } catch (IOException e) {
+            log.error("Cannot read stream info", e);
+        } catch (ClassNotFoundException e) {
+            log.error("Cannot read stream info", e);
+        }
+
+    }
+
+    public static void writeInfo(OutputStream outputStream, Map<String, Object> info) {
+
+        HashMap<String, Object> map = new HashMap<String, Object>(info);
+
+
+        try {
+            outputStream.write(META_START.getBytes("UTF-8"));
+
+            ObjectOutputStream stream = new ObjectOutputStream(outputStream);
+
+            stream.writeObject(map);
+
+        } catch (IOException e) {
+            log.error("Cannot read stream info", e);
+        }
+    }
+
+
+    public static Resource getPackagesRoot(ResourceResolver resourceResolver, String packagesRootPath) throws PersistenceException {
+        Resource packagesRoot = resourceResolver.getResource(packagesRootPath);
+
+        if (packagesRoot != null) {
+            return packagesRoot;
+        }
+
+        synchronized (repolock) {
+            resourceResolver.refresh();
+            packagesRoot = ResourceUtil.getOrCreateResource(resourceResolver, packagesRootPath, "sling:Folder", "sling:Folder", true);
+        }
+
+        return packagesRoot;
+    }
+
+    public static InputStream getStream(Resource resource) throws RepositoryException {
+        Node parent = resource.adaptTo(Node.class);
+        InputStream in = parent.getProperty("bin/jcr:content/jcr:data").getBinary().getStream();
+        return in;
+    }
+
+    public static void uploadStream(Resource resource, InputStream stream) throws RepositoryException {
+        Node parent = resource.adaptTo(Node.class);
+        Node file = JcrUtils.getOrAddNode(parent, "bin", NodeType.NT_FILE);
+        Node content = JcrUtils.getOrAddNode(file, Node.JCR_CONTENT, NodeType.NT_RESOURCE);
+        Binary binary = parent.getSession().getValueFactory().createBinary(stream);
+        content.setProperty(Property.JCR_DATA, binary);
+        Node refs = JcrUtils.getOrAddNode(parent, "refs", NodeType.NT_UNSTRUCTURED);
+    }
+
+
+    public static void acquire(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
+        if (holderNames.length == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+
+        Node parent = resource.adaptTo(Node.class);
+
+        Node refs = parent.getNode("refs");
+
+        for (String holderName : holderNames) {
+            if (!refs.hasNode(holderName)) {
+                refs.addNode(holderName, NodeType.NT_UNSTRUCTURED);
+            }
+        }
+    }
+
+
+    public static boolean release(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
+        if (holderNames.length == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+
+        Node parent = resource.adaptTo(Node.class);
+
+        Node refs = parent.getNode("refs");
+
+        for (String holderName : holderNames) {
+            Node refNode = refs.getNode(holderName);
+            if (refNode != null) {
+                refNode.remove();
+            }
+        }
+
+        if (!refs.hasNodes()) {
+            refs.remove();
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public static void acquire(File file, @Nonnull String[] holderNames) throws IOException {
+
+        if (holderNames.length == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+
+        synchronized (filelock) {
+            try {
+                HashSet<String> set = new HashSet<String>();
+
+                if (file.exists()) {
+                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+                    set = (HashSet<String>) inputStream.readObject();
+                    IOUtils.closeQuietly(inputStream);
+                }
+
+                set.addAll(Arrays.asList(holderNames));
+
+                ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+                outputStream.writeObject(set);
+                IOUtils.closeQuietly(outputStream);
+
+            } catch (ClassNotFoundException e) {
+                log.error("Cannot release file", e);
+            }
+        }
+
+
+    }
+
+
+    public static boolean release(File file, @Nonnull String[] holderNames) throws IOException {
+        if (holderNames.length == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+
+        synchronized (filelock) {
+            try {
+
+                HashSet<String> set = new HashSet<String>();
+
+                if (file.exists()) {
+                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+                    set = (HashSet<String>) inputStream.readObject();
+                    IOUtils.closeQuietly(inputStream);
+                }
+
+                set.removeAll(Arrays.asList(holderNames));
+
+                if (set.isEmpty()) {
+                    FileUtils.deleteQuietly(file);
+                    return true;
+                }
+
+                ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+                outputStream.writeObject(set);
+                IOUtils.closeQuietly(outputStream);
+            }
+            catch (ClassNotFoundException e) {
+                log.error("Cannot release file", e);
+            }
+        }
+        return false;
     }
 
 }

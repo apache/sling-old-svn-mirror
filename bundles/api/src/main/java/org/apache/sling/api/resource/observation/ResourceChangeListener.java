@@ -46,6 +46,8 @@ import aQute.bnd.annotation.ConsumerType;
  * If the resource listener is interested in external events, the implementation
  * should implement the {@link ExternalResourceChangeListener} interface, but still register
  * the service as a {@code ResourceChangeListener} service.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public interface ResourceChangeListener {
@@ -64,7 +66,8 @@ public interface ResourceChangeListener {
 
     /**
      * Array of change types - optional.
-     * If this property is missing, added, removed and changed events are reported.
+     * If this property is missing, added, removed and changed events for resources
+     * and added, and removed events for resource providers are reported.
      * If this property is invalid, the listener is ignored. The type of the property
      * must either be String, or a String array. Valid values are the constants from
      * {@link ResourceChange.ChangeType}.

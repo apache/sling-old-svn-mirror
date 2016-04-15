@@ -25,7 +25,6 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
-import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
@@ -65,7 +64,7 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         Collection<DistributionQueue> queues = new LinkedList<DistributionQueue>();
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem item = mock(DistributionQueueItem.class);
-        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, null)).thenReturn(null);
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(null, item, null)).thenReturn(null);
 
         queues.add(queue);
         when(queueProvider.getQueues()).thenReturn(queues);

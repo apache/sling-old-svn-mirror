@@ -26,7 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.karaf.features.BootFinished;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.karaf.options.LogLevelOption;
+import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -135,8 +135,8 @@ public abstract class KarafTestSupport {
                 .name(karafName())
                 .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
-            logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(aries-blueprint, bundle, config, deployer, diagnostic, feature, instance, jaas, kar, log, management, package, service, shell, shell-compat, ssh, system, wrap, eventadmin, webconsole, http, http-whiteboard)"),
+            logLevel(LogLevel.DEBUG),
+            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "DEBUG, out, sift, osgi:*"),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
             editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),

@@ -44,9 +44,19 @@ public interface Item {
     Items link(String rel) throws ClientException;
 
     /**
+     * Returns all the child links
+     */
+    Items link() throws ClientException;
+
+    /**
      * Returns the child forms that have the given relation
      */
     Items form(String rel) throws ClientException;
+
+    /**
+     * Returns all the child forms
+     */
+    Items form() throws ClientException;
 
     /**
      * Returns the text value of the property.

@@ -312,6 +312,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
      * the secure user data is not present either in the cookie or an HTTP
      * Session.
      */
+    @Override
     public AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -355,6 +356,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
      * form. No further checks are applied, though, before sending back the
      * 403/FORBIDDEN response.
      */
+    @Override
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
@@ -410,7 +412,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
         }
 
         try {
-            AuthUtil.sendRedirect(request, response, loginForm, params);
+            AuthUtil.sendRedirect(request, response, request.getContextPath() + loginForm, params);
         } catch (IOException e) {
             log.error("Failed to redirect to the login form " + loginForm, e);
         }
@@ -422,6 +424,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
      * Clears all authentication state which might have been prepared by this
      * authentication handler.
      */
+    @Override
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         authStorage.clear(request, response);
@@ -895,6 +898,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             this.defaultCookieDomain = defaultCookieDomain;
         }
 
+        @Override
         public String extractAuthenticationInfo(HttpServletRequest request) {
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
@@ -918,6 +922,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             return null;
         }
 
+        @Override
         public void set(HttpServletRequest request,
                 HttpServletResponse response, String authData, AuthenticationInfo info) {
             // base64 encode to handle any special characters
@@ -943,6 +948,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             }
         }
 
+        @Override
         public void clear(HttpServletRequest request,
                 HttpServletResponse response) {
             Cookie oldCookie = null;
@@ -1022,6 +1028,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             this.sessionAttributeName = sessionAttributeName;
         }
 
+        @Override
         public String extractAuthenticationInfo(HttpServletRequest request) {
             HttpSession session = request.getSession(false);
             if (session != null) {
@@ -1033,6 +1040,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             return null;
         }
 
+        @Override
         public void set(HttpServletRequest request,
                 HttpServletResponse response, String authData, AuthenticationInfo info) {
             // store the auth hash as a session attribute
@@ -1040,6 +1048,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             session.setAttribute(sessionAttributeName, authData);
         }
 
+        @Override
         public void clear(HttpServletRequest request,
                 HttpServletResponse response) {
             HttpSession session = request.getSession(false);

@@ -26,8 +26,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.serialization.impl.SharedDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -44,41 +45,39 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<String> queueNames;
+    private final String[] queueNames;
 
     public MultipleQueueDispatchingStrategy(String[] queueNames) {
-        this.queueNames = Collections.unmodifiableList(Arrays.asList(queueNames));
+        this.queueNames = Arrays.copyOf(queueNames, queueNames.length);
     }
 
     public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
 
-        if (!(distributionPackage instanceof SharedDistributionPackage) && queueNames.size() > 1) {
+        if (!(distributionPackage instanceof SharedDistributionPackage) && queueNames.length > 1) {
             throw new DistributionException("distribution package must be a shared package to be added in multiple queues");
         }
 
         DistributionQueueItem queueItem = getItem(distributionPackage);
         List<DistributionQueueItemStatus> result = new ArrayList<DistributionQueueItemStatus>();
 
-        // acquire the package temporarily until all queues are filled
-        String tempQueueName = "temp" + UUID.randomUUID();
-        DistributionPackageUtils.acquire(distributionPackage, tempQueueName);
+        // first acquire the package for all queues
+        DistributionPackageUtils.acquire(distributionPackage, queueNames);
 
-        try {
-            for (String queueName : queueNames) {
-                DistributionQueue queue = queueProvider.getQueue(queueName);
-                DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName());
+        // second add the package to all queues
+        for (String queueName : queueNames) {
+            DistributionQueue queue = queueProvider.getQueue(queueName);
+            DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, queue.getName());
 
-                DistributionPackageUtils.acquire(distributionPackage, queueName);
-                if (queue.add(queueItem)) {
-                    status = queue.getItem(queueItem.getId()).getStatus();
-                } else {
-                    DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
-                }
+            DistributionQueueEntry queueEntry = queue.add(queueItem);
 
-                result.add(status);
+            if (queueEntry != null) {
+                status = queueEntry.getStatus();
+            } else {
+                DistributionPackageUtils.release(distributionPackage, queueName);
+                log.error("cannot add package {} to queue {}", distributionPackage.getId(), queueName);
             }
-        } finally {
-            DistributionPackageUtils.releaseOrDelete(distributionPackage, tempQueueName);
+
+            result.add(status);
         }
 
         return result;
@@ -87,7 +86,7 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
 
     @Nonnull
     public List<String> getQueueNames() {
-        return queueNames;
+        return Arrays.asList(queueNames);
     }
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {

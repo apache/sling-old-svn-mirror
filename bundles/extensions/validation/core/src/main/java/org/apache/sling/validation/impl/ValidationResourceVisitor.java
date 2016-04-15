@@ -18,12 +18,10 @@
  */
 package org.apache.sling.validation.impl;
 
-import java.util.List;
-import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -36,7 +34,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     private final String rootResourcePath;
     private final boolean enforceValidation;
     private final boolean considerResourceSuperTypeModels;
-    private final @Nonnull ValidationResultImpl result;
+    private final @Nonnull CompositeValidationResult result;
     private final Predicate filter;
 
     public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) {
@@ -46,7 +44,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
         this.enforceValidation = enforceValidation;
         this.considerResourceSuperTypeModels = considerResourceSuperTypeModels;
         this.filter = filter;
-        this.result = new ValidationResultImpl();
+        this.result = new CompositeValidationResult();
     }
 
     @Override
@@ -60,20 +58,16 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
                 }
                 return;
             }
-            // the relative path must end with a slash and not start with a slash
+            // calculate the property name correctly from the root
+            // the relative path must not end with a slash and not start with a slash
             final String relativePath;
             if (resource.getPath().startsWith(rootResourcePath)) {
-                relativePath = resource.getPath().substring(rootResourcePath.length()) + "/";
+                relativePath = resource.getPath().substring(rootResourcePath.length());
             } else {
                 relativePath = "";
             }
             ValidationResult localResult = validationService.validate(resource, model, relativePath);
-            for (Entry<String, List<String>> entry : localResult.getFailureMessages().entrySet()) {
-                for (String message : entry.getValue()) {
-                    // calculate the property name correctly from the root
-                    result.addFailureMessage(entry.getKey(), message);
-                }
-            }
+            result.addValidationResult(localResult);
         }
     }
     
@@ -86,12 +80,12 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
             return false;
         }
         if (filter != null) {
-            return filter.evaluate(resource);
+            return filter.test(resource);
         }
         return true;
     }
 
-    public @Nonnull ValidationResultImpl getResult() {
+    public @Nonnull CompositeValidationResult getResult() {
         return result;
     }
 

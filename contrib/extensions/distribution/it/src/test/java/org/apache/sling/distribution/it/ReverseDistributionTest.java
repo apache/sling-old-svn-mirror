@@ -69,4 +69,19 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
         distribute(publish, reverseAgent, DistributionRequestType.DELETE, nodePath);
         assertNotExists(authorClient, nodePath);
     }
+
+    @Test
+    public void testAddTwoContent() throws Exception {
+        String nodePath1 = createRandomNode(publishClient, "/content/reverse_twoadd_" + System.nanoTime());
+        assertExists(publishClient, nodePath1);
+        String nodePath2 = createRandomNode(publishClient, "/content/reverse_twoadd_" + System.nanoTime());
+        assertExists(publishClient, nodePath2);
+
+        distribute(publish, reverseAgent, DistributionRequestType.ADD, nodePath1);
+        distribute(publish, reverseAgent, DistributionRequestType.ADD, nodePath2);
+
+        assertExists(authorClient, nodePath1);
+        assertExists(authorClient, nodePath2);
+    }
+
 }

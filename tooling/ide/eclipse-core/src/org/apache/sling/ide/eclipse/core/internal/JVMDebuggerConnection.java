@@ -16,37 +16,50 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
+import org.apache.sling.ide.eclipse.core.progress.ProgressUtils;
+import org.apache.sling.ide.osgi.OsgiClient;
+import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.osgi.SourceReference;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.wst.server.core.IServer;
 
 public class JVMDebuggerConnection {
 	
 	private ILaunch launch;
+    private OsgiClient osgiClient;
 
-	boolean connectInDebugMode(ILaunch launch, IServer iServer, IProgressMonitor monitor)
+	public JVMDebuggerConnection(OsgiClient osgiClient) {
+	    this.osgiClient = osgiClient;
+    }
+
+    boolean connectInDebugMode(ILaunch launch, IServer iServer, IProgressMonitor monitor)
 			throws CoreException {
+        
+        long start = System.currentTimeMillis();
+        
 		this.launch = launch;
 		boolean success = false;
 		IVMConnector connector = null;
@@ -87,36 +100,62 @@ public class JVMDebuggerConnection {
 				.setSourcePathComputer(DebugPlugin.getDefault().getLaunchManager()
 						.getSourcePathComputer(
 								"org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer")); //$NON-NLS-1$
-		List<ISourceContainer> l = new LinkedList<>();
-		IJavaProject[] javaProjects = ProjectHelper.getAllJavaProjects();
-		if (javaProjects!=null) {
-			for (int i = 0; i < javaProjects.length; i++) {
-				IJavaProject javaProject = javaProjects[i];
-				JavaProjectSourceContainer sc = new JavaProjectSourceContainer(javaProject);
-				l.add(sc);
-//					ISourceContainer[] scs = sc.getSourceContainers();
-//					if (scs!=null && scs.length>0) {
-//						for (int j = 0; j < scs.length; j++) {
-//							ISourceContainer iSourceContainer = scs[j];
-//							l.add(iSourceContainer);
-//						}
-//					} else {
-//					}
-			}
-			ISourceContainer[] containers = l.toArray(new ISourceContainer[l.size()]);
-			sourceLocator.setSourceContainers(containers);
-			sourceLocator.initializeParticipants();
-//			sourceLocator.initializeDefaults(configuration);
-			launch.setSourceLocator(sourceLocator);
-		}
-
-//			setDefaultSourceLocator(getServer().getLaunch(), null);
-		monitor.worked(1);		
+		List<IRuntimeClasspathEntry> classpathEntries = new ArrayList<>();
 		
+		// TODO - only add the projects which are deployed as modules on the server
+		// 1. add java projects first
+        for (IJavaProject javaProject : ProjectHelper.getAllJavaProjects()) {
+            classpathEntries.add(JavaRuntime.newProjectRuntimeClasspathEntry(javaProject));
+        }
+		
+        // 2. add the other modules deployed on server
+        ProgressUtils.advance(monitor, 5); // 5/30
+        
+        int workTicksForReferences = 24; // 30 - 5 - 1
+        
+        SourceReferenceResolver resolver = Activator.getDefault().getSourceReferenceResolver();
+        if ( resolver != null  && configuration.resolveSourcesInDebugMode()) {
+            try {
+                List<SourceReference> references = osgiClient.findSourceReferences();
+                SubMonitor subMonitor = SubMonitor.convert(monitor, "Resolving source references", workTicksForReferences).setWorkRemaining(references.size());
+                for ( SourceReference reference :  references ) {
+                    try {
+                        subMonitor.setTaskName("Resolving source reference: " + reference);
+                        IRuntimeClasspathEntry classpathEntry = resolver.resolve(reference);
+                        if ( classpathEntry != null ) {
+                            classpathEntries.add(classpathEntry);
+                        }
+                        ProgressUtils.advance(subMonitor, 1);
+                        
+                    } catch (CoreException e) {
+                        // don't fail the debug launch for artifact resolution errors
+                        Activator.getDefault().getPluginLogger().warn("Failed resolving source reference", e);
+                    }
+                }
+                subMonitor.done(); // 29/30
+            } catch (OsgiClientException e1) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
+            }
+        } else {
+            monitor.worked(workTicksForReferences);
+        }
+        
+        // 3. add the JRE entry
+		classpathEntries.add(JavaRuntime.computeJREEntry(launch.getLaunchConfiguration()));
+		
+		IRuntimeClasspathEntry[] resolved = JavaRuntime.resolveSourceLookupPath(classpathEntries.toArray(new IRuntimeClasspathEntry[0]), launch.getLaunchConfiguration());
+		
+		sourceLocator.setSourceContainers(JavaRuntime.getSourceContainers(resolved));
+		sourceLocator.initializeParticipants();
+		launch.setSourceLocator(sourceLocator);
+
 		// connect to remote VM
 		try{
-			connector.connect(connectMap, monitor, launch);
+			connector.connect(connectMap, monitor, launch); // 30/30
 			success = true;
+			
+			long elapsedMillis = System.currentTimeMillis() - start;
+			Activator.getDefault().getPluginLogger().tracePerformance("Debug connection to {0}", elapsedMillis, iServer.getName());
 		} catch(Exception e) {
 			throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst",
 		            "could not establish debug connection to "+iServer.getHost()+" : "+debugPort, e));
@@ -159,7 +198,4 @@ public class JVMDebuggerConnection {
 			}
 		}
 	}
-
-
-
 }

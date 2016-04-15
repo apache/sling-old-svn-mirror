@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.packaging.impl.exporter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -25,10 +26,11 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -45,14 +47,18 @@ public class RemoteDistributionPackageExporterTest {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
-        for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
-            RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                    packageBuilder, distributionTransportSecretProvider, endpoints, strategy, 1);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-            List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);
-            assertNotNull(distributionPackages);
-            assertTrue(distributionPackages.isEmpty());
-        }
+        RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
+        final List<DistributionPackage> distributionPackages = new ArrayList<DistributionPackage>();
+        remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest, new DistributionPackageProcessor() {
+            @Override
+            public void process(DistributionPackage distributionPackage) {
+                distributionPackages.add(distributionPackage);
+            }
+        });
+        assertNotNull(distributionPackages);
+        assertTrue(distributionPackages.isEmpty());
     }
 }

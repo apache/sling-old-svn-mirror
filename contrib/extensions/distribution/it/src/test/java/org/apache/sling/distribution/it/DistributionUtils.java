@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import junit.framework.Assert;
@@ -345,24 +344,25 @@ public class DistributionUtils {
 
         JSONObject json = getResource(instance, queueUrl + ".infinity");
 
-        JSONArray items = json.getJSONArray("items");
 
-        for(int i=0; i < items.length(); i++) {
-            String itemId = items.getString(i);
-            JSONObject queueItem = json.getJSONObject(itemId);
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            JSONObject queueItem = json.optJSONObject(key);
+            if (queueItem != null && queueItem.optString("id") != null) {
 
+                Map<String, Object> itemProperties = new HashMap<String, Object>();
 
-            Map<String, Object> itemProperties = new HashMap<String, Object>();
+                itemProperties.put("id", queueItem.get("id"));
+                itemProperties.put("paths", queueItem.get("paths"));
+                itemProperties.put("action", queueItem.get("action"));
+                itemProperties.put("userid", queueItem.get("userid"));
+                itemProperties.put("attempts", queueItem.get("attempts"));
+                itemProperties.put("time", queueItem.get("time"));
+                itemProperties.put("state", queueItem.get("state"));
 
-            itemProperties.put("id", queueItem.get("id"));
-            itemProperties.put("paths", queueItem.get("paths"));
-            itemProperties.put("action", queueItem.get("action"));
-            itemProperties.put("userid", queueItem.get("userid"));
-            itemProperties.put("attempts", queueItem.get("attempts"));
-            itemProperties.put("time", queueItem.get("time"));
-            itemProperties.put("state", queueItem.get("state"));
-
-            result.add(itemProperties);
+                result.add(itemProperties);
+            }
         }
 
         return result;

@@ -111,7 +111,7 @@ public class SlingMainServlet extends GenericServlet {
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
 
 
-    @Property(value = {"X-Content-Type-Options=nosniff"},
+    @Property(value = {"X-Content-Type-Options=nosniff", "X-Frame-Options=SAMEORIGIN"},
             label = "Additional response headers",
             description = "Provides mappings for additional response headers "
                 + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue' ",
@@ -379,14 +379,14 @@ public class SlingMainServlet extends GenericServlet {
             RequestData.DEFAULT_MAX_CALL_COUNTER));
         RequestData.setSlingMainServlet(this);
 
-        // configure default request parameter encoding
-        // log a message if such configuration exists ....
+        // Warn about the obsolete parameter encoding configuration
         if (componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING) != null) {
-            log.warn("Configure default request parameter encoding with 'org.apache.sling.parameters.config' configuration; the property "
+            log.warn("Please configure the default request parameter encoding using "
+                + "the 'org.apache.sling.engine.parameters' configuration PID; the property "
                 + PROP_DEFAULT_PARAMETER_ENCODING
                 + "="
                 + componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING)
-                + " is ignored");
+                + " is obsolete and ignored");
         }
 
         // register the servlet and resources

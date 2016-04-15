@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME;
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -49,6 +52,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jdt.core.IJavaProject;
@@ -82,24 +86,43 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         boolean success = false;
         Result<ResourceProxy> result = null;
-        monitor.beginTask("Starting server", 5);
+        monitor = SubMonitor.convert(monitor, "Starting server", 10).setWorkRemaining(50);
         
         Repository repository;
+        RepositoryInfo repositoryInfo;
+        OsgiClient client;
         try {
             repository = ServerUtil.connectRepository(getServer(), monitor);
+            repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+            client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
         } catch (CoreException e) {
             setServerState(IServer.STATE_STOPPED);
             throw e;
+        } catch (URISyntaxException e) {
+            setServerState(IServer.STATE_STOPPED);
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
 
-        monitor.worked(2); // 2/5 done
+        monitor.worked(10); // 10/50 done
+        
+        try {
+            EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
 
+            installBundle(monitor,client, artifactLocator.loadSourceSupportBundle(), SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 15/50 done
+            installBundle(monitor,client, artifactLocator.loadToolingSupportBundle(), SUPPORT_BUNDLE_SYMBOLIC_NAME); // 20/50 done
+            
+        } catch ( IOException | OsgiClientException e) {
+            Activator.getDefault().getPluginLogger()
+                .warn("Failed reading the installation support bundle", e);
+        }
+        
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-                debuggerConnection = new JVMDebuggerConnection();
-                success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+                debuggerConnection = new JVMDebuggerConnection(client);
+                
+                success = debuggerConnection.connectInDebugMode(launch, getServer(), SubMonitor.convert(monitor, 30));
 
-                monitor.worked(3); // 5/5 done
+                // 50/50 done
 
             } else {
                 
@@ -107,45 +130,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 result = command.execute();
                 success = result.isSuccess();
                 
-                monitor.worked(1); // 3/5 done
+                monitor.worked(30); // 50/50 done
                 
-                RepositoryInfo repositoryInfo;
-                try {
-                    repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                    OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
-                    EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-                    Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-                    
-                    monitor.worked(1); // 4/5 done
-                    
-                    final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
-
-                    final Version embeddedVersion = new Version(supportBundle.getVersion());
-                    
-                    ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
-                            monitor);
-                    if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
-                        try ( InputStream contents = supportBundle.openInputStream() ){
-                            client.installBundle(contents, supportBundle.getName());
-                        }
-                        remoteVersion = embeddedVersion;
-
-                    }
-                    launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
-                            monitor);
-                    
-                    monitor.worked(1); // 5/5 done
-                    
-                } catch ( IOException e) {
-                    Activator.getDefault().getPluginLogger()
-                        .warn("Failed reading the installation support bundle", e);
-                } catch (URISyntaxException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
-                } catch (OsgiClientException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
-                }
             }
 
             if (success) {
@@ -158,9 +144,39 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 }
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
             }
+        } catch ( CoreException | RuntimeException e ) {
+            setServerState(IServer.STATE_STOPPED);
+            throw e;
         } finally {
             monitor.done();
         }
+    }
+
+    private void installBundle(IProgressMonitor monitor, OsgiClient client, final EmbeddedArtifact bundle,
+            String bundleSymbolicName) throws OsgiClientException, IOException {
+
+        Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
+        
+        monitor.setTaskName("Installing " + bundleSymbolicName + " " + embeddedVersion);
+
+        Version remoteVersion = client.getBundleVersion(bundleSymbolicName);
+        
+        monitor.worked(2);
+        
+        ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                monitor);
+        if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0 
+                || ( remoteVersion.equals(embeddedVersion) || "SNAPSHOT".equals(embeddedVersion.getQualifier()))) {
+            try ( InputStream contents = bundle.openInputStream() ){
+                client.installBundle(contents, bundle.getName());
+            }
+            remoteVersion = embeddedVersion;
+
+        }
+        launchpadServer.setBundleVersion(bundleSymbolicName, remoteVersion,
+                monitor);
+        
+        monitor.worked(3);
     }
 
     // TODO refine signature
@@ -215,13 +231,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 // SLING-3655 : when doing PUBLISH_CLEAN, the bundle deployment mechanism should 
                 // still be triggered
                 publishBundleModule(module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
 
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             } catch (SerializationException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                         + traceOperation(kind, deltaKind, module).toString(), e));

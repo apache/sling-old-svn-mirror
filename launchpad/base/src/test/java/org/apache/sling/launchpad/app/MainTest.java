@@ -20,11 +20,13 @@ package org.apache.sling.launchpad.app;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+
+import junit.framework.TestCase;
 
 public class MainTest extends TestCase {
 
@@ -149,211 +151,114 @@ public class MainTest extends TestCase {
     }
 
     public void test_converCommandLineArgs_unknown() {
-        assertNull(Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("u", "short");
-            }
-        }));
-        assertNull(Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("longer", "long");
-            }
-        }));
+        assertNull(Main.convertCommandLineArgs(Collections.singletonMap("u", "short")));
+        assertNull(Main.convertCommandLineArgs(Collections.singletonMap("longer", "long")));
     }
 
     public void test_converCommandLineArgs_j_start_stop_status() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("j", "j");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("j", "j"));
         assertNull(props);
 
-        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("j", "host:port");
-            }
-        });
+        Map<String, String> props1 = Main.convertCommandLineArgs(Collections.singletonMap("j", "host:port"));
         assertNotNull(props1);
         assertEquals(1, props1.size());
         assertEquals("host:port", props1.get("sling.control.socket"));
 
-        Map<String, String> propsStart = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("start", "start");
-            }
-        });
+        Map<String, String> propsStart = Main.convertCommandLineArgs(Collections.singletonMap("start", "start"));
         assertNotNull(propsStart);
         assertEquals(1, propsStart.size());
         assertEquals("start", propsStart.get("sling.control.action"));
 
-        Map<String, String> propsStatus = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("status", "status");
-            }
-        });
+        Map<String, String> propsStatus = Main.convertCommandLineArgs(Collections.singletonMap("status", "status"));
         assertNotNull(propsStatus);
         assertEquals(1, propsStatus.size());
         assertEquals("status", propsStatus.get("sling.control.action"));
 
-        Map<String, String> propsStop = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("stop", "stop");
-            }
-        });
+        Map<String, String> propsStop = Main.convertCommandLineArgs(Collections.singletonMap("stop", "stop"));
         assertNotNull(propsStop);
         assertEquals(1, propsStop.size());
         assertEquals("stop", propsStop.get("sling.control.action"));
     }
 
     public void test_converCommandLineArgs_l() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("l", "INFO");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("l", "INFO"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("INFO", props.get("org.apache.sling.commons.log.level"));
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String l = "l";
-                put(l, l);
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("l", "l"));
         assertNull(props2);
     }
 
     public void test_converCommandLineArgs_f() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("f", "sling.changed");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("f", "sling.changed"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("sling.changed", props.get("org.apache.sling.commons.log.file"));
 
-        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("f", "-");
-            }
-        });
+        Map<String, String> props1 = Main.convertCommandLineArgs(Collections.singletonMap("f", "-"));
         assertNotNull(props1);
         assertEquals(1, props1.size());
         assertEquals("", props1.get("org.apache.sling.commons.log.file"));
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String f = "f";
-                put(f, f);
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("f", "f"));
         assertNull(props2);
     }
 
     public void test_converCommandLineArgs_c() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("c", "sling.changed");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("c", "sling.changed"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("sling.changed", props.get(SharedConstants.SLING_HOME));
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String c = "c";
-                put(c, c);
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("c", "c"));
         assertNull(props2);
     }
 
     public void test_converCommandLineArgs_i() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("i", "launchpad");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("i", "launchpad"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("launchpad", props.get(SharedConstants.SLING_LAUNCHPAD));
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String i = "i";
-                put(i, i);
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("i", "i"));
         assertNull(props2);
     }
 
     public void test_converCommandLineArgs_a() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("a", "0.0.0.0");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("a", "0.0.0.0"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("0.0.0.0", props.get("org.apache.felix.http.host"));
     }
 
     public void test_converCommandLineArgs_r() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("r", "/mycontext");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("r", "/mycontext"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("/mycontext", props.get("org.apache.felix.http.context_path"));
     }
 
     public void test_converCommandLineArgs_p() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("p", "1234");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("p", "1234"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("1234", props.get("org.osgi.service.http.port"));
 
-        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("p", "abc");
-            }
-        });
+        Map<String, String> props1 = Main.convertCommandLineArgs(Collections.singletonMap("p", "abc"));
         assertNull(props1);
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String p = "p";
-                put(p, p);
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("p", "p"));
         assertNull(props2);
     }
 
     public void test_converCommandLineArgs_n() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("n", "n");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("n", "n"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals(Boolean.FALSE.toString(), props.get("sling.shutdown.hook"));
 
-        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("D", "sling.shutdown.hook=" + Boolean.TRUE.toString());
-            }
-        });
+        Map<String, String> props1 = Main.convertCommandLineArgs(Collections.singletonMap("D", "sling.shutdown.hook=" + Boolean.TRUE.toString()));
         assertNotNull(props1);
         assertEquals(1, props1.size());
         assertEquals(Boolean.TRUE.toString(), props1.get("sling.shutdown.hook"));
@@ -378,30 +283,17 @@ public class MainTest extends TestCase {
     }
 
     public void test_converCommandLineArgs_D() {
-        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("D", "name=value");
-            }
-        });
+        Map<String, String> props = Main.convertCommandLineArgs(Collections.singletonMap("D", "name=value"));
         assertNotNull(props);
         assertEquals(1, props.size());
         assertEquals("value", props.get("name"));
 
-        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                put("D", "flag");
-            }
-        });
+        Map<String, String> props2 = Main.convertCommandLineArgs(Collections.singletonMap("D", "flag"));
         assertNotNull(props2);
         assertEquals(1, props2.size());
         assertEquals("flag", props2.get("flag"));
 
-        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
-            {
-                final String d = "D";
-                put(d, d);
-            }
-        });
+        Map<String, String> props1 = Main.convertCommandLineArgs(Collections.singletonMap("D", "D"));
         assertNull(props1);
     }
 
@@ -414,26 +306,10 @@ public class MainTest extends TestCase {
         System.getProperties().remove(key);
 
         TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>()));
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "true");
-            }
-        }));
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "TRUE");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "false");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "not true");
-            }
-        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "true"))));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "TRUE"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "false"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "not true"))));
 
         System.setProperty(key, "true");
         TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>()));
@@ -445,47 +321,15 @@ public class MainTest extends TestCase {
         TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>()));
 
         System.setProperty(key, "true");
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "true");
-            }
-        }));
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "TRUE");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "false");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "not true");
-            }
-        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "true"))));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "TRUE"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "false"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "not true"))));
 
         System.setProperty(key, "false");
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "true");
-            }
-        }));
-        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "TRUE");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "false");
-            }
-        }));
-        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
-            {
-                put(key, "not true");
-            }
-        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "true"))));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "TRUE"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "false"))));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>(Collections.singletonMap(key, "not true"))));
     }
 }

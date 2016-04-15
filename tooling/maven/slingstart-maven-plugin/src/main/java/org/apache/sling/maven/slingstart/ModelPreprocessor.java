@@ -179,6 +179,13 @@ public class ModelPreprocessor {
             for(final RunMode runMode : feature.getRunModes()) {
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     for(final org.apache.sling.provisioning.model.Artifact a : group) {
+                        if ( a.getGroupId().equals(info.project.getGroupId())
+                             && a.getArtifactId().equals(info.project.getArtifactId())
+                             && a.getVersion().equals(info.project.getVersion()) ) {
+                            // skip artifact from the same project
+                            env.logger.debug("- skipping dependency " + a.toMvnUrl());
+                            continue;
+                        }
                         final Dependency dep = new Dependency();
                         dep.setGroupId(a.getGroupId());
                         dep.setArtifactId(a.getArtifactId());

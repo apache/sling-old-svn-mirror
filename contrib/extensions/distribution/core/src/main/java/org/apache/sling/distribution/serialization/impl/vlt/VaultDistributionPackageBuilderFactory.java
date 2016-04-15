@@ -36,12 +36,15 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.apache.sling.distribution.serialization.impl.FileDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.ResourceDistributionPackageBuilder;
 
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.
@@ -54,13 +57,14 @@ import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributi
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionPackageBuilder.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Builder name: {name}")
 public class VaultDistributionPackageBuilderFactory implements DistributionPackageBuilder {
 
     /**
      * name of this package builder.
      */
     @Property(label = "Name", description = "The name of the package builder.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
     /**
@@ -74,40 +78,46 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
                     value = "file packages"
             )},
             value = "jcrvlt", label = "type", description = "The type of this package builder")
-    public static final String TYPE = DistributionComponentConstants.PN_TYPE;
+    private static final String TYPE = DistributionComponentConstants.PN_TYPE;
 
 
     /**
      * import mode property for file vault package builder
      */
     @Property(label = "Import Mode", description = "The vlt import mode for created packages.")
-    public static final String IMPORT_MODE = "importMode";
+    private static final String IMPORT_MODE = "importMode";
 
     /**
      * ACL handling property for file vault package builder
      */
     @Property(label = "Acl Handling", description = "The vlt acl handling mode for created packages.")
-    public static final String ACL_HANDLING = "aclHandling";
+    private static final String ACL_HANDLING = "aclHandling";
 
     /**
      * Package roots
      */
     @Property(label = "Package Roots", description = "The package roots to be used for created packages. (this is useful for assembling packages with an user that cannot read above the package root)")
-    public static final String PACKAGE_ROOTS = "package.roots";
+    private static final String PACKAGE_ROOTS = "package.roots";
 
     /**
      * Package filters
      */
     @Property(label = "Package Filters", description = "The package path filters. Filter format: path|+include|-exclude", cardinality = 100)
-    public static final String PACKAGE_FILTERS = "package.filters";
+    private static final String PACKAGE_FILTERS = "package.filters";
 
 
     /**
      * Temp file folder
      */
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
-    public static final String TEMP_FS_FOLDER = "tempFsFolder";
+    private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
+    @Property(label="Use Binary References", description = "If activated, it avoids sending binaries in the distribution package.", boolValue = false)
+    public static final String USE_BINARY_REFERENCES = "useBinaryReferences";
+
+    @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
+    public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
+    
     @Reference
     private Packaging packaging;
 
@@ -126,6 +136,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
+        boolean useBinaryReferences = PropertiesUtil.toBoolean(config.get(USE_BINARY_REFERENCES), false);
+        int autosaveThreshold = PropertiesUtil.toInteger(config.get(AUTOSAVE_THRESHOLD), -1);
+
 
         ImportMode importMode = null;
         if (importModeString != null) {
@@ -137,10 +150,13 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             aclHandling = AccessControlHandling.valueOf(aclHandlingString.trim());
         }
 
+        DistributionContentSerializer contentSerializer = new FileVaultContentSerializer(name, packaging, importMode, aclHandling,
+                packageRoots, packageFilters, useBinaryReferences, autosaveThreshold);
+
         if ("filevlt".equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
+            packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         } else {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling, packageRoots, packageFilters, tempFsFolder));
+            packageBuilder = new ResourceDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         }
     }
 
@@ -165,5 +181,11 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         return packageBuilder.installPackage(resourceResolver, distributionPackage);
+    }
+
+    @Nonnull
+    @Override
+    public DistributionPackageInfo installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        return packageBuilder.installPackage(resourceResolver, stream);
     }
 }

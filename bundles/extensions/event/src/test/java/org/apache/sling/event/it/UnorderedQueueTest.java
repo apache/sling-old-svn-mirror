@@ -44,22 +44,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class UnorderedQueueTest extends AbstractJobHandlingTest {
 
     private static final String QUEUE_NAME = "unorderedtestqueue";
     private static final String TOPIC = "sling/unorderedtest";
     private static int MAX_PAR = 5;
     private static int NUM_JOBS = 300;
-
-    private String queueConfPid;
 
     @Override
     @Before
@@ -77,14 +71,12 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
         rrProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
         rrConfig.update(rrProps);
 
-        queueConfPid = rrConfig.getPid();
-
         this.sleep(1000L);
     }
 
+    @Override
     @After
-    public void cleanUp() throws IOException {
-        this.removeConfiguration(this.queueConfPid);
+    public void cleanup() {
         super.cleanup();
     }
 
@@ -94,7 +86,7 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
 
         final Barrier cb = new Barrier(2);
 
-        final ServiceRegistration jc1Reg = this.registerJobConsumer(TOPIC + "/start",
+        this.registerJobConsumer(TOPIC + "/start",
                 new JobConsumer() {
 
                     @Override
@@ -109,7 +101,7 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
         final AtomicInteger parallelCount = new AtomicInteger(0);
         final Set<Integer> maxParticipants = new HashSet<Integer>();
 
-        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC + "/*",
+        this.registerJobConsumer(TOPIC + "/*",
                 new JobConsumer() {
 
                     @Override
@@ -127,7 +119,7 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -136,51 +128,45 @@ public class UnorderedQueueTest extends AbstractJobHandlingTest {
                     }
                 });
 
-        try {
-            // we first sent one event to get the queue started
-            jobManager.addJob(TOPIC + "/start", null);
-            assertTrue("No event received in the given time.", cb.block(5));
-            cb.reset();
+        // we first sent one event to get the queue started
+        jobManager.addJob(TOPIC + "/start", null);
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
 
-            // get the queue
-            final Queue q = jobManager.getQueue(QUEUE_NAME);
-            assertNotNull("Queue '" + QUEUE_NAME + "' should exist!", q);
+        // get the queue
+        final Queue q = jobManager.getQueue(QUEUE_NAME);
+        assertNotNull("Queue '" + QUEUE_NAME + "' should exist!", q);
 
-            // suspend it
-            q.suspend();
+        // suspend it
+        q.suspend();
 
-            // we start "some" jobs:
-            for(int i = 0; i < NUM_JOBS; i++ ) {
-                final String subTopic = TOPIC + "/sub" + (i % 10);
-                final Map<String, Object> props = new HashMap<String, Object>();
-                if ( i < 10 ) {
-                    props.put("sleep", 300);
-                } else {
-                    props.put("sleep", 30);
-                }
-                jobManager.addJob(subTopic, props);
+        // we start "some" jobs:
+        for(int i = 0; i < NUM_JOBS; i++ ) {
+            final String subTopic = TOPIC + "/sub" + (i % 10);
+            final Map<String, Object> props = new HashMap<String, Object>();
+            if ( i < 10 ) {
+                props.put("sleep", 300);
+            } else {
+                props.put("sleep", 30);
             }
-            // start the queue
-            q.resume();
-            while ( count.get() < NUM_JOBS  + 1 ) {
-                assertEquals("Failed count", 0, q.getStatistics().getNumberOfFailedJobs());
-                assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
-                sleep(300);
-            }
-            // we started one event before the test, so add one
-            assertEquals("Finished count", NUM_JOBS + 1, count.get());
-            assertEquals("Finished count", NUM_JOBS + 1, jobManager.getStatistics().getNumberOfFinishedJobs());
-            assertEquals("Finished count", NUM_JOBS + 1, q.getStatistics().getNumberOfFinishedJobs());
+            jobManager.addJob(subTopic, props);
+        }
+        // start the queue
+        q.resume();
+        while ( count.get() < NUM_JOBS  + 1 ) {
             assertEquals("Failed count", 0, q.getStatistics().getNumberOfFailedJobs());
             assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
-            for(int i=1; i <= MAX_PAR; i++) {
-                assertTrue("# Participants " + String.valueOf(i) + " not in " + maxParticipants,
-                        maxParticipants.contains(i));
-            }
-        } finally {
-            jc1Reg.unregister();
-            jcReg.unregister();
-            ehReg.unregister();
+            sleep(300);
+        }
+        // we started one event before the test, so add one
+        assertEquals("Finished count", NUM_JOBS + 1, count.get());
+        assertEquals("Finished count", NUM_JOBS + 1, jobManager.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Finished count", NUM_JOBS + 1, q.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Failed count", 0, q.getStatistics().getNumberOfFailedJobs());
+        assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
+        for(int i=1; i <= MAX_PAR; i++) {
+            assertTrue("# Participants " + String.valueOf(i) + " not in " + maxParticipants,
+                    maxParticipants.contains(i));
         }
     }
 }

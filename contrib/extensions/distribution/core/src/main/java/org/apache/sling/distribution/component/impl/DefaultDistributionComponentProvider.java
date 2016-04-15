@@ -51,22 +51,22 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionQueueProvider", referenceInterface = DistributionQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "distributionPackageBuilder", referenceInterface = DistributionPackageBuilder.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "distributionPackageBuilder", referenceInterface = DistributionPackageBuilder.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 @Service(DistributionComponentProvider.class)
 public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
 
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<String, DistributionComponent<DistributionAgent>> distributionAgentMap = new ConcurrentHashMap<String, DistributionComponent<DistributionAgent>>();
-    private Map<String, DistributionComponent<DistributionQueueProvider>> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueProvider>>();
-    private Map<String, DistributionComponent<DistributionQueueDispatchingStrategy>> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueDispatchingStrategy>>();
-    private Map<String, DistributionComponent<DistributionTransportSecretProvider>> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionTransportSecretProvider>>();
-    private Map<String, DistributionComponent<DistributionPackageImporter>> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageImporter>>();
-    private Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
-    private Map<String, DistributionComponent<DistributionPackageBuilder>> distributionPackageBuilderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageBuilder>>();
+    private final Map<String, DistributionComponent<DistributionAgent>> distributionAgentMap = new ConcurrentHashMap<String, DistributionComponent<DistributionAgent>>();
+    private final Map<String, DistributionComponent<DistributionQueueProvider>> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueProvider>>();
+    private final Map<String, DistributionComponent<DistributionQueueDispatchingStrategy>> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueDispatchingStrategy>>();
+    private final Map<String, DistributionComponent<DistributionTransportSecretProvider>> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionTransportSecretProvider>>();
+    private final Map<String, DistributionComponent<DistributionPackageImporter>> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageImporter>>();
+    private final Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
+    private final Map<String, DistributionComponent<DistributionPackageBuilder>> distributionPackageBuilderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageBuilder>>();
 
     private BundleContext bundleContext;
 

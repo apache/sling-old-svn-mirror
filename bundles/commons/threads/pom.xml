@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
-    <version>3.2.1-SNAPSHOT</version>
+    <version>3.2.7-SNAPSHOT</version>
 
     <name>Apache Sling Thread Support</name>
     <description>
@@ -57,13 +57,6 @@
                         <Bundle-Activator>
                             org.apache.sling.commons.threads.impl.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            org.apache.sling.commons.threads;version=3.2.0,
-                            org.apache.sling.commons.threads.jmx;version=1.0.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.threads.impl
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -98,6 +91,16 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

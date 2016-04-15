@@ -42,6 +42,7 @@ import org.osgi.framework.BundleContext;
         immediate = true
 )
 @Service(DistributionRequestAuthorizationStrategy.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Strategy name: {name}")
 public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements DistributionRequestAuthorizationStrategy {
 
     /**
@@ -54,10 +55,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements
      * privilege request authorization strategy jcr privilege property
      */
     @Property(label = "Jcr Privilege", description = "Jcr privilege to check for authorizing distribution requests. The privilege is checked for the calling user session.")
-    public static final String JCR_PRIVILEGE = "jcrPrivilege";
+    private static final String JCR_PRIVILEGE = "jcrPrivilege";
 
 
-    DistributionRequestAuthorizationStrategy authorizationStrategy;
+    private DistributionRequestAuthorizationStrategy authorizationStrategy;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) {

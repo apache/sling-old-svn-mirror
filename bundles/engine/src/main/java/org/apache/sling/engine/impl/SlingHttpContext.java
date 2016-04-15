@@ -24,9 +24,11 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
+import org.apache.sling.engine.impl.request.SlingRequestProgressTracker;
 import org.osgi.service.http.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +113,11 @@ class SlingHttpContext implements HttpContext {
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
+        final SlingRequestProgressTracker t = new SlingRequestProgressTracker(request);
+        request.setAttribute(RequestProgressTracker.class.getName(), t);
+        final String timerName = "handleSecurity";
+        t.startTimer(timerName);
+        
         final AuthenticationSupport authenticator = this.authenticationSupport;
         if (authenticator != null) {
 
@@ -118,8 +125,9 @@ class SlingHttpContext implements HttpContext {
             // ParameterSupport
             request = ParameterSupport.getParameterSupportRequestWrapper(request);
 
-            return authenticator.handleSecurity(request, response);
-
+            final boolean result = authenticator.handleSecurity(request, response);
+            t.logTimer(timerName, "authenticator {0} returns {1}", authenticator, result);
+            return result;
         }
 
         log.error("handleSecurity: AuthenticationSupport service missing. Cannot authenticate request.");

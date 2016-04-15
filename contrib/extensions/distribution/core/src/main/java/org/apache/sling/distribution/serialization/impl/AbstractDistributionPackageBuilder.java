@@ -23,16 +23,20 @@ import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
@@ -86,6 +90,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
+        Map<String, Object> headerInfo = new HashMap<String, Object>();
+        DistributionPackageUtils.readInfo(stream, headerInfo);
+
         DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
         stream.mark(-1);
@@ -94,6 +101,8 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (distributionPackage == null) {
             distributionPackage = readPackageInternal(resourceResolver, stream);
         }
+
+        distributionPackage.getInfo().putAll(headerInfo);
         return distributionPackage;
     }
 
@@ -112,10 +121,40 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             // do nothing for test packages
             installed = true;
         } else if (DistributionRequestType.ADD.equals(actionType)) {
-            installed = installPackageInternal(resourceResolver, distributionPackage);
+            installed = installAddPackage(resourceResolver, distributionPackage);
         }
 
         return installed;
+    }
+
+    @Nonnull
+    @Override
+    public DistributionPackageInfo installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        if (!stream.markSupported()) {
+            stream = new BufferedInputStream(stream);
+        }
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo(type);
+
+        DistributionPackageUtils.readInfo(stream, packageInfo);
+
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
+
+        stream.mark(-1);
+
+        boolean installed;
+        // not a simple package
+        if (distributionPackage == null) {
+            installed = installPackageInternal(resourceResolver, stream);
+        } else {
+            installed = installPackage(resourceResolver, distributionPackage);
+            packageInfo.putAll(distributionPackage.getInfo());
+        }
+
+        if (installed) {
+            return packageInfo;
+        } else {
+            return null;
+        }
     }
 
     private boolean installDeletePackage(@Nonnull ResourceResolver resourceResolver, @CheckForNull DistributionPackage distributionPackage) throws DistributionException {
@@ -138,6 +177,22 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
         return false;
     }
+
+
+    private boolean installAddPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
+            throws DistributionException {
+        InputStream inputStream = null;
+        try {
+            inputStream = distributionPackage.createInputStream();
+            return installPackageInternal(resourceResolver, inputStream);
+        } catch (IOException e) {
+            throw new DistributionException(e);
+        } finally {
+            IOUtils.closeQuietly(inputStream);
+        }
+
+    }
+
 
     @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
@@ -163,12 +218,16 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     protected void ungetSession(Session session) {
         if (session != null) {
             try {
-                session.save();
+                if (session.hasPendingChanges()) {
+                    session.save();
+                }
             } catch (RepositoryException e) {
                 log.debug("Cannot save session", e);
             }
         }
     }
+
+
 
     @CheckForNull
     protected abstract DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
@@ -179,7 +238,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             throws DistributionException;
 
 
-    protected abstract boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage)
+    protected abstract boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream)
             throws DistributionException;
 
     @CheckForNull

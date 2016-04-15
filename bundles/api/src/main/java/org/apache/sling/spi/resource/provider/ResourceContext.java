@@ -26,6 +26,8 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * The resource context provides additional information for resource resolving.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ResourceContext {

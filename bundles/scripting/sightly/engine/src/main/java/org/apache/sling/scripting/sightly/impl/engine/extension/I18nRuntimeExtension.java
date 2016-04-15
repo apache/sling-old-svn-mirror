@@ -22,9 +22,9 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import javax.script.Bindings;
 
+import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -81,11 +81,17 @@ public class I18nRuntimeExtension implements RuntimeExtension {
                     }
                 }
             } else {
-                Locale l = new Locale(locale);
-                ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
-                if (resourceBundle != null && resourceBundle.containsKey(key)) {
-                    return resourceBundle.getString(key);
+                try {
+                    Locale l = LocaleUtils.toLocale(locale);
+                    ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
+                    if (resourceBundle != null && resourceBundle.containsKey(key)) {
+                        return resourceBundle.getString(key);
+                    }
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("Invalid locale detected: {}.", locale);
+                    return text;
                 }
+
             }
         }
         LOG.warn("No translation found for string '{}' using expression provided locale '{}' or default locale '{}'",

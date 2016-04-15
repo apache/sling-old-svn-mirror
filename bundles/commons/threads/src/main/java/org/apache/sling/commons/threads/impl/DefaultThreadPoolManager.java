@@ -98,6 +98,9 @@ public class DefaultThreadPoolManager
         if ( props.get(ModifiableThreadPoolConfig.PROPERTY_QUEUE_SIZE) != null ) {
             config.setQueueSize((Integer)props.get(ModifiableThreadPoolConfig.PROPERTY_QUEUE_SIZE));
         }
+        if ( props.get(ModifiableThreadPoolConfig.PROPERTY_MAX_THREAD_AGE) != null ) {
+            config.setMaxThreadAge((Long) props.get(ModifiableThreadPoolConfig.PROPERTY_MAX_THREAD_AGE));
+        }
         if ( props.get(ModifiableThreadPoolConfig.PROPERTY_KEEP_ALIVE_TIME) != null ) {
             config.setKeepAliveTime((Long)props.get(ModifiableThreadPoolConfig.PROPERTY_KEEP_ALIVE_TIME));
         }

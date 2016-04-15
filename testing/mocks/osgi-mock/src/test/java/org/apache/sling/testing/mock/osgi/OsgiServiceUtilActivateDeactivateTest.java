@@ -84,6 +84,7 @@ public class OsgiServiceUtilActivateDeactivateTest {
         
         assertTrue(MockOsgi.activate(service, bundleContext, map));
         assertTrue(service.isActivated());
+        assertEquals(map, ImmutableMap.copyOf(service.getMap()));
         
         assertTrue(MockOsgi.deactivate(service, bundleContext, map));
         assertFalse(service.isActivated());
@@ -112,6 +113,25 @@ public class OsgiServiceUtilActivateDeactivateTest {
         
         assertTrue(MockOsgi.deactivate(service, bundleContext, map));
         assertFalse(service.isActivated());
+    }
+    
+    @Test
+    public void testService7() {
+        Service7 service = new Service7();
+        
+        assertTrue(MockOsgi.activate(service, bundleContext, map));
+        assertTrue(service.isActivated());
+        assertSame(bundleContext, service.getComponentContext().getBundleContext());
+        assertSame(bundleContext, service.getBundleContext());
+        assertEquals(map, ImmutableMap.copyOf(service.getMap()));
+        
+        assertTrue(MockOsgi.deactivate(service, bundleContext, map));
+        assertFalse(service.isActivated());
+    }
+    
+    
+    public @interface ServiceConfig {
+        String prop1();
     }
 
     @Component
@@ -202,10 +222,12 @@ public class OsgiServiceUtilActivateDeactivateTest {
     public static class Service4 {
         
         private boolean activated;
+        private Map<String, Object> map;
 
         @Activate
-        private void activate() {
+        private void activate(ServiceConfig config) {
             this.activated = true;
+            map = ImmutableMap.<String, Object>of("prop1", config.prop1());
         }
 
         @Deactivate
@@ -217,6 +239,10 @@ public class OsgiServiceUtilActivateDeactivateTest {
             return activated;
         }
 
+        public Map<String, Object> getMap() {
+            return map;
+        }
+        
     }
 
     @Component
@@ -258,6 +284,48 @@ public class OsgiServiceUtilActivateDeactivateTest {
 
         @Deactivate
         private void deactivate(Map<String,Object> map, BundleContext bundleContext, int value1, Integer value2) {
+            this.activated = false;
+            this.componentContext = null;
+            this.bundleContext = null;
+            this.map = null;
+        }
+        
+        public boolean isActivated() {
+            return activated;
+        }
+
+        public ComponentContext getComponentContext() {
+            return componentContext;
+        }
+
+        public BundleContext getBundleContext() {
+            return bundleContext;
+        }
+
+        public Map<String, Object> getMap() {
+            return map;
+        }
+
+    }
+
+    @Component
+    public static class Service7 {
+        
+        private boolean activated;
+        private ComponentContext componentContext;
+        private BundleContext bundleContext;
+        private Map<String,Object> map;
+
+        @Activate
+        private void activate(ComponentContext componentContext, ServiceConfig config, BundleContext bundleContext) {
+            this.activated = true;
+            this.componentContext = componentContext;
+            this.bundleContext = bundleContext;
+            this.map = ImmutableMap.<String, Object>of("prop1", config.prop1());;
+        }
+
+        @Deactivate
+        private void deactivate() {
             this.activated = false;
             this.componentContext = null;
             this.bundleContext = null;

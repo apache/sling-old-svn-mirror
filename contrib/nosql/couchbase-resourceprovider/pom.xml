@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.nosql.couchbase-resourceprovider</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling NoSQL Couchbase Resource Provider</name>
@@ -49,14 +49,14 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.nosql.couchbase-client</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.2</version>
             <scope>provided</scope>
         </dependency>
     
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.nosql.generic</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <scope>provided</scope>
         </dependency>
     
@@ -91,7 +91,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.nosql.generic</artifactId>
             <classifier>tests</classifier>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <scope>test</scope>
         </dependency>
       
@@ -133,6 +133,20 @@
           </plugin>
     
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>README.md</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     
     <profiles>

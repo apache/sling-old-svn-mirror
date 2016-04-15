@@ -26,7 +26,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
@@ -52,18 +51,6 @@ public final class MockSling {
         // static methods only
     }
 
-    /**
-     * Creates new sling resource resolver factory instance.
-     * @param type Type of underlying repository.
-     * @return Resource resolver factory instance
-     * @deprecated Please use {@link #newResourceResolverFactory(ResourceResolverType, BundleContext)}
-     *   and shutdown the bundle context after usage.
-     */
-    @Deprecated
-    public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type) {
-        return newResourceResolverFactory(type, MockOsgi.newBundleContext());
-    }
-    
     /**
      * Creates new sling resource resolver factory instance.
      * @param bundleContext Bundle context
@@ -119,47 +106,6 @@ public final class MockSling {
     }
 
     /**
-     * Creates new sling resource resolver factory instance using
-     * {@link #DEFAULT_RESOURCERESOLVER_TYPE}.
-     * @return Resource resolver factory instance
-     * @deprecated Please use {@link #newResourceResolverFactory(BundleContext)}
-     *   and shutdown the bundle context after usage.
-     */
-    @Deprecated
-    public static ResourceResolverFactory newResourceResolverFactory() {
-        return newResourceResolverFactory(DEFAULT_RESOURCERESOLVER_TYPE);
-    }
-
-    /**
-     * Creates new sling resource resolver instance.
-     * @param type Type of underlying repository.
-     * @return Resource resolver instance
-     * @deprecated Please use {@link #newResourceResolver(ResourceResolverType, BundleContext)}
-     *   and shutdown the bundle context after usage.
-     */
-    @Deprecated
-    public static ResourceResolver newResourceResolver(final ResourceResolverType type) {
-        ResourceResolverFactory factory = newResourceResolverFactory(type);
-        try {
-            return factory.getAdministrativeResourceResolver(null);
-        } catch (LoginException ex) {
-            throw new RuntimeException("Mock resource resolver factory implementation seems to require login.", ex);
-        }
-    }
-
-    /**
-     * Creates new sling resource resolver instance using
-     * {@link #DEFAULT_RESOURCERESOLVER_TYPE}.
-     * @return Resource resolver instance
-     * @deprecated Please use {@link #newResourceResolver(BundleContext)}
-     *   and shutdown the bundle context after usage.
-     */
-    @Deprecated
-    public static ResourceResolver newResourceResolver() {
-        return newResourceResolver(DEFAULT_RESOURCERESOLVER_TYPE);
-    }
-
-    /**
      * Creates new sling resource resolver instance.
      * @param type Type of underlying repository.
      * @param bundleContext Bundle context
@@ -199,24 +145,11 @@ public final class MockSling {
     /**
      * Creates a new sling script helper instance using
      * {@link #DEFAULT_RESOURCERESOLVER_TYPE} for the resource resolver.
-     * @return Sling script helper instance
-     * @deprecated Please use {@link #newSlingScriptHelper(BundleContext)}
-     *   and shutdown the bundle context after usage.
-     */
-    @Deprecated
-    public static SlingScriptHelper newSlingScriptHelper() {
-        BundleContext bundleContext = MockOsgi.newBundleContext();
-        return newSlingScriptHelper(bundleContext);
-    }
-
-    /**
-     * Creates a new sling script helper instance using
-     * {@link #DEFAULT_RESOURCERESOLVER_TYPE} for the resource resolver.
      * @param bundleContext Bundle context
      * @return Sling script helper instance
      */
     public static SlingScriptHelper newSlingScriptHelper(BundleContext bundleContext) {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver(bundleContext));
+        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver(bundleContext), bundleContext);
         SlingHttpServletResponse response = new MockSlingHttpServletResponse();
         return newSlingScriptHelper(request, response, bundleContext);
     }

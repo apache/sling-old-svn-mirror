@@ -20,6 +20,8 @@ package org.apache.sling.nosql.generic.adapter;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.LoginException;
+
 import aQute.bnd.annotation.ConsumerType;
 
 /**
@@ -73,5 +75,19 @@ public interface NoSqlAdapter {
      * @return Query result or null if query not supported
      */
     Iterator<NoSqlData> query(String query, String language);
-        
+
+    /**
+     * Checks whether the connection to the NoSQL database is possible
+     * @throws LoginException in case of any errors
+     */
+    void checkConnection() throws LoginException;
+
+    /**
+     * Creates index definitions for accessing the NoSQL database.
+     * This is called every time an adapter instances is created. If the indexes are
+     * already present it should do nothing.
+     * It is only called when the {@link #checkConnection()} call succeeds.
+     */
+    void createIndexDefinitions();
+
 }

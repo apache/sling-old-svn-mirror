@@ -41,7 +41,7 @@ public class SimpleDistributionQueueTest {
     public void testPackageAddition() throws Exception {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        assertTrue(queue.add(pkg));
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
     }
 
@@ -49,12 +49,12 @@ public class SimpleDistributionQueueTest {
     public void testPackageAdditionAndRemoval() throws Exception {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        when(pkg.getId()).thenReturn("id");
-        assertTrue(queue.add(pkg));
+        when(pkg.getPackageId()).thenReturn("id");
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
-        assertNotNull(queue.remove(pkg.getId()));
+        assertNotNull(queue.remove(pkg.getPackageId()));
         assertTrue(queue.getStatus().isEmpty());
-        DistributionQueueEntry entry = queue.getItem(pkg.getId());
+        DistributionQueueEntry entry = queue.getItem(pkg.getPackageId());
         assertNull(entry);
     }
 
@@ -62,13 +62,13 @@ public class SimpleDistributionQueueTest {
     public void testPackageAdditionRetrievalAndRemoval() throws Exception {
         DistributionQueue queue = new SimpleDistributionQueue("agentName", "default");
         DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        when(pkg.getId()).thenReturn("id");
-        assertTrue(queue.add(pkg));
+        when(pkg.getPackageId()).thenReturn("id");
+        assertNotNull(queue.add(pkg));
         assertFalse(queue.getStatus().isEmpty());
         assertEquals(pkg, queue.getHead().getItem());
         assertFalse(queue.getStatus().isEmpty());
-        DistributionQueueItemStatus status = queue.getItem(pkg.getId()).getStatus();
-        assertNotNull(queue.remove(pkg.getId()));
+        DistributionQueueItemStatus status = queue.getItem(pkg.getPackageId()).getStatus();
+        assertNotNull(queue.remove(pkg.getPackageId()));
         assertTrue(queue.getStatus().isEmpty());
         assertNotNull(status);
         assertEquals(1, status.getAttempts());

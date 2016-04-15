@@ -40,11 +40,12 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.discovery.commons.InitDelayingTopologyEventListener;
+import org.apache.sling.event.impl.TestUtil;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import junitx.util.PrivateAccessor;
 
 public class JobManagerConfigurationTest {
 
@@ -77,8 +78,8 @@ public class JobManagerConfigurationTest {
         }
 
         public void await() throws Exception {
-            if ( !latch.await(5000, TimeUnit.MILLISECONDS) ) {
-                throw new Exception("No configuration event within 5 seconds.");
+            if ( !latch.await(8000, TimeUnit.MILLISECONDS) ) {
+                throw new Exception("No configuration event within 8 seconds.");
             }
         }
 
@@ -109,6 +110,7 @@ public class JobManagerConfigurationTest {
                             ((Runnable)job).run();
                         }
                     }, 3000);
+                    return true;
                 }
                 return false;
             }
@@ -205,8 +207,16 @@ public class JobManagerConfigurationTest {
         // add change listener and verify
         ccl.init(1);
         final JobManagerConfiguration config = new JobManagerConfiguration();
-        PrivateAccessor.setField(config, "scheduler", scheduler);
-        ((AtomicBoolean)PrivateAccessor.getField(config, "active")).set(true);
+        TestUtil.setFieldValue(config, "scheduler", scheduler);
+        ((AtomicBoolean)TestUtil.getFieldValue(config, "active")).set(true);
+        InitDelayingTopologyEventListener startupDelayListener = new InitDelayingTopologyEventListener(1, new TopologyEventListener() {
+            
+            @Override
+            public void handleTopologyEvent(TopologyEvent event) {
+                config.doHandleTopologyEvent(event);
+            }
+        }, scheduler);;
+        TestUtil.setFieldValue(config, "startupDelayListener", startupDelayListener);
 
         config.addListener(ccl);
         ccl.await();
@@ -225,7 +235,7 @@ public class JobManagerConfigurationTest {
         assertTrue(ccl.events.get(0));
 
         // change view, followed by change props
-        ccl.init(3);
+        ccl.init(2);
         final TopologyView view2 = createView();
         Mockito.when(initView.isCurrent()).thenReturn(false);
         final TopologyEvent change1 = new TopologyEvent(TopologyEvent.Type.TOPOLOGY_CHANGED, initView, view2);
@@ -237,14 +247,13 @@ public class JobManagerConfigurationTest {
         config.handleTopologyEvent(change2);
 
         ccl.await();
-        assertEquals(3, ccl.events.size());
+        assertEquals(2, ccl.events.size());
         assertFalse(ccl.events.get(0));
-        assertFalse(ccl.events.get(1));
-        assertTrue(ccl.events.get(2));
+        assertTrue(ccl.events.get(1));
 
         // we wait another 4 secs to see if there is no another event
         Thread.sleep(4000);
-        assertEquals(3, ccl.events.size());
+        assertEquals(2, ccl.events.size());
 
     }
 }

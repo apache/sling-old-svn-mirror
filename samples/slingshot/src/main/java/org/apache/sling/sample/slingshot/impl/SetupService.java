@@ -27,9 +27,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.Privilege;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -41,10 +38,14 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.apache.sling.sample.slingshot.model.User;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +66,8 @@ public class SetupService {
     private static final String[] USERS = new String[] {"slingshot1", "slingshot2"};
 
     private static final String[] FOLDERS = new String[] {
-        "content:" + SlingshotConstants.RESOURCETYPE_CONTENT,
         "info",
-        "profile",
+        "settings",
         "ugc"};
 
     @Activate
@@ -133,23 +133,23 @@ public class SetupService {
     }
 
     private void setupUsers(final BundleContext bc, final ResourceResolver resolver) throws RepositoryException, IOException {
-        final UserManager um = AccessControlUtil.getUserManager(resolver.adaptTo(Session.class));
+        final Session session = resolver.adaptTo(Session.class);
+        final UserManager um = AccessControlUtil.getUserManager(session);
         for(final String userName : USERS) {
             Authorizable user = um.getAuthorizable(userName);
             if ( user == null ) {
                 logger.info("Creating user {}", userName);
                 um.createUser(userName, userName);
+                session.save();
             }
         }
 
         // create a service user
         Authorizable user = um.getAuthorizable(InternalConstants.SERVICE_USER_NAME);
         if ( user == null ) {
-            logger.info("Creating user {}", InternalConstants.SERVICE_USER_NAME);
-            // TODO - jackrabbit 2 does not support creating a system user
-            // um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
-
-            um.createUser(InternalConstants.SERVICE_USER_NAME, InternalConstants.SERVICE_USER_NAME);
+            logger.info("Creating service user {}", InternalConstants.SERVICE_USER_NAME);
+            um.createSystemUser(InternalConstants.SERVICE_USER_NAME, null);
+            session.save();
         }
 
         // check for service user config
@@ -189,7 +189,7 @@ public class SetupService {
                 Resource homeResource = resolver.getResource(usersResource, userName);
                 if ( homeResource == null ) {
                     final Map<String, Object> props = new HashMap<String, Object>();
-                    props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_USER);
+                    props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, User.RESOURCETYPE);
                     homeResource = resolver.create(usersResource, userName, props);
                     resolver.commit();
                 }

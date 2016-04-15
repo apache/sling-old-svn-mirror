@@ -43,6 +43,8 @@ import aQute.bnd.annotation.ConsumerType;
  * Local events for resources provide the names of the properties that
  * have been added, removed or changed. This information might be missing
  * for external events.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public class ResourceChange {
@@ -82,7 +84,7 @@ public class ResourceChange {
      * @param changeType The change type
      * @param path The resource path
      * @param isExternal {code true} if the change happened on another node
-     * @param addedPropertyName set of added property names, if provided must be immutable
+     * @param addedPropertyNames set of added property names, if provided must be immutable
      * @param changedPropertyNames set of added property names, if provided must be immutable
      * @param removedPropertyNames set of added property names, if provided must be immutable
      */

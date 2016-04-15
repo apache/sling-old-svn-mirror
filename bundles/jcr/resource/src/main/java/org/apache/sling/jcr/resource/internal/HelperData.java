@@ -18,9 +18,12 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 
 /**
@@ -29,15 +32,15 @@ import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
  */
 public class HelperData {
 
-    public final ClassLoader dynamicClassLoader;
+    private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
     public final PathMapper pathMapper;
 
     private volatile String[] namespacePrefixes;
 
-    public HelperData(final ClassLoader dynamicClassLoader,
+    public HelperData(final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
             final PathMapper pathMapper) {
-        this.dynamicClassLoader = dynamicClassLoader;
+        this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
         this.pathMapper = pathMapper;
     }
 
@@ -49,7 +52,11 @@ public class HelperData {
         return this.namespacePrefixes;
     }
 
-    public void clearCache() {
-        this.namespacePrefixes = null;
+    public ClassLoader getDynamicClassLoader() {
+        final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManagerReference.get();
+        if ( dclm == null ) {
+            return null;
+        }
+        return dclm.getDynamicClassLoader();
     }
 }

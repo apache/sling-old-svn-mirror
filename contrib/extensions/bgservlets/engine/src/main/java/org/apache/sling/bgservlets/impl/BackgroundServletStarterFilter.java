@@ -19,6 +19,9 @@
 package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -37,6 +40,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobStorage;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -67,11 +71,25 @@ public class BackgroundServletStarterFilter implements Filter {
     @Reference
     private JobStorage jobStorage;
 
+    /** Default value of the "put in background" parameter */
+    public static final String DEFAULT_BG_PARAM = "sling:bg";
+    
     /** Name of the property that defines the request parameter name to
      *  use to start a servlet in the background.
      */
-    @Property(value="sling:bg")
+    @Property(value=DEFAULT_BG_PARAM)
     public static final String PROP_BG_PARAM = "background.parameter.name";
+
+    /** Default list of HTTP method names that can trigger background requests */
+    public static final String [] DEFAULT_ALLOWED_METHODS = {"POST", "PUT", "DELETE"};
+    
+    /** Name of the property that defines the list of allowed HTTP methods
+     *  to trigger background jobs
+     */
+    @Property()
+    public static final String PROP_ALLOWED_METHODS = "allowed.http.methods";
+    
+    private Set<String> allowedHttpMethods;
 
     /**
      * Request runs in the background if this request parameter is present
@@ -79,13 +97,30 @@ public class BackgroundServletStarterFilter implements Filter {
     private String bgParamName;
 
     protected void activate(ComponentContext ctx) {
-        bgParamName = (String)ctx.getProperties().get(PROP_BG_PARAM);
-        if(bgParamName == null || bgParamName.length() == 0) {
-            throw new IllegalStateException("Missing " + PROP_BG_PARAM + " in ComponentContext");
+        bgParamName = PropertiesUtil.toString(ctx.getProperties().get(PROP_BG_PARAM), DEFAULT_BG_PARAM);
+        
+        final String [] cfgMethods = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_ALLOWED_METHODS), DEFAULT_ALLOWED_METHODS);
+        allowedHttpMethods = new HashSet<String>();
+        allowedHttpMethods.addAll(Arrays.asList(cfgMethods));
+        
+        if(allowedHttpMethods.isEmpty()) {
+            log.error("{} defines no allowed HTTP methods, background servlets cannot be started", PROP_ALLOWED_METHODS);
         }
-        log.info("Request parameter {} will run servlets in the background", bgParamName);
+        
+        log.info(
+                "Request parameter {} will run servlets in the background for HTTP methods {}", 
+                    bgParamName,
+                    allowedHttpMethods);
     }
-
+    
+    private boolean startBackgroundRequest(HttpServletRequest req) throws ServletException {
+        boolean result = Boolean.valueOf(req.getParameter(bgParamName));
+        if(result && ! allowedHttpMethods.contains(req.getMethod())) {
+            throw new ServletException("Background requests cannot be started with a " + req.getMethod() + " request");
+        }
+        return result;
+    }
+ 
     public void doFilter(final ServletRequest sreq,
             final ServletResponse sresp, final FilterChain chain)
             throws IOException, ServletException {
@@ -102,8 +137,7 @@ public class BackgroundServletStarterFilter implements Filter {
         final SlingHttpServletRequest slingRequest =
             (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request : null);
         final HttpServletResponse response = (HttpServletResponse) sresp;
-        final String bgParam = sreq.getParameter(bgParamName);
-        if (Boolean.valueOf(bgParam)) {
+        if (startBackgroundRequest(request)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
                     slingRequestProcessor, jobStorage, slingRequest, response,

@@ -37,7 +37,10 @@ import aQute.bnd.annotation.ConsumerType;
 public abstract class AbstractNoSqlResourceProviderFactory implements ResourceProviderFactory {
 
     public final ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
-        return new NoSqlResourceProvider(getNoSqlAdapter(), getEventAdmin());
+        NoSqlAdapter adapter = getNoSqlAdapter();
+        adapter.checkConnection();
+        adapter.createIndexDefinitions();
+        return new NoSqlResourceProvider(adapter, getEventAdmin());
     }
 
     public final ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {

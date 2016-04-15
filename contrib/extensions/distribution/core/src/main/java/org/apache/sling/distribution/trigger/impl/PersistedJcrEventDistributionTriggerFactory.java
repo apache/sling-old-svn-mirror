@@ -46,6 +46,7 @@ import org.osgi.framework.BundleContext;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class PersistedJcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
@@ -57,22 +58,22 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
      * jcr persisting event trigger path property
      */
     @Property(label = "Path", description = "The path for which changes are listened and distributed as persisted nugget events.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
     /**
      * jcr persisting event trigger service user property
      */
     @Property(label = "Service Name", description = "The service used to listen for jcr events")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
 
     /**
      * jcr persisting event trigger nuggets path property
      */
     @Property(value = PersistedJcrEventDistributionTrigger.DEFAULT_NUGGETS_PATH, label = "Nuggets Path", description = "The location where serialization of jcr events will be stored")
-    public static final String NUGGETS_PATH = "nuggetsPath";
+    private static final String NUGGETS_PATH = "nuggetsPath";
 
 
-    PersistedJcrEventDistributionTrigger trigger;
+    private PersistedJcrEventDistributionTrigger trigger;
 
     @Reference
     private SlingRepository repository;

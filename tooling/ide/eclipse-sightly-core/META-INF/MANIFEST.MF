@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-sightly-core;singleton:=true
-Bundle-Version: 1.0.99.qualifier
+Bundle-Version: 1.1.1.qualifier
 Bundle-Activator: org.apache.sling.ide.eclipse.sightly.internal.Activator
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
@@ -9,10 +9,11 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.swt,
  org.eclipse.osgi
-Import-Package: org.apache.sling.ide.eclipse.core.debug,
- org.apache.sling.ide.eclipse.core,
+Import-Package: org.apache.sling.ide.eclipse.core,
+ org.apache.sling.ide.eclipse.core.debug,
  org.apache.sling.ide.eclipse.core.facet,
  org.apache.sling.ide.log,
+ org.eclipse.core.expressions,
  org.eclipse.jface.resource,
  org.eclipse.jface.text,
  org.eclipse.jface.text.contentassist,
@@ -32,4 +33,5 @@ Import-Package: org.apache.sling.ide.eclipse.core.debug,
  org.eclipse.wst.xml.core.internal.regions
 Export-Package: org.apache.sling.ide.eclipse.sightly,
  org.apache.sling.ide.eclipse.sightly.model,
- org.apache.sling.ide.eclipse.sightly.validation
+ org.apache.sling.ide.eclipse.sightly.validation,
+ org.apache.sling.ide.eclipse.sightly.internal;x-friends:="org.apache.sling.ide.eclipse-test"

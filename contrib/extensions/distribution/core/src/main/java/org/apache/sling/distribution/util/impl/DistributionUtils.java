@@ -39,9 +39,7 @@ public class DistributionUtils {
 
         authInfo.put(ResourceResolverFactory.SUBSERVICE, serviceName);
 
-        ResourceResolver resourceResolver = resolverFactory.getServiceResourceResolver(authInfo);
-
-        return resourceResolver;
+        return resolverFactory.getServiceResourceResolver(authInfo);
     }
 
     public static void safelyLogout(ResourceResolver resourceResolver) {

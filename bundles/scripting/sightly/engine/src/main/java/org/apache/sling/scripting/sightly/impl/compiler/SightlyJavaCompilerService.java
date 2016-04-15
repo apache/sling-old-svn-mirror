@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Activate;
@@ -45,11 +47,12 @@ import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
+import org.apache.sling.scripting.sightly.impl.engine.extension.use.UseProviderUtils;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +67,8 @@ import org.slf4j.LoggerFactory;
 public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);
+
+    public static final Pattern PACKAGE_DECL_PATTERN = Pattern.compile("(\\s*)package\\s+([a-zA-Z_$][a-zA-Z\\d_$]*\\.?)+;");
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -88,38 +93,36 @@ public class SightlyJavaCompilerService {
      * compilation. In case the requested class does not denote a fully qualified classname, this service will try to find the class through
      * Sling's servlet resolution mechanism and compile the class on-the-fly if required.
      *
-     * @param resolver      a {@link ResourceResolver} with read access to resources from the search path (see {@link
-     *                      ResourceResolver#getSearchPath()})
-     * @param callingScript the lookup will be performed based on this resource only if the {@code className} does not identify a fully
-     *                      qualified class name; otherwise this parameter can be {@code null}
      * @param className     name of class to use for object instantiation
      * @return object instance of the requested class
      * @throws CompilerException in case of any runtime exception
      */
-    public Object getInstance(ResourceResolver resolver, Resource callingScript, String className, boolean pojoHint) {
+    public Object getInstance(RenderContext renderContext, String className) {
+        LOG.debug("Attempting to load class {}.", className);
         if (className.contains(".")) {
             if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
-                Object result = compileRepositoryJavaClass(resolver, className);
+                LOG.debug("Class {} identifies a POJO from the repository that was changed since the last time it was instantiated.",
+                        className);
+                Object result = compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
                 unitChangeMonitor.clearJavaUseObject(className);
                 return result;
             }
-            if (pojoHint) {
-                return compileRepositoryJavaClass(resolver, className);
-            }
             try {
                 // the object either comes from a bundle or from the repo but it was not registered by the UnitChangeMonitor
+                LOG.debug("Attempting to load class {} from the classloader cache.", className);
                 return loadObject(className);
             } catch (CompilerException cex) {
                 // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
-                return compileRepositoryJavaClass(resolver, className);
+                LOG.debug("Class {} identifies a POJO from the repository and it needs to be compiled.", className);
+                return compileRepositoryJavaClass(renderContext.getScriptResourceResolver(), className);
             }
         } else {
-            if (callingScript != null) {
-                Resource pojoResource = ResourceResolution.getResourceFromSearchPath(callingScript, className + ".java");
-                if (pojoResource != null) {
-                    return getInstance(resolver, null, Utils.getJavaNameFromPath(pojoResource.getPath()), false);
-                }
+            Resource pojoResource = UseProviderUtils.locateScriptResource(renderContext, className + ".java");
+            if (pojoResource != null) {
+                String fqcn = Utils.getJavaNameFromPath(pojoResource.getPath());
+                LOG.debug("Class {} has FQCN {}.", className, fqcn);
+                return getInstance(renderContext, fqcn);
             }
         }
         throw new SightlyException("Cannot find class " + className + ".");
@@ -129,50 +132,63 @@ public class SightlyJavaCompilerService {
      * Compiles a class using the passed fully qualified class name and its source code.
      *
      * @param sourceCode the source code from which to generate the class
-     * @param fqcn       fully qualified name of the class to compile
      * @return object instance of the class to compile
      * @throws CompilerException in case of any runtime exception
      */
-    public Object compileSource(SourceIdentifier sourceIdentifier, String sourceCode, String fqcn) {
-        boolean downgradedLock = false;
-        writeLock.lock();
+    public Object compileSource(SourceIdentifier sourceIdentifier, String sourceCode) {
+        readLock.lock();
         try {
-            if (sourceIdentifier != null) {
-                if (sourceIdentifier.needsUpdate()) {
-                    return internalCompileSource(sourceCode, fqcn);
-                } else {
-                    /**
-                     * downgrade write lock to a read lock; we don't need to recompile the class since it seems it has been recompiled by
-                     * another thread
-                     */
+            if (sourceIdentifier.needsUpdate()) {
+                readLock.unlock();
+                writeLock.lock();
+                try {
+                    LOG.debug("Need to recompile {}.", sourceIdentifier.toString());
+                    return internalCompileSource(sourceCode, sourceIdentifier.getFullyQualifiedName());
+                } finally {
+                    // downgrade write lock since we've probably compiled the source code by now
                     readLock.lock();
                     writeLock.unlock();
-                    downgradedLock = true;
-                    return classLoaderWriter.getClassLoader().loadClass(fqcn).newInstance();
                 }
             } else {
-                return internalCompileSource(sourceCode, fqcn);
+                LOG.debug("No need to recompile {}, loading it from the classloader cache.", sourceIdentifier.toString());
+                return classLoaderWriter.getClassLoader().loadClass(sourceIdentifier.getFullyQualifiedName()).newInstance();
             }
         } catch (Exception e) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
         } finally {
-            if (downgradedLock) {
-                readLock.unlock();
-            } else {
-                writeLock.unlock();
-            }
+            readLock.unlock();
         }
     }
 
     private Object internalCompileSource(String sourceCode, String fqcn) throws Exception {
-        if (sightlyEngineConfiguration.isDevMode()) {
+        if (sightlyEngineConfiguration.keepGenerated()) {
             String path = "/" + fqcn.replaceAll("\\.", "/") + ".java";
             OutputStream os = classLoaderWriter.getOutputStream(path);
             IOUtils.write(sourceCode, os, "UTF-8");
             IOUtils.closeQuietly(os);
         }
-        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
+        String[] sourceCodeLines = sourceCode.split("\\r\\n|[\\n\\x0B\\x0C\\r\\u0085\\u2028\\u2029]");
+        boolean foundPackageDeclaration = false;
+        for (String line : sourceCodeLines) {
+            Matcher matcher = PACKAGE_DECL_PATTERN.matcher(line);
+            if (matcher.matches()) {
+                /**
+                 * This matching might return false positives like:
+                 * // package a.b.c;
+                 *
+                 * where from a syntactic point of view the source code doesn't have a package declaration and the expectancy is that our
+                 * SightlyJavaCompilerService will add one.
+                 */
+                foundPackageDeclaration = true;
+                break;
+            }
+        }
 
+        if (!foundPackageDeclaration) {
+            sourceCode = "package " + Utils.getPackageNameFromFQCN(fqcn) + ";\n" + sourceCode;
+        }
+
+        CompilationUnit compilationUnit = new SightlyCompilationUnit(sourceCode, fqcn);
         long start = System.currentTimeMillis();
         CompilationResult compilationResult = javaCompiler.compile(new CompilationUnit[]{compilationUnit}, options);
         long end = System.currentTimeMillis();
@@ -180,9 +196,8 @@ public class SightlyJavaCompilerService {
         if (errors != null && errors.size() > 0) {
             throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, createErrorMsg(errors));
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("script compiled: {}", compilationResult.didCompile());
-            LOG.debug("compilation took {}ms", end - start);
+        if (compilationResult.didCompile()) {
+            LOG.debug("Class {} was compiled in {}ms.", fqcn, end - start);
         }
         /**
          * the class loader might have become dirty, so let the {@link ClassLoaderWriter} decide which class loader to return
@@ -195,7 +210,9 @@ public class SightlyJavaCompilerService {
         Resource pojoResource = resolver.getResource(pojoPath);
         if (pojoResource != null) {
             try {
-                return compileSource(null, IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"), className);
+                SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, unitChangeMonitor,
+                        classLoaderWriter, pojoResource);
+                return compileSource(sourceIdentifier, IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"));
             } catch (IOException e) {
                 throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoPath), e);
             }
@@ -350,7 +367,7 @@ public class SightlyJavaCompilerService {
         return buffer.toString();
     }
 
-    class SightlyCompilationUnit implements CompilationUnit {
+    private static class SightlyCompilationUnit implements CompilationUnit {
 
         private String fqcn;
         private String sourceCode;
@@ -362,7 +379,7 @@ public class SightlyJavaCompilerService {
 
         @Override
         public Reader getSource() throws IOException {
-            return new InputStreamReader(IOUtils.toInputStream(sourceCode, "UTF-8"));
+            return new InputStreamReader(IOUtils.toInputStream(sourceCode, "UTF-8"), "UTF-8");
         }
 
         @Override

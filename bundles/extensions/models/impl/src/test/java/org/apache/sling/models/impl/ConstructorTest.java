@@ -70,6 +70,7 @@ public class ConstructorTest {
         factory.activate(componentCtx);
         factory.bindInjector(new RequestAttributeInjector(), new ServicePropertiesMap(1, 1));
         factory.bindInjector(new SelfInjector(), new ServicePropertiesMap(2, 2));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(WithOneConstructorModel.class, WithThreeConstructorsModel.class, WithTwoConstructorsModel.class, SuperclassConstructorModel.class, InvalidConstructorModel.class, WithThreeConstructorsOneInjectModel.class, NoNameModel.class);
     }
 
     @Test

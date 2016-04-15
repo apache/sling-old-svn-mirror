@@ -105,7 +105,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
         scheduler.unschedule(getJobName(requestHandler));
     }
 
-    String getJobName(DistributionRequestHandler requestHandler) {
+    private String getJobName(DistributionRequestHandler requestHandler) {
         return SCHEDULE_NAME + requestHandler.toString();
     }
 

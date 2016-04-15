@@ -18,19 +18,22 @@
  */
 package org.apache.sling.validation;
 
+import java.util.function.Predicate;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.exceptions.SlingValidationException;
 import org.apache.sling.validation.model.ValidationModel;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
  */
+@ProviderType
 public interface ValidationService {
 
     /**
@@ -50,6 +53,7 @@ public interface ValidationService {
      * Tries to obtain a {@link ValidationModel} that is able to validate the given {@code resource}.
      *
      * @param resource the resource for which to obtain a validation model
+     * @param considerResourceSuperTypeModels if {@code true} will also consider the validation model of the resource super type (recursively), otherwise not.
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
      * @throws IllegalStateException in case an invalid validation model was found
      * @throws IllegalArgumentException in case resourceType being set on the given resource is blank, not set or absolute but outside of the search paths or some other error occurred while retrieving the models.
@@ -63,7 +67,6 @@ public interface ValidationService {
      *
      * @param resource the resource to validate
      * @param model    the model with which to perform the validation
-     * @param considerResourceSuperTypeModels if {@code true} will also consider the validation model of the resource super type (recursively), otherwise not.
      * @return a {@link ValidationResult} that provides the necessary information
      * @throws SlingValidationException if one validator was called with invalid arguments
      */
@@ -75,6 +78,7 @@ public interface ValidationService {
      * be queried for this validation operation.
      *
      * @param valueMap the map to validate
+     * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
      * @throws SlingValidationException if one validator was called with invalid arguments
      */

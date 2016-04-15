@@ -24,7 +24,9 @@ import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,17 +44,25 @@ import org.osgi.framework.Constants;
  */
 public class ClientSideTeleporter extends TeleporterRule {
 
+    public static final String DEFAULT_TEST_SERVLET_PATH = "system/sling/junit";
     private DependencyAnalyzer dependencyAnalyzer;
     private int testReadyTimeoutSeconds = 5;
+    private int webConsoleReadyTimeoutSeconds = 30;
     private String baseUrl;
     private String serverCredentials;
+    private String testServletPath = DEFAULT_TEST_SERVLET_PATH;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
+    private final Map<String, String> additionalBundleHeaders = new HashMap<String, String>();
     
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) throws IOException {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
             .set("Sling-Test-Regexp", c.getName() + ".*")
             .add(c);
+
+        for(Map.Entry<String, String> header : additionalBundleHeaders.entrySet()) {
+            b.set(header.getKey(), header.getValue());
+        }
         
         // Embed specified classes
         for(Class<?> clz : embeddedClasses) {
@@ -95,12 +105,25 @@ public class ClientSideTeleporter extends TeleporterRule {
         testReadyTimeoutSeconds = tm;
     }
     
+    /** Define how long to wait for the webconsole to be ready, before installing the test bundle */
+    public void setWebConsoleReadyTimeoutSeconds (int tm) {
+        webConsoleReadyTimeoutSeconds = tm;
+    }
+    
     /** Set the credentials to use to install our test bundle on the server */
     public void setServerCredentials(String username, String password) {
         serverCredentials = username + ":" + password;
     }
     
-    /** Define a prefix for class names that can be embedded
+    /**
+	 * @param testServletPath relative path to the Sling JUnit test servlet. 
+	 *     If null, defaults to DEFAULT_TEST_SERVLET_PATH.
+	 */
+	public void setTestServletPath(String testServletPath) {
+		this.testServletPath = testServletPath == null ? DEFAULT_TEST_SERVLET_PATH : testServletPath;
+	}
+
+	/** Define a prefix for class names that can be embedded
      *  in the test bundle if the {@link DependencyAnalyzer} thinks
      *  they should. Overridden by {@link #excludeDependencyPrefix } if
      *  any conflicts arise.
@@ -128,11 +151,16 @@ public class ClientSideTeleporter extends TeleporterRule {
         return this;
     }
     
+    /** Set additional bundle headers on the generated test bundle */
+    public Map<String, String> getAdditionalBundleHeaders() {
+        return additionalBundleHeaders;
+    }
+    
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
         final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss-");
         final String bundleSymbolicName = getClass().getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
         final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName);
-        httpClient.installBundle(bundle, bundleSymbolicName);
+        httpClient.installBundle(bundle, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
         return bundleSymbolicName;
     }
     
@@ -156,7 +184,7 @@ public class ClientSideTeleporter extends TeleporterRule {
             embeddedClasses.add(c);
         }
 
-        final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl);
+        final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl, testServletPath);
         httpClient.setCredentials(serverCredentials);
         
         // As this is not a ClassRule (which wouldn't map the test results correctly in an IDE)

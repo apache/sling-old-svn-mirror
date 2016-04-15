@@ -120,6 +120,8 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             eventHandlerRegistration.unregister();
             eventHandlerRegistration = null;
         }
+        // SLING-5592: cancel the potentially running background thread
+        cancelPreviousBackgroundCheck();
     }
     
     private void registerEventHandler() {

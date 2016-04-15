@@ -16,13 +16,34 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.compiler;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.scripting.sightly.impl.utils.JavaEscapeUtils;
+
 public class Utils {
 
     public static String getJavaNameFromPath(String path) {
         if (path.endsWith(".java")) {
             path = path.substring(0, path.length() - 5);
         }
-        return path.substring(1).replace("/", ".").replace("-", "_");
+        String[] parts = path.split("/");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            if (StringUtils.isNotEmpty(part)) {
+                stringBuilder.append(JavaEscapeUtils.getEscapedToken(parts[i]));
+                if (i != parts.length - 1) {
+                    stringBuilder.append(".");
+                }
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    public static String getPackageNameFromFQCN(String fqcn) {
+        if (StringUtils.isNotEmpty(fqcn)) {
+            return fqcn.substring(0, fqcn.lastIndexOf("."));
+        }
+        return null;
     }
 
 }

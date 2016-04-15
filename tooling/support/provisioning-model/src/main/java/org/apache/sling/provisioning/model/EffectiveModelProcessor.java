@@ -31,7 +31,7 @@ import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
  * Resolves all variables and artifact dependencies for the {@link ModelUtility#getEffectiveModel(Model)} method.
  */
 class EffectiveModelProcessor extends ModelProcessor {
-    
+
     private final ResolverOptions options;
 
     public EffectiveModelProcessor(ResolverOptions options) {
@@ -50,7 +50,7 @@ class EffectiveModelProcessor extends ModelProcessor {
         final String type = replace(newFeature, artifact.getType(), options.getVariableResolver());
         final String resolvedVersion = resolveArtifactVersion(groupId, artifactId, version, classifier, type,
                 options.getArtifactVersionResolver());
-        return new Artifact(groupId, artifactId, resolvedVersion, classifier, type);
+        return new Artifact(groupId, artifactId, resolvedVersion, classifier, type, artifact.getMetadata());
     }
 
     @Override

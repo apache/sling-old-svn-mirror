@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.test.impl;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -126,6 +128,24 @@ public class JcrContentContentProviderTest {
         
         // assertion
         assertIsNavigableAndHasNoChildren(syncDirNode, "/content/jcr:content/first-folder/second-folder");
+    }
+    
+    @Test
+    public void listChildrenOnSyncDirIgnoresWebInfAndMetaInf() throws Exception {
+        
+        project.ensureDirectoryExists(Path.fromPortableString("jcr_root/WEB-INF"));
+        project.ensureDirectoryExists(Path.fromPortableString("jcr_root/META-INF"));
+        project.ensureDirectoryExists(Path.fromPortableString("jcr_root/content"));
+        
+        // directly create the root node
+        SyncDir syncDirNode = new SyncDir((IFolder) contentProject.findMember("jcr_root"));
+
+        // assertion
+        Object[] children = new JcrContentContentProvider().getChildren(syncDirNode);
+        assertThat(children.length, equalTo(1));
+        
+        JcrNode child = (JcrNode) children[0];
+        assertThat(child.getName(), equalTo("content"));
     }
     
     /**

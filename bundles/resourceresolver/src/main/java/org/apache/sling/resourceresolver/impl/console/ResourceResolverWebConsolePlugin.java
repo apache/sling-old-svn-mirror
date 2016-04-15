@@ -435,11 +435,8 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
             pw.print("refreshable=");
             pw.print(dto.refreshable);
             pw.print("<br/>");
-            pw.print("supportsJCRQuery=");
-            pw.print(dto.supportsJCRQuery);
-            pw.print("<br/>");
-            pw.print("supportsQuery=");
-            pw.print(dto.supportsQuery);
+            pw.print("supportsQueryLanguage=");
+            pw.print(dto.supportsQueryLanguage);
             pw.print("<br/>");
             pw.print("useResourceAccessSecurity=");
             pw.print(dto.useResourceAccessSecurity);
@@ -492,7 +489,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         pw.println("Resource Providers");
 
-        final String format = "%25s%25s%15s\r\n";
+        final String format = "%35s %25s %15s\r\n";
         pw.printf(format, "Provider", "Path", "Configuration");
 
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
@@ -524,10 +521,8 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
             config.append(dto.modifiable);
             config.append(", refreshable=");
             config.append(dto.refreshable);
-            config.append(", supportsJCRQuery=");
-            config.append(dto.supportsJCRQuery);
-            config.append(", supportsQuery=");
-            config.append(dto.supportsQuery);
+            config.append(", supportsQueryLanguage=");
+            config.append(dto.supportsQueryLanguage);
             config.append(", useResourceAccessSecurity=");
             config.append(dto.useResourceAccessSecurity);
             pw.printf(format, sb.toString(), dto.path, config.toString());

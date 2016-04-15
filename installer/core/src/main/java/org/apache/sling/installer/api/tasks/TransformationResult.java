@@ -129,4 +129,11 @@ public class TransformationResult {
     public Version getVersion() {
         return this.version;
     }
+
+    @Override
+    public String toString() {
+        return "TransformationResult [resourceType=" + resourceType + ", id=" + id + ", version=" + version
+                + ", attributes=" + attributes + "]";
+    }
+
 }

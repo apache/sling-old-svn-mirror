@@ -82,4 +82,16 @@ public interface DistributionPackageBuilder {
      */
     boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException;
 
+
+    /**
+     * install a stream and returns the associated to a {@link DistributionPackageInfo} this provider can read and install
+     *
+     * @param resourceResolver resource resolver used to store the eventually created package
+     * @param stream           the {@link InputStream} of the package to read
+     * @return a {@link DistributionPackage} if it can read it from the stream
+     * @throws DistributionException when the stream cannot be read as a {@link DistributionPackage}
+     */
+    @Nonnull
+    DistributionPackageInfo installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException;
+
 }

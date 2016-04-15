@@ -37,7 +37,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
-import org.apache.sling.spi.resource.provider.ResolverContext;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class ResourceProviderEntryTest {
         this.providersBasedResolver = null;
         this.providers.clear();
         final ResourceProvider<?> rootProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(rootProvider.getResource(Mockito.any(ResolverContext.class), Mockito.anyString(), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(this.mockedRootResolver));
+        Mockito.when(rootProvider.getResource(Mockito.any(ResolveContext.class), Mockito.anyString(), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(this.mockedRootResolver));
         providers.add(createRPHandler(rootProvider, "rp0", 0, "/"));
     }
 
@@ -76,7 +77,7 @@ public class ResourceProviderEntryTest {
         String firstPath = "/rootel";
         final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(resolver));
+        Mockito.when(first.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(resolver));
 
         providers.add(createRPHandler(first, "rp1", 1, "/rootel"));
         this.providersBasedResolver = null;
@@ -97,13 +98,13 @@ public class ResourceProviderEntryTest {
 
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
 
         providers.add(createRPHandler(first, "rp1", 1, firstPath));
         providers.add(createRPHandler(second, "rp2", 2, secondPath));
@@ -126,13 +127,13 @@ public class ResourceProviderEntryTest {
 
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
 
         providers.add(createRPHandler(first, "rp1", 1, firstPath));
         providers.add(createRPHandler(second, "rp2", 2, secondPath));
@@ -155,13 +156,13 @@ public class ResourceProviderEntryTest {
 
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(firstPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(secondPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider<?> third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(thirdPath), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(thirdResolver));
 
         final Map<String, Object> firstProps = new HashMap<String, Object>();
         firstProps.put(Constants.SERVICE_ID, (long)1);
@@ -203,7 +204,7 @@ public class ResourceProviderEntryTest {
         for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
             final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
             final ResourceProvider<?> p = Mockito.mock(ResourceProvider.class);
-            Mockito.when(p.getResource(Mockito.any(ResolverContext.class), Mockito.startsWith(path), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(resolver));
+            Mockito.when(p.getResource(Mockito.any(ResolveContext.class), Mockito.startsWith(path), Mockito.any(ResourceContext.class), Mockito.any(Resource.class))).thenReturn(new TestResource(resolver));
 
             ++counter;
 
@@ -242,8 +243,16 @@ public class ResourceProviderEntryTest {
 
     private ResourceResolver getResolver() throws LoginException {
         if (providersBasedResolver == null) {
-            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()), false, null,
-                    new ResourceProviderStorage(providers));
+            final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+            activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
+            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
+                    new ResourceProviderStorageProvider() {
+
+                        @Override
+                        public ResourceProviderStorage getResourceProviderStorage() {
+                            return new ResourceProviderStorage(providers);
+                        }
+                    });
         }
         return providersBasedResolver;
     }

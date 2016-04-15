@@ -42,9 +42,7 @@ public class AsyncHealthCheckSample implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(AsyncHealthCheckSample.class);
     
-    // static because for factories, not always the same instance is returned for 
-    // the same service reference
-    private static final AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger counter = new AtomicInteger();
     
     public static final int PERIOD_SECONDS = 5;
     

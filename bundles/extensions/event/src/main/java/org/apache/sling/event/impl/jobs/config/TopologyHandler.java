@@ -32,6 +32,10 @@ import org.apache.sling.discovery.TopologyEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This topology handler is handling the topology change events asynchronously
+ * and processes them by queuing them.
+ */
 @Component
 @Service(value = TopologyEventListener.class)
 public class TopologyHandler implements TopologyEventListener, Runnable {

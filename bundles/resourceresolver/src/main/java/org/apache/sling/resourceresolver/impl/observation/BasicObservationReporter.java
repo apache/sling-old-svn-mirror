@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.api.resource.Path;
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.path.Path;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 
@@ -120,12 +120,8 @@ public class BasicObservationReporter implements ObservationReporter {
 
     @Override
     public void reportChanges(final Iterable<ResourceChange> changes, final boolean distribute) {
-        final List<ResourceChange> changeList = new ArrayList<ResourceChange>();
-        for(final ResourceChange ch : changes) {
-            changeList.add(ch);
-        }
         for (final Map.Entry<ListenerConfig, List<ResourceChangeListenerInfo>> entry : this.listeners.entrySet()) {
-            final List<ResourceChange> filtered = filterChanges(changeList, entry.getKey());
+            final List<ResourceChange> filtered = filterChanges(changes, entry.getKey());
             if ( !filtered.isEmpty() ) {
                 for(final ResourceChangeListenerInfo info : entry.getValue()) {
                     info.getListener().onChange(filtered);
@@ -141,7 +137,7 @@ public class BasicObservationReporter implements ObservationReporter {
      * @param config The configuration
      * @return The filtered list.
      */
-    private List<ResourceChange> filterChanges(final List<ResourceChange> changes, final ListenerConfig config) {
+    private List<ResourceChange> filterChanges(final Iterable<ResourceChange> changes, final ListenerConfig config) {
         final List<ResourceChange> filtered = new ArrayList<ResourceChange>();
         for (final ResourceChange c : changes) {
             if (matches(c, config)) {

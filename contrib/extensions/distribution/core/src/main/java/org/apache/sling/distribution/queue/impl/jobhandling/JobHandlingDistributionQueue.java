@@ -66,28 +66,26 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         return name;
     }
 
-    public boolean add(@Nonnull DistributionQueueItem item) {
-        boolean result = true;
+    public DistributionQueueEntry add(@Nonnull DistributionQueueItem item) {
         try {
             Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
-            log.info("job {} added", job.getId());
+            log.debug("job {} added for item {}", job.getId(), item.getPackageId());
+
+            return JobHandlingUtils.getEntry(job);
         } catch (Exception e) {
             log.error("could not add an item to the queue", e);
-            result = false;
+            return null;
         }
-        return result;
     }
 
 
     public DistributionQueueEntry getHead() {
         Job firstJob = getFirstJob();
         if (firstJob != null) {
-            DistributionQueueItem item = JobHandlingUtils.getItem(firstJob);
-            DistributionQueueItemStatus status = JobHandlingUtils.getStatus(firstJob);
-
-            return new DistributionQueueEntry(item, status);
+            DistributionQueueEntry entry = JobHandlingUtils.getEntry(firstJob);
+            return entry;
         } else {
             return null;
         }
@@ -99,15 +97,15 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         List<Job> jobs = getJobs(0, 1);
         if (jobs.size() > 0) {
             Job firstItem = jobs.get(0);
-            log.info("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
+            log.debug("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
             return firstItem;
         }
         return null;
     }
 
     private Job getJob(String itemId) {
-        Map<String, Object> properties = JobHandlingUtils.createIdProperties(itemId);
-        Job job = jobManager.getJob(topic, properties);
+        String jobId = JobHandlingUtils.unescapeId(itemId);
+        Job job = jobManager.getJobById(jobId);
 
         if (job == null) {
             log.warn("item with id {} cannot be found", itemId);
@@ -142,10 +140,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         List<DistributionQueueEntry> items = new ArrayList<DistributionQueueEntry>();
         Collection<Job> jobs = getJobs(skip, limit);
         for (Job job : jobs) {
-            DistributionQueueItem item = JobHandlingUtils.getItem(job);
-            DistributionQueueItemStatus status = JobHandlingUtils.getStatus(job);
-
-            items.add(new DistributionQueueEntry(item, status));
+            items.add(JobHandlingUtils.getEntry(job));
         }
 
         return items;
@@ -155,10 +150,8 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         Job job = getJob(id);
 
         if (job != null) {
-            DistributionQueueItem item = JobHandlingUtils.getItem(job);
-            DistributionQueueItemStatus status = JobHandlingUtils.getStatus(job);
-
-            return new DistributionQueueEntry(item, status);
+            DistributionQueueEntry entry = JobHandlingUtils.getEntry(job);
+            return entry;
         }
 
         return null;
@@ -171,13 +164,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         DistributionQueueEntry entry = null;
 
         if (job != null) {
-            DistributionQueueItem item = JobHandlingUtils.getItem(job);
-            DistributionQueueItemStatus status = JobHandlingUtils.getStatus(job);
-            entry = new DistributionQueueEntry(item, status);
+            entry = JobHandlingUtils.getEntry(job);
             removed = jobManager.removeJobById(job.getId());
         }
 
-        log.info("item with id {} removed from the queue: {}", id, removed);
+        log.debug("item with id {} removed from the queue: {}", id, removed);
         return entry;
     }
 
@@ -193,7 +184,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
         DistributionQueueState state = DistributionQueueUtils.calculateState(firstItem, firstItemStatus);
         if (!isActive) {
-            state = DistributionQueueState.PAUSED;
+            state = DistributionQueueState.PASSIVE;
         }
 
         int itemsCount = jobs.size();

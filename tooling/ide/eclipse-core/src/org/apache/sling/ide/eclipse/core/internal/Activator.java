@@ -22,6 +22,7 @@ import java.util.Map;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
+import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
@@ -60,7 +61,8 @@ public class Activator extends Plugin {
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<Logger, Logger> tracer;
     private ServiceTracker<BatcherFactory, BatcherFactory> batcherFactoryLocator;
-
+    private ServiceTracker<SourceReferenceResolver, Object> sourceReferenceLocator;
+    
     private ServiceRegistration<Logger> tracerRegistration;
 
 	public void start(BundleContext context) throws Exception {
@@ -94,6 +96,9 @@ public class Activator extends Plugin {
         
         batcherFactoryLocator = new ServiceTracker<>(context, BatcherFactory.class, null);
         batcherFactoryLocator.open();
+        
+        sourceReferenceLocator = new ServiceTracker<>(context, SourceReferenceResolver.class, null);
+        sourceReferenceLocator.open();
 	}
 
 	/*
@@ -111,6 +116,7 @@ public class Activator extends Plugin {
         artifactLocator.close();
         tracer.close();
         batcherFactoryLocator.close();
+        sourceReferenceLocator.close();
 
         plugin = null;
 		super.stop(context);
@@ -172,5 +178,12 @@ public class Activator extends Plugin {
     
     public EventAdmin getEventAdmin() {
         return (EventAdmin) ServiceUtil.getNotNull(eventAdmin);
+    }
+    
+    /**
+     * @return the source reference resolver, possibly null
+     */
+    public SourceReferenceResolver getSourceReferenceResolver() {
+        return (SourceReferenceResolver) sourceReferenceLocator.getService();
     }
 }

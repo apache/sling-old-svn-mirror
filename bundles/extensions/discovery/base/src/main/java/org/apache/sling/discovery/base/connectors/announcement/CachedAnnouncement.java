@@ -70,6 +70,10 @@ public class CachedAnnouncement {
         return lastPing;
     }
     
+    public final long getFirstPing() {
+        return firstPing;
+    }
+    
     /** Returns the second until the next heartbeat is expected, otherwise the timeout will hit **/
     public final long getSecondsUntilTimeout() {
         final long now = System.currentTimeMillis();
@@ -92,6 +96,7 @@ public class CachedAnnouncement {
      */
     final long registerPing(Announcement incomingAnnouncement, BaseConfig config) {
         lastPing = System.currentTimeMillis();
+        announcement.registerPing(incomingAnnouncement);
         if (incomingAnnouncement.isInherited()) {
             // then we are the client, we inherited this announcement from the server
             // hence we have no power to do any backoff instructions towards the server

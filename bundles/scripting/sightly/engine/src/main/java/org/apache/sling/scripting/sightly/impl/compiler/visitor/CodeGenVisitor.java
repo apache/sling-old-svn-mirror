@@ -31,6 +31,7 @@ import org.apache.sling.scripting.sightly.impl.compiled.TypeInfo;
 import org.apache.sling.scripting.sightly.impl.compiled.UnitBuilder;
 import org.apache.sling.scripting.sightly.impl.compiled.VariableAnalyzer;
 import org.apache.sling.scripting.sightly.impl.compiled.VariableDescriptor;
+import org.apache.sling.scripting.sightly.impl.compiled.VariableScope;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandVisitor;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Conditional;
 import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Loop;
@@ -78,25 +79,23 @@ public class CodeGenVisitor implements CommandVisitor {
     }
 
     private void initVariable(VariableDescriptor descriptor, JavaSource initSource) {
-        switch (descriptor.getScope()) {
-            case DYNAMIC:
-                initSource.beginAssignment(descriptor.getAssignedName());
-                if (descriptor.isTemplateVariable()) {
-                    initSource.startCall(SourceGenConstants.RECORD_GET_VALUE);
-                } else if (unitParameters.contains(descriptor.getOriginalName().toLowerCase())) {
-                    initSource.startMethodCall(SourceGenConstants.ARGUMENTS_FIELD, SourceGenConstants.BINDINGS_GET_METHOD);
-                } else {
-                    initSource.startMethodCall(SourceGenConstants.BINDINGS_FIELD, SourceGenConstants.BINDINGS_GET_METHOD);
-                }
-                initSource.stringLiteral(descriptor.getOriginalName())
-                        .endCall()
-                        .endStatement();
-                break;
-            case GLOBAL:
-                initSource.beginAssignment(descriptor.getAssignedName())
-                        .nullLiteral()
-                        .endStatement();
-                break;
+        VariableScope scope = descriptor.getScope();
+        if (scope == VariableScope.DYNAMIC) {
+            initSource.beginAssignment(descriptor.getAssignedName());
+            if (descriptor.isTemplateVariable()) {
+                initSource.startCall(SourceGenConstants.RECORD_GET_VALUE);
+            } else if (unitParameters.contains(descriptor.getOriginalName().toLowerCase())) {
+                initSource.startMethodCall(SourceGenConstants.ARGUMENTS_FIELD, SourceGenConstants.BINDINGS_GET_METHOD);
+            } else {
+                initSource.startMethodCall(SourceGenConstants.BINDINGS_FIELD, SourceGenConstants.BINDINGS_GET_METHOD);
+            }
+            initSource.stringLiteral(descriptor.getOriginalName())
+                    .endCall()
+                    .endStatement();
+        } else if (scope == VariableScope.GLOBAL) {
+            initSource.beginAssignment(descriptor.getAssignedName())
+                    .nullLiteral()
+                    .endStatement();
         }
         String listCoercionVar = descriptor.getListCoercion();
         if (listCoercionVar != null) {

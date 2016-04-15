@@ -26,7 +26,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -42,9 +44,14 @@ class TeleporterHttpClient {
     private final String CHARSET = "UTF-8";
     private final String baseUrl;
     private String credentials = null;
+    private final String testServletPath;
     
-    TeleporterHttpClient(String baseUrl) {
+    TeleporterHttpClient(String baseUrl, String testServletPath) {
         this.baseUrl = baseUrl;
+        if(!testServletPath.endsWith("/")) {
+            testServletPath += "/";
+        }
+        this.testServletPath = testServletPath;
     }
 
     void setCredentials(String cred) {
@@ -57,13 +64,34 @@ class TeleporterHttpClient {
             c.setRequestProperty ("Authorization", basicAuth);
         }
     }
+
+    /** Wait until specified URL returns specified status */
+    public void waitForStatus(String url, int expectedStatus, int timeoutMsec) throws IOException {
+        final long end = System.currentTimeMillis() + timeoutMsec;
+        final Set<Integer> statusSet = new HashSet<Integer>();
+        final ExponentialBackoffDelay d = new ExponentialBackoffDelay(50,  250);
+        while(System.currentTimeMillis() < end) {
+            try {
+                final int status = getHttpGetStatus(url);
+                statusSet.add(status);
+                if(status == expectedStatus) {
+                    return;
+                }
+                d.waitNextDelay();
+            } catch(Exception ignore) {
+            }
+        }
+        throw new IOException("Did not get status " + expectedStatus + " at " + url + " after " + timeoutMsec + " msec, got " + statusSet);
+    }
     
-    void installBundle(InputStream bundle, String bundleSymbolicName) throws MalformedURLException, IOException {
+    void installBundle(InputStream bundle, String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
         // Equivalent of
         // curl -u admin:admin -F action=install -Fbundlestart=1 -Fbundlefile=@somefile.jar http://localhost:8080/system/console/bundles
         final String url = baseUrl + "/system/console/bundles";
         final String contentType = "application/octet-stream";
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        
+        waitForStatus(url, 200, webConsoleReadyTimeoutSeconds * 1000);
         
         try {
             setConnectionCredentials(c);
@@ -101,8 +129,9 @@ class TeleporterHttpClient {
         }
     }
     
-    private int getHttpGetStatus(String url) throws MalformedURLException, IOException {
+    public int getHttpGetStatus(String url) throws MalformedURLException, IOException {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        setConnectionCredentials(c);
         c.setUseCaches(false);
         c.setDoOutput(true);
         c.setDoInput(true);
@@ -115,10 +144,11 @@ class TeleporterHttpClient {
     }
 
     void runTests(String testSelectionPath, int testReadyTimeoutSeconds) throws MalformedURLException, IOException, MultipleFailureException {
-        final String testUrl = baseUrl + "/system/sling/junit/" + testSelectionPath + ".junit_result";
+        final String testUrl = baseUrl + "/" + testServletPath + testSelectionPath + ".junit_result";
         
         // Wait for non-404 response that signals that test bundle is ready
         final long timeout = System.currentTimeMillis() + (testReadyTimeoutSeconds * 1000L);
+        final ExponentialBackoffDelay delay = new ExponentialBackoffDelay(25, 1000);
         while(true) {
             if(getHttpGetStatus(testUrl) == 200) {
                 break;
@@ -127,10 +157,12 @@ class TeleporterHttpClient {
                 fail("Timeout waiting for test at " + testUrl + " (" + testReadyTimeoutSeconds + " seconds)");
                 break;
             }
+            delay.waitNextDelay();
         }
         
         final HttpURLConnection c = (HttpURLConnection)new URL(testUrl).openConnection();
         try {
+        	setConnectionCredentials(c);
             c.setRequestMethod("POST");
             c.setUseCaches(false);
             c.setDoOutput(true);

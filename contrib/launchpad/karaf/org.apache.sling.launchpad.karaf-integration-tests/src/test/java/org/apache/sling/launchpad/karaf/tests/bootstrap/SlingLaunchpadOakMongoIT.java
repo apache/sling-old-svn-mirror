@@ -20,9 +20,6 @@ package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.jcr.Session;
-
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -31,8 +28,6 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +37,6 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Bundle;
 
 import static org.junit.Assert.assertEquals;
@@ -53,11 +47,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
-
-    @Inject
-    @Filter(timeout = 300000)
-    public SlingRepository slingRepository;
+public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSupport {
 
     private static MongodExecutable executable;
 
@@ -71,7 +61,7 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         process = executable.start();
     }
 
-    @AfterClass // TODO does it work?
+    @AfterClass // TODO does it work? (no - not supported by Pax Exam)
     public static void stopMongo() throws Exception {
         if (executable != null) {
             executable.stop();
@@ -84,13 +74,13 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         startMongo(port);
         final String mongoUri = String.format("mongodb://localhost:%s", port);
         return OptionUtils.combine(baseConfiguration(),
+            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(wrap)"),
             editConfigurationFilePut("etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg", "mongouri", mongoUri),
-            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.mongo").version("1.50.0")),
-            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.process").version("1.50.0")),
-            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").version("4.2.0")),
-            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").version("4.2.0")),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-compress").version("1.9"),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").version("3.4"),
+            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.mongo").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.process").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna-platform").versionAsInProject()),
+            mavenBundle().groupId("org.apache.commons").artifactId("commons-compress").versionAsInProject(),
             addSlingFeatures("sling-launchpad-oak-mongo")
         );
     }
@@ -100,18 +90,6 @@ public class SlingLaunchpadOakMongoIT extends KarafTestSupport {
         final Bundle bundle = findBundle("org.mongodb.mongo-java-driver");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testSlingRepository() throws Exception {
-        assertNotNull(slingRepository);
-    }
-
-    @Test
-    public void testVarSlingExists() throws Exception {
-        final Session session = slingRepository.loginAdministrative(null);
-        session.getRootNode().getNode("var/sling");
-        session.logout();
     }
 
 }

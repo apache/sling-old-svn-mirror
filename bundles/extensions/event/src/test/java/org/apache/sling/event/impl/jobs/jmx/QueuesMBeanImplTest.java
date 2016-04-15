@@ -33,15 +33,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 
 public class QueuesMBeanImplTest {
 
     private QueuesMBeanImpl mbean;
     @Mock
     private BundleContext bundleContext;
-    @Mock
-    private ComponentContext componentContext;
     @Captor
     private ArgumentCaptor<String> serviceClass;
     @Captor
@@ -59,8 +56,7 @@ public class QueuesMBeanImplTest {
     @Before
     public void setup() throws NoSuchFieldException {
         mbean = new QueuesMBeanImpl();
-        Mockito.when(componentContext.getBundleContext()).thenReturn(bundleContext);
-        mbean.activate(componentContext.getBundleContext());
+        mbean.activate(bundleContext);
     }
 
 

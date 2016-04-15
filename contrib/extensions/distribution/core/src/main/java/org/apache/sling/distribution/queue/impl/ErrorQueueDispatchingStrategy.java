@@ -35,6 +35,8 @@ import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -42,8 +44,10 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
  * where the queueName is the name of the original queue the package was in.
  */
 public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final static String ERROR_PREFIX = "error-";
+
+    public final static String ERROR_PREFIX = "error-";
     private final Set<String> queueNames = new TreeSet<String>();
 
     public ErrorQueueDispatchingStrategy(String[] queueNames) {
@@ -67,12 +71,14 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
         DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, errorQueueName);
 
         DistributionQueueItem queueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
+        DistributionPackageUtils.acquire(distributionPackage, errorQueueName);
+        DistributionQueueEntry queueEntry = errorQueue.add(queueItem);
 
-        if (errorQueue.add(queueItem)) {
-            DistributionPackageUtils.acquire(distributionPackage, errorQueueName);
-
-            DistributionQueueEntry entry = errorQueue.getItem(queueItem.getId());
-            status = entry.getStatus();
+        if (queueEntry != null) {
+            status = queueEntry.getStatus();
+        } else {
+            DistributionPackageUtils.releaseOrDelete(distributionPackage, errorQueueName);
+            log.error("cannot add package {} to queue {}", distributionPackage.getId(), errorQueueName);
         }
 
         result.add(status);

@@ -16,11 +16,14 @@
  */
 package org.apache.sling.commons.threads;
 
+import aQute.bnd.annotation.ProviderType;
+
 import java.util.concurrent.ThreadFactory;
 
 /**
  * The thread pool configuration.
  */
+@ProviderType
 public interface ThreadPoolConfig {
 
     /** The thread pool policies. */
@@ -54,6 +57,12 @@ public interface ThreadPoolConfig {
      * @return The queue size.
      */
     int getQueueSize();
+
+    /**
+     * Return the maximum age before a thread is retired.
+     * @return The maximum age of a thread in milliseconds.
+     */
+    long getMaxThreadAge();
 
     /**
      * Return the keep alive time.

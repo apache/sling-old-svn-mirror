@@ -158,7 +158,7 @@ public class SettingsUtils {
     }
 
 
-    public static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
+    private static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
         Map<String, AType> result = new TreeMap<String, AType>();
         for (int i = 0; i < aList.size(); i++) {
             result.put(prefix + i, aList.get(i));
@@ -197,7 +197,7 @@ public class SettingsUtils {
             return null;
         }
 
-        return result.toArray(new String[0]);
+        return result.toArray(new String[result.size()]);
     }
 
     public static String[] removeEmptyEntries(String[] array, String[] defaultArray) {

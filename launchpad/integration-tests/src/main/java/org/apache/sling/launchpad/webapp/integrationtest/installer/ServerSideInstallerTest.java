@@ -62,6 +62,13 @@ public class ServerSideInstallerTest {
         }
     }
     
+    /** Optionally ignore specific resources, usually
+     *  created by other tests. 
+     */
+    private boolean ignore(String entityId) {
+        return entityId.contains("InstallManyBundlesTest");
+    }
+    
     @Test
     public void noDuplicates() {
         String output = "";
@@ -70,6 +77,9 @@ public class ServerSideInstallerTest {
             if ( group.getResources().size() > 1 ) {            
                 boolean first = true;
                 for(final Resource rsrc : group.getResources()) {
+                    if(ignore(rsrc.getEntityId())) {
+                        continue;
+                    }
                     if ( first ) {
                         output += "Duplicate resources for '" + rsrc.getEntityId() + "' : ";
                         first = false;
@@ -78,7 +88,9 @@ public class ServerSideInstallerTest {
                     }
                     output += rsrc.getURL();
                 }
-                output += "\n";
+                if(!output.isEmpty()) {
+                    output += "\n";
+                }
             }
         }
         if(output.length() > 0) {

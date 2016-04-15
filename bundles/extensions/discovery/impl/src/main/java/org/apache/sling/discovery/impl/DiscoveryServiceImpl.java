@@ -152,7 +152,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     @Reference
     private Config config;
     
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference
     private SyncTokenService syncTokenService;
 
     /** the slingId of the local instance **/

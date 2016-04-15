@@ -20,7 +20,6 @@ package org.apache.sling.distribution.serialization;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,23 +39,23 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
     /**
      * distribution package type
      */
-    public static String PROPERTY_PACKAGE_TYPE = "package.type";
+    public static final String PROPERTY_PACKAGE_TYPE = "package.type";
 
     /**
      * distribution request paths
      */
-    public static String PROPERTY_REQUEST_PATHS = "request.paths";
+    public static final String PROPERTY_REQUEST_PATHS = "request.paths";
 
     /**
      * distribution request deep paths
      */
-    public static String PROPERTY_REQUEST_DEEP_PATHS = "request.deepPaths";
+    public static final String PROPERTY_REQUEST_DEEP_PATHS = "request.deepPaths";
 
 
     /**
      * distribution request type
      */
-    public static String PROPERTY_REQUEST_TYPE = "request.type";
+    public static final String PROPERTY_REQUEST_TYPE = "request.type";
 
 
     /**
@@ -113,7 +112,6 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
         return "DistributionPackageInfo{" +
                 " request.type=" + get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class) +
                 ", request.paths=" + Arrays.toString(get(PROPERTY_REQUEST_PATHS, String[].class)) +
-                ", request.deepPaths=" + Arrays.toString(get(PROPERTY_REQUEST_DEEP_PATHS, String[].class)) +
                 '}';
     }
 }

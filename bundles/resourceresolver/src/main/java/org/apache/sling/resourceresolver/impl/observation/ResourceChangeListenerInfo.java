@@ -28,9 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.sling.api.resource.PathSet;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.osgi.framework.ServiceReference;
 
@@ -39,7 +39,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class ResourceChangeListenerInfo {
 
-    private static final Set<ChangeType> DEFAULT_CHANGE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
+    private static final Set<ChangeType> DEFAULT_CHANGE_RESOURCE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
 
     private static final Set<ChangeType> DEFAULT_CHANGE_PROVIDER_TYPES = EnumSet.of(ChangeType.PROVIDER_ADDED, ChangeType.PROVIDER_REMOVED);
 
@@ -114,7 +114,7 @@ public class ResourceChangeListenerInfo {
             if ( rts.isEmpty() ) {
                 this.resourceChangeTypes = Collections.emptySet();
             } else if ( rts.size() == 3 ) {
-                this.resourceChangeTypes = DEFAULT_CHANGE_TYPES;
+                this.resourceChangeTypes = DEFAULT_CHANGE_RESOURCE_TYPES;
             } else {
                 this.resourceChangeTypes = Collections.unmodifiableSet(rts);
             }
@@ -126,9 +126,10 @@ public class ResourceChangeListenerInfo {
                 this.providerChangeTypes = Collections.unmodifiableSet(pts);
             }
         } else {
-            // default is added, changed, removed
-            this.resourceChangeTypes = DEFAULT_CHANGE_TYPES;
-            this.providerChangeTypes = Collections.emptySet();
+            // default is added, changed, removed for resources and
+            // added and removed for providers
+            this.resourceChangeTypes = DEFAULT_CHANGE_RESOURCE_TYPES;
+            this.providerChangeTypes = DEFAULT_CHANGE_PROVIDER_TYPES;
         }
 
         this.valid = configValid;

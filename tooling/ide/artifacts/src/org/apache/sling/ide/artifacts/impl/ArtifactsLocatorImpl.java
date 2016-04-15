@@ -40,13 +40,28 @@ public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
 
         BundleContext bundleContext = context.getBundleContext();
 
-        String version = "1.0.0"; // TODO - remove version hardcoding
+        String version = "1.0.2"; // TODO - remove version hardcoding
         String artifactId = "org.apache.sling.tooling.support.install";
         String extension = "jar";
 
         URL jarUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/sling-tooling-support-install/" + artifactId
                 + "." + extension);
 
+        return new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version, jarUrl);
+    }
+
+    @Override
+    public EmbeddedArtifact loadSourceSupportBundle() {
+        
+        BundleContext bundleContext = context.getBundleContext();
+        
+        String version = "1.0.0"; // TODO - remove version hardcoding
+        String artifactId = "org.apache.sling.tooling.support.source";
+        String extension = "jar";
+        
+        URL jarUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/sling-tooling-support-source/" + artifactId
+                + "." + extension);
+        
         return new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version, jarUrl);
     }
 

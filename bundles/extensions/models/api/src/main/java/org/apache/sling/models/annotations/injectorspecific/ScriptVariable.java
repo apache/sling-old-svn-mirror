@@ -47,7 +47,7 @@ public @interface ScriptVariable {
      * If set to true, the model can be instantiated even if there is no
      * scripting value with the specified name.
      * Default = false.
-     * @deprecated Use {@link InjectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;

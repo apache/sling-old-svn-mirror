@@ -412,7 +412,7 @@ public class XSSAPIImpl implements XSSAPI {
      */
     @Override
     public String encodeForJSString(String source) {
-        return source == null ? null : Encode.forJavaScript(source);
+        return source == null ? null : Encode.forJavaScriptSource(source);
     }
 
     /**

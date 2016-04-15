@@ -19,16 +19,19 @@
 package org.apache.sling.validation.impl.validators;
 
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.Validator;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.SlingValidationException;
+import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.Validator;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
@@ -38,20 +41,25 @@ import org.apache.sling.validation.exceptions.SlingValidationException;
 @Service(Validator.class)
 public class RegexValidator implements Validator<String> {
 
+    public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public String validate(@Nonnull String data, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ValueMap arguments)
+    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
-            throw new SlingValidationException("Mandatory " + REGEX_PARAM + " is missing from the arguments map.");
+            throw new SlingValidationException("Mandatory argument '" + REGEX_PARAM + "' is missing from the arguments map.");
         }
-        Pattern pattern = Pattern.compile(regex);
-        if (pattern.matcher((String)data).matches()) {
-            return null;
+        try {
+            Pattern pattern = Pattern.compile(regex);
+            if (pattern.matcher((String)data).matches()) {
+                return DefaultValidationResult.VALID;
+            }
+            return new DefaultValidationResult(context.getLocation(), context.getSeverity(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+        } catch (PatternSyntaxException e) {
+            throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }
-        return "Property does not match the pattern " + regex;
     }
 
 }

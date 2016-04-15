@@ -28,6 +28,7 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -40,6 +41,7 @@ public class SimpleDistributionPackageTest {
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.DELETE, "/abc");
         SimpleDistributionPackage createdPackage = new SimpleDistributionPackage(request, "VOID");
         SimpleDistributionPackage readPackage = SimpleDistributionPackage.fromStream(new ByteArrayInputStream(("DSTRPCK:DELETE|/abc").getBytes()), "VOID");
+        assertNotNull(readPackage);
         assertEquals(createdPackage.getType(), readPackage.getType());
         assertEquals(createdPackage.getInfo().getRequestType(), readPackage.getInfo().getRequestType());
         assertEquals(Arrays.toString(createdPackage.getInfo().getPaths()), Arrays.toString(readPackage.getInfo().getPaths()));

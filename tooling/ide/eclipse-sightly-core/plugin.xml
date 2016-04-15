@@ -64,4 +64,16 @@
                name="org.apache.sling.ide.eclipse-sightly-core"></bundle>
       </component>
    </extension>	
+   
+   <!-- property testers -->
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.apache.sling.ide.eclipse.sightly.internal.SightlyNatureTester"
+            id="org.apache.sling.ide.eclipse.sightly.core.sightlyNature"
+            namespace="org.apache.sling.ide.eclipse.sightly"
+            properties="sightlyNature"
+            type="java.lang.Object">
+      </propertyTester>
+   </extension>   
 </plugin>

@@ -35,5 +35,5 @@ public interface DistributionQueueProcessor {
      * @param queueEntry the {@link org.apache.sling.distribution.queue.DistributionQueueEntry} to be processed
      * @return {@code true} if the item was successfully processed, {@code false} otherwise
      */
-    public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueEntry queueEntry);
+    boolean process(@Nonnull String queueName, @Nonnull DistributionQueueEntry queueEntry);
 }

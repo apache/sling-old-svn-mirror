@@ -40,6 +40,7 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
     /**
      * @see java.util.Iterator#hasNext()
      */
+    @Override
     public boolean hasNext() {
         return this.iterator.hasNext();
     }
@@ -47,13 +48,18 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
     /**
      * @see java.util.Iterator#next()
      */
+    @Override
     public Resource next() {
-        return this.tracker.decorate(this.iterator.next());
+        final Resource rsrc = this.iterator.next();
+        rsrc.getResourceMetadata().setResolutionPath(rsrc.getPath());
+
+        return this.tracker.decorate(rsrc);
     }
 
     /**
      * @see java.util.Iterator#remove()
      */
+    @Override
     public void remove() {
         this.iterator.remove();
     }

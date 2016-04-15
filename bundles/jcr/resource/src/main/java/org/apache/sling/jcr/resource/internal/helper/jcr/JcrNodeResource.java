@@ -56,6 +56,8 @@ import org.slf4j.LoggerFactory;
 })
 class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
 
+    private static volatile boolean LOG_DEPRECATED_MAP = true;
+
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
@@ -133,11 +135,15 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
         } else if (type == PersistableValueMap.class ) {
+            if ( LOG_DEPRECATED_MAP ) {
+                LOG_DEPRECATED_MAP = false;
+                LOGGER.warn("DEPRECATION WARNING: PersistableValueMap is deprecated, a JcrResource should not be adapted to this anymore. Please switch to ModifiableValueMap.");
+            }
             // check write
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader);
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.getDynamicClassLoader());
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(

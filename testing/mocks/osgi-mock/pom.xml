@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>25</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-    <version>1.7.1-SNAPSHOT</version>
+    <version>2.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing OSGi Mock</name>
@@ -39,17 +39,20 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/osgi-mock</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/osgi-mock</url>
     </scm>
-
+    
     <dependencies>
   
+        <!-- This version of OSGi mocks is targeted at OSGi R6. osgi-mocks 1.x is compatible with older versions. -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
+            <version>6.0.0</version>
             <scope>compile</scope>
         </dependency>
     
@@ -66,6 +69,13 @@
             <version>5.0.0</version>
             <scope>compile</scope>
         </dependency>
+        <!-- The required classes o.a.f.scr.impl.helper.Annotations and o.a.f.scr.impl.helper.Coercions are inlined -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr</artifactId>
+            <version>2.0.2</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -80,7 +90,13 @@
             <version>3.0.1</version>
             <scope>compile</scope>
         </dependency>
-    
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -114,6 +130,13 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Embed-Dependency>
+                            org.apache.felix.scr;inline="org/apache/felix/scr/impl/helper/Annotations*|org/apache/felix/scr/impl/helper/Coercions*"
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
             </plugin>
       
             <plugin>
@@ -136,24 +159,4 @@
         </plugins>
     </build>
     
-    <profiles>
-      <profile>
-        <id>osgi-6</id>
-        <dependencies>
-          <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-          </dependency>
-          <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>5.0.0</version>
-            <scope>provided</scope>
-          </dependency>
-        </dependencies>
-      </profile>
-    </profiles>
-  
 </project>

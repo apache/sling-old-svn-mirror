@@ -154,6 +154,7 @@ public class StatisticsImplTest {
         this.stat.incQueued();
         this.stat.addActive(200);
         this.stat.failedJob();
+        this.stat.incQueued();
         assertTrue(this.stat.getStartTime() >= START_TIME);
         assertEquals(400, this.stat.getAverageProcessingTime());
         assertEquals(200, this.stat.getAverageWaitingTime());

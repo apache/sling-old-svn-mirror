@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +38,6 @@ import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNod
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.MapLiteral;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
 import org.apache.sling.scripting.sightly.impl.engine.extension.ExtensionUtils;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.PathInfo;
 import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -57,22 +55,22 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
 
     public static final String URI_MANIPULATION_FUNCTION = "uriManipulation";
 
-    private static final String SCHEME = "scheme";
-    private static final String DOMAIN = "domain";
-    private static final String PATH = "path";
-    private static final String APPEND_PATH = "appendPath";
-    private static final String PREPEND_PATH = "prependPath";
-    private static final String SELECTORS = "selectors";
-    private static final String ADD_SELECTORS = "addSelectors";
-    private static final String REMOVE_SELECTORS = "removeSelectors";
-    private static final String EXTENSION = "extension";
-    private static final String SUFFIX = "suffix";
-    private static final String PREPEND_SUFFIX = "prependSuffix";
-    private static final String APPEND_SUFFIX = "appendSuffix";
-    private static final String FRAGMENT = "fragment";
-    private static final String QUERY = "query";
-    private static final String ADD_QUERY = "addQuery";
-    private static final String REMOVE_QUERY = "removeQuery";
+    public static final String SCHEME = "scheme";
+    public static final String DOMAIN = "domain";
+    public static final String PATH = "path";
+    public static final String APPEND_PATH = "appendPath";
+    public static final String PREPEND_PATH = "prependPath";
+    public static final String SELECTORS = "selectors";
+    public static final String ADD_SELECTORS = "addSelectors";
+    public static final String REMOVE_SELECTORS = "removeSelectors";
+    public static final String EXTENSION = "extension";
+    public static final String SUFFIX = "suffix";
+    public static final String PREPEND_SUFFIX = "prependSuffix";
+    public static final String APPEND_SUFFIX = "appendSuffix";
+    public static final String FRAGMENT = "fragment";
+    public static final String QUERY = "query";
+    public static final String ADD_QUERY = "addQuery";
+    public static final String REMOVE_QUERY = "removeQuery";
 
     @Override
     public Expression apply(Expression expression, ExpressionContext expressionContext) {
@@ -85,9 +83,9 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
                 .PLUGIN_DATA_SLY_USE && expressionContext
                 != ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE && expressionContext != ExpressionContext.PLUGIN_DATA_SLY_CALL &&
                 expressionContext != ExpressionContext.PLUGIN_DATA_SLY_RESOURCE) {
-            Map<String, ExpressionNode> uriOptions = new HashMap<String, ExpressionNode>();
-            collectOptions(expression, uriOptions, SCHEME, DOMAIN, PATH, APPEND_PATH, PREPEND_PATH, SELECTORS, ADD_SELECTORS,
-                    REMOVE_SELECTORS, EXTENSION, SUFFIX, PREPEND_SUFFIX, APPEND_SUFFIX, FRAGMENT, QUERY, ADD_QUERY, REMOVE_QUERY);
+            Map<String, ExpressionNode> uriOptions = getFilterOptions(expression, SCHEME, DOMAIN, PATH, APPEND_PATH, PREPEND_PATH,
+                    SELECTORS, ADD_SELECTORS, REMOVE_SELECTORS, EXTENSION, SUFFIX, PREPEND_SUFFIX, APPEND_SUFFIX, FRAGMENT, QUERY,
+                    ADD_QUERY, REMOVE_QUERY);
             if (uriOptions.size() > 0) {
                 ExpressionNode translation = new RuntimeCall(URI_MANIPULATION_FUNCTION, expression.getRoot(), new MapLiteral(uriOptions));
                 return expression.withNode(translation);
@@ -102,9 +100,6 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
         ExtensionUtils.checkArgumentCount(URI_MANIPULATION_FUNCTION, arguments, 2);
         String uriString = RenderUtils.toString(arguments[0]);
         Map<String, Object> options = RenderUtils.toMap(arguments[1]);
-        if (uriString == null) {
-            return null;
-        }
         StringBuilder sb = new StringBuilder();
         PathInfo pathInfo = new PathInfo(uriString);
         uriAppender(sb, SCHEME, options, pathInfo.getScheme());
@@ -214,15 +209,6 @@ public class URIManipulationFilter extends FilterComponent implements RuntimeExt
             sb.append("#").append(fragment);
         }
         return sb.toString();
-    }
-
-    private void collectOptions(Expression expression, Map<String, ExpressionNode> collector, String... optionNames) {
-        for (String optionName : optionNames) {
-            if (expression.containsOption(optionName)) {
-                collector.put(optionName, expression.getOption(optionName));
-            }
-        }
-        expression.removeOptions(optionNames);
     }
 
     private void uriAppender(StringBuilder stringBuilder, String option, Map<String, Object> options, String defaultValue) {

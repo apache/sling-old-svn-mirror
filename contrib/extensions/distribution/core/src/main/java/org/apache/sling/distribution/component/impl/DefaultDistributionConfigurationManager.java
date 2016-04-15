@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.component.impl.DistributionComponentManager} implementation based on OSGI configs.
+ * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
  * For each tree of properties a set of OSGI configs is generated and registered in ConfigurationAdmin.
  * To delete a component all configs owned by that component will be unregistered from ConfigurationAdmin.
  */
@@ -51,6 +51,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
+    private
     ConfigurationAdmin configurationAdmin;
 
 
@@ -141,7 +142,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         }
     }
 
-    public List<Configuration> getOsgiConfigurations(DistributionComponentKind kind, String componentName) {
+    private List<Configuration> getOsgiConfigurations(DistributionComponentKind kind, String componentName) {
         List<String> factoryPids = kind.getFactories();
 
         List<Configuration> allConfigurations = new ArrayList<Configuration>();

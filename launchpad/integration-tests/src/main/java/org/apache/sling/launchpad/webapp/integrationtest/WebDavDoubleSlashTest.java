@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.sling.commons.testing.integration.HttpAnyMethod;
 import org.apache.sling.commons.testing.integration.HttpTest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,23 +53,32 @@ public class WebDavDoubleSlashTest {
     }
     
     /** Do a PROPFIND on /dav, adding worskpace name after that as required by the Jackrabbit WebDAV modules */
-    private int getPropfindStatus(String workspaceName, String nodePath) throws HttpException, IOException {
+    private void assertPropfindStatus(final int expecetdStatus, final String workspace, final String path) throws IOException {
         final String webdavRoot = "/dav";
-        final String url = HttpTest.HTTP_BASE_URL + webdavRoot + "/" + workspaceName + nodePath;
-        final HttpAnyMethod propfind = new HttpAnyMethod("PROPFIND",url);
-        return H.getHttpClient().executeMethod(propfind);
+        final String url = HttpTest.HTTP_BASE_URL + webdavRoot + "/" + workspace + path;
+        final HttpAnyMethod propfind = new HttpAnyMethod("PROPFIND", url);
+        final int status = H.getHttpClient().executeMethod(propfind);
+
+        if (expecetdStatus != status) {
+            // print the response body in case of a test failure to help debugging
+            fail(
+                    "Status code " + expecetdStatus + " expected, got " + status + ".\n" +
+                    "Response body:\n" +
+                    propfind.getResponseBodyAsString()
+            );
+        } else {
+            // never fails, but there will be no assertion otherwise
+            assertEquals("Status code", expecetdStatus, status);
+        }
     }
-    
+
     @Test
     public void testDefaultWorkspace() throws HttpException, IOException {
-        assertEquals(207, getPropfindStatus("default", testPath));
+        assertPropfindStatus(207, "default", testPath);
     }
-    
+
     @Test
     public void testEmptyWorkspace() throws HttpException, IOException {
-        // An empty JCR workspace name results in a URL like "/dav//test/..."
-        // which correctly returns 404 now, but used to work as the WebDAV
-        // servlets used the default workspace name in that case.
-        assertEquals(404, getPropfindStatus("", testPath));
+        assertPropfindStatus(207, "", testPath);
     }
 }

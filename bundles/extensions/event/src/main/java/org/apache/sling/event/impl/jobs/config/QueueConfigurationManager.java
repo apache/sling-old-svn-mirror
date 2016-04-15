@@ -53,9 +53,6 @@ public class QueueConfigurationManager {
     @Reference
     private MainQueueConfiguration mainQueueConfiguration;
 
-    /** Listener - this is the job manager configuration component. */
-    private volatile JobManagerConfiguration changeListener;
-
     /**
      * Add a new queue configuration.
      * @param config A new queue configuration.
@@ -69,7 +66,7 @@ public class QueueConfigurationManager {
 
     /**
      * Remove a queue configuration.
-     * @param config The queue configuraiton.
+     * @param config The queue configuration.
      */
     protected void unbindConfig(final InternalQueueConfiguration config) {
         synchronized ( configurations ) {
@@ -80,7 +77,7 @@ public class QueueConfigurationManager {
 
     /**
      * Update a queue configuration.
-     * @param config The queue configuraiton.
+     * @param config The queue configuration.
      */
     protected void updateConfig(final InternalQueueConfiguration config) {
         // InternalQueueConfiguration does not implement modified atm,
@@ -100,7 +97,6 @@ public class QueueConfigurationManager {
             Collections.sort(configurations);
             orderedConfigs = configurations.toArray(new InternalQueueConfiguration[configurations.size()]);
         }
-        this.updateListener();
     }
 
     /**
@@ -169,30 +165,5 @@ public class QueueConfigurationManager {
         result.queueName = result.queueConfiguration.getName();
 
         return result;
-    }
-
-    /**
-     * Add a config listener.
-     * @param listener
-     */
-    public void addListener(final JobManagerConfiguration listener) {
-        this.changeListener = listener;
-    }
-
-    /**
-     * Remove the config listener.
-     */
-    public void removeListener() {
-        this.changeListener = null;
-    }
-
-    /**
-     * Update the listener.
-     */
-    private void updateListener() {
-        final JobManagerConfiguration l = this.changeListener;
-        if ( l != null ) {
-            l.queueConfigurationChanged();
-        }
     }
 }

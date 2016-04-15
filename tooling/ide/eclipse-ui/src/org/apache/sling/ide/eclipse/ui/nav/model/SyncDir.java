@@ -42,6 +42,15 @@ public class SyncDir extends JcrNode {
 	}
 	
 	@Override
+	protected boolean childShouldNotBeShown(IResource resource) {
+	    // WTP Dynamic Web projects automatically create WEB-INF/lib and META-INF/MANIFEST.MF in the
+	    // web content directory, even though they don't make sense for Sling projects
+	    // So just ignore these in our own navigator
+	    return resource.getType() == IResource.FOLDER && 
+	            ( resource.getName().equals("WEB-INF") || resource.getName().equals("META-INF"));
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof SyncDir) {
 			SyncDir other = (SyncDir) obj;

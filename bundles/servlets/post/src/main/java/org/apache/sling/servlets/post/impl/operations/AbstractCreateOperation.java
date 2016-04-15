@@ -31,7 +31,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
@@ -53,7 +52,7 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 abstract class AbstractCreateOperation extends AbstractPostOperation {
     private final Random randomCollisionIndex = new Random();
-    
+
     /**
      * The default node name generator
      */
@@ -102,9 +101,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     throws PersistenceException, RepositoryException {
 
         final String path = response.getPath();
+        final Resource resource = resolver.getResource(path);
 
-        if ( resolver.getResource(path) == null ) {
-
+        if ( resource == null || ResourceUtil.isSyntheticResource(resource) ) {
             deepGetOrCreateNode(resolver, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
@@ -523,16 +522,19 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 if (startingResource == null){
                 	throw new PersistenceException("Access denied for root resource, resource can't be created: " + path);
                 }
-            } else if (resolver.getResource(startingResourcePath) != null) {
-                startingResource = resolver.getResource(startingResourcePath);
-                updateNodeType(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
-                updateMixins(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
             } else {
-                int pos = startingResourcePath.lastIndexOf('/');
-                if (pos > 0) {
-                    startingResourcePath = startingResourcePath.substring(0, pos);
+                final Resource r = resolver.getResource(startingResourcePath);
+                if ( r != null && !ResourceUtil.isSyntheticResource(r)) {
+                    startingResource = resolver.getResource(startingResourcePath);
+                    updateNodeType(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
+                    updateMixins(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
                 } else {
-                    startingResourcePath = "/";
+                    int pos = startingResourcePath.lastIndexOf('/');
+                    if (pos > 0) {
+                        startingResourcePath = startingResourcePath.substring(0, pos);
+                    } else {
+                        startingResourcePath = "/";
+                    }
                 }
             }
         }
@@ -552,8 +554,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // although the resource should not exist (according to the first test
             // above)
             // we do a sanety check.
-            if (resource.getChild(name) != null) {
-                resource = resource.getChild(name);
+            final Resource child = resource.getChild(name);
+            if (child != null && !ResourceUtil.isSyntheticResource(child)) {
+                resource = child;
                 updateNodeType(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
                 updateMixins(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
             } else {
@@ -693,7 +696,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 		            break;
 		        }
 		    }
-		    
+
 	        // Give up after MAX_TRIES
 	        if (resolver.getResource(jcrPath) != null ) {
 	            throw new RepositoryException(

@@ -107,7 +107,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
      * whether or not this service is activated - necessary to avoid sending
      * events to discovery awares before activate is done
      **/
-    private boolean activated = false;
+    private volatile boolean activated = false;
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -400,7 +400,9 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         final ProviderInfo info = new ProviderInfo(propertyProvider, props);
         this.providerInfos.add(info);
         Collections.sort(this.providerInfos);
-        this.doUpdateProperties();
+        if (activated) {
+            this.doUpdateProperties();
+        }
         checkForTopologyChange();
     }
 
@@ -439,7 +441,9 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
         final ProviderInfo info = new ProviderInfo(propertyProvider, props);
         if ( this.providerInfos.remove(info) && update ) {
-            this.doUpdateProperties();
+            if (activated) {
+                this.doUpdateProperties();
+            }
             this.checkForTopologyChange();
         }
     }
@@ -454,9 +458,19 @@ public class OakDiscoveryService extends BaseDiscoveryService {
      * @see Config#getClusterInstancesPath()
      */
     private void doUpdateProperties() {
-        if (resourceResolverFactory == null) {
+        // SLING-5382 : the caller must ensure that this method
+        // is not invoked after deactivation or before activation.
+        // so this method doesn't have to do any further synchronization.
+        // what we do nevertheless is a paranoia way of checking if
+        // all variables are available and do a NOOP if that's not the case.
+        final ResourceResolverFactory rrf = resourceResolverFactory;
+        final Config c = config;
+        final String sid = slingId;
+        if (rrf == null || c == null || sid == null) {
             // cannot update the properties then..
-            logger.debug("doUpdateProperties: too early to update the properties. resourceResolverFactory not yet set.");
+            logger.debug("doUpdateProperties: too early to update the properties. "
+                    + "resourceResolverFactory ({}), config ({}) or slingId ({}) not yet set.",
+                    new Object[] {rrf, c, sid});
             return;
         } else {
             logger.debug("doUpdateProperties: updating properties now..");
@@ -470,14 +484,14 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
         ResourceResolver resourceResolver = null;
         try {
-            resourceResolver = resourceResolverFactory
+            resourceResolver = rrf
                     .getAdministrativeResourceResolver(null);
 
             Resource myInstance = ResourceHelper
                     .getOrCreateResource(
                             resourceResolver,
-                            config.getClusterInstancesPath()
-                                    + "/" + slingId + "/properties");
+                            c.getClusterInstancesPath()
+                                    + "/" + sid + "/properties");
             // SLING-2879 - revert/refresh resourceResolver here to work
             // around a potential issue with jackrabbit in a clustered environment
             resourceResolver.revert();
@@ -541,8 +555,12 @@ public class OakDiscoveryService extends BaseDiscoveryService {
      */
     public void updateProperties() {
         synchronized (lock) {
-            logger.debug("updateProperties: calling doUpdateProperties.");
-            doUpdateProperties();
+            if (!activated) {
+                logger.debug("updateProperties: not yet activated, not calling doUpdateProperties this time.");
+            } else {
+                logger.debug("updateProperties: calling doUpdateProperties.");
+                doUpdateProperties();
+            }
             logger.debug("updateProperties: calling handlePotentialTopologyChange.");
             checkForTopologyChange();
             logger.debug("updateProperties: done.");

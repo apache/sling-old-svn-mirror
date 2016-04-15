@@ -61,7 +61,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
         super.createSection(parent);
         FormToolkit toolkit = getFormToolkit(parent.getDisplay());
 
-        Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.EXPANDED
+        Section section = toolkit.createSection(parent, ExpandableComposite.EXPANDED
                 | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION | ExpandableComposite.FOCUS_TITLE);
         section.setText("Connection");
         section.setDescription("Connection details for this server");
@@ -70,23 +70,26 @@ public class ConnectionEditorSection extends ServerEditorSection {
         // ports
         Composite composite = toolkit.createComposite(section);
 
+        // layout similar to ServerPropertiesEditorSection
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
-        layout.marginHeight = 8;
-        layout.marginWidth = 8;
+        layout.marginHeight = 5;
+        layout.marginWidth = 10;
+        layout.verticalSpacing = 5;
+        layout.horizontalSpacing = 15;
+        
         composite.setLayout(layout);
-        GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.FILL_HORIZONTAL);
-        composite.setLayoutData(gridData);
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
         toolkit.paintBordersFor(composite);
         section.setClient(composite);
 
-        createLabel(toolkit, composite, "Port");
+        createLabel(toolkit, composite, "Port:");
         portText = createText(toolkit, composite, SWT.SINGLE);
 
-        createLabel(toolkit, composite, "Debug Port");
+        createLabel(toolkit, composite, "Debug Port:");
         debugPortText = createText(toolkit, composite, SWT.SINGLE);
 
-        createLabel(toolkit, composite, "Context path");
+        createLabel(toolkit, composite, "Context path:");
         contextPathText = createText(toolkit, composite, SWT.SINGLE);
 
         // TODO wrong parent
@@ -95,10 +98,10 @@ public class ConnectionEditorSection extends ServerEditorSection {
         data.horizontalSpan = 2;
         separator.setLayoutData(data);
 
-        createLabel(toolkit, composite, "Username");
+        createLabel(toolkit, composite, "Username:");
         usernameText = createText(toolkit, composite, SWT.SINGLE);
 
-        createLabel(toolkit, composite, "Password");
+        createLabel(toolkit, composite, "Password:");
         passwordText = createText(toolkit, composite, SWT.PASSWORD);
 
         initialize();
@@ -107,10 +110,10 @@ public class ConnectionEditorSection extends ServerEditorSection {
     private void createLabel(FormToolkit toolkit, Composite composite, String label) {
         Label portLabel = toolkit.createLabel(composite, label);
         portLabel.setForeground(toolkit.getColors().getColor(IFormColors.TITLE));
-        GridData data = new GridData(GridData.FILL_HORIZONTAL);
-        data.horizontalIndent = 20;
-        data.widthHint = 20;
-        portLabel.setLayoutData(data);
+//        GridData data = new GridData(GridData.FILL_HORIZONTAL);
+//        data.horizontalIndent = 4;
+//        data.widthHint = 20;
+//        portLabel.setLayoutData(data);
     }
 
     private Text createText(FormToolkit toolkit, Composite composite, int flags) {

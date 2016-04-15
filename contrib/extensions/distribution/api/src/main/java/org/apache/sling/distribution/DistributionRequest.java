@@ -23,6 +23,7 @@ import aQute.bnd.annotation.ProviderType;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * A {@link org.apache.sling.distribution.DistributionRequest} represents the need from the caller to have
@@ -33,7 +34,7 @@ public interface DistributionRequest {
 
 
     /**
-     * get the {@link DistributionRequestType} associated with this request
+     * Get the {@link DistributionRequestType} associated with this request
      *
      * @return the type of the request as a {@link DistributionRequestType}
      */
@@ -41,13 +42,12 @@ public interface DistributionRequest {
     public DistributionRequestType getRequestType();
 
     /**
-     * get the paths for this distribution request
+     * Get the root paths for this distribution request
      *
      * @return an array of paths
      */
-    @CheckForNull
+    @Nonnull
     public String[] getPaths();
-
 
     /**
      * Returns whether the paths are covering the entire subtree (deep) or just the specified nodes (shallow)
@@ -58,4 +58,16 @@ public interface DistributionRequest {
     public boolean isDeep(@Nonnull String path);
 
 
+
+    /**
+     * Get the filters applicable for a specific path
+     * +/foo/.* - include all content under /foo
+     * -/foo - exclude /foo node
+     *
+     * filters are checked in order and the last matched filter determines inclusion/exclusion
+     *
+     * @return an array of filters
+     */
+    @Nonnull
+    public String[] getFilters(String path);
 }
