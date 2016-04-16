@@ -31,6 +31,8 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +46,17 @@ import org.slf4j.LoggerFactory;
 public class MessageSender {
 
     // depend on SmtpService so MessageService can deliver the messages
-    @Reference
-    private SmtpService smtpService;
+    @Reference(
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY
+    )
+    private volatile SmtpService smtpService;
 
-    @Reference
-    private MessageService messageService;
+    @Reference(
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY
+    )
+    private volatile MessageService messageService;
 
     private final Logger logger = LoggerFactory.getLogger(MessageSender.class);
 
