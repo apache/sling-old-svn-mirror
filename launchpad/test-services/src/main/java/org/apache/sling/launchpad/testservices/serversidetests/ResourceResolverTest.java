@@ -2732,7 +2732,6 @@ try {
         }
     }*/
 
-    @Ignore
     @Test public void test_resolve_with_sling_alias_limited_access() throws Exception {
         
         Principal testUserPrincipal = new Principal() {
