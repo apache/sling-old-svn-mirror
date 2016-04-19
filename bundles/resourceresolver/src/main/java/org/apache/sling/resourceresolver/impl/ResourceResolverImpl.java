@@ -916,11 +916,23 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         } else {
 
+            String tokenizedPath = absPath;
+            
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
             resource = getAbsoluteResourceInternal(null, "/", parameters, true);
+            
+            //no read access on / drilling further down
+            //SLING-5638
+            if (resource == null) {
+                resource = getAbsoluteResourceInternal(absPath, parameters, true);
+                if (resource != null) {
+                    tokenizedPath = tokenizedPath.substring(resource.getPath().length());
+                }
+            }
+            
             final StringBuilder resolutionPath = new StringBuilder();
-            final StringTokenizer tokener = new StringTokenizer(absPath, "/");
+            final StringTokenizer tokener = new StringTokenizer(tokenizedPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
                 final String childNameRaw = tokener.nextToken();
 
@@ -929,7 +941,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                     resource = nextResource;
                     resolutionPath.append("/").append(childNameRaw);
-
+                    
                 } else {
 
                     String childName = null;
@@ -1061,6 +1073,32 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;
+    }
+    
+    /**
+     * Creates a resource, traversing bottom up, to the highest readable resource.
+     * 
+     */
+    private Resource getAbsoluteResourceInternal(String absPath, final Map<String, String> parameters, final boolean isResolved) {
+         
+        if (!absPath.contains("/") || "/".equals(absPath)) {
+            return null;
+        }
+        
+        absPath = absPath.substring(absPath.indexOf("/"));
+        Resource resource = getAbsoluteResourceInternal(null, absPath, parameters, isResolved);
+        
+        absPath = absPath.substring(0, absPath.lastIndexOf("/"));
+
+        while (!absPath.equals("")) {
+            Resource r = getAbsoluteResourceInternal(null, absPath, parameters, true);
+            
+            if (r != null) {
+                resource = r;
+            }            
+            absPath = absPath.substring(0, absPath.lastIndexOf("/"));
+        }        
+        return resource;
     }
 
     /**
