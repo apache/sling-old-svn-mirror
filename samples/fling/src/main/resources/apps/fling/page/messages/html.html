@@ -38,15 +38,15 @@
             <td></td>
             <td>Subject</td>
             <td>From</td>
-            <td>Message ID</td>
+            <td>Text</td>
           </tr>
         </thead>
         <tbody>
           <tr data-th-each="message,status : ${messages}">
-            <td data-th-text="${status.count}">count</td>
-            <td data-th-text="${message.subject}">subject</td>
-            <td data-th-text="${message.from[0].address}">from</td>
-            <td data-th-text="${message.messageID}">message id</td>
+            <td><span data-th-text="${status.count}">count</span></td>
+            <td><span data-th-text="${message.subject}">subject</span></td>
+            <td><span data-th-text="${message.from[0].address}">from</span></td>
+            <td><span data-th-text="${message.contentType.startsWith('text/plain')} ? ${message.content} : 'not a plain text message, not rendering content'">content</span></td>
           </tr>
         </tbody>
       </table>
