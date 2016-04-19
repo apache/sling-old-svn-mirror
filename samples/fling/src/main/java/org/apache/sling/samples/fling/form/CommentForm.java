@@ -16,29 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.samples.fling.page;
+package org.apache.sling.samples.fling.form;
 
-import java.util.List;
+import org.apache.sling.api.resource.ValueMap;
 
-import javax.mail.internet.MimeMessage;
+public class CommentForm extends BaseForm {
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.OSGiService;
-import org.apache.sling.samples.fling.SmtpService;
+    public static final String RESOURCE_TYPE = "fling/form/comment";
 
-@Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class MessagesPage extends Page {
-
-    @OSGiService
-    private SmtpService smtpService;
-
-    public MessagesPage() {
+    public CommentForm(final ValueMap parameters) {
+        populate(parameters);
     }
 
-    public List<MimeMessage> getMessages() {
-        return smtpService.getMessages();
+    private void populate(final ValueMap parameters) {
+        put("name", parameters.get("name", String.class));
+        put("comment", parameters.get("comment", String.class));
+    }
+
+    @Override
+    public String getResourceType() {
+        return RESOURCE_TYPE;
+    }
+
+    @Override
+    public String toString() {
+        return fields.toString();
     }
 
 }

@@ -21,49 +21,27 @@ package org.apache.sling.samples.fling.page;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.models.annotations.injectorspecific.RequestAttribute;
+import org.apache.sling.samples.fling.form.BaseForm;
+import org.apache.sling.samples.fling.form.Form;
 
 import static org.apache.sling.models.annotations.injectorspecific.InjectionStrategy.OPTIONAL;
-import static org.apache.sling.query.SlingQuery.$;
 
 @Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class Page {
+public class FormPage extends Page {
 
-    @SlingObject
-    protected Resource resource;
+    @RequestAttribute(injectionStrategy = OPTIONAL)
+    private Form form = new BaseForm();
 
-    @SlingObject(injectionStrategy = OPTIONAL)
-    protected SlingHttpServletRequest request;
-
-    public Page() {
+    public FormPage() {
     }
 
-    public String getName() {
-        return resource.getName();
+    public Form getForm() {
+        return form;
     }
 
-    public String getPath() {
-        return resource.getPath();
-    }
-
-    public String getTitle() {
-        return resource.getValueMap().get("title", String.class);
-    }
-
-    public String getContent() {
-        return resource.getValueMap().get("content", String.class);
-    }
-
-    public Iterable<Page> getParents() {
-        return $(resource).parents("fling/page").map(Page.class);
-    }
-
-    public Iterable<Page> getChildren() {
-        return $(resource).children().map(Page.class);
-    }
-
-    public Iterable<Page> getSiblings() {
-        return $(resource).siblings().not($(resource)).map(Page.class);
+    public String getFormAction() {
+        return request.getRequestURI();
     }
 
 }

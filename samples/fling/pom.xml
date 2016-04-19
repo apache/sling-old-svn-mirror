@@ -56,6 +56,12 @@
       <version>2.0</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- OSGi -->
     <dependency>
       <groupId>org.osgi</groupId>
@@ -119,11 +125,24 @@
       <version>2.3.2</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.validation.api</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- Apache Jackrabbit -->
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
       <version>2.12.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Thymeleaf -->
+    <dependency>
+      <groupId>org.thymeleaf</groupId>
+      <artifactId>thymeleaf</artifactId>
+      <version>3.0.0.BETA02</version>
       <scope>provided</scope>
     </dependency>
     <!-- SubEtha SMTP -->
@@ -169,12 +188,28 @@
             <Sling-Initial-Content>
               apps/fling;path:=/apps/fling;overwrite:=true;uninstall:=true,
               content;path:=/content;overwrite:=true;uninstall:=true,
-              i18n;path:=/etc/i18n/org.apache.sling.samples.fling;overwrite:=true;uninstall:=true
+              etc;path:=/etc;overwrite:=true;uninstall:=true
             </Sling-Initial-Content>
             <Sling-Model-Packages>
-              org.apache.sling.samples.fling
+              org.apache.sling.samples.fling.page
             </Sling-Model-Packages>
+            <_dsannotations>*</_dsannotations>
+            <_metatypeannotations>*</_metatypeannotations>
+            <_removeheaders>
+              Embed-Dependency,
+              Private-Package,
+              Include-Resource
+            </_removeheaders>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>**/etc/messaging/form/comment.txt</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

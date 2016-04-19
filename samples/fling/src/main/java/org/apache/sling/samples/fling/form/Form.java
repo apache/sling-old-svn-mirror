@@ -16,29 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.samples.fling.page;
+package org.apache.sling.samples.fling.form;
 
 import java.util.List;
+import java.util.Map;
 
-import javax.mail.internet.MimeMessage;
+import org.apache.sling.validation.ValidationFailure;
+import org.apache.sling.validation.ValidationResult;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.OSGiService;
-import org.apache.sling.samples.fling.SmtpService;
+public interface Form extends Map<String, Object> {
 
-@Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class MessagesPage extends Page {
+    String getResourceType();
 
-    @OSGiService
-    private SmtpService smtpService;
+    void setValidationResult(final ValidationResult validationResult);
 
-    public MessagesPage() {
-    }
+    ValidationResult getValidationResult();
 
-    public List<MimeMessage> getMessages() {
-        return smtpService.getMessages();
-    }
+    boolean hasFailure(final String name);
+
+    List<ValidationFailure> getFailures(final String name);
 
 }

@@ -17,9 +17,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.Page@class)}">
-<head data-th-replace="/apps/fling/page/fragments/head.html::default">
-</head>
+<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.FormPage@class)}">
+<head data-th-replace="/apps/fling/page/fragments/head.html::default"></head>
 <body>
 <div class="container">
   <nav class="nav-main">
@@ -30,11 +29,11 @@
   </nav>
   <div class="panel panel-primary">
     <div class="panel-heading">
-      <span data-th-text="${page.title}">SIMPLE PAGE</span>
+      <span data-th-text="${page.title}">FORM PAGE</span>
     </div>
-    <div class="panel-body">
-      <div data-th-utext="${page.content}"><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p><pre>At vero eos et accusam et justo duo dolores et ea rebum.</pre></div>
-      <img src="../../../../assets/images/feather.png" width="355" height="111" data-th-attr="src='/fling/assets/images/feather.png'"/>
+    <div class="panel-body" data-th-with="form=${page.form}">
+      <p>Your form submission was successful!</p>
+      <span data-th-text="${form.name}"></span><span> says: </span><span data-th-text="${form.comment}"></span>
     </div>
     <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer"></div>
   </div>

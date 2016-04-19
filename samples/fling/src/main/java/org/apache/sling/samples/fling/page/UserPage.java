@@ -30,11 +30,12 @@ import javax.jcr.Value;
 
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.models.annotations.Model;
 
-@Model(adaptables = Resource.class)
+@Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
 public class UserPage extends Page {
 
     private User user;

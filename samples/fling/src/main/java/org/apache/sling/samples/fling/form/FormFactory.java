@@ -16,29 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.samples.fling.page;
+package org.apache.sling.samples.fling.form;
 
-import java.util.List;
+import org.apache.sling.api.resource.ValueMap;
 
-import javax.mail.internet.MimeMessage;
+public class FormFactory {
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.OSGiService;
-import org.apache.sling.samples.fling.SmtpService;
-
-@Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class MessagesPage extends Page {
-
-    @OSGiService
-    private SmtpService smtpService;
-
-    public MessagesPage() {
-    }
-
-    public List<MimeMessage> getMessages() {
-        return smtpService.getMessages();
+    public static Form build(final String formType, final ValueMap parameters) {
+        final String resourceType = String.format("fling/form/%s", formType);
+        switch (resourceType) {
+            case CommentForm.RESOURCE_TYPE:
+                return new CommentForm(parameters);
+            default:
+                return null;
+        }
     }
 
 }

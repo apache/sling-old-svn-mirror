@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.MessagesPage@class)}">
+<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.FormPage@class)}">
 <head data-th-replace="/apps/fling/page/fragments/head.html::default"></head>
 <body>
 <div class="container">
@@ -29,27 +29,27 @@
   </nav>
   <div class="panel panel-primary">
     <div class="panel-heading">
-      <span data-th-text="${page.title}">MESSAGES PAGE</span>
+      <span data-th-text="${page.title}">FORM PAGE</span>
     </div>
-    <div class="panel-body">
-      <table data-th-with="messages=${page.messages}" class="table">
-        <thead>
-          <tr>
-            <td></td>
-            <td>Subject</td>
-            <td>From</td>
-            <td>Text</td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-th-each="message,status : ${messages}">
-            <td><span data-th-text="${status.count}">count</span></td>
-            <td><span data-th-text="${message.subject}">subject</span></td>
-            <td><span data-th-text="${message.from[0].address}">from</span></td>
-            <td><span data-th-text="${message.contentType.startsWith('text/plain')} ? ${message.content} : 'not a plain text message, not rendering content'">content</span></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="panel-body" data-th-with="i18n=${request.getResourceBundle(request.getLocale())}">
+      <form data-th-action="${page.formAction}" data-th-with="form=${page.form}" method="post">
+        <input type="hidden" name="formType" value="comment">
+        <div class="form-group" data-th-classappend="${form.hasFailure('name')} ? 'has-error' : ''">
+          <label for="name">Your Name</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="Name" data-th-value="${form.name}">
+          <ul data-th-each="failure : ${form.getFailures('name')}">
+            <span class="help-block" data-th-text="${failure.getMessage(i18n)}"></span>
+          </ul>
+        </div>
+        <div class="form-group" data-th-classappend="${form.hasFailure('comment')} ? 'has-error' : ''">
+          <label for="comment">Your Comment</label>
+          <textarea class="form-control" rows="3" id="comment" name="comment" placeholder="Comment" data-th-text="${form.comment}"></textarea>
+          <ul data-th-each="failure : ${form.getFailures('comment')}">
+            <span class="help-block" data-th-text="${failure.getMessage(i18n)}"></span>
+          </ul>
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+      </form>
     </div>
     <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer"></div>
   </div>
