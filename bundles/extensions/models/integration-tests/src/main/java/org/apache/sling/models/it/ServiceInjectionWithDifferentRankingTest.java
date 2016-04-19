@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.sling.models.it;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -17,6 +33,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.junit.Activator;
 import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
 import org.apache.sling.models.factory.ModelFactory;
@@ -29,7 +46,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -54,7 +70,7 @@ public class ServiceInjectionWithDifferentRankingTest {
     private Resource resource;
     private Node createdNode;
     private BundleContext bundleContext;
-    private Collection<ServiceRegistration<SimpleService>> serviceRegistrations;
+    private Collection<ServiceRegistration> serviceRegistrations;
 
     @Before
     public void setUp() throws Exception {
@@ -69,8 +85,8 @@ public class ServiceInjectionWithDifferentRankingTest {
 
         resource = resolver.getResource(createdNode.getPath());
 
-        bundleContext = FrameworkUtil.getBundle(SimpleServiceWithCustomRanking.class).getBundleContext();
-        serviceRegistrations = new ArrayList<ServiceRegistration<SimpleService>>();
+        bundleContext = Activator.getBundleContext();
+        serviceRegistrations = new ArrayList<ServiceRegistration>();
     }
 
     @After
@@ -82,15 +98,17 @@ public class ServiceInjectionWithDifferentRankingTest {
             resolver.close();
         }
 
-        for (ServiceRegistration<?> serviceRegistration : serviceRegistrations) {
+        for (ServiceRegistration serviceRegistration : serviceRegistrations) {
             serviceRegistration.unregister();
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void registerSimpleService(int ranking) {
-        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        @SuppressWarnings("rawtypes")
+        Dictionary serviceProps = new Hashtable();
         serviceProps.put(Constants.SERVICE_RANKING, new Integer(ranking));
-        ServiceRegistration<SimpleService> serviceRegistration = bundleContext.registerService(SimpleService.class,
+        ServiceRegistration serviceRegistration = bundleContext.registerService(SimpleService.class.getName(),
                 new SimpleServiceWithCustomRanking(ranking), serviceProps);
         serviceRegistrations.add(serviceRegistration);
     }

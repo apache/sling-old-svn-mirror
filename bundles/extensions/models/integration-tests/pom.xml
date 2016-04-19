@@ -252,7 +252,6 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <scope>provided</scope>
-            <version>4.3.0</version> <!-- newer than specific in parent version to use FrameworkUtil.getBundle(Class) -->
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
