@@ -241,11 +241,11 @@ There is a single entry point in triggering a distribution workflow, via [Distri
 
 The _org.apache.sling.distribution.extensions_ bundle contains the following extensions:
 
-### Apache Avro distribution package builder
-A _DistributionPackageBuilder_ based on [Apache Avro](http://avro.apache.org).
+### Apache Avro distribution serialization
+A _DistributionContentSerializer_ based on [Apache Avro](http://avro.apache.org).
 
-### Kryo distribution package builder
-A _DistributionPackageBuilder_ based on [Kryo](http://github.com/EsotericSoftware/kryo).
+### Kryo distribution serialization
+A _DistributionContentSerializer_ based on [Kryo](http://github.com/EsotericSoftware/kryo).
 
 ## Ideas for future developments
 
