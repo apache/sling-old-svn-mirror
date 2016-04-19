@@ -19,7 +19,6 @@
 package org.apache.sling.samples.fling.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.mail.MessagingException;
