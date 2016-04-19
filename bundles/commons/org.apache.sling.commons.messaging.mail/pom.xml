@@ -53,6 +53,12 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <_dsannotations>*</_dsannotations>
+            <_metatypeannotations>*</_metatypeannotations>
+          </instructions>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.servicemix.tooling</groupId>
