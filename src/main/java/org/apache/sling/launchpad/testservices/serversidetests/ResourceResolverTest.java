@@ -2747,7 +2747,7 @@ try {
         saveMappings(session);
         session.save();
         
-        //deny jcr:all on /content
+        //deny jcr:all on /
         AccessControlUtil.replaceAccessControlEntry(session, "/", testUserPrincipal, null, new String[] {"jcr:all"}, null, "last");
         //grant read on /content/child
         AccessControlUtil.replaceAccessControlEntry(session, child.getPath(), testUserPrincipal, new String[] {"jcr:read"}, null, null, "last");
