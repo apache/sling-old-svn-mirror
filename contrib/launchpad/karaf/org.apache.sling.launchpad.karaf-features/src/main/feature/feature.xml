@@ -578,6 +578,7 @@
     <feature version="${feature.version}">sling-commons-messaging-mail</feature>
     <feature version="${feature.version}">sling-extension-models</feature>
     <feature version="${feature.version}">sling-extension-query</feature>
+    <feature version="${feature.version}">sling-extension-validation</feature>
     <feature version="${feature.version}">sling-auth-form</feature>
     <config name="org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder">
       subject=message\ from\ fling
