@@ -264,13 +264,14 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     }
 
     private void registerTemplateEngine() {
-        if (bundleContext != null) {
-            final Dictionary<String, String> properties = new Hashtable<>();
-            properties.put(Constants.SERVICE_DESCRIPTION, "Thymeleaf TemplateEngine");
-            properties.put(Constants.SERVICE_VENDOR, "Thymeleaf");
-            logger.info("{}, {}, {}", bundleContext, templateEngine, properties);
-            serviceRegistration = bundleContext.registerService(ITemplateEngine.class, templateEngine, properties);
+        if (templateEngine.getTemplateResolvers().size() == 0 || templateEngine.getMessageResolvers().size() == 0 || templateEngine.getDialects().size() == 0) {
+            return;
         }
+        final Dictionary<String, String> properties = new Hashtable<>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Thymeleaf TemplateEngine");
+        properties.put(Constants.SERVICE_VENDOR, "Thymeleaf");
+        logger.info("registering {} as service {} with properties {}", templateEngine, ITemplateEngine.class.getName(), properties);
+        serviceRegistration = bundleContext.registerService(ITemplateEngine.class, templateEngine, properties);
     }
 
     private void unregisterTemplateEngine() {
