@@ -163,10 +163,10 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-          	<Import-Package>
+            <Import-Package>
               com.fasterxml.jackson.*;version=${com.fasterxml.jackson.version};resolution:=optional,
               *
-          	</Import-Package>
+            </Import-Package>
             <Export-Package>
               org.apache.sling.scripting.thymeleaf,
               org.thymeleaf.*;version=${org.thymeleaf.version};-split-package:=merge-first,
