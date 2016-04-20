@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -188,6 +189,30 @@ public class ValidationServiceImplTest {
 
         Assert.assertFalse(vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure> hasItem(new DefaultValidationFailure("field2", 0, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, TEST_REGEX)));
+    }
+
+    // see https://issues.apache.org/jira/browse/SLING-5674
+    @Test
+    public void testNonExistingResource() throws Exception {
+        propertyBuilder.validator(new RegexValidator(), 0, RegexValidator.REGEX_PARAM, "\\d"); // accept any digits
+        ResourceProperty property = propertyBuilder.build("field1");
+        modelBuilder.resourceProperty(property);
+        
+        ChildResource modelChild = new ChildResourceImpl("child", null, true, Collections.singletonList(property), Collections.emptyList());
+        modelBuilder.childResource(modelChild);
+        
+        modelChild = new ChildResourceImpl("optionalChild", null, false, Collections.singletonList(property), Collections.emptyList());
+        modelBuilder.childResource(modelChild);
+        
+        ValidationModel vm = modelBuilder.build("sometype");
+        ResourceResolver rr = context.resourceResolver();
+        Resource nonExistingResource = new NonExistingResource(rr, "non-existing-resource");
+        ValidationResult vr = validationService.validate(nonExistingResource, vm);
+        Assert.assertFalse("resource should have been considered invalid", vr.isValid());
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
+                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
+                ));
     }
 
     @Test
@@ -441,6 +466,16 @@ public class ValidationServiceImplTest {
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(
                 new DefaultValidationFailure("", null,  ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
                 new DefaultValidationFailure("child2", null, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field2")));
+    }
+
+    // see https://issues.apache.org/jira/browse/SLING-5674
+    @Test
+    public void testValidateResourceRecursivelyOnNonExistingResource() throws Exception {
+        ResourceResolver rr = context.resourceResolver();
+        Resource nonExistingResource = new NonExistingResource(rr, "non-existing-resource");
+        
+        ValidationResult vr = validationService.validateResourceRecursively(nonExistingResource, true, null, true);
+        Assert.assertTrue("resource should have been considered valid", vr.isValid());
     }
 
     @Test(expected = IllegalArgumentException.class)
