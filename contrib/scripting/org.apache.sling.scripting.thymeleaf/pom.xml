@@ -47,9 +47,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/thymeleaf</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/thymeleaf</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/thymeleaf</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/org.apache.sling.scripting.thymeleaf</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/org.apache.sling.scripting.thymeleaf</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/org.apache.sling.scripting.thymeleaf</url>
   </scm>
 
   <dependencies>
