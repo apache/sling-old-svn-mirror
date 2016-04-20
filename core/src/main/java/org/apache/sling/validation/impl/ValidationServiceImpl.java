@@ -20,6 +20,7 @@ package org.apache.sling.validation.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -37,10 +38,12 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
@@ -145,11 +148,18 @@ public class ValidationServiceImpl implements ValidationService{
             throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
         }
         CompositeValidationResult result = new CompositeValidationResult();
+        final ValueMap valueMap;
+        if (ResourceUtil.isNonExistingResource(resource)) {
+            // NonExistingResource can not adapt to a ValueMap, therefore just use the empty map here
+            valueMap = new ValueMapDecorator(Collections.emptyMap());
+        } else {
+            valueMap = resource.adaptTo(ValueMap.class);
+        }
 
         // validate direct properties of the resource
-        validateValueMap(resource.adaptTo(ValueMap.class), resource, relativePath, model.getResourceProperties(), result );
+        validateValueMap(valueMap, resource, relativePath, model.getResourceProperties(), result );
 
-        // validate children resources, if any
+        // validate child resources, if any
         validateChildren(resource, relativePath, model.getChildren(), result);
         return result;
     }
