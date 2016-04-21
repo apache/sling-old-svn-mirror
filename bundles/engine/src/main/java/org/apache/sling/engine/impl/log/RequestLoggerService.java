@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.RequestLog;
 import org.osgi.framework.BundleContext;
 
@@ -90,23 +91,19 @@ public class RequestLoggerService {
     @Activate
     void setup(BundleContext bundleContext, Map<String, Object> configuration) {
         // whether to log on request entry or request exit
-        Object onEntryObject = configuration.get(PARAM_ON_ENTRY);
-        this.onEntry = (onEntryObject instanceof Boolean) ? ((Boolean) onEntryObject).booleanValue() : false;
+        this.onEntry = PropertiesUtil.toBoolean(configuration.get(PARAM_ON_ENTRY), false);
 
         // shared or private CustomLogFormat
-        Object format = configuration.get(PARAM_FORMAT);
+        final String format = PropertiesUtil.toString(configuration.get(PARAM_FORMAT), null);
         if (format != null) {
-            this.logFormat = new CustomLogFormat(format.toString());
+            this.logFormat = new CustomLogFormat(format);
         }
 
         // where to log to
-        Object output = configuration.get(PARAM_OUTPUT);
+        final String output = PropertiesUtil.toString(configuration.get(PARAM_OUTPUT), null);
         if (output != null) {
-            Object outputTypeObject = configuration.get(PARAM_OUTPUT_TYPE);
-            int outputType = (outputTypeObject instanceof Number)
-                    ? ((Number) outputTypeObject).intValue()
-                    : OUTPUT_TYPE_LOGGER;
-            this.log = this.getLog(bundleContext, output.toString(), outputType);
+            final int outputType = PropertiesUtil.toInteger(configuration.get(PARAM_OUTPUT_TYPE), OUTPUT_TYPE_LOGGER);
+            this.log = this.getLog(bundleContext, output, outputType);
         }
     }
 
