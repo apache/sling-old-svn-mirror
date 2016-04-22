@@ -15,15 +15,22 @@
  */
 package org.apache.sling.scripting.core.impl;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.JSONString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-class BindingsWrapper implements Serializable {
+class BindingsWrapper implements JSONString {
 
     private final List<ScriptingVariableModel> baseVariables;
 
     private final List<ScriptingVariableModel> customVariables;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BindingsWrapper.class);
 
     public BindingsWrapper() {
         this.baseVariables = new ArrayList<ScriptingVariableModel>();
@@ -36,6 +43,24 @@ class BindingsWrapper implements Serializable {
 
     public List<ScriptingVariableModel> getCustomVariables() {
         return customVariables;
+    }
+
+    @Override
+    public String toJSONString() {
+        try {
+            JSONArray baseVars = new JSONArray();
+            for (ScriptingVariableModel var : baseVariables) {
+                baseVars.put(new JSONObject(var.toJSONString()));
+            }
+            JSONArray customVars = new JSONArray();
+            for (ScriptingVariableModel var : customVariables) {
+                customVars.put(new JSONObject(var.toJSONString()));
+            }
+            return new JSONObject().put("baseVariables", baseVars).put("customVariables", customVars).toString();
+        } catch (JSONException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
+        return JSONObject.NULL.toString();
     }
 
 }

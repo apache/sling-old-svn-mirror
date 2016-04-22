@@ -45,6 +45,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -75,6 +76,8 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
@@ -84,8 +87,8 @@ import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
+import org.apache.sling.commons.json.io.JSONRenderer;
+import org.apache.sling.commons.json.io.JSONWriter;
 
 class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
@@ -380,6 +383,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             Object result = null;
             String selectorString = props.getRequest().getRequestPathInfo().getSelectorString();
             if(StringUtils.isBlank(selectorString) || !selectorString.contains(BVP_VARIABLES_SELECTOR)) {
+                LOGGER.debug("No " + BVP_VARIABLES_SELECTOR + " selector found in the request URI. Script will be evaluated.");
                 if (method == null && this.scriptEngine instanceof Compilable) {
                     CachedScript cachedScript = scriptCache.getScript(scriptName);
                     if (cachedScript == null) {
@@ -396,12 +400,14 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     result = scriptEngine.eval(reader, ctx);
                 }
             } else {
+                LOGGER.warn("Found " + BVP_VARIABLES_SELECTOR + " selector in the request URI. "
+                        + "Script will not be evaluated. Returning available scripting variables as json...");
                 acquireScriptingVariables(ctx, bvpVariables, 100, scriptEngine.getFactory().getEngineName());
                 acquireScriptingVariables(ctx, bvpVariables, 200, "GLOBAL");
                 acquireScriptingVariables(ctx, bvpVariables, -314, "SLING");
-                Gson  gson = new Gson();
+                JSONObject variablesAsJson = new JSONObject(bvpVariables.toJSONString());
                 props.getResponse().setContentType("application/json");
-                ctx.getWriter().write(gson.toJson(bvpVariables));
+                ctx.getWriter().write(variablesAsJson.toString());
             }
 
             // call method - if supplied and script engine supports direct invocation
@@ -432,6 +438,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             throw new ScriptEvaluationException(this.scriptName, se.getMessage(),
                 cause);
 
+        } catch (JSONException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return null;
         } finally {
             if ( props.getRequest() != null ) {
                 requestResourceResolver.set(oldResolver);

@@ -15,9 +15,12 @@
  */
 package org.apache.sling.scripting.core.impl;
 
-import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.JSONString;
 
-class ScriptingVariableModel implements Serializable {
+class ScriptingVariableModel implements JSONString {
 
     private final String name;
 
@@ -25,10 +28,13 @@ class ScriptingVariableModel implements Serializable {
 
     private final String scope;
 
+    private final String jsonString;
+
     public ScriptingVariableModel(String name, String description, String scope) {
         this.name = name;
         this.description = description;
         this.scope = scope;
+        this.jsonString = produceJsonString();
     }
 
     public String getName() {
@@ -41,6 +47,19 @@ class ScriptingVariableModel implements Serializable {
 
     public String getScope() {
         return scope;
+    }
+
+    @Override
+    public String toJSONString() {
+        return jsonString;
+    }
+
+    private String produceJsonString() {
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("name", name);
+        map.put("description", description);
+        map.put("scope", scope);
+        return new JSONObject(map).toString();
     }
 
 }
