@@ -97,8 +97,6 @@ public class KryoContentSerializer implements DistributionContentSerializer {
         }
         kryo.writeObject(output, resources);
         output.flush();
-        byte[] buffer = output.getBuffer();
-        output.close();
 
     }
 

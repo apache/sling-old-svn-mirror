@@ -122,7 +122,6 @@ public class AvroContentSerializer implements DistributionContentSerializer {
             throw new DistributionException(e);
         } finally {
             try {
-                outputStream.close();
                 writer.close();
             } catch (IOException e) {
                 // do nothing
