@@ -26,6 +26,10 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 
+/**
+ * This servlet is handling invalid requests only (when bvpvars selector is present but no scripting context is
+ * available). When request is valid, it's handled by {@link org.apache.sling.scripting.core.impl.DefaultSlingScript}
+ */
 @SlingServlet(
         resourceTypes = "sling/servlet/default",
         selectors = "bvpvars",
@@ -36,6 +40,9 @@ public class ScriptingContextValidationServlet extends SlingSafeMethodsServlet i
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
 
+    /**
+     * Request contains bvpvars selector, but none of the scripting engines can handle the requested resource
+     */
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException,
             IOException {

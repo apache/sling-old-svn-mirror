@@ -52,7 +52,7 @@
 				}
 		).fail(
 				function () {
-					$('#response').html('No scirpting context available under provided path.');
+					$('#response').html('No scripting context available under provided path.');
 				}
 		);
 	}
