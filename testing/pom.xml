@@ -47,6 +47,8 @@
 
   <modules>
     <module>tools</module>
+    <module>http/clients</module>
+    <module>serversetup</module>
     <module>hamcrest</module>
     <module>junit/core</module>
     <module>junit/scriptable</module>
