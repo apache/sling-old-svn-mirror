@@ -18,7 +18,7 @@
  */
 
 @Version("1.0.0")
-package org.apache.sling.tools;
+package org.apache.sling.testing.html.microdata;
 
 import aQute.bnd.annotation.Version;
 

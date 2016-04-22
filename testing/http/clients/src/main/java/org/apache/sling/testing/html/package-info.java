@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * OSGI testing tools.
- */
-@aQute.bnd.annotation.Version("1.0.0")
-package org.apache.sling.tools.osgi;
+
+@Version("1.0.0")
+package org.apache.sling.testing.html;
+
+import aQute.bnd.annotation.Version;
+
