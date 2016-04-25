@@ -20,6 +20,7 @@
 package org.apache.sling.distribution.transport.impl;
 
 import org.apache.http.client.fluent.Executor;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +30,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-public class DefaultDistributionPackageProxy implements DistributionPackageProxy {
-    private static final Logger log = LoggerFactory.getLogger(DefaultDistributionPackageProxy.class);
+public class DefaultRemoteDistributionPackage implements RemoteDistributionPackage {
+    private static final Logger log = LoggerFactory.getLogger(DefaultRemoteDistributionPackage.class);
 
 
     private final DistributionPackage wrappedPackage;
@@ -38,11 +39,11 @@ public class DefaultDistributionPackageProxy implements DistributionPackageProxy
     private final URI distributionURI;
     private final String remoteId;
 
-    public DefaultDistributionPackageProxy(DistributionPackage wrappedPackage, Executor executor, URI distributionURI, String remoteId) {
+    public DefaultRemoteDistributionPackage(DistributionPackage wrappedPackage, Executor executor, URI distributionURI) {
         this.wrappedPackage = wrappedPackage;
         this.executor = executor;
         this.distributionURI = distributionURI;
-        this.remoteId = remoteId;
+        this.remoteId = (String) wrappedPackage.getInfo().get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
     }
 
 
@@ -50,7 +51,7 @@ public class DefaultDistributionPackageProxy implements DistributionPackageProxy
         return wrappedPackage;
     }
 
-    public void deletePackage() {
+    public void deleteRemotePackage() {
 
         try {
             HttpTransportUtils.deletePackage(executor, distributionURI, remoteId);

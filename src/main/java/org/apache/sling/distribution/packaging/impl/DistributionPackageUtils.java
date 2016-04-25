@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
@@ -48,8 +49,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
@@ -70,6 +73,9 @@ public class DistributionPackageUtils {
 
     private static Object repolock = new Object();
     private static Object filelock = new Object();
+
+
+    public final static String PROPERTY_REMOTE_PACKAGE_ID = "remote.package.id";
 
 
 
@@ -217,6 +223,7 @@ public class DistributionPackageUtils {
         Map<String, Object> headerInfo = new HashMap<String, Object>();
         headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, packageInfo.getRequestType());
         headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, packageInfo.getPaths());
+        headerInfo.put(PROPERTY_REMOTE_PACKAGE_ID, distributionPackage.getId());
         writeInfo(outputStream, headerInfo);
 
         InputStream headerStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -235,7 +242,8 @@ public class DistributionPackageUtils {
             String s = new String(buffer, "UTF-8");
 
             if (bytesRead > 0 && buffer[0] > 0 && META_START.equals(s)) {
-                ObjectInputStream stream = new ObjectInputStream(inputStream);
+                ObjectInputStream stream = getSafeObjectInputStream(inputStream);
+
                 HashMap<String, Object> map = (HashMap<String, Object>) stream.readObject();
                 info.putAll(map);
             } else {
@@ -351,7 +359,7 @@ public class DistributionPackageUtils {
                 HashSet<String> set = new HashSet<String>();
 
                 if (file.exists()) {
-                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+                    ObjectInputStream inputStream = getSafeObjectInputStream(new FileInputStream(file));
                     set = (HashSet<String>) inputStream.readObject();
                     IOUtils.closeQuietly(inputStream);
                 }
@@ -382,7 +390,7 @@ public class DistributionPackageUtils {
                 HashSet<String> set = new HashSet<String>();
 
                 if (file.exists()) {
-                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+                    ObjectInputStream inputStream = getSafeObjectInputStream(new FileInputStream(file));
                     set = (HashSet<String>) inputStream.readObject();
                     IOUtils.closeQuietly(inputStream);
                 }
@@ -405,4 +413,32 @@ public class DistributionPackageUtils {
         return false;
     }
 
+
+    private static ObjectInputStream getSafeObjectInputStream(InputStream inputStream) throws IOException {
+
+        final Class[] acceptedClasses = new Class[] {
+                HashMap.class, HashSet.class,
+                String.class, String[].class,
+                Enum.class,
+                DistributionRequestType.class
+        };
+
+        return new ObjectInputStream(inputStream) {
+            @Override
+            protected Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
+                String className = osc.getName();
+                for (Class clazz : acceptedClasses) {
+                    if (clazz.getName().equals(className)) {
+                        return super.resolveClass(osc);
+                    }
+                }
+
+                throw new InvalidClassException("Class name not accepted: " + className);
+            }
+        };
+
+        // TODO: replace with the following lines when switching to commons-io-2.5
+        //        return new ValidatingObjectInputStream(inputStream)
+        //                .accept(acceptedClasses);
+    }
 }
