@@ -38,7 +38,7 @@ public class Constants {
 
     /**
      * Custom delay in milliseconds before an HTTP request goes through.
-     * Used by {@link org.apache.sling.testing.itframework.client.interceptors.DelayRequestInterceptor}
+     * Used by {@link org.apache.sling.testing.clients.interceptors.DelayRequestInterceptor}
      */
     public static final long HTTP_DELAY = delay;
 
