@@ -27,19 +27,19 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.testing.clients</artifactId>
+    <artifactId>org.apache.sling.testing.rules</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Testing Clients</name>
+    <name>Apache Sling Testing Rules</name>
     <description>
-        Sling testing http clients and utils
+        Sling testing junit rules and utils
     </description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/http/clients</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/http/clients</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/http/clients</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/http/rules</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/http/rules</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/http/rules</url>
     </scm>
     
     <build>
@@ -55,10 +55,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.testing.clients.*,
+                            org.apache.sling.testing.rules.*
                         </Export-Package>
                         <Import-Package>
                             org.apache.commons.exec.*; resolution:=optional,
+                            org.apache.sling.testing.clients.*,
                             *
                         </Import-Package>
                     </instructions>
@@ -70,12 +71,12 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.12</version>
+            <artifactId>org.apache.sling.testing.clients</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.testing.tools</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -94,41 +95,6 @@
             <version>1.1</version>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-            <version>1.5.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.5.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>4.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>14.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.5</version>
@@ -140,9 +106,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.xss</artifactId>
-            <version>1.0.4</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

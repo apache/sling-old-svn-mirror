@@ -17,48 +17,50 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>26</version>
+        <relativePath/>
+    </parent>
+
     <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>26</version>
-    <relativePath/>
-  </parent>
+    <artifactId>org.apache.sling.testing.reactor</artifactId>
+    <packaging>pom</packaging>
+    <version>1-SNAPSHOT</version>
 
-  <groupId>org.apache.sling</groupId>
-  <artifactId>org.apache.sling.testing.reactor</artifactId>
-  <packaging>pom</packaging>
-  <version>1-SNAPSHOT</version>
+    <name>Apache Sling Testing Modules Reactor</name>
+    <inceptionYear>2014</inceptionYear>
 
-  <name>Apache Sling Testing Modules Reactor</name>
-  <inceptionYear>2014</inceptionYear>
-
-  <scm>
-    <connection>
+    <scm>
+        <connection>
             scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing
         </connection>
-    <developerConnection>
+        <developerConnection>
             scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing
         </developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
-  </scm>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
+    </scm>
 
-  <modules>
-    <module>tools</module>
-    <module>http/clients</module>
-    <module>serversetup</module>
-    <module>hamcrest</module>
-    <module>junit/core</module>
-    <module>junit/scriptable</module>
-    <module>junit/healthcheck</module>
-    <module>junit/remote</module>
-    <module>junit/performance</module>
-    <module>junit/teleporter</module>
-    <module>mocks</module>
-    <module>sling-pax-util</module>
-    <module>samples/bundle-with-it</module>
-  </modules>
+    <modules>
+        <module>tools</module>
+        <module>http/clients</module>
+        <module>http/rules</module>
+        <module>serversetup</module>
+        <module>hamcrest</module>
+        <module>junit/core</module>
+        <module>junit/scriptable</module>
+        <module>junit/healthcheck</module>
+        <module>junit/remote</module>
+        <module>junit/performance</module>
+        <module>junit/teleporter</module>
+        <module>mocks</module>
+        <module>sling-pax-util</module>
+        <module>samples/bundle-with-it</module>
+    </modules>
 
 </project>
