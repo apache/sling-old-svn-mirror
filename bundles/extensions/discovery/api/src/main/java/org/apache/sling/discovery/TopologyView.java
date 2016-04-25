@@ -25,7 +25,9 @@ import aQute.bnd.annotation.ProviderType;
 /**
  * A topology view is a cross-cluster list of instances and clusters
  * that have announced themselves with the DiscoveryService.
- *
+ * <p>
+ * All instances in a topology must and do have a unique sling.id.
+ * @see InstanceDescription#getSlingId()
  */
 @ProviderType
 public interface TopologyView {
