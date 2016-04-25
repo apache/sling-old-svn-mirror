@@ -104,7 +104,7 @@ public class SimpleHttpDistributionTransportTest {
                 endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
+        RemoteDistributionPackage retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
         assertNull(retrievedPackage);
     }
 
@@ -139,7 +139,7 @@ public class SimpleHttpDistributionTransportTest {
                 endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionPackageProxy retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
+        RemoteDistributionPackage retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
         assertNotNull(retrievedPackage);
     }
 }

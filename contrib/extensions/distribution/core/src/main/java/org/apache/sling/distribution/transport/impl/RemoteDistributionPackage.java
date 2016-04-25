@@ -22,7 +22,9 @@ package org.apache.sling.distribution.transport.impl;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 
 
-public interface DistributionPackageProxy {
+public interface RemoteDistributionPackage {
+
     DistributionPackage getPackage();
-    void deletePackage();
+
+    void deleteRemotePackage();
 }

@@ -58,6 +58,6 @@ public interface DistributionTransport {
      *                                        fail to be retrieved from the target instance
      */
     @Nullable
-    DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request, @Nonnull DistributionTransportContext context) throws DistributionException;
+    RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request, @Nonnull DistributionTransportContext context) throws DistributionException;
 
 }

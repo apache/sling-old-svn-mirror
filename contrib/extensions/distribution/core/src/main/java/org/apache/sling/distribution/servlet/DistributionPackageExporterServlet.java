@@ -102,8 +102,6 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                     InputStream inputStream = null;
                     int bytesCopied = -1;
                     try {
-                        response.addHeader(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID, distributionPackage.getId());
-
                         inputStream = DistributionPackageUtils.createStreamWithHeader(distributionPackage);
 
                         bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
