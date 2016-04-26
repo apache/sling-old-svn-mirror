@@ -279,8 +279,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.teleporter</artifactId>
-            <!-- SNAPSHOT required due to SLING-5365 -->
-            <version>1.0.5-SNAPSHOT</version>
+            <version>1.0.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
