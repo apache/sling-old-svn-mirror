@@ -53,9 +53,6 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>
-              org.apache.sling.scripting.freemarker.*
-            </Private-Package>
             <Embed-Dependency>freemarker;inline=true</Embed-Dependency>
             <!--
             A few notes on the lines below:
@@ -147,28 +144,8 @@
       <version>2.1.4</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.jcr.resource</artifactId>
-      <version>2.2.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.jackrabbit</groupId>
-          <artifactId>jackrabbit-jcr-commons</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.jackrabbit</groupId>
-          <artifactId>jackrabbit-classloader</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
-      <version>2.0</version>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
