@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
         @Property(name = "felix.webconsole.label", value = "slingmetrics"),
         @Property(name = "felix.webconsole.title", value = "Metrics"),
         @Property(name = "felix.webconsole.category", value = "Sling"),
-        @Property(name = InventoryPrinter.FORMAT, value = {"TEXT" }),
+        @Property(name = InventoryPrinter.FORMAT, value = {"TEXT" , "JSON"}),
         @Property(name = InventoryPrinter.NAME, value = "slingmetrics"),
         @Property(name = InventoryPrinter.TITLE, value = "Sling Metrics"),
         @Property(name = InventoryPrinter.WEBCONSOLE, boolValue = true)
@@ -110,6 +110,13 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         if (format == Format.TEXT) {
             MetricRegistry registry = getConsolidatedRegistry();
             ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
+                    .outputTo(new PrintStream(new WriterOutputStream(printWriter)))
+                    .build();
+            reporter.report();
+            reporter.close();
+        } else if (format == Format.JSON) {
+            MetricRegistry registry = getConsolidatedRegistry();
+            JSONReporter reporter = JSONReporter.forRegistry(registry)
                     .outputTo(new PrintStream(new WriterOutputStream(printWriter)))
                     .build();
             reporter.report();
