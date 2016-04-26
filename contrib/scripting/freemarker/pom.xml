@@ -35,6 +35,12 @@
   <name>Apache Sling Scripting FreeMarker</name>
   <description>Support for FreeMarker scripting</description>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <sling.java.version>7</sling.java.version>
+  </properties>
+
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/freemarker</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/freemarker</developerConnection>

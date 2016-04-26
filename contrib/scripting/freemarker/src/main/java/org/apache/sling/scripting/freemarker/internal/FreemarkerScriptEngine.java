@@ -17,6 +17,7 @@
 package org.apache.sling.scripting.freemarker.internal;
 
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -52,6 +53,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
     public FreemarkerScriptEngine(ScriptEngineFactory factory) {
         super(factory);
         configuration = new Configuration(version);
+        configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         beansWrapper = new BeansWrapper(version);
         statics = beansWrapper.getStaticModels();
     }
