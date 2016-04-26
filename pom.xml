@@ -113,6 +113,12 @@
       <version>2.2</version>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20090211</version>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.hamcrest</groupId>
