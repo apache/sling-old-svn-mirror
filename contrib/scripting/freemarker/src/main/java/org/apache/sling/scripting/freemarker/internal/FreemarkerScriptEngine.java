@@ -24,7 +24,9 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.jcr.Node;
 
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.log.Logger;
+import freemarker.template.TemplateHashModel;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -42,9 +44,15 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
     private final Configuration configuration;
 
+    private final BeansWrapper beansWrapper;
+
+    private final TemplateHashModel statics;
+
     public FreemarkerScriptEngine(ScriptEngineFactory factory) {
         super(factory);
         configuration = new Configuration();
+        beansWrapper = new BeansWrapper();
+        statics = beansWrapper.getStaticModels();
     }
 
     public Object eval(Reader reader, ScriptContext scriptContext)
@@ -66,6 +74,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
             bindings.put("currentNode", new NodeModel((Node) bindings.get("currentNode")));
+            bindings.put("statics", statics);
             tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
             log.error("Failure running Freemarker script.", t);

@@ -76,6 +76,9 @@
               org.zeroturnaround.javarebel;
               org.python.*;resolution:=optional, *
             </Import-Package>
+            <DynamicImport-Package>
+              *
+            </DynamicImport-Package>
             <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
             <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
             <_dsannotations>*</_dsannotations>
