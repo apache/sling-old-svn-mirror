@@ -16,29 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.freemarker;
+package org.apache.sling.scripting.freemarker.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Component(
+    service = ScriptEngineFactory.class,
+    immediate = true,
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=Scripting engine for FreeMarker templates",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
+)
+@Designate(
+    ocd = FreemarkerScriptEngineFactoryConfiguration.class
+)
 public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
-
-    /** The extensions of FreeMarker scripts (value is "ftl"). */
-    public final static String FREEMARKER_SCRIPT_EXTENSION = "ftl";
-
-    /** The MIME type of FreeMarker script files (value is "text/x-freemarker"). */
-    public final static String FREEMARKER_MIME_TYPE = "text/x-freemarker";
-
-    /**
-     * The short name of the FreeMarker script engine factory (value is
-     * "freemarker").
-     */
-    public final static String SHORT_NAME = "freemarker";
 
     /** The name of the FreeMarker language (value is "FreeMarker"). */
     private static final String FREEMARKER_NAME = "FreeMarker";
@@ -69,10 +77,9 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
      */
     private final String languageVersion;
 
+    private final Logger logger = LoggerFactory.getLogger(FreemarkerScriptEngineFactory.class);
+
     public FreemarkerScriptEngineFactory() {
-        setExtensions(FREEMARKER_SCRIPT_EXTENSION);
-        setMimeTypes(FREEMARKER_MIME_TYPE);
-        setNames(SHORT_NAME);
 
         // extract language version from version.properties file
         String langVersion = null;
@@ -101,6 +108,29 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
         languageVersion = (langVersion == null)
                 ? DEFAULT_FREEMARKER_VERSION
                 : langVersion;
+    }
+
+    @Activate
+    private void activate(final FreemarkerScriptEngineFactoryConfiguration configuration) {
+        logger.debug("activate");
+        configure(configuration);
+    }
+
+    @Modified
+    private void modified(final FreemarkerScriptEngineFactoryConfiguration configuration) {
+        logger.debug("modified");
+        configure(configuration);
+    }
+
+    @Deactivate
+    private void deactivate() {
+        logger.debug("deactivate");
+    }
+
+    private void configure(final FreemarkerScriptEngineFactoryConfiguration configuration) {
+        setExtensions(configuration.extensions());
+        setMimeTypes(configuration.mimeTypes());
+        setNames(configuration.names());
     }
 
     public ScriptEngine getScriptEngine() {
