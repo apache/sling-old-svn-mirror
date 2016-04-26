@@ -23,7 +23,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
     name = "Apache Sling Scripting Thymeleaf “ScriptEngine Factory”",
-    description = "scripting engine for Thymeleaf template"
+    description = "scripting engine for Thymeleaf templates"
 )
 @interface ThymeleafScriptEngineFactoryConfiguration {
 
