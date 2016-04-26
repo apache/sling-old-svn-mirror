@@ -27,6 +27,7 @@ import javax.jcr.Node;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.log.Logger;
 import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -42,6 +43,8 @@ import freemarker.template.Template;
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
     private static final Logger log = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
+    private final Version version = new Version(2, 3, 24);
+
     private final Configuration configuration;
 
     private final BeansWrapper beansWrapper;
@@ -50,8 +53,8 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
     public FreemarkerScriptEngine(ScriptEngineFactory factory) {
         super(factory);
-        configuration = new Configuration();
-        beansWrapper = new BeansWrapper();
+        configuration = new Configuration(version);
+        beansWrapper = new BeansWrapper(version);
         statics = beansWrapper.getStaticModels();
     }
 
