@@ -40,7 +40,7 @@ import org.apache.sling.distribution.transport.impl.RemoteDistributionPackage;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 
 /**
- * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
+ * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
