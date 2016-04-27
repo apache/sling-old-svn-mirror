@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.TopologyView;
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.base.its.setup.mock.AssertingTopologyEventListener;
@@ -33,6 +34,7 @@ import org.apache.sling.discovery.impl.setup.FullJR2VirtualInstanceBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +83,7 @@ public class RepositoryDelaysTest {
      * typically for longer than the configured heartbeat
      * timeout
      */
+    @Category(Slow.class) //TODO: test takes couple minutes!
     @Test
     public void testSlowSessionSaves() throws Exception {
         VirtualInstanceBuilder builder1 = newBuilder();
