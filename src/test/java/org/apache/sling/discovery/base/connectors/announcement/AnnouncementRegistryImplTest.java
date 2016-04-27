@@ -31,6 +31,7 @@ import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
@@ -43,6 +44,7 @@ import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.spi.base.DummySlingSettingsService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AnnouncementRegistryImplTest {
 
@@ -78,6 +80,16 @@ public class AnnouncementRegistryImplTest {
 
     @Test
     public void testRegisterUnregister() throws Exception {
+    	doTestRegisterUnregister(false);
+    }
+    
+    @Category(Slow.class)
+    @Test
+    public void testRegisterUnregister_Slow() throws Exception {
+    	doTestRegisterUnregister(true);
+    }
+    
+    private void doTestRegisterUnregister(boolean includeFinalExpiryCheck) throws Exception {
         try{
             registry.registerAnnouncement(null);
             fail("should complain");
@@ -142,9 +154,10 @@ public class AnnouncementRegistryImplTest {
         assertTrue(registry.registerAnnouncement(ann)!=-1);
         assertEquals(1, registry.listInstances(localCluster).size());
 
-        Thread.sleep(10500);
-        assertEquals(0, registry.listInstances(localCluster).size());
-    
+        if (includeFinalExpiryCheck) {
+	        Thread.sleep(10500);
+	        assertEquals(0, registry.listInstances(localCluster).size());
+        }
     }
     
     @Test
@@ -315,6 +328,16 @@ public class AnnouncementRegistryImplTest {
     
     @Test
     public void testCluster() throws Exception {
+    	doTestCluster(false);
+    }
+    
+    @Category(Slow.class)
+    @Test
+    public void testCluster_Slow() throws Exception {
+    	doTestCluster(true);
+    }
+
+    private void doTestCluster(boolean includeFinalExpiryCheck) throws Exception {
         ClusterView cluster1 = createCluster(2);
         ClusterView cluster2 = createCluster(4);
         ClusterView cluster3 = createCluster(7);
@@ -372,15 +395,17 @@ public class AnnouncementRegistryImplTest {
         assertEquals(0, registry2.listLocalIncomingAnnouncements().size());
         assertAnnouncements(registry2, myCluster, 3, 8);
         
-        Thread.sleep(10500);
-        assertAnnouncements(registry1, myCluster, 3, 8);
-        assertAnnouncements(registry2, myCluster, 3, 8);
-        registry1.checkExpiredAnnouncements();
-        registry2.checkExpiredAnnouncements();
-        assertAnnouncements(registry1, myCluster, 1, 2);
-        assertAnnouncements(registry2, myCluster, 1, 2);
+        if (includeFinalExpiryCheck) {
+	        Thread.sleep(10500);
+	        assertAnnouncements(registry1, myCluster, 3, 8);
+	        assertAnnouncements(registry2, myCluster, 3, 8);
+	        registry1.checkExpiredAnnouncements();
+	        registry2.checkExpiredAnnouncements();
+	        assertAnnouncements(registry1, myCluster, 1, 2);
+	        assertAnnouncements(registry2, myCluster, 1, 2);
+        }
     }
-
+    
     private void assertAnnouncements(AnnouncementRegistryImpl registry,
             ClusterView myCluster, int expectedNumAnnouncements, int expectedNumInstances) {
         Announcement ann = createAnnouncement(myCluster, 0, false);
