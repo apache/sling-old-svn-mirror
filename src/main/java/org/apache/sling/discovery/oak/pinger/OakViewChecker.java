@@ -257,7 +257,10 @@ public class OakViewChecker extends BaseViewChecker {
 
             resourceMap.put(PROPERTY_ID_RUNTIME, runtimeId);
             // SLING-4765 : store more infos to be able to be more verbose on duplicate slingId/ghost detection
-            final String slingHomePath = slingSettingsService==null ? "n/a" : slingSettingsService.getSlingHomePath();
+            String slingHomePath = "n/a";
+            if (slingSettingsService != null && slingSettingsService.getSlingHomePath() != null) {
+                slingHomePath = slingSettingsService.getSlingHomePath();
+            }
             resourceMap.put(PROPERTY_ID_SLING_HOME_PATH, slingHomePath);
             final String endpointsAsString = getEndpointsAsString();
             resourceMap.put(PROPERTY_ID_ENDPOINTS, endpointsAsString);
