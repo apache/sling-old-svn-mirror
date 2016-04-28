@@ -49,7 +49,7 @@
     <modules>
         <module>tools</module>
         <module>http/clients</module>
-        <module>http/rules</module>
+        <module>junit/rules</module>
         <module>serversetup</module>
         <module>hamcrest</module>
         <module>junit/core</module>
