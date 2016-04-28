@@ -544,6 +544,12 @@
     <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/3.2.2</bundle>
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
+  <feature name="sling-scripting-freemarker" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.freemarker/1.0.0-SNAPSHOT</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">sling-scripting</feature>
+  </feature>
   <feature name="sling-scripting-groovy" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.2</bundle>
     <!-- dependencies -->
