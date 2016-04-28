@@ -17,7 +17,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -33,54 +34,54 @@
 
     <name>Apache Sling Testing - sample bundle with integration tests</name>
     <description>
-        Sample project that demonstrates a bundle with unit and integration 
-        tests in the same Maven module, running against a full Sling instance. 
+        Sample project that demonstrates a bundle with unit and integration
+        tests in the same Maven module, running against a full Sling instance.
         Uses both HTTP-based and teleported server-side tests.
     </description>
-    
+
     <properties>
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
          -->
-         
+
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
-        
+
         <!-- URL of a server against which to run tests -->
-        <test.server.url />
-        
-         <!-- Set this to run tests against a specific hostname, if test.server.url is not set-->
-         <test.server.hostname />
+        <test.server.url/>
+
+        <!-- Set this to run tests against a specific hostname, if test.server.url is not set-->
+        <test.server.hostname/>
 
         <!-- Set this to use a different username for remote execution of sling junit tests -->
-        <test.server.username />
+        <test.server.username/>
 
         <!-- Set this to use a different password for remote execution of sling junit tests -->
-        <test.server.password />
-        
+        <test.server.password/>
+
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
-        
+
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
-        
+
         <!-- Set this to run the executable jar in a specified filesystem folder -->
-        <jar.executor.work.folder />
-        
+        <jar.executor.work.folder/>
+
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
             selected port number -->
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
     </properties>
-    
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/bundle-with-tests</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/bundle-with-tests</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/bundle-with-tests</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/bundle-with-tests</url>
     </scm>
 
     <build>
         <plugins>
-           <plugin>
+            <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
                     <filesets>
@@ -98,11 +99,11 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-             </plugin>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-             </plugin>
+            </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
@@ -122,7 +123,7 @@
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
-                            <phase>process-resources</phase>
+                        <phase>process-resources</phase>
                         <configuration>
                             <includeArtifactIds>org.apache.sling.launchpad</includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
@@ -140,7 +141,7 @@
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
-                            <phase>process-resources</phase>
+                        <phase>process-resources</phase>
                         <configuration>
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
@@ -196,7 +197,7 @@
                             using a pure provisioning model startup would be more
                             flexible.  
                         -->
-                        
+
                         <!-- if set, this prevents jar executor from starting Sling?? 
                         <test.server.url>${test.server.url}</test.server.url>
                          -->
@@ -218,20 +219,20 @@
                         <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
                         <start.bundles.timeout.seconds>30</start.bundles.timeout.seconds>
                         <bundle.install.timeout.seconds>20</bundle.install.timeout.seconds>
-                        
+
                         <!-- 
                             Define additional bundles to install by specifying the beginning of their artifact name.
                             The bundles are installed in lexical order of these property names.
                             All bundles must be listed as dependencies in this pom, or they won't be installed. 
                         -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
-                        
+
                         <!--  Install this bundle for integration tests -->
                         <sling.additional.bundle.2>${project.artifactId}-${project.version}.jar</sling.additional.bundle.2>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-         </plugins>
+        </plugins>
     </build>
 
     <dependencies>
@@ -275,6 +276,22 @@
             <artifactId>org.apache.sling.testing.tools</artifactId>
             <version>1.0.10</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpcore</artifactId>
+                    </exclusion>
+
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.rules</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -287,7 +304,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <version>8</version>
-			<scope>provided</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
