@@ -16,8 +16,7 @@
  */
 package org.apache.sling.testing.samples.bundlewit;
 
-import org.apache.sling.testing.rules.SlingBaseInstanceRule;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.apache.sling.testing.junit.rules.SlingInstanceRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -31,7 +30,7 @@ import org.junit.Test;
 public class OsgiConsoleHttpIT {
 
     @ClassRule
-    public static SlingBaseInstanceRule slingInstanceRule = new SlingBaseInstanceRule();
+    public static SlingInstanceRule slingInstanceRule = new SlingInstanceRule();
     
     @Test
     public void testSomeConsolePaths() throws Exception {

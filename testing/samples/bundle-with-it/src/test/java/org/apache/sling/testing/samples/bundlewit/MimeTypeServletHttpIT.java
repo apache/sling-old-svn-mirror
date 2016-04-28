@@ -18,10 +18,11 @@ package org.apache.sling.testing.samples.bundlewit;
 
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingHttpResponse;
-import org.apache.sling.testing.rules.SlingBaseInstanceRule;
+import org.apache.sling.testing.junit.rules.SlingInstanceRule;
+import org.apache.sling.testing.junit.rules.SlingRule;
 import org.apache.sling.testing.samples.bundlewit.impl.MimeTypeServlet;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** HTTP test of the MimeTypeServlet provided
@@ -30,7 +31,10 @@ import org.junit.Test;
 public class MimeTypeServletHttpIT {
 
     @ClassRule
-    public static SlingBaseInstanceRule slingInstanceRule = new SlingBaseInstanceRule();
+    public static SlingInstanceRule slingInstanceRule = new SlingInstanceRule();
+
+    @Rule
+    public SlingRule slingMethodRule = new SlingRule(); // for demo purposes
     
     private void assertMimeType(String path, String expected) throws Exception {
         SlingClient client = slingInstanceRule.getAdminClient();
