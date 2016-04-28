@@ -22,8 +22,6 @@ import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 
 public class ConfigurationPool {
@@ -52,21 +50,6 @@ public class ConfigurationPool {
         LOG.info("No instance configurations found from the system properties");
 
         List<InstanceConfiguration> configurations = new ArrayList<InstanceConfiguration>();
-
-        // If no instance JAR is specified, assume that two standard instances are already running
-
-        LOG.info("Check if tests are running in development mode");
-
-        if (Options.JAR.isNotSpecified()) {
-
-            LOG.info("Tests are running in development mode, adding default InstanceConfiguration (URL: http://localhost:8080), runmode: default");
-
-            try {
-                configurations.add(new InstanceConfiguration(new URI("http://localhost:8080"), "default"));
-            } catch (URISyntaxException e) {
-                LOG.warn("Couldn't parse URI", e);
-            }
-        }
 
         return configurations;
     }
