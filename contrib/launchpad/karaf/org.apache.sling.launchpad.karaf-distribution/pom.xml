@@ -182,6 +182,7 @@
             <feature>sling-nosql-couchbase</feature>
             <feature>sling-nosql-mongodb</feature>
             <!-- Apache Sling Scripting (contrib) -->
+            <feature>sling-scripting-freemarker</feature>
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>
             <feature>sling-scripting-thymeleaf</feature>
