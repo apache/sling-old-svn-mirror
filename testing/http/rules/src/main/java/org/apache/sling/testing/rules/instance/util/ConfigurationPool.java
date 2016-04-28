@@ -14,10 +14,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart.util;
+package org.apache.sling.testing.rules.instance.util;
 
-import org.apache.sling.testing.clients.quickstart.QuickstartConfiguration;
-import org.apache.sling.testing.clients.quickstart.QuickstartSetup;
+import org.apache.sling.testing.clients.instance.InstanceConfiguration;
+import org.apache.sling.testing.clients.instance.InstanceSetup;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,41 +30,39 @@ public class ConfigurationPool {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationPool.class);
 
-    private static final List<QuickstartConfiguration> configurations = initialConfigurations();
+    private static final List<InstanceConfiguration> configurations = initialConfigurations();
 
     private static final Set<Integer> takenConfigurations = new HashSet<Integer>();
 
     private static final Map<Description, Set<Integer>> takenConfigurationsByDescription = new HashMap<Description, Set<Integer>>();
 
-    private static List<QuickstartConfiguration> initialConfigurations() {
+    private static List<InstanceConfiguration> initialConfigurations() {
 
-        // If we are using the Quickstart Maven Plugin, use initial configurations from the plugin
+        LOG.info("Reading initial configurations from the system properties");
 
-        LOG.info("Reading initial configurations from the Quickstart Maven Plugin");
-
-        List<QuickstartConfiguration> configurationsFromPlugin = QuickstartSetup.get().getConfigurations();
+        List<InstanceConfiguration> configurationsFromPlugin = InstanceSetup.get().getConfigurations();
 
         if (!configurationsFromPlugin.isEmpty()) {
 
-            LOG.info("Found {} quickstart configuration(s) from the system properties", configurationsFromPlugin.size());
+            LOG.info("Found {} instance configuration(s) from the system properties", configurationsFromPlugin.size());
 
             return configurationsFromPlugin;
         }
 
-        LOG.info("No quickstart configurations found from the system properties");
+        LOG.info("No instance configurations found from the system properties");
 
-        List<QuickstartConfiguration> configurations = new ArrayList<QuickstartConfiguration>();
+        List<InstanceConfiguration> configurations = new ArrayList<InstanceConfiguration>();
 
-        // If no quickstart JAR is specified, assume that two standard instances are already running
+        // If no instance JAR is specified, assume that two standard instances are already running
 
         LOG.info("Check if tests are running in development mode");
 
         if (Options.JAR.isNotSpecified()) {
 
-            LOG.info("Tests are running in development mode, adding default QuickstartConfiguration (URL: http://localhost:8080), runmode: default");
+            LOG.info("Tests are running in development mode, adding default InstanceConfiguration (URL: http://localhost:8080), runmode: default");
 
             try {
-                configurations.add(new QuickstartConfiguration(new URI("http://localhost:8080"), "default"));
+                configurations.add(new InstanceConfiguration(new URI("http://localhost:8080"), "default"));
             } catch (URISyntaxException e) {
                 LOG.warn("Couldn't parse URI", e);
             }
@@ -73,8 +71,8 @@ public class ConfigurationPool {
         return configurations;
     }
 
-    public List<QuickstartConfiguration> getConfigurations() {
-        return new ArrayList<QuickstartConfiguration>(configurations);
+    public List<InstanceConfiguration> getConfigurations() {
+        return new ArrayList<InstanceConfiguration>(configurations);
     }
 
     public boolean isTaken(int configurationIndex) {
@@ -83,7 +81,7 @@ public class ConfigurationPool {
         }
     }
 
-    public QuickstartConfiguration takeConfiguration(Description description, int configurationIndex) {
+    public InstanceConfiguration takeConfiguration(Description description, int configurationIndex) {
         synchronized (ConfigurationPool.class) {
             if (isTaken(configurationIndex)) {
                 throw new IllegalStateException("Requested configuration is already taken");
@@ -135,7 +133,7 @@ public class ConfigurationPool {
         }
     }
 
-    public Integer addAndTakeConfiguration(Description description, QuickstartConfiguration configuration) {
+    public Integer addAndTakeConfiguration(Description description, InstanceConfiguration configuration) {
         synchronized (ConfigurationPool.class) {
             configurations.add(configuration);
 

@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart.util;
+package org.apache.sling.testing.rules.instance.util;
 
 import java.util.HashSet;
 import java.util.Random;

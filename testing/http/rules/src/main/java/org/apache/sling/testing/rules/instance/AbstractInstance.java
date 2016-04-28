@@ -14,20 +14,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart;
+package org.apache.sling.testing.rules.instance;
 
 
 import org.apache.sling.testing.clients.SlingClient;
-import org.apache.sling.testing.clients.quickstart.QuickstartConfiguration;
+import org.apache.sling.testing.clients.instance.InstanceConfiguration;
 
 import java.lang.reflect.Constructor;
 import java.net.URI;
 
-public abstract class AbstractQuickstart implements Quickstart {
+public abstract class AbstractInstance implements Instance {
 
     @Override
     public <T extends SlingClient> T getClient(Class<T> clientClass, String user, String pass) {
-        QuickstartConfiguration configuration = getConfiguration();
+        InstanceConfiguration configuration = getConfiguration();
 
         Constructor<T> constructor;
 
@@ -51,11 +51,6 @@ public abstract class AbstractQuickstart implements Quickstart {
     @Override
     public <T extends SlingClient> T getAdminClient(Class<T> clientClass) {
         return getClient(clientClass, "admin", "admin");
-    }
-
-    @Override
-    public <T extends SlingClient> T getAuthorClient(Class<T> clientClass) {
-        return getClient(clientClass, "author", "author");
     }
 
 }

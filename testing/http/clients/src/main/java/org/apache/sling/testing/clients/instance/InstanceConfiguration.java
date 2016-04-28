@@ -14,30 +14,28 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart.util;
+package org.apache.sling.testing.clients.instance;
 
-import java.io.File;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.net.URI;
 
-public class DirectoryAllocator {
+/**
+ * Configuration of a single instance instance.
+ */
+public class InstanceConfiguration {
 
-    private static AtomicInteger counter;
+    private URI url;
+    private final String runmode;
 
-    static {
-        counter = new AtomicInteger(1);
+    public InstanceConfiguration(final URI url, final String runmode) {
+        this.url = url;
+        this.runmode = runmode;
     }
 
-    public File allocateDirectory(File root, String basename) {
-        while (true) {
-            File folder = new File(root, basename + "-" + counter.getAndIncrement());
+    public URI getUrl() {
+        return this.url;
+    }
 
-            if (folder.exists()) {
-                continue;
-            }
-
-            folder.mkdirs();
-
-            return folder;
-        }
+    public String getRunmode() {
+        return runmode;
     }
 }

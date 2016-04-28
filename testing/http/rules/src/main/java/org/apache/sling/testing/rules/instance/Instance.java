@@ -14,10 +14,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.category;
+package org.apache.sling.testing.rules.instance;
 
-/**
- * Marker interface for the tests that fail independently of the Java version or other environment settings
- */
-public interface FailingTestOnOak {
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.clients.instance.InstanceConfiguration;
+import org.junit.rules.TestRule;
+
+public interface Instance extends TestRule {
+
+    Instance withRunMode(String runMode);
+
+    Instance orDefault(InstanceConfiguration instanceConfiguration);
+
+    InstanceConfiguration getConfiguration();
+
+    <T extends SlingClient> T getClient(Class<T> clientClass, String user, String pass);
+
+    <T extends SlingClient> T getAdminClient(Class<T> clientClass);
+
 }

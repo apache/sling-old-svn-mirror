@@ -14,36 +14,36 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart;
+package org.apache.sling.testing.rules.instance;
 
-import org.apache.sling.testing.clients.quickstart.QuickstartConfiguration;
+import org.apache.sling.testing.clients.instance.InstanceConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-public class ExistingQuickstart extends AbstractQuickstart {
+public class ExistingInstance extends AbstractInstance {
 
     private String runMode;
 
-    private ExistingQuickstartStatement statement;
-    private QuickstartConfiguration defaultConfiguration;
+    private ExistingInstanceStatement statement;
+    private InstanceConfiguration defaultConfiguration;
 
-    public Quickstart withRunMode(String runMode) {
+    public Instance withRunMode(String runMode) {
         this.runMode = runMode;
         return this;
     }
 
     @Override
-    public Quickstart orDefault(QuickstartConfiguration quickstartConfiguration) {
-        this.defaultConfiguration = quickstartConfiguration;
+    public Instance orDefault(InstanceConfiguration instanceConfiguration) {
+        this.defaultConfiguration = instanceConfiguration;
         return this;
     }
 
-    public QuickstartConfiguration getConfiguration() {
+    public InstanceConfiguration getConfiguration() {
         return statement.getConfiguration();
     }
 
     public Statement apply(Statement base, Description description) {
-        this.statement = new ExistingQuickstartStatement(description, base, runMode, defaultConfiguration);
+        this.statement = new ExistingInstanceStatement(description, base, runMode, defaultConfiguration);
         return this.statement;
     }
 

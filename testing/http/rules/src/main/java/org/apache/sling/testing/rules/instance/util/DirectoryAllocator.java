@@ -14,25 +14,30 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.clients.html.microdata;
+package org.apache.sling.testing.rules.instance.util;
 
-/**
- * A composite collection to represent zero or more {@link Item}. When calling operation exposed by {@link Item}
- * interface, the first item in the collection is used.
- */
-public interface Items extends Iterable<Item>, Item {
+import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    /**
-     * Returns the item at given index.
-     *
-     * @param index the index
-     * @return the item
-     * @throws IndexOutOfBoundsException if the index is not found
-     */
-    Item at(int index) throws IndexOutOfBoundsException;
+public class DirectoryAllocator {
 
-    /**
-     * @return the amount of items contained in this collection.
-     */
-    int length();
+    private static AtomicInteger counter;
+
+    static {
+        counter = new AtomicInteger(1);
+    }
+
+    public File allocateDirectory(File root, String basename) {
+        while (true) {
+            File folder = new File(root, basename + "-" + counter.getAndIncrement());
+
+            if (folder.exists()) {
+                continue;
+            }
+
+            folder.mkdirs();
+
+            return folder;
+        }
+    }
 }

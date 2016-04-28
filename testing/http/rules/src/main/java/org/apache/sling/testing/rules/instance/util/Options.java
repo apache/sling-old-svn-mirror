@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart.util;
+package org.apache.sling.testing.rules.instance.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,11 +22,11 @@ import java.util.List;
 
 public enum Options {
 
-    JAR("quickstart.jar.file"),
-    JVM_ARGUMENTS("quickstart.vm.args"),
-    QUICKSTART_OPTIONS("quickstart.options"),
-    INSTALLATIONS("quickstart.installations"),
-    START_TIMEOUT("quickstart.timeout");
+    JAR("instance.jar.file"),
+    JVM_ARGUMENTS("instance.vm.args"),
+    QUICKSTART_OPTIONS("instance.options"),
+    INSTALLATIONS("instance.installations"),
+    START_TIMEOUT("instance.timeout");
 
     private String name;
 

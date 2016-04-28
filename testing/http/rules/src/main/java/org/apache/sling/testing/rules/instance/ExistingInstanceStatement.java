@@ -14,10 +14,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.rules.quickstart;
+package org.apache.sling.testing.rules.instance;
 
-import org.apache.sling.testing.rules.quickstart.util.ConfigurationPool;
-import org.apache.sling.testing.clients.quickstart.QuickstartConfiguration;
+import org.apache.sling.testing.rules.instance.util.ConfigurationPool;
+import org.apache.sling.testing.clients.instance.InstanceConfiguration;
 import org.junit.Assume;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-class ExistingQuickstartStatement extends Statement {
+class ExistingInstanceStatement extends Statement {
 
-    private final Logger logger = LoggerFactory.getLogger(ExistingQuickstartStatement.class);
+    private final Logger logger = LoggerFactory.getLogger(ExistingInstanceStatement.class);
 
     private final ConfigurationPool configurationPool = new ConfigurationPool();
 
@@ -40,12 +40,12 @@ class ExistingQuickstartStatement extends Statement {
 
     private Integer index;
 
-    private QuickstartConfiguration configuration;
+    private InstanceConfiguration configuration;
 
-    private final QuickstartConfiguration defaultConfiguration;
+    private final InstanceConfiguration defaultConfiguration;
 
-    public ExistingQuickstartStatement(Description description, Statement statement,
-                                       String runMode, QuickstartConfiguration defaultConfiguration) {
+    public ExistingInstanceStatement(Description description, Statement statement,
+                                     String runMode, InstanceConfiguration defaultConfiguration) {
         this.description = description;
         this.statement = statement;
         this.runMode = runMode;
@@ -69,16 +69,16 @@ class ExistingQuickstartStatement extends Statement {
         if (this.index == null) {
             Assume.assumeNotNull(this.defaultConfiguration);
             this.configuration = defaultConfiguration;
-            logger.info("Using default QuickstartConfiguration provided (URL: {}, runmode: {}) for test {}",
+            logger.info("Using default InstanceConfiguration provided (URL: {}, runmode: {}) for test {}",
                     configuration.getUrl(), configuration.getRunmode(), description);
         }
     }
 
     private void takeMatchingQuickstart() {
-        List<QuickstartConfiguration> configurations = configurationPool.getConfigurations();
+        List<InstanceConfiguration> configurations = configurationPool.getConfigurations();
 
         for (int i = 0; i < configurations.size(); i++) {
-            QuickstartConfiguration configuration = configurations.get(i);
+            InstanceConfiguration configuration = configurations.get(i);
 
             // Does the configuration match the requested run mode?
             if (!runMode.equals(configuration.getRunmode())) {
@@ -91,7 +91,7 @@ class ExistingQuickstartStatement extends Statement {
             }
 
             // The configuration is valid, save the index
-            logger.info("QuickstartConfiguration (URL: {}, runmode: {}) found for test {}", configuration.getUrl(), runMode, description);
+            logger.info("InstanceConfiguration (URL: {}, runmode: {}) found for test {}", configuration.getUrl(), runMode, description);
 
             takeQuickstart(i);
 
@@ -112,7 +112,7 @@ class ExistingQuickstartStatement extends Statement {
         index = null;
     }
 
-    public QuickstartConfiguration getConfiguration() {
+    public InstanceConfiguration getConfiguration() {
         return configuration;
     }
 

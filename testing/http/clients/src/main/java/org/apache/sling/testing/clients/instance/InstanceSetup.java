@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.testing.clients.quickstart;
+package org.apache.sling.testing.clients.instance;
 
 import org.apache.sling.testing.clients.Constants;
 import org.slf4j.Logger;
@@ -26,26 +26,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Utility class for getting the current quickstart setup
+ * Utility class for getting the current instance setup
  */
-public final class QuickstartSetup {
+public final class InstanceSetup {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuickstartSetup.class);
-    private static QuickstartSetup SINGLETON;
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceSetup.class);
+    private static InstanceSetup SINGLETON;
 
     /**
      * @return  the current setup object.
      */
-    public static QuickstartSetup get() {
+    public static InstanceSetup get() {
         if ( SINGLETON == null ) {
-            SINGLETON = new QuickstartSetup();
+            SINGLETON = new InstanceSetup();
         }
         return SINGLETON;
     }
 
-    private final List<QuickstartConfiguration> configs = new ArrayList<QuickstartConfiguration>();
+    private final List<InstanceConfiguration> configs = new ArrayList<InstanceConfiguration>();
 
-    private QuickstartSetup() {
+    private InstanceSetup() {
         final int number = Integer.valueOf(System.getProperty(Constants.CONFIG_PROP_PREFIX + "instances", "0"));
         for (int i=1; i<=number; i++ ) {
             URI url;
@@ -57,28 +57,28 @@ public final class QuickstartSetup {
             }
             final String runmode = System.getProperty(Constants.CONFIG_PROP_PREFIX + "instance.runmode." + String.valueOf(i));
 
-            final QuickstartConfiguration qc = new QuickstartConfiguration(url, runmode);
+            final InstanceConfiguration qc = new InstanceConfiguration(url, runmode);
 
             this.configs.add(qc);
         }
     }
 
     /**
-     * @return all quickstart configurations.
+     * @return all instance configurations.
      */
-    public List<QuickstartConfiguration> getConfigurations() {
+    public List<InstanceConfiguration> getConfigurations() {
         return this.configs;
     }
 
     /**
-     * Get the list of all QuickstartConfiguration with a specific {@code runmode}
+     * Get the list of all InstanceConfiguration with a specific {@code runmode}
      *
      * @param runmode the desired runmode
-     * @return all quickstart configurations filtered by runmode.
+     * @return all instance configurations filtered by runmode.
      */
-    public List<QuickstartConfiguration> getConfigurations(final String runmode) {
-        final List<QuickstartConfiguration> result = new ArrayList<QuickstartConfiguration>();
-        for(final QuickstartConfiguration qc : this.configs) {
+    public List<InstanceConfiguration> getConfigurations(final String runmode) {
+        final List<InstanceConfiguration> result = new ArrayList<InstanceConfiguration>();
+        for(final InstanceConfiguration qc : this.configs) {
             if ( runmode == null || runmode.equals(qc.getRunmode()) ) {
                 result.add(qc);
             }

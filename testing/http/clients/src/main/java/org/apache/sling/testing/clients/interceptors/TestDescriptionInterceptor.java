@@ -36,7 +36,7 @@ public class TestDescriptionInterceptor implements HttpRequestInterceptor{
     public static final String TEST_CLASS_HEADER = "sling.test.class";
 
     public void process(HttpRequest httpRequest, HttpContext httpContext) throws HttpException, IOException {
-            httpRequest.addHeader(TEST_NAME_HEADER,TestDescriptionHolder.getMethodName());
-            httpRequest.addHeader(TEST_CLASS_HEADER,TestDescriptionHolder.getClassName());
+            httpRequest.addHeader(TEST_NAME_HEADER, TestDescriptionHolder.getMethodName());
+            httpRequest.addHeader(TEST_CLASS_HEADER, TestDescriptionHolder.getClassName());
     }
 }

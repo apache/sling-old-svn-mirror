@@ -17,7 +17,7 @@
 package org.apache.sling.testing.rules.category;
 
 /**
- * Interface used to mark a JUnit test which has the ability to run in parallel with other tests against the same quickstart instance.
+ * Interface used to mark a JUnit test which has the ability to run in parallel with other tests against the same instance instance.
  * The definition of a parallelizable test is defined externally.
  */
 public interface ClusterAwareTest {

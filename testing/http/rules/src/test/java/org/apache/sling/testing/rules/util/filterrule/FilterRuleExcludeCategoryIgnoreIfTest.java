@@ -20,7 +20,7 @@ import org.apache.sling.testing.rules.FilterRule;
 import org.apache.sling.testing.rules.annotation.IgnoreIfProperty;
 import org.apache.sling.testing.rules.annotation.Issue;
 import org.apache.sling.testing.rules.category.FailingTest;
-import org.apache.sling.testing.rules.category.FailingTestOnOak;
+import org.apache.sling.testing.rules.category.SlowRunningTest;
 import org.apache.sling.testing.rules.util.IgnoreTestsConfig;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -37,7 +37,7 @@ public class FilterRuleExcludeCategoryIgnoreIfTest {
     public TestName name = new TestName();
 
     static {
-        System.setProperty(FilterRule.CATEGORY_PROPERTY, "Issue,FailingTestOnOak");
+        System.setProperty(FilterRule.CATEGORY_PROPERTY, "Issue,SlowRunningTest");
         System.setProperty("test.filterrule.a", "a");
         IgnoreTestsConfig.reCreate();
     }
@@ -69,7 +69,7 @@ public class FilterRuleExcludeCategoryIgnoreIfTest {
      */
     @Test
     @IgnoreIfProperty(name = "test.filterrule.a", value = "a")
-    @Category(FailingTestOnOak.class)
+    @Category(SlowRunningTest.class)
     public void testIgnoreIfPropExistsandExcludedCategoryExists_2() {
         Assert.fail("Test should be Ignored");
     }
