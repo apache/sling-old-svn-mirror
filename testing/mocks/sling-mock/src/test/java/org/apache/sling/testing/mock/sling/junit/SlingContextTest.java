@@ -80,8 +80,33 @@ public class SlingContextTest {
     }
 
     @Test
-    public void testRegisterAdapterOverlay() {
+    public void testRegisterAdapterOverlayStatic() {
+        prepareInitialAdapterFactory();
         
+        // register overlay adapter with static adaption
+        context.registerAdapter(TestAdaptable.class, String.class, "static-adaption");
+
+        // test overlay adapter with static adaption
+        assertEquals("static-adaption", new TestAdaptable("testMessage2").adaptTo(String.class));
+    }
+
+    @Test
+    public void testRegisterAdapterOverlayDynamic() {
+        prepareInitialAdapterFactory();
+        
+        // register overlay adapter with dynamic adaption
+        context.registerAdapter(TestAdaptable.class, String.class, new Function<TestAdaptable, String>() {
+            @Override
+            public String apply(TestAdaptable input) {
+                return input.getMessage() + "-dynamic";
+            }
+        });
+
+        // test overlay adapter with dynamic adaption
+        assertEquals("testMessage3-dynamic", new TestAdaptable("testMessage3").adaptTo(String.class));
+    }
+    
+    private void prepareInitialAdapterFactory() {
         // register "traditional" adapter factory without specific service ranking
         AdapterFactory adapterFactory = new AdapterFactory() {
             @SuppressWarnings("unchecked")
@@ -96,24 +121,7 @@ public class SlingContextTest {
                 .build());
         
         // test initial adapter factory
-        assertEquals("testMessage1-initial", new TestAdaptable("testMessage1").adaptTo(String.class));
-        
-        // register overlay adapter with static adaption
-        context.registerAdapter(TestAdaptable.class, String.class, "static-adaption");
-
-        // test overlay adapter with static adaption
-        assertEquals("static-adaption", new TestAdaptable("testMessage2").adaptTo(String.class));
-
-        // register overlay adapter with dynamic adaption
-        context.registerAdapter(TestAdaptable.class, String.class, new Function<TestAdaptable, String>() {
-            @Override
-            public String apply(TestAdaptable input) {
-                return input.getMessage() + "-dynamic";
-            }
-        });
-
-        // test overlay adapter with dynamic adaption
-        assertEquals("testMessage3-dynamic", new TestAdaptable("testMessage3").adaptTo(String.class));
+        assertEquals("testMessage1-initial", new TestAdaptable("testMessage1").adaptTo(String.class));        
     }
 
 

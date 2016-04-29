@@ -53,6 +53,7 @@ import org.apache.sling.testing.mock.sling.services.MockSlingSettingService;
 import org.apache.sling.testing.mock.sling.servlet.MockRequestPathInfo;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 import aQute.bnd.annotation.ConsumerType;
@@ -370,6 +371,8 @@ public class SlingContextImpl extends OsgiContextImpl {
                 .put(AdapterFactory.ADAPTER_CLASSES, new String[] {
                     adapterClass.getName()
                 })
+                // make sure this overlay has higher ranking than other adapter factories
+                .put(Constants.SERVICE_RANKING, Integer.MAX_VALUE)
                 .build());
     }
 
