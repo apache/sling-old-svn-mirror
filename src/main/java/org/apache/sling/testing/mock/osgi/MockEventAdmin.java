@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -106,13 +107,13 @@ public final class MockEventAdmin implements EventAdmin {
     
     protected void bindEventHandler(EventHandler eventHandler, Map<String, Object> props) {
         synchronized (eventHandlers) {
-            eventHandlers.put(ServiceUtil.getComparableForServiceRanking(props), new EventHandlerItem(eventHandler, props));
+            eventHandlers.put(ServiceUtil.getComparableForServiceRanking(props, Order.DESCENDING), new EventHandlerItem(eventHandler, props));
         }
     }
 
     protected void unbindEventHandler(EventHandler eventHandler, Map<String, Object> props) {
         synchronized (eventHandlers) {
-            eventHandlers.remove(ServiceUtil.getComparableForServiceRanking(props));
+            eventHandlers.remove(ServiceUtil.getComparableForServiceRanking(props, Order.DESCENDING));
         }
     }
     

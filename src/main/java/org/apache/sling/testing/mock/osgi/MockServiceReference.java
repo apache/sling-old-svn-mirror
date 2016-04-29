@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -44,7 +45,7 @@ class MockServiceReference<T> implements ServiceReference<T> {
     
     private Comparable<Object> buildComparable() {
         Map<String,Object> props = MapUtil.toMap(serviceRegistration.getProperties());
-        return ServiceUtil.getComparableForServiceRanking(props);
+        return ServiceUtil.getComparableForServiceRanking(props, Order.DESCENDING);
     }
     
     @Override
