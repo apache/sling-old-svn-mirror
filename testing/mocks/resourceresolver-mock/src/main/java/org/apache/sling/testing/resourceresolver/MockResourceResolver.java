@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -96,7 +97,11 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         // build full path again
         path = path + (urlRemainder != null ? urlRemainder : "");
 
-        return this.getResource(path);
+        Resource resource = this.getResource(path);
+        if (resource == null) {
+            resource = new NonExistingResource(this, absPath);
+        }
+        return resource;
     }
 
     @Override
