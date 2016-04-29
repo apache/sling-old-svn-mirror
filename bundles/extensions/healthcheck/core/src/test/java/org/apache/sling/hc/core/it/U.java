@@ -18,6 +18,7 @@
 package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -97,7 +98,7 @@ public class U {
                     )
             ),
             provision(
-                    CoreOptions.bundle(bundleFile.toURI().toString()),
+                    bundle(bundleFile.toURI().toString()),
                     mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
