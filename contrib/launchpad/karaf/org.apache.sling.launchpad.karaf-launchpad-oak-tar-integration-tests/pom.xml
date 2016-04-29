@@ -291,6 +291,8 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <!-- SLING-5414 Launchpad/Provisioning Model only -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
+                <!-- TODO -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/MappingEventsProxyTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
