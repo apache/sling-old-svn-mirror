@@ -59,8 +59,8 @@ public class IgnoreTestsConfig {
                 String[] pair = token.split(":");
 
                 // Split by ":" and get the ignore (partial) java FQDN and a reason
-                // Ex: com.adobe.test.*:GRANITE-4242
-                //     com.adobe.test.MyTest
+                // Ex: org.apache.sling.tests.*:SLING-4242
+                //     org.apache.sling.tests.MyTest:SLING-555
                 String ignoreToken = (pair.length > 0) ? pair[0] : "";
                 String reason = (pair.length > 1) ? pair[1] : "";
 
