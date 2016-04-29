@@ -189,7 +189,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <forkMode>never</forkMode>
                     <systemPropertyVariables>
                         <!-- 
                             TODO this is a fairly complicated setup, we might
@@ -290,7 +289,6 @@
                     <groupId>org.apache.httpcomponents</groupId>
                     <artifactId>httpcore</artifactId>
                     </exclusion>
-
             </exclusions>
         </dependency>
         <dependency>
