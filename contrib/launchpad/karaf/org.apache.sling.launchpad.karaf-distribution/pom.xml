@@ -38,10 +38,10 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
-    <servicemix.specs.version>2.5.0</servicemix.specs.version>
+    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <servicemix.specs.version>2.7.0</servicemix.specs.version>
     <xerces.version>2.11.0</xerces.version>
-    <xalan.bundle.version>2.7.2_2</xalan.bundle.version>
+    <xalan.bundle.version>2.7.2_3</xalan.bundle.version>
     <xalan-serializer.bundle.version>2.7.2_1</xalan-serializer.bundle.version>
   </properties>
 
