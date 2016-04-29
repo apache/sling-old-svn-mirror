@@ -115,7 +115,7 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"),
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
-                    mavenBundle("commons-io", "commons-io", "1.4"),
+                    mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
                     mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject(),
                     mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
