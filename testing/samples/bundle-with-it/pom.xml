@@ -173,6 +173,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.19.1</version>
                 <executions>
                     <execution>
                         <id>integration-test</id>
@@ -188,6 +189,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <forkMode>never</forkMode>
                     <systemPropertyVariables>
                         <!-- 
                             TODO this is a fairly complicated setup, we might
@@ -229,6 +231,9 @@
 
                         <!--  Install this bundle for integration tests -->
                         <sling.additional.bundle.2>${project.artifactId}-${project.version}.jar</sling.additional.bundle.2>
+
+                        <!-- Filter IT -->
+                        <sling.it.ignorelist>*.FilterIT#testShouldNotRun:test_filter</sling.it.ignorelist>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
