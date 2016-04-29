@@ -305,6 +305,7 @@
     <feature version="${feature.version}">sling-installer</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
+    <feature version="${feature.version}">sling-extension-discovery-oak</feature>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.prefs/1.0.6</bundle>
     <!-- TODO both plugins do not get installed with feature -->
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6</bundle>
