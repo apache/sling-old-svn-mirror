@@ -291,8 +291,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <!-- SLING-5414 Launchpad/Provisioning Model only -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
-                <!-- TODO Could not obtain a ServiceReference for the following services: org.apache.sling.hc.api.execution.HealthCheckExecutor -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/teleporter/ServicesPresentTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
