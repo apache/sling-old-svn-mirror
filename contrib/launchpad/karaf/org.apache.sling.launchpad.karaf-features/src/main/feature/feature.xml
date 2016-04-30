@@ -105,7 +105,7 @@
     <feature version="${feature.version}">sling</feature>
   </feature>
   <feature name="sling-extension-discovery" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.api/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.api/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.base/1.1.3-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.commons/1.0.12</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.support/1.0.0</bundle>
@@ -602,12 +602,13 @@
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.4.0</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.4.0</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.4.0</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.5.1</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.5.1</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.5.1</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-scripting-jsp</feature>
+    <feature version="${feature.version}">sling-extension-event</feature>
   </feature>
 </features>
