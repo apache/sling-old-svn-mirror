@@ -1,11 +1,13 @@
 Sling Fling Sample
 ==================
 
-This is a sample using _Sling Models_, _Sling Query_ and _Sling Scripting Thymeleaf_.
+This is a sample using _Sling Models_, _Sling Query_, _Sling Scripting Thymeleaf_ (latest snapshot), _Sling Validation_ (latest snapshot), _Sling Commons Messaging_ (latest snapshot) and _Sling Commons Messaging Mail_ (latest snapshot).
 
 * [Sling Models](http://sling.apache.org/documentation/bundles/models.html)
 * [Sling Query](https://github.com/Cognifide/Sling-Query)
 * [Sling Scripting Thymeleaf](http://sling.apache.org/documentation/bundles/scripting/scripting-thymeleaf.html) ([Thymeleaf](http://www.thymeleaf.org/), [Sling i18n](http://sling.apache.org/documentation/bundles/internationalization-support-i18n.html))
+* [Sling Validation](https://sling.apache.org/documentation/bundles/validation.html)
+* Sling Commons Messaging and Sling Commons Messaging Mail
 
 Additional features used in this sample:
 
@@ -24,17 +26,15 @@ When using _[Apache Karaf](http://karaf.apache.org)_ with _[Sling Karaf Launchpa
 
     mvn clean install -P karaf@localhost
 
-This will install initial content under `/apps/fling`, `/content/fling` and `/etc/i18n/org.apache.sling.samples.fling`.
+This will install initial content under `/apps/fling`, `/content/fling`, `/etc/i18n/org.apache.sling.samples.fling` and `/etc/messaging`.
 
 Browse to [http://localhost:8080/fling.html](http://localhost:8080/fling.html) or [http://localhost:8181/fling.html](http://localhost:8181/fling.html).
 
-To install the required bundles/features on _Apache Karaf_ run the commands below:
+To install the `sling-samples-fling` feature with dependencies on _Apache Karaf_ run the commands below:
 
     karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features
     karaf@root()> feature:install sling-launchpad-oak-tar
-    karaf@root()> feature:install sling-extension-models
-    karaf@root()> feature:install sling-extension-query
-    karaf@root()> feature:install sling-scripting-thymeleaf
+    karaf@root()> feature:install sling-samples-fling
     karaf@root()> feature:install sling-auth-form﻿²
 
 For a more detailed user profile add some properties to an user³:
