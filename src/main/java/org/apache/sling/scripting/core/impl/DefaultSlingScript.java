@@ -224,7 +224,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                                   break;
                         case 200: this.globalScope = bindings;
                                   break;
-                        default: throw new IllegalArgumentException("Invaild scope");
+                        default: throw new IllegalArgumentException("Invalid scope");
                     }
                 }
 
@@ -237,7 +237,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                         case 100: return this.engineScope;
                         case 200: return this.globalScope;
                     }
-                    throw new IllegalArgumentException("Invaild scope");
+                    throw new IllegalArgumentException("Invalid scope");
                 }
 
                 /**
