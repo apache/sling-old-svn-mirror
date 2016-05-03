@@ -17,7 +17,7 @@
  * under the License.
  ******************************************************************************/
 
-@Version("1.0.0")
+@Version("2.0.0")
 package org.apache.sling.hapi;
 
 import aQute.bnd.annotation.Version;

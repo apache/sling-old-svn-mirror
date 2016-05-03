@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +40,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hapi.HApiProperty;
 import org.apache.sling.hapi.HApiType;
@@ -83,14 +83,23 @@ public class HApiUtilImpl implements HApiUtil {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated
     public Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException {
+        return getTypeResource(resolver, type).adaptTo(Node.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Resource getTypeResource(ResourceResolver resolver, String type) throws RepositoryException {
         Session session = resolver.adaptTo(Session.class);
 
         // Try to resolve the resource as a path
         Resource res = resolver.getResource(type);
         if (null != res) {
             LOG.debug("res = " + res.getName() + " " + res.getPath());
-            return res.adaptTo(Node.class);
+            return res;
         } else {
             for (String path : new HashSet<String>(Arrays.asList(hApiPaths))) {
                 // Remove trailing slash from path
@@ -111,7 +120,7 @@ public class HApiUtilImpl implements HApiUtil {
 
                 NodeIterator nodeIter = result.getNodes();
                 if (nodeIter.hasNext()) {
-                    return nodeIter.nextNode();
+                    return resolver.getResource(nodeIter.nextNode().getPath());
                 } else {
                     // continue
                 }
@@ -128,12 +137,12 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException {
-        Node typeNode = this.getTypeNode(resolver, type);
-        LOG.debug("typeNode=" + typeNode);
-        if (null == typeNode) {
+        Resource typeResource = this.getTypeResource(resolver, type);
+        LOG.debug("typeResource=" + typeResource);
+        if (null == typeResource) {
             return new AbstractHapiTypeImpl(type);
         } else {
-            return fromNode(resolver, typeNode);
+            return fromResource(resolver, typeResource);
         }
     }
 
@@ -141,15 +150,26 @@ public class HApiUtilImpl implements HApiUtil {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated
     public HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException {
         if (null == typeNode) return null;
-        String name = typeNode.getProperty("name").getValue().getString();
-        String description = typeNode.getProperty("description").getValue().getString();
-        String path = typeNode.getPath();
-        String fqdn = typeNode.getProperty("fqdn").getValue().getString();
+        Resource resource = resolver.getResource(typeNode.getPath());
+        return fromResource(resolver, resource);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    public HApiType fromResource(ResourceResolver resolver, Resource typeResource) throws RepositoryException {
+        if (null == typeResource) return null;
+
+        ValueMap resProps = typeResource.adaptTo(ValueMap.class);
+        String name = resProps.get("name", (String) null);
+        String description = resProps.get("description", (String) null);
+        String path = typeResource.getPath();
+        String fqdn = resProps.get("fqdn", (String) null);
         // get parameters
-        Value[] parameterValues = typeNode.hasProperty("parameters") ? typeNode.getProperty("parameters").getValues() : new Value[]{};
+        Value[] parameterValues = resProps.get("parameters", new Value[]{});
         List<String> parameters = new ArrayList<String>(parameterValues.length);
 
         for (Value p : Arrays.asList(parameterValues)) {
@@ -158,31 +178,30 @@ public class HApiUtilImpl implements HApiUtil {
         HApiTypeImpl newType = new HApiTypeImpl(name, description, serverContextPath, path, fqdn, parameters, null, null, false);
         TypesCache.getInstance(this).addType(newType);
 
+
         try {
-            // get parent if it exists
+            // Get parent if it exists
             HApiType parent = null;
-            String parentPath = typeNode.hasProperty("extends") ? typeNode.getProperty("extends").getString() : null;
+            String parentPath = resProps.get("extends", (String) null);
             if (null != parentPath) {
                 parent = TypesCache.getInstance(this).getType(resolver, parentPath);
             }
 
             // Get properties
             Map<String, HApiProperty> properties = new HashMap<String, HApiProperty>();
+            for (Resource res : typeResource.getChildren()) {
+                ValueMap resValueMap = res.adaptTo(ValueMap.class);
 
-            // Add the properties from this node
-            Iterator<Node> it = typeNode.getNodes();
-            while (it.hasNext()) {
-                Node propNode = it.next();
-                String propName = propNode.getName();
-                String propDescription = propNode.hasProperty("description") ? propNode.getProperty("description").getString() : "";
-
-                String typePath = propNode.getProperty("type").getValue().getString();
+                String propName = res.getName();
+                String propDescription = resValueMap.get("description", "");
+                String typePath = resValueMap.get("type", (String) null);
                 HApiType propType = TypesCache.getInstance(this).getType(resolver, typePath);
-                Boolean propMultiple = propNode.hasProperty("multiple") ? propNode.getProperty("multiple").getBoolean() : false;
+                Boolean propMultiple = resValueMap.get("multiple", false);
 
                 HApiProperty prop = new HApiPropertyImpl(propName, propDescription, propType, propMultiple);
                 properties.put(prop.getName(), prop);
             }
+            // Set parent and properties
             newType.setParent(parent);
             newType.setProperties(properties);
 
@@ -196,6 +215,7 @@ public class HApiUtilImpl implements HApiUtil {
             throw e;
         }
 
+        LOG.debug("Created type {}", newType);
         return newType;
     }
 
