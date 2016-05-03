@@ -70,8 +70,8 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.messaging.mail/0.0.1-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
-    <feature>sling-commons-messaging</feature>
-    <feature>sling-commons-threads</feature>
+    <feature version="${feature.version}">sling-commons-messaging</feature>
+    <feature version="${feature.version}">sling-commons-threads</feature>
     <bundle dependency="true">mvn:com.sun.mail/javax.mail/1.5.5</bundle>
     <bundle dependency="true">mvn:javax.mail/javax.mail-api/1.5.5</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-email/1.4</bundle>
