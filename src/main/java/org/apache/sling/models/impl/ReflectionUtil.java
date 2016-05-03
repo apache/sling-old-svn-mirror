@@ -55,9 +55,19 @@ public final class ReflectionUtil {
         while (type != null) {
             Method[] methods = type.getDeclaredMethods();
             addAnnotated(methods, result);
+            addAnnotatedMethodsFromInterfaces(type, result);
             type = type.getSuperclass();
         }
         return result;
+
+    }
+
+    private static void addAnnotatedMethodsFromInterfaces(Class<?> type, List<Method> result) {
+        for (Class<?> iface : type.getInterfaces()) {
+            Method[] methods = iface.getDeclaredMethods();
+            addAnnotated(methods, result);
+            addAnnotatedMethodsFromInterfaces(iface, result);
+        }
     }
 
     public static <T extends AnnotatedElement> void addAnnotated(T[] elements, List<T> set) {
