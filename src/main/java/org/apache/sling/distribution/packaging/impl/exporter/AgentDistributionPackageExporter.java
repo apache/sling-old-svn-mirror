@@ -42,6 +42,10 @@ import org.apache.sling.distribution.serialization.impl.SimpleDistributionPackag
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * a {@link DistributionPackageExporter} that picks {@link DistributionPackage} from a specific {@link DistributionAgent}'s
+ * queue.
+ */
 public class AgentDistributionPackageExporter implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final DistributionPackageBuilderProvider packageBuilderProvider;

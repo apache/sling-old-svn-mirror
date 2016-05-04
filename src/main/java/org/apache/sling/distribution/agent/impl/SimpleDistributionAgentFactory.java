@@ -169,7 +169,6 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
         Set<String> processingQueues = new HashSet<String>();
         processingQueues.addAll(exportQueueStrategy.getQueueNames());
 
-
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, processingQueues,
                 serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
                 queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository,

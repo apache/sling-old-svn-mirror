@@ -76,7 +76,6 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     public void acquire(@Nonnull String[] holderNames) {
         try {
             DistributionPackageUtils.acquire(getStatusFile(), holderNames);
-
         } catch (IOException e) {
             log.error("cannot release package", e);
         }

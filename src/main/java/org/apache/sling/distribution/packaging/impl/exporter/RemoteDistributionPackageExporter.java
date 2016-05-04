@@ -64,7 +64,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
-
         this.packageBuilder = packageBuilder;
 
         for (String endpoint : endpoints) {
@@ -81,7 +80,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
 
             RemoteDistributionPackage retrievedPackage;
             while (noPackages < maxNumberOfPackages && ((retrievedPackage = distributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext)) != null)) {
-
 
                 DistributionPackage distributionPackage = retrievedPackage.getPackage();
 

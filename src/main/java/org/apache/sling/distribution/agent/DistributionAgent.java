@@ -57,14 +57,12 @@ public interface DistributionAgent {
     @CheckForNull
     DistributionQueue getQueue(@Nonnull String name);
 
-
     /**
      * Get the agent log
      * @return the log for this agent
      */
     @Nonnull
     DistributionLog getLog();
-
 
     /**
      * returns the state of the agent
