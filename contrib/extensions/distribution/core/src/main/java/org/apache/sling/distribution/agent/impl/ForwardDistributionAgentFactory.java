@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
@@ -43,6 +44,7 @@ import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.impl.exporter.AsyncTransportDistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -62,7 +64,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
+ * An OSGi service factory for "forward agents" that push resources from the local instance to remote instances.
+ *
+ * @see {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 @Component(metatype = true,
         label = "Apache Sling Distribution Agent - Forward Agents Factory",
@@ -110,6 +114,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
     private static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+
+    @Property(boolValue = true, label = "Asynchronous Transport Enabled", description = "Whether or not the distribution agent should deliver the package immediately after creation.")
+    private static final String ASYNC_TRANSPORT = "transport.async";
 
 
     /**
@@ -179,6 +186,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private SlingRepository slingRepository;
 
+    @Reference
+    private Scheduler scheduler;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -214,13 +223,13 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
 
 
-        DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
+
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy errorQueueStrategy = null;
 
-        DistributionPackageImporter packageImporter = null;
+        RemoteDistributionPackageImporter packageImporter = null;
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
         Set<String> processingQueues = new HashSet<String>();
 
@@ -242,6 +251,14 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         processingQueues.removeAll(Arrays.asList(passiveQueues));
 
         packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
+
+        boolean asyncTransport = PropertiesUtil.toBoolean(config.get(ASYNC_TRANSPORT), false);
+        DistributionPackageExporter packageExporter;
+        if (asyncTransport) {
+            packageExporter = new AsyncTransportDistributionPackageExporter(scheduler, packageBuilder, packageImporter);
+        } else {
+            packageExporter = new LocalDistributionPackageExporter(packageBuilder);
+        }
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 

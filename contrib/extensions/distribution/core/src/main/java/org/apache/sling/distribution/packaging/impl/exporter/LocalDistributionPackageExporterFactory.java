@@ -39,8 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
- * {@link DistributionPackage} locally.
+ * OSGi configuration factory for {@link LocalDistributionPackageExporter}s.
  */
 @Component(label = "Apache Sling Distribution Exporter - Local Package Exporter Factory",
         metatype = true,

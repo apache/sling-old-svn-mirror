@@ -30,6 +30,9 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
 
+/**
+ * {@link DistributionRequestAuthorizationStrategy} based on JCR privileges over a certain {@link Session}
+ */
 public class PrivilegeDistributionRequestAuthorizationStrategy implements DistributionRequestAuthorizationStrategy {
 
     private final String jcrPrivilege;

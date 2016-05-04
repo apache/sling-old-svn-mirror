@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
+ * OSGi configuration factory for {@link RemoteDistributionPackageExporter}s.
  */
 @Component(label = "Apache Sling Distribution Exporter - Remote Package Exporter Factory",
         metatype = true,
