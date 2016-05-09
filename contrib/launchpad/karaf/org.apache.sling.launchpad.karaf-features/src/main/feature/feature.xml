@@ -615,9 +615,9 @@
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.5.1</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.5.1</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.5.1</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.5.2</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.5.2</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.5.2</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
