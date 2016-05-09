@@ -96,11 +96,11 @@ public class PipeBindingsTest extends AbstractPipeTest {
         bindings.getBindings().put("test", testMap);
         String newExpression = (String)bindings.instantiateObject("${test.a} and ${test.b}");
         assertEquals("expression should be correctly instantiated", "apricots and bananas", newExpression);
-        Calendar cal = (Calendar)bindings.instantiateObject("${new Date(2012,04,12)}");
+        Calendar cal = (Calendar)bindings.instantiateObject("${new Date('Sat, 12 May 2012 13:30:00 GMT')}");
         assertNotNull("calendar should be instantiated", cal);
         assertEquals("year should be correct", 2012, cal.get(Calendar.YEAR));
         assertEquals("month should be correct", 4, cal.get(Calendar.MONTH));
-        assertEquals("date should be correct", 11, cal.get(Calendar.DAY_OF_MONTH));
+        assertEquals("date should be correct", 12, cal.get(Calendar.DAY_OF_MONTH));
     }
 
     @Test
