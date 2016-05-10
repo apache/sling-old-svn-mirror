@@ -48,6 +48,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
     public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
         Session session = resourceResolver.adaptTo(Session.class);
 
+        if (session == null) {
+            throw new DistributionException("cannot obtain a Session");
+        }
+
         try {
             if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
                 checkPermissionForAdd(session, distributionRequest.getPaths());
