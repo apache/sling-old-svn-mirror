@@ -102,11 +102,11 @@ public class Modification {
      * Records a 'order' change.
      *
      * @param orderedPath Path of the node that was reordered
-     * @param beforeSibbling Name of the sibbling node before which the source node has
+     * @param beforeSibling Name of the sibling node before which the source node has
      *            been inserted.
      */
-    public static Modification onOrder(String orderedPath, String beforeSibbling) {
-        return onChange(ModificationType.ORDER, orderedPath, beforeSibbling);
+    public static Modification onOrder(String orderedPath, String beforeSibling) {
+        return onChange(ModificationType.ORDER, orderedPath, beforeSibling);
     }
 
     protected static Modification onChange(ModificationType type, String source) {
