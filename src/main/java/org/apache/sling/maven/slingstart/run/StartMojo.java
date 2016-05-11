@@ -77,7 +77,8 @@ public class StartMojo extends AbstractMojo {
     
     /**
      * Overwrites debug parameter of all server configurations (if set).
-     * Attaches a debugger to the forked JVM. If set to "true", the process will allow a debugger to attach on port 8000. If set to some other string, that string will be appended to the vmOpts, allowing you to configure arbitrary debuggability options (without overwriting the other options specified through the vmOpts parameter of the servers).
+     * Attaches a debugger to the forked JVM. If set to {@code "true"}, the process will allow a debugger to connect on port 8000. 
+     * If set to some other string, that string will be appended to the server's {@code vmOpts}, allowing you to configure arbitrary debugging options.
      */
     @Parameter(property = "launchpad.debug")
     protected String debug;
