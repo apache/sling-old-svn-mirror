@@ -109,11 +109,13 @@ class TeleporterHttpClient {
         }
     }
 
-    void uninstallBundle(String bundleSymbolicName) throws MalformedURLException, IOException {
+    void uninstallBundle(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
         // equivalent of
         // curl -u admin:admin -F action=uninstall http://localhost:8080/system/console/bundles/$N
         final String url = baseUrl + "/system/console/bundles/" + bundleSymbolicName;
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        
+        waitForStatus(url, 200, webConsoleReadyTimeoutSeconds * 1000);
         
         try {
             setConnectionCredentials(c);

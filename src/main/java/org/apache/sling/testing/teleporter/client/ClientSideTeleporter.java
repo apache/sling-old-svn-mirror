@@ -199,7 +199,7 @@ public class ClientSideTeleporter extends TeleporterRule {
                 try {
                     httpClient.runTests(testPath, testReadyTimeoutSeconds);
                 } finally {
-                    httpClient.uninstallBundle(bundleSymbolicName);
+                    httpClient.uninstallBundle(bundleSymbolicName, webConsoleReadyTimeoutSeconds);
                 }
             }
         };
