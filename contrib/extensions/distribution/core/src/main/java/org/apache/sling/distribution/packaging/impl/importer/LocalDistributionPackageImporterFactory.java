@@ -40,13 +40,11 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
- * based {@link DistributionPackage} locally.
+ * OSGi configuration factory for {@link LocalDistributionPackageImporter}s.
  */
 @Component(label = "Apache Sling Distribution Importer - Local Package Importer Factory",
         metatype = true,

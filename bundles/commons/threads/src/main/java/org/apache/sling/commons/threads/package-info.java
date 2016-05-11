@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("3.3.0")
+@Version("3.4.0")
 package org.apache.sling.commons.threads;
 
 import aQute.bnd.annotation.Version;

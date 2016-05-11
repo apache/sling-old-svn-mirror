@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.event</artifactId>
     <packaging>bundle</packaging>
-    <version>4.0.1-SNAPSHOT</version>
+    <version>4.0.3-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -318,7 +318,7 @@
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-container-native</artifactId>
+            <artifactId>pax-exam-container-forked</artifactId>
             <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
@@ -355,6 +355,12 @@
             <artifactId>javax.inject</artifactId>
             <version>1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.discovery.commons</artifactId>
+        	<version>1.0.12</version>
+        	<scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

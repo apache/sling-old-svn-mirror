@@ -42,6 +42,10 @@ import org.apache.sling.distribution.serialization.impl.SimpleDistributionPackag
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * a {@link DistributionPackageExporter} that picks {@link DistributionPackage} from a specific {@link DistributionAgent}'s
+ * queue.
+ */
 public class AgentDistributionPackageExporter implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final DistributionPackageBuilderProvider packageBuilderProvider;
@@ -87,11 +91,12 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
 
                 if (packageBuilder != null) {
-                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getPackageId());
+                    distributionPackage.getInfo().putAll(info);
 
                     log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
-                        packageProcessor.process(new AgentDistributionPackage(distributionPackage, queue));
+                        packageProcessor.process(new AgentDistributionPackage(distributionPackage, queue, entry.getId()));
                     } else {
                         log.warn("cannot get package {}", info);
                     }
@@ -113,7 +118,8 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting package from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            DistributionQueueEntry entry = queue.getHead();
+            String itemId = distributionPackageId;
+            DistributionQueueEntry entry = queue.getItem(itemId);
             DistributionPackage distributionPackage;
 
             if (entry != null) {
@@ -123,10 +129,12 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
                 DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
 
                 if (packageBuilder != null) {
-                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getId());
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getPackageId());
+                    distributionPackage.getInfo().putAll(info);
+
                     log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
-                        return new AgentDistributionPackage(distributionPackage, queue);
+                        return new AgentDistributionPackage(distributionPackage, queue, entry.getId());
                     }
                 } else {
                     log.warn("cannot find package builder with type {}", info.getType());
@@ -145,19 +153,26 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
         private final DistributionPackage distributionPackage;
         private final DistributionQueue queue;
+        private final String itemId;
 
-        AgentDistributionPackage(DistributionPackage distributionPackage, DistributionQueue queue) {
+        AgentDistributionPackage(DistributionPackage distributionPackage, DistributionQueue queue, String itemId) {
             super(distributionPackage);
             this.distributionPackage = distributionPackage;
             this.queue = queue;
+            this.itemId = itemId;
         }
 
         @Override
         public void delete() {
-            String id = distributionPackage.getId();
-            queue.remove(id);
+            queue.remove(itemId);
             DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
-            agentLog("exported package {} with info {} from queue {} by exporter {}", new Object[] {id, distributionPackage.getInfo(), queue.getName(), name});
+            agentLog("exported package {} with info {} from queue {} by exporter {}", new Object[] {itemId, distributionPackage.getInfo(), queue.getName(), name});
+        }
+
+        @Nonnull
+        @Override
+        public String getId() {
+            return itemId;
         }
     }
 

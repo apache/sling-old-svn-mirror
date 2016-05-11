@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.base.commons.UndefinedClusterViewException;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
@@ -32,6 +33,7 @@ import org.apache.sling.discovery.base.its.setup.WithholdingAppender;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,35 +112,52 @@ public abstract class AbstractClusterLoadTest {
     }
 
     @Test
+    public void testTwoInstancesFast() throws Throwable {
+    	doTest(2, 3);
+    }
+    
+    @Test
+    public void testThreeInstancesFast() throws Throwable {
+    	doTest(3, 3);
+    }
+
+    @Category(Slow.class)
+    @Test
     public void testTwoInstances() throws Throwable {
     	doTest(2, 5);
     }
 
+    @Category(Slow.class)
     @Test
     public void testThreeInstances() throws Throwable {
     	doTest(3, 6);
     }
 
+    @Category(Slow.class)
     @Test
     public void testFourInstances() throws Throwable {
     	doTest(4, 7);
     }
 
+    @Category(Slow.class)
     @Test
     public void testFiveInstances() throws Throwable {
     	doTest(5, 8);
     }
 
+    @Category(Slow.class)
     @Test
     public void testSixInstances() throws Throwable {
     	doTest(6, 9);
     }
 
+    @Category(Slow.class)
     @Test
     public void testSevenInstances() throws Throwable {
         doTest(7, 10);
     }
     
+    @Category(Slow.class)
     @Test
     public void testEightInstances() throws Throwable {
         doTest(8, 50);

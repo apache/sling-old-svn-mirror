@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME;
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -101,14 +104,25 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         }
 
         monitor.worked(10); // 10/50 done
+        
+        try {
+            EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
 
+            installBundle(monitor,client, artifactLocator.loadSourceSupportBundle(), SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 15/50 done
+            installBundle(monitor,client, artifactLocator.loadToolingSupportBundle(), SUPPORT_BUNDLE_SYMBOLIC_NAME); // 20/50 done
+            
+        } catch ( IOException | OsgiClientException e) {
+            Activator.getDefault().getPluginLogger()
+                .warn("Failed reading the installation support bundle", e);
+        }
+        
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
                 debuggerConnection = new JVMDebuggerConnection(client);
                 
-                success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+                success = debuggerConnection.connectInDebugMode(launch, getServer(), SubMonitor.convert(monitor, 30));
 
-                monitor.worked(5); // 7/7 done
+                // 50/50 done
 
             } else {
                 
@@ -116,20 +130,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 result = command.execute();
                 success = result.isSuccess();
                 
-                monitor.worked(10); // 20/50 done
+                monitor.worked(30); // 50/50 done
                 
-                try {
-                    EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-                    
-                    installBundle(monitor, client, artifactLocator.loadToolingSupportBundle(), 
-                            EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME); // 35/50 done
-                    installBundle(monitor, client, artifactLocator.loadSourceSupportBundle(), 
-                            EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 50/50 done
-                    
-                } catch ( IOException | OsgiClientException e) {
-                    Activator.getDefault().getPluginLogger()
-                        .warn("Failed reading the installation support bundle", e);
-                }
             }
 
             if (success) {
@@ -152,12 +154,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     private void installBundle(IProgressMonitor monitor, OsgiClient client, final EmbeddedArtifact bundle,
             String bundleSymbolicName) throws OsgiClientException, IOException {
+
+        Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
         
+        monitor.setTaskName("Installing " + bundleSymbolicName + " " + embeddedVersion);
+
         Version remoteVersion = client.getBundleVersion(bundleSymbolicName);
         
-        monitor.worked(7);
-        
-        final Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
+        monitor.worked(2);
         
         ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
                 monitor);
@@ -172,7 +176,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         launchpadServer.setBundleVersion(bundleSymbolicName, remoteVersion,
                 monitor);
         
-        monitor.worked(8);
+        monitor.worked(3);
     }
 
     // TODO refine signature
@@ -227,13 +231,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 // SLING-3655 : when doing PUBLISH_CLEAN, the bundle deployment mechanism should 
                 // still be triggered
                 publishBundleModule(module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
 
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             } catch (SerializationException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                         + traceOperation(kind, deltaKind, module).toString(), e));

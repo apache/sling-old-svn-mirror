@@ -24,6 +24,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
+import org.apache.sling.ide.eclipse.core.DefaultSlingLaunchpadConfiguration;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.eclipse.core.resources.IProject;
@@ -251,4 +253,8 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
     }
 
     public abstract String doGetWindowTitle();
+    
+    protected ISlingLaunchpadConfiguration getDefaultConfig() {
+        return DefaultSlingLaunchpadConfiguration.INSTANCE;
+    }
 }

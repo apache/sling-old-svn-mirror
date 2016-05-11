@@ -18,19 +18,12 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 
 import static org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo.ValidationFlag.SKIP_SERVER_STARTED;
 
-import java.io.IOException;
-import java.io.InputStream;
 
-import org.apache.sling.ide.artifacts.EmbeddedArtifact;
-import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.SlingLaunchpadConfigurationDefaults;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo;
-import org.apache.sling.ide.osgi.OsgiClient;
-import org.apache.sling.ide.osgi.OsgiClientException;
-import org.apache.sling.ide.osgi.OsgiClientFactory;
-import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -57,10 +50,13 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
-import org.osgi.framework.Version;
 
 public class SetupServerWizardPage extends WizardPage {
 	
+    private static final String RUNTIME_TYPE_LAUNCHPAD = "org.apache.sling.ide.launchpadRuntimeType";
+
+    private static final String SERVER_TYPE_LAUNCHPAD = "org.apache.sling.ide.launchpadServer";
+
     private static final int HORIZONTAL_INDENT = 10;
 
     private Button useExistingServer;
@@ -79,11 +75,14 @@ public class SetupServerWizardPage extends WizardPage {
 
     private Button skipServerConfiguration;
 
+    private ISlingLaunchpadConfiguration config;
+
     public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
         setTitle("Select or Create Server");
         setDescription("This step defines which server to use with the new project.");
 		setImageDescriptor(parent.getLogo());
+		config = parent.getDefaultConfig();
 	}
 
     @Override
@@ -144,18 +143,23 @@ public class SetupServerWizardPage extends WizardPage {
 	    
         newLabel(container, "Host name:");
         newServerHostnameName = newText(container);
+        newServerHostnameName.setText("localhost");
 	    
         newLabel(container, "Port:");
         newServerPort = newText(container);
+        newServerPort.setText(Integer.toString(config.getPort()));
         
         newLabel(container, "Username:");
         newServerUsername = newText(container);
+        newServerUsername.setText(config.getUsername());
 
         newLabel(container, "Password:");
         newServerPassword = newText(container);
+        newServerPassword.setText(config.getPassword());
 	    
         newLabel(container, "Debug Port:");
         newServerDebugPort = newText(container);
+        newServerDebugPort.setText(Integer.toString(config.getDebugPort()));
 	    
 	    SelectionAdapter radioListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
@@ -303,23 +307,13 @@ public class SetupServerWizardPage extends WizardPage {
 		if (useExistingServer.getSelection()) {
             return existingServerCombo.getServer();
 		} else {
-			IServerType serverType = ServerCore.findServerType("org.apache.sling.ide.launchpadServer");
-			@SuppressWarnings("unused")
-			IRuntime existingRuntime = null;//ServerCore.findRuntime("org.apache.sling.ide.launchpadRuntimeType");
-			IRuntime[] existingRuntimes = ServerCore.getRuntimes();
-			for (IRuntime runtime : existingRuntimes) {
-				if (runtime.getRuntimeType().getId().equals("org.apache.sling.ide.launchpadRuntimeType")) {
-					existingRuntime = runtime;
-				}
-			}
+		    
+			IServerType serverType = ServerCore.findServerType(SERVER_TYPE_LAUNCHPAD);
+			IRuntime slingRuntime = getOrCreateSlingRuntime(monitor);
 			
-			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
-                // TODO there should be a nicer API for creating this, and also a central place for defaults
-                // TODO - we should not be creating runtimes, but maybe matching against existing ones
-                IRuntime runtime = serverRuntime.createRuntime(null, monitor);
-                runtime = runtime.createWorkingCopy().save(true, monitor);
-                IServerWorkingCopy wc = serverType.createServer(null, null, runtime, monitor);
+                // TODO there should be a nicer API for creating this
+                IServerWorkingCopy wc = serverType.createServer(null, null, slingRuntime, monitor);
 				wc.setHost(getHostname());
                 wc.setName(newServerName.getText());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
@@ -329,7 +323,7 @@ public class SetupServerWizardPage extends WizardPage {
                 
                 SlingLaunchpadConfigurationDefaults.applyDefaultValues(wc);
                 
-				wc.setRuntime(runtime);
+				wc.setRuntime(slingRuntime);
                 server = wc.save(true, monitor);
                 return server;
 			} catch (CoreException e) {
@@ -339,6 +333,18 @@ public class SetupServerWizardPage extends WizardPage {
 			}
 		}
 	}
+
+    private IRuntime getOrCreateSlingRuntime(IProgressMonitor monitor) throws CoreException {
+        
+        for ( IRuntime runtime : ServerCore.getRuntimes()) {
+            if ( runtime.getRuntimeType().getId().equals(RUNTIME_TYPE_LAUNCHPAD)) {
+                return runtime;
+            }
+        }
+        
+        IRuntimeType serverRuntime = ServerCore.findRuntimeType(RUNTIME_TYPE_LAUNCHPAD);
+        return serverRuntime.createRuntime(null, monitor).createWorkingCopy().save(true, monitor);
+    }
 
 	private int getPort() {
 		return Integer.parseInt(newServerPort.getText());

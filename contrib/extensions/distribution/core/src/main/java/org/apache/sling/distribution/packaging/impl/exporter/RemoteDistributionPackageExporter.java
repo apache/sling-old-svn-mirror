@@ -36,11 +36,11 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
 import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
 import org.apache.sling.distribution.transport.impl.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.DistributionPackageProxy;
+import org.apache.sling.distribution.transport.impl.RemoteDistributionPackage;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 
 /**
- * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
+ * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
@@ -64,7 +64,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
-
         this.packageBuilder = packageBuilder;
 
         for (String endpoint : endpoints) {
@@ -79,16 +78,15 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         for (DistributionTransport distributionTransport : transportHandlers) {
             int noPackages = 0;
 
-            DistributionPackageProxy retrievedPackage;
+            RemoteDistributionPackage retrievedPackage;
             while (noPackages < maxNumberOfPackages && ((retrievedPackage = distributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext)) != null)) {
-
 
                 DistributionPackage distributionPackage = retrievedPackage.getPackage();
 
                 try {
                     packageProcessor.process(distributionPackage);
 
-                    retrievedPackage.deletePackage();
+                    retrievedPackage.deleteRemotePackage();
 
                 } finally {
                     DistributionPackageUtils.closeSafely(distributionPackage);

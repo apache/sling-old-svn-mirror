@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
@@ -39,6 +40,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +79,7 @@ public class TestMinEventDelayHandler {
 
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
-        discoveryLogger.setLevel(Level.DEBUG);
+        discoveryLogger.setLevel(Level.INFO); // changed from Level.DEBUG
     }
     
     @After
@@ -165,6 +167,7 @@ public class TestMinEventDelayHandler {
         assertEquals(0, listener.countEvents());
     }
 
+    @Category(Slow.class) //TODO test takes env 50sec
     @Test
     public void testNormalDelaying() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -190,6 +193,7 @@ public class TestMinEventDelayHandler {
         }
     }
 
+    @Category(Slow.class) //TODO test takes env 45sec
     @Test
     public void testFailedDelaying() throws Exception {
         scheduler.failMode();

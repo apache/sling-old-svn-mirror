@@ -21,8 +21,10 @@ package org.apache.sling.distribution.resources.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentState;
@@ -51,7 +53,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     private static final String STATUS_PATH = "status";
 
 
-    private static final int MAX_QUEUE_DEPTH = 100;
+    private static final int MAX_QUEUE_LENGTH = 5000;
+    private static final int MAX_QUEUE_CHUNK = 100;
+
 
 
     public ExtendedDistributionServiceResourceProvider(String kind,
@@ -145,14 +149,14 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 }
 
                 List<String> nameList = new ArrayList<String>();
-                Map<String, Map<String, Object>> propertiesMap = new HashMap<String, Map<String, Object>>();
-                for (DistributionQueueEntry entry : queue.getItems(0, MAX_QUEUE_DEPTH)) {
-                    nameList.add(entry.getItem().getId());
-                    propertiesMap.put(entry.getItem().getId(), getItemProperties(entry));
+
+                DistributionQueueEntry entry = queue.getHead();
+                if (entry != null) {
+                    nameList.add(entry.getId());
                 }
 
                 result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
-                result.put(INTERNAL_ITEMS_PROPERTIES, propertiesMap);
+                result.put(INTERNAL_ITEMS_ITERATOR, new QueueItemsIterator(queue));
                 result.put(INTERNAL_ADAPTABLE, queue);
             }
 
@@ -190,7 +194,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             DistributionQueueItem item = entry.getItem();
             DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
-            result.put("id", item.getId());
+            result.put("id", entry.getId());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
             result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));
@@ -204,6 +208,51 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
         return result;
 
+    }
+
+
+    class QueueItemsIterator implements Iterator<Map<String, Object>> {
+
+        private final DistributionQueue queue;
+        private Iterator<DistributionQueueEntry> items;
+        int fetched = 0;
+
+        QueueItemsIterator(DistributionQueue queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            if (fetched > MAX_QUEUE_LENGTH) {
+                return false;
+            }
+
+            boolean shouldFetch = items == null || !items.hasNext();
+
+            if (shouldFetch) {
+                items = queue.getItems(fetched, MAX_QUEUE_CHUNK).iterator();
+            }
+
+            boolean hasNext = items.hasNext();
+            return hasNext;
+        }
+
+        @Override
+        public Map<String, Object> next() {
+            DistributionQueueEntry queueEntry = items.next();
+            String itemName = queueEntry.getId();
+            Map<String, Object> itemProperties = getItemProperties(queueEntry);
+            itemProperties.put(INTERNAL_NAME, itemName);
+
+            fetched ++;
+            return itemProperties;
+        }
+
+        @Override
+        public void remove() {
+            items.remove();
+        }
     }
 
 }

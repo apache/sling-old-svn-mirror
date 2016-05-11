@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest.repository;
 
 import static org.junit.Assert.fail;
+
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

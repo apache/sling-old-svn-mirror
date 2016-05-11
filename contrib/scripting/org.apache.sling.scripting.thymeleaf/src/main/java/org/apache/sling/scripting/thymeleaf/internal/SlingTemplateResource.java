@@ -62,7 +62,7 @@ public class SlingTemplateResource implements ITemplateResource {
     }
 
     @Override
-    public ITemplateResource relative(final String relativeLocation) throws IOException {
+    public ITemplateResource relative(final String relativeLocation) {
         throw new UnsupportedOperationException("not yet implemented"); // TODO
     }
 

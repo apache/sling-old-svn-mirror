@@ -23,6 +23,7 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
     -Dtest.host=xyzzy \
     -Dhttp.base.path=foo \
     -Dwebdav.workspace.path=foo \
+    -Dlaunchpad.readiness.mediatype=.json:application/json \ 
     -Dtest=**/integrationtest/**/*Test.java
 
 To run the tests against the same instance that is used in the full build,

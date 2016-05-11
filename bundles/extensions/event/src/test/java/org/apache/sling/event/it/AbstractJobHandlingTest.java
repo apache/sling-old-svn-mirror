@@ -49,7 +49,9 @@ import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -57,6 +59,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJobHandlingTest {
 
@@ -169,7 +172,14 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"),
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.1.2"),
 
-                CoreOptions.bundle( bundleFile.toURI().toString() ),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.commons", "1.0.12"),
+
+                // SLING-5560: delaying start of the sling.event bundle to
+                // ensure the parameter 'startup.delay' is properly set to 1sec
+                // for these ITs - as otherwise, the default of 30sec applies -
+                // which will cause the tests to fail
+                // @see setup() where the bundle is finally started - after reconfig
+                CoreOptions.bundle( bundleFile.toURI().toString() ).start(false),
 
                 junitBundles()
            );
@@ -202,13 +212,34 @@ public abstract class AbstractJobHandlingTest {
             // ignore
         }
     }
-
+    
     public void setup() throws IOException {
         // set load delay to 3 sec
         final org.osgi.service.cm.Configuration c2 = this.configAdmin.getConfiguration("org.apache.sling.event.impl.jobs.jcr.PersistenceHandler", null);
         Dictionary<String, Object> p2 = new Hashtable<String, Object>();
         p2.put(JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY, 3L);
+        // and startup.delay to 1sec - otherwise default of 30sec breaks tests!
+        p2.put(JobManagerConfiguration.PROPERTY_STARTUP_DELAY, 1L);
         c2.update(p2);
+        
+        // SLING-5560 : since the above (re)config is now applied, we're safe
+        // to go ahead and start the sling.event bundle.
+        // this time, the JobManagerConfiguration will be activated
+        // with the 'startup.delay' set to 1sec - so that ITs actually succeed
+        try {
+            Bundle[] bundles = bc.getBundles();
+            for (Bundle bundle : bundles) {
+                if (bundle.getSymbolicName().contains("sling.event")) {
+                    // assuming we only have 1 bundle that contains 'sling.event'
+                    LoggerFactory.getLogger(getClass()).info("starting bundle... "+bundle);
+                    bundle.start();
+                    break;
+                }
+            }
+        } catch (BundleException e) {
+            LoggerFactory.getLogger(getClass()).error("could not start sling.event bundle: "+e, e);
+            throw new RuntimeException(e);
+        }
     }
 
     private int deleteCount;
@@ -243,6 +274,9 @@ public abstract class AbstractJobHandlingTest {
             // ignore
         } catch (final PersistenceException e) {
             // ignore
+        } catch ( final Exception e ) {
+            // sometimes an NPE is thrown from the repository, as we
+            // are in the cleanup, we can ignore this
         } finally {
             if ( resolver != null ) {
                 resolver.close();

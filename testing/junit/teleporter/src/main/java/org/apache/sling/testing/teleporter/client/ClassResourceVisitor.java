@@ -61,8 +61,9 @@ public class ClassResourceVisitor {
         
         if("file".equals(protocol)) {
             // Get base path and remove ending slash
-            String basePath = clazz.getResource("/").getPath();
-            basePath = basePath.substring(0, basePath.length() - 1);
+            //String basePath = clazz.getResource("/").getPath();
+            //basePath = basePath.substring(0, basePath.length() - 1);
+            final String basePath = new File(clazz.getResource("/").getPath()).getAbsolutePath();
             processFile(basePath, new File(resourceURL.getPath()), p);
             
         } else if("jar".equals(protocol)) {
@@ -107,6 +108,13 @@ public class ClassResourceVisitor {
         }
     }
     
+    /* Backslashes are valid in Zip-files, BUT Java expects paths to be delimited by forward slashes.
+     * Windows provides file paths using backslashes, which need to be converted here.
+     */
+    static String sanitizeResourceName(String basePath, File resource) {
+        return resource.getAbsolutePath().substring(basePath.length()).replace("\\", "/");
+    }
+    
     private void processFile(String basePath, File f, Processor p) throws IOException {
         if(f.isDirectory()) {
             final String [] names = f.list();
@@ -118,7 +126,7 @@ public class ClassResourceVisitor {
         } else {
             final InputStream is = new BufferedInputStream(new FileInputStream(f));
             try {
-                p.process(f.getAbsolutePath().substring(basePath.length()), is);
+                p.process(sanitizeResourceName(basePath, f), is);            
             } finally {
                 is.close();
             }

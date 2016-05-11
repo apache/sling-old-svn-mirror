@@ -20,6 +20,7 @@ package org.apache.sling.maven.bundlesupport;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,6 +38,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.FileRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
@@ -48,6 +50,7 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -126,12 +129,6 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     @Parameter(property="sling.deploy.method", required = false)
     protected BundleDeploymentMethod deploymentMethod;
-
-    /**
-     * The jcr:primaryType to be used when creating intermediate paths. Only applies to WebDAV deployment
-     */
-    @Parameter(property = "sling.deploy.intermediatePathPrimaryType" , defaultValue = "sling:Folder")
-    protected String intermediatePathPrimaryType;
 
     /**
      * The content type / mime type used for WebDAV or Sling POST deployment.
@@ -459,7 +456,6 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     }
 
     private int performPut(String targetURL, File file) throws HttpException, IOException {
-
         PutMethod filePut = new PutMethod(getURLWithFilename(targetURL, file.getName()));
         try {
             filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
@@ -469,39 +465,67 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         }
     }
 
+    private int performHead(String uri) throws HttpException, IOException {
+        HeadMethod head = new HeadMethod(uri);
+        try {
+            return getHttpClient().executeMethod(head);
+        } finally {
+            head.releaseConnection();
+        }
+    }
+
+    private int performMkCol(String uri) throws IOException {
+        MkColMethod mkCol = new MkColMethod(uri);
+        try {
+            return getHttpClient().executeMethod(mkCol);
+        } finally {
+            mkCol.releaseConnection();
+        }
+    }
+
     private void createIntermediaryPaths(String targetURL) throws HttpException, IOException, MojoExecutionException {
+        // extract all intermediate URIs (longest one first)
+        List<String> intermediateUris = IntermediateUrisExtractor.extractIntermediateUris(targetURL);
 
-        for ( String intermediatePath : IntermediatePathsExtractor.extractIntermediatePaths(targetURL)) {
-            getLog().debug("Creating intermediate path at " + intermediatePath);
-
-            // verify if the path exists by calling the JSON servlet
-            // this should always return a 200 OK status if it exists or a 4040 otherwise
-            GetMethod get = new GetMethod(intermediatePath + ".json");
-            try {
-                int result = getHttpClient().executeMethod(get);
-                if ( result == HttpStatus.SC_OK ) {
-                    getLog().debug("Path at " + intermediatePath + " already exists");
-                    continue;
-                }
-            } finally {
-                get.releaseConnection();
-            }
-
-            // create the path if it does not exist
-            PostMethod post = new PostMethod(intermediatePath);
-            try {
-                post.addParameter(new NameValuePair("jcr:primaryType", intermediatePathPrimaryType));
-                int result = getHttpClient().executeMethod(post);
-                if ( result != HttpStatus.SC_CREATED && result != HttpStatus.SC_OK) {
-                    throw new MojoExecutionException("Failed creating intermediate path at " + intermediatePath + "."
-                            + " Reason: " + HttpStatus.getStatusText(result));
-                }
-                getLog().info("Created intermediate path at " + intermediatePath + " as a " + intermediatePathPrimaryType);
-            } finally {
-                post.releaseConnection();
+        // 1. go up to the node in the repository which exists already (HEAD request towards the root node)
+        String existingIntermediateUri = null;
+        // go through all intermediate URIs (longest first)
+        for (String intermediateUri : intermediateUris) {
+            // until one is existing
+            int result = performHead(intermediateUri) ;
+            if (result == HttpStatus.SC_OK) {
+                existingIntermediateUri = intermediateUri;
+                break;
+            } else if (result != HttpStatus.SC_NOT_FOUND) {
+                throw new MojoExecutionException("Failed getting intermediate path at " + intermediateUri + "."
+                        + " Reason: " + HttpStatus.getStatusText(result));
             }
         }
 
+        if (existingIntermediateUri == null) {
+            throw new MojoExecutionException(
+                    "Could not find any intermediate path up until the root of " + targetURL + ".");
+        }
+
+        // 2. now create from that level on each intermediate node individually towards the target path
+        int startOfInexistingIntermediateUri = intermediateUris.indexOf(existingIntermediateUri);
+        if (startOfInexistingIntermediateUri == -1) {
+            throw new IllegalStateException(
+                    "Could not find intermediate uri " + existingIntermediateUri + " in the list");
+        }
+
+        for (int index = startOfInexistingIntermediateUri - 1; index >= 0; index--) {
+            // use MKCOL to create the intermediate paths
+            String intermediateUri = intermediateUris.get(index);
+            int result = performMkCol(intermediateUri);
+            if (result == HttpStatus.SC_CREATED || result == HttpStatus.SC_OK) {
+                getLog().debug("Intermediate path at " + intermediateUri + " successfully created");
+                continue;
+            } else {
+                throw new MojoExecutionException("Failed creating intermediate path at '" + intermediateUri + "'."
+                        + " Reason: " + HttpStatus.getStatusText(result));
+            }
+        }
     }
 
     /**

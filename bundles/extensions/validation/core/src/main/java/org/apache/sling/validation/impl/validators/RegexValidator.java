@@ -28,7 +28,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
@@ -56,7 +56,7 @@ public class RegexValidator implements Validator<String> {
             if (pattern.matcher((String)data).matches()) {
                 return DefaultValidationResult.VALID;
             }
-            return new DefaultValidationResult(context.getLocation(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+            return new DefaultValidationResult(context.getLocation(), context.getSeverity(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
         } catch (PatternSyntaxException e) {
             throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }

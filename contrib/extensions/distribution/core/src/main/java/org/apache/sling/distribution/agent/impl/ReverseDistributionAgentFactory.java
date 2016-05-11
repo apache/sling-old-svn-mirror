@@ -48,7 +48,6 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
@@ -59,7 +58,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
+ * An OSGi service factory for "reverse agents" that pull resources from remote instances (e.g. from "queueing agents").
+ *
+ * @see {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 @Component(metatype = true,
         label = "Apache Sling Distribution Agent - Reverse Agents Factory",
@@ -190,7 +191,6 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         int pullItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
 
-        DefaultSharedDistributionPackageBuilder packageBuilder = new DefaultSharedDistributionPackageBuilder(this.packageBuilder);
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, pullItems);
         DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(packageBuilder);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);

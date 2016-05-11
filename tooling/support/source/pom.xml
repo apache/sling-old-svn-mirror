@@ -26,9 +26,8 @@
         <version>26</version>
     </parent>
 
-    <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.tooling.support.source</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Tooling Support Source</name>
@@ -65,6 +64,10 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>

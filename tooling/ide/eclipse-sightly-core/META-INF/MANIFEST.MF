@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-sightly-core;singleton:=true
-Bundle-Version: 1.0.99.qualifier
+Bundle-Version: 1.1.1.qualifier
 Bundle-Activator: org.apache.sling.ide.eclipse.sightly.internal.Activator
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

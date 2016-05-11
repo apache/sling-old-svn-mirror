@@ -35,13 +35,11 @@ import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
- * {@link DistributionPackage} locally.
+ * OSGi configuration factory for {@link LocalDistributionPackageExporter}s.
  */
 @Component(label = "Apache Sling Distribution Exporter - Local Package Exporter Factory",
         metatype = true,
@@ -69,7 +67,7 @@ public class LocalDistributionPackageExporterFactory implements DistributionPack
 
     @Activate
     public void activate(Map<String, Object> config) {
-        exporter = new LocalDistributionPackageExporter(new DefaultSharedDistributionPackageBuilder(packageBuilder));
+        exporter = new LocalDistributionPackageExporter(packageBuilder);
     }
 
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {

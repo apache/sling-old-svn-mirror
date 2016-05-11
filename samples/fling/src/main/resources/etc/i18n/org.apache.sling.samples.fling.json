@@ -1,0 +1,21 @@
+{
+    "en": {
+        "jcr:mixinTypes": [
+            "mix:language"
+        ],
+        "jcr:language": "en",
+        "sling:basename": "org.apache.sling.samples.fling",
+        "action.logout": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:message": "logout"
+        },
+        "no_auth": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:message": "no auth"
+        },
+        "fling.validator.comment.invalid": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:message": "Invalid comment, try with: {0}"
+        }
+    }
+}

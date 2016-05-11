@@ -30,7 +30,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
+ * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a
  * {@link DistributionPackage} locally.
  */
 public class LocalDistributionPackageExporter implements DistributionPackageExporter {
@@ -42,7 +42,6 @@ public class LocalDistributionPackageExporter implements DistributionPackageExpo
     }
 
     public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
-
         DistributionPackage createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
 
         try {
@@ -50,7 +49,6 @@ public class LocalDistributionPackageExporter implements DistributionPackageExpo
         } finally {
             DistributionPackageUtils.closeSafely(createdPackage);
         }
-
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {

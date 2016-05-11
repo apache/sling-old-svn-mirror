@@ -40,6 +40,7 @@ public class BWIT_TeleporterCustomizer implements TeleporterRule.Customizer {
         // Make sure our bundle API is imported instead of embedded
         final String apiPackage = "org.apache.sling.testing.samples.bundlewit.api";
         cst.includeDependencyPrefix("org.apache.sling.testing.samples.bundlewit");
+        cst.includeDependencyPrefix("org.apache.http.concurrent");
         cst.excludeDependencyPrefix(apiPackage);
         cst.getAdditionalBundleHeaders().put(Constants.IMPORT_PACKAGE, apiPackage);
     }

@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -45,10 +44,9 @@ class DistributionAgentJobConsumer implements JobConsumer {
         boolean processingResult = false;
         if (entry != null) {
             String queueName = entry.getStatus().getQueueName();
-            DistributionQueueItem item = entry.getItem();
-            log.debug("processing item {} in queue {}", item.getId(), queueName);
+            log.debug("processing item {} in queue {}", entry.getId(), queueName);
             processingResult = queueProcessor.process(queueName, entry);
-            log.debug("item {} processed {}", item.getId());
+            log.debug("item {} processed {}", entry.getId());
         } else {
             log.warn("no entry for job {}", job.getId());
         }

@@ -26,6 +26,8 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 
+import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -36,6 +38,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SlingContextTest {
@@ -74,6 +77,66 @@ public class SlingContextTest {
         assertEquals(Integer.valueOf(5), context.resourceResolver().adaptTo(Integer.class));
         assertEquals(">" + context.resourceResolver().toString(), context.resourceResolver().adaptTo(String.class));
         assertNull(context.resourceResolver().adaptTo(Double.class));
+    }
+
+    @Test
+    public void testRegisterAdapterOverlayStatic() {
+        prepareInitialAdapterFactory();
+        
+        // register overlay adapter with static adaption
+        context.registerAdapter(TestAdaptable.class, String.class, "static-adaption");
+
+        // test overlay adapter with static adaption
+        assertEquals("static-adaption", new TestAdaptable("testMessage2").adaptTo(String.class));
+    }
+
+    @Test
+    public void testRegisterAdapterOverlayDynamic() {
+        prepareInitialAdapterFactory();
+        
+        // register overlay adapter with dynamic adaption
+        context.registerAdapter(TestAdaptable.class, String.class, new Function<TestAdaptable, String>() {
+            @Override
+            public String apply(TestAdaptable input) {
+                return input.getMessage() + "-dynamic";
+            }
+        });
+
+        // test overlay adapter with dynamic adaption
+        assertEquals("testMessage3-dynamic", new TestAdaptable("testMessage3").adaptTo(String.class));
+    }
+    
+    private void prepareInitialAdapterFactory() {
+        // register "traditional" adapter factory without specific service ranking
+        AdapterFactory adapterFactory = new AdapterFactory() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
+                return (AdapterType)(((TestAdaptable)adaptable).getMessage() + "-initial");
+            }
+        };
+        context.registerService(AdapterFactory.class, adapterFactory, ImmutableMap.<String, Object>builder()
+                .put(AdapterFactory.ADAPTABLE_CLASSES, new String[] { TestAdaptable.class.getName() })
+                .put(AdapterFactory.ADAPTER_CLASSES, new String[] { String.class.getName() })
+                .build());
+        
+        // test initial adapter factory
+        assertEquals("testMessage1-initial", new TestAdaptable("testMessage1").adaptTo(String.class));        
+    }
+
+
+    private static class TestAdaptable extends SlingAdaptable {
+        
+        private final String message;
+
+        public TestAdaptable(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+        
     }
 
 }

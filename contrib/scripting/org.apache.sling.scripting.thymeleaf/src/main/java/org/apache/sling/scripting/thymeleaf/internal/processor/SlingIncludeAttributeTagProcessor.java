@@ -35,9 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.dialect.IProcessorDialect;
 import org.thymeleaf.engine.AttributeName;
-import org.thymeleaf.model.IElementAttributes;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
@@ -47,6 +45,8 @@ import org.thymeleaf.standard.expression.StandardExpressions;
 import org.thymeleaf.templatemode.TemplateMode;
 
 public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProcessor {
+
+    private final String dialectPrefix; // TODO remove (use dialectPrefix from extended AbstractElementTagProcessor)
 
     public static final int ATTRIBUTE_PRECEDENCE = 100;
 
@@ -64,12 +64,13 @@ public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProce
 
     private final Logger logger = LoggerFactory.getLogger(SlingIncludeAttributeTagProcessor.class);
 
-    public SlingIncludeAttributeTagProcessor(final IProcessorDialect processorDialect, final String dialectPrefix) {
-        super(processorDialect, TemplateMode.HTML, dialectPrefix, null, true, ATTRIBUTE_NAME, true, ATTRIBUTE_PRECEDENCE, true);
+    public SlingIncludeAttributeTagProcessor(final String dialectPrefix) {
+        super(TemplateMode.HTML, dialectPrefix, null, true, ATTRIBUTE_NAME, true, ATTRIBUTE_PRECEDENCE, true);
+        this.dialectPrefix = dialectPrefix;
     }
 
     @Override
-    protected void doProcess(final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final AttributeName attributeName, final String attributeValue, final String tagTemplateName, final int tagLine, final int tagCol, final IElementTagStructureHandler elementTagStructureHandler) {
+    protected void doProcess(final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final AttributeName attributeName, final String attributeValue, final IElementTagStructureHandler elementTagStructureHandler) {
         try {
             final SlingHttpServletRequest slingHttpServletRequest = (SlingHttpServletRequest) templateContext.getVariable(SlingBindings.REQUEST);
             final SlingHttpServletResponse slingHttpServletResponse = (SlingHttpServletResponse) templateContext.getVariable(SlingBindings.RESPONSE);
@@ -88,11 +89,11 @@ public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProce
                 resource = (Resource) include;
             }
             // request dispatcher options
-            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(expressionParser, templateContext, processableElementTag);
+            final RequestDispatcherOptions requestDispatcherOptions = prepareRequestDispatcherOptions(expressionParser, templateContext, processableElementTag, elementTagStructureHandler);
             // dispatch
             final String content = dispatch(resource, path, slingHttpServletRequest, slingHttpServletResponse, requestDispatcherOptions);
             // add output
-            final Boolean unwrap = (Boolean) parseAttribute(expressionParser, templateContext, processableElementTag, UNWRAP_ATTRIBUTE_NAME);
+            final Boolean unwrap = (Boolean) parseAttribute(expressionParser, templateContext, processableElementTag, elementTagStructureHandler, UNWRAP_ATTRIBUTE_NAME);
             if (unwrap != null && unwrap) {
                 elementTagStructureHandler.replaceWith(content, false);
             } else {
@@ -103,32 +104,22 @@ public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProce
         }
     }
 
-    protected Object parseAttribute(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final String name) {
-        final IElementAttributes attributes = processableElementTag.getAttributes();
-        final String value = attributes.getValue(getDialect().getPrefix(), name);
+    protected Object parseAttribute(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final IElementTagStructureHandler elementTagStructureHandler, final String name) {
+        final String value = processableElementTag.getAttributeValue(dialectPrefix, name);
         Object result = null;
         if (value != null) {
             final IStandardExpression expression = expressionParser.parseExpression(templateContext, value);
             result = expression.execute(templateContext);
         }
-        attributes.removeAttribute(getDialect().getPrefix(), name);
+        elementTagStructureHandler.removeAttribute(dialectPrefix, name);
         return result;
     }
 
-    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag) {
-        final String prefix = getDialect().getPrefix();
-
-        final String resourceType = (String) parseAttribute(expressionParser, templateContext, processableElementTag, RESOURCE_TYPE_ATTRIBUTE_NAME);
-        processableElementTag.getAttributes().removeAttribute(prefix, RESOURCE_TYPE_ATTRIBUTE_NAME);
-
-        final String replaceSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, REPLACE_SELECTORS_ATTRIBUTE_NAME);
-        processableElementTag.getAttributes().removeAttribute(prefix, REPLACE_SELECTORS_ATTRIBUTE_NAME);
-
-        final String addSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, ADD_SELECTORS_ATTRIBUTE_NAME);
-        processableElementTag.getAttributes().removeAttribute(prefix, ADD_SELECTORS_ATTRIBUTE_NAME);
-
-        final String replaceSuffix = (String) parseAttribute(expressionParser, templateContext, processableElementTag, REPLACE_SUFFIX_ATTRIBUTE_NAME);
-        processableElementTag.getAttributes().removeAttribute(prefix, REPLACE_SUFFIX_ATTRIBUTE_NAME);
+    protected RequestDispatcherOptions prepareRequestDispatcherOptions(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final IElementTagStructureHandler elementTagStructureHandler) {
+        final String resourceType = (String) parseAttribute(expressionParser, templateContext, processableElementTag, elementTagStructureHandler, RESOURCE_TYPE_ATTRIBUTE_NAME);
+        final String replaceSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, elementTagStructureHandler, REPLACE_SELECTORS_ATTRIBUTE_NAME);
+        final String addSelectors = (String) parseAttribute(expressionParser, templateContext, processableElementTag, elementTagStructureHandler, ADD_SELECTORS_ATTRIBUTE_NAME);
+        final String replaceSuffix = (String) parseAttribute(expressionParser, templateContext, processableElementTag, elementTagStructureHandler, REPLACE_SUFFIX_ATTRIBUTE_NAME);
 
         final RequestDispatcherOptions options = new RequestDispatcherOptions();
         options.setForceResourceType(resourceType);

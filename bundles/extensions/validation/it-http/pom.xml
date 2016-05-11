@@ -47,6 +47,9 @@
         optionally using -Dmaven.surefire.debug to enable debugging.
      -->
     <properties>
+        <!-- API and Core bundle require Java 8 -->
+        <sling.java.version>8</sling.java.version>
+    
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
          -->
@@ -229,6 +232,8 @@
                             The bundles are installed in lexical order of these property names.
                             All bundles must be listed as dependencies in this pom, or they won't be installed.
                         -->
+                        <!-- commons-lang3 can be removed when using Launchpad 9, see SLING-5603 -->
+                        <sling.additional.bundle.0>commons-lang3</sling.additional.bundle.0>
                         <sling.additional.bundle.1>org.apache.sling.validation.api</sling.additional.bundle.1>
                         <sling.additional.bundle.2>org.apache.sling.validation.core</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.validation.test-services</sling.additional.bundle.3>
@@ -261,6 +266,12 @@
         </dependency>
 
         <!-- actual dependencies -->
+        <!-- commons-lang3 can be removed when using Launchpad 9, see SLING-5603 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>

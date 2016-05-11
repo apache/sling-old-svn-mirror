@@ -24,7 +24,6 @@ import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.validation.ValidationFailure;
 
 /**
@@ -36,16 +35,25 @@ public class DefaultValidationFailure implements ValidationFailure {
     private final @Nonnull String location;
     private final @Nonnull String messageKey;
     private final Object[] messageArguments;
+    private final int severity;
+
+    public final static int DEFAULT_SEVERITY = 0;
 
     /**
      * Constructor of a validation failure. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param location the location
+     * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
      */
-    public DefaultValidationFailure(@Nonnull String location, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationFailure(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
         this.location = location;
+        if (severity != null) {
+            this.severity = severity;
+        } else {
+            this.severity = DEFAULT_SEVERITY;
+        }
         this.messageKey = messageKey;
         this.messageArguments = messageArguments;
     }
@@ -62,8 +70,14 @@ public class DefaultValidationFailure implements ValidationFailure {
     }
 
     @Override
+    public int getSeverity() {
+        return severity;
+    }
+
+    @Override
     public String toString() {
-        return "DefaultValidationFailure [location=" + location + ", messageKey=" + messageKey + ", messageArguments=" + StringUtils.join(messageArguments) + "]";
+        return "DefaultValidationFailure [location=" + location + ", messageKey=" + messageKey + ", messageArguments="
+                + Arrays.toString(messageArguments) + ", severity=" + severity + "]";
     }
 
     @Override
@@ -73,6 +87,7 @@ public class DefaultValidationFailure implements ValidationFailure {
         result = prime * result + ((location == null) ? 0 : location.hashCode());
         result = prime * result + Arrays.hashCode(messageArguments);
         result = prime * result + ((messageKey == null) ? 0 : messageKey.hashCode());
+        result = prime * result + severity;
         return result;
     }
 
@@ -96,6 +111,8 @@ public class DefaultValidationFailure implements ValidationFailure {
             if (other.messageKey != null)
                 return false;
         } else if (!messageKey.equals(other.messageKey))
+            return false;
+        if (severity != other.severity)
             return false;
         return true;
     }

@@ -17,11 +17,16 @@
  */
 package org.apache.sling.oak.server;
 
+import static com.google.common.collect.ImmutableSet.of;
+import static java.util.Collections.singleton;
+import static org.apache.felix.scr.annotations.ReferencePolicy.STATIC;
+import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
+import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
+import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
+
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.Executor;
 
 import javax.jcr.Repository;
@@ -34,8 +39,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
@@ -67,25 +70,16 @@ import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.collect.ImmutableSet.of;
-import static java.util.Collections.singleton;
-import static org.apache.felix.scr.annotations.ReferencePolicy.STATIC;
-import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
-import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
-import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
 
 /**
  * A Sling repository implementation that wraps the Oak OSGi repository
@@ -100,11 +94,6 @@ import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefi
             + "and provide it as a SlingRepository and a standard JCR "
             + "Repository. In addition, if the registration URL is not "
             + "empty, the repository is registered as defined.")
-@Reference(
-        name = "namespaceMapper",
-        referenceInterface = NamespaceMapper.class,
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC)
 public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -171,10 +160,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private ComponentContext componentContext;
 
-    private Map<Long, NamespaceMapper> namespaceMapperRefs = new TreeMap<Long, NamespaceMapper>();
-
-    private NamespaceMapper[] namespaceMappers;
-
     private String adminUserName;
 
     @Reference
@@ -201,11 +186,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
         return this.serviceUserMapper;
-    }
-
-    @Override
-    protected NamespaceMapper[] getNamespaceMapperServices() {
-        return this.namespaceMappers;
     }
 
     @Reference(policy = STATIC, policyOption = GREEDY)
@@ -263,9 +243,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
                 commitRateLimiter, fastQueryResultSize);
     }
 
-    @Override
-    protected void setup(BundleContext bundleContext, SlingRepository repository) {
-        super.setup(bundleContext, repository);
+    private void setup(BundleContext bundleContext, SlingRepository repository) {
 
         final Object o = this.getComponentContext().getProperties().get(ANONYMOUS_READ_PROP);
         if(o != null) {
@@ -304,7 +282,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected AbstractSlingRepository2 create(Bundle usingBundle) {
-        return new OakSlingRepository(this, usingBundle, this.adminUserName);
+        final AbstractSlingRepository2 result = new OakSlingRepository(this, usingBundle, this.adminUserName);
+        setup(usingBundle.getBundleContext(), result);
+        return result;
     }
 
     @Override
@@ -350,30 +330,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     private void deactivate() {
         super.stop();
         this.componentContext = null;
-        this.namespaceMapperRefs.clear();
-        this.namespaceMappers = null;
         this.threadPoolManager.release(this.threadPool);
         this.threadPool = null;
         this.nodeAggregator.unregister();
-        this.tearDown();
-    }
-
-    @SuppressWarnings("unused")
-    private void bindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
-        synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.put((Long)props.get(Constants.SERVICE_ID), namespaceMapper);
-            this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    private void unbindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
-        synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.remove(props.get(Constants.SERVICE_ID));
-            this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
-        }
     }
 
     private static NodeAggregator getNodeAggregator() {

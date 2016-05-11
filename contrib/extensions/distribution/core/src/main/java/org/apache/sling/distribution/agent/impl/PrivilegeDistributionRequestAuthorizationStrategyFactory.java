@@ -33,6 +33,9 @@ import org.apache.sling.distribution.component.impl.DistributionComponentConstan
 import org.apache.sling.distribution.common.DistributionException;
 import org.osgi.framework.BundleContext;
 
+/**
+ * OSGi configuration factory for {@link PrivilegeDistributionRequestAuthorizationStrategy}
+ */
 @Component(metatype = true,
         label = "Apache Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
         description = "OSGi configuration for request based authorization strategy based on privileges",

@@ -17,6 +17,7 @@
 package org.apache.sling.scripting.sightly.impl.engine.compiled;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -27,12 +28,15 @@ import static org.mockito.Mockito.when;
 public class SourceIdentifierTest {
 
     private static SourceIdentifier sourceIdentifier;
+    private static final String BUNDLE_SYMBOLIC_NAME = "org.apache.sling.scripting.sightly";
 
     @BeforeClass
     public static void setUp() {
         final Resource resource = mock(Resource.class);
         when(resource.getPath()).thenReturn("/apps/blah/static/foo/foo.html");
-        sourceIdentifier = new SourceIdentifier(null, null, null, resource, "SightlyJava_");
+        final SightlyEngineConfiguration configuration = mock(SightlyEngineConfiguration.class);
+        when(configuration.getBundleSymbolicName()).thenReturn(BUNDLE_SYMBOLIC_NAME);
+        sourceIdentifier = new SourceIdentifier(configuration, null, null, resource, "SightlyJava_");
     }
 
     @Test
@@ -42,11 +46,11 @@ public class SourceIdentifierTest {
 
     @Test
     public void testGetPackageName() throws Exception {
-        assertEquals("apps.blah._static.foo", sourceIdentifier.getPackageName());
+        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah._static.foo", sourceIdentifier.getPackageName());
     }
 
     @Test
     public void testGetFullyQualifiedName() throws Exception {
-        assertEquals("apps.blah._static.foo.SightlyJava_foo", sourceIdentifier.getFullyQualifiedName());
+        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah._static.foo.SightlyJava_foo", sourceIdentifier.getFullyQualifiedName());
     }
 }

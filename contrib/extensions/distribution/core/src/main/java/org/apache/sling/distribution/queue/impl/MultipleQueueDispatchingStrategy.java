@@ -21,9 +21,7 @@ package org.apache.sling.distribution.queue.impl;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;

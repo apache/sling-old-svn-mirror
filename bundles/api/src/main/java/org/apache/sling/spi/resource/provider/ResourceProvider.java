@@ -61,7 +61,7 @@ import aQute.bnd.annotation.ConsumerType;
  * {@link #stop()} method is called. Whenever
  * information concerning the provider is changed while the provider
  * is used, the {@link #update()} method is called. The provider context
- * instance which is passed to the {@link #start(ProviderContext} method
+ * instance which is passed to the {@link #start(ProviderContext)} method
  * contains the updated state.
  * <p>
  * Some resource providers might require (user) authentication. For example
@@ -262,7 +262,7 @@ public abstract class ResourceProvider<T> {
      * @return The provider context or {@code null} if the provider is currently
      *         not used in the resource tree.
      */
-    protected ProviderContext getProviderContext() {
+    protected @CheckForNull ProviderContext getProviderContext() {
         return this.ctx;
     }
 
@@ -313,7 +313,7 @@ public abstract class ResourceProvider<T> {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    @Nonnull public T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
+    public @CheckForNull T authenticate(final @Nonnull Map<String, Object> authenticationInfo)
     throws LoginException {
         return null;
     }
@@ -455,7 +455,7 @@ public abstract class ResourceProvider<T> {
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
      */
-    public Collection<String> getAttributeNames(final @Nonnull ResolveContext<T> ctx) {
+    public @CheckForNull Collection<String> getAttributeNames(final @Nonnull ResolveContext<T> ctx) {
         return null;
     }
 
@@ -474,7 +474,7 @@ public abstract class ResourceProvider<T> {
      * @throws IllegalStateException
      *             if this resource provider has already been closed.
      */
-    public Object getAttribute(final @Nonnull ResolveContext<T> ctx, final @Nonnull String name) {
+    public @CheckForNull Object getAttribute(final @Nonnull ResolveContext<T> ctx, final @Nonnull String name) {
         return null;
     }
 
@@ -496,7 +496,7 @@ public abstract class ResourceProvider<T> {
      *
      * @throws PersistenceException If anything fails
      */
-    public Resource create(final @Nonnull ResolveContext<T> ctx, final String path, final Map<String, Object> properties)
+    public @Nonnull Resource create(final @Nonnull ResolveContext<T> ctx, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         throw new PersistenceException("create is not supported.");
     }
@@ -618,8 +618,8 @@ public abstract class ResourceProvider<T> {
      * @return {@code true} if the provider can perform the copy
      */
     public boolean copy(final  @Nonnull ResolveContext<T> ctx,
-              final String srcAbsPath,
-              final String destAbsPath) throws PersistenceException {
+              final @Nonnull String srcAbsPath,
+              final @Nonnull String destAbsPath) throws PersistenceException {
         return false;
     }
 
@@ -646,8 +646,8 @@ public abstract class ResourceProvider<T> {
      * @return {@code true} if the provider can perform the move
      */
     public boolean move(final  @Nonnull ResolveContext<T> ctx,
-              final String srcAbsPath,
-              final String destAbsPath) throws PersistenceException {
+              final @Nonnull String srcAbsPath,
+              final @Nonnull String destAbsPath) throws PersistenceException {
         return false;
     }
 }

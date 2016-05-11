@@ -40,13 +40,12 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.DefaultSharedDistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
+ * OSGi configuration factory for {@link RemoteDistributionPackageExporter}s.
  */
 @Component(label = "Apache Sling Distribution Exporter - Remote Package Exporter Factory",
         metatype = true,
@@ -109,7 +108,7 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.EXPORTER, exporterName, RemoteDistributionPackageExporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
 
-        exporter = new RemoteDistributionPackageExporter(distributionLog, new DefaultSharedDistributionPackageBuilder(packageBuilder), transportSecretProvider, endpoints, pollItems);
+        exporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, endpoints, pollItems);
     }
 
 

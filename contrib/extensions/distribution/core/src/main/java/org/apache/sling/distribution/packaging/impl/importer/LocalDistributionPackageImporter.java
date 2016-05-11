@@ -26,14 +26,13 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
- * based {@link DistributionPackage} locally.
+ * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a
+ * {@link DistributionPackage} locally.
  */
 
 public class LocalDistributionPackageImporter implements DistributionPackageImporter {
@@ -62,20 +61,9 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
 
     @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
-        DistributionPackage distributionPackage = null;
-        try {
-            distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
+        DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
 
-            boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
-
-            if (!success) {
-                log.warn("could not install distribution package {}", distributionPackage.getId());
-            }
-
-            return distributionPackage.getInfo();
-        } finally {
-            DistributionPackageUtils.deleteSafely(distributionPackage);
-        }
+        return packageInfo;
     }
 
 }

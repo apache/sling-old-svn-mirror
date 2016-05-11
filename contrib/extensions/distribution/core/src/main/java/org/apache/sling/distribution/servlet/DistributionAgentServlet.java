@@ -65,10 +65,10 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
                 log.debug("distribution response : {}", distributionResponse);
             } catch (Throwable e) {
                 log.error("an unexpected error has occurred", e);
-                ServletJsonUtils.writeJson(response, 503, "an unexpected error has occurred");
+                ServletJsonUtils.writeJson(response, 503, "an unexpected error has occurred", null);
             }
         } else {
-            ServletJsonUtils.writeJson(response, 404, "agent not found");
+            ServletJsonUtils.writeJson(response, 404, "agent not found", null);
         }
     }
 

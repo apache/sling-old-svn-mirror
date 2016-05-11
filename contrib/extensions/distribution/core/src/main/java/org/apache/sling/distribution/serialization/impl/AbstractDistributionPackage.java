@@ -26,7 +26,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 /**
  * abstract implementation of a {@link DistributionPackage}
  */
-public abstract class AbstractDistributionPackage implements DistributionPackage {
+public abstract class AbstractDistributionPackage implements SharedDistributionPackage {
 
     public static final String PACKAGES_ROOT = "/var/sling/distribution/packages";
 

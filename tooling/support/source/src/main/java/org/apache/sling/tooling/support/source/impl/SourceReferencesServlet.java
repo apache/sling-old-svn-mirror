@@ -42,6 +42,8 @@ import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <tt>SourceReferencesServlet</tt> infers and outputs source information about bundles running a Sling instance
@@ -53,20 +55,26 @@ public class SourceReferencesServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private static final String KEY_TYPE = "__type__";
     private static final String KEY_GROUP_ID = "groupId";
     private static final String KEY_ARTIFACT_ID = "artifactId";
     private static final String KEY_VERSION = "version";
 
-    private static final String VALUE_TYPE_MAVEN = "maven";
+    static final String VALUE_TYPE_MAVEN = "maven";
 
     private static final String FELIX_FW_GROUP_ID = "org.apache.felix";
     private static final String FELIX_FW_ARTIFACT_ID = "org.apache.felix.framework";
 
     private ComponentContext ctx;
+    private List<SourceReferenceFinder> finders;
 
     protected void activate(ComponentContext ctx) {
         this.ctx = ctx;
+        
+        finders = new ArrayList<SourceReferenceFinder>();
+        finders.add(new FelixJettySourceReferenceFinder());
     }    
     
     @Override
@@ -74,7 +82,7 @@ public class SourceReferencesServlet extends HttpServlet {
         try {
             response.setContentType("application/json");
             
-            JSONWriter w = new JSONWriter(response.getWriter());
+            final JSONWriter w = new JSONWriter(response.getWriter());
             w.array();
             
             for ( Bundle bundle : ctx.getBundleContext().getBundles() ) {
@@ -93,14 +101,9 @@ public class SourceReferencesServlet extends HttpServlet {
                 // the system bundle is embedded by the launchpad jar so we need special handling
                 // since the pom.properties file is not located in the bundle
                 if ( bundle.getBundleId() == 0 && bundle.getSymbolicName().equals(FELIX_FW_ARTIFACT_ID) ) {
-                    w.object();
-                    w.key(KEY_TYPE).value(VALUE_TYPE_MAVEN);
-                    w.key(KEY_GROUP_ID).value(FELIX_FW_GROUP_ID);
-                    w.key(KEY_ARTIFACT_ID).value(FELIX_FW_ARTIFACT_ID);
-                    w.key(KEY_VERSION).value(bundleVersion);
-                    w.endObject();
+                    writeMavenGav(w, FELIX_FW_GROUP_ID, FELIX_FW_ARTIFACT_ID, (String) bundleVersion);
                 }
-
+                
                 // look for pom.properties in the bundle ( the original bundle, fragments )
                 collectMavenSourceReferences(w, bundle);
                 
@@ -113,6 +116,19 @@ public class SourceReferencesServlet extends HttpServlet {
                     }
                     collectMavenSourceRerefences(w, entry);
                 }
+                
+                // query custom finders for source references
+                for ( SourceReferenceFinder finder : finders ) {
+                    try {
+                        for ( SourceReference reference : finder.findSourceReferences(bundle)) {
+                            log.debug("{} found reference {}:{}:{} in {}", new Object[] { finder, reference.getGroupId(), reference.getArtifactId(), reference.getVersion(), bundle});
+                            writeMavenGav(w, reference.getGroupId(), reference.getArtifactId(), reference.getVersion());
+                        }
+                    } catch (SourceReferenceException e) {
+                        log.warn(finder + " execution did not complete normally for " + bundle, e);
+                    }
+                }
+                
                 w.endArray();
                 w.endObject();
             }
@@ -137,6 +153,16 @@ public class SourceReferencesServlet extends HttpServlet {
                 IOUtils.closeQuietly(in);
             }
         }
+    }
+    
+    private void writeMavenGav(JSONWriter w, String groupId, String artifactId, String version) throws JSONException {
+        
+        w.object();
+        w.key(KEY_TYPE).value(VALUE_TYPE_MAVEN);
+        w.key(KEY_GROUP_ID).value(groupId);
+        w.key(KEY_ARTIFACT_ID).value(artifactId);
+        w.key(KEY_VERSION).value(version);
+        w.endObject();
     }
     
     private void writeMavenGav(JSONWriter w, InputStream in) throws IOException, JSONException {

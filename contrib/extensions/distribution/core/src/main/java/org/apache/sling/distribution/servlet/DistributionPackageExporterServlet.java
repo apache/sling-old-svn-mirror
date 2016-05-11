@@ -33,6 +33,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
@@ -101,9 +102,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                     InputStream inputStream = null;
                     int bytesCopied = -1;
                     try {
-                        response.addHeader(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID, distributionPackage.getId());
-
-                        inputStream = distributionPackage.createInputStream();
+                        inputStream = DistributionPackageUtils.createStreamWithHeader(distributionPackage);
 
                         bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
                     } catch (IOException e) {

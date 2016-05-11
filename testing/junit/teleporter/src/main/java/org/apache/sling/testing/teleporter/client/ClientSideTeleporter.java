@@ -116,14 +116,14 @@ public class ClientSideTeleporter extends TeleporterRule {
     }
     
     /**
-	 * @param testServletPath relative path to the Sling JUnit test servlet. 
-	 *     If null, defaults to DEFAULT_TEST_SERVLET_PATH.
-	 */
-	public void setTestServletPath(String testServletPath) {
-		this.testServletPath = testServletPath == null ? DEFAULT_TEST_SERVLET_PATH : testServletPath;
-	}
+     * @param testServletPath
+     *            relative path to the Sling JUnit test servlet. If null, defaults to DEFAULT_TEST_SERVLET_PATH.
+     */
+    public void setTestServletPath(String testServletPath) {
+        this.testServletPath = testServletPath == null ? DEFAULT_TEST_SERVLET_PATH : testServletPath;
+    }
 
-	/** Define a prefix for class names that can be embedded
+    /** Define a prefix for class names that can be embedded
      *  in the test bundle if the {@link DependencyAnalyzer} thinks
      *  they should. Overridden by {@link #excludeDependencyPrefix } if
      *  any conflicts arise.
@@ -199,7 +199,7 @@ public class ClientSideTeleporter extends TeleporterRule {
                 try {
                     httpClient.runTests(testPath, testReadyTimeoutSeconds);
                 } finally {
-                    httpClient.uninstallBundle(bundleSymbolicName);
+                    httpClient.uninstallBundle(bundleSymbolicName, webConsoleReadyTimeoutSeconds);
                 }
             }
         };

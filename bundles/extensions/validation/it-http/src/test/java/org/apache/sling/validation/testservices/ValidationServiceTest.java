@@ -64,12 +64,13 @@ public class ValidationServiceTest extends SlingTestBase {
         String content = re.getContent();
         JSONObject jsonResponse = new JSONObject(content);
         assertFalse(jsonResponse.getBoolean("valid"));
-        // TODO: check validation failure
         JSONObject failure = jsonResponse.getJSONArray("failures").getJSONObject(0);
         assertEquals("Property does not match the pattern \"^\\p{Upper}+$\".", failure.get("message"));
         assertEquals("field1", failure.get("location"));
+        assertEquals(10, failure.get("severity"));
         failure = jsonResponse.getJSONArray("failures").getJSONObject(1);
         assertEquals("Missing required property with name \"field2\".", failure.get("message"));
         assertEquals("", failure.get("location")); // location is empty as the property is not found (property name is part of the message rather)
+        assertEquals(0, failure.get("severity"));
     }
 }

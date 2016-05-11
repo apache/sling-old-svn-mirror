@@ -1,7 +1,7 @@
 /*
  * =============================================================================
  * 
- *   Copyright (c) 2011-2014, The THYMELEAF team (http://www.thymeleaf.org)
+ *   Copyright (c) 2011-2016, The THYMELEAF team (http://www.thymeleaf.org)
  * 
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -62,6 +62,9 @@ import org.thymeleaf.templateresource.ITemplateResource;
  *   a {@link TemplateResolution} object for each template name. If a template resolver
  *   returns null for a specific resolution, the next one in the chain is asked. Template Resolvers
  *   that are not configured an order will be executed last in the chain.
+ * </p>
+ * <p>
+ *   Implementations of this interface should be <strong>thread-safe</strong>.
  * </p>
  * <p>
  *   Note a class with this name existed since 1.0, but it was completely reimplemented

@@ -18,6 +18,7 @@ package org.apache.sling.junit.teleporter.customizers;
 
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 
 public class ITCustomizer implements TeleporterRule.Customizer {
 
@@ -28,5 +29,6 @@ public class ITCustomizer implements TeleporterRule.Customizer {
         cst.setBaseUrl(System.getProperty(BASE_URL_PROP, BASE_URL_PROP + "_IS_NOT_SET"));
         cst.setServerCredentials("admin", "admin");
         cst.includeDependencyPrefix("org.apache.sling.repoinit.it");
+        cst.setTestReadyTimeoutSeconds(TimeoutsProvider.getInstance().getTimeout(5));
     }
 }

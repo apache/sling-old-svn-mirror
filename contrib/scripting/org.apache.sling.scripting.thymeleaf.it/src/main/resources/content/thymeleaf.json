@@ -1,0 +1,30 @@
+{
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "thymeleaf/page/main",
+    "sling:resourceSuperType": "thymeleaf/page",
+    "title": "Apache Sling Scripting Thymeleaf",
+    "text": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "thymeleaf/page/text",
+        "sling:resourceSuperType": "thymeleaf/page",
+        "title": "Thymeleaf Text"
+    },
+    "replace": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "thymeleaf/page/replace",
+        "sling:resourceSuperType": "thymeleaf/page",
+        "title": "Thymeleaf Replace"
+    },
+    "include": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "thymeleaf/page/include",
+        "sling:resourceSuperType": "thymeleaf/page",
+        "title": "Sling Include"
+    },
+    "adaptto": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "thymeleaf/page/adaptto",
+        "sling:resourceSuperType": "thymeleaf/page",
+        "title": "Sling Models adaptTo()"
+    }
+}

@@ -64,7 +64,7 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         Collection<DistributionQueue> queues = new LinkedList<DistributionQueue>();
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem item = mock(DistributionQueueItem.class);
-        when(queue.getHead()).thenReturn(new DistributionQueueEntry(item, null)).thenReturn(null);
+        when(queue.getHead()).thenReturn(new DistributionQueueEntry(null, item, null)).thenReturn(null);
 
         queues.add(queue);
         when(queueProvider.getQueues()).thenReturn(queues);

@@ -23,6 +23,7 @@ import java.util.Hashtable;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
@@ -33,6 +34,8 @@ public class Activator implements BundleActivator {
     public void start(BundleContext bundleContext) throws Exception {
         final Object service = new Object();
         final Dictionary<String, String> properties = new Hashtable<>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Fling Sample “Sling Authentication Requirements”");
+        properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         properties.put("sling.auth.requirements", "/fling/auth");
         serviceRegistration = bundleContext.registerService(Object.class, service, properties);
     }

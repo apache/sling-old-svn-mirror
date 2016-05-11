@@ -36,17 +36,19 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             cleanCaches(true),
             editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "ERROR, out, sift, osgi:*"),
             // configurations for tests
-            editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak,oak_tar"),
+            editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak_tar"),
             editConfigurationFilePut("etc/users.properties", "admin", "admin,_g_:admingroup"), // Sling’s default admin credentials used in tests
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             editConfigurationFilePut("etc/integrationTestsConfig.cfg", "message", "This test config should be loaded at startup"),
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.cfg", "servletresolver.cacheSize", "0"),
             // TODO PAXWEB-935 editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.cfg", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.cfg", "alias", "/server"),
+            editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.cfg", "enabled", "true"),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
                 "sling-extension-discovery-standalone",
                 "sling-extension-event",
+                "sling-extension-healthcheck",
                 "sling-launchpad-content",
                 "sling-auth-form",
                 "sling-auth-openid",
@@ -71,8 +73,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             // TODO PAXWEB-935
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version("2.2.2"),
             // TODO repoinit
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.api").version("2.3.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.base").version("2.3.1-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("0.0.1-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.oak-jcr").version("0.0.1-SNAPSHOT")
         );

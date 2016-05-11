@@ -47,12 +47,12 @@
         <pax.vm.options></pax.vm.options>
 
         <tika.version>1.11</tika.version>
-        <jackrabbit.version>2.12.0</jackrabbit.version>
+        <jackrabbit.version>2.12.1</jackrabbit.version>
         <!--
             WARNING make sure oak.version and sling.oak.server.version 
             are in sync with bundles/jcr/oak-server
         -->
-        <oak.version>1.3.16</oak.version>
+        <oak.version>1.4.0</oak.version>
         <sling.oak.server.version>1.0.1-SNAPSHOT</sling.oak.server.version>
         
         <!-- optionally activate the webconsole -->

@@ -123,6 +123,7 @@
           <module>extensions/tracer</module>
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
+          <module>extensions/sling-dynamic-include</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
@@ -142,7 +143,9 @@
           <module>scripting/scala/config</module>
           <module>scripting/scala/samples/hello-world</module>
           <module>scripting/scala/samples/forum</module>
+          <module>scripting/org.apache.sling.scripting.freemarker.it</module>
           <module>scripting/org.apache.sling.scripting.thymeleaf</module>
+          <module>scripting/org.apache.sling.scripting.thymeleaf.it</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
 

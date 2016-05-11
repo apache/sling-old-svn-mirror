@@ -16,8 +16,13 @@
  */
 package org.apache.sling.testing.samples.bundlewit;
 
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.clients.SlingHttpResponse;
+import org.apache.sling.testing.junit.rules.SlingInstanceRule;
+import org.apache.sling.testing.junit.rules.SlingRule;
 import org.apache.sling.testing.samples.bundlewit.impl.MimeTypeServlet;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** HTTP test of the MimeTypeServlet provided
@@ -25,15 +30,16 @@ import org.junit.Test;
  */
 public class MimeTypeServletHttpIT {
 
-    private static final SlingTestBase S = new SlingTestBase();
+    @ClassRule
+    public static SlingInstanceRule slingInstanceRule = new SlingInstanceRule();
+
+    @Rule
+    public SlingRule slingMethodRule = new SlingRule(); // for demo purposes
     
     private void assertMimeType(String path, String expected) throws Exception {
-        S.getRequestExecutor().execute(
-                S.getRequestBuilder().buildGetRequest(path + ".mimetype.txt")
-                .withCredentials(S.getServerUsername(), S.getServerPassword())
-        )
-        .assertStatus(200)
-        .assertContentContains(expected);
+        SlingClient client = slingInstanceRule.getAdminClient();
+        SlingHttpResponse response = client.doGet(path + ".mimetype.txt", 200);
+        response.checkContentContains(expected);
     }
     
     @Test

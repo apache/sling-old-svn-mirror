@@ -18,7 +18,9 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal;
 
+import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -27,7 +29,9 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -39,6 +43,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.cache.ICacheManager;
 import org.thymeleaf.dialect.IDialect;
@@ -92,7 +97,11 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     )
     private volatile ICacheManager cacheManager;
 
+    private BundleContext bundleContext;
+
     private TemplateEngine templateEngine;
+
+    private ServiceRegistration<ITemplateEngine> serviceRegistration;
 
     private final Object lock = new Object();
 
@@ -104,63 +113,82 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     protected void addTemplateResolver(final ITemplateResolver templateResolver) {
         synchronized (lock) {
             logger.debug("adding template resolver '{}'", templateResolver.getName());
-            templateEngine = null;
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.addTemplateResolver(templateResolver);
+            }
         }
     }
 
     protected void removeTemplateResolver(final ITemplateResolver templateResolver) {
         synchronized (lock) {
             logger.debug("removing template resolver '{}'", templateResolver.getName());
-            templateEngine = null;
+            serviceTemplateEngine();
         }
     }
 
     protected void addMessageResolver(final IMessageResolver messageResolver) {
         synchronized (lock) {
             logger.debug("adding message resolver '{}'", messageResolver.getName());
-            templateEngine = null;
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.addMessageResolver(messageResolver);
+            }
         }
     }
 
     protected void removeMessageResolver(final IMessageResolver messageResolver) {
         synchronized (lock) {
             logger.debug("removing message resolver '{}'", messageResolver.getName());
-            templateEngine = null;
+            serviceTemplateEngine();
         }
     }
 
     protected void addDialect(final IDialect dialect) {
         synchronized (lock) {
             logger.debug("adding dialect '{}'", dialect.getName());
-            templateEngine = null;
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.addDialect(dialect);
+            }
         }
     }
 
     protected void removeDialect(final IDialect dialect) {
         synchronized (lock) {
             logger.debug("removing dialect '{}'", dialect.getName());
-            templateEngine = null;
+            serviceTemplateEngine();
         }
     }
 
     protected void setCacheManager(final ICacheManager cacheManager) {
         synchronized (lock) {
             logger.debug("setting cache manager '{}'", cacheManager.getClass().getName());
-            templateEngine = null;
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.setCacheManager(cacheManager);
+            }
         }
     }
 
     protected void unsetCacheManager(final ICacheManager cacheManager) {
         synchronized (lock) {
             logger.debug("unsetting cache manager '{}'", cacheManager.getClass().getName());
-            templateEngine = null;
+            serviceTemplateEngine();
         }
     }
 
     @Activate
-    private void activate(final ThymeleafScriptEngineFactoryConfiguration configuration) {
+    private void activate(final ThymeleafScriptEngineFactoryConfiguration configuration, final BundleContext bundleContext) {
         logger.debug("activate");
+        this.bundleContext = bundleContext;
         configure(configuration);
+        setupTemplateEngine();
+        registerTemplateEngine();
     }
 
     @Modified
@@ -172,7 +200,9 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     @Deactivate
     private void deactivate() {
         logger.debug("deactivate");
+        unregisterTemplateEngine();
         templateEngine = null;
+        bundleContext = null;
     }
 
     private void configure(final ThymeleafScriptEngineFactoryConfiguration configuration) {
@@ -204,20 +234,57 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         return new ThymeleafScriptEngine(this);
     }
 
+    private void serviceTemplateEngine() {
+        unregisterTemplateEngine();
+        setupTemplateEngine();
+        registerTemplateEngine();
+    }
+
+    private void setupTemplateEngine() {
+        logger.info("setting up new template engine");
+        templateEngine = null;
+        // setup template engine
+        final TemplateEngine templateEngine = new TemplateEngine();
+        if (this.templateResolvers != null) {
+            final Set<ITemplateResolver> templateResolvers = new HashSet<>(this.templateResolvers);
+            templateEngine.setTemplateResolvers(templateResolvers);
+        }
+        if (this.messageResolvers != null) {
+            final Set<IMessageResolver> messageResolvers = new HashSet<>(this.messageResolvers);
+            templateEngine.setMessageResolvers(messageResolvers);
+        }
+        if (this.dialects != null) {
+            final Set<IDialect> dialects = new HashSet<>(this.dialects);
+            templateEngine.setDialects(dialects);
+        }
+        final IDialect standardDialect = new StandardDialect();
+        templateEngine.addDialect(standardDialect);
+        templateEngine.setCacheManager(cacheManager);
+        this.templateEngine = templateEngine;
+    }
+
+    private void registerTemplateEngine() {
+        if (templateEngine.getTemplateResolvers().size() == 0 || templateEngine.getMessageResolvers().size() == 0 || templateEngine.getDialects().size() == 0) {
+            return;
+        }
+        final Dictionary<String, String> properties = new Hashtable<>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Thymeleaf TemplateEngine");
+        properties.put(Constants.SERVICE_VENDOR, "Thymeleaf");
+        logger.info("registering {} as service {} with properties {}", templateEngine, ITemplateEngine.class.getName(), properties);
+        serviceRegistration = bundleContext.registerService(ITemplateEngine.class, templateEngine, properties);
+    }
+
+    private void unregisterTemplateEngine() {
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
+            serviceRegistration = null;
+        }
+    }
+
     TemplateEngine getTemplateEngine() {
         synchronized (lock) {
-            if (this.templateEngine == null) {
-                logger.info("setting up new template engine");
-                templateEngine = new TemplateEngine();
-                final Set<ITemplateResolver> templateResolvers = new HashSet<>(this.templateResolvers);
-                templateEngine.setTemplateResolvers(templateResolvers);
-                final Set<IMessageResolver> messageResolvers = new HashSet<>(this.messageResolvers);
-                templateEngine.setMessageResolvers(messageResolvers);
-                final Set<IDialect> dialects = new HashSet<>(this.dialects);
-                templateEngine.setDialects(dialects);
-                final IDialect standardDialect = new StandardDialect();
-                templateEngine.addDialect(standardDialect);
-                templateEngine.setCacheManager(cacheManager);
+            if (templateEngine == null) {
+                serviceTemplateEngine();
             }
             return templateEngine;
         }

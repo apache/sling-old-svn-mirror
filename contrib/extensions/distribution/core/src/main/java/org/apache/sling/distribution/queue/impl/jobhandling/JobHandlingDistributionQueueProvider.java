@@ -31,6 +31,7 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.CachingDistributionQueue;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.framework.BundleContext;
@@ -69,7 +70,9 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name + "/" + queueName;
         boolean isActive = jobConsumer != null && (processingQueueNames == null || processingQueueNames.contains(queueName));
 
-        return new JobHandlingDistributionQueue(queueName, topic, jobManager, isActive);
+        DistributionQueue queue = new JobHandlingDistributionQueue(queueName, topic, jobManager, isActive);
+        queue = new CachingDistributionQueue(topic, queue);
+        return queue;
     }
 
 

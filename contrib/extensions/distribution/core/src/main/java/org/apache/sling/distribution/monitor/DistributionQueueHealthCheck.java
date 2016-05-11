@@ -116,11 +116,11 @@ public class DistributionQueueHealthCheck implements HealthCheck {
                             DistributionQueueItem item = entry.getItem();
                             DistributionQueueItemStatus status = entry.getStatus();
                             if (status.getAttempts() <= numberOfRetriesAllowed) {
-                                resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), item.getId(), status.getAttempts());
+                                resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), entry.getId(), status.getAttempts());
                             } else {
                                 // the no. of attempts is higher than the configured threshold
                                 resultLog.warn("Queue: [{}], first item: [{}], number of retries: {}, expected number of retries <= {}",
-                                        q.getName(), item.getId(), status.getAttempts(), numberOfRetriesAllowed);
+                                        q.getName(), entry.getId(), status.getAttempts(), numberOfRetriesAllowed);
                                 failures.put(q.getName(), status.getAttempts());
                             }
                         } else {

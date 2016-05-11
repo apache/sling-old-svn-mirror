@@ -47,6 +47,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/base</url>
     </scm>
 
+    <properties>
+        <sling.java.version>7</sling.java.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -307,6 +311,12 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+            <version>1.4</version>
+            <scope>test</scope>
+        </dependency> 
     </dependencies>
 </project>
 

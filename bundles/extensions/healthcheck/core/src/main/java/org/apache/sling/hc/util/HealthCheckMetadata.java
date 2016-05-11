@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;

@@ -33,23 +33,23 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
  */
 public class DistributionQueueItem extends ValueMapDecorator implements ValueMap {
 
-    private final String id;
+    private final String packageId;
 
-    public DistributionQueueItem(@Nonnull String id, Map<String, Object> base) {
+    public DistributionQueueItem(@Nonnull String packageId, Map<String, Object> base) {
         super(base);
-        this.id = id;
+        this.packageId = packageId;
     }
 
     @Nonnull
-    public String getId() {
-        return id;
+    public String getPackageId() {
+        return packageId;
     }
 
 
     @Override
     public String toString() {
         return "DistributionQueueItem{" +
-                "id='" + id + '\'' +
+                "id='" + packageId + '\'' +
                 ", info=" + super.toString() +
                 '}';
     }

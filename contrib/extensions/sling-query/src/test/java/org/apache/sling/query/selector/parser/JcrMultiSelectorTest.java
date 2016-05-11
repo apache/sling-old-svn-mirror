@@ -52,7 +52,7 @@ public class JcrMultiSelectorTest {
 	@Test
 	public void attributesWithPath() {
 		final String selector = "[x=y][y=z], [a=b][c=d]";
-		final String jcrQuery = "SELECT * FROM [nt:base] AS s WHERE (ISDESCENDANTNODE([/content]) AND ((s.[x] = 'y' AND s.[y] = 'z') OR (s.[a] = 'b' AND s.[c] = 'd')))";
+		final String jcrQuery = "SELECT * FROM [nt:base] AS s WHERE (ISDESCENDANTNODE('/content') AND ((s.[x] = 'y' AND s.[y] = 'z') OR (s.[a] = 'b' AND s.[c] = 'd')))";
 		Assert.assertEquals(jcrQuery, parse(selector, "/content"));
 	}
 }

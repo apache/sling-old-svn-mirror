@@ -75,17 +75,18 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(immediate = true, metatype = true,
+@Component(metatype = true,
         label = "Apache Sling JCR Resource Provider Factory",
-        description = "This provider adds  JCR resources to the resource tree")
+        description = "This provider adds JCR resources to the resource tree",
+        name="org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
 @Service(value = ResourceProvider.class)
-@Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
-        @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
-        @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED),
-        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true),
+@Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR", propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/", propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true, propertyPrivate=true),
+        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true, propertyPrivate=true),
 })
 @Reference(name = "dynamicClassLoaderManager",
            referenceInterface = DynamicClassLoaderManager.class,

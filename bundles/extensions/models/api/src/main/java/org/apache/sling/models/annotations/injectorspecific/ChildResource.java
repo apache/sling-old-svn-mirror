@@ -47,7 +47,7 @@ public @interface ChildResource {
      * If set to true, the model can be instantiated even if there is no child resource
      * with that name available.
      * Default = false.
-     * @deprecated Use {@link injectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;

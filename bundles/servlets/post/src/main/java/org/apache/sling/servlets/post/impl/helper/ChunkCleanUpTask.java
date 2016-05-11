@@ -67,7 +67,9 @@ import org.slf4j.LoggerFactory;
         + "See http://www.docjar.com/docs/api/org/quartz/CronTrigger.html for a description "
         + "of the format for this value."),
     @Property(name = "service.description", value = "Periodic Chunk Cleanup Job", propertyPrivate = true),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true) })
+    @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
+    @Property(name = "scheduler.concurrent", label = "scheduler.concurrent", boolValue = false, 
+        description = "Allow Chunk Cleanup Task to run concurrently (default: false).")})
 public class ChunkCleanUpTask implements Runnable {
 
     /** default log */
@@ -76,7 +78,7 @@ public class ChunkCleanUpTask implements Runnable {
     @Reference
     private SlingRepository repository;
 
-    @Property(intValue = 360, description = "The chunk's age in minutes before it is considered for clean up.")
+    @Property(intValue = 360, label = "chunk.cleanup.age", description = "The chunk's age in minutes before it is considered for clean up.")
     private static final String CHUNK_CLEANUP_AGE = "chunk.cleanup.age";
 
     private SlingFileUploadHandler uploadhandler = new SlingFileUploadHandler();

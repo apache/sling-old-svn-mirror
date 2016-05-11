@@ -45,10 +45,46 @@
     <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
   </scm>
 
+  <build>
+      <pluginManagement>
+          <plugins>
+              <plugin>
+                  <groupId>org.apache.rat</groupId>
+                  <artifactId>apache-rat-plugin</artifactId>
+                  <configuration>
+                      <excludes combine.children="append">
+                          <exclude>derby.log</exclude>
+                          <exclude>sling/**</exclude>
+                      </excludes>
+                  </configuration>
+              </plugin>
+          </plugins>
+      </pluginManagement>
+      <plugins>
+          <plugin>
+              <artifactId>maven-clean-plugin</artifactId>
+              <configuration>
+                  <filesets>
+                      <fileset>
+                          <directory>${basedir}</directory>
+                          <includes>
+                              <!-- sling folder is the workdir of the executable jar that we test -->
+                              <include>sling/**</include>
+                          </includes>
+                      </fileset>
+                  </filesets>
+              </configuration>
+          </plugin>
+      </plugins>
+  </build>
+  
   <modules>
     <module>tools</module>
+    <module>http/clients</module>
     <module>hamcrest</module>
+    <module>serversetup</module>
     <module>junit/core</module>
+    <module>junit/rules</module>
     <module>junit/scriptable</module>
     <module>junit/healthcheck</module>
     <module>junit/remote</module>
@@ -56,9 +92,6 @@
     <module>junit/teleporter</module>
     <module>mocks</module>
     <module>sling-pax-util</module>
-    <module>samples/sample-tests</module>
-    <module>samples/failing-tests</module>
-    <module>samples/integration-tests</module>
     <module>samples/bundle-with-it</module>
   </modules>
 

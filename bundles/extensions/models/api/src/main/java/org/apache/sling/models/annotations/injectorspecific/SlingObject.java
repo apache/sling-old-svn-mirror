@@ -87,7 +87,7 @@ public @interface SlingObject {
      * If set to true, the model can be instantiated even if there is no request attribute
      * with the given name found.
      * Default = false.
-     * @deprecated Use {@link injectionStrategy} instead
+     * @deprecated Use {@link #injectionStrategy} instead
      */
     @Deprecated
     boolean optional() default false;

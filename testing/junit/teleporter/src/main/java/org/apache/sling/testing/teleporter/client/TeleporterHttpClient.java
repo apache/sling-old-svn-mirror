@@ -69,6 +69,7 @@ class TeleporterHttpClient {
     public void waitForStatus(String url, int expectedStatus, int timeoutMsec) throws IOException {
         final long end = System.currentTimeMillis() + timeoutMsec;
         final Set<Integer> statusSet = new HashSet<Integer>();
+        final ExponentialBackoffDelay d = new ExponentialBackoffDelay(50,  250);
         while(System.currentTimeMillis() < end) {
             try {
                 final int status = getHttpGetStatus(url);
@@ -76,7 +77,7 @@ class TeleporterHttpClient {
                 if(status == expectedStatus) {
                     return;
                 }
-                Thread.sleep(50);
+                d.waitNextDelay();
             } catch(Exception ignore) {
             }
         }
@@ -108,11 +109,13 @@ class TeleporterHttpClient {
         }
     }
 
-    void uninstallBundle(String bundleSymbolicName) throws MalformedURLException, IOException {
+    void uninstallBundle(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
         // equivalent of
         // curl -u admin:admin -F action=uninstall http://localhost:8080/system/console/bundles/$N
         final String url = baseUrl + "/system/console/bundles/" + bundleSymbolicName;
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
+        
+        waitForStatus(url, 200, webConsoleReadyTimeoutSeconds * 1000);
         
         try {
             setConnectionCredentials(c);
@@ -147,6 +150,7 @@ class TeleporterHttpClient {
         
         // Wait for non-404 response that signals that test bundle is ready
         final long timeout = System.currentTimeMillis() + (testReadyTimeoutSeconds * 1000L);
+        final ExponentialBackoffDelay delay = new ExponentialBackoffDelay(25, 1000);
         while(true) {
             if(getHttpGetStatus(testUrl) == 200) {
                 break;
@@ -155,6 +159,7 @@ class TeleporterHttpClient {
                 fail("Timeout waiting for test at " + testUrl + " (" + testReadyTimeoutSeconds + " seconds)");
                 break;
             }
+            delay.waitNextDelay();
         }
         
         final HttpURLConnection c = (HttpURLConnection)new URL(testUrl).openConnection();

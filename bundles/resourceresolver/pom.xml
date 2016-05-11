@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourceresolver</artifactId>
-    <version>1.4.5-SNAPSHOT</version>
+    <version>1.4.13-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Resolver</name>

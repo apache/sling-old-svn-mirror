@@ -42,6 +42,9 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link DistributionComponentProvider} OSGi service.
+ */
 @Component
 @Property(name = "name", value = "default")
 @References({

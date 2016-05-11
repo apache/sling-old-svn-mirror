@@ -51,6 +51,7 @@ public class Launcher {
     
     public static final String CRANKSTART_FEATURE = ":crankstart";
     public static final String MODEL_KEY = "model";
+    public static final String LISTENER_KEY = "listener";
     public static final String FRAMEWORK_KEY = "framework";
     
     public static final String VARIABLE_OVERRIDE_PREFIX = "crankstart.model.";
@@ -80,7 +81,8 @@ public class Launcher {
             return !Launcher.CRANKSTART_FEATURE.equals(f.getName());
         }
     };
-    
+    private LauncherListener listener;
+
     public Launcher(String ... args) throws Exception {
         MavenResolver.setup();
         withVariableResolver(null);
@@ -92,6 +94,11 @@ public class Launcher {
      */
     public Launcher withVariableResolver(VariableResolver v) {
         variableResolver = (v == null ? DEFAULT_VARIABLE_RESOLVER : v);
+        return this;
+    }
+
+    public Launcher withListener(LauncherListener listener) {
+        this.listener = listener;
         return this;
     }
 
@@ -158,6 +165,7 @@ public class Launcher {
         final Callable<?> c = (Callable<?>) getClass().getClassLoader().loadClass("org.apache.sling.crankstart.launcher.FrameworkSetup").newInstance();
         @SuppressWarnings("unchecked") final Map<String, Object> cmap = (Map<String, Object>)c; 
         cmap.put(MODEL_KEY, model);
+        cmap.put(LISTENER_KEY, listener);
         c.call();
     }
     

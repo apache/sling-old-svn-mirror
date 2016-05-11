@@ -2,7 +2,9 @@ package org.apache.sling.commons.json.io;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
 
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
@@ -368,5 +370,75 @@ public class JSONWriter {
      */
     public JSONWriter value(Object o) throws JSONException {
         return this.append(JSONObject.valueToString(o));
+    }
+
+    /**
+     * Append a JSON Object
+     *
+     * @param o
+     * @return
+     * @throws JSONException
+     */
+    public JSONWriter writeObject(JSONObject o) throws JSONException {
+        Iterator<String> keys = o.keys();
+
+        this.object();
+
+        while (keys.hasNext()) {
+            String key = keys.next();
+
+            this.key(key);
+
+            JSONObject objVal = o.optJSONObject(key);
+            if (objVal != null) {
+                this.writeObject(objVal);
+                continue;
+            }
+
+            JSONArray arrVal = o.optJSONArray(key);
+            if (arrVal != null) {
+                this.writeArray(arrVal);
+                continue;
+            }
+
+            Object obj = o.opt(key);
+            this.value(obj);
+        }
+
+        this.endObject();
+
+        return this;
+    }
+
+    /**
+     * Append a JSON Array
+     *
+     * @param a
+     * @return
+     * @throws JSONException
+     */
+    public JSONWriter writeArray(JSONArray a) throws JSONException {
+        this.array();
+
+        for (int i = 0; i < a.length(); i++) {
+            JSONObject objVal = a.optJSONObject(i);
+            if (objVal != null) {
+                this.writeObject(objVal);
+                continue;
+            }
+
+            JSONArray arrVal = a.optJSONArray(i);
+            if (arrVal != null) {
+                this.writeArray(arrVal);
+                continue;
+            }
+
+            Object obj = a.opt(i);
+            this.value(obj);
+        }
+
+        this.endArray();
+
+        return this;
     }
 }

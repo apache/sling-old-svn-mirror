@@ -30,7 +30,7 @@
 
   <artifactId>org.apache.sling.tracer</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
 
   <name>Apache Sling Log Tracer</name>
   <description>

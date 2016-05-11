@@ -36,6 +36,7 @@
 
     <modules>
         <module>core</module>
+        <module>client</module>
         <module>samplecontent</module>
     </modules>
 </project>

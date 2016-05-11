@@ -154,8 +154,10 @@ public class UnitChangeMonitor {
     private void processEvent(Event event) {
         String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         String topic = event.getTopic();
+        LOG.debug("Received event {} for path {}.", topic, path);
         if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(topic) || SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic)) {
             if (path.endsWith(".java")) {
+                LOG.debug("Java Use Object {} was {}.", path, topic);
                 slyJavaUseMap.put(Utils.getJavaNameFromPath(path), System.currentTimeMillis());
             } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
                 ResourceResolver resolver = null;
@@ -175,12 +177,15 @@ public class UnitChangeMonitor {
                 if (StringUtils.isEmpty(encoding)) {
                     encoding = sightlyEngineConfiguration.getEncoding();
                 }
+                LOG.debug("Sightly script {} was {}.", path, topic);
                 slyScriptsMap.put(path, new SightlyScriptMetaInfo(encoding, System.currentTimeMillis()));
             }
         } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
             if (path.endsWith(".java")) {
+                LOG.debug("Removed Java Use Object {} from UnitChangeMonitor cache.", path);
                 slyJavaUseMap.remove(Utils.getJavaNameFromPath(path));
             } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
+                LOG.debug("Removed script {} from UnitChangeMonitor cache.", path);
                 slyScriptsMap.remove(path);
             }
         }

@@ -371,7 +371,7 @@ public class ResourceUtil {
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
      */
-    public static @Nonnull ValueMap getValueMap(@Nonnull final Resource res) {
+    public static @Nonnull ValueMap getValueMap(final Resource res) {
         if ( res == null ) {
             // use empty map
             return new ValueMapDecorator(new HashMap<String, Object>());

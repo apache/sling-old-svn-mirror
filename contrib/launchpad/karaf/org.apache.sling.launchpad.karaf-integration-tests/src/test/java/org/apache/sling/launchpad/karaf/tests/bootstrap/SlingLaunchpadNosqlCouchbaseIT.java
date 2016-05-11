@@ -22,9 +22,10 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import de.flapdoodle.embed.process.runtime.Network;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+// import org.couchbase.mock.CouchbaseMock;
+import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,23 +39,55 @@ import org.ops4j.pax.exam.util.Filter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class SlingLaunchpadNosqlCouchbaseIT extends KarafTestSupport {
 
+    // private static CouchbaseMock couchbase;
+
     @Inject
     @Filter(timeout = 300000)
     public ResourceProviderFactory resourceProviderFactory;
 
+    protected void startCouchbase(final int port) throws IOException, InterruptedException {
+        /*
+        couchbase = new CouchbaseMock("localhost", port, 10, 1024);
+        couchbase.start();
+        couchbase.waitForStartup();
+        */
+    }
+
+    @AfterClass // TODO does it work? (no - not supported by Pax Exam)
+    public static void stopCouchbase() throws Exception {
+        /*
+        if (couchbase != null) {
+            couchbase.stop();
+        }
+        */
+    }
+
     @Configuration
-    public Option[] configuration() throws IOException {
-        final int port = Network.getFreeServerPort();
-        // TODO find a way to start CouchDB with this port and do real tests
+    public Option[] configuration() throws IOException, InterruptedException {
+        final int port = findFreePort();
+        startCouchbase(port);
         final String couchbaseHosts = String.format("localhost:%s", port);
         return OptionUtils.combine(baseConfiguration(),
+            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(wrap)"),
             editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.cfg", "couchbaseHosts", couchbaseHosts),
+            editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.cfg", "clientId", "sling-resourceprovider-couchbase"),
+            editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.cfg", "bucketName", "sling"),
+            editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.cfg", "enabled", "true"),
+            // wrappedBundle(mavenBundle().groupId("org.couchbase.mock").artifactId("CouchbaseMock").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("com.couchbase.client").artifactId("couchbase-client").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("com.intellij").artifactId("annotations").versionAsInProject()),
+            mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
+            mavenBundle().groupId("com.googlecode.json-simple").artifactId("json-simple").versionAsInProject(),
+            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.rhino").versionAsInProject(),
+            mavenBundle().groupId("org.tukaani").artifactId("xz").versionAsInProject(),
             addSlingFeatures("sling-launchpad-nosql-couchbase")
         );
     }

@@ -38,7 +38,8 @@ public class SetServerPortCommand extends AbstractOperation {
 
     @Override
     public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-        oldValue = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
+        oldValue = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getPort());
 
         server.setAttribute(ISlingLaunchpadServer.PROP_PORT, port);
 

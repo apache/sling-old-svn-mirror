@@ -25,6 +25,18 @@
         "title": "Sling Scripting Thymeleaf",
         "content": "<p><em>Sling Scripting Thymeleaf</em> with <em>Sling Models</em> and <code>adaptTo()</code> to render resources:</p><pre>&lt;html data-th-with=\"page=${resource.adaptTo(@org.apache.sling.samples.fling.Page@class)}\"&gt;\n&lt;head&gt;\n  &lt;meta charset=\"UTF-8\"/&gt;\n  &lt;meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/&gt;\n  &lt;title data-th-text=\"${page.title}\"&gt;Page Title&lt;/title&gt;\n[...]</pre><p><em>Sling Scripting Thymeleaf</em> with <em>Sling i18n</em> for localized messages:</p><pre>&lt;a href=\"/system/sling/logout\" data-th-text=\"#{action.logout}\"&gt;logout&lt;/a&gt;</pre><pre>{\n    \"en\": {\n        \"jcr:mixinTypes\": [\n            \"mix:language\"\n        ],\n        \"jcr:language\": \"en\",\n        \"sling:basename\": \"org.apache.sling.samples.fling\",\n        \"action.logout\": {\n            \"jcr:primaryType\": \"sling:MessageEntry\",\n            \"sling:key\": \"action.logout\",\n            \"sling:message\": \"logout\"\n        },\n        [...]\n    }\n}\n</pre>"
     },
+    "validation": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling/page/form",
+        "sling:resourceSuperType": "fling/page",
+        "title": "Sling Validation"
+    },
+    "messaging": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling/page/messages",
+        "sling:resourceSuperType": "fling/page",
+        "title": "Sling Commons Messaging"
+    },
     "auth": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "fling/page/simple",

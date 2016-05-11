@@ -30,6 +30,9 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
 
+/**
+ * {@link DistributionRequestAuthorizationStrategy} based on JCR privileges over a certain {@link Session}
+ */
 public class PrivilegeDistributionRequestAuthorizationStrategy implements DistributionRequestAuthorizationStrategy {
 
     private final String jcrPrivilege;
@@ -44,6 +47,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
 
     public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
         Session session = resourceResolver.adaptTo(Session.class);
+
+        if (session == null) {
+            throw new DistributionException("cannot obtain a Session");
+        }
 
         try {
             if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {

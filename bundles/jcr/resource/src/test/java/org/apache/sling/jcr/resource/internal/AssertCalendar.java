@@ -26,16 +26,15 @@ public final class AssertCalendar {
      * Asserts that two calendars are equal.
      * <p>
      * This differs from {@link Assert#assertEquals(Object, Object)} in the way how the time zone is compared. While
-     * assertEquals expects the exact same {@link java.util.TimeZone} object, this method is satisfied if the TimeZone
-     * objects describes the same time zone/have the same offset.
+     * assertEquals expects the exact same {@link java.util.TimeZone} object, this simply compares the getTimeInMillis()
+     * values - if those are equal both Calendar point to the same time.
      */
     public static void assertEqualsCalendar(Calendar expected, Calendar actual) {
         if (expected == null) {
             Assert.assertNull(actual);
         } else {
             Assert.assertNotNull(actual);
-            Assert.assertEquals(expected.getTime(), actual.getTime());
-            Assert.assertEquals(expected.getTimeZone().getRawOffset(), actual.getTimeZone().getRawOffset());
+            Assert.assertEquals(expected.getTimeInMillis(), actual.getTimeInMillis());
         }
     }
 

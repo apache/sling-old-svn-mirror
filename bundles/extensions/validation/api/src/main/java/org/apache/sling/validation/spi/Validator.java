@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.exceptions.SlingValidationException;
+import org.apache.sling.validation.SlingValidationException;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -37,7 +37,7 @@ public interface Validator <T> {
      * 
      * The validator can enforce the type of the given data just by setting the appropriate parameter type {@code T} which can be any non-primitive class. 
      * Depending on whether this type is an array or not the {@code validate} method is called differently:
-     * <table> 
+     * <table summary="">
      *  <tr>
      *    <th>T is array type</th>
      *    <th>Valuemap contains array value</th>
@@ -70,7 +70,7 @@ public interface Validator <T> {
      * @param context the validation context contains additional information about the data to be validated, never {@code null}.
      * @param arguments the parameterization of the validator. Never {@code null} but might be the empty map.
      * @return the validation result (encapsulates the validation status as well as messages).
-     * @throws org.apache.sling.validation.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
+     * @throws SlingValidationException if some expected arguments are missing from the arguments map
      */
     @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
 }

@@ -90,6 +90,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
             String paramBindings = request.getParameter(PARAM_BINDINGS);
             int size = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
+            if (size < 0) {
+                size = Integer.MAX_VALUE;
+            }
 
             Map additionalBindings = null;
             if (StringUtils.isNotBlank(dryRun) && dryRun.equals(Boolean.TRUE.toString())) {
@@ -135,7 +138,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 writer.key(KEY_ITEMS).array();
                 while (resourceIterator.hasNext()){
                     Resource resource = resourceIterator.next();
-                    if (i ++ < NB_MAX) {
+                    if (++i < size) {
                         writer.object();
                         writer.key(PATH_KEY).value(resource.getPath());
                         Iterator<String> keys = writerObj.keys();
@@ -154,7 +157,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 writer.key(KEY_ITEMS);
                 writer.array();
                 for (String resource : resources) {
-                    if (i ++ > NB_MAX){
+                    if (++i > size){
                         break;
                     } else {
                         writer.value(resource);

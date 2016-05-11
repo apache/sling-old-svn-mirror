@@ -19,8 +19,6 @@ package org.apache.sling.sample.slingshot.ratings.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -31,12 +29,12 @@ import org.apache.sling.sample.slingshot.SlingshotConstants;
 import org.apache.sling.sample.slingshot.SlingshotUtil;
 import org.apache.sling.sample.slingshot.ratings.RatingsService;
 import org.apache.sling.sample.slingshot.ratings.RatingsUtil;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Implementation of the ratings service
  */
-@Component
-@Service(value=RatingsService.class)
+@Component(service=RatingsService.class)
 public class RatingsServiceImpl implements RatingsService {
 
     /** The resource type for the rating holder. */

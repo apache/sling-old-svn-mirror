@@ -16,7 +16,8 @@
  */
 package org.apache.sling.testing.samples.bundlewit;
 
-import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.apache.sling.testing.junit.rules.SlingInstanceRule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Simple HTTP test example, checks the validity of some
@@ -28,13 +29,8 @@ import org.junit.Test;
  */
 public class OsgiConsoleHttpIT {
 
-    /** This provides access to the server under test, after
-     *  setting it up with the required test bundles and 
-     *  waiting for them to be ready. It was designed as
-     *  a base class for tests but using it in this way is
-     *  more decoupled.
-     */
-    private static final SlingTestBase S = new SlingTestBase();
+    @ClassRule
+    public static SlingInstanceRule slingInstanceRule = new SlingInstanceRule();
     
     @Test
     public void testSomeConsolePaths() throws Exception {
@@ -51,10 +47,7 @@ public class OsgiConsoleHttpIT {
         
         for(String subpath : subpaths) {
             final String path = "/system/console/" + subpath;
-            S.getRequestExecutor().execute(
-                    S.getRequestBuilder().buildGetRequest(path)
-                    .withCredentials(S.getServerUsername(), S.getServerPassword())
-            ).assertStatus(200);
+            slingInstanceRule.getAdminClient().doGet(path, 200);
         }
     }
 }

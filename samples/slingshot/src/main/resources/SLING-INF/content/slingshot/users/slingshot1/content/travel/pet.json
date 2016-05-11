@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Item",
-    "title":"My Pet",
-    "description":"Always hungry...but never gets fat"
-}

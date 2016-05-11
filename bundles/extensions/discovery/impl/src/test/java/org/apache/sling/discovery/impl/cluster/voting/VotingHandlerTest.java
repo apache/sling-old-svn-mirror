@@ -41,6 +41,7 @@ import javax.jcr.Session;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.impl.DefaultThreadPool;
 import org.apache.sling.discovery.base.its.setup.OSGiMock;
@@ -55,6 +56,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -361,26 +363,40 @@ public class VotingHandlerTest {
         doTestConcurrentVotes(123, 12, votingHandler1);
     }
     
+    @Category(Slow.class) //TODO: takes env 15sec
     @Test
     public void testConcurrentVotesTwoNodes() throws Exception {
         doTestConcurrentVotes(456, 12, votingHandler1, votingHandler2);
     }
     
     @Test
+    public void testFastConcurrentVotesTwoNodes() throws Exception {
+        doTestConcurrentVotes(42, 12, votingHandler1, votingHandler2);
+    }
+
+    @Category(Slow.class) //TODO: takes env 10sec
+    @Test
     public void testConcurrentVotesThreeNodes() throws Exception {
         doTestConcurrentVotes(234, 12, votingHandler1, votingHandler2, votingHandler3);
     }
     
+    @Category(Slow.class) //TODO: takes env 30sec
     @Test
     public void testConcurrentVotesFourNodes() throws Exception {
         doTestConcurrentVotes(247, 12, votingHandler1, votingHandler2, votingHandler3, votingHandler4);
     }
     
+    @Category(Slow.class) //TODO: takes env 25sec
     @Test
     public void testConcurrentVotesFiveNodes() throws Exception {
         doTestConcurrentVotes(285, 12, votingHandler1, votingHandler2, votingHandler3, votingHandler4, votingHandler5);
     }
     
+    @Test
+    public void testFastConcurrentVotesFiveNodes() throws Exception {
+        doTestConcurrentVotes(12, 12, votingHandler1, votingHandler2, votingHandler3, votingHandler4, votingHandler5);
+    }
+
     private void add(List<VotingDetail> votingDetails, Map<VotingDetail, Integer> totals) {
         for (VotingDetail d : votingDetails) {
             Integer i = totals.get(d);

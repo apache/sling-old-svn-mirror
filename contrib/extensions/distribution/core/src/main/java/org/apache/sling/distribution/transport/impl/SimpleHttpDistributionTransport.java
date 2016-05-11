@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +30,6 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
@@ -42,6 +40,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.common.RecoverableDistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
@@ -95,13 +94,13 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                 InputStream inputStream = null;
                 try {
-                    inputStream = distributionPackage.createInputStream();
+                    inputStream = DistributionPackageUtils.createStreamWithHeader(distributionPackage);
 
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
 
                     Response response = executor.execute(req);
+                    response.returnContent(); // throws an error if HTTP status is >= 300
 
-                    response.discardContent();
                 } finally {
                     IOUtils.closeQuietly(inputStream);
                 }
@@ -123,7 +122,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     }
 
     @Nullable
-    public DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
+    public RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
@@ -138,11 +137,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 //            Request req = Request.Post(distributionURI).useExpectContinue();
 
             // TODO : add queue parameter
-
-            // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
-            final Map<String, String> headers = new HashMap<String, String>();
-
-            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, headers);
+            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI);
 
             if (inputStream == null) {
                 return null;
@@ -152,9 +147,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
             log.debug("pulled package with info {}", responsePackage.getInfo());
 
-            String originalId = headers.get(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
-
-            return new DefaultDistributionPackageProxy(responsePackage, executor, distributionURI, originalId);
+            return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
         } catch (HttpHostConnectException e) {
             log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {

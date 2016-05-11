@@ -38,10 +38,10 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.0.4</org.apache.karaf.version>
-    <servicemix.specs.version>2.5.0</servicemix.specs.version>
+    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <servicemix.specs.version>2.7.0</servicemix.specs.version>
     <xerces.version>2.11.0</xerces.version>
-    <xalan.bundle.version>2.7.2_2</xalan.bundle.version>
+    <xalan.bundle.version>2.7.2_3</xalan.bundle.version>
     <xalan-serializer.bundle.version>2.7.2_1</xalan-serializer.bundle.version>
   </properties>
 
@@ -112,6 +112,11 @@
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
             <!-- Apache Sling Commons -->
+            <feature>sling-commons-classloader</feature>
+            <feature>sling-commons-fsclassloader</feature>
+            <feature>sling-commons-messaging</feature>
+            <feature>sling-commons-messaging-mail</feature>
+            <feature>sling-commons-metrics</feature>
             <feature>sling-commons-scheduler</feature>
             <feature>sling-commons-threads</feature>
             <!-- Apache Sling Extensions -->
@@ -119,6 +124,7 @@
             <feature>sling-extension-bundleresource</feature>
             <feature>sling-extension-discovery</feature>
             <feature>sling-extension-discovery-impl</feature>
+            <feature>sling-extension-discovery-oak</feature>
             <feature>sling-extension-discovery-standalone</feature>
             <feature>sling-extension-event</feature>
             <feature>sling-extension-explorer</feature>
@@ -161,6 +167,8 @@
             <!-- Apache Sling Auth (contrib) -->
             <feature>sling-auth-openid</feature>
             <feature>sling-auth-selector</feature>
+            <!-- Apache Sling Commons (contrib) -->
+            <feature>sling-commons-html</feature>
             <!-- Apache Sling Extensions (contrib) -->
             <feature>sling-extension-distribution</feature>
             <feature>sling-extension-healthcheck</feature>
@@ -176,6 +184,7 @@
             <feature>sling-nosql-couchbase</feature>
             <feature>sling-nosql-mongodb</feature>
             <!-- Apache Sling Scripting (contrib) -->
+            <feature>sling-scripting-freemarker</feature>
             <feature>sling-scripting-groovy</feature>
             <feature>sling-scripting-java</feature>
             <feature>sling-scripting-thymeleaf</feature>
