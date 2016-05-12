@@ -204,4 +204,26 @@ public class ClientSideTeleporter extends TeleporterRule {
             }
         };
     }
+
+    /** Use a Customizer, if one was defined, to customize this Rule */
+    protected void customize() {
+        // As with the client-side rule implementation, instantiate our Customizer
+        // dynamically to avoid requiring its class on the server side.
+        if((clientSetupOptions != null) && !clientSetupOptions.isEmpty()) {
+            String customizerClassName = clientSetupOptions;
+            String customizerOptions = "";
+            final int firstColon = clientSetupOptions.indexOf(":");
+            if(firstColon > 0) {
+                customizerClassName = clientSetupOptions.substring(0, firstColon);
+                customizerOptions = clientSetupOptions.substring(firstColon + 1);
+            }
+            // If a short name is used, transform it using our pattern. Simplifies referring
+            // to these customizers in test code, without having to make the customizer
+            // classes accessible to this bundle
+            if(!customizerClassName.contains(".")) {
+                customizerClassName = CUSTOMIZER_PATTERN.replace("<NAME>", customizerClassName);
+            }
+            createInstance(Customizer.class, customizerClassName).customize(this, customizerOptions);
+        }
+    }
 }
