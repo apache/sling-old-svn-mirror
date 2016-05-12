@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.Rule;
@@ -75,6 +76,26 @@ public class TeleporterHttpClientTest {
             client.waitForStatus(testUrl, 200, 100);
             fail("Expected waitForStatus to timeout");
         } catch(IOException expected) {
+        }
+    }
+    
+    @Test
+    public void repeatedGetStatus() {
+        final String path = TEST_PATH + "/" + UUID.randomUUID();
+        givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(200)));
+        
+        final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, path);
+        final String testUrl = baseUrl + path;
+        
+        final int N = Integer.getInteger("sling.getstatus.test.count", 1000);
+        int status = 0;
+        for(int i=0; i < N; i++) {
+            try {
+                status = client.getHttpGetStatus(testUrl);
+            } catch(Exception e) {
+                fail("Exception at index " + i + ":" + e);
+            }
+            assertEquals("Expecting status 200 at index " + i, 200, status);
         }
     }
 }
