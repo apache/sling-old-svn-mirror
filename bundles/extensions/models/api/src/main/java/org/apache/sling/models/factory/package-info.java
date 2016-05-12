@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// TODO check: the baseline plugin forced me to upgrade this to 2.0.0
-@Version("2.0.0")
+@Version("1.1.0")
 package org.apache.sling.models.factory;
 
 import aQute.bnd.annotation.Version;

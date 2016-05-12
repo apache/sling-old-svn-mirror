@@ -17,9 +17,14 @@
 package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
@@ -41,8 +46,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Injects a custom type object for a value map value that can be mapped to by calling its constructor 
- * (if there is one with one parameter that matches the type that is returned by the value map for the property name).
+ * Injects a custom type object for a value map value that can be mapped to by
+ * calling its constructor (if there is one with one parameter that matches the
+ * type that is returned by the value map for the property name).
  */
 @Component
 @Service
@@ -58,58 +64,99 @@ public class ValueMapObjectInjector extends AbstractInjector implements Injector
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
 
-    	// it's probably better to restrict to Annotation usages (otherwise the below reflection calls will be made for a 
-    	// lot of "currentPage", "resource", etc. injections where this injector is not relevant), same thing is done for @Self    	
-    	if (!element.isAnnotationPresent(ValueMapObject.class)) {
-    		return null;
-    	}
-    	
-    	// AbstractInjector.getValueMap() does not "unfold" request to resource, doing this here to make it work. 
-    	// Should it be done in AbstractInjector.getValueMap()?
-		if(adaptable instanceof SlingHttpServletRequest) {
-			adaptable = ((SlingHttpServletRequest) adaptable).getResource();
-		}
-    	
-    	ValueMap valueMap = getValueMap(adaptable);
-    	if(valueMap==null) {
-    		return null; 
-    	}
-    	
-    	Object object = valueMap.get(name);
-    	if(object == null) {
-    		return null; 
-    	}
-    	
-    	Class<?> objectType = object.getClass();
-    	Class<?> clazz = (Class<?>) type;
-		Class<?>[] contructorParameters = new Class<?>[] {objectType};
-    	
-    	Object valueToInject = null;
-    	Constructor<?> constructor = null;
-    	try {
-			constructor = clazz.getConstructor(contructorParameters);
-			valueToInject = constructor.newInstance(new Object[]{object});
-		} catch (NoSuchMethodException e) {
-			LOG.debug("@PlainObject: Constructor with parameter {} not found in class {}", objectType, clazz);
-		} catch (SecurityException e) {
-			LOG.debug("@PlainObject: Reflection not allowed", e);
-		} catch (IllegalArgumentException e) {
-			LOG.debug("@PlainObject: Impossible (invocation arguments will always match found contructur with above code)");
-		} catch (InstantiationException e) {
-			LOG.debug("@PlainObject: Exception while invoking {}", constructor, e);
-		} catch (IllegalAccessException e) {
-			LOG.debug("@PlainObject: Reflection not allowed", e);
-		} catch (InvocationTargetException e) {
-			LOG.debug("@PlainObject: Exception while invoking {}", constructor, e);
-		} 
-    	
+        // it's probably better to restrict to Annotation usages (otherwise the below reflection calls will be made for a lot of "currentPage", "resource", etc. injections where this injector is not relevant), same thing is done for @Self
+        if(!element.isAnnotationPresent(ValueMapObject.class)) {
+            return null;
+        }
+
+        // AbstractInjector.getValueMap() does not "unfold" request to resource, doing this here to make it work.
+        // Should it be done in AbstractInjector.getValueMap()?
+        if(adaptable instanceof SlingHttpServletRequest) {
+            adaptable = ((SlingHttpServletRequest) adaptable).getResource();
+        }
+
+        ValueMap valueMap = getValueMap(adaptable);
+        if(valueMap == null) {
+            return null;
+        }
+
+        Object sourceObject = valueMap.get(name);
+        if(sourceObject == null) {
+            return null;
+        }
+        
+        Class<?> targetClass = (type instanceof Class) ? (Class<?>) type : (Class<?>) ((ParameterizedType) type).getRawType();
+        boolean sourceIsMultiple = sourceObject.getClass().isArray();
+        boolean targetIsMultiple = targetClass.isArray() || isDeclaredTypeCollection(type);
+        
+        Object valueToInject = null;
+        if(!targetIsMultiple /* and no matter if source is multiple (if it is will search for a constructor with array arg) */) {
+            valueToInject = mapSourceValueToTargetType(sourceObject, targetClass);
+        } else {
+            Class<?> targetObjectArrElementType;
+            if(targetClass.isArray()) {
+                targetObjectArrElementType = targetClass.getComponentType();
+            } else {
+                ParameterizedType pType = (ParameterizedType) type;
+                Type[] actualTypeArguments = pType.getActualTypeArguments();
+                if(actualTypeArguments==null || actualTypeArguments.length !=1) {
+                    throw new IllegalStateException("Collection class " + targetClass+ " does not have exactly one type argument.");
+                }
+                targetObjectArrElementType = (Class<?>)  actualTypeArguments[0];
+            }            
+            
+            if(!sourceIsMultiple) {
+                // wrap in array
+                sourceObject = new Object[] {sourceObject};
+            }
+            
+            int length = Array.getLength(sourceObject);
+            Object[] targetObjectArr = (Object[]) Array.newInstance(targetObjectArrElementType, length);
+            for(int i=0;i<length;i++) {
+                Object targetVal = mapSourceValueToTargetType(Array.get(sourceObject, i), targetObjectArrElementType);
+                targetObjectArr[i] = targetVal;
+            }
+            
+            if(targetClass.isArray()) {
+                valueToInject = targetObjectArr;
+            } else {
+                valueToInject = Arrays.asList(targetObjectArr);
+            }
+            
+        }
+
         return valueToInject;
     }
 
+    private Object mapSourceValueToTargetType(Object sourceValue, Class<?> targetClass) {
+        Class<?> objectType = sourceValue.getClass();
+        Class<?>[] contructorParameters = new Class<?>[] { objectType };
+
+        Object valueAsTargetType = null;
+        Constructor<?> constructor = null;
+        try {
+            constructor = targetClass.getConstructor(contructorParameters);
+            valueAsTargetType = constructor.newInstance(new Object[] { sourceValue });
+        } catch (NoSuchMethodException e) {
+            LOG.debug("@ValueMapObject: Constructor with parameter {} not found in class {}", objectType, targetClass);
+        } catch (SecurityException e) {
+            LOG.debug("@ValueMapObject: Reflection not allowed", e);
+        } catch (IllegalArgumentException e) {
+            LOG.debug("@ValueMapObject: Impossible (invocation arguments will always match found contructur with above code)");
+        } catch (InstantiationException e) {
+            LOG.debug("@ValueMapObject: Exception while invoking {}", constructor, e);
+        } catch (IllegalAccessException e) {
+            LOG.debug("@ValueMapObject: Reflection not allowed", e);
+        } catch (InvocationTargetException e) {
+            LOG.debug("@ValueMapObject: Exception while invoking {}", constructor, e);
+        }
+        return valueAsTargetType;
+    }
+    
     @Override
     public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
-    	ValueMapObject annotation = element.getAnnotation(ValueMapObject.class);
-        if (annotation != null) {
+        ValueMapObject annotation = element.getAnnotation(ValueMapObject.class);
+        if(annotation != null) {
             return new ValueMapObjectAnnotationProcessor(annotation);
         }
         return null;
@@ -127,7 +174,7 @@ public class ValueMapObjectInjector extends AbstractInjector implements Injector
         public InjectionStrategy getInjectionStrategy() {
             return annotation.injectionStrategy();
         }
-        
+
     }
 
 }
