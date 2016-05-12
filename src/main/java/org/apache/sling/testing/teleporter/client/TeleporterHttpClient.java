@@ -105,7 +105,7 @@ class TeleporterHttpClient {
                 throw new IOException("Got status code " + status + " for " + url);
             }
         } finally {
-            c.disconnect();
+            cleanup(c);
         }
     }
 
@@ -127,7 +127,7 @@ class TeleporterHttpClient {
                 throw new IOException("Got status code " + status + " for " + url);
             }
         } finally {
-            c.disconnect();
+            cleanup(c);
         }
     }
     
@@ -141,7 +141,7 @@ class TeleporterHttpClient {
         try {
             return c.getResponseCode();
         } finally {
-            c.disconnect();
+            cleanup(c);
         }
     }
 
@@ -186,7 +186,30 @@ class TeleporterHttpClient {
         } catch(ClassNotFoundException e) {
             throw new IOException("Exception reading test results:" + e, e);
         } finally {
-            c.disconnect();
+            cleanup(c);
         }
+    }
+    
+    private void consumeAndClose(InputStream is) throws IOException {
+        if(is == null) {
+            return;
+        }
+        final byte [] buffer = new byte[16384];
+        while(is.read(buffer) != -1) {
+            // nothing to do, just consume the stream
+        }
+        is.close();
+    }
+    
+    private void cleanup(HttpURLConnection c) {
+        try {
+            consumeAndClose(c.getInputStream());
+        } catch(IOException ignored) {
+        }
+        try {
+            consumeAndClose(c.getErrorStream());
+        } catch(IOException ignored) {
+        }
+        c.disconnect();
     }
 }
