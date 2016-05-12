@@ -38,13 +38,7 @@ public class HttpTransportUtils {
 
     private static final Logger log = LoggerFactory.getLogger(HttpTransportUtils.class);
 
-    public final static String HEADER_DISTRIBUTION_ORIGINAL_ID = "X-Distribution-OriginalId";
-
-    public static InputStream fetchNextPackage(Executor executor, URI distributionURI, Map<String, String> headers) throws URISyntaxException, IOException {
-
-        // always clear the result headers map
-        headers.clear();
-
+    public static InputStream fetchNextPackage(Executor executor, URI distributionURI) throws URISyntaxException, IOException {
         URI fetchUri = getFetchUri(distributionURI);
         Request fetchReq = Request.Post(fetchUri).useExpectContinue();
         HttpResponse httpResponse = executor.execute(fetchReq).returnResponse();
@@ -54,15 +48,6 @@ public class HttpTransportUtils {
         }
 
         HttpEntity entity = httpResponse.getEntity();
-
-
-        Header header = httpResponse.getFirstHeader(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
-        if (header != null && header.getValue() != null) {
-            String originalId = header.getValue();
-            headers.put(HEADER_DISTRIBUTION_ORIGINAL_ID, originalId);
-        } else {
-            log.warn("cannot retrieve original id header");
-        }
 
         return entity.getContent();
     }

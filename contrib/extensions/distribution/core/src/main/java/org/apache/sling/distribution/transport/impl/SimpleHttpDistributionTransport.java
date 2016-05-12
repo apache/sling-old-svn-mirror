@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -123,7 +122,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     }
 
     @Nullable
-    public DistributionPackageProxy retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
+    public RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
@@ -138,11 +137,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 //            Request req = Request.Post(distributionURI).useExpectContinue();
 
             // TODO : add queue parameter
-
-            // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
-            final Map<String, String> headers = new HashMap<String, String>();
-
-            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, headers);
+            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI);
 
             if (inputStream == null) {
                 return null;
@@ -152,9 +147,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
             log.debug("pulled package with info {}", responsePackage.getInfo());
 
-            String originalId = headers.get(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
-
-            return new DefaultDistributionPackageProxy(responsePackage, executor, distributionURI, originalId);
+            return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
         } catch (HttpHostConnectException e) {
             log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {

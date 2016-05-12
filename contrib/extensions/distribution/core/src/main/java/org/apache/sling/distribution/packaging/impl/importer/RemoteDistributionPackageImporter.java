@@ -41,11 +41,8 @@ import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransp
  */
 public class RemoteDistributionPackageImporter implements DistributionPackageImporter {
 
-
     private final Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
     private final DistributionTransportContext distributionContext = new DistributionTransportContext();
-
-
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
                                              Map<String, String> endpointsMap) {

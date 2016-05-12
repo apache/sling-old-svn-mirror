@@ -24,7 +24,6 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +158,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
             return new SimpleReadableResourceIterator(childrenProperties, resourceResolver, path);
         } else if (childrenList != null) {
             for (String childResourceName : childrenList) {
-                Resource childResource = getResource(resourceResolver, path + "/" + childResourceName);;
+                Resource childResource = getResource(resourceResolver, path + "/" + childResourceName);
                 resourceList.add(childResource);
             }
         }

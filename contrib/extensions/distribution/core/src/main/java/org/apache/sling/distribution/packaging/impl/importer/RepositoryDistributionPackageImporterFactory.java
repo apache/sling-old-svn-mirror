@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Factory for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}s
+ * OSGi configuration factory for {@link RepositoryDistributionPackageImporter}s.
  */
 @Component(label = "Apache Sling Distribution Importer - Repository Package Importer Factory",
         metatype = true,

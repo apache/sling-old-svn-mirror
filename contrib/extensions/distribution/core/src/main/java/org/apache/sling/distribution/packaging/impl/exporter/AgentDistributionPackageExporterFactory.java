@@ -41,6 +41,9 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilderPro
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * OSGi configuration factory for {@link AgentDistributionPackageExporter}s
+ */
 @Component(label = "Apache Sling Distribution Exporter - Agent Based Package Exporter",
         metatype = true,
         configurationFactory = true,

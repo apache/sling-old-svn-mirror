@@ -33,8 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -365,7 +365,7 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
                     is = new FileInputStream(toView);
                     String contents = IOUtils.toString(is);
                     w.write("<pre class=\"prettyprint linenums\">");
-                    StringEscapeUtils.escapeHtml(w, contents);
+                    w.write(StringEscapeUtils.escapeHtml4(contents));
                     w.write("</pre>");
                 } finally {
                     IOUtils.closeQuietly(is);

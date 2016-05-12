@@ -21,6 +21,7 @@ package org.apache.sling.distribution.serialization.impl.kryo;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link KryoContentSerializer}
@@ -59,6 +61,7 @@ public class KryoContentSerializerTest {
         kryoContentSerializer.exportToStream(resourceResolver, request, outputStream);
         byte[] bytes = outputStream.toByteArray();
         assertNotNull(bytes);
+        assertTrue(bytes.length > 0);
     }
 
     @Test

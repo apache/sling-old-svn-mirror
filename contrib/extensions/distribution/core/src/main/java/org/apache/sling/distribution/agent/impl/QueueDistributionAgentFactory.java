@@ -54,7 +54,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
+ * An OSGi service factory for "queuing agents" that queue resources from the local instance (and can be eventually
+ * pulled from another remote "reverse agent").
+ *
+ * @see {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 @Component(metatype = true,
         label = "Apache Sling Distribution Agent - Queue Agents Factory",

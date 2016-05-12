@@ -51,21 +51,13 @@ public class SimpleMailBuilder implements MailBuilder {
 
     // TODO use encryption and support more configuration options
 
-    private String subject;
-
-    private String from;
-
-    private String smtpHostname;
-
-    private int smtpPort;
-
-    private String smtpUsername;
-
-    private String smtpPassword;
+    private SimpleMailBuilderConfiguration configuration;
 
     private static final String SUBJECT_KEY = "mail.subject";
 
     private static final String FROM_KEY = "mail.from";
+
+    private static final String CHARSET_KEY = "mail.charset";
 
     private static final String SMTP_HOSTNAME_KEY = "mail.smtp.hostname";
 
@@ -83,35 +75,28 @@ public class SimpleMailBuilder implements MailBuilder {
     @Activate
     private void activate(final SimpleMailBuilderConfiguration configuration) {
         logger.debug("activate");
-        configure(configuration);
+        this.configuration = configuration;
     }
 
     @Modified
     private void modified(final SimpleMailBuilderConfiguration configuration) {
         logger.debug("modified");
-        configure(configuration);
-    }
-
-    private void configure(final SimpleMailBuilderConfiguration configuration) {
-        subject = configuration.subject();
-        from = configuration.from();
-        smtpHostname = configuration.smtpHostname();
-        smtpPort = configuration.smtpPort();
-        smtpUsername = configuration.smtpUsername();
-        smtpPassword = configuration.smtpPassword();
+        this.configuration = configuration;
     }
 
     @Override
     public Email build(@Nonnull final String message, @Nonnull final String recipient, @Nonnull final Map data) throws EmailException {
         final Map configuration = (Map) data.getOrDefault("mail", Collections.EMPTY_MAP);
-        final String subject = (String) configuration.getOrDefault(SUBJECT_KEY, this.subject);
-        final String from = (String) configuration.getOrDefault(FROM_KEY, this.from);
-        final String smtpHostname = (String) configuration.getOrDefault(SMTP_HOSTNAME_KEY, this.smtpHostname);
-        final int smtpPort = (Integer) configuration.getOrDefault(SMTP_PORT_KEY, this.smtpPort);
-        final String smtpUsername = (String) configuration.getOrDefault(SMTP_USERNAME_KEY, this.smtpUsername);
-        final String smtpPassword = (String) configuration.getOrDefault(SMTP_PASSWORD_KEY, this.smtpPassword);
+        final String subject = (String) configuration.getOrDefault(SUBJECT_KEY, this.configuration.subject());
+        final String from = (String) configuration.getOrDefault(FROM_KEY, this.configuration.from());
+        final String charset = (String) configuration.getOrDefault(CHARSET_KEY, this.configuration.charset());
+        final String smtpHostname = (String) configuration.getOrDefault(SMTP_HOSTNAME_KEY, this.configuration.smtpHostname());
+        final int smtpPort = (Integer) configuration.getOrDefault(SMTP_PORT_KEY, this.configuration.smtpPort());
+        final String smtpUsername = (String) configuration.getOrDefault(SMTP_USERNAME_KEY, this.configuration.smtpUsername());
+        final String smtpPassword = (String) configuration.getOrDefault(SMTP_PASSWORD_KEY, this.configuration.smtpPassword());
 
         final Email email = new SimpleEmail();
+        email.setCharset(charset);
         email.setMsg(message);
         email.addTo(recipient);
         email.setSubject(subject);

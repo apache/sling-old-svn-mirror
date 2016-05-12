@@ -19,7 +19,9 @@
 
 package org.apache.sling.distribution.servlet;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.commons.json.JSONException;
@@ -60,10 +62,16 @@ class ServletJsonUtils {
         response.getWriter().append(json.toString());
     }
 
-    public static void writeJson(SlingHttpServletResponse response, int status, String message) throws IOException {
+    public static void writeJson(SlingHttpServletResponse response, int status, String message,
+                                 @Nullable Map<String, String> kv) throws IOException {
         JSONObject json = new JSONObject();
         try {
             json.put("message", message);
+            if (kv != null && kv.size() > 0) {
+                for (Map.Entry<String, String> entry : kv.entrySet()) {
+                    json.put(entry.getKey(), entry.getValue());
+                }
+            }
         } catch (JSONException e) {
             log.error("Cannot write json", e);
         }

@@ -33,7 +33,9 @@
 
     <name>Apache Sling Test Tools</name>
     <description>
-        Sling testing utilities.
+        Sling testing utilities. This is considered DEPRECATED now, replaced
+        by the SLING-5703 modules. We'll remove this one or move to contrib
+        after using these new modules for some time.
     </description>
     
     <scm>

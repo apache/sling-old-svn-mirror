@@ -56,8 +56,6 @@ import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
-import org.apache.sling.distribution.queue.DistributionQueueStatus;
-import org.apache.sling.distribution.queue.impl.DistributionQueueWrapper;
 import org.apache.sling.distribution.queue.impl.SimpleAgentDistributionQueue;
 import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -87,29 +85,26 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
 
     private final DistributionQueueProvider queueProvider;
-
-    private final boolean queueProcessingEnabled;
     private final DistributionPackageImporter distributionPackageImporter;
     private final DistributionPackageExporter distributionPackageExporter;
-
     private final DistributionQueueDispatchingStrategy scheduleQueueStrategy;
     private final DistributionQueueDispatchingStrategy errorQueueStrategy;
-
+    private final DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy;
+    private final DefaultDistributionLog log;
     private final DistributionEventFactory distributionEventFactory;
+    private AgentBasedRequestHandler agentBasedRequestHandler;
+
+    private final SlingRepository slingRepository;
+    private final ResourceResolverFactory resourceResolverFactory;
 
     private final String name;
-
-    private final DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy;
-    private final ResourceResolverFactory resourceResolverFactory;
+    private final boolean queueProcessingEnabled;
+    private final DistributionRequestType[] allowedRequests;
     private final String subServiceName;
-    private AgentBasedRequestHandler agentBasedRequestHandler;
     private boolean active = false;
     private final Set<String> processingQueues;
     private final int retryAttempts;
     private final boolean impersonateUser;
-    private final SlingRepository slingRepository;
-    private final DefaultDistributionLog log;
-    private final DistributionRequestType[] allowedRequests;
     private final String[] allowedRoots;
     private final AtomicInteger nextRequestId = new AtomicInteger();
 
@@ -136,6 +131,24 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.processingQueues = processingQueues;
         this.retryAttempts = retryAttempts;
 
+        validateConfiguration(name, queueProcessingEnabled, subServiceName, distributionPackageImporter, distributionPackageExporter, distributionRequestAuthorizationStrategy, queueProvider, scheduleQueueStrategy, distributionEventFactory, resourceResolverFactory);
+
+        this.allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
+        this.subServiceName = SettingsUtils.removeEmptyEntry(subServiceName);
+        this.impersonateUser = this.subServiceName == null;
+        this.distributionRequestAuthorizationStrategy = distributionRequestAuthorizationStrategy;
+        this.resourceResolverFactory = resourceResolverFactory;
+        this.name = SettingsUtils.removeEmptyEntry(name);
+        this.queueProcessingEnabled = queueProcessingEnabled;
+        this.distributionPackageImporter = distributionPackageImporter;
+        this.distributionPackageExporter = distributionPackageExporter;
+        this.queueProvider = queueProvider;
+        this.scheduleQueueStrategy = scheduleQueueStrategy;
+        this.errorQueueStrategy = errorQueueStrategy;
+        this.distributionEventFactory = distributionEventFactory;
+    }
+
+    private void validateConfiguration(String name, boolean queueProcessingEnabled, String subServiceName, DistributionPackageImporter distributionPackageImporter, DistributionPackageExporter distributionPackageExporter, DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy, DistributionQueueProvider queueProvider, DistributionQueueDispatchingStrategy scheduleQueueStrategy, DistributionEventFactory distributionEventFactory, ResourceResolverFactory resourceResolverFactory) {
         // check configuration is valid
         if (name == null
                 || (queueProcessingEnabled && distributionPackageImporter == null)
@@ -157,20 +170,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                     resourceResolverFactory});
             throw new IllegalArgumentException("all arguments are required: " + errorMessage);
         }
-
-        this.allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
-        this.subServiceName = SettingsUtils.removeEmptyEntry(subServiceName);
-        this.impersonateUser = this.subServiceName == null;
-        this.distributionRequestAuthorizationStrategy = distributionRequestAuthorizationStrategy;
-        this.resourceResolverFactory = resourceResolverFactory;
-        this.name = SettingsUtils.removeEmptyEntry(name);
-        this.queueProcessingEnabled = queueProcessingEnabled;
-        this.distributionPackageImporter = distributionPackageImporter;
-        this.distributionPackageExporter = distributionPackageExporter;
-        this.queueProvider = queueProvider;
-        this.scheduleQueueStrategy = scheduleQueueStrategy;
-        this.errorQueueStrategy = errorQueueStrategy;
-        this.distributionEventFactory = distributionEventFactory;
     }
 
     @Nonnull
@@ -208,7 +207,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
             // export packages
             CompositeDistributionResponse distributionResponse = exportPackages(agentResourceResolver, distributionRequest, callingUser, requestId);
 
-
             log.debug("REQUEST-STARTED {}: {} paths={}, success={}, state={}, exportTime={}ms, noPackages={}, size={}B, noQueues={}", new Object[]{
                     requestId,
                     distributionRequest.getRequestType(), distributionRequest.getPaths(),
@@ -226,7 +224,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
         }
-
     }
 
     private boolean isPassive() {

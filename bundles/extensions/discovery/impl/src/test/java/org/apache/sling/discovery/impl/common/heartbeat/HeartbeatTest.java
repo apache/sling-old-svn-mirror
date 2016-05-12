@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
@@ -52,6 +53,7 @@ import org.apache.sling.discovery.impl.setup.FullJR2VirtualInstanceBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,11 +140,13 @@ public class HeartbeatTest {
         }
     }
 
+    @Category(Slow.class) //TODO: takes env 40sec
     @Test
     public void testPartitioning() throws Throwable {
         doTestPartitioning(true);
     }
     
+    @Category(Slow.class) //TODO: takes env 35sec
     @Test
     public void testPartitioningWithFailingScheduler() throws Throwable {
         doTestPartitioning(false);
@@ -437,11 +441,13 @@ public class HeartbeatTest {
      * TOPOLOGY_CHANGED until it finally sends heartbeats again and the voting can 
      * happen again.
      */
+    @Category(Slow.class) //TODO: takes env 25sec
     @Test
     public void testSlowAndFastMachine() throws Throwable {
         doTestSlowAndFastMachine(false);
     }
 
+    @Category(Slow.class) //TODO: takes env 25sec
     @Test
     public void testSlowAndFastMachineWithFailingScheduler() throws Throwable {
         doTestSlowAndFastMachine(true);

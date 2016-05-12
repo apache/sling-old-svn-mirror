@@ -53,7 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>EclipseJavaCompiler</code> provides platform independant
+ * The <code>EclipseJavaCompiler</code> provides platform independent
  * Java compilation support using the Eclipse Java Compiler (org.eclipse.jdt).
  *
  */

@@ -65,10 +65,10 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
             long end = System.currentTimeMillis();
 
             log.info("Package {} imported successfully in {}ms", distributionPackageInfo, end - start);
-            ServletJsonUtils.writeJson(response, 200, "package imported successfully");
+            ServletJsonUtils.writeJson(response, 200, "package imported successfully", null);
 
         } catch (final Throwable e) {
-            ServletJsonUtils.writeJson(response, 500, "an unexpected error has occurred during distribution import");
+            ServletJsonUtils.writeJson(response, 500, "an unexpected error has occurred during distribution import", null);
             log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();

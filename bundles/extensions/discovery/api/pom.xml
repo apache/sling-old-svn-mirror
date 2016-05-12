@@ -24,12 +24,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.discovery.api</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Discovery API</name>
     <description>

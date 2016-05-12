@@ -57,6 +57,7 @@ import org.jmock.Mockery;
 import org.jmock.api.Action;
 import org.jmock.api.Invocation;
 import org.jmock.integration.junit4.JUnit4Mockery;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,7 +215,10 @@ public class RepositoryTestHelper {
 
     public static ResourceResolverFactory mockResourceResolverFactory(final SlingRepository repositoryOrNull)
             throws Exception {
-        Mockery context = new JUnit4Mockery();
+        Mockery context = new JUnit4Mockery(){{
+        	// @see http://www.jmock.org/threading-synchroniser.html
+            setThreadingPolicy(new Synchroniser());
+        }};
     
         final ResourceResolverFactory resourceResolverFactory = context
                 .mock(ResourceResolverFactory.class);

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.commons.messaging.mail.internal;
 
+import org.apache.commons.mail.EmailConstants;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
@@ -38,6 +39,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
         description = "default from (sender) address for mails"
     )
     String from();
+
+    @AttributeDefinition(
+        name = "charset",
+        description = "charset to use for mails"
+    )
+    String charset() default EmailConstants.UTF_8;
 
     @AttributeDefinition(
         name = "SMTP hostname",

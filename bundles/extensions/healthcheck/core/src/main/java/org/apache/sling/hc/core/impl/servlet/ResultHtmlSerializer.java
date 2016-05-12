@@ -26,8 +26,8 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -88,10 +88,10 @@ public class ResultHtmlSerializer {
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Result result = executionResult.getHealthCheckResult();
             writer.println("<tr class=\"" + getClassForStatus(result.getStatus()) + "\" "
-                    + "title=\"Tags: " + StringEscapeUtils.escapeHtml(StringUtils.join(executionResult.getHealthCheckMetadata().getTags(), ",")) + "\">");
-            writer.println("<td><span title=\"" + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
-                    + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "</span></td>");
-            writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml(result.getStatus().toString()) + "</td>");
+                    + "title=\"Tags: " + StringEscapeUtils.escapeHtml4(StringUtils.join(executionResult.getHealthCheckMetadata().getTags(), ",")) + "\">");
+            writer.println("<td><span title=\"" + StringEscapeUtils.escapeHtml4(executionResult.getHealthCheckMetadata().getName()) + "\">"
+                    + StringEscapeUtils.escapeHtml4(executionResult.getHealthCheckMetadata().getTitle()) + "</span></td>");
+            writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml4(result.getStatus().toString()) + "</td>");
             writer.println("<td>");
             boolean isFirst = true;
 
@@ -110,15 +110,15 @@ public class ResultHtmlSerializer {
                 
                 boolean showStatus = !isSingleResult && entry.getStatus()!=Result.Status.DEBUG && entry.getStatus() !=Result.Status.INFO;
                 
-                String message = StringEscapeUtils.escapeHtml(entry.getMessage());
+                String message = StringEscapeUtils.escapeHtml4(entry.getMessage());
                 if(entry.getStatus()==Result.Status.DEBUG) {
                 	message = "<span style='color:gray'/>"+message + "</span>";
                 }
-				writer.println((showStatus ? StringEscapeUtils.escapeHtml(entry.getStatus().toString()) + " " : "") + message);
+				writer.println((showStatus ? StringEscapeUtils.escapeHtml4(entry.getStatus().toString()) + " " : "") + message);
 
                 Exception exception = entry.getException();
                 if (exception != null) {
-                    writer.println("<span style='width:20px'/>" + StringEscapeUtils.escapeHtml(exception.toString()));
+                    writer.println("<span style='width:20px'/>" + StringEscapeUtils.escapeHtml4(exception.toString()));
                     writer.println("<!--");
                     exception.printStackTrace(writer);
                     writer.println("-->");

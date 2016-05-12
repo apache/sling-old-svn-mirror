@@ -76,7 +76,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
         this.autosaveThreshold = autosaveThreshold;
-        this.filters = VltUtils.parseFilters(filters);;
+        this.filters = VltUtils.parseFilters(filters);
         this.useBinaryReferences = useBinaryReferences;
     }
 

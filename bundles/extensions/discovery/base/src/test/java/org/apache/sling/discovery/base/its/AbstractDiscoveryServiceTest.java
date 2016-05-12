@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
@@ -39,6 +40,7 @@ import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -277,6 +279,22 @@ public abstract class AbstractDiscoveryServiceTest {
     }
 
     @Test
+    public void testFiveInstances() throws Throwable {
+        logger.info("testFiveInstances: start");
+        Tester i1 = newInstance("i1", 1, 30, 250, null);
+        for(int i=2; i<=5; i++) {
+            Tester in = newInstance("i"+i, 1, 30, 250, i1.instance);
+        }
+        logger.info("testFiveInstances: starting retry loop (40sec max)");
+        startRetryLoop(testers, 40);
+        i1.instance.dumpRepo();
+        i1.assertNoFailures();
+        assertStableTopology(testers.toArray(new Tester[0]));
+        logger.info("testFiveInstances: end");
+    }
+
+    @Category(Slow.class) //TODO: this takes env 10sec
+    @Test
     public void testTenInstances() throws Throwable {
         logger.info("testTenInstances: start");
         Tester i1 = newInstance("i1", 1, 30, 250, null);
@@ -291,6 +309,7 @@ public abstract class AbstractDiscoveryServiceTest {
         logger.info("testTenInstances: end");
     }
 
+    @Category(Slow.class) //TODO: this takes env 15sec
     @Test
     public void testTwentyInstances() throws Throwable {
         logger.info("testTwentyInstances: start");
@@ -306,6 +325,7 @@ public abstract class AbstractDiscoveryServiceTest {
         logger.info("testTwentyInstances: end");
     }
 
+    @Category(Slow.class) //TODO: this takes env 40sec
     @Test
     public void testTwentyFourInstances() throws Throwable {
         logger.info("testTwentyFourInstances: start");
@@ -350,6 +370,7 @@ public abstract class AbstractDiscoveryServiceTest {
         }, retryTimeoutSeconds /*seconds*/, 1000/*millis*/);        
     }
     
+    @Category(Slow.class) //TODO: this takes env 120sec
     @Test
     public void testStartStopFiesta() throws Throwable {
         final Tester[] instances = new Tester[8];

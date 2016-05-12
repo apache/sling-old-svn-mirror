@@ -39,6 +39,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <sling.java.version>8</sling.java.version>
+    <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
   </properties>
 
   <scm>
@@ -206,19 +207,19 @@
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-container-forked</artifactId>
-      <version>4.8.0</version>
+      <version>${org.ops4j.pax.exam.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
-      <version>4.8.0</version>
+      <version>${org.ops4j.pax.exam.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-link-mvn</artifactId>
-      <version>4.8.0</version>
+      <version>${org.ops4j.pax.exam.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

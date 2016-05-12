@@ -21,7 +21,6 @@ package org.apache.sling.distribution.serialization.impl;
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -77,7 +76,6 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     public void acquire(@Nonnull String[] holderNames) {
         try {
             DistributionPackageUtils.acquire(getStatusFile(), holderNames);
-
         } catch (IOException e) {
             log.error("cannot release package", e);
         }

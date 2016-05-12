@@ -24,8 +24,6 @@ import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SimpleAgentDistributionQueue extends DistributionQueueWrapper {
 

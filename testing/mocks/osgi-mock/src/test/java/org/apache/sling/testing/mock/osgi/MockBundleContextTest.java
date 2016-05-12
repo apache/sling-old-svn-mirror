@@ -73,15 +73,15 @@ public class MockBundleContextTest {
     @Test
     public void testServiceRegistration() throws InvalidSyntaxException {
         // prepare test services
-        String[] clazzes2 = new String[] { String.class.getName(), Integer.class.getName() };
-        Object service2 = new Object();
-        Dictionary<String, Object> properties2 = getServiceProperties(null);
-        ServiceRegistration reg2 = bundleContext.registerService(clazzes2, service2, properties2);
-
-        String clazz1 = String.class.getName();
+        String[] clazzes1 = new String[] { String.class.getName(), Integer.class.getName() };
         Object service1 = new Object();
+        Dictionary<String, Object> properties2 = getServiceProperties(null);
+        ServiceRegistration reg1 = bundleContext.registerService(clazzes1, service1, properties2);
+
+        String clazz2 = String.class.getName();
+        Object service2 = new Object();
         Dictionary<String, Object> properties1 = getServiceProperties(null);
-        ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
+        ServiceRegistration reg2 = bundleContext.registerService(clazz2, service2, properties1);
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
@@ -93,7 +93,7 @@ public class MockBundleContextTest {
         assertSame(reg1.getReference(), refString);
 
         ServiceReference<?> refInteger = bundleContext.getServiceReference(Integer.class.getName());
-        assertSame(reg3.getReference(), refInteger);
+        assertSame(reg1.getReference(), refInteger);
 
         ServiceReference<?>[] refsString = bundleContext.getServiceReferences(String.class.getName(), null);
         assertEquals(2, refsString.length);
@@ -106,8 +106,8 @@ public class MockBundleContextTest {
 
         ServiceReference<?>[] refsInteger = bundleContext.getServiceReferences(Integer.class.getName(), null);
         assertEquals(2, refsInteger.length);
-        assertSame(reg3.getReference(), refsInteger[0]);
-        assertSame(reg2.getReference(), refsInteger[1]);
+        assertSame(reg1.getReference(), refsInteger[0]);
+        assertSame(reg3.getReference(), refsInteger[1]);
 
         ServiceReference<?>[] allRefsString = bundleContext.getAllServiceReferences(String.class.getName(), null);
         assertArrayEquals(refsString, allRefsString);
@@ -115,7 +115,7 @@ public class MockBundleContextTest {
         // test get services
         assertSame(service1, bundleContext.getService(refsString[0]));
         assertSame(service2, bundleContext.getService(refsString[1]));
-        assertSame(service3, bundleContext.getService(refInteger));
+        assertSame(service1, bundleContext.getService(refInteger));
 
         // unget does nothing
         bundleContext.ungetService(refsString[0]);

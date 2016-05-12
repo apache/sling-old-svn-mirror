@@ -46,6 +46,19 @@ public class JSONWriterTest {
         w.endObject();
         return new DespacedRendering(output.toString());
     }
+
+    private DespacedRendering writeObject() throws JSONException {
+        JSONArray arr = new JSONArray();
+        arr.put(1).put("two").put(3.0).put(false);
+
+        w.writeObject(
+            new JSONObject()
+                .put("foo", "bar")
+                .put("array", arr)
+        );
+
+        return new DespacedRendering(output.toString());
+    }
     
     @Test
     public void testSetTidy() {
@@ -61,11 +74,28 @@ public class JSONWriterTest {
                 "_foo_:_bar_", 
                 "_array_:[1,_two_,3,false]");
     }
+
+    @Test
+    public void testStandardObjectWrite() throws JSONException {
+        final DespacedRendering r = writeObject();
+        r.expect(
+                "_foo_:_bar_", 
+                "_array_:[1,_two_,3,false]");
+    }
     
     @Test
     public void testTidyWrite() throws JSONException {
         w.setTidy(true);
         final DespacedRendering r = write();
+        r.expect(
+                "-nl-_foo_:_bar_", 
+                "-nl-_array_:[-nl-1,-nl-_two_,-nl-3,-nl-false-nl-]");
+    }
+
+    @Test
+    public void testTidyObjectWrite() throws JSONException {
+        w.setTidy(true);
+        final DespacedRendering r = writeObject();
         r.expect(
                 "-nl-_foo_:_bar_", 
                 "-nl-_array_:[-nl-1,-nl-_two_,-nl-3,-nl-false-nl-]");

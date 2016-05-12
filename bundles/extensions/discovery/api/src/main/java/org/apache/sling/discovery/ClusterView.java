@@ -30,6 +30,9 @@ import aQute.bnd.annotation.ProviderType;
  * persistence layer/jcr repository.
  * <p>
  * A ClusterView can also consist of just one single instance.
+ * <p>
+ * All instances in a cluster must and do have a unique sling.id.
+ * @see InstanceDescription#getSlingId()
  */
 @ProviderType
 public interface ClusterView {

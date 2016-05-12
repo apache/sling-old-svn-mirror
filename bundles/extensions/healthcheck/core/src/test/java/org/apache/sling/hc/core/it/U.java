@@ -18,6 +18,7 @@
 package org.apache.sling.hc.core.it;
 
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -97,10 +98,10 @@ public class U {
                     )
             ),
             provision(
-                    CoreOptions.bundle(bundleFile.toURI().toString()),
+                    bundle(bundleFile.toURI().toString()),
+                    mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
-                    mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
@@ -115,10 +116,9 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"),
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
-                    mavenBundle("commons-io", "commons-io", "1.4"),
+                    mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
-                    mavenBundle("commons-lang", "commons-lang", "2.5"),
-                    mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
+                    mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject()
             )
         );
     }
