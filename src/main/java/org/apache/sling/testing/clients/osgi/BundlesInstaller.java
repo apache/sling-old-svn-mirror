@@ -16,171 +16,202 @@
  */
 package org.apache.sling.testing.clients.osgi;
 
-import org.osgi.framework.Constants;
+import org.apache.sling.testing.clients.ClientException;
+import org.apache.sling.testing.clients.util.poller.AbstractPoller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 
 
-/** Utility that installs and starts additional bundles for testing */ 
+/**
+ * Utility for installing and starting additional bundles for testing
+ */
 public class BundlesInstaller {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final WebconsoleClient webconsoleClient;
+    private final OsgiConsoleClient osgiConsoleClient;
     public static final String ACTIVE_STATE = "active";
-    
-    public BundlesInstaller(WebconsoleClient wcc) {
-        webconsoleClient = wcc;
+
+    public BundlesInstaller(OsgiConsoleClient cc) {
+        osgiConsoleClient = cc;
     }
-   
-    public boolean isInstalled(File bundleFile) throws Exception {
-        final String bundleSymbolicName = getBundleSymbolicName(bundleFile);
-        try{
-            log.debug("Checking if installed: "+bundleSymbolicName);
-            webconsoleClient.checkBundleInstalled(bundleSymbolicName, 1);
-            // if this succeeds, then there's no need to install again
-            log.debug("Already installed: "+bundleSymbolicName);
+
+    /**
+     * Checks if a bundle is installed or not. Does not retry.
+     * @param bundleFile
+     * @return
+     * @throws ClientException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public boolean isInstalled(File bundleFile) throws ClientException, InterruptedException, IOException {
+        final String bundleSymbolicName = OsgiConsoleClient.getBundleSymbolicName(bundleFile);
+        log.debug("Checking if installed: " + bundleSymbolicName);
+        boolean installed = osgiConsoleClient.checkBundleInstalled(bundleSymbolicName, 1000, 1);
+        // if this succeeds, then there's no need to install again
+        if (installed) {
+            log.debug("Already installed: " + bundleSymbolicName);
             return true;
-        } catch(AssertionError e) {
-            log.debug("Not yet installed: "+bundleSymbolicName);
+        } else {
+            log.debug("Not yet installed: " + bundleSymbolicName);
             return false;
         }
-
     }
-    
-    /** Check if the installed version matches the one of the bundle (file) **/
-    public boolean isInstalledWithSameVersion(File bundleFile) throws Exception {
-        final String bundleSymbolicName = getBundleSymbolicName(bundleFile);
-        final String versionOnServer = webconsoleClient.getBundleVersion(bundleSymbolicName);
-        final String versionInBundle = getBundleVersion(bundleFile);
+
+    /**
+     * Check if the installed version matches the one of the bundle (file)
+     * @param bundleFile
+     * @return
+     * @throws Exception
+     */
+    public boolean isInstalledWithSameVersion(File bundleFile) throws ClientException, IOException {
+        final String bundleSymbolicName = OsgiConsoleClient.getBundleSymbolicName(bundleFile);
+        final String versionOnServer = osgiConsoleClient.getBundleVersion(bundleSymbolicName);
+        final String versionInBundle = OsgiConsoleClient.getBundleVersionFromFile(bundleFile);
         if (versionOnServer.equals(versionInBundle)) {
             return true;
         } else {
-            log.info("Bundle installed doesn't match: "+bundleSymbolicName+
-                    ", versionOnServer="+versionOnServer+", versionInBundle="+versionInBundle);
+            log.warn("Installed bundle doesn't match: {}, versionOnServer={}, versionInBundle={}",
+                    bundleSymbolicName, versionOnServer, versionInBundle);
             return false;
         }
     }
-    
-    /** Install a list of bundles supplied as Files */
-    public void installBundles(List<File> toInstall, boolean startBundles) throws Exception {
+
+    /**
+     * Install a list of bundles supplied as Files
+     * @param toInstall
+     * @param startBundles
+     * @throws Exception
+     */
+    public void installBundles(List<File> toInstall, boolean startBundles) throws ClientException, IOException, InterruptedException {
         for(File f : toInstall) {
-            final String bundleSymbolicName = getBundleSymbolicName(f);
+            final String bundleSymbolicName = OsgiConsoleClient.getBundleSymbolicName(f);
             if (isInstalled(f)) {
                 if (f.getName().contains("SNAPSHOT")) {
                     log.info("Reinstalling (due to SNAPSHOT version): {}", bundleSymbolicName);
-                    webconsoleClient.uninstallBundle(bundleSymbolicName, f);
+                    osgiConsoleClient.uninstallBundle(bundleSymbolicName);
                 } else if (!isInstalledWithSameVersion(f)) {
                     log.info("Reinstalling (due to version mismatch): {}", bundleSymbolicName);
-                    webconsoleClient.uninstallBundle(bundleSymbolicName, f);
+                    osgiConsoleClient.uninstallBundle(bundleSymbolicName);
                 } else {
                     log.info("Not reinstalling: {}", bundleSymbolicName);
                     continue;
                 }
             }
-            webconsoleClient.installBundle(f, startBundles);
+            osgiConsoleClient.installBundle(f, startBundles);
             log.info("Installed: {}", bundleSymbolicName);
         }
-        
+
         // ensure that bundles are re-wired esp. if an existing bundle was updated
-        webconsoleClient.refreshPackages();
+        osgiConsoleClient.refreshPackages();
 
         log.info("{} additional bundles installed", toInstall.size());
     }
-    
-    /** Uninstall a list of bundles supplied as Files */
-    public void uninstallBundles(List<File> toUninstall) throws Exception {
+
+    /**
+     * Uninstall a list of bundles supplied as Files
+     * @param toUninstall
+     * @throws ClientException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void uninstallBundles(List<File> toUninstall) throws ClientException, IOException, InterruptedException {
         for(File f : toUninstall) {
-            final String bundleSymbolicName = getBundleSymbolicName(f);
+            final String bundleSymbolicName = OsgiConsoleClient.getBundleSymbolicName(f);
             if (isInstalled(f)) {
                 log.info("Uninstalling bundle: {}", bundleSymbolicName);
-                webconsoleClient.uninstallBundle(bundleSymbolicName, f);
+                osgiConsoleClient.uninstallBundle(bundleSymbolicName);
             } else {
                 log.info("Could not uninstall: {} as it never was installed", bundleSymbolicName);
             }
         }
-        
+
         // ensure that bundles are re-wired esp. if an existing bundle was updated
-        webconsoleClient.refreshPackages();
+        osgiConsoleClient.refreshPackages();
 
         log.info("{} additional bundles uninstalled", toUninstall.size());
     }
-    
-    /** Wait for all bundles specified in symbolicNames list to be installed in the
-     *  remote web console.
+
+
+    /**
+     * Wait for all bundles specified in symbolicNames list to be installed in the OSGi web console.
+     * @param symbolicNames the list of names for the bundles
+     * @param timeoutSeconds how many seconds to wait
+     * @return
+     * @throws Exception
      */
-    public void waitForBundlesInstalled(List<String> symbolicNames, int timeoutSeconds) throws Exception {
-        log.info("Checking that bundles are installed (timeout {} seconds): {}", timeoutSeconds, symbolicNames);
-        for(String symbolicName : symbolicNames) {
-            webconsoleClient.checkBundleInstalled(symbolicName, timeoutSeconds);
+    public boolean waitForBundlesInstalled(List<String> symbolicNames, int timeoutSeconds) throws ClientException, InterruptedException {
+        log.info("Checking that the following bundles are installed (timeout {} seconds): {}", timeoutSeconds, symbolicNames);
+        for (String symbolicName : symbolicNames) {
+            boolean started = osgiConsoleClient.checkBundleInstalled(symbolicName, 500, 2 * timeoutSeconds);
+            if (!started) return false;
         }
+        return true;
     }
-    
-    public void startAllBundles(List<String> symbolicNames, int timeoutSeconds) throws Exception {
+
+    /**
+     * Start all the bundles in a {{List}}
+     * @param symbolicNames the list of bundles to start
+     * @param timeoutSeconds number of seconds until it times out
+     * @throws ClientException
+     * @throws InterruptedException
+     */
+    public void startAllBundles(final List<String> symbolicNames, int timeoutSeconds) throws ClientException, InterruptedException {
         log.info("Starting bundles (timeout {} seconds): {}", timeoutSeconds, symbolicNames);
-        
-        final long timeout = System.currentTimeMillis() + timeoutSeconds * 1000L;
-        final List<String> toStart = new LinkedList<String>();
-        while(System.currentTimeMillis() < timeout) {
-            toStart.clear();
-            for(String name : symbolicNames) {
-                final String state = webconsoleClient.getBundleState(name);
-                if(!state.equalsIgnoreCase(ACTIVE_STATE)) {
-                    toStart.add(name);
-                    break;
+        class StartAllBundlesPoller extends AbstractPoller {
+            private ClientException exception;
+            public StartAllBundlesPoller(List<String> symbolicNames, long waitInterval, long waitCount) {
+                super(waitInterval, waitCount);
+            }
+
+            @Override
+            public boolean call() {
+                for (String bundle : symbolicNames) {
+                    final String state;
+                    try {
+                        state = osgiConsoleClient.getBundleState(bundle);
+                        if (!state.equalsIgnoreCase(ACTIVE_STATE)) {
+                            osgiConsoleClient.startBundle(bundle);
+                        }
+                    } catch (ClientException e) {
+                        this.exception = e;
+                        return false;
+                    }
                 }
+                return true;
             }
-            
-            if(toStart.isEmpty()) {
-                log.info("Ok - all bundles are in the {} state", ACTIVE_STATE);
-                break;
+
+            @Override
+            public boolean condition() {
+                for (String bundle : symbolicNames) {
+                    final String state;
+                    try {
+                        state = osgiConsoleClient.getBundleState(bundle);
+                        if (!state.equalsIgnoreCase(ACTIVE_STATE)) {
+                            return false;
+                        }
+                    } catch (ClientException e) {
+                        this.exception = e;
+                        return false;
+                    }
+                }
+                return true;
             }
-            
-            for(String name : toStart) {
-                webconsoleClient.startBundle(name);
+
+            public ClientException getException() {
+                return exception;
             }
-            
-            Thread.sleep(500L);
         }
-        
-        if(!toStart.isEmpty()) {
-            throw new Exception("Some bundles did not start: " + toStart);
+        StartAllBundlesPoller poller = new StartAllBundlesPoller(symbolicNames, 1000, timeoutSeconds);
+        if (!poller.callUntilCondition()) {
+            throw new ClientException("Some bundles did not start or timed out", poller.getException());
         }
+
     }
-    
-    public String getBundleSymbolicName(File bundleFile) throws IOException {
-        String name = null;
-        final JarInputStream jis = new JarInputStream(new FileInputStream(bundleFile));
-        try {
-            final Manifest m = jis.getManifest();
-            if (m == null) {
-                throw new IOException("Manifest is null in " + bundleFile.getAbsolutePath());
-            }
-            name = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-        } finally {
-            jis.close();
-        }
-        return name;
-    }
-    
-    public String getBundleVersion(File bundleFile) throws IOException {
-        String version = null;
-        final JarInputStream jis = new JarInputStream(new FileInputStream(bundleFile));
-        try {
-            final Manifest m = jis.getManifest();
-            if(m == null) {
-                throw new IOException("Manifest is null in " + bundleFile.getAbsolutePath());
-            }
-            version = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-        } finally {
-            jis.close();
-        }
-        return version;
-    }
+
+
+
+
 }
