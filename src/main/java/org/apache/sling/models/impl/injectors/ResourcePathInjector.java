@@ -84,7 +84,6 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
 
         ResourceResolver resolver = getResourceResolver(adaptable);
         if (resolver == null) {
-            LOG.debug("Could not get resolver from adaptable {}", adaptable);
             return null;
         }
         List<Resource> resources = getResources(resolver, resourcePaths, name);

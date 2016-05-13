@@ -44,30 +44,12 @@ abstract class AbstractInjector {
         return resolver;
     }
 
-    /** 
-     * Retrieve the ValueMap from the given adaptable. This succeeds, if the adaptable is either
-     * <ul>
-     * <li>a {@link ValueMap},</li>
-     * <li>a {@link SlingHttpServletRequest}, in which case the returned {@link ValueMap} is the one derived from the request's resource or</li>
-     * <li>adaptable to a {@link ValueMap}.</li>
-     * </ul>
-     * Otherwise {@code null} is returned.
-     * @param adaptable
-     * @return a ValueMap or {@code null}.
-     */
     protected ValueMap getValueMap(Object adaptable) {
         if (adaptable instanceof ValueMap) {
             return (ValueMap) adaptable;
-        } else if (adaptable instanceof SlingHttpServletRequest) {
-            final Resource resource = ((SlingHttpServletRequest)adaptable).getResource();
-            // resource may be null for mocked adaptables, therefore do a check here
-            if (resource != null) {
-                return resource.adaptTo(ValueMap.class);
-            } else {
-                return null;
-            }
         } else if (adaptable instanceof Adaptable) {
-            return ((Adaptable) adaptable).adaptTo(ValueMap.class);
+            ValueMap map = ((Adaptable) adaptable).adaptTo(ValueMap.class);
+            return map;
         } else {
             return null;
         }
