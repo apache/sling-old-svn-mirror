@@ -47,8 +47,10 @@ import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.cache.ICacheManager;
 import org.thymeleaf.dialect.IDialect;
+import org.thymeleaf.linkbuilder.ILinkBuilder;
 import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.standard.StandardDialect;
+import org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 @Component(
@@ -87,6 +89,23 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         unbind = "removeDialect"
     )
     private List<IDialect> dialects;
+
+    @Reference(
+        cardinality = ReferenceCardinality.MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "addLinkBuilder",
+        unbind = "removeLinkBuilder"
+    )
+    private List<ILinkBuilder> linkBuilders;
+
+    @Reference(
+        cardinality = ReferenceCardinality.OPTIONAL,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        bind = "setDecoupledTemplateLogicResolver",
+        unbind = "unsetDecoupledTemplateLogicResolver"
+    )
+    private volatile IDecoupledTemplateLogicResolver decoupledTemplateLogicResolver;
 
     @Reference(
         cardinality = ReferenceCardinality.OPTIONAL,
@@ -160,6 +179,42 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     protected void removeDialect(final IDialect dialect) {
         synchronized (lock) {
             logger.debug("removing dialect '{}'", dialect.getName());
+            serviceTemplateEngine();
+        }
+    }
+
+    protected void addLinkBuilder(final ILinkBuilder linkBuilder) {
+        synchronized (lock) {
+            logger.debug("adding link builder '{}'", linkBuilder.getName());
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.addLinkBuilder(linkBuilder);
+            }
+        }
+    }
+
+    protected void removeLinkBuilder(final ILinkBuilder linkBuilder) {
+        synchronized (lock) {
+            logger.debug("removing link builder '{}'", linkBuilder.getName());
+            serviceTemplateEngine();
+        }
+    }
+
+    protected void setDecoupledTemplateLogicResolver(final IDecoupledTemplateLogicResolver decoupledTemplateLogicResolver) {
+        synchronized (lock) {
+            logger.debug("setting decoupled template logic resolver '{}'", decoupledTemplateLogicResolver.getClass().getName());
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.setDecoupledTemplateLogicResolver(decoupledTemplateLogicResolver);
+            }
+        }
+    }
+
+    protected void unsetDecoupledTemplateLogicResolver(final IDecoupledTemplateLogicResolver decoupledTemplateLogicResolver) {
+        synchronized (lock) {
+            logger.debug("unsetting decoupled template logic resolver '{}'", decoupledTemplateLogicResolver.getClass().getName());
             serviceTemplateEngine();
         }
     }
@@ -253,12 +308,19 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
             final Set<IMessageResolver> messageResolvers = new HashSet<>(this.messageResolvers);
             templateEngine.setMessageResolvers(messageResolvers);
         }
+        if (this.linkBuilders != null) {
+            final Set<ILinkBuilder> linkBuilders = new HashSet<>(this.linkBuilders);
+            templateEngine.setLinkBuilders(linkBuilders);
+        }
         if (this.dialects != null) {
             final Set<IDialect> dialects = new HashSet<>(this.dialects);
             templateEngine.setDialects(dialects);
         }
         final IDialect standardDialect = new StandardDialect();
         templateEngine.addDialect(standardDialect);
+        if (decoupledTemplateLogicResolver != null) {
+            templateEngine.setDecoupledTemplateLogicResolver(decoupledTemplateLogicResolver);
+        }
         templateEngine.setCacheManager(cacheManager);
         this.templateEngine = templateEngine;
     }
