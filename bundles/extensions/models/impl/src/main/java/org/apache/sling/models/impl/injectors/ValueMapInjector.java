@@ -169,12 +169,7 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
             if (StringUtils.isNotBlank(annotation.via())) {
                 return annotation.via();
             }
-            // automatically go via resource, if this is the httprequest
-            if (adaptable instanceof SlingHttpServletRequest) {
-                return "resource";
-            } else {
-                return null;
-            }
+            return null;
         }
         
         @Override
