@@ -32,7 +32,7 @@ import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 public class ResourcePathAllOptionalModel {
 
     @Inject
-    @Path("/some/path")
+    @Path("/some/invalidpath")
     @Optional
     private Resource fromPath;
 
@@ -42,11 +42,11 @@ public class ResourcePathAllOptionalModel {
     private Resource derefProperty;
     
     @Inject
-    @Path(paths={"/some/path", "/some/path2"})
+    @Path(paths={"/some/invalidpath", "/some/invalidpath2"})
     @Optional
     private Resource manyFromPathNonList;
 
-    @ResourcePath(path = "/some/path2", optional=true)
+    @ResourcePath(path = "/some/invalidpath2", optional=true)
     private Resource fromPath2;
 
     @ResourcePath(name = "anotherPropertyContainingAPath", optional=true)
