@@ -122,13 +122,16 @@ public class SlingModelsUseProvider implements UseProvider {
         try {
             // try to instantiate class via Sling Models (first via request, then via resource)
             if (modelFactory.canCreateFromAdaptable(request, cls)) {
+                LOGGER.debug("Trying to instantiate class {} as Sling Model from request.", cls);
                 return ProviderOutcome.notNullOrFailure(modelFactory.createModel(request, cls));
             }
             Resource resource = (Resource) globalBindings.get(SlingBindings.RESOURCE);
             if (resource == null) {
+                LOGGER.debug("Could not get resource from bindings.");
                 return ProviderOutcome.failure(new IllegalStateException("Could not get resource from bindings."));
             }
             if (modelFactory.canCreateFromAdaptable(resource, cls)) {
+                LOGGER.debug("Trying to instantiate class {} as Sling Model from request.", cls);
                 return ProviderOutcome.notNullOrFailure(modelFactory.createModel(resource, cls));
             }
             return ProviderOutcome.failure(
