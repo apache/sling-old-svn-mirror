@@ -18,7 +18,11 @@
 package org.apache.sling.testing.clients.osgi;
 
 import org.apache.http.Header;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.clients.ClientException;
 import org.apache.sling.testing.clients.SlingHttpResponse;
 import org.apache.sling.testing.clients.util.JsonUtils;
@@ -27,18 +31,27 @@ import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingClientConfig;
 import org.apache.sling.testing.clients.util.FormEntityBuilder;
 import org.apache.sling.testing.clients.util.HttpUtils;
+import org.apache.sling.testing.clients.util.poller.PathPoller;
 import org.codehaus.jackson.JsonNode;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import static org.apache.http.HttpStatus.SC_MOVED_TEMPORARILY;
 import static org.apache.http.HttpStatus.SC_OK;
 
 /**
  * A client that wraps the Felix OSGi Web Console REST API calls.
+ * @see <a href=http://felix.apache.org/documentation/subprojects/apache-felix-web-console/web-console-restful-api.html>
+ *     Web Console RESTful API</a>
  */
 public class OsgiConsoleClient extends SlingClient {
 
@@ -62,6 +75,12 @@ public class OsgiConsoleClient extends SlingClient {
      * The URL for components requests
      */
     private final String URL_COMPONENTS = CONSOLE_ROOT_URL + "/components";
+
+
+    public static final String JSON_KEY_ID = "id";
+    public static final String JSON_KEY_VERSION = "version";
+    public static final String JSON_KEY_DATA = "data";
+    public static final String JSON_KEY_STATE = "state";
 
     /**
      * Default constructor. Simply calls {@link SlingClient#SlingClient(URI, String, String)}
@@ -140,6 +159,10 @@ public class OsgiConsoleClient extends SlingClient {
         HttpUtils.verifyHttpStatus(resp, HttpUtils.getExpectedStatus(SC_OK, expectedStatus));
         return new ComponentInfo(JsonUtils.getJsonNodeFromString(resp.getContent()));
     }
+
+    //
+    // OSGi configurations
+    //
 
     /**
      * Returns a map of all properties set for the config referenced by the PID, where the map keys
@@ -276,16 +299,282 @@ public class OsgiConsoleClient extends SlingClient {
      *
      * @param pid pid
      * @param expectedStatus expected response status
+     * @return the sling response
      * @throws ClientException if the response status does not match any of the expectedStatus
      */
-    public void deleteConfiguration(String pid, int... expectedStatus) throws ClientException {
+    public SlingHttpResponse deleteConfiguration(String pid, int... expectedStatus) throws ClientException {
         FormEntityBuilder builder = FormEntityBuilder.create();
         builder.addParameter("apply", "1");
         builder.addParameter("delete", "1");
         // make the request
         SlingHttpResponse resp = this.doPost(URL_CONFIGURATION + "/" + pid, builder.build());
-        // check the returned status         
+        // check the returned status
         HttpUtils.verifyHttpStatus(resp, HttpUtils.getExpectedStatus(200, expectedStatus));
+        return resp;
+    }
+
+    //
+    // Bundles
+    //
+
+    /**
+     * Uninstall a bundle
+     * @param symbolicName
+     * @return the sling response
+     * @throws ClientException
+     */
+    public SlingHttpResponse uninstallBundle(String symbolicName) throws ClientException {
+        final long bundleId = getBundleId(symbolicName);
+        LOG.info("Uninstalling bundle {} with bundleId {}", symbolicName, bundleId);
+        FormEntityBuilder builder = FormEntityBuilder.create();
+        builder.addParameter("action", "uninstall");
+        return this.doPost(getBundlePath(symbolicName), builder.build(), 200);
+    }
+
+    /**
+     * Install a bundle using the Felix webconsole HTTP interface
+     * @param f the bundle file
+     * @param startBundle whether to start the bundle or not
+     * @return the sling response
+     * @throws ClientException
+     */
+    public SlingHttpResponse installBundle(File f, boolean startBundle) throws ClientException {
+        return installBundle(f, startBundle, 0);
+    }
+
+    /**
+     * Install a bundle using the Felix webconsole HTTP interface, with a specific start level
+     * @param f
+     * @param startBundle
+     * @param startLevel
+     * @return the sling response
+     * @throws ClientException
+     */
+    public SlingHttpResponse installBundle(File f, boolean startBundle, int startLevel) throws ClientException {
+        // Setup request for Felix Webconsole bundle install
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+                .addTextBody("action", "install")
+                .addBinaryBody("bundlefile", f);
+        if (startBundle) {
+            builder.addTextBody("bundlestart", "true");
+        }
+        if (startLevel > 0) {
+            builder.addTextBody("bundlestartlevel", String.valueOf(startLevel));
+            LOG.info("Installing bundle {} at start level {}", f.getName(), startLevel);
+        } else {
+            LOG.info("Installing bundle {} at default start level", f.getName());
+        }
+
+        return this.doPost(URL_BUNDLES, builder.build(), 302);
+
+    }
+
+    /**
+     * Install a bundle using the Felix webconsole HTTP interface and wait for it to be installed
+     * @param f the bundle file
+     * @param startBundle whether to start the bundle or not
+     * @param startLevel the start level of the bundle. negative values mean default start level
+     * @param waitTime how long to wait between retries of checking the bundle
+     * @param retries how many times to check for the bundle to be installed, until giving up
+     * @return true if the bundle was successfully installed, false otherwise
+     * @throws ClientException
+     */
+    public boolean installBundleWithRetry(File f, boolean startBundle, int startLevel, int waitTime, int retries)
+            throws ClientException, InterruptedException {
+        installBundle(f, startBundle, startLevel);
+        try {
+            return this.checkBundleInstalled(OsgiConsoleClient.getBundleSymbolicName(f), waitTime, retries);
+        } catch (IOException e) {
+            throw new ClientException("Cannot get bundle symbolic name", e);
+        }
+    }
+
+    /**
+     * Check that specified bundle is installed and retries every {{waitTime}} milliseconds, until the
+     * bundle is installed or the number of retries was reached
+     * @param symbolicName the name of the bundle
+     * @param waitTime How many milliseconds to wait between retries
+     * @param retries the number of retries
+     * @return true if the bundle was installed until the retries stop, false otherwise
+     * @throws InterruptedException
+     */
+    public boolean checkBundleInstalled(String symbolicName, int waitTime, int retries) throws InterruptedException {
+        final String path = getBundlePath(symbolicName, ".json");
+        return new PathPoller(this, path, waitTime, retries).callAndWait();
+    }
+
+    /**
+     * Get the id of the bundle
+     * @param symbolicName
+     * @return
+     * @throws Exception
+     */
+    public long getBundleId(String symbolicName) throws ClientException {
+        final JSONObject bundle = getBundleData(symbolicName);
+        try {
+            return bundle.getLong(JSON_KEY_ID);
+        } catch (JSONException e) {
+            throw new ClientException("Cannot get id from json", e);
+        }
+    }
+
+    /**
+     * Get the version of the bundle
+     * @param symbolicName
+     * @return
+     * @throws ClientException
+     */
+    public String getBundleVersion(String symbolicName) throws ClientException {
+        final JSONObject bundle = getBundleData(symbolicName);
+        try {
+            return bundle.getString(JSON_KEY_VERSION);
+        } catch (JSONException e) {
+            throw new ClientException("Cannot get version from json", e);
+        }
+    }
+
+    /**
+     * Get the state of the bundle
+     * @param symbolicName
+     * @return
+     * @throws Exception
+     */
+    public String getBundleState(String symbolicName) throws ClientException {
+        final JSONObject bundle = getBundleData(symbolicName);
+        try {
+            return bundle.getString(JSON_KEY_STATE);
+        } catch (JSONException e) {
+            throw new ClientException("Cannot get state from json", e);
+        }
+    }
+
+    /**
+     * Starts a bundle
+     * @param symbolicName the name of the bundle
+     * @throws ClientException
+     */
+    public void startBundle(String symbolicName) throws ClientException {
+        // To start the bundle we POST action=start to its URL
+        final String path = getBundlePath(symbolicName);
+        LOG.info("Starting bundle {} via {}", symbolicName, path);
+        this.doPost(path, FormEntityBuilder.create().addParameter("action", "start").build(), SC_OK);
+    }
+
+    /**
+     * Starts a bundle and waits for it to be started
+     * @param symbolicName the name of the bundle
+     * @param waitTime How many milliseconds to wait between retries
+     * @param retries the number of retries
+     * @throws ClientException, InterruptedException
+     */
+    public void startBundlewithWait(String symbolicName, int waitTime, int retries)
+            throws ClientException, InterruptedException {
+        // start a bundle
+        startBundle(symbolicName);
+        // wait for it to be in the started state
+        checkBundleInstalled(symbolicName, waitTime, retries);
+    }
+
+    /**
+     * Calls PackageAdmin.refreshPackages to force re-wiring of all the bundles.
+     * @throws ClientException
+     */
+    public void refreshPackages() throws ClientException {
+        LOG.info("Refreshing packages.");
+        FormEntityBuilder builder = FormEntityBuilder.create();
+        builder.addParameter("action", "refreshPackages");
+        this.doPost(URL_BUNDLES, builder.build(), 200);
+    }
+
+
+    //
+    // private methods
+    //
+
+    private String getBundlePath(String symbolicName, String extension) {
+        return getBundlePath(symbolicName) + extension;
+    }
+
+    private String getBundlePath(String symbolicName) {
+        return URL_BUNDLES + "/" + symbolicName;
+    }
+
+    private JSONObject getBundleData(String symbolicName) throws ClientException {
+        // This returns a data structure like
+        // {"status":"Bundle information: 173 bundles in total - all 173 bundles active.","s":[173,171,2,0,0],"data":
+        //  [
+        //      {"id":0,"name":"System Bundle","fragment":false,"stateRaw":32,"state":"Active","version":"3.0.7","symbolicName":"org.apache.felix.framework","category":""},
+        //  ]}
+        final String path = getBundlePath(symbolicName, ".json");
+        final String content = this.doGet(path, SC_OK).getContent();
+
+        try {
+            final JSONObject root = new JSONObject(content);
+
+            if (!root.has(JSON_KEY_DATA)) {
+                throw new ClientException(path + " does not provide '" + JSON_KEY_DATA + "' element, JSON content=" + content);
+            }
+
+            final JSONArray data = root.getJSONArray(JSON_KEY_DATA);
+            if (data.length() < 1) {
+                throw new ClientException(path + "." + JSON_KEY_DATA + " is empty, JSON content=" + content);
+            }
+
+            final JSONObject bundle = data.getJSONObject(0);
+            if (!bundle.has(JSON_KEY_STATE)) {
+                throw new ClientException(path + ".data[0].state missing, JSON content=" + content);
+            }
+
+            return bundle;
+        } catch (JSONException e) {
+            throw new ClientException("Cannot get json", e);
+        }
+    }
+
+    //
+    // static methods
+    //
+
+    /**
+     * Get the symbolic name from a bundle file
+     * @param bundleFile
+     * @return
+     * @throws IOException
+     */
+    public static String getBundleSymbolicName(File bundleFile) throws IOException {
+        String name = null;
+        final JarInputStream jis = new JarInputStream(new FileInputStream(bundleFile));
+        try {
+            final Manifest m = jis.getManifest();
+            if (m == null) {
+                throw new IOException("Manifest is null in " + bundleFile.getAbsolutePath());
+            }
+            name = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+        } finally {
+            jis.close();
+        }
+        return name;
+    }
+
+    /**
+     * Get the version form a bundle file
+     * @param bundleFile
+     * @return
+     * @throws IOException
+     */
+    public static String getBundleVersionFromFile(File bundleFile) throws IOException {
+        String version = null;
+        final JarInputStream jis = new JarInputStream(new FileInputStream(bundleFile));
+        try {
+            final Manifest m = jis.getManifest();
+            if(m == null) {
+                throw new IOException("Manifest is null in " + bundleFile.getAbsolutePath());
+            }
+            version = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+        } finally {
+            jis.close();
+        }
+        return version;
     }
 
 
