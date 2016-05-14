@@ -47,9 +47,11 @@ public class CompositeValidationResult implements ValidationResult {
         results.add(new DefaultValidationResult(location, severity, message, messageArguments));
     }
 
+    /**
+     * @return false if at least one {@link ValidationResult} is not valid, true otherwise
+     */
     @Override
     public boolean isValid() {
-        // this is only valid if all aggregated results are valid
         for (ValidationResult result : results) {
             if (!result.isValid()) {
                 return false;
