@@ -6,7 +6,7 @@ scripting engine for [_Thymeleaf_](http://www.thymeleaf.org) templates
 Features
 --------
 
-* Supporting all of Thymeleaf's extension points: _TemplateResolver_﻿s, _MessageResolver_﻿s, _Dialect_﻿s, _LinkBuilder_﻿s, _DecoupledTemplateLogicResolver_ and _CacheManager_﻿
+* Supporting all of Thymeleaf's extension points: _TemplateResolver_﻿s, _MessageResolver_﻿s, _Dialect_﻿s, _LinkBuilder_﻿s, _DecoupledTemplateLogicResolver_, _CacheManager_﻿ and _EngineContextFactory_
 * `NonCachingTemplateResolver` customizable through `TemplateModeProvider`﻿
 * `MessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n` customizable through optional `AbsentMessageRepresentationProvider`﻿
 * `PatternSpecTemplateModeProvider` supporting `PatternSpec` configurations for all template modes (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS` and `RAW`)
