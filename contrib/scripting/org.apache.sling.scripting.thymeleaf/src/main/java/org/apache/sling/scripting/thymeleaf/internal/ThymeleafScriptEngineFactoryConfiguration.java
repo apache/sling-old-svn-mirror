@@ -57,4 +57,40 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
         "thymeleaf"
     };
 
+    @AttributeDefinition(
+        name = "use standard message resolver",
+        description = "" // TODO
+    )
+    boolean useStandardMessageResolver() default true;
+
+    @AttributeDefinition(
+        name = "use standard link builder",
+        description = "" // TODO
+    )
+    boolean useStandardLinkBuilder() default true;
+
+    @AttributeDefinition(
+        name = "use standard dialect",
+        description = "" // TODO
+    )
+    boolean useStandardDialect() default true;
+
+    @AttributeDefinition(
+        name = "use standard decoupled template logic resolver",
+        description = "" // TODO
+    )
+    boolean useStandardDecoupledTemplateLogicResolver() default true;
+
+    @AttributeDefinition(
+        name = "use standard cache manager",
+        description = "" // TODO
+    )
+    boolean useStandardCacheManager() default true;
+
+    @AttributeDefinition(
+        name = "use standard engine context factory",
+        description = "" // TODO
+    )
+    boolean useStandardEngineContextFactory() default true;
+
 }

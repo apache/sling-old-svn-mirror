@@ -46,9 +46,12 @@ import org.slf4j.LoggerFactory;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.cache.ICacheManager;
+import org.thymeleaf.context.IEngineContextFactory;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.linkbuilder.ILinkBuilder;
+import org.thymeleaf.linkbuilder.StandardLinkBuilder;
 import org.thymeleaf.messageresolver.IMessageResolver;
+import org.thymeleaf.messageresolver.StandardMessageResolver;
 import org.thymeleaf.standard.StandardDialect;
 import org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
@@ -115,6 +118,17 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         unbind = "unsetCacheManager"
     )
     private volatile ICacheManager cacheManager;
+
+    @Reference(
+        cardinality = ReferenceCardinality.OPTIONAL,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        bind = "setEngineContextFactory",
+        unbind = "unsetEngineContextFactory"
+    )
+    private volatile IEngineContextFactory engineContextFactory;
+
+    private ThymeleafScriptEngineFactoryConfiguration configuration;
 
     private BundleContext bundleContext;
 
@@ -237,9 +251,28 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         }
     }
 
+    protected void setEngineContextFactory(final IEngineContextFactory engineContextFactory) {
+        synchronized (lock) {
+            logger.debug("setting engine context factory '{}'", engineContextFactory.getClass().getName());
+            if (templateEngine == null || templateEngine.isInitialized()) {
+                serviceTemplateEngine();
+            } else {
+                templateEngine.setEngineContextFactory(engineContextFactory);
+            }
+        }
+    }
+
+    protected void unsetEngineContextFactory(final IEngineContextFactory engineContextFactory) {
+        synchronized (lock) {
+            logger.debug("unsetting engine context factory '{}'", engineContextFactory.getClass().getName());
+            serviceTemplateEngine();
+        }
+    }
+
     @Activate
     private void activate(final ThymeleafScriptEngineFactoryConfiguration configuration, final BundleContext bundleContext) {
         logger.debug("activate");
+        this.configuration = configuration;
         this.bundleContext = bundleContext;
         configure(configuration);
         setupTemplateEngine();
@@ -249,6 +282,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     @Modified
     private void modified(final ThymeleafScriptEngineFactoryConfiguration configuration) {
         logger.debug("modified");
+        this.configuration = configuration;
         configure(configuration);
     }
 
@@ -300,28 +334,51 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         templateEngine = null;
         // setup template engine
         final TemplateEngine templateEngine = new TemplateEngine();
+        // Template Resolvers
         if (this.templateResolvers != null) {
             final Set<ITemplateResolver> templateResolvers = new HashSet<>(this.templateResolvers);
             templateEngine.setTemplateResolvers(templateResolvers);
         }
+        // Message Resolvers
         if (this.messageResolvers != null) {
             final Set<IMessageResolver> messageResolvers = new HashSet<>(this.messageResolvers);
             templateEngine.setMessageResolvers(messageResolvers);
         }
+        if (configuration.useStandardMessageResolver()) {
+            final IMessageResolver standardMessageResolver = new StandardMessageResolver();
+            templateEngine.addMessageResolver(standardMessageResolver);
+        }
+        // Link Builders
         if (this.linkBuilders != null) {
             final Set<ILinkBuilder> linkBuilders = new HashSet<>(this.linkBuilders);
             templateEngine.setLinkBuilders(linkBuilders);
         }
+        if (configuration.useStandardLinkBuilder()) {
+            final ILinkBuilder standardLinkBuilder = new StandardLinkBuilder();
+            templateEngine.addLinkBuilder(standardLinkBuilder);
+        }
+        // Dialects
         if (this.dialects != null) {
             final Set<IDialect> dialects = new HashSet<>(this.dialects);
             templateEngine.setDialects(dialects);
         }
-        final IDialect standardDialect = new StandardDialect();
-        templateEngine.addDialect(standardDialect);
-        if (decoupledTemplateLogicResolver != null) {
+        if (configuration.useStandardDialect()) {
+            final IDialect standardDialect = new StandardDialect();
+            templateEngine.addDialect(standardDialect);
+        }
+        // Decoupled Template Logic Resolver
+        if (!configuration.useStandardDecoupledTemplateLogicResolver()) {
             templateEngine.setDecoupledTemplateLogicResolver(decoupledTemplateLogicResolver);
         }
-        templateEngine.setCacheManager(cacheManager);
+        // Cache Manager
+        if (!configuration.useStandardCacheManager()) {
+            templateEngine.setCacheManager(cacheManager);
+        }
+        // Engine Context Factory
+        if (!configuration.useStandardEngineContextFactory()) {
+            templateEngine.setEngineContextFactory(engineContextFactory);
+        }
+        //
         this.templateEngine = templateEngine;
     }
 
