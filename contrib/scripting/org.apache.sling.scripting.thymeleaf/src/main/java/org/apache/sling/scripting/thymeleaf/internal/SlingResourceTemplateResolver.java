@@ -47,14 +47,14 @@ import org.thymeleaf.templateresource.ITemplateResource;
 @Component(
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=Non-caching template resolver for Sling Scripting Thymeleaf",
+        Constants.SERVICE_DESCRIPTION + "=Sling resource template resolver for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )
 @Designate(
-    ocd = NonCachingTemplateResolverConfiguration.class
+    ocd = SlingResourceTemplateResolverConfiguration.class
 )
-public class NonCachingTemplateResolver implements ITemplateResolver {
+public class SlingResourceTemplateResolver implements ITemplateResolver {
 
     @Reference(
         cardinality = ReferenceCardinality.OPTIONAL,
@@ -67,9 +67,9 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
 
     private Integer order;
 
-    private final Logger logger = LoggerFactory.getLogger(NonCachingTemplateResolver.class);
+    private final Logger logger = LoggerFactory.getLogger(SlingResourceTemplateResolver.class);
 
-    public NonCachingTemplateResolver() {
+    public SlingResourceTemplateResolver() {
     }
 
     public void setTemplateModeProvider(final TemplateModeProvider templateModeProvider) {
@@ -81,13 +81,13 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     }
 
     @Activate
-    private void activate(final NonCachingTemplateResolverConfiguration configuration) {
+    private void activate(final SlingResourceTemplateResolverConfiguration configuration) {
         logger.debug("activate");
         configure(configuration);
     }
 
     @Modified
-    private void modified(final NonCachingTemplateResolverConfiguration configuration) {
+    private void modified(final SlingResourceTemplateResolverConfiguration configuration) {
         logger.debug("modified");
         configure(configuration);
     }
@@ -97,7 +97,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
         logger.debug("deactivate");
     }
 
-    private void configure(final NonCachingTemplateResolverConfiguration configuration) {
+    private void configure(final SlingResourceTemplateResolverConfiguration configuration) {
         order = configuration.order();
     }
 
