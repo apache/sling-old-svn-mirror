@@ -46,8 +46,6 @@ import org.thymeleaf.templatemode.TemplateMode;
 
 public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProcessor {
 
-    private final String dialectPrefix; // TODO remove (use dialectPrefix from extended AbstractElementTagProcessor)
-
     public static final int ATTRIBUTE_PRECEDENCE = 100;
 
     public static final String ATTRIBUTE_NAME = "include";
@@ -66,7 +64,6 @@ public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProce
 
     public SlingIncludeAttributeTagProcessor(final String dialectPrefix) {
         super(TemplateMode.HTML, dialectPrefix, null, true, ATTRIBUTE_NAME, true, ATTRIBUTE_PRECEDENCE, true);
-        this.dialectPrefix = dialectPrefix;
     }
 
     @Override
@@ -105,13 +102,13 @@ public class SlingIncludeAttributeTagProcessor extends AbstractAttributeTagProce
     }
 
     protected Object parseAttribute(final IStandardExpressionParser expressionParser, final ITemplateContext templateContext, final IProcessableElementTag processableElementTag, final IElementTagStructureHandler elementTagStructureHandler, final String name) {
-        final String value = processableElementTag.getAttributeValue(dialectPrefix, name);
+        final String value = processableElementTag.getAttributeValue(getDialectPrefix(), name);
         Object result = null;
         if (value != null) {
             final IStandardExpression expression = expressionParser.parseExpression(templateContext, value);
             result = expression.execute(templateContext);
         }
-        elementTagStructureHandler.removeAttribute(dialectPrefix, name);
+        elementTagStructureHandler.removeAttribute(getDialectPrefix(), name);
         return result;
     }
 
