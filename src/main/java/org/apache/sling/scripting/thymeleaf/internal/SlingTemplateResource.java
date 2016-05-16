@@ -23,8 +23,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.path.PathBuilder;
 import org.thymeleaf.templateresource.ITemplateResource;
 
 public class SlingTemplateResource implements ITemplateResource {
@@ -44,7 +47,7 @@ public class SlingTemplateResource implements ITemplateResource {
 
     @Override
     public String getBaseName() {
-        return resource.getName();
+        return FilenameUtils.getBaseName(resource.getName());
     }
 
     @Override
@@ -63,7 +66,12 @@ public class SlingTemplateResource implements ITemplateResource {
 
     @Override
     public ITemplateResource relative(final String relativeLocation) {
-        throw new UnsupportedOperationException("not yet implemented"); // TODO
+        final PathBuilder pathBuilder = new PathBuilder(resource.getPath());
+        final String path = pathBuilder.append("..").append(relativeLocation).toString();
+        final ResourceResolver resourceResolver = resource.getResourceResolver();
+        final Resource relative = resourceResolver.getResource(path);
+        // final Resource relative = resource.getParent().getChild(relativeLocation);
+        return new SlingTemplateResource(relative);
     }
 
 }
