@@ -57,7 +57,7 @@ import org.thymeleaf.templateresource.ITemplateResource;
 public class SlingResourceTemplateResolver implements ITemplateResolver {
 
     @Reference(
-        cardinality = ReferenceCardinality.OPTIONAL,
+        cardinality = ReferenceCardinality.MANDATORY,
         policy = ReferencePolicy.DYNAMIC,
         policyOption = ReferencePolicyOption.GREEDY,
         bind = "setTemplateModeProvider",
