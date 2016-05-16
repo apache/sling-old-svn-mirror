@@ -23,8 +23,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.thymeleaf.templateresource.ITemplateResource;
 
 public class SlingTemplateResource implements ITemplateResource {
@@ -49,7 +49,7 @@ public class SlingTemplateResource implements ITemplateResource {
 
     @Override
     public boolean exists() {
-        return !(resource instanceof NonExistingResource);
+        return !(ResourceUtil.isNonExistingResource(resource));
     }
 
     @Override
