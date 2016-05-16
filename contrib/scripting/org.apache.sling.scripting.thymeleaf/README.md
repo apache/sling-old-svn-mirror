@@ -24,6 +24,8 @@ There is a feature for [Karaf](https://github.com/apache/sling/tree/trunk/contri
 
     karaf@root()> feature:install sling-scripting-thymeleaf
 
+**Note:** Sling Scripting Thymeleaf requires an implementation of OSGi Declarative Services 1.3 (e.g. [Apache Felix Service Component Runtime](http://felix.apache.org/documentation/subprojects/apache-felix-service-component-runtime.html) 2.0.0 or greater)
+
 relevant Thymeleaf issues
 -------------------------
 
