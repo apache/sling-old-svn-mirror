@@ -53,7 +53,7 @@ import org.thymeleaf.messageresolver.IMessageResolver;
 public class ResourceBundleMessageResolver implements IMessageResolver {
 
     @Reference(
-        cardinality = ReferenceCardinality.OPTIONAL,
+        cardinality = ReferenceCardinality.MANDATORY,
         policy = ReferencePolicy.DYNAMIC,
         policyOption = ReferencePolicyOption.GREEDY,
         bind = "setResourceBundleProvider",
