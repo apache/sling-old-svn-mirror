@@ -33,4 +33,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     )
     int order() default 0;
 
+    @AttributeDefinition(
+        name = "use decoupled logic",
+        description = "" // TODO
+    )
+    boolean useDecoupledLogic() default true;
+
 }
