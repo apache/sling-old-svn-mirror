@@ -18,7 +18,7 @@
 package org.apache.sling.repoinit.parser.operations;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 
 public class CreatePath extends Operation {
@@ -62,7 +62,7 @@ public class CreatePath extends Operation {
         }
     }
     
-    public Iterator<PathSegmentDefinition> getDefinitions() {
-        return pathDef.iterator();
+    public List<PathSegmentDefinition> getDefinitions() {
+        return Collections.unmodifiableList(pathDef);
     }
 }
