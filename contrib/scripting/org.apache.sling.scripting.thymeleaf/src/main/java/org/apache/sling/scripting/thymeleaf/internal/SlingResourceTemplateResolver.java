@@ -37,6 +37,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.IEngineConfiguration;
+import org.thymeleaf.cache.ICacheEntryValidity;
 import org.thymeleaf.cache.NonCacheableCacheEntryValidity;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -65,7 +66,7 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
     )
     private volatile TemplateModeProvider templateModeProvider;
 
-    private Integer order;
+    private SlingResourceTemplateResolverConfiguration configuration;
 
     private final Logger logger = LoggerFactory.getLogger(SlingResourceTemplateResolver.class);
 
@@ -83,22 +84,18 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
     @Activate
     private void activate(final SlingResourceTemplateResolverConfiguration configuration) {
         logger.debug("activate");
-        configure(configuration);
+        this.configuration = configuration;
     }
 
     @Modified
     private void modified(final SlingResourceTemplateResolverConfiguration configuration) {
         logger.debug("modified");
-        configure(configuration);
+        this.configuration = configuration;
     }
 
     @Deactivate
     private void deactivate() {
         logger.debug("deactivate");
-    }
-
-    private void configure(final SlingResourceTemplateResolverConfiguration configuration) {
-        order = configuration.order();
     }
 
     @Override
@@ -108,7 +105,7 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
 
     @Override
     public Integer getOrder() {
-        return order;
+        return configuration.order();
     }
 
     @Override
@@ -117,9 +114,12 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
         final ResourceResolver resourceResolver = (ResourceResolver) context.getVariable(SlingBindings.RESOLVER);
         final Resource resource = resourceResolver.getResource(template);
         final ITemplateResource templateResource = new SlingTemplateResource(resource);
+        final boolean templateResourceExistenceVerified = false;
         final TemplateMode templateMode = templateModeProvider.provideTemplateMode(resource);
         logger.debug("using template mode {} for template '{}'", templateMode, template);
-        return new TemplateResolution(templateResource, templateMode, NonCacheableCacheEntryValidity.INSTANCE);
+        final boolean useDecoupledLogic = configuration.useDecoupledLogic();
+        final ICacheEntryValidity validity = NonCacheableCacheEntryValidity.INSTANCE;
+        return new TemplateResolution(templateResource, templateResourceExistenceVerified, templateMode, useDecoupledLogic, validity);
     }
 
 }
