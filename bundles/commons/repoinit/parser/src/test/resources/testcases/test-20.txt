@@ -1,0 +1,6 @@
+# Various create path tests
+# TODO should use "create path" instead of "create_path"
+create_path (sling:Folder) /var/discovery(nt:unstructured)/somefolder
+create_path /one/two/three
+create_path /three/four(nt:folk)/five(nt:jazz)/six
+create_path (nt:x) /seven/eight/nine

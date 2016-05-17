@@ -27,6 +27,7 @@ import javax.jcr.Session;
 import org.apache.sling.repoinit.jcr.impl.AclUtil;
 import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.operations.AclLine;
+import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
@@ -112,5 +113,10 @@ public class JcrRepoInitOpVisitor implements OperationVisitor {
             final boolean isAllow = line.getAction().equals(AclLine.Action.ALLOW);
             setAcl(line, session, require(line, PROP_PRINCIPALS), paths, require(line, PROP_PRIVILEGES), isAllow); 
         }
+    }
+
+    @Override
+    public void visitCreatePath(CreatePath cp) {
+        throw new UnsupportedOperationException("visitCreatePath is not implemented yet");
     }
 }

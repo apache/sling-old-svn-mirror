@@ -9,6 +9,8 @@ SetAclPaths on /libs /apps
 CreateServiceUser bob_the_service
 SetAclPaths on /tmp 
   AclLine ALLOW {principals=[bob_the_service], privileges=[some:otherPrivilege]}
+CreatePath [content, example.com(sling:Folder)]
+CreatePath [var(nt:unstructured)]
 SetAclPrincipals for alice bob fred 
   AclLine REMOVE_ALL {paths=[/]}
   AclLine ALLOW {paths=[/content, /var], privileges=[jcr:read]}

@@ -17,6 +17,9 @@ set ACL on /tmp
 allow some:otherPrivilege for bob_the_service
 end
 
+create_path /content/example.com(sling:Folder)
+create_path (nt:unstructured) /var
+
 set ACL for alice, bob,fred
     remove * on /
     allow jcr:read on /content,/var

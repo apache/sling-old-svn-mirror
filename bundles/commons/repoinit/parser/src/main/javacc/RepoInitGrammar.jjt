@@ -5,8 +5,9 @@
  
 options
 {
-    LOOKAHEAD=3;
     STATIC=false;
+    LOOKAHEAD=3;
+    //FORCE_LA_CHECK=true;
 }
 
 PARSER_BEGIN(RepoInitParserImpl)
@@ -63,6 +64,9 @@ TOKEN:
 |   < END: "end" >
 |   < USER: "user" >
 |   < NODETYPES: "nodetypes" >
+|   < CREATE_PATH: "create_path" >
+|   < LPAREN: "(" >
+|   < RPAREN: ")" >
 |   < PRINCIPAL: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
 |   < COMMA: "," >
 |   < STAR: "*" >
@@ -79,7 +83,8 @@ List<Operation> parse() :
     ( 
         serviceUserStatement(result) 
         | setAclPaths(result) 
-        | setAclPrincipals(result) 
+        | setAclPrincipals(result)
+        | createPathStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -141,13 +146,38 @@ List<String> namespacedItemsList() :
 List<String> pathsList() :
 {
     Token t = null;
-    List<String> paths = new ArrayList<String>(); 
-    
+    List<String> paths = new ArrayList<String>();
 }
 {
     t = <PATH> { paths.add(t.image); } 
     ( <COMMA> t = <PATH> { paths.add(t.image); } )* 
     { return paths; }
+}
+
+void createPathStatement(List<Operation> result) :
+{
+    CreatePath cp = null;
+    String defaultPrimaryType = null;
+    Token t1 = null;
+    Token t2 = null;
+}
+{
+    <CREATE_PATH> 
+    ( <LPAREN> t1 = <NAMESPACED_ITEM> <RPAREN> { defaultPrimaryType = t1.image; } ) ?
+    
+    ( t1 = <PATH> ( <LPAREN> t2 = <NAMESPACED_ITEM> <RPAREN> ) ?
+        {
+            if(cp == null) {
+                cp = new CreatePath(defaultPrimaryType);
+            } 
+            cp.addSegment(t1.image, t2 == null ? null : t2.image); 
+            t2 = null; 
+        }
+    ) +
+    
+    (<EOL> | <EOF>)
+    
+    { if(cp != null) result.add(cp); }
 }
 
 void setAclPaths(List<Operation> result) :

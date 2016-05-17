@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 
 import org.apache.sling.repoinit.parser.operations.AclLine;
+import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
@@ -72,6 +73,11 @@ class OperationToStringVisitor implements OperationVisitor {
         dumpAclLines(s.getLines());
     }
     
+    @Override
+    public void visitCreatePath(CreatePath cp) {
+        out.println(cp.toString());
+    }
+
     private void dumpAclLines(Collection<AclLine> c) {
         for(AclLine line : c) {
             out.print("  ");
