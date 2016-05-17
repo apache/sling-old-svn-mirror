@@ -138,11 +138,17 @@ class TeleporterHttpClient {
         c.setDoOutput(true);
         c.setDoInput(true);
         c.setInstanceFollowRedirects(false);
+        boolean gotStatus = false;
+        int result = 0;
         try {
-            return c.getResponseCode();
+            result = c.getResponseCode();
+            gotStatus = true;
         } finally {
-            cleanup(c);
+            // If we didn't get a status, do not attempt
+            // to get input streams as this would retry connecting
+            cleanup(c, gotStatus);
         }
+        return result;
     }
 
     void runTests(String testSelectionPath, int testReadyTimeoutSeconds) throws MalformedURLException, IOException, MultipleFailureException {
@@ -202,13 +208,19 @@ class TeleporterHttpClient {
     }
     
     private void cleanup(HttpURLConnection c) {
-        try {
-            consumeAndClose(c.getInputStream());
-        } catch(IOException ignored) {
-        }
-        try {
-            consumeAndClose(c.getErrorStream());
-        } catch(IOException ignored) {
+        cleanup(c, true);
+    }
+    
+    private void cleanup(HttpURLConnection c, boolean includeInputStreams) {
+        if(includeInputStreams) {
+            try {
+                consumeAndClose(c.getInputStream());
+            } catch(IOException ignored) {
+            }
+            try {
+                consumeAndClose(c.getErrorStream());
+            } catch(IOException ignored) {
+            }
         }
         c.disconnect();
     }
