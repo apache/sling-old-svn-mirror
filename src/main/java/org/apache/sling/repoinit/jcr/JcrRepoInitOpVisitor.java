@@ -22,6 +22,7 @@ import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRIVILEGE
 
 import java.util.List;
 
+import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.repoinit.jcr.impl.AclUtil;
@@ -31,6 +32,7 @@ import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.parser.operations.PathSegmentDefinition;
 import org.apache.sling.repoinit.parser.operations.SetAclPaths;
 import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 import org.slf4j.Logger;
@@ -117,6 +119,25 @@ public class JcrRepoInitOpVisitor implements OperationVisitor {
 
     @Override
     public void visitCreatePath(CreatePath cp) {
-        throw new UnsupportedOperationException("visitCreatePath is not implemented yet");
+        String parentPath = "";
+            for(PathSegmentDefinition psd : cp.getDefinitions()) {
+                final String fullPath = parentPath + "/" + psd.getSegment();
+                try {
+                    if(session.itemExists(fullPath)) {
+                        // TODO warn if primary type is not correct 
+                    } else {
+                        final Node n = parentPath.equals("") ? session.getRootNode() : session.getNode(parentPath);
+                        n.addNode(psd.getSegment(), psd.getPrimaryType());
+                    }
+                } catch(Exception e) {
+                    throw new RuntimeException("CreatePath execution failed at " + psd + ": " + e, e);
+                }
+                parentPath += "/" + psd.getSegment();
+            }
+        try {
+            session.save();
+        } catch(Exception e) {
+            throw new RuntimeException("Session.save failed: "+ e, e);
+        }
     }
 }

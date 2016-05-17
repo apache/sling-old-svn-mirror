@@ -18,12 +18,14 @@ package org.apache.sling.repoinit.jcr;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.UUID;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -40,6 +42,7 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 /** Test utilities */
 class TestUtil {
     
+    public static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
     final Session adminSession;
     final String id;
     final String username;
@@ -67,6 +70,26 @@ class TestUtil {
             assertNotNull(info + ", expecting Principal to exist:" + id, a);
             final User u = (User)a;
             assertNotNull(info + ", expecting Principal to be a System user:" + id, u.isSystemUser());
+        }
+    }
+    
+    void assertNodeExists(String path) throws RepositoryException {
+        assertNodeExists(path, null);
+    }
+    
+    void assertNodeExists(String path, String primaryType) throws RepositoryException {
+        if(!adminSession.nodeExists(path)) {
+            fail("Node does not exist:" + path);
+        }
+        if(primaryType != null) {
+            final Node n = adminSession.getNode(path);
+            if(!n.hasProperty(JCR_PRIMARY_TYPE)) {
+                fail("No " + JCR_PRIMARY_TYPE + " property at " + path);
+            }
+            final String actual = n.getProperty(JCR_PRIMARY_TYPE).getString();
+            if(!primaryType.equals(actual)) {
+                fail("Primary type mismatch for " + path + ", expected " + primaryType + " but got " + actual);
+            }
         }
     }
     

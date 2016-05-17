@@ -132,5 +132,11 @@
       <version>1.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.testing</artifactId>
+      <version>2.0.18</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
