@@ -17,10 +17,32 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
-    void visitCreatePath(CreatePath cp);
+/** Defines a segment of a path to be created, 
+ *  with its name and an optional primary type
+ */
+public class PathSegmentDefinition {
+    private final String segment;
+    private final String primaryType;
+    
+    public PathSegmentDefinition(String segment, String primaryType) {
+        this.segment = segment;
+        this.primaryType = primaryType;
+    }
+
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(segment);
+        if(primaryType != null) {
+            sb.append("(").append(primaryType).append(")");
+        }
+        return sb.toString();
+    }
+    
+    public String getSegment() {
+        return segment;
+    }
+
+    public String getPrimaryType() {
+        return primaryType;
+    }
 }
