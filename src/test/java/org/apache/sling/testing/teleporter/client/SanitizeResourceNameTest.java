@@ -43,7 +43,7 @@ public class SanitizeResourceNameTest {
     private final String expected;
     
     public SanitizeResourceNameTest(String basePath, String path, String expected) {
-        this.basePath = File.separator + basePath;
+        this.basePath = new File(File.separator + basePath).getAbsolutePath();
         this.path = path;
         this.expected = expected;
     }
