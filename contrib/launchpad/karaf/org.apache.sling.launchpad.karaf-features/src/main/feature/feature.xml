@@ -181,7 +181,7 @@
   </feature>
   <feature name="sling-extension-models" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.models.api/1.2.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.models.impl/1.2.8</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
