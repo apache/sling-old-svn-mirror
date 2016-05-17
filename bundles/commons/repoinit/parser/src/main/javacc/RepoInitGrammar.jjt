@@ -61,17 +61,17 @@ TOKEN:
 |   < CREATE: "create" >
 |   < DELETE: "delete" >
 |   < SERVICE: "service" >
+|   < PATH: "path" >
 |   < END: "end" >
 |   < USER: "user" >
 |   < NODETYPES: "nodetypes" >
-|   < CREATE_PATH: "create_path" >
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
 |   < PRINCIPAL: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
 |   < COMMA: "," >
 |   < STAR: "*" >
 |   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
-|   < PATH: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
+|   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
 |   < EOL: "\n" >
 }
 
@@ -149,8 +149,8 @@ List<String> pathsList() :
     List<String> paths = new ArrayList<String>();
 }
 {
-    t = <PATH> { paths.add(t.image); } 
-    ( <COMMA> t = <PATH> { paths.add(t.image); } )* 
+    t = <PATH_STRING> { paths.add(t.image); } 
+    ( <COMMA> t = <PATH_STRING> { paths.add(t.image); } )* 
     { return paths; }
 }
 
@@ -162,10 +162,10 @@ void createPathStatement(List<Operation> result) :
     Token t2 = null;
 }
 {
-    <CREATE_PATH> 
+    <CREATE> <PATH> 
     ( <LPAREN> t1 = <NAMESPACED_ITEM> <RPAREN> { defaultPrimaryType = t1.image; } ) ?
     
-    ( t1 = <PATH> ( <LPAREN> t2 = <NAMESPACED_ITEM> <RPAREN> ) ?
+    ( t1 = <PATH_STRING> ( <LPAREN> t2 = <NAMESPACED_ITEM> <RPAREN> ) ?
         {
             if(cp == null) {
                 cp = new CreatePath(defaultPrimaryType);
