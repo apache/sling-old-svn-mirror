@@ -41,13 +41,11 @@ public class SimpleDistributionQueueProviderTest {
         assertNotNull(queue);
     }
 
-
-
     @Test
     public void testEnableQueueProcessing() throws Exception {
         Scheduler scheduler = mock(Scheduler.class);
         ScheduleOptions options = mock(ScheduleOptions.class);
-        when(scheduler.NOW(-1, 10)).thenReturn(options);
+        when(scheduler.NOW(-1, 1)).thenReturn(options);
         when(options.canRunConcurrently(false)).thenReturn(options);
         when(options.name(any(String.class))).thenReturn(options);
         SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, "dummy-agent");

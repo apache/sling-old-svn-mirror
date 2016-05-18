@@ -42,7 +42,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
     private final String name;
     private final Scheduler scheduler;
 
-    private final Map<String, DistributionQueue> queueMap = new ConcurrentHashMap<String, DistributionQueue>();
+    private final Map<String, SimpleDistributionQueue> queueMap = new ConcurrentHashMap<String, SimpleDistributionQueue>();
 
     public SimpleDistributionQueueProvider(Scheduler scheduler, String name) {
         if (name == null || scheduler == null) {
@@ -58,7 +58,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
     public DistributionQueue getQueue(@Nonnull String queueName) {
         String key = name + queueName;
 
-        DistributionQueue queue = queueMap.get(key);
+        SimpleDistributionQueue queue = queueMap.get(key);
         if (queue == null) {
             log.debug("creating a queue with key {}", key);
             queue = new SimpleDistributionQueue(name, queueName);
@@ -69,22 +69,31 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
     }
 
 
-    Collection<DistributionQueue> getQueues() {
+    Collection<SimpleDistributionQueue> getQueues() {
         return queueMap.values();
     }
 
     public void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) {
-        ScheduleOptions options = scheduler.NOW(-1, 10)
-                .canRunConcurrently(false)
-                .name(getJobName());
-        scheduler.schedule(new ScheduledDistributionQueueProcessorTask(this, queueProcessor), options);
+        for (String queueName : queueNames) {
+            ScheduleOptions options = scheduler.NOW(-1, 1)
+                    .canRunConcurrently(false)
+                    .name(getJobName(queueName));
+            scheduler.schedule(new ScheduledDistributionQueueProcessorTask(getQueue(queueName), queueProcessor), options);
+        }
     }
 
     public void disableQueueProcessing() {
-        scheduler.unschedule(getJobName());
+        for (DistributionQueue queue : getQueues()) {
+                String queueName = queue.getName();
+                if (scheduler.unschedule(getJobName(queueName))) {
+                    log.debug("queue processing on {} stopped", queue);
+                } else {
+                    log.warn("could not disable queue processing on {}", queue);
+                }
+        }
     }
 
-    private String getJobName() {
-        return "simple-queueProcessor-" + name;
+    private String getJobName(String queueName) {
+        return "simple-queueProcessor-" + name + "-" + queueName;
     }
 }

@@ -24,10 +24,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.WeakHashMap;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -45,6 +44,9 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * Note that, at the moment, this is a transient in memory queue not persisted on the repository and
  * therefore not usable for production.
+ *
+ * Note: potentially the Queue could contain the ordered package ids, with a sidecar map id->item;
+ * that way removal could be faster.
  */
 public class SimpleDistributionQueue implements DistributionQueue {
 
@@ -52,7 +54,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
 
     private final String name;
 
-    private final BlockingQueue<DistributionQueueItem> queue;
+    private final Queue<DistributionQueueItem> queue;
 
     private final Map<DistributionQueueItem, DistributionQueueItemStatus> statusMap;
 
@@ -72,9 +74,9 @@ public class SimpleDistributionQueue implements DistributionQueue {
         DistributionQueueItemState itemState = DistributionQueueItemState.ERROR;
         boolean result = false;
         try {
-            result = queue.offer(item, 10, TimeUnit.SECONDS);
+            result = queue.offer(item);
             itemState = DistributionQueueItemState.QUEUED;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error("cannot add an item to the queue", e);
         } finally {
             statusMap.put(item, new DistributionQueueItemStatus(Calendar.getInstance(), itemState, 0, name));
@@ -152,6 +154,13 @@ public class SimpleDistributionQueue implements DistributionQueue {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleDistributionQueue{" +
+                "name='" + name + '\'' +
+                '}';
     }
 
 }

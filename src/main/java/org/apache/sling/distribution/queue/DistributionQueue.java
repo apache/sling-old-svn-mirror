@@ -77,7 +77,7 @@ public interface DistributionQueue {
     /**
      * gets an item from the queue by specifying its id
      *
-     * @param itemId the id of the item
+     * @param itemId the id of the item as returned by {@link DistributionQueueItem#getPackageId()}
      * @return the item, or {@code null} if the item with the given id
      * doesn't exist
      */
@@ -87,7 +87,7 @@ public interface DistributionQueue {
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param itemId the id the item
+     * @param itemId the id the item as returned by {@link DistributionQueueItem#getPackageId()}
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */

@@ -37,10 +37,10 @@ public class ScheduledDistributionQueueProcessorTaskTest {
 
     @Test
     public void testRunWithNoQueue() throws Exception {
-        SimpleDistributionQueueProvider queueProvider = mock(SimpleDistributionQueueProvider.class);
+        DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
         ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
-                queueProvider, queueProcessor);
+                queue, queueProcessor);
         scheduledDistributionQueueProcessorTask.run();
     }
 
@@ -54,7 +54,7 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         when(queueProvider.getQueues()).thenReturn(queues);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
         ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
-                queueProvider, queueProcessor);
+                queue, queueProcessor);
         scheduledDistributionQueueProcessorTask.run();
     }
 
@@ -70,7 +70,7 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         when(queueProvider.getQueues()).thenReturn(queues);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
         ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
-                queueProvider, queueProcessor);
+                queue, queueProcessor);
         scheduledDistributionQueueProcessorTask.run();
     }
 }
