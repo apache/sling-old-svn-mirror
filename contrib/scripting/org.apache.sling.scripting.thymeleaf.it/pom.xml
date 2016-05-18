@@ -57,6 +57,19 @@
       <version>1</version>
       <scope>provided</scope>
     </dependency>
+    <!-- OSGi -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.core</artifactId>
+      <version>6.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.cmpn</artifactId>
+      <version>6.0.0</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- Apache Karaf -->
     <dependency>
       <groupId>org.apache.karaf</groupId>
@@ -120,7 +133,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.scripting.thymeleaf</artifactId>
       <version>0.1.7-SNAPSHOT</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <!-- bnd -->
     <dependency>
@@ -194,6 +207,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-Activator>org.apache.sling.scripting.thymeleaf.it.Activator</Bundle-Activator>
             <Sling-Initial-Content>
               apps/jsp;path:=/apps/jsp;overwrite:=true;uninstall:=true,
               apps/thymeleaf;path:=/apps/thymeleaf;overwrite:=true;uninstall:=true,
