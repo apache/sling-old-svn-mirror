@@ -19,30 +19,22 @@ package org.apache.sling.commons.json.sling;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ResourceTraversorTest {
     private static final String RESOURCE_NAME = "R";
-    private static final String PATH = "/" + RESOURCE_NAME;
     private static final String ID = "id";
 
     // Several tests currently fail with stack overflow with -Dsling.test.ResourceTraversor.count=20000
@@ -51,26 +43,24 @@ public class ResourceTraversorTest {
     private final int LEVELS = 3;
     private Resource root;
     
-    private void addChildren(Resource parent, int resourcesPerLevel, int nLevels) {
-        final List<Resource> empty = new ArrayList<Resource>();
-        final List<Resource> children = new CopyOnWriteArrayList<Resource>();
-        ResourceResolver childResourceResolver = mock(ResourceResolver.class);
+    @Rule
+    public final SlingContext context = new SlingContext();
+    
+    private void addChildren(Resource parent, int resourcesPerLevel, int nLevels) throws PersistenceException {
         for(int i=0; i < resourcesPerLevel; i++) {
-            final Map<String, Object> childProps = new HashMap<String, Object>();
-            final String id = makePath(parent.getPath(), i);
-            childProps.put(ID, id);
-            final Resource r = mock(Resource.class);
-            when(r.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(childProps));
-            when(r.getResourceResolver()).thenReturn(childResourceResolver);
-            when(r.getPath()).thenReturn(PATH + "/" + id);
-            children.add(r);
-            when(r.getResourceResolver().listChildren(any(Resource.class))).thenReturn(empty.iterator());
+            final String id = makePath(nLevels, i);
+            final Resource child = parent.getResourceResolver().create(parent, id, null);
+            ModifiableValueMap vm = child.adaptTo(ModifiableValueMap.class);
+            vm.put(ID,  id);
+            child.getResourceResolver().commit();
+            if(nLevels > 1) {
+                addChildren(child, resourcesPerLevel, nLevels - 1);
+            }
         }
-        when(parent.getResourceResolver().listChildren(any(Resource.class))).thenReturn(children.iterator());
     }
     
-    private static String makePath(String parentPath, int index) {
-        return parentPath.replaceAll("/", "_") + "_" + index;
+    private static String makePath(int nLevels, int index) {
+        return RESOURCE_NAME + "_" + nLevels + "_" + index;
     }
     
     private String describe(JSONObject o) {
@@ -97,17 +87,13 @@ public class ResourceTraversorTest {
         root = null;
     }
     
-    public void createTree(int resourcesPerLevel, int depth) {
-        root = mock(Resource.class);
-        ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        when(root.getResourceResolver()).thenReturn(resourceResolver);
-        when(root.getPath()).thenReturn(PATH);
+    public void createTree(int resourcesPerLevel, int depth) throws PersistenceException {
+        root = context.resourceResolver().getResource("/");
         addChildren(root, resourcesPerLevel, depth);
     }
     
     @Test
-    @Ignore("Need to generate a tree of resources")
-    public void collectNLevelsNoLimit() throws JSONException {
+    public void collectNLevelsNoLimit() throws JSONException, PersistenceException {
         createTree(FEW, LEVELS);
         ResourceTraversor traversor = new ResourceTraversor(-1, Integer.MAX_VALUE, root, true);
         traversor.collectResources();
@@ -115,24 +101,56 @@ public class ResourceTraversorTest {
     }
     
     @Test
-    public void collectOneLevelNoLimit() throws JSONException {
+    public void collectNLevelsWithLimit() throws JSONException, PersistenceException {
+        createTree(FEW, LEVELS);
+        final String [] ids = { "R_3_0", "R_3_1" };
+        final int limit = ids.length;
+        ResourceTraversor traversor = new ResourceTraversor(-1, limit, root, true);
+        traversor.collectResources();
+        final int expectedCount = limit + 1;
+        assertEquals(expectedCount, traversor.getCount());
+        final JSONObject jso = traversor.getJSONObject();
+        for(String id : ids) {
+            assertTrue("Expecting " + id + " on " + describe(jso), jso.has(id));
+        }
+    }
+    
+    @Test
+    public void collectWithLimitInChildren() throws JSONException, PersistenceException {
+        createTree(2, 2);
+        final String [] ids = { "R_2_0", "R_2_1" };
+        final int limit = ids.length;
+        ResourceTraversor traversor = new ResourceTraversor(-1, limit, root, true);
+        traversor.collectResources();
+        final int expectedCount = limit + 1;
+        assertEquals(expectedCount, traversor.getCount());
+        final JSONObject jso = traversor.getJSONObject();
+        for(String id : ids) {
+            assertTrue("Expecting " + id + " on " + describe(jso), jso.has(id));
+        }
+    }
+    
+    @Test
+    public void collectOneLevelNoLimit() throws JSONException, PersistenceException {
         createTree(MANY, 1);
         ResourceTraversor traversor = new ResourceTraversor(1, MANY * 10, root, true);
         traversor.collectResources();
         assertTraversalResult(root.getPath(), traversor.getJSONObject(), MANY, 1);
+        assertEquals(MANY, traversor.getCount());
     }
     
     @Test
-    public void collectOneLevelLimitIgnoredAtLevelOne() throws JSONException {
+    public void collectOneLevelLimitIgnoredAtLevelOne() throws JSONException, PersistenceException {
         createTree(MANY, 1);
         ResourceTraversor traversor = new ResourceTraversor(1, 1, root, true);
         traversor.collectResources();
         assertTraversalResult(root.getPath(), traversor.getJSONObject(), MANY, 1);
+        assertEquals(MANY, traversor.getCount());
     }
     
     void assertTraversalResult(String parentPath, JSONObject jso, int childrenPerLevel, int nLevels) throws JSONException {
         for(int i=0; i < childrenPerLevel; i++) {
-            final String key = makePath(parentPath, i);
+            final String key = makePath(nLevels, i);
             assertTrue("Expecting " + key + " on " + describe(jso), jso.has(key));
             final JSONObject child = jso.getJSONObject(key);
             assertTrue("Expecting property " + ID, child.has(ID));
@@ -147,6 +165,7 @@ public class ResourceTraversorTest {
             k.next();
             keysCount++;
         }
-        assertEquals("Expecting " + childrenPerLevel + " keys on " + describe(jso), childrenPerLevel, keysCount);
+        // Sling mocks add an extra property
+        assertEquals("Expecting " + childrenPerLevel + " keys on " + describe(jso), childrenPerLevel + 1, keysCount);
     }
 }
