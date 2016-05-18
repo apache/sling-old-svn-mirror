@@ -52,6 +52,13 @@ public class ResourceTraversor {
 
     private final Resource startResource;
 
+    /** Create a ResourceTraversor, optionally limiting recursion and total number of resources
+     * @param levels recursion levels limit, -1 means no limit
+     * @param maxResources maximum number of resources to collect, ignored if levels == 1
+     * @param resource the root resource to traverse
+     * @param tidy not used
+     * @throws JSONException
+     */
     public ResourceTraversor(final int levels, final long maxResources, final Resource resource, final boolean tidy)
     throws JSONException {
         this.maxResources = maxResources;
