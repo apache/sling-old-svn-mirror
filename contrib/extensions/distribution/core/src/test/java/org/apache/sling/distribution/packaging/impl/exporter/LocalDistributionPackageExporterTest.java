@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 public class LocalDistributionPackageExporterTest {
 
     @Test
-    public void testDummyExport() throws Exception {
+    public void testExport() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         when(packageBuilder.createPackage(any(ResourceResolver.class), any(DistributionRequest.class))).thenReturn(mock(DistributionPackage.class));
         LocalDistributionPackageExporter localdistributionPackageExporter = new LocalDistributionPackageExporter(packageBuilder);
@@ -57,5 +57,15 @@ public class LocalDistributionPackageExporterTest {
         });
         assertNotNull(distributionPackages);
         assertEquals(1, distributionPackages.size());
+    }
+
+    @Test
+    public void testGetPackage() throws Exception {
+        DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
+        when(packageBuilder.getPackage(any(ResourceResolver.class), any(String.class))).thenReturn(mock(DistributionPackage.class));
+        LocalDistributionPackageExporter localdistributionPackageExporter = new LocalDistributionPackageExporter(packageBuilder);
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = localdistributionPackageExporter.getPackage(resourceResolver, "123");
+        assertNotNull(distributionPackage);
     }
 }
