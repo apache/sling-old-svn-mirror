@@ -205,6 +205,7 @@ public class JobSchedulerImpl
      * Remove a scheduled job
      */
     public void removeJob(final ScheduledJobInfoImpl info) {
+        this.unscheduleJob(info);
         this.scheduledJobHandler.remove(info);
     }
 
