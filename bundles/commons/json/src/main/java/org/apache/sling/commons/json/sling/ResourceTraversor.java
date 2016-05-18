@@ -108,6 +108,11 @@ public class ResourceTraversor {
             }
         }
 
+        // do processing only at first level to avoid unnecessary recursion
+        if (currentLevel > 0) {
+            return -1;
+        }
+
         while (!currentQueue.isEmpty() || !nextQueue.isEmpty()) {
             if (currentQueue.isEmpty()) {
                 currentLevel++;
