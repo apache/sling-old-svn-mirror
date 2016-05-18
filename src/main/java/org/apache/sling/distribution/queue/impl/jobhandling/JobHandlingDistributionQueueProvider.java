@@ -44,6 +44,9 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.queue.DistributionQueue}s
  */
 public class JobHandlingDistributionQueueProvider implements DistributionQueueProvider {
+
+    public static final String TYPE = "jobs";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;

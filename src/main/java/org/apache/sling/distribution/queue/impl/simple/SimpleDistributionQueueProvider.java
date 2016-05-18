@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleDistributionQueueProvider implements DistributionQueueProvider {
 
+    public static final String TYPE = "simple";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;

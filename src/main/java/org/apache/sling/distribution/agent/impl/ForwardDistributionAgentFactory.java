@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
@@ -50,7 +51,9 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueue;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -161,6 +164,14 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             "e.g. use target=(name=...) to bind to services by name.")
     public static final String TRIGGERS_TARGET = "triggers.target";
 
+    @Property(options = {
+            @PropertyOption(name = JobHandlingDistributionQueueProvider.TYPE, value = "Sling Jobs"),
+            @PropertyOption(name = SimpleDistributionQueueProvider.TYPE, value = "In-memory")},
+            value = "info",
+            label = "Log Level", description = "The log level recorded in the transient log accessible via http."
+    )
+    public static final String QUEUE_PROVIDER = "queue.provider";
+
     @Reference
     private Packaging packaging;
 
@@ -178,6 +189,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Reference
     private SlingRepository slingRepository;
+
+    @Reference
+    private Scheduler scheduler;
 
 
     @Activate
@@ -213,9 +227,16 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         Map<String, String> priorityQueues = PropertiesUtil.toMap(config.get(PRIORITY_QUEUES), new String[0]);
         priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
 
-
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
-        DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+
+        DistributionQueueProvider queueProvider;
+        String queueProviderName = PropertiesUtil.toString(config.get(QUEUE_PROVIDER), JobHandlingDistributionQueueProvider.TYPE);
+        if (JobHandlingDistributionQueueProvider.TYPE.equals(queueProviderName)) {
+           queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+        }
+        else {
+            queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName);
+        }
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy errorQueueStrategy = null;
