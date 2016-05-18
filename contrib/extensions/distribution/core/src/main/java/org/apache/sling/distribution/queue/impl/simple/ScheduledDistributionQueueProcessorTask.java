@@ -30,28 +30,25 @@ import org.slf4j.LoggerFactory;
 class ScheduledDistributionQueueProcessorTask implements Runnable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final SimpleDistributionQueueProvider queueProvider;
+    private final DistributionQueue queue;
     private final DistributionQueueProcessor queueProcessor;
 
-    public ScheduledDistributionQueueProcessorTask(SimpleDistributionQueueProvider queueProvider,
+    public ScheduledDistributionQueueProcessorTask(DistributionQueue queue,
                                                    DistributionQueueProcessor queueProcessor) {
-        this.queueProvider = queueProvider;
+        this.queue = queue;
         this.queueProcessor = queueProcessor;
     }
 
     public void run() {
         try {
-            for (DistributionQueue queue : queueProvider.getQueues()) {
-                DistributionQueueEntry entry;
-                while ((entry = queue.getHead()) != null) {
-
-                    if (queueProcessor.process(queue.getName(), entry)) {
-                        if (queue.remove(entry.getId()) != null) {
-                            log.debug("item {} processed and removed from the queue", entry.getItem());
-                        }
-                    } else {
-                        log.warn("processing of item {} failed", entry.getId());
+            DistributionQueueEntry entry;
+            while ((entry = queue.getHead()) != null) {
+                if (queueProcessor.process(queue.getName(), entry)) {
+                    if (queue.remove(entry.getId()) != null) {
+                        log.debug("item {} processed and removed from the queue", entry.getItem());
                     }
+                } else {
+                    log.warn("processing of item {} failed", entry.getId());
                 }
             }
         } catch (Exception e) {

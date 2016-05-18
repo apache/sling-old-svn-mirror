@@ -43,6 +43,7 @@ public class CachingDistributionQueue extends DistributionQueueWrapper {
     }
 
 
+    @Nonnull
     @Override
     public DistributionQueueStatus getStatus() {
 
