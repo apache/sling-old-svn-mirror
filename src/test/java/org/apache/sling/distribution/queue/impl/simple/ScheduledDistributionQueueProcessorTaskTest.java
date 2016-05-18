@@ -47,8 +47,8 @@ public class ScheduledDistributionQueueProcessorTaskTest {
     @Test
     public void testRunWithOneEmptyQueue() throws Exception {
         SimpleDistributionQueueProvider queueProvider = mock(SimpleDistributionQueueProvider.class);
-        Collection<DistributionQueue> queues = new LinkedList<DistributionQueue>();
-        DistributionQueue queue = mock(DistributionQueue.class);
+        Collection<SimpleDistributionQueue> queues = new LinkedList<SimpleDistributionQueue>();
+        SimpleDistributionQueue queue = mock(SimpleDistributionQueue.class);
         when(queue.getHead()).thenReturn(null);
         queues.add(queue);
         when(queueProvider.getQueues()).thenReturn(queues);
@@ -61,8 +61,8 @@ public class ScheduledDistributionQueueProcessorTaskTest {
     @Test
     public void testRunWithOneNonEmptyQueue() throws Exception {
         SimpleDistributionQueueProvider queueProvider = mock(SimpleDistributionQueueProvider.class);
-        Collection<DistributionQueue> queues = new LinkedList<DistributionQueue>();
-        DistributionQueue queue = mock(DistributionQueue.class);
+        Collection<SimpleDistributionQueue> queues = new LinkedList<SimpleDistributionQueue>();
+        SimpleDistributionQueue queue = mock(SimpleDistributionQueue.class);
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         when(queue.getHead()).thenReturn(new DistributionQueueEntry(null, item, null)).thenReturn(null);
 
