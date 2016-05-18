@@ -36,8 +36,9 @@ public class ResourceTraversorTest {
     private static final String RESOURCE_NAME = "R";
     private static final String ID = "id";
 
-    // Several tests currently fail with stack overflow if this is set to 20000
-    private final int MANY = Integer.getInteger("sling.test.ResourceTraversor.count", 10);
+    // Before revision 1744381 the tests would fail with this set to 20'000
+    private final int MANY = Integer.getInteger("sling.test.ResourceTraversor.count", 100000);
+    
     private final int FEW = 5;
     private final int LEVELS = 3;
     private Resource root;
