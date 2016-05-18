@@ -34,7 +34,16 @@ public class DefaultPropertyBasedCustomizerTest {
     
     @Before
     public void setUp() {
-        System.setProperties(null);
+        // remove all properties starting with "ClientSideTeleporter."
+        // removing all properties without conditions would prevent other java code from being executed without errors, because some java code at least relies on "java.home" being set!
+        Properties oldProperties = System.getProperties();
+        Properties newProperties = new Properties();
+        for (Object key : oldProperties.keySet()) {
+            if (!((String)key).startsWith("ClientSideTeleporter.")) {
+                newProperties.put(key, oldProperties.get(key));
+            }
+        }
+        System.setProperties(newProperties);
     }
 
     @Test(expected=AssertionError.class)
@@ -45,24 +54,20 @@ public class DefaultPropertyBasedCustomizerTest {
 
     @Test(expected=AssertionError.class)
     public void testEmptyBaseUrl() {
-        Properties props = new Properties();
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "   ");
-        System.setProperties(props);
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "   ");
         customizer = new DefaultPropertyBasedCustomizer();
         customizer.customize(clientSideTeleporter, null);
     }
 
     @Test
     public void testSettingAllProperties() {
-        Properties props = new Properties();
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_INCLUDE_DEPENDENCY_PREFIXES, "include-dependency1,include-dependency2");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EXCLUDE_DEPENDENCY_PREFIXES, "exclude-dependency1,exclude-dependency2");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EMBED_CLASSES, "org.apache.sling.testing.teleporter.client.ClassResourceVisitor,org.apache.sling.testing.teleporter.client.ClientSideTeleporter");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_TESTREADY_TIMEOUT_SECONDS, "50");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_USERNAME, "adminuser");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_PASSWORD, "adminpassword");
-        System.setProperties(props);
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_INCLUDE_DEPENDENCY_PREFIXES, "include-dependency1,include-dependency2");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EXCLUDE_DEPENDENCY_PREFIXES, "exclude-dependency1,exclude-dependency2");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EMBED_CLASSES, "org.apache.sling.testing.teleporter.client.ClassResourceVisitor,org.apache.sling.testing.teleporter.client.ClientSideTeleporter");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_TESTREADY_TIMEOUT_SECONDS, "50");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_USERNAME, "adminuser");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_PASSWORD, "adminpassword");
         customizer = new DefaultPropertyBasedCustomizer();
         customizer.customize(clientSideTeleporter, null);
         Mockito.verify(clientSideTeleporter).setBaseUrl("base-url");
@@ -78,10 +83,8 @@ public class DefaultPropertyBasedCustomizerTest {
 
     @Test(expected=AssertionError.class)
     public void testEmbeddingInvalidClass() {
-        Properties props = new Properties();
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
-        props.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EMBED_CLASSES, "org.apache.sling.testing.teleporter.client.InvalidClass");
-        System.setProperties(props);
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EMBED_CLASSES, "org.apache.sling.testing.teleporter.client.InvalidClass");
         customizer = new DefaultPropertyBasedCustomizer();
         customizer.customize(clientSideTeleporter, null);
     }
