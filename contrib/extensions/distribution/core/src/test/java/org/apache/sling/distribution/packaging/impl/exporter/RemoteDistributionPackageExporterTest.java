@@ -34,8 +34,11 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link RemoteDistributionPackageExporter}
@@ -43,7 +46,7 @@ import static org.mockito.Mockito.mock;
 public class RemoteDistributionPackageExporterTest {
 
     @Test
-    public void testDummyExport() throws Exception {
+    public void testNothingExported() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
@@ -60,5 +63,18 @@ public class RemoteDistributionPackageExporterTest {
         });
         assertNotNull(distributionPackages);
         assertTrue(distributionPackages.isEmpty());
+    }
+
+    @Test
+    public void testFailedPackageRetrieval() throws Exception {
+        DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
+        String[] endpoints = new String[0];
+        RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = remotedistributionPackageExporter.getPackage(resourceResolver, "123");
+        assertNull(distributionPackage);
     }
 }
