@@ -29,7 +29,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class ResourceTraversorTest {
     private static final String RESOURCE_NAME = "R";
     private static final String ID = "id";
 
-    // Several tests currently fail with stack overflow with -Dsling.test.ResourceTraversor.count=20000
+    // Several tests currently fail with stack overflow if this is set to 20000
     private final int MANY = Integer.getInteger("sling.test.ResourceTraversor.count", 10);
     private final int FEW = 5;
     private final int LEVELS = 3;
