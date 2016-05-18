@@ -31,10 +31,53 @@ public class InternalQueueConfigurationTest {
 
     @org.junit.Test public void testMaxParallel() {
         final Map<String, Object> p = new HashMap<String, Object>();
+        p.put(ConfigurationConstants.PROP_NAME, "QueueConfigurationTest");
         p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -1);
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
+
+        // Edge cases 0.0 and 1.0 (treated as int numbers)
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.0);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(0, c.getMaxParallel());
+
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 1.0);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(1, c.getMaxParallel());
+
+        // percentage (50%)
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.5);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.5), c.getMaxParallel());
+
+        // rounding
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.90);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.9), c.getMaxParallel());
+
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.99);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.99), c.getMaxParallel());
+
+        // Percentages can't go over 99% (0.99)
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 1.01);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
+
+        // Treat negative values same a -1 (all cores)
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -0.5);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
+
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -2);
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
+
+        // Invalid number results in ConfigurationConstants.DEFAULT_MAX_PARALLEL
+        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, "a string");
+        c = InternalQueueConfiguration.fromConfiguration(p);
+        assertEquals(ConfigurationConstants.DEFAULT_MAX_PARALLEL, c.getMaxParallel());
     }
 
     @org.junit.Test public void testTopicMatchersDot() {
