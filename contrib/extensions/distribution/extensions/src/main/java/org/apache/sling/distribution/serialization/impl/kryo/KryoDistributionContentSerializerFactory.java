@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionContentSerializer.class)
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Content serializer name: {name}")
 public class KryoDistributionContentSerializerFactory implements DistributionContentSerializer {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -62,10 +63,9 @@ public class KryoDistributionContentSerializerFactory implements DistributionCon
     public void activate(Map<String, Object> config) {
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
-        log.info("starting Kryo format {}", name);
 
         format = new KryoContentSerializer(name);
-        log.info("started Kryo resource package builder");
+        log.info("started Kryo content serializer {}", name);
     }
 
 

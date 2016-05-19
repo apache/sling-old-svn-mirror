@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionContentSerializer.class)
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Content serializer name: {name}")
 public class AvroDistributionContentSerializerFactory implements DistributionContentSerializer {
 
     /**
@@ -62,10 +63,9 @@ public class AvroDistributionContentSerializerFactory implements DistributionCon
     public void activate(Map<String, Object> config) {
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
-        log.info("starting avro format {}", name);
 
         format = new AvroContentSerializer(name);
-        log.info("started avro resource package builder");
+        log.info("started avro content serializer {}", name);
     }
 
 
