@@ -41,9 +41,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/oak-jcr</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/oak-jcr</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/repoinit/oak-jcr</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</url>
   </scm>
   
   <build>
