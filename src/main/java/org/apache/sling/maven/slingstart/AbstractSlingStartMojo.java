@@ -39,6 +39,13 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     private File modelDirectory;
 
     /**
+     * The model file name pattern
+     * This parameter is evaluated in the DependencyLifecycleParticipant
+     */
+    @Parameter
+    private String modelPattern;
+
+    /**
      * Inlined model, supported since version 1.3.
      * This parameter is evaluated in the DependencyLifecycleParticipant
      */
