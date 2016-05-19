@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.MavenExecutionException;
@@ -93,10 +94,13 @@ public class ModelPreprocessor {
         final String directory = nodeValue(info.plugin,
                 "modelDirectory",
                 new File(info.project.getBasedir(), "src/main/provisioning").getAbsolutePath());
+        final String pattern = nodeValue(info.plugin,
+                "modelPattern", "((.*)\\.txt|(.*)\\.model)");
+
         final String inlinedModel = nodeValue(info.plugin,
                 "model", null);
         try {
-            info.localModel = readLocalModel(info.project, inlinedModel, new File(directory), env.logger);
+            info.localModel = readLocalModel(info.project, inlinedModel, new File(directory), pattern, env.logger);
         } catch ( final IOException ioe) {
             throw new MavenExecutionException(ioe.getMessage(), ioe);
         }
@@ -390,13 +394,15 @@ public class ModelPreprocessor {
             final MavenProject project,
             final String inlinedModel,
             final File modelDirectory,
+            final String pattern,
             final Logger logger)
     throws MavenExecutionException, IOException {
+        final Pattern p = Pattern.compile(pattern);
         final List<String> candidates = new ArrayList<String>();
         if ( modelDirectory != null && modelDirectory.exists() ) {
             for(final File f : modelDirectory.listFiles() ) {
                 if ( f.isFile() && !f.getName().startsWith(".") ) {
-                    if ( f.getName().endsWith(".txt") || f.getName().endsWith(".model") ) {
+                    if ( p.matcher(f.getName()).matches() ) {
                         candidates.add(f.getName());
                     }
                 }
