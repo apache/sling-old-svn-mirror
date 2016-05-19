@@ -17,11 +17,14 @@
 #  under the License.
 #
 
-# Service users and ACLs for our integration tests
+# Paths on which ACLs will be set
+create path /acltest/A/B
 
+# Service users and ACLs for our integration tests
 create service user fredWilmaService
 create service user anotherService
 
+# ACLs for those service users
 set ACL for fredWilmaService
   allow jcr:all on /acltest
   deny jcr:write on /acltest/A

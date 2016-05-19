@@ -42,7 +42,6 @@ import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -65,13 +64,6 @@ public class RepoInitIT {
         WaitFor.services(teleporter, SlingRepository.class, RepoInitParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
         
-        // TODO this should be done by the repoinit language
-        try {
-            session.getRootNode().addNode("acltest").addNode("A").addNode("B").save();;
-        } catch(RepositoryException ignore) {
-        }
-        assertTrue("Expecting test nodes to be created", session.itemExists("/acltest/A/B"));
-        
         // Execute some repoinit statements
         final InputStream is = getClass().getResourceAsStream(REPO_INIT_FILE);
         assertNotNull("Expecting " + REPO_INIT_FILE, is);
@@ -86,6 +78,8 @@ public class RepoInitIT {
             is.close();
         }
         
+        // The repoinit file causes those nodes to be created
+        assertTrue("Expecting test nodes to be created", session.itemExists("/acltest/A/B"));
     }
     
     @After
