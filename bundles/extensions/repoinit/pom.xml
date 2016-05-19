@@ -33,9 +33,16 @@
   <name>Apache Sling RepoInit Reactor</name>
   <description>Content Repository Initialization Modules</description>
 
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit</url>
+  </scm>
+  
   <modules>
     <module>parser</module>
     <module>oak-jcr</module>
     <module>it</module>
+    <module>startup</module>
   </modules>
 </project>
