@@ -43,6 +43,5 @@
     <module>parser</module>
     <module>oak-jcr</module>
     <module>it</module>
-    <module>startup</module>
   </modules>
 </project>

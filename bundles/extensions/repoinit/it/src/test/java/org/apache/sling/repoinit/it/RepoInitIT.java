@@ -22,18 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.UUID;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.LoginException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
@@ -89,41 +80,12 @@ public class RepoInitIT {
         }
     }
     
-    private boolean userExists(String id) throws LoginException, RepositoryException, InterruptedException {
-        final Authorizable a = ((JackrabbitSession)session).getUserManager().getAuthorizable(id);
-        return a != null;
-    }
-    
-    private Session getServiceSession(String serviceId) throws LoginException, RepositoryException {
-        return session.impersonate(new SimpleCredentials(serviceId, new char[0]));
-    }
-    
-    /** True if user can write to specified path. 
-     *  @throws PathNotFoundException if the path doesn't exist */ 
-    private boolean canWrite(String userId, String path) throws PathNotFoundException,RepositoryException {
-        if(!session.itemExists(path)) {
-            throw new PathNotFoundException(path);
-        }
-        
-        final Session serviceSession = getServiceSession(userId);
-        final String testNodeName = "test_" + UUID.randomUUID().toString();
-        try {
-            ((Node)serviceSession.getItem(path)).addNode(testNodeName);
-            serviceSession.save();
-        } catch(AccessDeniedException ade) {
-            return false;
-        } finally {
-            serviceSession.logout();
-        }
-        return true;
-    }
-    
     @Test
     public void serviceUserCreated() throws Exception {
         new Retry() {
             @Override
             public Void call() throws Exception {
-                assertTrue("Expecting user " + FRED_WILMA, userExists(FRED_WILMA));
+                assertTrue("Expecting user " + FRED_WILMA, U.userExists(session, FRED_WILMA));
                 return null;
             }
         };
@@ -134,8 +96,8 @@ public class RepoInitIT {
         new Retry() {
             @Override
             public Void call() throws Exception {
-                assertFalse("Expecting no write access to A", canWrite(FRED_WILMA, "/acltest/A"));
-                assertTrue("Expecting write access to A/B", canWrite(FRED_WILMA, "/acltest/A/B"));
+                assertFalse("Expecting no write access to A", U.canWrite(session, FRED_WILMA, "/acltest/A"));
+                assertTrue("Expecting write access to A/B", U.canWrite(session, FRED_WILMA, "/acltest/A/B"));
                 return null;
             }
         };
@@ -146,8 +108,8 @@ public class RepoInitIT {
         new Retry() {
             @Override
             public Void call() throws Exception {
-                assertTrue("Expecting write access to A", canWrite(ANOTHER, "/acltest/A"));
-                assertFalse("Expecting no write access to B", canWrite(ANOTHER, "/acltest/A/B"));
+                assertTrue("Expecting write access to A", U.canWrite(session, ANOTHER, "/acltest/A"));
+                assertFalse("Expecting no write access to B", U.canWrite(session, ANOTHER, "/acltest/A/B"));
                 return null;
             }
         };
