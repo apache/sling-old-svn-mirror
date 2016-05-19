@@ -124,9 +124,10 @@ public class JcrRepoInitOpVisitor implements OperationVisitor {
                 final String fullPath = parentPath + "/" + psd.getSegment();
                 try {
                     if(session.itemExists(fullPath)) {
-                        // TODO warn if primary type is not correct 
+                        log.info("Path already exists, nothing to do (and not checking its primary type for now): {}", fullPath); 
                     } else {
                         final Node n = parentPath.equals("") ? session.getRootNode() : session.getNode(parentPath);
+                        log.info("Creating node {} with primary type {}", fullPath, psd.getPrimaryType());
                         n.addNode(psd.getSegment(), psd.getPrimaryType());
                     }
                 } catch(Exception e) {
