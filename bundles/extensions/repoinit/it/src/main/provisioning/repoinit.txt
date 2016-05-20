@@ -27,7 +27,9 @@
   org.apache.sling/org.apache.sling.junit.core/1.0.14
   org.apache.sling/org.apache.sling.testing.tools/1.0.10
   org.apache.sling/org.apache.sling.jcr.api/2.3.1-SNAPSHOT
-  
+  org.apache.sling/org.apache.sling.jcr.base/2.3.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
+    
 [settings]
   org.apache.sling.commons.log.julenabled=true
 
