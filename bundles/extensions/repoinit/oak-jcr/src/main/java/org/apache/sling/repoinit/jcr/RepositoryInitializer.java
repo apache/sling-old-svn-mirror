@@ -49,7 +49,10 @@ import org.slf4j.LoggerFactory;
 /** SlingRepositoryInitializer that executes repoinit statements read
  *  from a configurable URL.
  */
-@Component
+@Component(
+        name="Apache Sling Repository Initializer",
+        description="Initializes the JCR content repository using repoinit statements",
+        metatype=true)
 @Service(SlingRepositoryInitializer.class)
 @Properties({
     // SlingRepositoryInitializers are executed in ascending
@@ -69,13 +72,13 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     public static final String PROP_TEXT_URL = "text.url";
     private String textURL;
     
-    public static final String DEFAULT_MODEL_SECTION_NAME = ":repoinit";
+    public static final String DEFAULT_MODEL_SECTION_NAME = "repoinit";
     
     @Property(
             label="Model section name", 
             description=
-                "Optional provisioning model section name to used to extract repoinit statements"
-                + " from the raw text provided by our text URL. Leave empty to consider the content"
+                "Optional provisioning model additional section name (without leading colon) used to extract"
+                + " repoinit statements from the raw text provided by our text URL. Leave empty to consider the content"
                 + " provided by that URL to already be in repoinit format", 
             value=DEFAULT_MODEL_SECTION_NAME)
     public static final String PROP_MODEL_SECTION_NAME = "model.section.name";
@@ -104,6 +107,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
                 log.info("Executing {}", op);
                 op.accept(v);
             }
+            s.save();
             log.info("{} repoinit operations executed", count);
         } finally {
             s.logout();
@@ -122,6 +126,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             } else {
                 final StringWriter w = new StringWriter();
                 IOUtils.copy(is, w, "UTF-8");
+                result = w.toString();
             }
         } catch(Exception e) {
             log.warn("Error reading repoinit statements from " + textURL, e);
@@ -138,6 +143,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
         }
         String result = getRawRepoInitText();
         log.debug("Raw text from {}: \n{}", textURL, result);
+        log.info("Got {} characters from {}", result.length(), textURL);
         if(parseRawText) {
             final StringReader r = new StringReader(result);
             try {

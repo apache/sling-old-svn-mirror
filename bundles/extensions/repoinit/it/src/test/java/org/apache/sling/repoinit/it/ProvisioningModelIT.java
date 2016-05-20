@@ -30,13 +30,12 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-@Ignore("Fails for now - initializer not executed?")
 /** Test repoinit statements supplied by our provisioning model */
 public class ProvisioningModelIT {
 
     private Session session;
     private static final String TEST_PATH = "/repoinit/fromProvisioningModel";
-    private static final String TEST_USER = "fromProvisioningModel";
+    private static final String TEST_USER = "userFromProvisioningModel";
     
     @Rule
     public TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "IT");

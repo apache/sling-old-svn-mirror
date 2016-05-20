@@ -61,11 +61,10 @@
       <integration.test.wait>false</integration.test.wait>
 
       <!--
-      if set to "true" this will start the launchpad with the following debug options:
-          -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000
-      otherwise you can provide your own debug settings
+        If set to "true" this will start the launchpad with standard debug options,
+        or set to a string to provide custom debug settings
       -->
-      <debug.options/>
+      <launchpad.debug/>
   </properties>
 
   <build>
@@ -130,7 +129,7 @@
               <controlPort>${sling.control.port}</controlPort>
               <runmode>jackrabbit</runmode>
               <contextPath>${http.base.path}</contextPath>
-              <debug>${debug.options}</debug>
+              <debug>${launchpad.debug}</debug>
             </server>
           </servers>
         </configuration>
