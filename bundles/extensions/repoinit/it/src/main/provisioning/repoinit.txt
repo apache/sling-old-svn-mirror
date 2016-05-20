@@ -34,7 +34,7 @@
   org.apache.sling.commons.log.julenabled=true
 
 [:repoinit]
-# Test the RepositoryInitializer which reads such sections  
+# Test the RepositoryInitializer which reads such sections  
 create path /repoinit/fromProvisioningModel
 
 create service user userFromProvisioningModel
