@@ -610,7 +610,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         String country = parts[1];
         String[] countries = Locale.getISOCountries();
         for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equals(lang)) {
+            if (countries[i].equals(country)) {
                 country = null; // signal ok
                 break;
             }
