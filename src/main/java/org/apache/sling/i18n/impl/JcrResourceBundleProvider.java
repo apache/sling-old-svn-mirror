@@ -577,55 +577,57 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
      * language or country is replaced by the platform default language and
      * country.
      */
-    private Locale toLocale(String localeString) {
+    static Locale toLocale(String localeString) {
         if (localeString == null || localeString.length() == 0) {
             return Locale.getDefault();
         }
 
         // check language and country
-        String[] parts = localeString.split("_");
+        final String[] parts = localeString.split("_");
         if (parts.length == 0) {
             return Locale.getDefault();
         }
 
         // at least language is available
         String lang = parts[0];
+        boolean isValidLanguageCode = false;
         String[] langs = Locale.getISOLanguages();
         for (int i = 0; i < langs.length; i++) {
             if (langs[i].equals(lang)) {
-                lang = null; // signal ok
+                isValidLanguageCode = true;
                 break;
             }
         }
-        if (lang != null) {
-            parts[0] = Locale.getDefault().getLanguage();
+        if (!isValidLanguageCode) {
+            lang = Locale.getDefault().getLanguage();
         }
 
         // only language
         if (parts.length == 1) {
-            return new Locale(parts[0]);
+            return new Locale(lang);
         }
 
         // country is also available
         String country = parts[1];
+        boolean isValidCountryCode = false;
         String[] countries = Locale.getISOCountries();
         for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equals(lang)) {
-                country = null; // signal ok
+            if (countries[i].equals(country)) {
+                isValidCountryCode = true; // signal ok
                 break;
             }
         }
-        if (country != null) {
-            parts[1] = Locale.getDefault().getCountry();
+        if (!isValidCountryCode) {
+            country = Locale.getDefault().getCountry();
         }
 
         // language and country
         if (parts.length == 2) {
-            return new Locale(parts[0], parts[1]);
+            return new Locale(lang, country);
         }
 
         // language, country and variant
-        return new Locale(parts[0], parts[1], parts[2]);
+        return new Locale(lang, country, parts[2]);
     }
 
     //---------- internal class
