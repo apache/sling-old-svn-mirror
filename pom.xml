@@ -188,7 +188,10 @@
         <module>bundles/extensions/xss</module>
         <module>bundles/extensions/resourcebuilder</module>
         <module>bundles/extensions/servlet-helpers</module>
+<!-- TODO re-enable after fixing slingstart plugin dependency issue: build
+     works from the repoinit folder but not from the top
         <module>bundles/extensions/repoinit</module>
+-->
 
         <!-- Testing Support -->
         <module>testing</module>
