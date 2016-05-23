@@ -197,9 +197,19 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
             // invalidate everything
             if (languageRootPaths.contains(path)) {
                 log.debug(
-                        "handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles",
+                        "handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundle that are affected",
                         path);
-                scheduleReloadBundles(true);
+
+                for (JcrResourceBundle bundle : resourceBundleCache.values()) {
+                    if (bundle.getLanguageRootPaths().contains(path)) {
+                        if (bundle.getLocale().equals(defaultLocale)) {
+                            scheduleReloadBundles(true);
+                            return;
+                        }
+                        discardBundlesWithLocalePrefix(bundle.getLocale().toString());
+                    }
+                }
+
             } else {
                 // if it is only a change below a root path, only messages of one resource bundle can be affected!
                 for (final String root : languageRootPaths) {
@@ -222,6 +232,14 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                 if (isDictionaryResource(path, event)) {
                     scheduleReloadBundles(true);
                 }
+            }
+        }
+    }
+
+    private void discardBundlesWithLocalePrefix(String localePrefix) {
+        for (JcrResourceBundle bundle : resourceBundleCache.values()) {
+            if (bundle.getLocale().toString().startsWith(localePrefix)) {
+                scheduleReloadBundle(bundle);
             }
         }
     }
