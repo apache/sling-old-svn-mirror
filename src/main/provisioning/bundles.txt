@@ -28,6 +28,9 @@
   org.apache.sling/org.apache.sling.junit.scriptable/1.0.11-SNAPSHOT
   org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
 
+[artifacts startLevel=2]
+  org.apache.sling/org.apache.sling.provisioning.model/1.4.2
+
 [artifacts startLevel=5]
   org.apache.sling/org.apache.sling.launchpad.test-services-war/2.0.8/war
   org.apache.sling/org.apache.sling.launchpad.test-services/2.0.8
