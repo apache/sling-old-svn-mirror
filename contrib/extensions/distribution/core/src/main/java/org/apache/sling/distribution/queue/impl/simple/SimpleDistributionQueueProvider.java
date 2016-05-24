@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
@@ -131,7 +133,16 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
                             Iterator<String> keys = jsonObject.keys();
                             while (keys.hasNext()) {
                                 String key = keys.next();
-                                info.put(key, jsonObject.get(key));
+                                JSONArray v = jsonObject.optJSONArray(key);
+                                if (v != null) {
+                                    String[] a = new String[v.length()];
+                                    for (int i = 0; i < a.length; i++) {
+                                        a[i] = v.getString(i);
+                                    }
+                                    info.put(key, a);
+                                } else {
+                                    info.put(key, jsonObject.getString(key));
+                                }
                             }
                             queue.add(new DistributionQueueItem(id, info));
                         }

@@ -19,14 +19,18 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -82,6 +86,19 @@ public class SimpleDistributionQueueProviderTest {
         DistributionQueue queue = simpledistributionQueueProvider.getQueue("dummy-agent");
         assertNotNull(queue);
         assertEquals(1, queue.getStatus().getItemsCount());
+        DistributionQueueEntry head = queue.getHead();
+        assertNotNull(head);
+        DistributionQueueItem item = head.getItem();
+        assertNotNull(item);
+        String packageId = item.getPackageId();
+        assertNotNull(packageId);
+        assertEquals("DSTRQ1", item.get("internal.request.id"));
+        assertArrayEquals(new String[]{"/foo","bar"}, (String[])item.get("request.paths"));
+        assertArrayEquals(new String[]{"/foo"}, (String[])item.get("request.deepPaths"));
+        assertEquals("admin", item.get("internal.request.user"));
+        assertEquals("ADD", item.get("request.type"));
+        assertEquals("default", item.get("package.type"));
+        assertEquals("1464090250095", item.get("internal.request.startTime"));
     }
 
     @Test
