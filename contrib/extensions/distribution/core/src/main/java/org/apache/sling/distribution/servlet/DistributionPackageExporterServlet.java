@@ -50,7 +50,6 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {

@@ -19,14 +19,6 @@
 
 package org.apache.sling.distribution.serialization.impl;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
-
 import javax.annotation.Nonnull;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -35,8 +27,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 
-public class FileDistributionPackageBuilder extends AbstractDistributionPackageBuilder  {
+/**
+ * A {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on files.
+ */
+public class FileDistributionPackageBuilder extends AbstractDistributionPackageBuilder {
 
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
@@ -45,7 +47,6 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
-
     }
 
     @Override
@@ -54,7 +55,7 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
         OutputStream outputStream = null;
 
         try {
-            File file = File.createTempFile("distrpck-create-" + System.nanoTime(),  "." + getType(), tempDirectory);
+            File file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
             outputStream = new BufferedOutputStream(new FileOutputStream(file));
 
             distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
@@ -94,7 +95,7 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream  inputStream)
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream inputStream)
             throws DistributionException {
         try {
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
@@ -104,7 +105,6 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
             IOUtils.closeQuietly(inputStream);
         }
     }
-
 
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {

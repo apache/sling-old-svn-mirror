@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a
  * {@link DistributionPackage} locally.
  */
-
 public class LocalDistributionPackageImporter implements DistributionPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -50,20 +49,19 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         this.packageBuilder = packageBuilder;
     }
 
+    @Override
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
-
 
         if (!success) {
             log.warn("could not install distribution package {}", distributionPackage.getId());
         }
     }
 
+    @Override
     @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
-        DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
-
-        return packageInfo;
+        return packageBuilder.installPackage(resourceResolver, stream);
     }
 
 }

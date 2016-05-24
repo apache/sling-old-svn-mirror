@@ -28,8 +28,9 @@ import org.apache.sling.distribution.serialization.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 
 /**
- * A {@link DistributionPackageImporter} is responsible for importing
- * {@link DistributionPackage}s into the resource tree.
+ * A {@link DistributionPackageImporter} is responsible for importing {@link DistributionPackage}s into either a local
+ * or remote Sling instance.
+ * Importing a {@link DistributionPackage} means persisting its stream into a Sling instance.
  */
 @ConsumerType
 public interface DistributionPackageImporter {
@@ -47,9 +48,9 @@ public interface DistributionPackageImporter {
      * Tries to convert an {@link java.io.InputStream} to a {@link DistributionPackage} and then imports it into the underlying system
      *
      * @param resourceResolver - the resource resolver used to read the package
-     * @param stream           the {@link InputStream} of the package to be converted and installed
-     * @return a {@link DistributionPackageInfo} if the stream has been successfully converted and installed
-     * @throws DistributionException when the stream cannot be read as a {@link DistributionPackage} and installed
+     * @param stream           the {@link InputStream} of the package to be converted and imported
+     * @return a {@link DistributionPackageInfo} if the stream has been successfully converted and imported
+     * @throws DistributionException when the stream cannot be read as a {@link DistributionPackage} and imported
      */
     @Nonnull
     DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException;
