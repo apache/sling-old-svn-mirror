@@ -27,14 +27,14 @@ import org.slf4j.LoggerFactory;
 /**
  * a simple scheduled {@link SimpleDistributionQueue}s processor
  */
-class ScheduledDistributionQueueProcessorTask implements Runnable {
+class SimpleDistributionQueueProcessor implements Runnable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final DistributionQueue queue;
     private final DistributionQueueProcessor queueProcessor;
 
-    public ScheduledDistributionQueueProcessorTask(DistributionQueue queue,
-                                                   DistributionQueueProcessor queueProcessor) {
+    public SimpleDistributionQueueProcessor(DistributionQueue queue,
+                                            DistributionQueueProcessor queueProcessor) {
         this.queue = queue;
         this.queueProcessor = queueProcessor;
     }
