@@ -59,7 +59,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     private final Map<DistributionQueueItem, DistributionQueueItemStatus> statusMap;
 
     public SimpleDistributionQueue(String agentName, String name) {
-        log.debug("starting a simple queue for agent {}", agentName);
+        log.debug("starting a simple queue {} for agent {}", name, agentName);
         this.name = name;
         this.queue = new LinkedBlockingQueue<DistributionQueueItem>();
         this.statusMap = new WeakHashMap<DistributionQueueItem, DistributionQueueItemStatus>(10);

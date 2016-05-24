@@ -31,17 +31,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testcase for {@link ScheduledDistributionQueueProcessorTask}
+ * Testcase for {@link SimpleDistributionQueueProcessor}
  */
-public class ScheduledDistributionQueueProcessorTaskTest {
+public class SimpleDistributionQueueProcessorTest {
 
     @Test
     public void testRunWithNoQueue() throws Exception {
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
-        ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
+        SimpleDistributionQueueProcessor simpleDistributionQueueProcessor = new SimpleDistributionQueueProcessor(
                 queue, queueProcessor);
-        scheduledDistributionQueueProcessorTask.run();
+        simpleDistributionQueueProcessor.run();
     }
 
     @Test
@@ -53,9 +53,9 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         queues.add(queue);
         when(queueProvider.getQueues()).thenReturn(queues);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
-        ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
+        SimpleDistributionQueueProcessor simpleDistributionQueueProcessor = new SimpleDistributionQueueProcessor(
                 queue, queueProcessor);
-        scheduledDistributionQueueProcessorTask.run();
+        simpleDistributionQueueProcessor.run();
     }
 
     @Test
@@ -69,8 +69,8 @@ public class ScheduledDistributionQueueProcessorTaskTest {
         queues.add(queue);
         when(queueProvider.getQueues()).thenReturn(queues);
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
-        ScheduledDistributionQueueProcessorTask scheduledDistributionQueueProcessorTask = new ScheduledDistributionQueueProcessorTask(
+        SimpleDistributionQueueProcessor simpleDistributionQueueProcessor = new SimpleDistributionQueueProcessor(
                 queue, queueProcessor);
-        scheduledDistributionQueueProcessorTask.run();
+        simpleDistributionQueueProcessor.run();
     }
 }
