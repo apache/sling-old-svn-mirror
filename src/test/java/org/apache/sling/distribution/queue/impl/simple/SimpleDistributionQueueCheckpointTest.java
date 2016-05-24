@@ -61,6 +61,7 @@ public class SimpleDistributionQueueCheckpointTest {
         HashedMap base = new HashedMap();
         base.put("here","there");
         base.put("foo","bar");
+        base.put("multi", new String[]{"1", "2"});
         entries.add(new DistributionQueueEntry("123", new DistributionQueueItem("pid123", base),
                 new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED, queueName)));
         when(queue.getItems(0, -1)).thenReturn(entries);
@@ -70,5 +71,6 @@ public class SimpleDistributionQueueCheckpointTest {
         simpleDistributionQueueCheckpoint.run();
         File checkpointFile = new File(checkpointDirectory, "sample-queue-checkpoint");
         assertTrue(checkpointFile.exists());
+        System.err.println(checkpointDirectory.getAbsolutePath());
     }
 }
