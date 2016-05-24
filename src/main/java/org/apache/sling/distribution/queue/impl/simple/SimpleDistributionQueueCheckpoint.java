@@ -82,7 +82,7 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
             boolean success = checkpointFile.renameTo(new File(checkpointDirectory, fileName));
             log.debug("checkpoint succeeded: {}", success);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("failed checkpointing for queue {}", queue.getName());
         }
     }
 }
