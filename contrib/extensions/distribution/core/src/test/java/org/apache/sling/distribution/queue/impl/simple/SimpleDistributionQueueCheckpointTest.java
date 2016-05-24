@@ -58,7 +58,10 @@ public class SimpleDistributionQueueCheckpointTest {
         String queueName = "sample-queue";
         when(queue.getName()).thenReturn(queueName);
         LinkedList<DistributionQueueEntry> entries = new LinkedList<DistributionQueueEntry>();
-        entries.add(new DistributionQueueEntry("123", new DistributionQueueItem("pid123", new HashedMap()),
+        HashedMap base = new HashedMap();
+        base.put("here","there");
+        base.put("foo","bar");
+        entries.add(new DistributionQueueEntry("123", new DistributionQueueItem("pid123", base),
                 new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED, queueName)));
         when(queue.getItems(0, -1)).thenReturn(entries);
         File checkpointDirectory = FileUtils.getTempDirectory();
