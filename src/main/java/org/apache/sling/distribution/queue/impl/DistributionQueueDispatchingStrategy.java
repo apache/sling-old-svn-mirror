@@ -51,7 +51,6 @@ public interface DistributionQueueDispatchingStrategy {
      */
     Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException;
 
-
     /**
      * Returns the queue names available for this strategy.
      *

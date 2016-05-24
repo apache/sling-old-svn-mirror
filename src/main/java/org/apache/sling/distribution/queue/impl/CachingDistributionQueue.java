@@ -29,6 +29,9 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * {@link DistributionQueueWrapper} that caches entries for 30s.
+ */
 public class CachingDistributionQueue extends DistributionQueueWrapper {
     // cache status for 30 sec as it is expensive to count items
     private static final int EXPIRY_QUEUE_CACHE = 30 * 1000;
@@ -41,7 +44,6 @@ public class CachingDistributionQueue extends DistributionQueueWrapper {
         super(wrappedQueue);
         this.cacheKey = cacheKey;
     }
-
 
     @Nonnull
     @Override

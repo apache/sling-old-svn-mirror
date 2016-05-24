@@ -18,16 +18,21 @@
  */
 package org.apache.sling.distribution.serialization;
 
+import javax.annotation.CheckForNull;
+
+import aQute.bnd.annotation.ProviderType;
+
 /**
- * A helper interface to allow finding registered {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder}s
+ * A helper interface to allow finding registered {@link DistributionPackageBuilder}s
  */
+@ProviderType
 public interface DistributionPackageBuilderProvider {
 
     /**
      * Finds a package builder that has the specified package type.
      * @param type the package type
-     * @return a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} if one is already registered for that type
-     * or null otherwise
+     * @return a {@link DistributionPackageBuilder} if one is already registered for that type or null otherwise
      */
+    @CheckForNull
     DistributionPackageBuilder getPackageBuilder(String type);
 }

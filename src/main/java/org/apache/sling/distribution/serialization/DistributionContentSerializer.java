@@ -21,13 +21,15 @@ package org.apache.sling.distribution.serialization;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 
 /**
- * A content serializer used to extract and import distribution packages.
+ * A content serializer used to extract and import {@link DistributionPackage}s.
  */
+@ConsumerType
 public interface DistributionContentSerializer {
 
     /**
