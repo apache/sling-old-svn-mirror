@@ -167,8 +167,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(options = {
             @PropertyOption(name = JobHandlingDistributionQueueProvider.TYPE, value = "Sling Jobs"),
             @PropertyOption(name = SimpleDistributionQueueProvider.TYPE, value = "In-memory")},
-            value = "info",
-            label = "Log Level", description = "The log level recorded in the transient log accessible via http."
+            value = "jobs",
+            label = "Queue provider", description = "The queue provider implementation."
     )
     public static final String QUEUE_PROVIDER = "queue.provider";
 
@@ -201,7 +201,6 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     protected void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         super.bindDistributionTrigger(distributionTrigger, config);
-
     }
 
     protected void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
