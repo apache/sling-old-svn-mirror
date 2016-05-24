@@ -51,7 +51,6 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
-import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueue;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -77,7 +76,7 @@ import org.slf4j.LoggerFactory;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
-@Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Agent name: {name}")
 public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -166,7 +165,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Property(options = {
             @PropertyOption(name = JobHandlingDistributionQueueProvider.TYPE, value = "Sling Jobs"),
-            @PropertyOption(name = SimpleDistributionQueueProvider.TYPE, value = "In-memory")},
+            @PropertyOption(name = SimpleDistributionQueueProvider.TYPE, value = "In-memory"),
+            @PropertyOption(name = SimpleDistributionQueueProvider.TYPE_CHECKPOINT, value = "In-file")},
             value = "jobs",
             label = "Queue provider", description = "The queue provider implementation."
     )
@@ -231,10 +231,11 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionQueueProvider queueProvider;
         String queueProviderName = PropertiesUtil.toString(config.get(QUEUE_PROVIDER), JobHandlingDistributionQueueProvider.TYPE);
         if (JobHandlingDistributionQueueProvider.TYPE.equals(queueProviderName)) {
-           queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        }
-        else {
-            queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName);
+            queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+        } else if (SimpleDistributionQueueProvider.TYPE.equals(queueProviderName)) {
+            queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, false);
+        } else {
+            queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, true);
         }
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
