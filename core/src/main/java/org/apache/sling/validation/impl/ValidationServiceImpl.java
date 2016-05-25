@@ -148,12 +148,10 @@ public class ValidationServiceImpl implements ValidationService{
             throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
         }
         CompositeValidationResult result = new CompositeValidationResult();
-        final ValueMap valueMap;
-        if (ResourceUtil.isNonExistingResource(resource)) {
-            // NonExistingResource can not adapt to a ValueMap, therefore just use the empty map here
+        ValueMap valueMap = resource.adaptTo(ValueMap.class);
+        if (valueMap == null) {
+            // SyntheticResources can not adapt to a ValueMap, therefore just use the empty map here
             valueMap = new ValueMapDecorator(Collections.emptyMap());
-        } else {
-            valueMap = resource.adaptTo(ValueMap.class);
         }
 
         // validate direct properties of the resource
