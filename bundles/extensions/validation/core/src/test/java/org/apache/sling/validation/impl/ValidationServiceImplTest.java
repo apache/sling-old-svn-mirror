@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
@@ -207,6 +208,30 @@ public class ValidationServiceImplTest {
         ValidationModel vm = modelBuilder.build("sometype");
         ResourceResolver rr = context.resourceResolver();
         Resource nonExistingResource = new NonExistingResource(rr, "non-existing-resource");
+        ValidationResult vr = validationService.validate(nonExistingResource, vm);
+        Assert.assertFalse("resource should have been considered invalid", vr.isValid());
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
+                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
+                ));
+    }
+
+    // see https://issues.apache.org/jira/browse/SLING-5749
+    @Test
+    public void testSyntheticResource() throws Exception {
+        propertyBuilder.validator(new RegexValidator(), 0, RegexValidator.REGEX_PARAM, "\\d"); // accept any digits
+        ResourceProperty property = propertyBuilder.build("field1");
+        modelBuilder.resourceProperty(property);
+        
+        ChildResource modelChild = new ChildResourceImpl("child", null, true, Collections.singletonList(property), Collections.emptyList());
+        modelBuilder.childResource(modelChild);
+        
+        modelChild = new ChildResourceImpl("optionalChild", null, false, Collections.singletonList(property), Collections.emptyList());
+        modelBuilder.childResource(modelChild);
+        
+        ValidationModel vm = modelBuilder.build("sometype");
+        ResourceResolver rr = context.resourceResolver();
+        Resource nonExistingResource = new SyntheticResource(rr, "someresource", "resourceType");
         ValidationResult vr = validationService.validate(nonExistingResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
