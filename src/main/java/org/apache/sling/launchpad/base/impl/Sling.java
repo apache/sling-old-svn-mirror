@@ -30,11 +30,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -202,9 +200,6 @@ public class Sling {
 
         // check for bootstrap command file
         copyBootstrapCommandFile(props);
-
-        // check for auto-start bundles
-        this.setInstallBundles(props);
 
         // create the framework and start it
         try {
@@ -654,26 +649,6 @@ public class Sling {
             logger.log(Logger.LOG_DEBUG, "Property " + oldName
                 + " does not exist, nothing to do");
         }
-    }
-
-    private void setInstallBundles(Map<String, String> props) {
-        String prefix = "sling.install.";
-        Set<String> levels = new TreeSet<String>();
-        for (String key : props.keySet()) {
-            if (key.startsWith(prefix)) {
-                levels.add(key.substring(prefix.length()));
-            }
-        }
-
-        StringBuffer buf = new StringBuffer();
-        for (String level : levels) {
-            if (buf.length() > 0) {
-                buf.append(',');
-            }
-            buf.append(level);
-        }
-
-        props.put(prefix + "bundles", buf.toString());
     }
 
     // ---------- Extension support --------------------------------------------
