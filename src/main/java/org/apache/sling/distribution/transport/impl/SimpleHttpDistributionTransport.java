@@ -160,9 +160,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private Executor authenticate(DistributionTransportSecret secret, Executor executor) {
         Map<String, String> credentialsMap = secret.asCredentialsMap();
         if (credentialsMap != null) {
-            executor = executor.auth(new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()),
+            URI uri = distributionEndpoint.getUri();
+            executor = executor.auth(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                     credentialsMap.get(USERNAME), credentialsMap.get(PASSWORD)).authPreemptive(
-                    new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()));
+                    new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()));
             log.debug("authenticate user={}, endpoint={}", secret.asCredentialsMap().get(USERNAME), distributionEndpoint.getUri());
         }
         return executor;
