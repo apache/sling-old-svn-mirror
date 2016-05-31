@@ -124,17 +124,11 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     @Nullable
     public RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
-        List<DistributionPackage> result = new ArrayList<DistributionPackage>();
-
 
         try {
             URI distributionURI = RequestUtils.appendDistributionRequest(distributionEndpoint.getUri(), distributionRequest);
 
-            // TODO : executor should be cached and reused
-
             Executor executor = getExecutor(distributionContext);
-
-//            Request req = Request.Post(distributionURI).useExpectContinue();
 
             // TODO : add queue parameter
             InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI);
