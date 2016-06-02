@@ -55,7 +55,8 @@ public class ResourceBundleProviderIT {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final int RETRY_TIMEOUT_MSEC = 10000;
-    public static final String MSG_KEY = "foo";
+    public static final String MSG_KEY1 = "foo";
+    public static final String MSG_KEY2 = "foo2";
 
     @Inject
     private SlingRepository repository;
@@ -66,7 +67,9 @@ public class ResourceBundleProviderIT {
     private Session session;
     private Node i18nRoot;
     private Node deRoot;
+    private Node deDeRoot;
     private Node frRoot;
+    private Node enRoot;
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
@@ -118,6 +121,8 @@ public class ResourceBundleProviderIT {
         i18nRoot = libs.addNode("i18n", "nt:unstructured");
         deRoot = addLanguageNode(i18nRoot, "de");
         frRoot = addLanguageNode(i18nRoot, "fr");
+        deDeRoot = addLanguageNode(i18nRoot, "de_DE");
+        enRoot = addLanguageNode(i18nRoot, "en");
         session.save();
     }
 
@@ -135,18 +140,23 @@ public class ResourceBundleProviderIT {
         return child;
     }
 
-    private void assertMessages(final String deMessage, final String frMessage) {
+    private void assertMessages(final String key, final String deMessage, final String deDeMessage, final String frMessage) {
         new Retry(RETRY_TIMEOUT_MSEC) {
             protected void exec() {
                 {
+                    final ResourceBundle deDE = resourceBundleProvider.getResourceBundle(Locale.GERMANY); // this is the resource bundle for de_DE
+                    assertNotNull(deDE);
+                    assertEquals(deDeMessage, deDE.getString(key));
+                }
+                {
                     final ResourceBundle de = resourceBundleProvider.getResourceBundle(Locale.GERMAN);
                     assertNotNull(de);
-                    assertEquals(deMessage, de.getString(MSG_KEY));
+                    assertEquals(deMessage, de.getString(key));
                 }
                 {
                     final ResourceBundle fr = resourceBundleProvider.getResourceBundle(Locale.FRENCH);
                     assertNotNull(fr);
-                    assertEquals(frMessage, fr.getString(MSG_KEY));
+                    assertEquals(frMessage, fr.getString(key));
                 }
             }
         };
@@ -171,14 +181,31 @@ public class ResourceBundleProviderIT {
 
     @Test
     public void testChangesDetection() throws RepositoryException {
-        new Message("", MSG_KEY, "DE_message", false).add(deRoot);
-        new Message("", MSG_KEY, "FR_message", false).add(frRoot);
+        // set a key which is only available in the en dictionary
+        new Message("", MSG_KEY2, "EN_message", false).add(enRoot);
         session.save();
-        assertMessages("DE_message", "FR_message");
+        // since "en" is the fallback for all other resource bundle, the value from "en" must be exposed
+        assertMessages(MSG_KEY2, "EN_message", "EN_message", "EN_message");
+        
+        new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
+        new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
+        session.save();
+        assertMessages(MSG_KEY1, "DE_message", "DE_message", "FR_message");
 
-        new Message("", MSG_KEY, "DE_changed", false).add(deRoot);
-        new Message("", MSG_KEY, "FR_changed", false).add(frRoot);
+        new Message("", MSG_KEY1, "DE_changed", false).add(deRoot);
+        new Message("", MSG_KEY1, "FR_changed", false).add(frRoot);
         session.save();
-        assertMessages("DE_changed", "FR_changed");
+        assertMessages(MSG_KEY1, "DE_changed", "DE_changed", "FR_changed");
+        
+        new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
+        new Message("", MSG_KEY1, "DE_DE_message", false).add(deDeRoot);
+        new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
+        session.save();
+        assertMessages(MSG_KEY1, "DE_message", "DE_DE_message", "FR_message");
+        
+        // now change a key which is only available in the "en" dictionary
+        new Message("", MSG_KEY2, "EN_changed", false).add(enRoot);
+        session.save();
+        assertMessages(MSG_KEY2, "EN_changed", "EN_changed", "EN_changed");
     }
 }
