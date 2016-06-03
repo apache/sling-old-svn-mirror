@@ -54,4 +54,18 @@ public final class NonExistingResource extends SyntheticResource {
         // overwrite to only list the class name and path, type is irrelevant
         return getClass().getSimpleName() + ", path=" + getPath();
     }
+
+    /**
+     * 
+     * @return the parent resource (might be a {@link NonExistingResource} in case the parent does not exist either).
+     */
+    public Resource getParent() {
+        Resource parent = super.getParent();
+        if (parent == null) {
+            return new NonExistingResource(getResourceResolver(), ResourceUtil.getParent(getPath()));
+        } else {
+            return parent;
+        }
+    }
+
 }
