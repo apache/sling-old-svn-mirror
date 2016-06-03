@@ -30,7 +30,7 @@
     <!-- Apache Sling Commons -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.compiler/2.3.0</bundle>
     <!-- org.apache.sling.commons.json requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.16</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.18</bundle>
     <!-- (not using org.apache.sling.commons.log) -->
     <!-- (not using org.apache.sling.commons.logservice) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.8</bundle>
@@ -48,7 +48,7 @@
     <bundle dependency="true">mvn:javax.jcr/jcr/2.0</bundle>
     <bundle dependency="true">mvn:commons-codec/commons-codec/1.10</bundle>
     <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.2</bundle>
-    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.2</bundle>
     <bundle dependency="true">mvn:commons-io/commons-io/2.5</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/2.6</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-lang3/3.4</bundle>
@@ -377,7 +377,7 @@
   <!-- Apache Sling Servlets -->
   <feature name="sling-servlets" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.14</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.12</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.4.3-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
@@ -397,7 +397,7 @@
     <!-- TODO... -->
     <bundle dependency="true">mvn:commons-codec/commons-codec/1.10</bundle>
     <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.2</bundle>
-    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.3.2</bundle>
     <bundle dependency="true">mvn:commons-io/commons-io/2.5</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/2.6</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
@@ -615,9 +615,9 @@
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.5.2</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.5.2</bundle>
-    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.5.2</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.5.3</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.5.3</bundle>
+    <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.5.3</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
