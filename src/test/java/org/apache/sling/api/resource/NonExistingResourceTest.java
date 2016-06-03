@@ -40,7 +40,7 @@ public class NonExistingResourceTest {
 
     @Test
     public void testGetParentWithNonExistingParent() {
-        NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/nonExistingParent/nonExistingResource");
+        final NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/nonExistingParent/nonExistingResource");
         
         context.checking(new Expectations() {{
             allowing(resolver).getParent(nonExistingResource); will(returnValue(null));
@@ -54,9 +54,9 @@ public class NonExistingResourceTest {
 
     @Test
     public void testGetParentWithExistingParent() throws PersistenceException {
-        NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/existingParent/nonExistingResource");
+        final NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/existingParent/nonExistingResource");
         
-        Resource mockParentResource = this.context.mock(Resource.class);
+        final Resource mockParentResource = this.context.mock(Resource.class);
         context.checking(new Expectations() {{
             allowing(resolver).getParent(nonExistingResource); will(returnValue(mockParentResource));
             allowing(mockParentResource).getPath(); will(returnValue("/existingParent"));
