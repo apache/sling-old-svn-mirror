@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import javax.annotation.Nonnull;
+
 /**
  * Simple helper class representing nonexisting resources.
  *
@@ -43,7 +45,7 @@ public final class NonExistingResource extends SyntheticResource {
     /**
      * @see org.apache.sling.api.resource.SyntheticResource#getResourceType()
      */
-    public final String getResourceType() {
+    public final @Nonnull String getResourceType() {
         // overwrite to prevent overwriting of this method in extensions of
         // this class because the specific resource type is the marker of a
         // NonExistingResource
