@@ -76,7 +76,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         Resource resource = null;
 
-        Map<String, Object> properties = getResourceProperties(pathInfo);
+        Map<String, Object> properties = getMainResourceProperties(pathInfo);
 
         if (properties != null) {
             Object adaptable = properties.remove(INTERNAL_ADAPTABLE);
@@ -87,6 +87,12 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         return resource;
     }
+
+    protected Map<String, Object> getMainResourceProperties(SimplePathInfo pathInfo) {
+
+        return getResourceProperties(pathInfo);
+    }
+
 
 
     Resource buildMainResource(ResourceResolver resourceResolver,
