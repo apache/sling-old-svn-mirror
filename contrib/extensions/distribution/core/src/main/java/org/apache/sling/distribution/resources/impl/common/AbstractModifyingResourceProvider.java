@@ -85,8 +85,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     }
 
     public void revert(ResourceResolver resolver) {
-        changedResources.clear();
-        deletedResources.clear();
+        reset();
     }
 
     public void commit(ResourceResolver resolver) throws PersistenceException {
@@ -96,7 +95,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         save(resolver, changedResources, deletedResources);
 
-        revert(resolver);
+        reset();
     }
 
     public boolean hasChanges(ResourceResolver resolver) {
@@ -121,7 +120,8 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
     private boolean addToChangedResources(String resourceName, Map<String, Object> newProperties, boolean failIfAlreadyExists) {
         final boolean deleted = this.deletedResources.remove(resourceName);
-        Map<String, Object> existingResource = getMainResourceProperties(resourceName);
+        SimplePathInfo pathInfo = SimplePathInfo.parsePathInfo(resourceRoot, resourceRoot + "/" + resourceName);
+        Map<String, Object> existingResource = getMainResourceProperties(pathInfo);
         if (failIfAlreadyExists && !deleted && existingResource != null) {
             return false;
         }
@@ -140,8 +140,10 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         return true;
     }
 
-    private Map<String, Object> getMainResourceProperties(String resourceName) {
+    @Override
+    protected Map<String, Object> getMainResourceProperties(SimplePathInfo pathInfo) {
 
+        String resourceName = pathInfo.getMainResourceName();
         if (deletedResources.contains(resourceName)) {
             return null;
         }
@@ -149,8 +151,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         if (changedResources.containsKey(resourceName)) {
             return changedResources.get(resourceName);
         }
-
-        SimplePathInfo pathInfo = SimplePathInfo.parsePathInfo(resourceRoot, resourceRoot + "/" + resourceName);
 
         return getResourceProperties(pathInfo);
     }
@@ -160,6 +160,11 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
                                Map<String, Object> properties,
                                Object... adapters) {
         return new SimpleModifiableResource(resourceResolver, this, pathInfo.getResourcePath(), properties);
+    }
+
+    private void reset() {
+        changedResources.clear();
+        deletedResources.clear();
     }
 
 

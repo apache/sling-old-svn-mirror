@@ -140,24 +140,22 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     }
 
     @Test
-    @Ignore
     public void testAgentConfigurationResourceCreate() throws Exception {
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName);
+        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/distribution/setting/agent",
+                "sling:resourceType", "sling/distribution/setting",
                 "name", agentName);
     }
 
     @Test
-    @Ignore
     public void testAgentConfigurationResourceDelete() throws Exception {
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
-        authorClient.createNode(newConfigResource, "name", agentName);
+        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
