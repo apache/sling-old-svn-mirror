@@ -114,6 +114,23 @@ public class XSSAPIImpl implements XSSAPI {
     }
 
     /**
+     * @see org.apache.sling.xss.XSSAPI#getValidDouble(String, double)
+     */
+    @Override
+    public Double getValidDouble(String source, double defaultValue) {
+        if (source != null && source.length() > 0) {
+            try {
+                return validator.getValidDouble("XSS", source, 0d, Double.MAX_VALUE, false);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        // fall through to default if empty, null, or validation failure
+        return defaultValue;
+    }
+
+    /**
      * @see org.apache.sling.xss.XSSAPI#getValidDimension(String, String)
      */
     @Override
