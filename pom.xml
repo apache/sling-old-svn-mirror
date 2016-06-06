@@ -86,7 +86,7 @@
        <dependency>
            <groupId>org.apache.sling</groupId>
            <artifactId>org.apache.sling.provisioning.model</artifactId>
-           <version>1.4.4</version>
+           <version>1.4.5-SNAPSHOT</version>
        </dependency>
        <dependency>
            <groupId>org.apache.maven</groupId>
