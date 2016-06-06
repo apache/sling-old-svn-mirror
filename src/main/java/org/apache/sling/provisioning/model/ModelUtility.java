@@ -171,14 +171,32 @@ public abstract class ModelUtility {
             for(final RunMode runMode : feature.getRunModes()) {
                 final String[] rm = runMode.getNames();
                 if ( rm != null ) {
-                    boolean hasSpecial = false;
+                    int hasSpecial = 0;
+                    boolean hasRemove = false;
                     for(final String m : rm) {
                         if ( m.startsWith(":") ) {
-                            if ( hasSpecial ) {
-                                errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
-                                break;
+                            if ( hasSpecial > 0 ) {
+                                if ( hasSpecial == 1 ) {
+                                    if ( ModelConstants.RUN_MODE_REMOVE.equals(m) && !hasRemove) {
+                                        hasRemove = true;
+                                        hasSpecial = 2;
+                                    } else if ( hasRemove && !ModelConstants.RUN_MODE_REMOVE.equals(m) ) {
+                                        hasSpecial = 2;
+                                    } else {
+                                        hasSpecial = 2;
+                                        errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                        break;
+                                    }
+                                } else {
+                                    hasSpecial++;
+                                    errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                    break;
+                                }
+
+                            } else {
+                                hasSpecial = 1;
+                                hasRemove = ModelConstants.RUN_MODE_REMOVE.equals(m);
                             }
-                            hasSpecial = true;
                         }
                     }
                 }
