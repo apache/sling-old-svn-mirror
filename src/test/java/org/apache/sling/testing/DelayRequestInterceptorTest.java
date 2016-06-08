@@ -24,11 +24,11 @@ public class DelayRequestInterceptorTest {
 
     @Test
     public void testDelay() throws Exception {
-        DelayRequestInterceptor interceptor = new DelayRequestInterceptor(1000);
+        DelayRequestInterceptor interceptor = new DelayRequestInterceptor(700);
         long before = System.currentTimeMillis();
         interceptor.process(null, null);
         long after = System.currentTimeMillis();
-        Assert.assertTrue(after - before >= 1000);
+        Assert.assertTrue(after - before >= 700);
     }
 
 }
