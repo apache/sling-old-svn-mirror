@@ -182,6 +182,18 @@ public class SlingContextImpl extends OsgiContextImpl {
     }
 
     /**
+     * Returns a {@code ResourceResolverFactory}. All resource resolvers being created with the returned factory need to be properly closed.
+     * In most of the cases {@link #resourceResolver()} should be used instead, because its life cycle is managed automatically
+     * (i.e. it is automatically closed after the test). 
+     * @return Resource resolver factory
+     */
+    public final ResourceResolverFactory resourceResolverFactory() {
+        return this.resourceResolverFactory;
+    }
+
+    /**
+     * Returns the singleton resource resolver bound to this context.
+     * It is automatically closed after the test.
      * @return Resource resolver
      */
     public final ResourceResolver resourceResolver() {
