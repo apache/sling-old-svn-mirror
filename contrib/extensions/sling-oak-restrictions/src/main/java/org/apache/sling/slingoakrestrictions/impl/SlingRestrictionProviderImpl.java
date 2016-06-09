@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.slingoakrestrictions;
+package org.apache.sling.slingoakrestrictions.impl;
 
 import java.util.Map;
 import java.util.Set;
