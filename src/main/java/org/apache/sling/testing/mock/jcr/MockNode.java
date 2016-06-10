@@ -315,6 +315,12 @@ class MockNode extends AbstractItem implements Node {
         return false;
     }
 
+    @Override
+    public NodeType[] getMixinNodeTypes() throws RepositoryException {
+        // we have no real mixin support - just assume no mixin nodetypes are set
+        return new NodeType[0];
+    }
+        
     // --- unsupported operations ---
     @Override
     public Property setProperty(final String name, final Value value, final int type) throws RepositoryException {
@@ -388,11 +394,6 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public Lock getLock() throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public NodeType[] getMixinNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
