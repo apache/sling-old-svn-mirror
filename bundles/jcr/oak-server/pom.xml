@@ -72,9 +72,6 @@
                           org.apache.felix.jaas.boot,
                           *
                         </Import-Package>
-                        
-                        <!-- TODO embedding shouldn't be needed but avoids classloading issues -->
-                        <Embed-Dependency>oak-jcr</Embed-Dependency>
                     </instructions>
                 </configuration>                
             </plugin>
