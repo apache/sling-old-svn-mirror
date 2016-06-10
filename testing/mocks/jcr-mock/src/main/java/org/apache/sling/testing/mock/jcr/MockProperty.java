@@ -272,6 +272,31 @@ class MockProperty extends AbstractItem implements Property {
             return MockProperty.this.itemData.isMultiple();
         }
 
+        @Override
+        public boolean isAutoCreated() {
+            return false;
+        }
+
+        @Override
+        public boolean isMandatory() {
+            return false;
+        }
+
+        @Override
+        public boolean isProtected() {
+            return false;
+        }
+        
+        @Override
+        public boolean isFullTextSearchable() {
+            return false;
+        }
+
+        @Override
+        public boolean isQueryOrderable() {
+            return false;
+        }
+        
         // --- unsupported operations ---
         @Override
         public Value[] getDefaultValues() {
@@ -304,34 +329,10 @@ class MockProperty extends AbstractItem implements Property {
         }
 
         @Override
-        public boolean isAutoCreated() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isMandatory() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isProtected() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public String[] getAvailableQueryOperators() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public boolean isFullTextSearchable() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isQueryOrderable() {
-            throw new UnsupportedOperationException();
-        }
     }
 
 }

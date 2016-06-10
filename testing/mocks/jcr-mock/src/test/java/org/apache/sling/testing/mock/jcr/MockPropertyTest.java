@@ -78,6 +78,12 @@ public class MockPropertyTest {
         assertFalse(prop1.isMultiple());
         assertFalse(prop1.getDefinition().isMultiple());
         assertEquals(6, prop1.getLength());
+
+        assertFalse(prop1.getDefinition().isProtected());
+        assertFalse(prop1.getDefinition().isAutoCreated());
+        assertFalse(prop1.getDefinition().isMandatory());
+        assertFalse(prop1.getDefinition().isFullTextSearchable());
+        assertFalse(prop1.getDefinition().isQueryOrderable());
     }
 
     @Test
