@@ -31,6 +31,7 @@
     org.apache.jackrabbit/oak-commons/${oak.version}
     org.apache.jackrabbit/oak-lucene/${oak.version}
     org.apache.jackrabbit/oak-blob/${oak.version}
+    org.apache.jackrabbit/oak-jcr/${oak.version}
 
 [artifacts startLevel=15 runModes=oak_tar]
     org.apache.jackrabbit/oak-segment/${oak.version}
