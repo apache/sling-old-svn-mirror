@@ -83,7 +83,6 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-          <module>auth/openid</module>
           <module>auth/org.apache.sling.auth.xing.api</module>
           <module>auth/org.apache.sling.auth.xing.login</module>
           <module>auth/org.apache.sling.auth.xing.oauth</module>
