@@ -55,8 +55,7 @@ import org.apache.jackrabbit.oak.plugins.name.NamespaceEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.TypeEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.write.InitialContent;
 import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
-import org.apache.jackrabbit.oak.plugins.version.VersionEditorProvider;
-import org.apache.jackrabbit.oak.spi.commit.EditorHook;
+import org.apache.jackrabbit.oak.plugins.version.VersionHook;
 import org.apache.jackrabbit.oak.spi.lifecycle.RepositoryInitializer;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
@@ -214,7 +213,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(new ExtraSlingContent())
 
         .with(JcrConflictHandler.createJcrConflictHandler())
-        .with(new EditorHook(new VersionEditorProvider()))
+        .with(new VersionHook())
 
         .with(securityProvider)
 
