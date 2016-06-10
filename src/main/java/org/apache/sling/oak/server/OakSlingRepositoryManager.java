@@ -24,6 +24,8 @@ import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
 import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
 import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -42,8 +44,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
-import org.apache.jackrabbit.oak.api.ContentRepository;
-import org.apache.jackrabbit.oak.jcr.osgi.OsgiRepository;
+import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
@@ -209,6 +210,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         }, new Hashtable<String, Object>());
 
         final Oak oak = new Oak(nodeStore)
+            .withAsyncIndexing("async", 5);
+
+        Jcr jcr = new Jcr(oak, false)
         .with(new InitialContent())
         .with(new ExtraSlingContent())
 
@@ -220,26 +224,23 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(new NameValidatorProvider())
         .with(new NamespaceEditorProvider())
         .with(new TypeEditorProvider())
-//        .with(new RegistrationEditorProvider())
         .with(new ConflictValidatorProvider())
 
         // index stuff
         .with(indexProvider)
         .with(indexEditorProvider)
         .with(getDefaultWorkspace())
-        .withAsyncIndexing()
         .with(whiteboard)
-        ;
-        
+        .withFastQueryResultSize(true)
+        .withObservationQueueLength(observationQueueLength);
+
         if (commitRateLimiter != null) {
-            oak.with(commitRateLimiter);
+            jcr.with(commitRateLimiter);
         }
 
-        final ContentRepository contentRepository = oak.createContentRepository();
-        final boolean fastQueryResultSize = true;
-        return new OsgiRepository(
-                contentRepository, whiteboard, securityProvider, observationQueueLength, 
-                commitRateLimiter, fastQueryResultSize);
+        jcr.createContentRepository();
+
+        return new TCCLWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
     }
 
     private void setup(BundleContext bundleContext, SlingRepository repository) {
