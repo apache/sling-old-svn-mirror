@@ -583,7 +583,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         }
 
         // check language and country
-        final String[] parts = localeString.split("_");
+        final String[] parts = localeString.split("-");
         if (parts.length == 0) {
             return Locale.getDefault();
         }
