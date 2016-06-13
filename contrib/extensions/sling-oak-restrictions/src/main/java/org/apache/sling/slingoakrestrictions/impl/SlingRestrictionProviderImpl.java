@@ -16,6 +16,8 @@
  */
 package org.apache.sling.slingoakrestrictions.impl;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,12 +39,11 @@ import org.apache.jackrabbit.oak.spi.security.authorization.restriction.Restrict
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-
 /** Sling restriction provider implementation that supports the following restrictions:
  *
  * <ul>
- * <li>{@link #REP_SLING_RESOURCE_TYPE}: A restriction that allows to match against resource types.</li>
+ * <li>{@link #REP_RESOURCE_TYPES}: A restriction that allows to match against resource types (matches are exact and do not include children).</li>
+ * <li>{@link #REP_RESOURCE_TYPES_WITH_CHILDREN}: A restriction that allows to match against resource types and all sub nodes of matching resource types.</li>
  * </ul>
  * 
  * Further sling restriction can be added here in future.
@@ -53,15 +54,20 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(SlingRestrictionProviderImpl.class);
 
-    public static final String REP_SLING_RESOURCE_TYPE = "rep:slingResourceTypes";
+    public static final String REP_RESOURCE_TYPES = "rep:resourceTypes";
+    public static final String REP_RESOURCE_TYPES_WITH_CHILDREN = "rep:resourceTypesWithChildren";
 
     public SlingRestrictionProviderImpl() {
         super(supportedRestrictions());
     }
 
     private static Map<String, RestrictionDefinition> supportedRestrictions() {
-        RestrictionDefinition slingResourceTypes = new RestrictionDefinitionImpl(REP_SLING_RESOURCE_TYPE, Type.STRINGS, false);
-        return ImmutableMap.of(slingResourceTypes.getName(), slingResourceTypes);
+        RestrictionDefinition slingResourceTypes = new RestrictionDefinitionImpl(REP_RESOURCE_TYPES, Type.STRINGS, false);
+        RestrictionDefinition slingResourceTypesWithChildren = new RestrictionDefinitionImpl(REP_RESOURCE_TYPES_WITH_CHILDREN, Type.STRINGS, false);
+        Map<String, RestrictionDefinition> supportedRestrictions = new HashMap<String, RestrictionDefinition>();
+        supportedRestrictions.put(slingResourceTypes.getName(), slingResourceTypes);
+        supportedRestrictions.put(slingResourceTypesWithChildren.getName(), slingResourceTypesWithChildren);
+        return Collections.unmodifiableMap(supportedRestrictions);
     }
 
     // ------------------------------------------------< RestrictionProvider >---
@@ -70,12 +76,18 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
     @Override
     public RestrictionPattern getPattern(String oakPath, @Nonnull Tree tree) {
         if (oakPath != null) {
-            PropertyState resourceTypes = tree.getProperty(REP_SLING_RESOURCE_TYPE);
+            PropertyState resourceTypes = tree.getProperty(REP_RESOURCE_TYPES);
             if (resourceTypes != null) {
-                ResourceTypePattern resourceTypePattern = new ResourceTypePattern(resourceTypes.getValue(Type.STRINGS));
-                LOG.debug("Returning resourceTypePattern={} in getPattern(String oakPath, @Nonnull Tree tree) ", resourceTypePattern);
+                ResourceTypePattern resourceTypePattern = new ResourceTypePattern(resourceTypes.getValue(Type.STRINGS), oakPath, false);
+                LOG.debug("Returning resourceTypePattern={} for rep:slingResourceTypes in getPattern(String,Tree)", resourceTypePattern);
                 return resourceTypePattern;
             }
+            PropertyState resourceTypesWithChildren = tree.getProperty(REP_RESOURCE_TYPES_WITH_CHILDREN);
+            if (resourceTypesWithChildren != null) {
+                ResourceTypePattern resourceTypePattern = new ResourceTypePattern(resourceTypesWithChildren.getValue(Type.STRINGS), oakPath, true);
+                LOG.debug("Returning resourceTypePattern={} for rep:slingResourceTypesWithChildren in getPattern(String,Tree)", resourceTypePattern);
+                return resourceTypePattern;
+            }            
         }
         return RestrictionPattern.EMPTY;
     }
@@ -87,10 +99,16 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
         if (oakPath != null && !restrictions.isEmpty()) {
             for (Restriction r : restrictions) {
                 String name = r.getDefinition().getName();
-                if (REP_SLING_RESOURCE_TYPE.equals(name)) {
-                    ResourceTypePattern resourceTypePattern = new ResourceTypePattern(r.getProperty().getValue(Type.STRINGS));
+                if (REP_RESOURCE_TYPES.equals(name)) {
+                    ResourceTypePattern resourceTypePattern = new ResourceTypePattern(r.getProperty().getValue(Type.STRINGS), oakPath, false);
                     LOG.debug(
-                            "Returning resourceTypePattern={} in getPattern(@Nullable String oakPath, @Nonnull Set<Restriction> restrictions)",
+                            "Returning resourceTypePattern={} for rep:slingResourceTypes in getPattern(String,Set<Restriction>)",
+                            resourceTypePattern);
+                    return resourceTypePattern;
+                } else if(REP_RESOURCE_TYPES_WITH_CHILDREN.equals(name)) {
+                    ResourceTypePattern resourceTypePattern = new ResourceTypePattern(r.getProperty().getValue(Type.STRINGS), oakPath, true);
+                    LOG.debug(
+                            "Returning resourceTypePattern={} for rep:slingResourceTypesWithChildren in getPattern(String,Set<Restriction>)",
                             resourceTypePattern);
                     return resourceTypePattern;
                 }

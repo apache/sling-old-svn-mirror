@@ -16,10 +16,9 @@
  */
 package org.apache.sling.slingoakrestrictions.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,71 +33,114 @@ import org.apache.sling.api.SlingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 /** Implementation of the {@link RestrictionPattern} interface that returns {@code true} if the resource type of the target tree (or the
  * parent of a target property) is contained in the configured resource type. */
 public class ResourceTypePattern implements RestrictionPattern {
-
-    private static final String SLING_RESOURCE_TYPE = SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE;
-
     private static final Logger LOG = LoggerFactory.getLogger(ResourceTypePattern.class);
 
-    private final Set<String> resourceTypes;
-    private final Map<String,Set<String>> resourceTypesByPath;
+    static final String DEFAULT_PATH = ".";
+    static final String PATH_MARKER = "@";
+    
+    static final String SLING_RESOURCE_TYPE = SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE;
 
-    ResourceTypePattern(@Nonnull Iterable<String> resourceTypesRaw) {
+
+    private final String limitedToPath;
+    private final boolean matchChildren;
+    
+    private final Map<String,Set<String>> resourceTypesByPath;
+    
+  
+    ResourceTypePattern(@Nonnull Iterable<String> resourceTypesRaw, String limitedToPath, boolean matchChildren) {
         
-        List<String> plainResourceTypes = new ArrayList<String>();
-        Map<String,Set<String>> resourceTypesByPath = new HashMap<String,Set<String>>();
+        this.limitedToPath = limitedToPath;
+        this.matchChildren = matchChildren;
+        
+        Map<String,Set<String>> resourceTypesByPath = new LinkedHashMap<String,Set<String>>();
         for (String resourceTypeRaw : resourceTypesRaw) {
-            if(resourceTypeRaw.contains("@")) {
-                String[] bits = resourceTypeRaw.split("@",2);
-                String path = bits[1];
-                String resourceType = bits[0];
-                Set<String> resourceTypesForPath = resourceTypesByPath.get(path);
-                if(resourceTypesForPath==null) {
-                    resourceTypesForPath = new HashSet<String>();
-                    resourceTypesByPath.put(path, resourceTypesForPath);
-                }
-                resourceTypesForPath.add(resourceType);
+            String path;
+            String resourceType;
+            if(resourceTypeRaw.contains(PATH_MARKER)) {
+                String[] bits = resourceTypeRaw.trim().split(PATH_MARKER, 2);
+                path = bits[1];
+                resourceType = bits[0];
             } else {
-                plainResourceTypes.add(resourceTypeRaw);
+                path = DEFAULT_PATH;
+                resourceType = resourceTypeRaw;
             }
+                
+            Set<String> resourceTypesForPath = resourceTypesByPath.get(path);
+            if(resourceTypesForPath==null) {
+                resourceTypesForPath = new HashSet<String>();
+                resourceTypesByPath.put(path, resourceTypesForPath);
+            }
+            resourceTypesForPath.add(resourceType);
         }
         
-        this.resourceTypes = ImmutableSet.copyOf(plainResourceTypes);
-        this.resourceTypesByPath = ImmutableMap.copyOf(resourceTypesByPath);
-        LOG.debug("pattern setup with resourceTypes={}, resourceTypesByPath=", this.resourceTypes, this.resourceTypesByPath);
+        this.resourceTypesByPath = Collections.unmodifiableMap(resourceTypesByPath);
+        LOG.trace("pattern setup with resourceTypesByPath={}",  this.resourceTypesByPath);
+    }
+    
+    String getLimitedToPath() {
+        return limitedToPath;
+    }
+
+    boolean isMatchChildren() {
+        return matchChildren;
     }
 
     @Override
     public boolean matches(@Nonnull Tree tree, @Nullable PropertyState property) {
-        String actualResourceType = TreeUtil.getString(tree, SLING_RESOURCE_TYPE);
-        boolean isResourceTypeMatch = resourceTypes.contains(actualResourceType);
-        LOG.debug("isResourceTypeMatch={} (checked at path {})", isResourceTypeMatch, resourceTypes);
-        if(!isResourceTypeMatch && !resourceTypesByPath.isEmpty()) {
-            for (String path : resourceTypesByPath.keySet()) {
-                try {
-                    Tree childTree = tree.getChild(path);
-                    String actualResourceTypeChild = TreeUtil.getString(childTree, SLING_RESOURCE_TYPE);
-                    Set<String> resourceTypesForPath = resourceTypesByPath.get(path);
-                    isResourceTypeMatch = resourceTypesForPath.contains(actualResourceTypeChild);
-                    if(LOG.isDebugEnabled()) {
-                        LOG.debug("isResourceTypeMatch={} (checked at path {} with sub path {})", new Object[]{isResourceTypeMatch, resourceTypes, path});
+        boolean isMatch = matchesAtTree(tree);
+        if(!isMatch && matchChildren) { // try parent hierarchy
+            Tree treeCursor = tree;
+            while(!isMatch && !treeCursor.isRoot()) {
+                treeCursor = treeCursor.getParent();
+                if(!treeCursor.getPath().startsWith(limitedToPath)) {
+                    if(LOG.isTraceEnabled()) {
+                        LOG.trace("Breaking parent traversal loop: tree={}, limitedToPath={}", treeCursor.getPath(), limitedToPath);
                     }
-                    if(isResourceTypeMatch) {
-                        break; // return as quickly as possible
-                    }
-                } catch (IllegalArgumentException e) {
-                    continue; // continue and ignore if path is not found
+                    break; 
+                }
+                isMatch = matchesAtTree(treeCursor);
+            }
+        }
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Match for "+tree.getPath()+": "+ (isMatch ? "YES":"NO") + " ("+this+")");
+        }
+        return isMatch;
+    }
+
+    private boolean matchesAtTree(Tree tree) {
+        boolean isResourceTypeMatch = false;
+        for (String path : resourceTypesByPath.keySet()) {
+
+                Tree treeToCheck = tree; // the default if e.g. just the resource type without @path is given
+                if(!DEFAULT_PATH.equals(path)) {
+                    try {
+                        String[] segments = path.split("/");
+                        for (String string : segments) {
+                            treeToCheck = treeToCheck.getChild(string);
+                        }
+                    } catch (IllegalArgumentException e) {
+                        continue; // continue and ignore if path is not found
+                    } 
                 }
                 
-            }
+                Set<String> resourceTypesForPath = resourceTypesByPath.get(path);
+                String actualResourceType = TreeUtil.getString(treeToCheck, SLING_RESOURCE_TYPE);
+                isResourceTypeMatch = resourceTypesForPath.contains(actualResourceType);
+                
+                if(LOG.isTraceEnabled()) {
+                    LOG.trace("isResourceTypeMatch={} (checked at path {} at sub path {})", new Object[]{isResourceTypeMatch, tree.getPath(), path});
+                }
+                if(isResourceTypeMatch) {
+                    break; // return as quickly as possible
+                }
+
         }
         return isResourceTypeMatch;
     }
+
 
     @Override
     public boolean matches(@Nonnull String path) {
@@ -112,28 +154,46 @@ public class ResourceTypePattern implements RestrictionPattern {
     }
 
     // -------------------------------------------------------------< Object >---
-    /** @see Object#hashCode() */
-    @Override
-    public int hashCode() {
-        return resourceTypes.hashCode();
-    }
 
-    /** @see Object#toString() */
     @Override
     public String toString() {
-        return resourceTypes.toString();
+        return "ResourceTypePattern [limitedToPath=" + limitedToPath + ", matchChildren=" + matchChildren + ", resourceTypesByPath="
+                + resourceTypesByPath + "]";
     }
 
-    /** @see Object#equals(Object) */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((limitedToPath == null) ? 0 : limitedToPath.hashCode());
+        result = prime * result + (matchChildren ? 1231 : 1237);
+        result = prime * result + ((resourceTypesByPath == null) ? 0 : resourceTypesByPath.hashCode());
+        return result;
+    }
+
+
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
+        if(this == obj)
             return true;
-        }
-        if (obj instanceof ResourceTypePattern) {
-            ResourceTypePattern other = (ResourceTypePattern) obj;
-            return resourceTypes.equals(other.resourceTypes);
-        }
-        return false;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        ResourceTypePattern other = (ResourceTypePattern) obj;
+        if(limitedToPath == null) {
+            if(other.limitedToPath != null)
+                return false;
+        } else if(!limitedToPath.equals(other.limitedToPath))
+            return false;
+        if(matchChildren != other.matchChildren)
+            return false;
+        if(resourceTypesByPath == null) {
+            if(other.resourceTypesByPath != null)
+                return false;
+        } else if(!resourceTypesByPath.equals(other.resourceTypesByPath))
+            return false;
+        return true;
     }
+    
 }
