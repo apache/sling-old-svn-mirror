@@ -79,13 +79,13 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
             PropertyState resourceTypes = tree.getProperty(REP_RESOURCE_TYPES);
             if (resourceTypes != null) {
                 ResourceTypePattern resourceTypePattern = new ResourceTypePattern(resourceTypes.getValue(Type.STRINGS), oakPath, false);
-                LOG.debug("Returning resourceTypePattern={} for rep:slingResourceTypes in getPattern(String,Tree)", resourceTypePattern);
+                LOG.trace("Returning resourceTypePattern={} for rep:slingResourceTypes in getPattern(String,Tree)", resourceTypePattern);
                 return resourceTypePattern;
             }
             PropertyState resourceTypesWithChildren = tree.getProperty(REP_RESOURCE_TYPES_WITH_CHILDREN);
             if (resourceTypesWithChildren != null) {
                 ResourceTypePattern resourceTypePattern = new ResourceTypePattern(resourceTypesWithChildren.getValue(Type.STRINGS), oakPath, true);
-                LOG.debug("Returning resourceTypePattern={} for rep:slingResourceTypesWithChildren in getPattern(String,Tree)", resourceTypePattern);
+                LOG.trace("Returning resourceTypePattern={} for rep:slingResourceTypesWithChildren in getPattern(String,Tree)", resourceTypePattern);
                 return resourceTypePattern;
             }            
         }
@@ -101,13 +101,13 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
                 String name = r.getDefinition().getName();
                 if (REP_RESOURCE_TYPES.equals(name)) {
                     ResourceTypePattern resourceTypePattern = new ResourceTypePattern(r.getProperty().getValue(Type.STRINGS), oakPath, false);
-                    LOG.debug(
+                    LOG.trace(
                             "Returning resourceTypePattern={} for rep:slingResourceTypes in getPattern(String,Set<Restriction>)",
                             resourceTypePattern);
                     return resourceTypePattern;
                 } else if(REP_RESOURCE_TYPES_WITH_CHILDREN.equals(name)) {
                     ResourceTypePattern resourceTypePattern = new ResourceTypePattern(r.getProperty().getValue(Type.STRINGS), oakPath, true);
-                    LOG.debug(
+                    LOG.trace(
                             "Returning resourceTypePattern={} for rep:slingResourceTypesWithChildren in getPattern(String,Set<Restriction>)",
                             resourceTypePattern);
                     return resourceTypePattern;
@@ -118,8 +118,4 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
         return RestrictionPattern.EMPTY;
     }
 
-    @Override
-    public void validateRestrictions(String oakPath, @Nonnull Tree aceTree) throws AccessControlException {
-        super.validateRestrictions(oakPath, aceTree);
-    }
 }
