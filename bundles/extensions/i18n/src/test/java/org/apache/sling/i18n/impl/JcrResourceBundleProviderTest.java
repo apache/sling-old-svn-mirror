@@ -35,20 +35,20 @@ public class JcrResourceBundleProviderTest {
         Assert.assertEquals(Locale.ENGLISH, JcrResourceBundleProvider.toLocale("en"));
         Assert.assertEquals(Locale.GERMAN, JcrResourceBundleProvider.toLocale("de"));
         // for invalid languages assume default language
-        Assert.assertEquals(new Locale(Locale.getDefault().getLanguage()), JcrResourceBundleProvider.toLocale("-"));
+        Assert.assertEquals(new Locale(Locale.getDefault().getLanguage()), JcrResourceBundleProvider.toLocale("_"));
         
         // both language and country being set
-        Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("de_DE"));
-        Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("en_GB"));
+        Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("de-DE"));
+        Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("en-GB"));
         // for invalid languages assume default language
-        Assert.assertEquals(new Locale(Locale.getDefault().getLanguage(), "GB"), JcrResourceBundleProvider.toLocale("-_GB"));
+        Assert.assertEquals(new Locale(Locale.getDefault().getLanguage(), "GB"), JcrResourceBundleProvider.toLocale("_-GB"));
         // for invalid countries assume default country
-        Assert.assertEquals(new Locale("en", Locale.getDefault().getCountry()), JcrResourceBundleProvider.toLocale("en_-"));
+        Assert.assertEquals(new Locale("en", Locale.getDefault().getCountry()), JcrResourceBundleProvider.toLocale("en-_"));
     
         // language, country and variant being set
-        Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en_GB_variant1"));
+        Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en-GB-variant1"));
         
         // parts after the variant are just ignored
-        Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en_GB_variant1_something"));
+        Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en-GB-variant1-something"));
     }
 }
