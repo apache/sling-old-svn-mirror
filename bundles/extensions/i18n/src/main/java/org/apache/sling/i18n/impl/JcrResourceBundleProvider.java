@@ -228,6 +228,27 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                         break;
                     }
                 }
+
+                Resource resource = resourceResolver.getResource(path);
+                ValueMap valueMap = resource.adaptTo(ValueMap.class);
+
+                if (hasMixin(valueMap, JcrResourceBundle.MIXIN_MESSAGE)) {
+                    resource = resource.getParent();
+                    valueMap = resource.adaptTo(ValueMap.class);
+                }
+
+                if (hasMixin(valueMap, JcrResourceBundle.MIXIN_LANGUAGE) && valueMap.containsKey(JcrResourceBundle.PROP_LANGUAGE)) {
+                    String language = valueMap.get(JcrResourceBundle.PROP_LANGUAGE, String.class);
+                    Locale currLocale = toLocale(language);
+                    if (currLocale.equals(defaultLocale)) {
+                        scheduleReloadBundles(true);
+                        return;
+                    }
+                    discardBundlesWithLocalePrefix(language);
+                    return;
+                }
+
+
                 // may be a completely new dictionary
                 if (isDictionaryResource(path, event)) {
                     scheduleReloadBundles(true);
