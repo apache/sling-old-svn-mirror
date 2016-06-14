@@ -35,7 +35,7 @@
   <description>Support for scripting with Groovy</description>
 
   <properties>
-    <groovy.version>2.4.6</groovy.version>
+    <groovy.version>2.4.7</groovy.version>
   </properties>
 
   <scm>
