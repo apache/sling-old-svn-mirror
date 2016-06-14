@@ -124,7 +124,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.support/1.0.0</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
-    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.4</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.5</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.2</bundle>
   </feature>
   <feature name="sling-extension-discovery-impl" version="${feature.version}">
@@ -474,7 +474,7 @@
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-extension-event</feature>
     <feature version="${feature.version}">sling-extension-healthcheck</feature>
-    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.4</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.5</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.2</bundle>
     <bundle dependency="true">mvn:org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.1.26</bundle>
   </feature>
@@ -571,9 +571,9 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
-    <bundle dependency="true">mvn:org.codehaus.groovy/groovy/2.4.6</bundle>
-    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-json/2.4.6</bundle>
-    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-templates/2.4.6</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy/2.4.7</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-json/2.4.7</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-templates/2.4.7</bundle>
   </feature>
   <feature name="sling-scripting-java" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.14</bundle>
