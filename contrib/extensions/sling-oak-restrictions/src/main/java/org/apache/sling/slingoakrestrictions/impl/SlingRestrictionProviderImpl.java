@@ -54,8 +54,8 @@ public class SlingRestrictionProviderImpl extends AbstractRestrictionProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(SlingRestrictionProviderImpl.class);
 
-    public static final String REP_RESOURCE_TYPES = "rep:resourceTypes";
-    public static final String REP_RESOURCE_TYPES_WITH_CHILDREN = "rep:resourceTypesWithChildren";
+    public static final String REP_RESOURCE_TYPES = "sling:resourceTypes";
+    public static final String REP_RESOURCE_TYPES_WITH_CHILDREN = "sling:resourceTypesWithChildren";
 
     public SlingRestrictionProviderImpl() {
         super(supportedRestrictions());
