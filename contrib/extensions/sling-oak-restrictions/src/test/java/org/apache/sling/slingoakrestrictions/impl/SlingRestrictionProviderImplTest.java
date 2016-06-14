@@ -68,7 +68,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromTreeResourceTypes() {
         
-        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.REP_RESOURCE_TYPES);
+        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES);
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
@@ -84,7 +84,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromTreeResourceTypesWithChildren() {
         
-        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.REP_RESOURCE_TYPES_WITH_CHILDREN);
+        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_CHILDREN);
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
@@ -100,7 +100,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromRestrictionsResourceTypes() {
         
-        doReturn(SlingRestrictionProviderImpl.REP_RESOURCE_TYPES).when(definition).getName();
+        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES).when(definition).getName();
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
@@ -117,7 +117,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromRestrictionsResourceTypesWithChildren() {
         
-        doReturn(SlingRestrictionProviderImpl.REP_RESOURCE_TYPES_WITH_CHILDREN).when(definition).getName();
+        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_CHILDREN).when(definition).getName();
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
