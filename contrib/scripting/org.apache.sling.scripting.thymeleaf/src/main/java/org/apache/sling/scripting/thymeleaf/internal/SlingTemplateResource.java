@@ -52,7 +52,7 @@ public class SlingTemplateResource implements ITemplateResource {
 
     @Override
     public boolean exists() {
-        return !(ResourceUtil.isNonExistingResource(resource));
+        return resource != null && !(ResourceUtil.isNonExistingResource(resource));
     }
 
     @Override
