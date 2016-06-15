@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import java.io.File;
-import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
@@ -30,9 +29,7 @@ import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,16 +41,23 @@ public class SimpleDistributionQueueProviderTest {
 
     @Test
     public void testGetOrCreateQueue() throws Exception {
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(mock(Scheduler.class), "agentName", false);
+        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(mock(Scheduler.class),
+                "agentName", false);
         DistributionQueue queue = simpledistributionQueueProvider.getQueue("default");
         assertNotNull(queue);
     }
 
     @Test
     public void testGetOrCreateQueueWithCheckpointing() throws Exception {
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(mock(Scheduler.class), "agentName", true);
-        DistributionQueue queue = simpledistributionQueueProvider.getQueue("default");
-        assertNotNull(queue);
+        String name = "agentName";
+        try {
+            SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(mock(Scheduler.class),
+                    name, true);
+            DistributionQueue queue = simpledistributionQueueProvider.getQueue("default");
+            assertNotNull(queue);
+        } finally {
+            new File(name + "-simple-queues-checkpoints").deleteOnExit();
+        }
     }
 
     @Test
@@ -63,7 +67,9 @@ public class SimpleDistributionQueueProviderTest {
         when(scheduler.NOW(-1, 1)).thenReturn(options);
         when(options.canRunConcurrently(false)).thenReturn(options);
         when(options.name(any(String.class))).thenReturn(options);
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, "dummy-agent", false);
+        String name = "dummy-agent";
+        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler,
+                name, false);
         DistributionQueueProcessor processor = mock(DistributionQueueProcessor.class);
         simpledistributionQueueProvider.enableQueueProcessing(processor);
     }
@@ -80,37 +86,48 @@ public class SimpleDistributionQueueProviderTest {
         when(scheduler.NOW(-1, 15)).thenReturn(options);
         when(options.canRunConcurrently(false)).thenReturn(options);
         when(options.name(any(String.class))).thenReturn(options);
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, "dummy-agent", true);
-        DistributionQueueProcessor processor = mock(DistributionQueueProcessor.class);
-        simpledistributionQueueProvider.enableQueueProcessing(processor, "dummy-agent");
-        DistributionQueue queue = simpledistributionQueueProvider.getQueue("dummy-agent");
-        assertNotNull(queue);
-        assertEquals(1, queue.getStatus().getItemsCount());
-        DistributionQueueEntry head = queue.getHead();
-        assertNotNull(head);
-        DistributionQueueItem item = head.getItem();
-        assertNotNull(item);
-        String packageId = item.getPackageId();
-        assertNotNull(packageId);
-        assertEquals("DSTRQ1", item.get("internal.request.id"));
-        assertArrayEquals(new String[]{"/foo","bar"}, (String[])item.get("request.paths"));
-        assertArrayEquals(new String[]{"/foo"}, (String[])item.get("request.deepPaths"));
-        assertEquals("admin", item.get("internal.request.user"));
-        assertEquals("ADD", item.get("request.type"));
-        assertEquals("default", item.get("package.type"));
-        assertEquals("1464090250095", item.get("internal.request.startTime"));
+        String name = "dummy-agent";
+        try {
+            SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, name, true);
+            DistributionQueueProcessor processor = mock(DistributionQueueProcessor.class);
+            simpledistributionQueueProvider.enableQueueProcessing(processor, name);
+            DistributionQueue queue = simpledistributionQueueProvider.getQueue(name);
+            assertNotNull(queue);
+            assertEquals(1, queue.getStatus().getItemsCount());
+            DistributionQueueEntry head = queue.getHead();
+            assertNotNull(head);
+            DistributionQueueItem item = head.getItem();
+            assertNotNull(item);
+            String packageId = item.getPackageId();
+            assertNotNull(packageId);
+            assertEquals("DSTRQ1", item.get("internal.request.id"));
+            assertArrayEquals(new String[]{"/foo", "bar"}, (String[]) item.get("request.paths"));
+            assertArrayEquals(new String[]{"/foo"}, (String[]) item.get("request.deepPaths"));
+            assertEquals("admin", item.get("internal.request.user"));
+            assertEquals("ADD", item.get("request.type"));
+            assertEquals("default", item.get("package.type"));
+            assertEquals("1464090250095", item.get("internal.request.startTime"));
+        } finally {
+            FileUtils.deleteDirectory(new File(name + "-simple-queues-checkpoints"));
+        }
     }
 
     @Test
     public void testEnableQueueProcessingWithCheckpointing() throws Exception {
-        Scheduler scheduler = mock(Scheduler.class);
-        ScheduleOptions options = mock(ScheduleOptions.class);
-        when(scheduler.NOW(-1, 1)).thenReturn(options);
-        when(options.canRunConcurrently(false)).thenReturn(options);
-        when(options.name(any(String.class))).thenReturn(options);
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, "dummy-agent", true);
-        DistributionQueueProcessor processor = mock(DistributionQueueProcessor.class);
-        simpledistributionQueueProvider.enableQueueProcessing(processor);
+        String name = "dummy-agent";
+        try {
+            Scheduler scheduler = mock(Scheduler.class);
+            ScheduleOptions options = mock(ScheduleOptions.class);
+            when(scheduler.NOW(-1, 1)).thenReturn(options);
+            when(options.canRunConcurrently(false)).thenReturn(options);
+            when(options.name(any(String.class))).thenReturn(options);
+            SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler,
+                    name, true);
+            DistributionQueueProcessor processor = mock(DistributionQueueProcessor.class);
+            simpledistributionQueueProvider.enableQueueProcessing(processor);
+        } finally {
+            new File(name + "-simple-queues-checkpoints").deleteOnExit();
+        }
     }
 
     @Test
@@ -126,12 +143,18 @@ public class SimpleDistributionQueueProviderTest {
 
     @Test
     public void testDisableQueueProcessingWithCheckpointing() throws Exception {
-        Scheduler scheduler = mock(Scheduler.class);
-        ScheduleOptions options = mock(ScheduleOptions.class);
-        when(scheduler.NOW(-1, 10)).thenReturn(options);
-        when(options.canRunConcurrently(false)).thenReturn(options);
-        when(options.name(any(String.class))).thenReturn(options);
-        SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler, "dummy-agent", true);
-        simpledistributionQueueProvider.disableQueueProcessing();
+        String name = "dummy-agent";
+        try {
+            Scheduler scheduler = mock(Scheduler.class);
+            ScheduleOptions options = mock(ScheduleOptions.class);
+            when(scheduler.NOW(-1, 10)).thenReturn(options);
+            when(options.canRunConcurrently(false)).thenReturn(options);
+            when(options.name(any(String.class))).thenReturn(options);
+            SimpleDistributionQueueProvider simpledistributionQueueProvider = new SimpleDistributionQueueProvider(scheduler,
+                    name, true);
+            simpledistributionQueueProvider.disableQueueProcessing();
+        } finally {
+            new File(name + "-simple-queues-checkpoints").deleteOnExit();
+        }
     }
 }
