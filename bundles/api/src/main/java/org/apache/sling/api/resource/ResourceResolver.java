@@ -525,16 +525,17 @@ public interface ResourceResolver extends Adaptable, Closeable {
             throws LoginException;
 
     /**
-     * Returns <code>true</code> if this resource resolver has not been closed
-     * yet.
+     * Returns <code>true</code> if this resource resolver is still usable.
+     * This method tests different things like if it has not been closed
+     * yet or if any of the used resource providers is not usable anymore.
      * <p>
      * Unlike the other methods defined in this interface, this method will
      * never throw an exception even after the resource resolver has been
      * {@link #close() closed}.
      *
-     * @return <code>true</code> if the resource resolver has not been closed
-     *         yet. Once the resource resolver has been closed, this method
-     *         returns <code>false</code>.
+     * @return <code>true</code> if the resource resolver is still usable.
+     *      Once the resource resolver has been closed or a used resource
+     *      provider has been unregistered, this method returns <code>false</code>.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
     boolean isLive();
@@ -546,8 +547,9 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * exceptions if still used - with the exception of this method, which
      * can be called several times with no ill effects.
      *
-     * A resource may also be closed implicitly in case when the {@link ResourceResolverFactory}
-     * which was used to create this resolver is no longer active.
+     * A resolver may also be closed implicitly in case when the {@link ResourceResolverFactory}
+     * which was used to create this resolver is no longer active or
+     * any of the used resource providers is no longer active.
      *
      * @since 2.1 (Sling API Bundle 2.1.0)
      * @see ResourceResolver Resource Resolver (section lifecycle)
