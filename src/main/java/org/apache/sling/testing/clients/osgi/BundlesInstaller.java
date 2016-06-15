@@ -46,7 +46,7 @@ public class BundlesInstaller {
      * @throws IOException
      * @throws InterruptedException
      */
-    public boolean isInstalled(File bundleFile) throws ClientException, InterruptedException, IOException {
+    public boolean isInstalled(File bundleFile) throws InterruptedException, IOException {
         final String bundleSymbolicName = OsgiConsoleClient.getBundleSymbolicName(bundleFile);
         log.debug("Checking if installed: " + bundleSymbolicName);
         boolean installed = osgiConsoleClient.checkBundleInstalled(bundleSymbolicName, 1000, 1);

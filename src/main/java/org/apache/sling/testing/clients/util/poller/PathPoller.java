@@ -37,7 +37,11 @@ public class PathPoller extends AbstractPoller {
         super(waitInterval, waitCount);
         this.client = client;
         this.path = path;
-        this.expectedStatus = expectedStatus;
+        if (null == expectedStatus || expectedStatus.length == 0) {
+            this.expectedStatus = new int[]{200};
+        } else {
+            this.expectedStatus = expectedStatus;
+        }
     }
 
 
