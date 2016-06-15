@@ -22,7 +22,7 @@ import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.instance.InstanceConfiguration;
 import org.apache.sling.testing.junit.rules.instance.ExistingInstance;
 import org.apache.sling.testing.junit.rules.instance.Instance;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.apache.sling.testing.serversetup.instance.SlingTestBase;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -36,6 +36,7 @@ import java.net.URI;
  * Junit Rule that allows access to a Sling instance.
  * It is wrapped by a {@link SlingClassRule}
  */
+@SuppressWarnings("ALL")
 public class SlingInstanceRule implements TestRule {
 
     // Until we extract this logic from SlingTestBase, we can just reuse it here
@@ -53,8 +54,7 @@ public class SlingInstanceRule implements TestRule {
     /** ExistingInstance for default instance */
     public final Instance defaultInstance = new ExistingInstance().withRunMode("default").orDefault(DEFAULT_INSTANCE);
 
-    protected TestRule ruleChain = RuleChain.outerRule(slingClassRule)
-            .around(defaultInstance);
+    protected TestRule ruleChain = RuleChain.outerRule(slingClassRule).around(defaultInstance);
 
 
     public <T extends SlingClient> T getAdminClient(Class<T> clientClass) {
