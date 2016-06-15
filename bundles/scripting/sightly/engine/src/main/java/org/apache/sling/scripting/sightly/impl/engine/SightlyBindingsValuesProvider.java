@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 
 /**
  * Sightly specific {@code BindingsValuesProvider}.
@@ -44,7 +45,7 @@ public class SightlyBindingsValuesProvider implements BindingsValuesProvider {
     @Override
     public void addBindings(Bindings bindings) {
         if (!bindings.containsKey(PROPERTIES)) {
-            Resource currentResource = (Resource) bindings.get(SlingBindings.RESOURCE);
+            Resource currentResource = BindingsUtils.getResource(bindings);
             if (currentResource != null) {
                 bindings.put(PROPERTIES, currentResource.adaptTo(ValueMap.class));
             }

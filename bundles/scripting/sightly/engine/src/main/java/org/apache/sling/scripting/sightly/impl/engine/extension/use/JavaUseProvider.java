@@ -31,11 +31,10 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
-import org.apache.sling.scripting.sightly.impl.compiler.UnitChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -83,7 +82,7 @@ public class JavaUseProvider implements UseProvider {
         }
         Bindings globalBindings = renderContext.getBindings();
         SlingScriptHelper sling = BindingsUtils.getHelper(globalBindings);
-        SlingHttpServletRequest request = (SlingHttpServletRequest) globalBindings.get(SlingBindings.REQUEST);
+        SlingHttpServletRequest request = BindingsUtils.getRequest(globalBindings);
         Map<String, Object> overrides = setRequestAttributes(request, arguments);
 
         Object result;
@@ -106,7 +105,7 @@ public class JavaUseProvider implements UseProvider {
             }
             result = request.adaptTo(cls);
             if (result == null) {
-                Resource resource = (Resource) globalBindings.get(SlingBindings.RESOURCE);
+                Resource resource = BindingsUtils.getResource(globalBindings);
                 result = resource.adaptTo(cls);
             }
             if (result != null) {
@@ -141,7 +140,7 @@ public class JavaUseProvider implements UseProvider {
     }
 
     private Map<String, Object> setRequestAttributes(ServletRequest request, Bindings arguments) {
-        Map<String, Object> overrides = new HashMap<String, Object>();
+        Map<String, Object> overrides = new HashMap<>();
         for (Map.Entry<String, Object> entry : arguments.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();

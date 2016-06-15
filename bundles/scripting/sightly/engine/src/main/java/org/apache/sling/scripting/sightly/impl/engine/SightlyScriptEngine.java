@@ -16,80 +16,132 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.engine;
 
 import java.io.Reader;
-import java.util.Collections;
+import java.io.StringReader;
+import java.util.Set;
 import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.api.ScriptNameAware;
+import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.compiler.CompilationResult;
+import org.apache.sling.scripting.sightly.compiler.CompilationUnit;
+import org.apache.sling.scripting.sightly.compiler.CompilerMessage;
+import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
+import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.apache.sling.scripting.sightly.java.compiler.GlobalShadowCheckBackendCompiler;
+import org.apache.sling.scripting.sightly.java.compiler.JavaClassBackendCompiler;
+import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 
 /**
  * The Sightly Script engine
  */
-public class SightlyScriptEngine extends AbstractSlingScriptEngine {
+public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Compilable {
 
-    private static final Bindings EMPTY_BINDINGS = new SimpleBindings(Collections.<String, Object>emptyMap());
+    public static final String NO_SCRIPT = "NO_SCRIPT";
 
-    private final UnitLoader unitLoader;
-    private final ExtensionRegistryService extensionRegistryService;
+    private SightlyCompiler sightlyCompiler;
+    private SightlyJavaCompilerService javaCompilerService;
+    private final SightlyEngineConfiguration configuration;
 
     public SightlyScriptEngine(ScriptEngineFactory scriptEngineFactory,
-                               UnitLoader unitLoader,
-                               ExtensionRegistryService extensionRegistryService) {
+                               SightlyCompiler sightlyCompiler,
+                               SightlyJavaCompilerService javaCompilerService,
+                               SightlyEngineConfiguration configuration) {
         super(scriptEngineFactory);
-        this.unitLoader = unitLoader;
-        this.extensionRegistryService = extensionRegistryService;
+        this.sightlyCompiler = sightlyCompiler;
+        this.javaCompilerService = javaCompilerService;
+        this.configuration = configuration;
+    }
+
+    @Override
+    public CompiledScript compile(String script) throws ScriptException {
+        return compile(new StringReader(script));
+    }
+
+    @Override
+    public CompiledScript compile(final Reader script) throws ScriptException {
+        return internalCompile(script, null);
     }
 
     @Override
     public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
-        ClassLoader old = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(((SightlyScriptEngineFactory) getFactory()).getClassLoader());
         checkArguments(reader, scriptContext);
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-        SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        Resource scriptResource = slingScriptHelper.getScript().getScriptResource();
-        final SlingBindings slingBindings = new SlingBindings();
+        SlingBindings slingBindings = new SlingBindings();
         slingBindings.putAll(bindings);
-
-        Bindings globalBindings = new SimpleBindings(slingBindings);
-
         final SlingHttpServletRequest request = slingBindings.getRequest();
         final Object oldValue = request.getAttribute(SlingBindings.class.getName());
-        final ResourceResolver scriptResourceResolver = (ResourceResolver) scriptContext.getAttribute(
-            SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, SlingScriptConstants.SLING_SCOPE);
-
         try {
             request.setAttribute(SlingBindings.class.getName(), slingBindings);
-            evaluateScript(scriptResource, globalBindings, scriptResourceResolver);
+            SightlyCompiledScript compiledScript = internalCompile(reader, scriptContext);
+            return compiledScript.eval(scriptContext);
         } catch (Exception e) {
             throw new ScriptException(e);
         } finally {
             request.setAttribute(SlingBindings.class.getName(), oldValue);
-            Thread.currentThread().setContextClassLoader(old);
         }
-
-        return null;
     }
 
-    private void evaluateScript(Resource scriptResource, Bindings bindings, ResourceResolver scriptResourceResolver) throws Exception {
-        RenderContextImpl renderContext = new RenderContextImpl(bindings, extensionRegistryService.extensions(), scriptResourceResolver);
-        RenderUnit renderUnit = unitLoader.createUnit(scriptResource, renderContext);
-        renderUnit.render(renderContext, EMPTY_BINDINGS);
+    private SightlyCompiledScript internalCompile(final Reader script, ScriptContext scriptContext) throws ScriptException {
+        ClassLoader old = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(((SightlyScriptEngineFactory) getFactory()).getClassLoader());
+        try {
+            String sName = NO_SCRIPT;
+            if (script instanceof ScriptNameAware) {
+                sName = ((ScriptNameAware) script).getScriptName();
+            }
+            if (sName.equals(NO_SCRIPT)) {
+                sName = getScriptName(scriptContext);
+            }
+            final String scriptName = sName;
+            CompilationUnit compilationUnit = new CompilationUnit() {
+                @Override
+                public String getScriptName() {
+                    return scriptName;
+                }
+
+                @Override
+                public Reader getScriptReader() {
+                    return script;
+                }
+            };
+            JavaClassBackendCompiler javaClassBackendCompiler = new JavaClassBackendCompiler();
+            GlobalShadowCheckBackendCompiler shadowCheckBackendCompiler = null;
+            if (scriptContext != null) {
+                Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+                Set<String> globals = bindings.keySet();
+                shadowCheckBackendCompiler = new GlobalShadowCheckBackendCompiler(javaClassBackendCompiler, globals);
+            }
+            CompilationResult result = shadowCheckBackendCompiler == null ? sightlyCompiler.compile(compilationUnit,
+                    javaClassBackendCompiler) : sightlyCompiler.compile(compilationUnit, shadowCheckBackendCompiler);
+            if (result.getErrors().size() > 0) {
+                CompilerMessage error = result.getErrors().get(0);
+                throw new ScriptException(error.getMessage(), error.getScriptName(), error.getLine(), error.getColumn());
+            }
+            SourceIdentifier sourceIdentifier = new SourceIdentifier(configuration, scriptName);
+            String javaSourceCode = javaClassBackendCompiler.build(sourceIdentifier);
+            Object renderUnit = javaCompilerService.compileSource(sourceIdentifier, javaSourceCode);
+            if (renderUnit instanceof RenderUnit) {
+                return new SightlyCompiledScript(this, (RenderUnit) renderUnit);
+            } else {
+                throw new SightlyException("Expected a RenderUnit.");
+            }
+        } finally {
+            Thread.currentThread().setContextClassLoader(old);
+        }
     }
 
     private void checkArguments(Reader reader, ScriptContext scriptContext) {
@@ -99,5 +151,20 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         if (scriptContext == null) {
             throw new NullPointerException("ScriptContext cannot be null");
         }
+    }
+
+    private String getScriptName(ScriptContext scriptContext) {
+        if (scriptContext != null) {
+            Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+            String scriptName = (String) bindings.get(ScriptEngine.FILENAME);
+            if (scriptName != null && !"".equals(scriptName)) {
+                return scriptName;
+            }
+            SlingScriptHelper sling = BindingsUtils.getHelper(bindings);
+            if (sling != null) {
+                return sling.getScript().getScriptResource().getPath();
+            }
+        }
+        return NO_SCRIPT;
     }
 }

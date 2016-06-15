@@ -31,12 +31,12 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.impl.filter.I18nFilter;
-import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.SlingRuntimeObjectModel;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(RuntimeExtension.class)
 @Properties({
-        @Property(name = RuntimeExtension.NAME, value = I18nFilter.FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.I18N)
 })
 public class I18nRuntimeExtension implements RuntimeExtension {
 
@@ -52,19 +52,19 @@ public class I18nRuntimeExtension implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
-        ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 2);
-        String text = RenderUtils.toString(arguments[0]);
+        ExtensionUtils.checkArgumentCount(RuntimeFunction.I18N, arguments, 2);
+        String text = SlingRuntimeObjectModel.toString(arguments[0]);
         Map<String, Object> options = (Map<String, Object>) arguments[1];
-        String locale = RenderUtils.toString(options.get(I18nFilter.LOCALE_OPTION));
-        String hint = RenderUtils.toString(options.get(I18nFilter.HINT_OPTION));
+        String locale = SlingRuntimeObjectModel.toString(options.get("locale"));
+        String hint = SlingRuntimeObjectModel.toString(options.get("hint"));
         final Bindings bindings = renderContext.getBindings();
         return get(bindings, text, locale, hint);
     }
 
     private String get(final Bindings bindings, String text, String locale, String hint) {
 
-        final SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+        final SlingScriptHelper slingScriptHelper = BindingsUtils.getHelper(bindings);
+        final SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
         final ResourceBundleProvider resourceBundleProvider = slingScriptHelper.getService(ResourceBundleProvider.class);
         if (resourceBundleProvider != null) {
             String key = text;
