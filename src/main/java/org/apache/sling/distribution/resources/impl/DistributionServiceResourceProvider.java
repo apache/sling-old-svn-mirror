@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
@@ -55,11 +56,11 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
     }
 
     @Override
-    protected Map<String, Object> getResourceProperties(SimplePathInfo pathInfo) {
+    protected Map<String, Object> getInternalResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
         if (pathInfo.isRoot()) {
             return getResourceRootProperties();
         } else if (pathInfo.isMain()) {
-            return getResourceProperties(pathInfo.getMainResourceName());
+            return getResourceProperties(resolver, pathInfo.getMainResourceName());
         } else if (pathInfo.isChild()) {
             DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
 
@@ -73,7 +74,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
 
     @Override
-    protected Iterable<String> getResourceChildren(SimplePathInfo pathInfo) {
+    protected Iterable<String> getInternalResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
         if (pathInfo.isMain()) {
             DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
 
@@ -85,7 +86,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         return null;
     }
 
-    private Map<String, Object> getResourceProperties(String resourceName) {
+    private Map<String, Object> getResourceProperties(ResourceResolver resolver, String resourceName) {
 
         DistributionComponent component = componentProvider.getComponent(kind, resourceName);
 

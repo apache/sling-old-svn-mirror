@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.component.impl;
 
+import org.apache.sling.api.resource.ResourceResolver;
+
 import java.util.List;
 
 /**
@@ -26,11 +28,11 @@ import java.util.List;
  */
 public interface DistributionConfigurationManager {
 
-    List<DistributionConfiguration> getConfigs(DistributionComponentKind kind);
+    List<DistributionConfiguration> getConfigs(ResourceResolver resolver, DistributionComponentKind kind);
 
-    DistributionConfiguration getConfig(DistributionComponentKind kind, String name);
+    DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name);
 
-    void saveConfig(DistributionConfiguration config);
+    void saveConfig(ResourceResolver resolver, DistributionConfiguration config);
 
-    void deleteConfig(DistributionComponentKind kind, String name);
+    void deleteConfig(ResourceResolver resolver, DistributionComponentKind kind, String name);
 }

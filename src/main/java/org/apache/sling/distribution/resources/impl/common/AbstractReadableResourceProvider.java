@@ -76,7 +76,8 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         Resource resource = null;
 
-        Map<String, Object> properties = getMainResourceProperties(pathInfo);
+        Map<String, Object> properties = getResourceProperties(resourceResolver,  pathInfo);
+
 
         if (properties != null) {
             Object adaptable = properties.remove(INTERNAL_ADAPTABLE);
@@ -87,12 +88,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         return resource;
     }
-
-    protected Map<String, Object> getMainResourceProperties(SimplePathInfo pathInfo) {
-
-        return getResourceProperties(pathInfo);
-    }
-
 
 
     Resource buildMainResource(ResourceResolver resourceResolver,
@@ -143,11 +138,11 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         }
 
         List<Resource> resourceList = new ArrayList<Resource>();
-        Iterable<String> childrenList = getResourceChildren(pathInfo);
+        Iterable<String> childrenList = getResourceChildren(resourceResolver, pathInfo);
         Iterator<Map<String,Object>> childrenProperties = null;
 
         if (childrenList == null) {
-            Map<String, Object> properties = getResourceProperties(pathInfo);
+            Map<String, Object> properties = getResourceProperties(resourceResolver, pathInfo);
 
             if (properties != null && properties.containsKey(ITEMS)
                     && properties.get(ITEMS) instanceof String[]) {
@@ -175,8 +170,19 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
-    protected abstract Map<String, Object> getResourceProperties(SimplePathInfo pathInfo);
+    protected Map<String, Object> getResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
+        return getInternalResourceProperties(resolver, pathInfo);
+    }
 
-    protected abstract Iterable<String> getResourceChildren(SimplePathInfo pathInfo);
+    protected Iterable<String> getResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
+        return getInternalResourceChildren(resolver, pathInfo);
+    }
+
+
+
+
+    protected abstract Map<String, Object> getInternalResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo);
+
+    protected abstract Iterable<String> getInternalResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo);
 
 }

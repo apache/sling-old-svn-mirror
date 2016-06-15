@@ -56,7 +56,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         String resourceName = pathInfo.getMainResourceName();
 
-        boolean added = addToChangedResources(resourceName, properties, true);
+        boolean added = addToChangedResources(resolver, resourceName, properties, true);
 
         if (!added) {
             throw new PersistenceException("Resource already exists at " + path, null, resourceName, null);
@@ -93,7 +93,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
             return;
         }
 
-        save(resolver, changedResources, deletedResources);
+        saveInternalResources(resolver, changedResources, deletedResources);
 
         reset();
     }
@@ -115,13 +115,16 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         String resourceName = pathInfo.getMainResourceName();
 
-        addToChangedResources(resourceName, properties, false);
+        addToChangedResources(resourceResolver, resourceName, properties, false);
     }
 
-    private boolean addToChangedResources(String resourceName, Map<String, Object> newProperties, boolean failIfAlreadyExists) {
+    private boolean addToChangedResources(ResourceResolver resolver, String resourceName, Map<String, Object> newProperties, boolean failIfAlreadyExists) {
         final boolean deleted = this.deletedResources.remove(resourceName);
+
         SimplePathInfo pathInfo = SimplePathInfo.parsePathInfo(resourceRoot, resourceRoot + "/" + resourceName);
-        Map<String, Object> existingResource = getMainResourceProperties(pathInfo);
+
+        Map<String, Object> existingResource = getResourceProperties(resolver, pathInfo);
+
         if (failIfAlreadyExists && !deleted && existingResource != null) {
             return false;
         }
@@ -140,21 +143,25 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         return true;
     }
 
+
     @Override
-    protected Map<String, Object> getMainResourceProperties(SimplePathInfo pathInfo) {
+    protected Map<String, Object> getResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
 
-        String resourceName = pathInfo.getMainResourceName();
-        if (deletedResources.contains(resourceName)) {
-            return null;
+        if (pathInfo.isMain()) {
+            String resourceName = pathInfo.getMainResourceName();
+            if (deletedResources.contains(resourceName)) {
+                return null;
+            }
+
+            if (changedResources.containsKey(resourceName)) {
+                return changedResources.get(resourceName);
+            }
         }
 
-        if (changedResources.containsKey(resourceName)) {
-            return changedResources.get(resourceName);
-        }
-
-        return getResourceProperties(pathInfo);
+        return super.getResourceProperties(resolver, pathInfo);
     }
 
+    @Override
     Resource buildMainResource(ResourceResolver resourceResolver,
                                SimplePathInfo pathInfo,
                                Map<String, Object> properties,
@@ -168,9 +175,9 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     }
 
 
-    protected abstract void save(ResourceResolver resourceResolver,
-                                 Map<String, Map<String, Object>> changedResources,
-                                 Set<String> deletedResources) throws PersistenceException;
+    protected abstract void saveInternalResources(ResourceResolver resourceResolver,
+                                                  Map<String, Map<String, Object>> changedResources,
+                                                  Set<String> deletedResources) throws PersistenceException;
 
 
 }
