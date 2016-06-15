@@ -16,20 +16,18 @@
  */
 package org.apache.sling.testing.serversetup.instance;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.testing.tools.http.RequestBuilder;
-import org.apache.sling.testing.tools.http.RequestExecutor;
-import org.apache.sling.testing.tools.junit.TestDescriptionInterceptor;
-import org.apache.sling.testing.tools.osgi.WebconsoleClient;
-import org.apache.sling.testing.tools.sling.BundlesInstaller;
-import org.apache.sling.testing.tools.sling.TimeoutsProvider;
+import org.apache.sling.testing.clients.ClientException;
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.clients.osgi.BundlesInstaller;
+import org.apache.sling.testing.clients.osgi.OsgiConsoleClient;
+import org.apache.sling.testing.clients.util.TimeoutsProvider;
 import org.apache.sling.testing.serversetup.jarexec.JarExecutor;
 import org.junit.After;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.Assert.fail;
@@ -37,7 +35,9 @@ import static org.junit.Assert.fail;
 /** Base class for running tests against a Sling instance,
  *  takes care of starting Sling and waiting for it to be ready.
  */
+@SuppressWarnings("ALL")
 public class SlingTestBase implements SlingInstance {
+    // TODO: unify these
     public static final String TEST_SERVER_URL_PROP = "test.server.url";
     public static final String TEST_SERVER_USERNAME = "test.server.username";
     public static final String TEST_SERVER_PASSWORD = "test.server.password";
@@ -58,10 +58,7 @@ public class SlingTestBase implements SlingInstance {
     private final String serverPassword;
     private final SlingInstanceState slingTestState;
     private final Properties systemProperties;
-    private RequestBuilder builder;
-    private DefaultHttpClient httpClient = new DefaultHttpClient();
-    private RequestExecutor executor = new RequestExecutor(httpClient);
-    private WebconsoleClient webconsoleClient;
+    private OsgiConsoleClient osgiConsoleClient;
     private BundlesInstaller bundlesInstaller;
     private boolean serverStartedByThisClass;
 
@@ -70,8 +67,7 @@ public class SlingTestBase implements SlingInstance {
 
 
     public SlingTestBase() {
-        this(SlingInstanceState.getInstance(SlingInstanceState.DEFAULT_INSTANCE_NAME),
-                System.getProperties());
+        this(SlingInstanceState.getInstance(SlingInstanceState.DEFAULT_INSTANCE_NAME), System.getProperties());
     }
 
     /** Get configuration but do not start server yet, that's done on demand */
@@ -79,10 +75,9 @@ public class SlingTestBase implements SlingInstance {
         this.slingTestState = slingTestState;
         this.systemProperties = systemProperties;
         this.keepJarRunning = "true".equals(systemProperties.getProperty(KEEP_JAR_RUNNING_PROP));
-        this.httpClient.addRequestInterceptor(new TestDescriptionInterceptor());
 
-
-        final String configuredUrl = systemProperties.getProperty(TEST_SERVER_URL_PROP, systemProperties.getProperty("launchpad.http.server.url"));
+        final String configuredUrl = systemProperties.getProperty(TEST_SERVER_URL_PROP,
+                systemProperties.getProperty("launchpad.http.server.url"));
         if(configuredUrl != null && configuredUrl.trim().length() > 0) {
             slingTestState.setServerBaseUrl(configuredUrl);
             slingTestState.setServerStarted(true);
@@ -122,10 +117,14 @@ public class SlingTestBase implements SlingInstance {
             serverPassword = ADMIN;
         }
 
-        builder = new RequestBuilder(slingTestState.getServerBaseUrl());
-        webconsoleClient = new WebconsoleClient(slingTestState.getServerBaseUrl(), serverUsername, serverPassword);
-        builder = new RequestBuilder(slingTestState.getServerBaseUrl());
-        bundlesInstaller = new BundlesInstaller(webconsoleClient);
+        // create client
+        try {
+            osgiConsoleClient = new OsgiConsoleClient(URI.create(slingTestState.getServerBaseUrl()), serverUsername, serverPassword);
+        } catch (ClientException e) {
+            throw new RuntimeException("Cannot instantiate client", e);
+        }
+
+        bundlesInstaller = new BundlesInstaller(osgiConsoleClient);
 
         if(!slingTestState.isServerInfoLogged()) {
             log.info("Server base URL={}", slingTestState.getServerBaseUrl());
@@ -172,7 +171,7 @@ public class SlingTestBase implements SlingInstance {
     }
 
     protected void installAdditionalBundles() {
-        if(slingTestState.isInstallBundlesFailed()) {
+        if (slingTestState.isInstallBundlesFailed()) {
             fail("Bundles could not be installed, cannot run tests");
         } else if(!slingTestState.isExtraBundlesInstalled()) {
             final List<File> toInstall = getBundlesToInstall();
@@ -182,7 +181,7 @@ public class SlingTestBase implements SlingInstance {
                     bundlesInstaller.installBundles(toInstall, false);
                     final List<String> symbolicNames = new LinkedList<String>();
                     for (File f : toInstall) {
-                        symbolicNames.add(bundlesInstaller.getBundleSymbolicName(f));
+                        symbolicNames.add(osgiConsoleClient.getBundleSymbolicName(f));
                     }
                     bundlesInstaller.waitForBundlesInstalled(symbolicNames,
                             TimeoutsProvider.getInstance().getTimeout(BUNDLE_INSTALL_TIMEOUT_SECONDS, 10));
@@ -216,12 +215,6 @@ public class SlingTestBase implements SlingInstance {
         }
     }
 
-    /** Start server if needed, and return a RequestBuilder that points to it */
-    public RequestBuilder getRequestBuilder() {
-        startServerIfNeeded();
-        return builder;
-    }
-
     /** Start server if needed, and return its base URL */
     public String getServerBaseUrl() {
         startServerIfNeeded();
@@ -236,6 +229,16 @@ public class SlingTestBase implements SlingInstance {
     /** Return password configured for execution of HTTP requests */
     public String getServerPassword() {
         return serverPassword;
+    }
+
+    @Override
+    public SlingClient getSlingClient() {
+        return osgiConsoleClient;
+    }
+
+    public OsgiConsoleClient getOsgiConsoleClient() {
+        startServerIfNeeded();
+        return osgiConsoleClient;
     }
 
     /** Optionally block here so that the runnable jar stays up - we can
@@ -286,28 +289,26 @@ public class SlingTestBase implements SlingInstance {
         // that contains the pattern that's optionally supplied with the
         // path, separated by a colon
         log.info("Checking that GET requests return expected content (timeout={} seconds): {}", timeoutSec, testPaths);
-        while(System.currentTimeMillis() < endTime) {
+        while (System.currentTimeMillis() < endTime) {
             boolean errors = false;
-            for(String p : testPaths) {
+            for (String p : testPaths) {
                 final String [] s = p.split(":");
                 final String path = s[0];
                 final String pattern = (s.length > 0 ? s[1] : "");
                 try {
-                    executor.execute(builder.buildGetRequest(path).withCredentials(serverUsername, serverPassword))
-                    .assertStatus(200)
-                    .assertContentContains(pattern);
-                } catch(AssertionError ae) {
+                    osgiConsoleClient.doGet(path, null, 200).checkContentContains(pattern);
+                } catch(ClientException e) {
                     errors = true;
-                    log.debug("Request to {}@{}{} failed, will retry ({})",
-                            new Object[] { serverUsername, slingTestState.getServerBaseUrl(), path, ae});
+                    log.debug("Request to {}@{} failed, will retry ({})",
+                            new Object[] { serverUsername, osgiConsoleClient.getUrl(path), e});
                 } catch(Exception e) {
                     errors = true;
-                    log.debug("Request to {}@{}{} failed, will retry ({})",
-                            new Object[] { serverUsername, slingTestState.getServerBaseUrl(), path, pattern, e });
+                    log.debug("Request to {}@{} failed, will retry ({})",
+                            new Object[] { serverUsername, osgiConsoleClient.getUrl(path), pattern, e });
                 }
             }
 
-            if(!errors) {
+            if (!errors) {
                 slingTestState.setServerReady(true);
                 log.info("All {} paths return expected content, server ready", testPaths.size());
                 break;
@@ -315,7 +316,7 @@ public class SlingTestBase implements SlingInstance {
             Thread.sleep(TimeoutsProvider.getInstance().getTimeout(1000L));
         }
 
-        if(!slingTestState.isServerReady()) {
+        if (!slingTestState.isServerReady()) {
             slingTestState.setServerReadyTestFailed(true);
             final String msg = "Server not ready after " + timeoutSec + " seconds, giving up";
             log.info(msg);
@@ -342,7 +343,9 @@ public class SlingTestBase implements SlingInstance {
         return toInstall;
     }
 
-    /** Get the list of additional bundles to install, as specified by additionalBundlesPath parameter */
+    /**
+     * Get the list of additional bundles to install, as specified by additionalBundlesPath parameter
+     */
     protected List<File> getBundlesToInstall(String additionalBundlesPath) {
         final List<File> result = new LinkedList<File>();
         if(additionalBundlesPath == null) {
@@ -358,7 +361,7 @@ public class SlingTestBase implements SlingInstance {
         // Collect all filenames of candidate bundles
         final List<String> bundleNames = new ArrayList<String>();
         final String [] files = dir.list();
-        if(files != null) {
+        if (files != null) {
             for(String file : files) {
                 if(file.endsWith(".jar")) {
                     bundleNames.add(file);
@@ -375,7 +378,7 @@ public class SlingTestBase implements SlingInstance {
             }
         }
         Collections.sort(sortedPropertyKeys);
-        for(String key : sortedPropertyKeys) {
+        for (String key : sortedPropertyKeys) {
             final String filenamePrefix = systemProperties.getProperty(key);
             for(String bundleFilename : bundleNames) {
                 if(bundleFilename.startsWith(filenamePrefix)) {
@@ -391,16 +394,4 @@ public class SlingTestBase implements SlingInstance {
         return serverStartedByThisClass;
     }
 
-    public HttpClient getHttpClient() {
-        return httpClient;
-    }
-
-    public RequestExecutor getRequestExecutor() {
-        return executor;
-    }
-
-    public WebconsoleClient getWebconsoleClient() {
-        startServerIfNeeded();
-        return webconsoleClient;
-    }
 }

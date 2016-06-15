@@ -16,6 +16,8 @@
  */
 package org.apache.sling.testing.serversetup.instance;
 
+import org.apache.sling.testing.clients.ClientException;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -25,15 +27,16 @@ import java.util.concurrent.ConcurrentHashMap;
  *  Helper class for running tests against multiple Sling instances,
  *  takes care of starting the Sling instances and waiting for them to be ready.
  */
+@SuppressWarnings("ALL")
 public class SlingInstanceManager implements Iterable<SlingInstance > {
     private final Map<String, SlingInstance> slingTestInstances = new ConcurrentHashMap<String, SlingInstance>();
 
-    public SlingInstanceManager(String... instanceNames) {
+    public SlingInstanceManager(String... instanceNames) throws ClientException {
         this(System.getProperties(), instanceNames);
     }
 
     /** Get configuration but do not start server yet, that's done on demand */
-    public SlingInstanceManager(Properties systemProperties, String... instanceNames) {
+    public SlingInstanceManager(Properties systemProperties, String... instanceNames) throws ClientException {
         if (instanceNames == null || instanceNames.length == 0) {
             instanceNames = new String [] { SlingInstanceState.DEFAULT_INSTANCE_NAME };
         }

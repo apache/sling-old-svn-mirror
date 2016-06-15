@@ -17,17 +17,12 @@
 package org.apache.sling.testing.serversetup.instance;
 
 
-import org.apache.sling.testing.tools.http.RequestBuilder;
-import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.apache.sling.testing.clients.SlingClient;
 
 /**
  * Interface used to communicate with a sling instance
  */
 public interface SlingInstance {
-
-    /** Start server if needed, and return a RequestBuilder that points to it */
-    public RequestBuilder getRequestBuilder();
-
 
     /** Start server if needed, and return its base URL */
     public String getServerBaseUrl();
@@ -40,6 +35,6 @@ public interface SlingInstance {
     public String getServerPassword();
 
 
-    /** Returns a RequestExecutor for this server **/
-    public RequestExecutor getRequestExecutor();
+    /** Returns a SlingClient for this server **/
+    public SlingClient getSlingClient();
 }
