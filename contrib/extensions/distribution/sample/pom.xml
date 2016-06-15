@@ -69,7 +69,8 @@
                         <Bundle-SymbolicName>org.apache.sling.distribution.sample</Bundle-SymbolicName>
                         <Sling-Initial-Content>
                             SLING-CONTENT/libs/sling/distribution;path:=/libs/sling/distribution;overwrite:=true,
-                            SLING-CONTENT/var/sling/distribution;path:=/var/sling/distribution;overwrite:=true
+                            SLING-CONTENT/var/sling/distribution;path:=/var/sling/distribution;overwrite:=true,
+                            SLING-CONTENT/etc/distribution;path:=/etc/distribution;overwrite:=true
                         </Sling-Initial-Content>
                     </instructions>
                 </configuration>

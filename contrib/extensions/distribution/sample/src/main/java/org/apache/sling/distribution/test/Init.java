@@ -78,6 +78,7 @@ public class Init {
                 AccessControlUtils.addAccessControlEntry(session, "/var/sling/distribution/packages", distributorUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
                 AccessControlUtils.addAccessControlEntry(session, "/content", distributorUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
                 AccessControlUtils.addAccessControlEntry(session, "/libs/sling/distribution", distributorUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
+                AccessControlUtils.addAccessControlEntry(session, "/etc/distribution", distributorUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
 
                 AccessControlUtils.addAccessControlEntry(session, null, distributorUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
 
