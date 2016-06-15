@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 /** Start a runnable jar by forking a JVM process,
  *  and terminate the process when this VM exits.
  */
+@SuppressWarnings("ALL")
 public class JarExecutor {
     private final File jarToExecute;
     private final String jvmFullPath;

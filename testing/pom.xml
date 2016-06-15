@@ -36,12 +36,8 @@
   <inceptionYear>2014</inceptionYear>
 
   <scm>
-    <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing
-        </connection>
-    <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing
-        </developerConnection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
   </scm>
 

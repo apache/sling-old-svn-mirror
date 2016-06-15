@@ -32,13 +32,13 @@ public class SlingInstanceState {
     public static final String DEFAULT_INSTANCE_NAME = "default";
 
     private String serverBaseUrl;
-    private boolean serverStarted;
-    private boolean serverReady;
-    private boolean serverReadyTestFailed;
-    private boolean installBundlesFailed;
-    private boolean extraBundlesInstalled;
-    private boolean startupInfoProvided;
-    private boolean serverInfoLogged;
+    private boolean serverStarted = false;
+    private boolean serverReady = false;
+    private boolean serverReadyTestFailed = false;
+    private boolean installBundlesFailed = false;
+    private boolean extraBundlesInstalled = false;
+    private boolean startupInfoProvided = false;
+    private boolean serverInfoLogged = false;
     private JarExecutor jarExecutor;
 
     /**

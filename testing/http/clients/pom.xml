@@ -55,7 +55,14 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.testing.clients.*,
+                            org.apache.sling.testing.clients,
+                            org.apache.sling.testing.clients.instance,
+                            org.apache.sling.testing.clients.interceptors,
+                            org.apache.sling.testing.clients.osgi,
+                            org.apache.sling.testing.clients.util,
+                            org.apache.sling.testing.clients.util.config,
+                            org.apache.sling.testing.clients.util.poller,
+                            org.apache.sling.testing.clients.*
                         </Export-Package>
                         <Import-Package>
                             org.apache.commons.exec.*; resolution:=optional,

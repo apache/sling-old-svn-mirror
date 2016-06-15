@@ -16,6 +16,7 @@
  */
 package org.apache.sling.testing.serversetup.instance;
 
+import org.apache.sling.testing.clients.ClientException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -28,7 +29,7 @@ public class SlingInstancesRule implements TestRule {
     private SlingInstance currentInstance;
     private final Iterable<SlingInstance> instances;
     
-    public SlingInstancesRule(String ... instanceNames) {
+    public SlingInstancesRule(String ... instanceNames) throws ClientException {
         this(new SlingInstanceManager(instanceNames));
     }
     

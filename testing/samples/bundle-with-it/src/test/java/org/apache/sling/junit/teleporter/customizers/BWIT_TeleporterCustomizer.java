@@ -17,9 +17,9 @@
 package org.apache.sling.junit.teleporter.customizers;
 
 import org.apache.sling.junit.rules.TeleporterRule;
+import org.apache.sling.testing.clients.util.TimeoutsProvider;
+import org.apache.sling.testing.serversetup.instance.SlingTestBase;
 import org.apache.sling.testing.teleporter.client.ClientSideTeleporter;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
-import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 
 import aQute.bnd.osgi.Constants;
 
@@ -41,6 +41,9 @@ public class BWIT_TeleporterCustomizer implements TeleporterRule.Customizer {
         final String apiPackage = "org.apache.sling.testing.samples.bundlewit.api";
         cst.includeDependencyPrefix("org.apache.sling.testing.samples.bundlewit");
         cst.includeDependencyPrefix("org.apache.http.concurrent");
+        cst.includeDependencyPrefix("org.apache.sling.testing.clients");
+        cst.includeDependencyPrefix("org.apache.sling.testing.junit.rules");
+        cst.includeDependencyPrefix("org.apache.sling.testing.serversetup");
         cst.excludeDependencyPrefix(apiPackage);
         cst.getAdditionalBundleHeaders().put(Constants.IMPORT_PACKAGE, apiPackage);
     }
