@@ -79,7 +79,7 @@ public class SightlyEngineConfiguration {
     private boolean devMode = false;
     private String encoding = SCR_PROP_DEFAULT_ENCODING;
     private boolean keepGenerated;
-    private String bundleSymbolicName = "_sightly";
+    private String bundleSymbolicName = "org.apache.sling.scripting.sightly";
 
     public String getEngineVersion() {
         return engineVersion;

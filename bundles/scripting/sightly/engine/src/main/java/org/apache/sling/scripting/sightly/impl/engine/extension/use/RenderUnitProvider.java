@@ -19,7 +19,11 @@
 
 package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import javax.script.Bindings;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngineManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -27,14 +31,19 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.CachedScript;
+import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyCompiledScript;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngine;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
-import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
@@ -62,17 +71,21 @@ import org.osgi.framework.Constants;
 public class RenderUnitProvider implements UseProvider {
 
     @Reference
-    private UnitLoader unitLoader;
+    private ScriptCache scriptCache;
+
+    @Reference
+    private ScriptEngineManager scriptEngineManager;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
         if (identifier.endsWith("." + SightlyScriptEngineFactory.EXTENSION)) {
+            RenderContextImpl rci  = (RenderContextImpl) renderContext;
             Bindings globalBindings = renderContext.getBindings();
             SlingScriptHelper sling = BindingsUtils.getHelper(globalBindings);
-            Resource renderUnitResource = UseProviderUtils.locateScriptResource(renderContext, identifier);
+            SlingHttpServletRequest request = BindingsUtils.getRequest(globalBindings);
+            final Resource renderUnitResource = rci.resolveScript(identifier);
             if (renderUnitResource == null) {
-                Resource caller = ResourceResolution.getResourceForRequest(sling.getRequest().getResourceResolver(), sling
-                        .getRequest());
+                Resource caller = ResourceResolution.getResourceForRequest(request.getResourceResolver(), request);
                 if (caller != null) {
                     String resourceSuperType = caller.getResourceSuperType();
                     StringBuilder errorMessage = new StringBuilder("Cannot find resource ");
@@ -87,8 +100,35 @@ public class RenderUnitProvider implements UseProvider {
                             .getScript().getScriptResource().getPath()));
                 }
             }
+            RenderUnit renderUnit;
             try {
-                RenderUnit renderUnit = unitLoader.createUnit(renderUnitResource, renderContext);
+                CachedScript cachedScript = scriptCache.getScript(renderUnitResource.getPath());
+                final SightlyCompiledScript compiledScript;
+                if (cachedScript != null) {
+                    compiledScript = (SightlyCompiledScript) cachedScript.getCompiledScript();
+                } else {
+                    SightlyScriptEngine sightlyScriptEngine =
+                            (SightlyScriptEngine) scriptEngineManager.getEngineByName(SightlyScriptEngineFactory.SHORT_NAME);
+                    InputStream inputStream = renderUnitResource.adaptTo(InputStream.class);
+                    String encoding = renderUnitResource.getResourceMetadata().getCharacterEncoding();
+                    if (StringUtils.isEmpty(encoding)) {
+                        encoding = "UTF-8";
+                    }
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding);
+                    compiledScript = (SightlyCompiledScript) sightlyScriptEngine.compile(inputStreamReader);
+                    scriptCache.putScript(new CachedScript() {
+                        @Override
+                        public String getScriptPath() {
+                            return renderUnitResource.getPath();
+                        }
+
+                        @Override
+                        public CompiledScript getCompiledScript() {
+                            return compiledScript;
+                        }
+                    });
+                }
+                renderUnit = compiledScript.getRenderUnit();
                 return ProviderOutcome.success(renderUnit);
             } catch (Exception e) {
                 return ProviderOutcome.failure(e);

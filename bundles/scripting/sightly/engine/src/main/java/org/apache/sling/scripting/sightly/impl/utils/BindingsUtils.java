@@ -21,6 +21,7 @@ import javax.script.SimpleBindings;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 
@@ -28,6 +29,16 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
  * {@code BindingsUtils} provides helper methods for retrieving commonly used objects from a {@link javax.script.Bindings} map.
  */
 public class BindingsUtils {
+
+    /**
+     * Retrieves the {@link Resource} from a {@link Bindings} map.
+     *
+     * @param bindings the bindings map
+     * @return the {@link Resource} if found, {@code null} otherwise
+     */
+    public static Resource getResource(Bindings bindings) {
+        return (Resource) bindings.get(SlingBindings.RESOURCE);
+    }
 
     /**
      * Retrieves the {@link SlingHttpServletRequest} from a {@link Bindings} map.

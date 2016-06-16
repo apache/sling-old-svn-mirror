@@ -36,5 +36,9 @@
     "crlf": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/crlf"
+    },
+    "update": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/update"
     }
 }

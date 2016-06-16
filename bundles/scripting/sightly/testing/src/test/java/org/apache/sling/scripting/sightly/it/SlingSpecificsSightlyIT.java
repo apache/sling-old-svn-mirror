@@ -20,8 +20,6 @@ package org.apache.sling.scripting.sightly.it;
 
 import java.io.IOException;
 
-import javax.swing.text.html.HTML;
-
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -56,6 +54,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_CRLF_NOPKG = SLING_CRLF + ".nopkg.html";
     private static final String SLING_CRLF_PKG = SLING_CRLF + ".pkg.html";
     private static final String SLING_CRLF_WRONGPKG = SLING_CRLF + ".wrongpkg.html";
+    private static final String SLING_SCRIPT_UPDATE = "/sightly/update.html";
 
 
     @BeforeClass
@@ -122,7 +121,8 @@ public class SlingSpecificsSightlyIT {
     public void testBadTemplateIdentifier() {
         String url = launchpadURL + SLING_TEMPLATE_BAD_IDENTIFIER;
         String pageContent = client.getStringContent(url, 500);
-        assertTrue(pageContent.contains("org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException"));
+        assertTrue(pageContent.contains(
+                "org.apache.sling.scripting.sightly.java.compiler.SightlyJavaCompilerException: Unsupported identifier name: bad-template-id"));
     }
 
     @Test
@@ -178,6 +178,19 @@ public class SlingSpecificsSightlyIT {
     }
 
     @Test
+    public void testScriptUpdate() throws Exception {
+        String url = launchpadURL + SLING_SCRIPT_UPDATE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("Hello world!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
+        uploadFile("update.v2.html", "update.html", "/apps/sightly/scripts/update");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("Hello, John Doe!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
+        uploadFile("update.html", "update.html", "/apps/sightly/scripts/update");
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("Hello world!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
+    }
+
+    @Test
     public void testRepositoryPojoNoPkg() {
         String url = launchpadURL + SLING_USE;
         String pageContent = client.getStringContent(url, 200);
@@ -212,7 +225,7 @@ public class SlingSpecificsSightlyIT {
     public void testCRLFWrongPkg() {
         String url = launchpadURL + SLING_CRLF_WRONGPKG;
         String pageContent = client.getStringContent(url, 500);
-        assertTrue(pageContent.contains("CompilerException"));
+        assertTrue(pageContent.contains("Compilation errors in apps/sightly/scripts/crlf/RepoPojoWrongPkgCRLF.java"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
