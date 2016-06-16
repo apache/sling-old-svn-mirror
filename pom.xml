@@ -38,6 +38,17 @@
 
     <name>Apache Sling Scripting Sightly Compiler</name>
 
+    <description>
+        The Apache Sling Scripting Sightly Compiler provides support for compiling Sightly scripts into an Abstract
+        Syntax Tree.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/compiler</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/compiler</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/compiler</url>
+    </scm>
+
     <properties>
         <antlr.version>4.1</antlr.version>
         <sling.java.version>7</sling.java.version>
