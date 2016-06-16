@@ -19,9 +19,7 @@
 
 package org.apache.sling.hapi.client.microdata;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.sling.hapi.client.*;
 import org.apache.sling.hapi.client.forms.FormValues;
 import org.jsoup.Jsoup;
