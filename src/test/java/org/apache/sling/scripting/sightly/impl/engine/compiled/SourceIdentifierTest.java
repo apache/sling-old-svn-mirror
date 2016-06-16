@@ -18,7 +18,6 @@ package org.apache.sling.scripting.sightly.impl.engine.compiled;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -27,30 +26,38 @@ import static org.mockito.Mockito.when;
 
 public class SourceIdentifierTest {
 
-    private static SourceIdentifier sourceIdentifier;
     private static final String BUNDLE_SYMBOLIC_NAME = "org.apache.sling.scripting.sightly";
-
-    @BeforeClass
-    public static void setUp() {
-        final Resource resource = mock(Resource.class);
-        when(resource.getPath()).thenReturn("/apps/blah/static/foo/foo.html");
-        final SightlyEngineConfiguration configuration = mock(SightlyEngineConfiguration.class);
-        when(configuration.getBundleSymbolicName()).thenReturn(BUNDLE_SYMBOLIC_NAME);
-        sourceIdentifier = new SourceIdentifier(configuration, null, null, resource, "SightlyJava_");
-    }
 
     @Test
     public void testGetClassName() throws Exception {
-        assertEquals("SightlyJava_foo", sourceIdentifier.getClassName());
+        SourceIdentifier sourceIdentifier = getSourceIdentifier("/apps/blah/static/foo/foo.html");
+        assertEquals("foo_html", sourceIdentifier.getSimpleClassName());
     }
 
     @Test
     public void testGetPackageName() throws Exception {
-        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah._static.foo", sourceIdentifier.getPackageName());
+        SourceIdentifier sourceIdentifier = getSourceIdentifier("/apps/blah/static/foo/foo.html");
+        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah.static_.foo", sourceIdentifier.getPackageName());
     }
 
     @Test
     public void testGetFullyQualifiedName() throws Exception {
-        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah._static.foo.SightlyJava_foo", sourceIdentifier.getFullyQualifiedName());
+        SourceIdentifier sourceIdentifier = getSourceIdentifier("/apps/blah/static/foo/foo.html");
+        assertEquals(BUNDLE_SYMBOLIC_NAME + ".apps.blah.static_.foo.foo_html", sourceIdentifier.getPackageName() + "." +
+                sourceIdentifier.getSimpleClassName());
+    }
+
+    @Test
+    public void testGetScriptName() {
+        assertEquals("/apps/my-project/static-test/foo.html", SourceIdentifier.getScriptName(BUNDLE_SYMBOLIC_NAME, BUNDLE_SYMBOLIC_NAME +
+                ".apps.my__002d__project.static__002d__test.foo_html"));
+    }
+
+    private SourceIdentifier getSourceIdentifier(String path) {
+        Resource resource = mock(Resource.class);
+        when(resource.getPath()).thenReturn(path);
+        SightlyEngineConfiguration configuration = mock(SightlyEngineConfiguration.class);
+        when(configuration.getBundleSymbolicName()).thenReturn(BUNDLE_SYMBOLIC_NAME);
+        return new SourceIdentifier(configuration, resource.getPath());
     }
 }

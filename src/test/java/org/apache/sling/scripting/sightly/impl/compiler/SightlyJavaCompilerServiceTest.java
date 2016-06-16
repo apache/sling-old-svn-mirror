@@ -33,7 +33,9 @@ import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
-import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,10 +45,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class SightlyJavaCompilerServiceTest {
 
@@ -93,7 +92,7 @@ public class SightlyJavaCompilerServiceTest {
     @Test
     public void testGetInstanceForCachedPojoFromRepo() throws Exception {
         final String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
-        final String className = "apps.my_project.test_components.a.Pojo";
+        final String className = "apps.my__002d__project.test__005f__components.a.Pojo";
         Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
             put(className, System.currentTimeMillis());
         }};
@@ -103,13 +102,13 @@ public class SightlyJavaCompilerServiceTest {
     }
 
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {
-        RenderContext renderContext = Mockito.mock(RenderContext.class);
+        RenderContextImpl renderContext = Mockito.mock(RenderContextImpl.class);
         Resource pojoResource = Mockito.mock(Resource.class);
         when(pojoResource.getPath()).thenReturn(pojoPath);
         ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         when(renderContext.getScriptResourceResolver()).thenReturn(resolver);
         when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
-        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY"));
+        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY", "UTF-8"));
         JavaCompiler javaCompiler = Mockito.mock(JavaCompiler.class);
         CompilationResult compilationResult = Mockito.mock(CompilationResult.class);
         when(compilationResult.getErrors()).thenReturn(new ArrayList<CompilerMessage>());
