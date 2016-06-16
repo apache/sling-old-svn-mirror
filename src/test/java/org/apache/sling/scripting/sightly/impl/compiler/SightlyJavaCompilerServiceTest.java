@@ -57,7 +57,6 @@ public class SightlyJavaCompilerServiceTest {
         compiler = new SightlyJavaCompilerService();
         ucm = spy(new UnitChangeMonitor());
         SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
-        when(sightlyEngineConfiguration.isDevMode()).thenReturn(false);
         Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
         Whitebox.setInternalState(compiler, "unitChangeMonitor", ucm);
     }

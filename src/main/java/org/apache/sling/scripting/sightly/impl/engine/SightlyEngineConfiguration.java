@@ -44,19 +44,6 @@ import org.osgi.service.component.ComponentContext;
 @Service(SightlyEngineConfiguration.class)
 @Properties({
         @Property(
-                name = SightlyEngineConfiguration.SCR_PROP_NAME_DEVMODE,
-                boolValue = SightlyEngineConfiguration.SCR_PROP_DEFAULT_DEVMODE,
-                label = "Development Mode",
-                description = "If enabled, Sightly components will be recompiled at every request instead of loading objects from memory."
-        ),
-        @Property(
-                name = SightlyEngineConfiguration.SCR_PROP_NAME_ENCODING,
-                value = SightlyEngineConfiguration.SCR_PROP_DEFAULT_ENCODING,
-                label = "Template Files Default Encoding",
-                description = "The default encoding used for reading Sightly template files (this directly affects how Sightly templates" +
-                        "are rendered)."
-        ),
-        @Property(
                 name = SightlyEngineConfiguration.SCR_PROP_NAME_KEEPGENERATED,
                 boolValue = SightlyEngineConfiguration.SCR_PROP_DEFAULT_KEEPGENERATED,
                 label = "Keep Generated Java Source Code",
@@ -66,18 +53,10 @@ import org.osgi.service.component.ComponentContext;
 })
 public class SightlyEngineConfiguration {
 
-    public static final String SCR_PROP_NAME_DEVMODE = "org.apache.sling.scripting.sightly.devmode";
-    public static final boolean SCR_PROP_DEFAULT_DEVMODE = false;
-
-    public static final String SCR_PROP_NAME_ENCODING = "org.apache.sling.scripting.sightly.encoding";
-    public static final String SCR_PROP_DEFAULT_ENCODING = "UTF-8";
-
     public static final String SCR_PROP_NAME_KEEPGENERATED = "org.apache.sling.scripting.sightly.keepgenerated";
     public static final boolean SCR_PROP_DEFAULT_KEEPGENERATED = true;
 
     private String engineVersion = "0";
-    private boolean devMode = false;
-    private String encoding = SCR_PROP_DEFAULT_ENCODING;
     private boolean keepGenerated;
     private String bundleSymbolicName = "org.apache.sling.scripting.sightly";
 
@@ -91,14 +70,6 @@ public class SightlyEngineConfiguration {
 
     public String getScratchFolder() {
         return "/" + bundleSymbolicName.replaceAll("\\.", "/");
-    }
-
-    public boolean isDevMode() {
-        return devMode;
-    }
-
-    public String getEncoding() {
-        return encoding;
     }
 
     public boolean keepGenerated() {
@@ -131,8 +102,6 @@ public class SightlyEngineConfiguration {
             }
         }
         Dictionary properties = componentContext.getProperties();
-        devMode = PropertiesUtil.toBoolean(properties.get(SCR_PROP_NAME_DEVMODE), SCR_PROP_DEFAULT_DEVMODE);
-        encoding = PropertiesUtil.toString(properties.get(SCR_PROP_NAME_ENCODING), SCR_PROP_DEFAULT_ENCODING);
         keepGenerated = PropertiesUtil.toBoolean(properties.get(SCR_PROP_NAME_KEEPGENERATED), SCR_PROP_DEFAULT_KEEPGENERATED);
     }
 }
