@@ -30,7 +30,7 @@ mvn clean verify
 **Play with Sightly REPL**
 ```bash
 cd testing
-mvn launchpad:run
+mvn clean package slingstart:start -Dlaunchpad.keep.running=true -Dhttp.port=8080
 ```
 Then browse to [http://localhost:8080/sightly/repl.html](http://localhost:8080/sightly/repl.html).
  
