@@ -50,6 +50,8 @@
     </scm>
 
     <modules>
+        <module>compiler</module>
+        <module>java-compiler</module>
         <module>engine</module>
         <module>js-use-provider</module>
         <module>models-use-provider</module>

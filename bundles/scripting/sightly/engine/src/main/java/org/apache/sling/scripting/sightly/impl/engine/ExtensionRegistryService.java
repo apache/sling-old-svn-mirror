@@ -51,7 +51,6 @@ public class ExtensionRegistryService {
         return mapping;
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     protected synchronized void bindExtensionService(RuntimeExtension extension, Map<String, Object> properties) {
         Integer newPriority = PropertiesUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
         String extensionName = PropertiesUtil.toString(properties.get(RuntimeExtension.NAME), "");
@@ -68,7 +67,6 @@ public class ExtensionRegistryService {
 
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     protected synchronized void unbindExtensionService(RuntimeExtension extension, Map<String, Object> properties) {
         String extensionName = PropertiesUtil.toString(properties.get(RuntimeExtension.NAME), "");
         mappingPriorities.remove(extensionName);

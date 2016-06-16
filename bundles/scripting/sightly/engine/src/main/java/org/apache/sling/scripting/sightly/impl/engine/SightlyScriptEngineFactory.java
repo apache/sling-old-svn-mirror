@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.engine;
 
 import java.io.IOException;
@@ -36,6 +35,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +53,6 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(SightlyScriptEngineFactory.class);
 
     @Reference
-    private UnitLoader unitLoader;
-
-    @Reference
-    private ExtensionRegistryService extensionRegistryService;
-
-    @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     @Reference
@@ -66,6 +60,12 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Reference
     private ClassLoaderWriter classLoaderWriter;
+
+    @Reference
+    private SightlyCompiler sightlyCompiler;
+
+    @Reference
+    private SightlyJavaCompilerService sightlyJavaCompilerService;
 
     public final static String SHORT_NAME = "sightly";
 
@@ -94,7 +94,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new SightlyScriptEngine(this, unitLoader, extensionRegistryService);
+        return new SightlyScriptEngine(this, sightlyCompiler, sightlyJavaCompilerService, sightlyEngineConfiguration);
     }
 
     protected ClassLoader getClassLoader() {
@@ -102,7 +102,6 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     }
 
     @Activate
-    @SuppressWarnings("unused")
     protected void activate() {
         InputStream is;
         boolean newVersion = true;

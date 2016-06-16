@@ -122,7 +122,8 @@ public class SlingSpecificsSightlyIT {
     public void testBadTemplateIdentifier() {
         String url = launchpadURL + SLING_TEMPLATE_BAD_IDENTIFIER;
         String pageContent = client.getStringContent(url, 500);
-        assertTrue(pageContent.contains("org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException"));
+        assertTrue(pageContent.contains(
+                "org.apache.sling.scripting.sightly.java.compiler.SightlyJavaCompilerException: Unsupported identifier name: bad-template-id"));
     }
 
     @Test
@@ -212,7 +213,7 @@ public class SlingSpecificsSightlyIT {
     public void testCRLFWrongPkg() {
         String url = launchpadURL + SLING_CRLF_WRONGPKG;
         String pageContent = client.getStringContent(url, 500);
-        assertTrue(pageContent.contains("CompilerException"));
+        assertTrue(pageContent.contains("Compilation errors in apps/sightly/scripts/crlf/RepoPojoWrongPkgCRLF.java"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {

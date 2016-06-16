@@ -31,26 +31,25 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin;
-import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.SlingRuntimeObjectModel;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Runtime support for including resources in a Sightly script through {@code data-sly-include}.
+ */
 @Component
 @Service(RuntimeExtension.class)
 @Properties({
-        @Property(name = RuntimeExtension.NAME, value = IncludePlugin.FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.INCLUDE)
 })
-/**
- * Runtime support for including resources in a Sightly script through {@code data-sly-include}. For more details check the implementation
- * of the {@link org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin}.
- */
 public class IncludeRuntimeExtension implements RuntimeExtension {
 
     private static final Logger LOG = LoggerFactory.getLogger(IncludeRuntimeExtension.class);
@@ -61,8 +60,8 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
-        ExtensionUtils.checkArgumentCount(IncludePlugin.FUNCTION, arguments, 2);
-        String originalPath = RenderUtils.toString(arguments[0]);
+        ExtensionUtils.checkArgumentCount(RuntimeFunction.INCLUDE, arguments, 2);
+        String originalPath = SlingRuntimeObjectModel.toString(arguments[0]);
         Map options = (Map) arguments[1];
         String path = buildPath(originalPath, options);
         StringWriter output = new StringWriter();
@@ -95,14 +94,14 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
             throw new SightlyException("Path for data-sly-include is empty");
         } else {
             LOG.debug("Attempting to include script {}.", script);
-            SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+            SlingScriptHelper slingScriptHelper = BindingsUtils.getHelper(bindings);
             ServletResolver servletResolver = slingScriptHelper.getService(ServletResolver.class);
             if (servletResolver != null) {
-                SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+                SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
                 Servlet servlet = servletResolver.resolveServlet(request.getResource(), script);
                 if (servlet != null) {
                     try {
-                        SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
+                        SlingHttpServletResponse response = BindingsUtils.getResponse(bindings);
                         PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
                         servlet.service(request, resWrapper);
                     } catch (Exception e) {

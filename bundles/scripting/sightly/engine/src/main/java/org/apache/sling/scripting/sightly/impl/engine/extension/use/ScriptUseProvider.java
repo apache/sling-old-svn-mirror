@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -68,13 +69,14 @@ public class ScriptUseProvider implements UseProvider {
 
     @Override
     public ProviderOutcome provide(String scriptName, RenderContext renderContext, Bindings arguments) {
-        Bindings globalBindings = renderContext.getBindings();
+        RenderContextImpl rci = (RenderContextImpl) renderContext;
+        Bindings globalBindings = rci.getBindings();
         Bindings bindings = BindingsUtils.merge(globalBindings, arguments);
         String extension = scriptExtension(scriptName);
         if (extension == null || extension.equals(SightlyScriptEngineFactory.EXTENSION)) {
             return ProviderOutcome.failure();
         }
-        Resource scriptResource = UseProviderUtils.locateScriptResource(renderContext, scriptName);
+        Resource scriptResource = rci.resolveScript(scriptName);
         if (scriptResource == null) {
             log.debug("Path does not match an existing resource: {}", scriptName);
             return ProviderOutcome.failure();
