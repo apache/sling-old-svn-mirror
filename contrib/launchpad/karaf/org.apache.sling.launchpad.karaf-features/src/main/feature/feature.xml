@@ -522,10 +522,10 @@
   </feature>
   <!-- Apache Sling Launchpad (contrib) -->
   <feature name="sling-launchpad-nosql-couchbase" version="${feature.version}">
-    <config name="org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config">
+    <config name="org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config-default">
       provider.roots=["/"]
     </config>
-    <config name="org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config">
+    <config name="org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default">
       clientId=sling-resourceprovider-couchbase
       couchbaseHosts=localhost:8091
       bucketName=sling
@@ -535,7 +535,7 @@
     <feature version="${feature.version}">sling-nosql-couchbase</feature>
   </feature>
   <feature name="sling-launchpad-nosql-mongodb" version="${feature.version}">
-    <config name="org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config">
+    <config name="org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default">
       provider.roots=["/"]
       connectionString=localhost:27017
       database=sling
