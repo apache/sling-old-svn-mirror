@@ -74,7 +74,8 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version("2.2.2"),
             // TODO repoinit
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("0.0.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.oak-jcr").version("0.0.1-SNAPSHOT")
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.oak-jcr").version("0.0.1-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.4.4")
         );
     }
 
