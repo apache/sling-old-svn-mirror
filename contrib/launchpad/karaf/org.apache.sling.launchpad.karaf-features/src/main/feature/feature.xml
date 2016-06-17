@@ -273,6 +273,10 @@
   </feature>
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
+    <config name="org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge">
+      resource.change.types=["ADDED", "CHANGED", "REMOVED"]
+      resource.paths=/
+    </config>
     <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
     <config name="org.apache.felix.jaas.Configuration.factory-GuestLoginModule">
       jaas.controlFlag=optional
