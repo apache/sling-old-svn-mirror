@@ -39,9 +39,13 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Web Console for the FileSystem Class Loader. Allows users to download Java
@@ -62,6 +66,12 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
     static final String APP_ROOT = "fsclassloader";
 
     static final String RES_LOC = APP_ROOT + "/res/ui";
+    static final String POST_PARAM_CLEAR_CLASSLOADER = "clear";
+
+    private static final Logger LOG = LoggerFactory.getLogger(FSClassLoaderWebConsole.class);
+
+    @Reference(target = "(service.pid=org.apache.sling.commons.fsclassloader.impl.FSClassLoaderProvider)")
+    private ClassLoaderWriter classLoaderWriter;
 
     /**
      * Represents a set of class, java and deps files for a script.
@@ -205,8 +215,39 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
             IOUtils.copy(
                     getClass().getClassLoader().getResourceAsStream(
                             "/res/ui/prettify.js"), response.getOutputStream());
-        } else {
+        } else if (request.getRequestURI().endsWith(RES_LOC + "/fsclassloader.js")) {
+            response.setContentType("application/javascript");
+            IOUtils.copy(
+                    getClass().getClassLoader().getResourceAsStream(
+                            "/res/ui/fsclassloader.js"), response.getOutputStream());
+        }
+        else {
             super.doGet(request, response);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String clear = req.getParameter(POST_PARAM_CLEAR_CLASSLOADER);
+        boolean shouldClear = Boolean.parseBoolean(clear);
+        if (shouldClear) {
+            if (classLoaderWriter != null) {
+                boolean result = classLoaderWriter.delete("");
+                if (result) {
+                    resp.getWriter().write("{ \"status\" : \"success\" }");
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                } else {
+                    resp.getWriter().write("{ \"status\" : \"failure\", \"message\" : \"unable to clear classloader; check server log\" }");
+                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } else {
+                LOG.error("Cannot get a reference to org.apache.sling.commons.fsclassloader.impl.FSClassLoaderProvider");
+                resp.getWriter().write("{ \"status\" : \"failure\", \"message\" : \"unable to clear classloader; check server log\" }");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            resp.getWriter().write("{ \"status\" : \"failure\", \"message\" : \"invalid command\" }");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
@@ -328,10 +369,13 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
                 + "/prettify.css\"></link>");
         w.write("<script type=\"text/javascript\" src=\"" + RES_LOC
                 + "/prettify.js\"></script>");
+        w.write("<script type=\"text/javascript\" src=\"" + RES_LOC
+                + "/fsclassloader.js\"></script>");
         w.write("<script>$(document).ready(prettyPrint);</script>");
         w.write("<style>.prettyprint ol.linenums > li { list-style-type: decimal; } pre.prettyprint { white-space: pre-wrap; }</style>");
         String file = request.getParameter("view");
         File toView = new File(root + file);
+        w.write("<div id=\"classes\">");
         if (!StringUtils.isEmpty(file)) {
             if (isValid(toView)) {
 
@@ -363,7 +407,7 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
                 InputStream is = null;
                 try {
                     is = new FileInputStream(toView);
-                    String contents = IOUtils.toString(is);
+                    String contents = IOUtils.toString(is, "UTF-8");
                     w.write("<pre class=\"prettyprint linenums\">");
                     w.write(StringEscapeUtils.escapeHtml4(contents));
                     w.write("</pre>");
@@ -374,11 +418,13 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
                 response.sendError(404, "File " + file + " not found");
             }
         } else {
-
             w.write("<p class=\"statline ui-state-highlight\">File System ClassLoader Root: "
-                    + root + "</p>");
-
-            w.write("<table class=\"nicetable ui-widget\">");
+                    + root + " <span style=\"float: right\"><button type='button' id='clear'>Clear Class Loader</button></span></p>");
+            if (scripts.values().size() > 0 ) {
+                w.write("<table class=\"nicetable ui-widget fsclassloader-has-classes\">");
+            } else {
+                w.write("<table class=\"nicetable ui-widget\">");
+            }
             w.write("<tr class=\"header ui-widget-header\">");
             w.write("<th>View</th>");
             w.write("<th>Script</th>");
@@ -395,5 +441,6 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
             }
             w.write("</table>");
         }
+        w.write("</div>");
     }
 }
