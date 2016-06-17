@@ -67,6 +67,7 @@
         <module>maven-sling-plugin</module>
         <module>maven-launchpad-plugin</module>
         <module>slingstart-maven-plugin</module>
+        <module>sightly-maven-plugin</module>
         <module>archetypes</module>
     </modules>
 </project>
