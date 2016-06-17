@@ -376,6 +376,7 @@
     <feature version="${feature.version}">sling-extension-i18n</feature>
     <feature version="${feature.version}">sling-extension-xss</feature>
     <feature version="${feature.version}">sling-jcr-compiler</feature>
+    <feature version="${feature.version}">sling-commons-fsclassloader</feature>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.rhino/1.7.7.1_1</bundle>
   </feature>
   <!-- Apache Sling Servlets -->
