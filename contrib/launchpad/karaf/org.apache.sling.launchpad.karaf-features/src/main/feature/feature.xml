@@ -261,6 +261,7 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">oak-sling</feature>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
@@ -310,14 +311,10 @@
       userPrivilegeNames=["jcr:all"]
       groupPrivilegeNames=["jcr:read"]
     </config>
-    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
-      localIndexDir=sling/repository/index
-    </config>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-servlets</feature>
-    <feature version="${feature.version}">sling-jcr-oak</feature>
     <!-- ... -->
     <feature version="${feature.version}">sling-installer</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
@@ -329,17 +326,25 @@
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
+    <feature version="${feature.version}">sling-jcr-oak</feature>
     <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
       name=Default\ NodeStore
       repository.home=sling/repository
     </config>
+    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
+      localIndexDir=sling/repository/index
+    </config>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${feature.version}">
+    <feature version="${feature.version}">sling-jcr-oak</feature>
     <config name="org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService">
       mongouri=mongodb://localhost:27017
       db=sling
+    </config>
+    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
+      localIndexDir=sling/repository/index
     </config>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
     <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.14.2</bundle>
@@ -420,7 +425,6 @@
   <feature name="oak-sling" version="${feature.version}">
     <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
     <!-- dependencies -->
