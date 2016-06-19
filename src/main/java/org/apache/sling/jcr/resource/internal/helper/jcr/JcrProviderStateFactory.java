@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
@@ -76,10 +76,8 @@ public class JcrProviderStateFactory {
         Session session;
         BundleContext bc = null;
         try {
-            final String workspace = getWorkspace(authenticationInfo);
-
             if (Boolean.TRUE.equals(authenticationInfo.get(ResourceProvider.AUTH_ADMIN))) {
-                session = repository.loginAdministrative(workspace);
+                session = repository.loginAdministrative(null);
             } else {
                 session = getSession(authenticationInfo);
                 if (session == null) {
@@ -102,7 +100,7 @@ public class JcrProviderStateFactory {
                         }
 
                         try {
-                            session = repo.loginService(subServiceName, workspace);
+                            session = repo.loginService(subServiceName, null);
                         } finally {
                             // unget the repository if the service cannot
                             // login to it, otherwise the repository service
@@ -118,39 +116,8 @@ public class JcrProviderStateFactory {
                         // requested non-admin session to any workspace (or
                         // default)
                         final Credentials credentials = getCredentials(authenticationInfo);
-                        session = repository.login(credentials, workspace);
+                        session = repository.login(credentials, null);
 
-                    }
-
-                } else if (workspace != null) {
-
-                    // session provided by map; but requested a different
-                    // workspace impersonate can only change the user not switch
-                    // the workspace as a workaround we login to the requested
-                    // workspace with admin and then switch to the provided
-                    // session's user (if required)
-                    Session tmpSession = null;
-                    try {
-
-                        /*
-                         * TODO: Instead of using the deprecated loginAdministrative
-                         * method, this bundle could be configured with an
-                         * appropriate user for service authentication and do:
-                         * tmpSession = repository.loginService(null, workspace);
-                         * For now, we keep loginAdministrative
-                         */
-
-                        tmpSession = repository.loginAdministrative(workspace);
-                        if (tmpSession.getUserID().equals(session.getUserID())) {
-                            session = tmpSession;
-                            tmpSession = null;
-                        } else {
-                            session = tmpSession.impersonate(new SimpleCredentials(session.getUserID(), new char[0]));
-                        }
-                    } finally {
-                        if (tmpSession != null) {
-                            tmpSession.logout();
-                        }
                     }
 
                 } else {
@@ -329,22 +296,6 @@ public class JcrProviderStateFactory {
         final Object sudoObject = authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
         if (sudoObject instanceof String) {
             return (String) sudoObject;
-        }
-        return null;
-    }
-
-    /**
-     * Return the workspace name. If the workspace name is provided, it is
-     * returned, otherwise <code>null</code> is returned.
-     *
-     * @param authenticationInfo
-     *            Authentication info (not {@code null}).
-     * @return The configured workspace name or <code>null</code>
-     */
-    private static String getWorkspace(final Map<String, Object> authenticationInfo) {
-        final Object workspaceObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE);
-        if (workspaceObject instanceof String) {
-            return (String) workspaceObject;
         }
         return null;
     }
