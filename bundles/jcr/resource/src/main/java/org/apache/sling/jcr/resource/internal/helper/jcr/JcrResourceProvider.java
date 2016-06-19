@@ -59,7 +59,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;

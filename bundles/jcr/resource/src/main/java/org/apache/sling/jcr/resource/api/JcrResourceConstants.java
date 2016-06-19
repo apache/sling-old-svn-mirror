@@ -16,16 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource;
+package org.apache.sling.jcr.resource.api;
 
 import org.apache.sling.api.SlingConstants;
 
 /**
  * The <code>JcrResourceConstants</code> interface provides constant values.
- *
- * @deprecated Use org.apache.sling.jcr.resource.api.JcrResourceConstants instead.
  */
-@Deprecated
 public class JcrResourceConstants {
 
     /**
@@ -76,18 +73,6 @@ public class JcrResourceConstants {
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
     public static final String AUTHENTICATION_INFO_CREDENTIALS = "user.jcr.credentials";
-
-    /**
-     * The name of the authentication info property containing the workspace
-     * name to which the JCR based resource resolver should provide access.
-     * <p>
-     * The type of this property, if present, is <code>String</code>.
-     *
-     * @since 2.1
-     * @deprecated Workspaces are not supported anymore
-     */
-    @Deprecated
-    public static final String AUTHENTICATION_INFO_WORKSPACE = "user.jcr.workspace";
 
     /**
      * The name of the authentication info property containing a JCR Session to
