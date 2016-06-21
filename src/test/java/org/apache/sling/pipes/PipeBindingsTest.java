@@ -64,6 +64,8 @@ public class PipeBindingsTest extends AbstractPipeTest {
         expressions.put("blah ${blah}", "'blah ' + blah");
         expressions.put("${blah}${blah}", "blah + '' + blah");
         expressions.put("+[${blah}]", "'+[' + blah + ']'");
+        expressions.put("${(new Regexp('.{3}').test(path)}","(new Regexp('.{3}').test(path)");
+        expressions.put("${(new Regexp('.{3,5}').test(path)}","(new Regexp('.{3,5}').test(path)");
         for (Map.Entry<String,String> test : expressions.entrySet()){
             assertEquals(test.getKey() + " should be transformed in " + test.getValue(), test.getValue(), bindings.computeECMA5Expression(test.getKey()));
         }
