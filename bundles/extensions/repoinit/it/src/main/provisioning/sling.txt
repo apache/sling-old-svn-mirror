@@ -57,7 +57,7 @@
     org.apache.sling/org.apache.sling.scripting.core/2.0.36
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.14
-    org.apache.sling/org.apache.sling.servlets.post/2.3.10
+    org.apache.sling/org.apache.sling.servlets.post/2.3.12
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.2
     javax.mail/mail/1.4.7
     org.apache.geronimo.bundles/jstl/1.2_1
