@@ -33,6 +33,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -40,6 +41,8 @@ import org.junit.Test;
  * request parameters and headers including j_validate, Ajax detection, and
  * non-browser client detection.
  */
+// SLING-2760 auth/selector not deployed to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
+@Ignore
 public class SelectorAuthenticationResponseCodeTest {
     
     private final HttpTest H = new HttpTest(); 
