@@ -24,19 +24,19 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>26</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.repoinit.parser</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Apache Sling RepoInit Parser</name>
   <description>Parser for the Repository Initialization language used in Sling</description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.0</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.0</url>
   </scm>
   
   <build>
