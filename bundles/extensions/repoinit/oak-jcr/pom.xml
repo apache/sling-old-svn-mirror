@@ -24,12 +24,12 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>26</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.repoinit.oak-jcr</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Apache Sling RepoInit Oak/JCR module</name>
   <description>
 	  Initializes a JCR repository based on the output
@@ -41,9 +41,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/oak-jcr</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.oak-jcr-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.oak-jcr-1.0.0</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.oak-jcr-1.0.0</url>
   </scm>
   
   <build>
