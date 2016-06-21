@@ -38,20 +38,16 @@ import org.junit.runner.RunWith;
 @RunWith(JMock.class)
 public class JsonReaderTest {
 
-    protected JsonReader jsonReader;
+    JsonReader jsonReader;
 
-    protected Mockery mockery = new JUnit4Mockery();
+    Mockery mockery = new JUnit4Mockery();
 
-    protected ContentCreator creator;
+    ContentCreator creator;
 
-    protected Sequence mySequence;
-
-    protected void setReader() {
-        this.jsonReader = new JsonReader();
-    }
+    Sequence mySequence;
 
     @org.junit.Before public void setUp() throws Exception {
-        setReader();
+        this.jsonReader = new JsonReader();
         this.creator = this.mockery.mock(ContentCreator.class);
         this.mySequence = this.mockery.sequence("my-sequence");
     }
@@ -299,14 +295,14 @@ public class JsonReaderTest {
 
     //---------- internal helper ----------------------------------------------
 
-    protected void parse(String json) throws IOException, RepositoryException {
+    private void parse(String json) throws IOException, RepositoryException {
         String charSet = "ISO-8859-1";
         json = "#" + charSet + "\r\n" + json;
         InputStream ins = new ByteArrayInputStream(json.getBytes(charSet));
         this.jsonReader.parse(ins, this.creator);
     }
 
-    protected JSONArray toJsonArray(String[] array) throws JSONException {
+    private JSONArray toJsonArray(String[] array) throws JSONException {
         return new JSONArray(Arrays.asList(array));
     }
 }
