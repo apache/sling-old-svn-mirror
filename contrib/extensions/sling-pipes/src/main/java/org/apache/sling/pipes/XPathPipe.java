@@ -19,6 +19,9 @@ package org.apache.sling.pipes;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.jcr.query.Query;
 import java.util.Iterator;
 
@@ -27,6 +30,7 @@ import java.util.Iterator;
  */
 public class XPathPipe extends BasePipe {
 
+    private static final Logger logger = LoggerFactory.getLogger(XPathPipe.class);
     public static final String RESOURCE_TYPE = "slingPipes/xpath";
 
     public XPathPipe(Plumber plumber, Resource resource) throws Exception {
@@ -37,6 +41,7 @@ public class XPathPipe extends BasePipe {
     public Iterator<Resource> getOutput() {
         String query = getExpr();
         if (StringUtils.isNotBlank(query)){
+            logger.info("Executing query: {}", query);
             return resource.getResourceResolver().findResources(query, Query.XPATH);
         }
         return EMPTY_ITERATOR;
