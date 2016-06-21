@@ -86,7 +86,11 @@
           <module>auth/org.apache.sling.auth.xing.api</module>
           <module>auth/org.apache.sling.auth.xing.login</module>
           <module>auth/org.apache.sling.auth.xing.oauth</module>
+
+          <!-- SLING-2760 Do not include in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
+          <module>auth/openid</module>
           <module>auth/selector</module>
+          -->
 
           <module>commons/html</module>
 
