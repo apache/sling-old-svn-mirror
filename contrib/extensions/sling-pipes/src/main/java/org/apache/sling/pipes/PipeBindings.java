@@ -60,7 +60,7 @@ public class PipeBindings {
 
     Map<String, Resource> outputResources = new HashMap<>();
 
-    private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{([^\\}]*)\\}");
+    private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}");
 
     /**
      * public constructor
