@@ -80,7 +80,7 @@
                 <!-- the Sling instance is provisioned from the model in src/main/provisioning/model.txt -->
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.4.3-SNAPSHOT</version>
+                <version>1.4.4</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
