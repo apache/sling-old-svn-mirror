@@ -44,9 +44,12 @@ public class FilterPipe extends BasePipe {
 
     boolean propertiesPass(ValueMap current, ValueMap filter){
         if (filter.containsKey(PN_TEST)){
-            if (!(Boolean) bindings.instantiateObject(filter.get(PN_TEST, "${false}"))){
+            Object test = bindings.instantiateObject(filter.get(PN_TEST, "${false}"));
+            if (! (test instanceof Boolean)){
+                logger.error("instatiated test {} is not a boolean, filtering out", test);
                 return false;
             }
+            return (Boolean) test;
         }
         for (String key : filter.keySet()){
             if (! IGNORED_PROPERTIES.contains(key) && !key.startsWith(PREFIX_FILTER)){
@@ -101,7 +104,7 @@ public class FilterPipe extends BasePipe {
                 logger.debug("filter passes for {}", resource.getPath());
                 return super.getOutput();
             } else {
-                logger.info("{} got filtered out", resource.getPath());
+                logger.debug("{} got filtered out", resource.getPath());
             }
         }
         return Collections.emptyIterator();
