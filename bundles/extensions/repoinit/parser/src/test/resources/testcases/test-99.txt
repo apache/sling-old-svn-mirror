@@ -17,7 +17,10 @@ set ACL on /tmp
 allow some:otherPrivilege for bob_the_service
 end
 
+# Nodetypes inside the path apply to just that path element
 create path /content/example.com(sling:Folder)
+
+# A nodetype in front is used as the default for all path elements
 create path (nt:unstructured) /var
 
 set ACL for alice, bob,fred
