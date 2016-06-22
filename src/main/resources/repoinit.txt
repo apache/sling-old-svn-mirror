@@ -17,6 +17,8 @@
 #  under the License.
 #
 
-# No tests rely on this so far but we can add
-# more repoinit statements here as needed.
+# With SLING-5355 we can create system users
+# directly from the provisioning model, this
+# is used by the SystemUsersTest to test the
+# more low-level repository initializer mechanism
 create service user launchpad_testing
