@@ -16,49 +16,32 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.repository;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Verify that required system users have been created */
-public class SystemUsersTest {
+/** Verify that a path is created by repoinit statements
+ *  from our provisioning model.
+ */
+public class RepoinitPathTest {
 
     @Rule
     public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "Launchpad");
-    
-    private void assertSystemUser(String name) throws RepositoryException {
+
+    @Test
+    public void pathExists() throws RepositoryException {
         final SlingRepository repo = teleporter.getService(SlingRepository.class);
         final Session s = repo.loginAdministrative(null);
         try {
-            final Credentials creds = new SimpleCredentials(name, new char[] {});
-            try {
-                s.impersonate(creds);
-            } catch(RepositoryException rex) {
-                fail("Impersonation as " + name + " failed: " + rex.toString());
-            }
+            assertTrue(s.nodeExists("/repoinit/provisioningModelTest"));
         } finally { 
             s.logout();
         }
-    }
-    
-    @Test
-    public void launchpadTestingUser() throws RepositoryException {
-        // This user is created by a RepositoryInitalizer in our
-        // test-services bundle
-        assertSystemUser("launchpad_testing");
-    }
-    
-    @Test
-    public void provisioningModelUser() throws RepositoryException {
-        // This one is created from our provisioning model
-        assertSystemUser("provisioningModelUser");
     }
 }
