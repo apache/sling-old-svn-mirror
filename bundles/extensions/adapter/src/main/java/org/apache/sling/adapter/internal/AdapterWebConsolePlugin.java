@@ -174,6 +174,8 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
             logger.error("Unable to load adapter descriptors for bundle " + bundle, e);
         } catch (final JSONException e) {
             logger.error("Unable to load adapter descriptors for bundle " + bundle, e);
+        } catch (IllegalStateException e) {
+            logger.debug("Unable to load adapter descriptors for bundle " + bundle);
         }
 
     }
