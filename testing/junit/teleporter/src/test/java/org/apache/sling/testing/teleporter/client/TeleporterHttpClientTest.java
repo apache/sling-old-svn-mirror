@@ -36,7 +36,7 @@ import org.junit.Test;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 public class TeleporterHttpClientTest {
-    private static final int PORT = 1234;
+    private static final int PORT = Integer.getInteger("http.port", 1234);
     private static final String baseUrl = "http://127.0.0.1:" + PORT;
     private static final String TEST_PATH = "/foo";
     
