@@ -34,3 +34,11 @@
 
 [settings]
   org.apache.sling.commons.log.julenabled=true
+  
+ # Test repository initialization from provisioning model
+ # No need to test all repoinit statements, this is done
+ # by the repoinit it module
+ [:repoinit]
+create path /repoinit/provisioningModelTest
+
+create service user provisioningModelUser
