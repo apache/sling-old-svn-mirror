@@ -234,7 +234,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.3.4</bundle>
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.7.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.8.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.4</bundle>
     <!-- dependencies -->
@@ -359,11 +359,9 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-javascript" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.28</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.30</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-scripting</feature>
-    <!-- TODO obsolete for 2.0.30, see SLING-5514 -->
-    <feature version="${feature.version}">sling-jcr</feature>
   </feature>
   <feature name="sling-scripting-jsp" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.1.8</bundle>
