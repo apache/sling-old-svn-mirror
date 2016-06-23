@@ -9,7 +9,7 @@ Features
 * Supporting all of Thymeleaf's extension points: _TemplateResolver_﻿s, _MessageResolver_﻿s, _Dialect_﻿s, _LinkBuilder_﻿s, _DecoupledTemplateLogicResolver_, _CacheManager_﻿ and _EngineContextFactory_
 * `SlingResourceTemplateResolver` customizable through `TemplateModeProvider`﻿
 * `ResourceBundleMessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n` customizable through optional `AbsentMessageRepresentationProvider`﻿
-* `PatternSpecTemplateModeProvider` supporting `PatternSpec` configurations for all template modes (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS` and `RAW`)
+* `PatternTemplateModeProvider` supporting `Pattern` configurations for all template modes (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS` and `RAW`)
 * `SlingDialect`
 * Thymeleaf's `TemplateEngine` registered as OSGi Service for direct use
 

@@ -138,6 +138,8 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     private final Object lock = new Object();
 
+    private final String THYMELEAF_PROPERTIES = "/org/thymeleaf/thymeleaf.properties";
+
     private final Logger logger = LoggerFactory.getLogger(ThymeleafScriptEngineFactory.class);
 
     public ThymeleafScriptEngineFactory() {
@@ -271,7 +273,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     @Activate
     private void activate(final ThymeleafScriptEngineFactoryConfiguration configuration, final BundleContext bundleContext) {
-        logger.debug("activate");
+        logger.debug("activating");
         this.configuration = configuration;
         this.bundleContext = bundleContext;
         configure(configuration);
@@ -281,14 +283,14 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
 
     @Modified
     private void modified(final ThymeleafScriptEngineFactoryConfiguration configuration) {
-        logger.debug("modified");
+        logger.debug("modifying");
         this.configuration = configuration;
         configure(configuration);
     }
 
     @Deactivate
     private void deactivate() {
-        logger.debug("deactivate");
+        logger.debug("deactivating");
         unregisterTemplateEngine();
         templateEngine = null;
         bundleContext = null;
@@ -309,17 +311,17 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     public String getLanguageVersion() {
         try {
             final Properties properties = new Properties();
-            properties.load(getClass().getResourceAsStream("/org/thymeleaf/thymeleaf.properties"));
+            properties.load(getClass().getResourceAsStream(THYMELEAF_PROPERTIES));
             return properties.getProperty("version");
         } catch (Exception e) {
-            logger.error("error reading version from thymeleaf.properties", e);
+            logger.error("error reading version from " + THYMELEAF_PROPERTIES, e);
             return ""; // null breaks output of web console
         }
     }
 
     @Override
     public ScriptEngine getScriptEngine() {
-        logger.debug("get script engine for Thymeleaf");
+        logger.debug("getting script engine for Thymeleaf");
         return new ThymeleafScriptEngine(this);
     }
 
@@ -388,7 +390,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         }
         final Dictionary<String, String> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "Thymeleaf TemplateEngine");
-        properties.put(Constants.SERVICE_VENDOR, "Thymeleaf");
+        properties.put(Constants.SERVICE_VENDOR, "The Thymeleaf Team");
         logger.info("registering {} as service {} with properties {}", templateEngine, ITemplateEngine.class.getName(), properties);
         serviceRegistration = bundleContext.registerService(ITemplateEngine.class, templateEngine, properties);
     }

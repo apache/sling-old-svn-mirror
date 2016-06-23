@@ -99,19 +99,19 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
 
     @Activate
     private void activate(final ResourceBundleMessageResolverConfiguration configuration) {
-        logger.debug("activate");
+        logger.debug("activating");
         configure(configuration);
     }
 
     @Modified
     private void modified(final ResourceBundleMessageResolverConfiguration configuration) {
-        logger.debug("modified");
+        logger.debug("modifying");
         configure(configuration);
     }
 
     @Deactivate
     private void deactivate() {
-        logger.debug("deactivate");
+        logger.debug("deactivating");
     }
 
     private void configure(final ResourceBundleMessageResolverConfiguration configuration) {
