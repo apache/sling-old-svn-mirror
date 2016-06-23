@@ -69,7 +69,10 @@ public class SlingOptions {
     }
 
     public static Option webconsole() {
-        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole").version(versionResolver);
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.inventory").version(versionResolver)
+        );
     }
 [# th:each="feature : ${features}"]
     public static Option [(${feature.javaName})]() {
