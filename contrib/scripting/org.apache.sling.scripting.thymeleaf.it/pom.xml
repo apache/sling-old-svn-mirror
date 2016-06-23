@@ -39,7 +39,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <sling.java.version>7</sling.java.version>
-    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
   </properties>
 
@@ -70,19 +69,12 @@
       <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
-    <!-- Apache Karaf -->
+    <!-- Apache Felix -->
     <dependency>
-      <groupId>org.apache.karaf</groupId>
-      <artifactId>apache-karaf</artifactId>
-      <type>tar.gz</type>
-      <version>${org.apache.karaf.version}</version>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>5.4.0</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.karaf</groupId>
-          <artifactId>org.apache.karaf.client</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!-- Apache Sling -->
     <dependency>
@@ -95,33 +87,19 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.auth.core</artifactId>
       <version>1.3.12</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.engine</artifactId>
       <version>2.4.6</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.api</artifactId>
       <version>2.3.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
-      <version>0.1.1-SNAPSHOT</version>
-      <type>xml</type>
-      <classifier>features</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
-      <version>0.1.1-SNAPSHOT</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -135,18 +113,10 @@
       <version>0.1.7-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
-    <!-- bnd -->
     <dependency>
-      <groupId>biz.aQute.bnd</groupId>
-      <artifactId>biz.aQute.bndlib</artifactId>
-      <version>2.4.1</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- javassist -->
-    <dependency>
-      <groupId>org.javassist</groupId>
-      <artifactId>javassist</artifactId>
-      <version>3.20.0-GA</version>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.paxexam</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <!-- jsoup -->
@@ -182,13 +152,25 @@
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-karaf</artifactId>
+      <artifactId>pax-exam-cm</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-forked</artifactId>
       <version>${org.ops4j.pax.exam.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
       <version>${org.ops4j.pax.exam.version}</version>
       <scope>test</scope>
     </dependency>
