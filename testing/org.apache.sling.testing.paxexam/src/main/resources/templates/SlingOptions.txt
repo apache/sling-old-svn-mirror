@@ -1,0 +1,85 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.testing.paxexam;
+
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
+
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+
+/**
+ * NOTE: This file is generated from Sling's Launchpad Karaf Features
+ */
+public class SlingOptions {
+
+    public static VersionResolver versionResolver = new SlingVersionResolver();
+
+    public static Option config() {
+        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version(versionResolver);
+    }
+
+    public static Option eventadmin() {
+        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").version(versionResolver);
+    }
+
+    public static Option http() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver)
+        );
+    }
+
+    public static Option httpWhiteboard() {
+        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.whiteboard").version(versionResolver);
+    }
+
+    public static Option management() {
+        return composite(
+            mavenBundle().groupId("org.apache.aries").artifactId("org.apache.aries.util").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.api").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.core").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.whiteboard").version(versionResolver)
+        );
+    }
+
+    public static Option scr() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.metatype").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version(versionResolver)
+        );
+    }
+
+    public static Option webconsole() {
+        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole").version(versionResolver);
+    }
+[# th:each="feature : ${features}"]
+    public static Option [(${feature.javaName})]() {
+        return composite([# th:each="fc,fcsStatus : ${feature.getFeatures()}"]
+            [(${fc})]()[# th:unless="${fcsStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getFeatures())}"][# th:if="${not #lists.isEmpty(feature.getBundles())}"],[/][/][# th:each="bundle,bundlesStatus : ${feature.getBundles()}"]
+            mavenBundle().groupId("[(${bundle.groupId})]").artifactId("[(${bundle.artifactId})]").version(versionResolver)[# th:unless="${bundlesStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getConfigurations())}"],[/][# th:each="configuration,configurationsStatus : ${feature.getConfigurations()}"]
+            [# th:if="${configuration.isFactory()}"]factoryConfiguration[/][# th:unless="${configuration.isFactory()}"]newConfiguration[/]("[(${configuration.pid})]")    [# th:each="entry,entriesStatus : ${configuration.getEntries()}"]
+                .put("[(${entry.key})]", "[(${entry.value})]")[/]
+                .asOption()[# th:unless="${configurationsStatus.last}"],[/][/]
+        );
+    }
+
+[/]}
