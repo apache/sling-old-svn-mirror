@@ -259,10 +259,18 @@
   <feature name="sling-jcr-oak" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT</bundle>
     <!-- dependencies -->
+    <feature>scr</feature>
     <feature version="${feature.version}">sling-jcr</feature>
-    <feature version="${feature.version}">oak-sling</feature>
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <feature version="${feature.version}">jackrabbit-sling</feature>
+    <feature version="${feature.version}">tika-sling</feature>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
+    <!-- TODO SLING-5796 Make Oak Lucene optional -->
+    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${feature.version}">
@@ -417,18 +425,6 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jcdi_1.0_spec/1.0</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
-  </feature>
-  <!-- Apache Jackrabbit Oak -->
-  <feature name="oak-sling" version="${feature.version}">
-    <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
-    <!-- dependencies -->
-    <feature>scr</feature>
-    <feature version="${feature.version}">jackrabbit-sling</feature>
-    <feature version="${feature.version}">tika-sling</feature>
-    <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${feature.version}">
