@@ -160,8 +160,6 @@
             <feature>sling-servlets</feature>
             <!-- Apache Jackrabbit -->
             <feature>jackrabbit-sling</feature>
-            <!-- Apache Jackrabbit Oak-->
-            <feature>oak-sling</feature>
             <!-- Apache Tika -->
             <feature>tika-sling</feature>
             <!-- Apache Sling Auth (contrib) -->
