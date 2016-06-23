@@ -38,14 +38,14 @@ import org.thymeleaf.util.PatternSpec;
 @Component(
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=PatternSpec TemplateMode Provider for Sling Scripting Thymeleaf",
+        Constants.SERVICE_DESCRIPTION + "=Pattern TemplateMode Provider for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )
 @Designate(
-    ocd = PatternSpecTemplateModeProviderConfiguration.class
+    ocd = PatternTemplateModeProviderConfiguration.class
 )
-public class PatternSpecTemplateModeProvider implements TemplateModeProvider {
+public class PatternTemplateModeProvider implements TemplateModeProvider {
 
     private final PatternSpec htmlPatternSpec = new PatternSpec();
 
@@ -59,29 +59,29 @@ public class PatternSpecTemplateModeProvider implements TemplateModeProvider {
 
     private final PatternSpec rawPatternSpec = new PatternSpec();
 
-    private final Logger logger = LoggerFactory.getLogger(PatternSpecTemplateModeProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(PatternTemplateModeProvider.class);
 
-    public PatternSpecTemplateModeProvider() {
+    public PatternTemplateModeProvider() {
     }
 
     @Activate
-    private void activate(final PatternSpecTemplateModeProviderConfiguration configuration) {
-        logger.debug("activate");
+    private void activate(final PatternTemplateModeProviderConfiguration configuration) {
+        logger.debug("activating");
         configure(configuration);
     }
 
     @Modified
-    private void modified(final PatternSpecTemplateModeProviderConfiguration configuration) {
-        logger.debug("modified");
+    private void modified(final PatternTemplateModeProviderConfiguration configuration) {
+        logger.debug("modifying");
         configure(configuration);
     }
 
     @Deactivate
     private void deactivate() {
-        logger.debug("deactivate");
+        logger.debug("deactivating");
     }
 
-    private void configure(final PatternSpecTemplateModeProviderConfiguration configuration) {
+    private void configure(final PatternTemplateModeProviderConfiguration configuration) {
         // HTML
         setPatterns(configuration.htmlPatterns(), htmlPatternSpec);
         logger.debug("configured HTML patterns: {}", htmlPatternSpec.getPatterns());

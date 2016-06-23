@@ -22,20 +22,20 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-    name = "Apache Sling Scripting Thymeleaf “Sling resource Template Resolver”",
+    name = "Apache Sling Scripting Thymeleaf “Sling Resource TemplateResolver”",
     description = "Sling resource template resolver for Sling Scripting Thymeleaf"
 )
 @interface SlingResourceTemplateResolverConfiguration {
 
     @AttributeDefinition(
         name = "order",
-        description = "property for ordering template resolvers inside the Thymeleaf template engine"
+        description = "Property for ordering template resolvers inside the Thymeleaf template engine."
     )
     int order() default 0;
 
     @AttributeDefinition(
         name = "use decoupled logic",
-        description = "" // TODO
+        description = "Setting for 'use decoupled logic' in template resolution."
     )
     boolean useDecoupledLogic() default true;
 

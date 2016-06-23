@@ -35,13 +35,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(
         name = "order",
-        description = "property for ordering message resolvers inside the Thymeleaf template engine"
+        description = "Property for ordering message resolvers inside the Thymeleaf template engine."
     )
     int order() default 0;
 
     @AttributeDefinition(
         name = "absent message representation type",
-        description = "if no AbsentMessageRepresentationProvider is present, empty (''), blank (' ') or the message key can represent an absent message"
+        description = "If no AbsentMessageRepresentationProvider is present, empty (''), blank (' ') or the message key can represent an absent message."
     )
     AbsentMessageRepresentationType absentMessageRepresentationType() default AbsentMessageRepresentationType.KEY;
 

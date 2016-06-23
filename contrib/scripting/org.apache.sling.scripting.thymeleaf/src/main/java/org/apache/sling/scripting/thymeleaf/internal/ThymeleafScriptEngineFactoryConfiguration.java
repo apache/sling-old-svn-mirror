@@ -29,13 +29,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(
         name = "service ranking",
-        description = "service property for identifying the service's ranking number"
+        description = "Service property for identifying the service's ranking number."
     )
     int service_ranking() default 0;
 
     @AttributeDefinition(
         name = "extensions",
-        description = "extensions"
+        description = "The extensions this script engine is registered for."
     )
     String[] extensions() default {
         "html"
@@ -43,7 +43,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(
         name = "mime types",
-        description = "mime types"
+        description = "The MIME (content) types this script engine is registered for."
     )
     String[] mimeTypes() default {
         "text/html"
@@ -51,45 +51,46 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(
         name = "names",
-        description = "names"
+        description = "The names under which this script engine is registered."
     )
     String[] names() default {
+        "Thymeleaf",
         "thymeleaf"
     };
 
     @AttributeDefinition(
         name = "use standard message resolver",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard message resolver and uses it also."
     )
     boolean useStandardMessageResolver() default true;
 
     @AttributeDefinition(
         name = "use standard link builder",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard link builder and uses it also."
     )
     boolean useStandardLinkBuilder() default true;
 
     @AttributeDefinition(
         name = "use standard dialect",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard dialect and uses it also."
     )
     boolean useStandardDialect() default true;
 
     @AttributeDefinition(
         name = "use standard decoupled template logic resolver",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard decoupled template logic resolver and uses it exclusively."
     )
     boolean useStandardDecoupledTemplateLogicResolver() default true;
 
     @AttributeDefinition(
         name = "use standard cache manager",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard cache manager and uses it exclusively."
     )
     boolean useStandardCacheManager() default true;
 
     @AttributeDefinition(
         name = "use standard engine context factory",
-        description = "" // TODO
+        description = "Enables Thymeleaf's standard engine context factory and uses it exclusively."
     )
     boolean useStandardEngineContextFactory() default true;
 

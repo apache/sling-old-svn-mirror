@@ -83,19 +83,19 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
 
     @Activate
     private void activate(final SlingResourceTemplateResolverConfiguration configuration) {
-        logger.debug("activate");
+        logger.debug("activating");
         this.configuration = configuration;
     }
 
     @Modified
     private void modified(final SlingResourceTemplateResolverConfiguration configuration) {
-        logger.debug("modified");
+        logger.debug("modifying");
         this.configuration = configuration;
     }
 
     @Deactivate
     private void deactivate() {
-        logger.debug("deactivate");
+        logger.debug("deactivating");
     }
 
     @Override
