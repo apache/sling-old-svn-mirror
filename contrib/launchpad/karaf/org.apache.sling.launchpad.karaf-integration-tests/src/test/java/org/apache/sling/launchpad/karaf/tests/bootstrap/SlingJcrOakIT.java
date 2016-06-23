@@ -51,8 +51,43 @@ public class SlingJcrOakIT extends KarafTestSupport {
     }
 
     @Test
+    public void testOrgApacheJackrabbitOakCore() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-core");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheJackrabbitOakCommons() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-commons");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheJackrabbitOakBlob() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-blob");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheJackrabbitOakJcr() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-jcr");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test // TODO SLING-5796 Make Oak Lucene optional
     public void testOrgApacheJackrabbitOakLucene() {
         final Bundle bundle = findBundle("org.apache.jackrabbit.oak-lucene");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testComGoogleGuava() {
+        final Bundle bundle = findBundle("com.google.guava");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
