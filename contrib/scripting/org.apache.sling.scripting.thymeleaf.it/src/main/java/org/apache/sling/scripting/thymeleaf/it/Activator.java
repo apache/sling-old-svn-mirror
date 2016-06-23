@@ -29,23 +29,27 @@ import org.thymeleaf.linkbuilder.ILinkBuilder;
 
 public class Activator implements BundleActivator {
 
-    private ServiceRegistration serviceRegistration;
+    private ServiceRegistration linkBuilderRegistration;
 
     @Override
-    public void start(BundleContext bundleContext) throws Exception {
+    public void start(final BundleContext bundleContext) throws Exception {
+        registerLinkBuilder(bundleContext);
+    }
+
+    @Override
+    public void stop(final BundleContext bundleContext) throws Exception {
+        if (linkBuilderRegistration != null) {
+            linkBuilderRegistration.unregister();
+            linkBuilderRegistration = null;
+        }
+    }
+
+    private void registerLinkBuilder(final BundleContext bundleContext) {
         final FooBarLinkBuilder linkBuilder = new FooBarLinkBuilder();
         final Dictionary<String, String> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Scripting Thymeleaf IT FooBarLinkBuilder");
         properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = bundleContext.registerService(ILinkBuilder.class, linkBuilder, properties);
-    }
-
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-        if (serviceRegistration != null) {
-            serviceRegistration.unregister();
-            serviceRegistration = null;
-        }
+        linkBuilderRegistration = bundleContext.registerService(ILinkBuilder.class, linkBuilder, properties);
     }
 
 }
