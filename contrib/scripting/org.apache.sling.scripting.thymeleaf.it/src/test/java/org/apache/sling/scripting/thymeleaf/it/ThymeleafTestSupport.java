@@ -29,6 +29,7 @@ import javax.script.ScriptEngineFactory;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
+import org.apache.sling.testing.paxexam.SlingOptions;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.util.Filter;
@@ -133,7 +134,7 @@ public abstract class ThymeleafTestSupport {
             newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
                 .put("localIndexDir", localIndexDir)
                 .asOption(),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version("1.5.3")
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver)
         );
     }
 
