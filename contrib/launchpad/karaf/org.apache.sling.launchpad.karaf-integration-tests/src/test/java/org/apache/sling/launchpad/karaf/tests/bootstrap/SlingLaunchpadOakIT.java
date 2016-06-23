@@ -45,30 +45,8 @@ public class SlingLaunchpadOakIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheFelixInventory() {
-        final Bundle bundle = findBundle("org.apache.felix.inventory");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     public void testOrgApacheFelixPrefs() {
         final Bundle bundle = findBundle("org.apache.felix.prefs");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testOrgApacheFelixWebconsolePluginsEvent() {
-        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.event");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    @Ignore // TODO
-    public void testOrgApacheFelixWebconsolePluginsDs() {
-        final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.ds");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
