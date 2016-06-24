@@ -32,6 +32,10 @@ public class ClientException extends Exception {
         this(message, -1, throwable);
     }
 
+    public ClientException(String message, int htmlStatusCode) {
+        this(message, htmlStatusCode, null);
+    }
+
     public ClientException(String message, int htmlStatusCode, Throwable throwable) {
         super(message, throwable);
         this.httpStatusCode = htmlStatusCode;

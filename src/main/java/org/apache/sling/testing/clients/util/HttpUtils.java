@@ -99,7 +99,7 @@ public class HttpUtils {
         }
 
         // throw the exception
-        throw new ClientException(errorMsg);
+        throw new ClientException(errorMsg, givenStatus);
     }
 
 
