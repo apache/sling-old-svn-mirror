@@ -261,7 +261,8 @@ public class JobSchedulerImpl
      * @param info The scheduling info
      */
     private void stopScheduledJob(final ScheduledJobInfoImpl info) {
-        if ( this.active.get() ) {
+        final Scheduler localScheduler = this.scheduler;
+        if ( localScheduler != null ) {
             this.configuration.getAuditLogger().debug("SCHEDULED STOP name={}, topic={}, properties={} : {}",
                     new Object[] {info.getName(),
                                   info.getJobTopic(),
@@ -269,7 +270,7 @@ public class JobSchedulerImpl
                                   info.getSchedules()});
             for(int index = 0; index<info.getSchedules().size(); index++) {
                 final String name = info.getSchedulerJobId() + "-" + String.valueOf(index);
-                this.scheduler.unschedule(name);
+                localScheduler.unschedule(name);
             }
         }
     }
