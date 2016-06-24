@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,7 +17,40 @@
  * under the License.
  ******************************************************************************/
 
-@Version("1.1.0")
-package org.apache.sling.hapi.sightly;
+package org.apache.sling.hapi;
 
-import aQute.bnd.annotation.Version;
+import java.util.Collection;
+
+public interface HApiTypesCollection extends Collection<HApiType> {
+    /**
+     * The name of this type collection
+     * @return
+     */
+    String getName();
+
+
+    /**
+     * The description of this type collection
+     * @return
+     */
+    String getDescription();
+
+    /**
+     * The Resource path of this type collection
+     * @return
+     */
+    String getPath();
+
+    /**
+     * The external URL of the type collection
+     * @return
+     */
+    String getUrl();
+
+    /**
+     * The fully qualified domain name of this type collection
+     * @return
+     */
+    String getFqdn();
+
+}

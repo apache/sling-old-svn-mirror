@@ -41,13 +41,13 @@ public interface HApiType {
     String getDescription();
 
     /**
-     * The JCR path of the node representing this type
+     * The path of the Resource representing this type
      * @return
      */
     String getPath();
 
     /**
-     * The URL of the node representing this type
+     * The external URL of the node representing this type
      * @return
      */
     String getUrl();

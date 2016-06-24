@@ -17,8 +17,9 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<html data-sly-use.type="org.apache.sling.hapi.sightly.TypeView"
-      data-sly-use.hapitype="${'org.apache.sling.hapi.sightly.HApiUse' @type='org.apache.sling.hapi.common.hapi_type'}" lang="${type.lang}">
+<html data-sly-use.collection="org.apache.sling.hapi.sightly.TypesCollectionView"
+      data-sly-use.hapicollection="${'org.apache.sling.hapi.sightly.HApiUse' @type='org.apache.sling.hapi.common.hapi_typescollection'}"
+      lang="${type.lang}">
 
     <head>
         <meta charset="utf-8">
@@ -35,49 +36,38 @@
           <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
 
-        <title>${type.title}</title>
+        <title>${collection.title}</title>
 
     </head>
     <body>
-        <div class="container" data-sly-attribute="${hapitype.itemtype}">
+        <div class="container">
 
-            <h1 data-sly-attribute="${hapitype.itemprop.hapi_name}">${type.title}</h1>
+            <h1 data-sly-attribute="${hapicollection.itemprop.hapi_name}">${collection.title}</h1>
             <div>
-                <p data-sly-attribute="${hapitype.itemprop.hapi_description}">${type.description}</p>
+                <p data-sly-attribute="${hapicollection.itemprop.hapi_description}">${collection.description}</p>
             </div>
-            <h2 data-sly-test.parentUrl="${type.parentUrl}"> extends
-                <a data-sly-attribute="${hapitype.itemprop.hapi_parent}" href="${parentUrl}" >${type.parentFqdn}</a>
-            </h2>
-            <h3 data-sly-test="${type.parameters}">Parameters: </h3>
-                <ul data-sly-list.param="${type.parameters}" title="Parameters" class="list-inline">
-                <li data-sly-attribute="${hapitype.itemprop.hapi_parameter}">${param}</li>
-            </ul>
-            <h3>Properties: </h3>
-            <table class="table" data-sly-test.props="${type.props}">
+
+            <h3>Types: </h3>
+            <table class="table" data-sly-test.types="${collection.types}">
                 <thead>
                     <tr>
-                        <th>Property</th>
-                        <th>Expected Type</th>
-                        <th>Multiple</th>
+                        <th>Name</th>
                         <th>Description</th>
                     </tr>
                 </thead>
-                <tbody data-sly-list.prop="${type.props}">
-                    <tr data-sly-attribute="${hapitype.itemprop.hapi_property}"
-                        data-sly-use.hapi_type_prop="${'org.apache.sling.hapi.sightly.HApiUse' @type=hapitype.proptype.hapi_property}">
-
-                        <th data-sly-attribute="${hapi_type_prop.itemprop.hapi_name}">${prop.name}</th>
+                <tbody data-sly-list.type="${collection.types}">
+                    <tr data-sly-attribute="${hapicollection.itemprop.hapi_type}"
+                        data-sly-use.hapi_type="${'org.apache.sling.hapi.sightly.HApiUse' @type=hapicollection.proptype.hapi_type}">
                         <td>
-                            <a data-sly-attribute="${hapi_type_prop.itemprop.hapi_property_type}" href="${prop.type.url}">
-                                ${prop.type.name}
+                            <a rel="hapi_type" data-sly-attribute="${hapi_type.itemprop.hapi_url}" href="${type.url}">
+                                <span data-sly-attribute="${hapi_type.itemprop.hapi_name}">${type.fqdn}</span>
                             </a>
                         </td>
-                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_multiple}">${prop.multiple}</td>
-                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_description}">${prop.description}</td>
+                        <td data-sly-attribute="${hapi_type.itemprop.hapi_description}">${type.description}</td>
                     </tr>
                 </tbody>
             </table>
-            <div data-sly-test="${!props}">None</div>
+            <div data-sly-test="${!types}">None</div>
         </div>
     </body>
 </html>

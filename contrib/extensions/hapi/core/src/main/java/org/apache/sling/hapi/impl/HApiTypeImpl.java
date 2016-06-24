@@ -169,6 +169,6 @@ public class HApiTypeImpl implements HApiType {
 
     @Override
     public String toString() {
-        return this.getName() + ": Properties: " + this.getProperties();
+        return this.getName() + "(" + this.getPath() + "): Properties: " + this.getProperties();
     }
 }

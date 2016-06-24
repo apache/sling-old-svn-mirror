@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,34 +19,36 @@
 package org.apache.sling.hapi.impl;
 
 import org.apache.sling.hapi.HApiType;
-import org.apache.sling.hapi.HApiProperty;
+import org.apache.sling.hapi.HApiTypesCollection;
 
-/**
- * {@inheritDoc}
- */
-public class HApiPropertyImpl implements HApiProperty {
-    private String name;
-    private String description;
-    private HApiType type;
-    private Boolean multiple;
+import java.util.ArrayList;
+
+public class HApiTypesCollectionImpl extends ArrayList<HApiType> implements HApiTypesCollection {
+
+    private final String name;
+    private final String description;
+    private final String path;
+    private final String serverUrl;
+    private final String fqdn;
 
     /**
      *
-     * @param name
-     * @param description
-     * @param type
-     * @param multiple
+     * @param name The name of the collection.
+     * @param description The description of the collection
+     * @param path The path of the resource describing the collection
      */
-    public HApiPropertyImpl(String name, String description, HApiType type, Boolean multiple) {
+    public HApiTypesCollectionImpl(String name, String description, String serverUrl, String path, String fqdn) {
         this.name = name;
         this.description = description;
-        this.type = type;
-        this.multiple = multiple;
+        this.serverUrl = serverUrl.substring(0, serverUrl.length() - (serverUrl.endsWith("/") ? 1 : 0));
+        this.path = path;
+        this.fqdn = fqdn;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -54,13 +56,7 @@ public class HApiPropertyImpl implements HApiProperty {
     /**
      * {@inheritDoc}
      */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public String getDescription() {
         return description;
     }
@@ -68,45 +64,24 @@ public class HApiPropertyImpl implements HApiProperty {
     /**
      * {@inheritDoc}
      */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public HApiType getType() {
-        return type;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setType(HApiType type) {
-        this.type = type;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Boolean getMultiple() {
-        return multiple;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setMultiple(Boolean multiple) {
-        this.multiple = multiple;
-    }
-
     @Override
-    public String toString() {
-        return "HApiProperty{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", type=" + type.getPath() +
-                ", multiple=" + multiple +
-                '}';
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getUrl() {
+        return this.serverUrl + getPath() + ".html";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getFqdn() {
+        return fqdn;
     }
 }
