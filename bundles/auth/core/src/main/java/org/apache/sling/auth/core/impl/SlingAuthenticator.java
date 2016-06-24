@@ -19,6 +19,8 @@
 package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -1216,6 +1218,11 @@ public class SlingAuthenticator implements Authenticator,
                 "sendSudoCookie: Failed to quote value '{}' of cookie {}: {}",
                 new Object[] { user, this.sudoCookieName, iae.getMessage() });
             return;
+        } catch (UnsupportedEncodingException e) {
+            log.error(
+                    "sendSudoCookie: Failed to quote value '{}' of cookie {}: {}",
+                    new Object[] { user, this.sudoCookieName, e.getMessage() });
+                return;
         }
 
         if (quotedUser != null) {
@@ -1456,11 +1463,12 @@ public class SlingAuthenticator implements Authenticator,
      *
      * @param value The cookie value to quote
      * @return The quoted cookie value
+     * @throws UnsupportedEncodingException 
      * @throws IllegalArgumentException If the cookie value is <code>null</code>
      *             or cannot be quoted, primarily because it contains a quote
      *             sign.
      */
-    static String quoteCookieValue(final String value) {
+    static String quoteCookieValue(final String value) throws UnsupportedEncodingException {
         // method is package private to enable unit testing
 
         if (value == null) {
@@ -1477,7 +1485,7 @@ public class SlingAuthenticator implements Authenticator,
                 throw new IllegalArgumentException(
                     "Cookie value may not contain CTL character");
             } else {
-                builder.append(c);
+                builder.append(URLEncoder.encode(String.valueOf(c), "UTF-8"));
             }
         }
         builder.append('"');
