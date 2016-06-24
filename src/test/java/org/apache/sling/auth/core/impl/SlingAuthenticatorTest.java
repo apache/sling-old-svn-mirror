@@ -18,6 +18,8 @@
  */
 package org.apache.sling.auth.core.impl;
 
+import java.io.UnsupportedEncodingException;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.auth.core.impl.SlingAuthenticator;
@@ -33,7 +35,7 @@ public class SlingAuthenticatorTest extends TestCase {
 
     private final Mockery context = new JUnit4Mockery();
     
-    public void test_quoteCookieValue() {
+    public void test_quoteCookieValue() throws UnsupportedEncodingException {
 
         try {
             SlingAuthenticator.quoteCookieValue(null);
@@ -44,10 +46,12 @@ public class SlingAuthenticatorTest extends TestCase {
 
         checkQuote("\"", "\"\\\"\"");
         checkQuote("simplevalue", "\"simplevalue\"");
-        checkQuote("simple value", "\"simple value\"");
-        checkQuote("email@address.com", "\"email@address.com\"");
+        checkQuote("simple value", "\"simple+value\"");
+        checkQuote("email@address.com", "\"email%40address.com\"");
 
-        checkQuote("string\ttab", "\"string\ttab\"");
+        checkQuote("string\ttab", "\"string%09tab\"");
+        checkQuote("test中文", "\"test%E4%B8%AD%E6%96%87\"");
+
 
         try {
             SlingAuthenticator.quoteCookieValue("string\rCR");
@@ -74,7 +78,7 @@ public class SlingAuthenticatorTest extends TestCase {
         checkUnQuote("\"string\ttab\"", "string\ttab");
     }
 
-    private void checkQuote(final String value, final String expected) {
+    private void checkQuote(final String value, final String expected) throws UnsupportedEncodingException {
         final String actual = SlingAuthenticator.quoteCookieValue(value);
         assertEquals(expected, actual);
     }
