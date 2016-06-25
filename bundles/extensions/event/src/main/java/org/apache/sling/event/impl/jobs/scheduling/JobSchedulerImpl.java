@@ -326,9 +326,11 @@ public class JobSchedulerImpl
             if ( path != null && path.startsWith(this.configuration.getScheduledJobsPath(true)) ) {
                 if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
                     // removal
+                    logger.debug("Remove scheduled job {}, event {}", path, event.getTopic());
                     this.scheduledJobHandler.handleRemove(path);
                 } else {
                     // add or update
+                    logger.debug("Add or update scheduled job {}, event {}", path, event.getTopic());
                     this.scheduledJobHandler.handleAddUpdate(path);
                 }
             }
