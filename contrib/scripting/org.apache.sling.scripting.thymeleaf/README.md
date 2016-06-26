@@ -6,12 +6,12 @@ scripting engine for [_Thymeleaf_](http://www.thymeleaf.org) templates
 Features
 --------
 
-* Supporting all of Thymeleaf's extension points: _TemplateResolver_﻿s, _MessageResolver_﻿s, _Dialect_﻿s, _LinkBuilder_﻿s, _DecoupledTemplateLogicResolver_, _CacheManager_﻿ and _EngineContextFactory_
+* Supporting all of Thymeleaf's extension points: [_TemplateResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/templateresolver/ITemplateResolver.html)﻿s, [_MessageResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/messageresolver/IMessageResolver.html)﻿s, [_Dialect_﻿](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/dialect/IDialect.html)s, [_LinkBuilder_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/linkbuilder/ILinkBuilder.html)﻿s, [_DecoupledTemplateLogicResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/templateparser/markup/decoupled/IDecoupledTemplateLogicResolver.html), [_CacheManager_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/cache/ICacheManager.html) and [_EngineContextFactory_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/context/IEngineContext.html)
 * `SlingResourceTemplateResolver` customizable through `TemplateModeProvider`﻿
-* `ResourceBundleMessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n` customizable through optional `AbsentMessageRepresentationProvider`﻿
-* `PatternTemplateModeProvider` supporting `Pattern` configurations for all template modes (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS` and `RAW`)
+* `ResourceBundleMessageResolver` backed by `ResourceBundleProvider` from [Sling i18n](https://sling.apache.org/documentation/bundles/internationalization-support-i18n.html) customizable through optional `AbsentMessageRepresentationProvider`﻿
+* `PatternTemplateModeProvider` supporting [`Pattern`](https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) configurations for all [template modes](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/templatemode/TemplateMode.html) (`HTML`, `XML`, `TEXT`, `JAVASCRIPT`, `CSS` and `RAW`)
 * `SlingDialect`
-* Thymeleaf's `TemplateEngine` registered as OSGi Service for direct use
+* Thymeleaf's [`TemplateEngine`](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/ITemplateEngine.html) registered as OSGi Service ([`ITemplateEngine`](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/ITemplateEngine.html)) for direct use
 
 Installation
 ------------
@@ -30,5 +30,4 @@ relevant Thymeleaf issues
 -------------------------
 
 * [Create OSGi bundle](https://github.com/thymeleaf/thymeleaf/issues/32)
-* [Remove initialize() steps in extension points](https://github.com/thymeleaf/thymeleaf/issues/54)
 * [keep (custom) IContext accessible](https://github.com/thymeleaf/thymeleaf/issues/388)
