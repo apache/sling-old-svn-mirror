@@ -20,5 +20,5 @@
 
 [artifacts]
   org.apache.sling/org.apache.sling.repoinit.parser/0.0.1-SNAPSHOT
-  org.apache.sling/org.apache.sling.repoinit.oak-jcr/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.jcr.repoinit/0.9.9-SNAPSHOT
   org.apache.sling/org.apache.sling.provisioning.model/1.4.4
