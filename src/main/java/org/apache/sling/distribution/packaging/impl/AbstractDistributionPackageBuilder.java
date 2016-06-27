@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -33,17 +33,16 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * base abstract implementation of a JCR based {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder}
+ * base abstract implementation of a JCR based {@link DistributionPackageBuilder}
  */
 public abstract class AbstractDistributionPackageBuilder implements DistributionPackageBuilder {
 

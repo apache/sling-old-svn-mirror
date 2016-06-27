@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization;
+package org.apache.sling.distribution.packaging;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;

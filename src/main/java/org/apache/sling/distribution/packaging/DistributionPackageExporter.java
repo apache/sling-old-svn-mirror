@@ -25,7 +25,6 @@ import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
  * A {@link DistributionPackageExporter) is responsible of exporting {@link DistributionPackage}s from a local or remote

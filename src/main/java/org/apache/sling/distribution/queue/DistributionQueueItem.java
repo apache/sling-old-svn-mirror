@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
  * An item in a {@link DistributionQueue}

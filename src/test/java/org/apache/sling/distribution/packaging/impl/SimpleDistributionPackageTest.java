@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging.impl;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.packaging.impl.SimpleDistributionPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

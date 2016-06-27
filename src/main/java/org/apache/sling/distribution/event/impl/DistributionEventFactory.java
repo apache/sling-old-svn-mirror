@@ -21,7 +21,7 @@ package org.apache.sling.distribution.event.impl;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 
 /**
  * generate distribution related events

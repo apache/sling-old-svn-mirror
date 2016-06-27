@@ -43,7 +43,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.serialization.impl.FileDistributionPackage;
+import org.apache.sling.distribution.packaging.impl.FileDistributionPackage;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

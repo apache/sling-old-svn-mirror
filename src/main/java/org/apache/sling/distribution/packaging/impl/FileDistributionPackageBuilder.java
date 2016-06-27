@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedOutputStream;
@@ -31,12 +31,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 
 /**
- * A {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on files.
+ * A {@link DistributionPackageBuilder} based on files.
  */
 public class FileDistributionPackageBuilder extends AbstractDistributionPackageBuilder {
 

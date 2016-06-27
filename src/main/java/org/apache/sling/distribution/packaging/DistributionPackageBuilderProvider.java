@@ -16,29 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging;
 
-import javax.annotation.Nonnull;
+import javax.annotation.CheckForNull;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.distribution.serialization.DistributionPackage;
 
 /**
- * A {@link DistributionPackage} that offers basic reference counting.
- * That's useful for example when using a package in multiple queues.
+ * A helper interface to allow finding registered {@link DistributionPackageBuilder}s
  */
 @ProviderType
-public interface SharedDistributionPackage extends DistributionPackage {
+public interface DistributionPackageBuilderProvider {
 
     /**
-     * acquire a reference to this package and increase the reference count.
+     * Finds a package builder that has the specified package type.
+     * @param type the package type
+     * @return a {@link DistributionPackageBuilder} if one is already registered for that type or null otherwise
      */
-    void acquire(@Nonnull String[] holderNames);
-
-    /**
-     * release a reference to this package and decrease the reference count.
-     * when no more references are hold the package {@code DistributionPackage#delete} method is called.
-     */
-    void release(@Nonnull String[] holderNames);
-
+    @CheckForNull
+    DistributionPackageBuilder getPackageBuilder(String type);
 }
