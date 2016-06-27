@@ -280,6 +280,10 @@ public class JobSchedulerImpl
      */
     @Override
     public void execute(final JobContext context) {
+        if ( !active.get() ) {
+            // not active anymore, simply return
+            return;
+        }
         final ScheduledJobInfoImpl info = (ScheduledJobInfoImpl) context.getConfiguration().get(PROPERTY_READ_JOB);
 
         if ( info.isSuspended() ) {
