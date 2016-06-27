@@ -22,7 +22,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
  * A queue is responsible for collecting the {@link DistributionPackage}s

@@ -27,7 +27,7 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 
 /**
- * A content serializer used to extract and import {@link DistributionPackage}s.
+ * A content serializer used to convert distribution payloads to and from binary streams.
  */
 @ConsumerType
 public interface DistributionContentSerializer {

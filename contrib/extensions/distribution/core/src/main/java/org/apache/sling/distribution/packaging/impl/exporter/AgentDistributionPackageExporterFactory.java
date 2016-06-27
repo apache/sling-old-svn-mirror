@@ -35,9 +35,9 @@ import org.apache.sling.distribution.component.impl.DistributionComponentConstan
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -19,8 +19,6 @@
 
 package org.apache.sling.distribution.packaging;
 
-import org.apache.sling.distribution.serialization.DistributionPackage;
-
 /**
  * A callback function used to process packages
  */

@@ -44,7 +44,7 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;

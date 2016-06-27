@@ -24,8 +24,6 @@ import java.io.InputStream;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
 
 /**
  * A {@link DistributionPackageImporter} is responsible for importing {@link DistributionPackage}s into either a local

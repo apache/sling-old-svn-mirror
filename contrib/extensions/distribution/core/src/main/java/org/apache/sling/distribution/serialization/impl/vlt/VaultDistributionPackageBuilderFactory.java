@@ -40,11 +40,11 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
-import org.apache.sling.distribution.serialization.impl.FileDistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.ResourceDistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageBuilder;
 
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.

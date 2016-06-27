@@ -25,9 +25,9 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
-import org.apache.sling.distribution.serialization.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 
 /**
  * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a

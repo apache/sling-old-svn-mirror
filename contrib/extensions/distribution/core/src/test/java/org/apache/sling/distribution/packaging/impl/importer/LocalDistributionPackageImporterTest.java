@@ -19,8 +19,8 @@
 package org.apache.sling.distribution.packaging.impl.importer;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;

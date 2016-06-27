@@ -25,8 +25,8 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilderProvider;
 import org.junit.Test;
 
 import java.util.ArrayList;

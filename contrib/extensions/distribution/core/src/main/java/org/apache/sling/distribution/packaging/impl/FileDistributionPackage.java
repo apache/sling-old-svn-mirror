@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
@@ -26,9 +26,8 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

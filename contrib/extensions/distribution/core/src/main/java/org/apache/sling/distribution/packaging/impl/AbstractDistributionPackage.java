@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.serialization.impl;
+package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.distribution.serialization.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 
 /**
  * abstract implementation of a {@link DistributionPackage}
