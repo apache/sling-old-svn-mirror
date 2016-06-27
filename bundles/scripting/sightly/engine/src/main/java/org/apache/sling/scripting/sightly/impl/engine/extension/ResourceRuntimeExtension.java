@@ -69,6 +69,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
     private static final String OPTION_REMOVE_SELECTORS = "removeSelectors";
     private static final String OPTION_ADD_SELECTORS = "addSelectors";
     private static final String OPTION_REPLACE_SELECTORS = "replaceSelectors";
+    private static final String OPTION_REQUEST_ATTRIBUTES = "requestAttributes";
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
@@ -81,6 +82,9 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         PathInfo pathInfo = new PathInfo(coerceString(pathObj));
         String path = pathInfo.path;
         final Bindings bindings = renderContext.getBindings();
+        SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
+        Map originalAttributes = ExtensionUtils.setRequestAttributes(request,
+                (Map)options.remove(OPTION_REQUEST_ATTRIBUTES));
         String finalPath = buildPath(path, opts, BindingsUtils.getResource(bindings));
         String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
         Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
@@ -88,6 +92,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         StringWriter writer = new StringWriter();
         PrintWriter printWriter = new PrintWriter(writer);
         includeResource(bindings, printWriter, finalPath, dispatcherOptions, resourceType);
+        ExtensionUtils.setRequestAttributes(request, originalAttributes);
         return writer.toString();
     }
 

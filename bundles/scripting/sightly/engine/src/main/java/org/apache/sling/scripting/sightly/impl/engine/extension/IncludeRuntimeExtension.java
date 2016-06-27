@@ -56,6 +56,7 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
     private static final String OPTION_FILE = "file";
     private static final String OPTION_PREPEND_PATH = "prependPath";
     private static final String OPTION_APPEND_PATH = "appendPath";
+    private static final String OPTION_REQUEST_ATTRIBUTES = "requestAttributes";
 
 
     @Override
@@ -67,7 +68,11 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
         String path = buildPath(originalPath, options);
         StringWriter output = new StringWriter();
         final Bindings bindings = renderContext.getBindings();
+        SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
+        Map originalAttributes = ExtensionUtils.setRequestAttributes(request,
+                (Map)options.remove(OPTION_REQUEST_ATTRIBUTES));
         includeScript(bindings, path, new PrintWriter(output));
+        ExtensionUtils.setRequestAttributes(request, originalAttributes);
         return output.toString();
 
     }

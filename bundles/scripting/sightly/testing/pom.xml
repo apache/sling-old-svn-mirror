@@ -272,6 +272,12 @@
             <version>4.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Dependency for running Sling performance tests -->
         <dependency>
