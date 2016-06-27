@@ -19,7 +19,7 @@
 [feature name=repoinit-tests]
 
 [artifacts startLevel=2]
-  org.apache.sling/org.apache.sling.repoinit.oak-jcr/1.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.jcr.repoinit/0.9.9-SNAPSHOT
   org.apache.sling/org.apache.sling.repoinit.parser/1.0.1-SNAPSHOT
   org.apache.sling/org.apache.sling.provisioning.model/1.4.2
 

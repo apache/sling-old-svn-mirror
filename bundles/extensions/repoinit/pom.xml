@@ -41,7 +41,7 @@
   
   <modules>
     <module>parser</module>
-    <module>oak-jcr</module>
+    <module>jcr</module>
     <module>it</module>
   </modules>
 </project>
