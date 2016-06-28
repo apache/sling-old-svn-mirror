@@ -33,6 +33,7 @@ import io.sightly.tck.html.HTMLExtractor;
 import io.sightly.tck.http.Client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class SlingSpecificsSightlyIT {
@@ -42,6 +43,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_USE = "/sightly/use.html";
     private static final String SLING_JAVA_USE_NPE = "/sightly/use.javaerror.html";
     private static final String SLING_RESOURCE = "/sightly/resource.html";
+    private static final String SLING_RESOURCE_ACTUAL = "/sightly/actualresource.html";
     private static final String SLING_TEMPLATE = "/sightly/template.html";
     private static final String SLING_TEMPLATE_BAD_IDENTIFIER = "/sightly/template.bad-id.html";
     private static final String SLING_JS_USE = "/sightly/use.jsuse.html";
@@ -226,6 +228,17 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_CRLF_WRONGPKG;
         String pageContent = client.getStringContent(url, 500);
         assertTrue(pageContent.contains("Compilation errors in apps/sightly/scripts/crlf/RepoPojoWrongPkgCRLF.java"));
+    }
+
+    @Test
+    public void actualResource() {
+        String url = launchpadURL + SLING_RESOURCE_ACTUAL;
+        String pageContent = client.getStringContent(url, 200);
+        String hash = HTMLExtractor.innerHTML(url, pageContent, "#hash");
+        String actual = HTMLExtractor.innerHTML(url, pageContent, "#actual");
+        String path = HTMLExtractor.innerHTML(url, pageContent, "#path");
+        assertEquals(hash, actual);
+        assertNotEquals(hash, path);
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
