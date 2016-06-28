@@ -567,20 +567,25 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     }
 
     /**
-     * Converts the given <code>localeString</code> to valid
-     * <code>java.util.Locale</code>. If the locale string is
-     * <code>null</code> or empty, the platform default locale is assumed. If
+     * Converts the given <code>localeString</code> to a valid
+     * <code>java.util.Locale</code>. It must either be in the format specified by
+     * {@link Locale#toString()} or in <a href="https://tools.ietf.org/html/bcp47">BCP 47 format</a>
+     * If the locale string is <code>null</code> or empty, the platform default locale is assumed. If
      * the localeString matches any locale available per default on the
      * platform, that platform locale is returned. Otherwise the localeString is
      * parsed and the language and country parts are compared against the
      * languages and countries provided by the platform. Any unsupported
      * language or country is replaced by the platform default language and
      * country.
+     * @param localeString the locale as string
+     * @return the {@link Locale} being generated from the {@code localeString}
      */
     static Locale toLocale(String localeString) {
         if (localeString == null || localeString.length() == 0) {
             return Locale.getDefault();
         }
+        // support BCP 47 compliant strings as well (using a different separator "-" instead of "_")
+        localeString = localeString.replaceAll("-", "_");
 
         // check language and country
         final String[] parts = localeString.split("_");
