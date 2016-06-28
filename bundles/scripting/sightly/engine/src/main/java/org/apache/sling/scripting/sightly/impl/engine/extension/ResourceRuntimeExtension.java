@@ -47,8 +47,6 @@ import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Runtime support for including resources in a Sightly script through {@code data-sly-resource}.
@@ -60,7 +58,6 @@ import org.slf4j.LoggerFactory;
 )
 public class ResourceRuntimeExtension implements RuntimeExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceRuntimeExtension.class);
     private static final String OPTION_RESOURCE_TYPE = "resourceType";
     private static final String OPTION_PATH = "path";
     private static final String OPTION_PREPEND_PATH = "prependPath";
@@ -238,7 +235,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
     private void includeResource(final Bindings bindings, PrintWriter out, String script, String dispatcherOptions, String resourceType) {
         if (StringUtils.isEmpty(script)) {
-            LOG.error("Resource path cannot be empty");
+            throw new SightlyException("Resource path cannot be empty");
         } else {
             SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
             script = normalizePath(request, script);
@@ -252,7 +249,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
     private void includeResource(final Bindings bindings, PrintWriter out, Resource includeRes, String dispatcherOptions, String resourceType) {
         if (includeRes == null) {
-            LOG.error("Resource cannot be null");
+            throw new SightlyException("Resource cannot be null");
         } else {
             SlingHttpServletResponse customResponse = new PrintWriterResponseWrapper(out, BindingsUtils.getResponse(bindings));
             SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
