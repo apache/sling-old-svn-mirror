@@ -531,7 +531,7 @@ public class JobManagerImpl
      * @param passedJobProperties The optional job properties
      * @return The persisted job or <code>null</code>.
      */
-    private Job addJobInteral(final String jobTopic,
+    private Job addJobInternal(final String jobTopic,
             final Map<String, Object> jobProperties,
             final List<String> errors) {
         final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(jobTopic);
@@ -701,7 +701,7 @@ public class JobManagerImpl
             return null;
         }
         final List<String> errorList = new ArrayList<String>();
-        Job result = this.addJobInteral(topic, properties, errorList);
+        Job result = this.addJobInternal(topic, properties, errorList);
         if ( errors != null ) {
             errors.addAll(errorList);
         }
