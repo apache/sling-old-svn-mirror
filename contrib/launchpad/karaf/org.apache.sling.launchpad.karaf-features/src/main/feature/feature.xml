@@ -21,7 +21,7 @@
   <!-- Apache Sling -->
   <feature name="sling" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.11.1-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.14</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.16</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.6</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
     <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.4.12</bundle>
@@ -108,7 +108,7 @@
   </feature>
   <!-- Apache Sling Extensions -->
   <feature name="sling-extension-adapter" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.8</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
   </feature>
