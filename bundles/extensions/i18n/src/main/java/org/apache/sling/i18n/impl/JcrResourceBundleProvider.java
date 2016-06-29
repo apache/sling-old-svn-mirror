@@ -598,7 +598,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         boolean isValidLanguageCode = false;
         String[] langs = Locale.getISOLanguages();
         for (int i = 0; i < langs.length; i++) {
-            if (langs[i].equals(lang)) {
+            if (langs[i].equalsIgnoreCase(lang)) {
                 isValidLanguageCode = true;
                 break;
             }
@@ -617,7 +617,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         boolean isValidCountryCode = false;
         String[] countries = Locale.getISOCountries();
         for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equals(country)) {
+            if (countries[i].equalsIgnoreCase(country)) {
                 isValidCountryCode = true; // signal ok
                 break;
             }
