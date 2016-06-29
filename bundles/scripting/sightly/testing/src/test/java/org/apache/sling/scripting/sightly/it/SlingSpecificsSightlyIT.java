@@ -55,6 +55,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_CRLF_PKG = SLING_CRLF + ".pkg.html";
     private static final String SLING_CRLF_WRONGPKG = SLING_CRLF + ".wrongpkg.html";
     private static final String SLING_SCRIPT_UPDATE = "/sightly/update.html";
+    private static final String SLING_RESOURCE_USE = "/sightly/use.resource.html";
 
 
     @BeforeClass
@@ -226,6 +227,18 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + SLING_CRLF_WRONGPKG;
         String pageContent = client.getStringContent(url, 500);
         assertTrue(pageContent.contains("Compilation errors in apps/sightly/scripts/crlf/RepoPojoWrongPkgCRLF.java"));
+    }
+
+    @Test
+    public void testResourceUse() {
+        String url = launchpadURL + SLING_RESOURCE_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("foobar-someresource", HTMLExtractor.innerHTML(url, pageContent, "#someresource .data"));
+        assertEquals("foobar-somefolder", HTMLExtractor.innerHTML(url, pageContent, "#somefolder .data"));
+        assertEquals("foobar-sometemplate", HTMLExtractor.innerHTML(url, pageContent, "#sometemplate .data"));
+        assertEquals("foobar-somejava", HTMLExtractor.innerHTML(url, pageContent, "#somejava .data"));
+        assertEquals("foobar-somejs", HTMLExtractor.innerHTML(url, pageContent, "#somejs .data"));
+        assertEquals("foobar-someecma", HTMLExtractor.innerHTML(url, pageContent, "#someecma .data"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
