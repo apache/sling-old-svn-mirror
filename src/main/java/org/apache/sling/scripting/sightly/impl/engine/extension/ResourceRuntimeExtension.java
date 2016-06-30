@@ -18,7 +18,6 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -28,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -38,7 +36,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
@@ -47,8 +44,6 @@ import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Runtime support for including resources in a Sightly script through {@code data-sly-resource}.
@@ -60,7 +55,6 @@ import org.slf4j.LoggerFactory;
 )
 public class ResourceRuntimeExtension implements RuntimeExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceRuntimeExtension.class);
     private static final String OPTION_RESOURCE_TYPE = "resourceType";
     private static final String OPTION_PATH = "path";
     private static final String OPTION_PREPEND_PATH = "prependPath";
@@ -78,16 +72,24 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
     private String provideResource(final RenderContext renderContext, Object pathObj, Map<String, Object> options) {
         Map<String, Object> opts = new HashMap<>(options);
-        PathInfo pathInfo = new PathInfo(coerceString(pathObj));
-        String path = pathInfo.path;
         final Bindings bindings = renderContext.getBindings();
-        String finalPath = buildPath(path, opts, BindingsUtils.getResource(bindings));
         String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
-        Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
-        String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
         StringWriter writer = new StringWriter();
         PrintWriter printWriter = new PrintWriter(writer);
-        includeResource(bindings, printWriter, finalPath, dispatcherOptions, resourceType);
+
+        if (pathObj instanceof Resource) {
+            Resource includeRes = (Resource) pathObj;
+            Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, new LinkedHashSet<String>(), opts);
+            String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
+            includeResource(bindings, printWriter, includeRes, dispatcherOptions, resourceType);
+        } else {
+            PathInfo pathInfo = new PathInfo(coerceString(pathObj));
+            String finalPath = buildPath(pathInfo.path, opts, BindingsUtils.getResource(bindings));
+            Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
+            String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
+            includeResource(bindings, printWriter, finalPath, dispatcherOptions, resourceType);
+        }
+
         return writer.toString();
     }
 
@@ -229,16 +231,24 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
 
     private void includeResource(final Bindings bindings, PrintWriter out, String script, String dispatcherOptions, String resourceType) {
         if (StringUtils.isEmpty(script)) {
-            LOG.error("Script path cannot be empty");
+            throw new SightlyException("Resource path cannot be empty");
+        } else {
+            SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
+            script = normalizePath(request, script);
+            Resource includeRes = request.getResourceResolver().resolve(script);
+            if (ResourceUtil.isNonExistingResource(includeRes)) {
+                includeRes = new SyntheticResource(request.getResourceResolver(), script, resourceType);
+            }
+            includeResource(bindings, out, includeRes, dispatcherOptions, resourceType);
+        }
+    }
+
+    private void includeResource(final Bindings bindings, PrintWriter out, Resource includeRes, String dispatcherOptions, String resourceType) {
+        if (includeRes == null) {
+            throw new SightlyException("Resource cannot be null");
         } else {
             SlingHttpServletResponse customResponse = new PrintWriterResponseWrapper(out, BindingsUtils.getResponse(bindings));
             SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
-            script = normalizePath(request, script);
-
-            Resource includeRes = request.getResourceResolver().resolve(script);
-            if (includeRes instanceof NonExistingResource || includeRes.isResourceType(Resource.RESOURCE_TYPE_NON_EXISTING)) {
-                includeRes = new SyntheticResource(request.getResourceResolver(), script, resourceType);
-            }
             RequestDispatcherOptions opts = new RequestDispatcherOptions(dispatcherOptions);
             if (StringUtils.isNotEmpty(resourceType)) {
                 opts.setForceResourceType(resourceType);
@@ -246,10 +256,8 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             RequestDispatcher dispatcher = request.getRequestDispatcher(includeRes, opts);
             try {
                 dispatcher.include(request, customResponse);
-            } catch (ServletException e) {
-                throw new SightlyException("Failed to include resource " + script, e);
-            } catch (IOException e) {
-                throw new SightlyException("Failed to include resource " + script, e);
+            } catch (Exception e) {
+                throw new SightlyException("Failed to include resource " + includeRes.getPath(), e);
             }
         }
     }
