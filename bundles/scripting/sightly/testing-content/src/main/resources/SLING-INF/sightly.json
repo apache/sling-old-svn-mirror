@@ -46,7 +46,15 @@
         "sling:resourceType": "/apps/sightly/scripts/update"
     },
     "requestattributes": {
-        "jcr:primaryType": "nt:unstructured",
+        "jcr:primaryType"   : "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/requestattributes"
+    },
+    "use-someresource": {
+        "jcr:primaryType": "nt:unstructured",
+        "data": "foobar-someresource"
+    },
+    "use-somefolder": {
+        "jcr:primaryType": "sling:Folder",
+        "data": "foobar-somefolder"
     }
 }
