@@ -187,14 +187,18 @@ public class AvroContentSerializer implements DistributionContentSerializer {
     private Collection<AvroShallowResource> readAvroResources(byte[] bytes) throws IOException {
         DatumReader<AvroShallowResource> datumReader = new SpecificDatumReader<AvroShallowResource>(AvroShallowResource.class);
         DataFileReader<AvroShallowResource> dataFileReader = new DataFileReader<AvroShallowResource>(new SeekableByteArrayInput(bytes), datumReader);
-        AvroShallowResource avroResource = null;
         Collection<AvroShallowResource> avroResources = new LinkedList<AvroShallowResource>();
-        while (dataFileReader.hasNext()) {
+        try {
+            AvroShallowResource avroResource = null;
+            while (dataFileReader.hasNext()) {
 // Reuse avroResource object by passing it to next(). This saves us from
 // allocating and garbage collecting many objects for files with
 // many items.
-            avroResource = dataFileReader.next(avroResource);
-            avroResources.add(avroResource);
+                avroResource = dataFileReader.next(avroResource);
+                avroResources.add(avroResource);
+            }
+        } finally {
+            dataFileReader.close();
         }
         return avroResources;
     }
