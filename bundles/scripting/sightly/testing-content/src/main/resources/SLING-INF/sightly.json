@@ -9,6 +9,10 @@
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/resource"
     },
+    "actualresource": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "/apps/sightly/scripts/actualresource"
+    },
     "includedresource": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "/apps/sightly/scripts/includedresource"
