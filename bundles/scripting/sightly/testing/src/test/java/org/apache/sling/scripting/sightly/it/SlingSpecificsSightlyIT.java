@@ -57,6 +57,8 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_CRLF_PKG = SLING_CRLF + ".pkg.html";
     private static final String SLING_CRLF_WRONGPKG = SLING_CRLF + ".wrongpkg.html";
     private static final String SLING_SCRIPT_UPDATE = "/sightly/update.html";
+    private static final String SLING_REQUEST_ATTRIBUTES = "/sightly/requestattributes.html";
+    private static final String SLING_REQUEST_ATTRIBUTES_INCLUDE = "/sightly/requestattributes.include.html";
 
 
     @BeforeClass
@@ -239,6 +241,22 @@ public class SlingSpecificsSightlyIT {
         String path = HTMLExtractor.innerHTML(url, pageContent, "#path");
         assertEquals(hash, actual);
         assertNotEquals(hash, path);
+    }
+
+    @Test
+    public void testRequestAttributes() {
+        String url = launchpadURL + SLING_REQUEST_ATTRIBUTES;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("testValue", HTMLExtractor.innerHTML(url, pageContent, "#attrs-set"));
+        assertEquals("", HTMLExtractor.innerHTML(url, pageContent, "#attrs-unset"));
+    }
+
+    @Test
+    public void testRequestAttributesInclude() {
+        String url = launchpadURL + SLING_REQUEST_ATTRIBUTES_INCLUDE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("testValue", HTMLExtractor.innerHTML(url, pageContent, "#attrs-set"));
+        assertEquals("", HTMLExtractor.innerHTML(url, pageContent, "#attrs-unset"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
