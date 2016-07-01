@@ -141,7 +141,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         if(checked == 0) {
             resultLog.warn("No paths checked, empty paths list?");
         } else {
-            resultLog.debug("{} paths checked, {} failures", checked, failed);
+            resultLog.info("{} paths checked, {} failures", checked, failed);
         }
 
         return new Result(resultLog);
