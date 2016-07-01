@@ -334,6 +334,10 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     private void setupTemplateEngine() {
         logger.info("setting up new template engine");
         templateEngine = null;
+        if (configuration == null) {
+            logger.info("configuration is null, not setting up new template engine");
+            return;
+        }
         // setup template engine
         final TemplateEngine templateEngine = new TemplateEngine();
         // Template Resolvers
