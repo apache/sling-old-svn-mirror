@@ -48,7 +48,7 @@ import org.thymeleaf.templateresource.ITemplateResource;
 @Component(
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=Sling resource template resolver for Sling Scripting Thymeleaf",
+        Constants.SERVICE_DESCRIPTION + "=Sling Resource TemplateResolver for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )

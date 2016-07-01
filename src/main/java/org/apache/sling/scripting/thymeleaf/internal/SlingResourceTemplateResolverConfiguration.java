@@ -23,7 +23,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
     name = "Apache Sling Scripting Thymeleaf “Sling Resource TemplateResolver”",
-    description = "Sling resource template resolver for Sling Scripting Thymeleaf"
+    description = "Resolves template resources by using Sling's resource resolver from script bindings."
 )
 @interface SlingResourceTemplateResolverConfiguration {
 
