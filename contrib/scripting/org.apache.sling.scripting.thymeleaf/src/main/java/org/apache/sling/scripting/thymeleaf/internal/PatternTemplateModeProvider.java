@@ -38,7 +38,7 @@ import org.thymeleaf.util.PatternSpec;
 @Component(
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=Pattern TemplateMode Provider for Sling Scripting Thymeleaf",
+        Constants.SERVICE_DESCRIPTION + "=Pattern TemplateModeProvider for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )

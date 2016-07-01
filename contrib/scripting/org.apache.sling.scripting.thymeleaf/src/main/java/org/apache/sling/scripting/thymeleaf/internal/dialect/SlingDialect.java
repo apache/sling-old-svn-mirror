@@ -32,7 +32,7 @@ import org.thymeleaf.processor.IProcessor;
     service = IDialect.class,
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=Sling dialect for Sling Scripting Thymeleaf",
+        Constants.SERVICE_DESCRIPTION + "=Sling Dialect for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )

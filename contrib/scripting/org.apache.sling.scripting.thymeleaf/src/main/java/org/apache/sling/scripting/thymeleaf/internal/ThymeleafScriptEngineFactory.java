@@ -60,7 +60,7 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
     service = ScriptEngineFactory.class,
     immediate = true,
     property = {
-        Constants.SERVICE_DESCRIPTION + "=Scripting engine for Thymeleaf templates",
+        Constants.SERVICE_DESCRIPTION + "=ScriptEngineFactory for Sling Scripting Thymeleaf",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
     }
 )
