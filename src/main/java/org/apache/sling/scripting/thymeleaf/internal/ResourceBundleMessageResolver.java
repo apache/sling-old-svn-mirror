@@ -133,8 +133,14 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     public String resolveMessage(final ITemplateContext templateContext, final Class<?> origin, final String key, final Object[] messageParameters) {
         logger.debug("resolving message for '{}' ({}) with message parameters {}", key, origin, messageParameters);
         // TODO can origin be useful with Sling i18n?
+        if (key == null) {
+            return null;
+        }
         final Locale locale = templateContext.getLocale();
         final ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(locale);
+        if (resourceBundle == null) {
+            return null;
+        }
         final String string = resourceBundle.getString(key);
         final MessageFormat messageFormat = new MessageFormat(string, locale);
         final String message = messageFormat.format((messageParameters != null ? messageParameters : EMPTY_MESSAGE_PARAMETERS));
