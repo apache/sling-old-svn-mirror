@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.osgi</artifactId>
-    <version>2.4.1-SNAPSHOT</version> <!-- next release version should be 2.4 given new BundleUtil -->
+    <version>2.4.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons OSGi support</name>
