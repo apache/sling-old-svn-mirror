@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
+import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.slf4j.Logger;
