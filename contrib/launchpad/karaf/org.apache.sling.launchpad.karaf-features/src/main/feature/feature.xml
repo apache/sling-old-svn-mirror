@@ -588,7 +588,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-thymeleaf" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.1.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/1.0.0</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
