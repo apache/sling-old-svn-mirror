@@ -23,6 +23,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.repoinit.jcr.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;

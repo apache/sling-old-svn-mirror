@@ -20,6 +20,7 @@ import java.util.Random;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.repoinit.jcr.impl.TestUtil;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.List;
 
 import javax.jcr.Session;
 
@@ -28,7 +29,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.slf4j.Logger;
@@ -50,6 +51,9 @@ public class SystemUsersInitializer implements SlingRepositoryInitializer {
     @Reference
     private RepoInitParser parser;
     
+    @Reference
+    private JcrRepoInitOpsProcessor processor;
+    
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
         final Session s = repo.loginAdministrative(null);
@@ -59,14 +63,10 @@ public class SystemUsersInitializer implements SlingRepositoryInitializer {
                 throw new IOException("Class Resource not found:" + REPOINIT_FILE);
             }
             final Reader r = new InputStreamReader(is, "UTF-8");
-            JcrRepoInitOpVisitor v = new JcrRepoInitOpVisitor(s);
-            int count = 0;
-            for(Operation op : parser.parse(r)) {
-                op.accept(v);
-                count++;
-            }
+            final List<Operation> ops = parser.parse(r); 
+            log.info("Executing {} repoinit Operations", ops.size());
+            processor.apply(s, ops);
             s.save();
-            log.info("{} repoinit Operations executed", count);
         } finally {
             s.logout();
             is.close();

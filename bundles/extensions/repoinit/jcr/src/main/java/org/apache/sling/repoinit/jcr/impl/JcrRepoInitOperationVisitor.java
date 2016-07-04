@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.repoinit.jcr.impl;
 
 import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PATHS;
 import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRINCIPALS;
@@ -25,8 +25,6 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.apache.sling.repoinit.jcr.impl.AclUtil;
-import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
@@ -39,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** JCR visitor for the Operations produced by the repoinit parser */
-public class JcrRepoInitOpVisitor implements OperationVisitor {
+class JcrRepoInitOperationVisitor implements OperationVisitor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -49,7 +47,7 @@ public class JcrRepoInitOpVisitor implements OperationVisitor {
      * @param s must have sufficient rights to create users
      *      and set ACLs.
      */
-    public JcrRepoInitOpVisitor(Session s) {
+    public JcrRepoInitOperationVisitor(Session s) {
         session = s;
     }
     

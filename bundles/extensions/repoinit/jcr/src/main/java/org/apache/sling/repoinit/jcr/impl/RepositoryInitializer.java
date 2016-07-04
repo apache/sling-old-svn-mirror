@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.repoinit.jcr.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +22,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Session;
@@ -40,6 +41,7 @@ import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.Section;
 import org.apache.sling.provisioning.model.io.ModelReader;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.osgi.framework.Constants;
@@ -87,6 +89,9 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     @Reference
     private RepoInitParser parser;
     
+    @Reference
+    private JcrRepoInitOpsProcessor processor;
+    
     @Activate
     public void activate(Map<String, Object> config) {
         textURL = PropertiesUtil.toString(config.get(PROP_TEXT_URL), DEFAULT_TEXT_URL);
@@ -96,19 +101,14 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
         final String repoinit = getRepoInitText();
-        int count=0;
         
         // loginAdministrative is ok here, definitely an admin operation
         final Session s = repo.loginAdministrative(null);
-        final JcrRepoInitOpVisitor v = new JcrRepoInitOpVisitor(s);
         try {
-            for(Operation op : parser.parse(new StringReader(repoinit))) {
-                count++;
-                log.info("Executing {}", op);
-                op.accept(v);
-            }
+            final List<Operation> ops = parser.parse(new StringReader(repoinit));
+            log.info("Executing {} repoinit operations", ops.size());
+            processor.apply(s, ops);
             s.save();
-            log.info("{} repoinit operations executed", count);
         } finally {
             s.logout();
         }

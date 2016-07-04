@@ -27,10 +27,8 @@ import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpVisitor;
+import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
-import org.apache.sling.repoinit.parser.operations.Operation;
-import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,10 +58,8 @@ public class RepoInitIT {
         assertNotNull("Expecting " + REPO_INIT_FILE, is);
         try {
             final RepoInitParser  parser = teleporter.getService(RepoInitParser.class);
-            final OperationVisitor v = new JcrRepoInitOpVisitor(session);
-            for(Operation op : parser.parse(new InputStreamReader(is, "UTF-8"))) {
-                op.accept(v);
-            }
+            final JcrRepoInitOpsProcessor processor = teleporter.getService(JcrRepoInitOpsProcessor.class);
+            processor.apply(session, parser.parse(new InputStreamReader(is, "UTF-8")));
             session.save();
         } finally {
             is.close();
