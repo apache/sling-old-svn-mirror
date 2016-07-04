@@ -67,15 +67,12 @@ public class AvroContentSerializer implements DistributionContentSerializer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;
-    private final DataFileWriter<AvroShallowResource> dataFileWriter;
     private final Schema schema;
     private final Set<String> ignoredProperties;
     private final Set<String> ignoredNodeNames;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.sss+hh:mm");
 
     public AvroContentSerializer(String name) {
-        DatumWriter<AvroShallowResource> datumWriter = new SpecificDatumWriter<AvroShallowResource>(AvroShallowResource.class);
-        this.dataFileWriter = new DataFileWriter<AvroShallowResource>(datumWriter);
         try {
             schema = new Schema.Parser().parse(getClass().getResourceAsStream("/shallowresource.avsc"));
         } catch (IOException e) {
@@ -102,22 +99,21 @@ public class AvroContentSerializer implements DistributionContentSerializer {
     @Override
     public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
 
-        DataFileWriter<AvroShallowResource> writer;
+        DatumWriter<AvroShallowResource> datumWriter = new SpecificDatumWriter<AvroShallowResource>(AvroShallowResource.class);
+        DataFileWriter<AvroShallowResource> writer = new DataFileWriter<AvroShallowResource>(datumWriter);
         try {
-            writer = dataFileWriter.create(schema, outputStream);
+            writer.create(schema, outputStream);
         } catch (IOException e) {
             throw new DistributionException(e);
         }
 
         try {
-
             for (String path : request.getPaths()) {
                 Resource resource = resourceResolver.getResource(path);
                 AvroShallowResource avroShallowResource = getAvroShallowResource(request.isDeep(path), path, resource);
                 writer.append(avroShallowResource);
             }
             outputStream.flush();
-
         } catch (Exception e) {
             throw new DistributionException(e);
         } finally {
@@ -127,7 +123,6 @@ public class AvroContentSerializer implements DistributionContentSerializer {
                 // do nothing
             }
         }
-
     }
 
     @Override
@@ -237,7 +232,7 @@ public class AvroContentSerializer implements DistributionContentSerializer {
             parent = createParent(resourceResolver, parentPath);
         }
         Resource createdResource = resourceResolver.create(parent, name, map);
-        log.info("created resource {}", createdResource);
+        log.debug("created resource {}", createdResource);
         for (AvroShallowResource child : r.getChildren()) {
             persistResource(createdResource.getResourceResolver(), child);
         }

@@ -134,7 +134,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
             parent = createParent(resourceResolver, parentPath);
         }
         Resource createdResource = resourceResolver.create(parent, name, resource.getValueMap());
-        log.info("created resource {}", createdResource);
+        log.debug("created resource {}", createdResource);
     }
 
     private Resource createParent(ResourceResolver resourceResolver, String path) throws PersistenceException {
