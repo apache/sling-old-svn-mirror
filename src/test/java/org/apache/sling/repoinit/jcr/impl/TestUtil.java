@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.repoinit.jcr.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -33,6 +33,7 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.sling.repoinit.jcr.impl.JcrRepoInitOperationVisitor;
 import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.impl.RepoInitParserService;
@@ -40,20 +41,20 @@ import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
 /** Test utilities */
-class TestUtil {
+public class TestUtil {
     
     public static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
-    final Session adminSession;
-    final String id;
-    final String username;
+    public final Session adminSession;
+    public final String id;
+    public final String username;
     
-    TestUtil(SlingContext ctx) {
+    public TestUtil(SlingContext ctx) {
         adminSession = ctx.resourceResolver().adaptTo(Session.class);
         id = UUID.randomUUID().toString();
         username = "user_" + id;
     }
     
-    List<Operation> parse(String input) throws RepoInitParsingException {
+    public List<Operation> parse(String input) throws RepoInitParsingException {
         final Reader r = new StringReader(input);
         try {
             return new RepoInitParserService().parse(r);
@@ -62,7 +63,7 @@ class TestUtil {
         }
     }
 
-    void assertServiceUser(String info, String id, boolean expectToExist) throws RepositoryException {
+    public void assertServiceUser(String info, String id, boolean expectToExist) throws RepositoryException {
         final Authorizable a = ServiceUserUtil.getUserManager(adminSession).getAuthorizable(id);
         if(!expectToExist) {
             assertNull(info + ", expecting Principal to be absent:" + id, a);
@@ -73,11 +74,11 @@ class TestUtil {
         }
     }
     
-    void assertNodeExists(String path) throws RepositoryException {
+    public void assertNodeExists(String path) throws RepositoryException {
         assertNodeExists(path, null);
     }
     
-    void assertNodeExists(String path, String primaryType) throws RepositoryException {
+    public void assertNodeExists(String path, String primaryType) throws RepositoryException {
         if(!adminSession.nodeExists(path)) {
             fail("Node does not exist:" + path);
         }
@@ -93,20 +94,20 @@ class TestUtil {
         }
     }
     
-    void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
-        final JcrRepoInitOpVisitor v = new JcrRepoInitOpVisitor(adminSession);
+    public void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
+        final JcrRepoInitOperationVisitor v = new JcrRepoInitOperationVisitor(adminSession);
         for(Operation o : parse(input)) {
             o.accept(v);
         }
         adminSession.save();
     }
     
-    void cleanupUser() throws RepositoryException, RepoInitParsingException {
+    public void cleanupUser() throws RepositoryException, RepoInitParsingException {
         parseAndExecute("delete service user " + username);
         assertServiceUser("in cleanupUser()", username, false);
     }
     
-    Session loginService(String serviceUsername) throws RepositoryException {
+    public Session loginService(String serviceUsername) throws RepositoryException {
         final SimpleCredentials cred = new SimpleCredentials(serviceUsername, new char[0]);
         return adminSession.impersonate(cred);
     }

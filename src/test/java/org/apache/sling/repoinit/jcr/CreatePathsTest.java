@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.repoinit.jcr.impl.TestUtil;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
