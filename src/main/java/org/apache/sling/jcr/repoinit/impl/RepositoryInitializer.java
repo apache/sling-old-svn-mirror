@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr.impl;
+package org.apache.sling.jcr.repoinit.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,11 +37,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
+import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.Section;
 import org.apache.sling.provisioning.model.io.ModelReader;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.osgi.framework.Constants;

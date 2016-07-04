@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr.impl;
+package org.apache.sling.jcr.repoinit.impl;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import javax.jcr.Session;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
+import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.operations.Operation;
 
 /** Apply Operations produced by the repoinit parser to a JCR Repository */

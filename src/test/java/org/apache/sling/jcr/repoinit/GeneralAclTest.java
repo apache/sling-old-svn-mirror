@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.jcr.repoinit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +26,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.repoinit.jcr.impl.TestUtil;
+import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
