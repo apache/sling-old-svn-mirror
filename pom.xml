@@ -197,8 +197,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.repoinit.oak-jcr</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <artifactId>org.apache.sling.jcr.repoinit</artifactId>
+            <version>0.9.9-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
