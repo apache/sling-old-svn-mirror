@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr.impl;
+package org.apache.sling.jcr.repoinit.impl;
 
 import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PATHS;
 import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRINCIPALS;

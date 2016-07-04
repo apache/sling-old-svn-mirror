@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.jcr.repoinit;
 
 import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.repoinit.jcr.impl.TestUtil;
+import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;

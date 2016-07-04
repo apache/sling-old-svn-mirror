@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr.impl;
+package org.apache.sling.jcr.repoinit.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -33,8 +33,6 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.sling.repoinit.jcr.impl.JcrRepoInitOperationVisitor;
-import org.apache.sling.repoinit.jcr.impl.ServiceUserUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.impl.RepoInitParserService;
 import org.apache.sling.repoinit.parser.operations.Operation;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.repoinit.jcr.impl;
+package org.apache.sling.jcr.repoinit.impl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

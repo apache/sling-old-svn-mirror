@@ -26,8 +26,8 @@ import java.io.InputStreamReader;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.repoinit.jcr.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.junit.After;
 import org.junit.Before;

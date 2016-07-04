@@ -16,6 +16,6 @@
  ******************************************************************************/
 
 @Version("1.1.0")
-package org.apache.sling.repoinit.jcr;
+package org.apache.sling.jcr.repoinit;
 
 import aQute.bnd.annotation.Version;
