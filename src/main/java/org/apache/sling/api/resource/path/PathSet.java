@@ -78,7 +78,7 @@ public class PathSet implements Iterable<Path> {
 
     /**
      * Create a path set from a collection of strings
-     * @param paths The collection of strings
+     * @param strings The array of strings
      * @return The path set
      */
     public static PathSet fromStrings(final String...strings) {
@@ -127,7 +127,7 @@ public class PathSet implements Iterable<Path> {
      * of the paths in this set.
      * @param otherPath
      * @return The path which matches the provided path, {@code null} otherwise.
-     * @see {@link Path#matches(String)}
+     * @see Path#matches(String)
      */
     public Path matches(final String otherPath) {
          for(final Path p : this.paths) {
