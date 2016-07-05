@@ -24,8 +24,8 @@ import java.util.Iterator;
  * The <code>AbstractResourceVisitor</code> helps in traversing a
  * resource tree by decoupling the actual traversal code
  * from application code. Concrete subclasses should implement
- * the {@link ResourceVisitor#visit(Resource)} method.
- * 
+ * the {@link AbstractResourceVisitor#visit(Resource)} method.
+ *
  * @since 2.2 (Sling API Bundle 2.2.0)
  */
 public abstract class AbstractResourceVisitor {
