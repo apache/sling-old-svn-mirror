@@ -58,11 +58,12 @@ public class I18nRuntimeExtension implements RuntimeExtension {
         Map<String, Object> options = (Map<String, Object>) arguments[1];
         String locale = runtimeObjectModel.toString(options.get("locale"));
         String hint = runtimeObjectModel.toString(options.get("hint"));
+        String basename = runtimeObjectModel.toString(options.get("basename"));
         final Bindings bindings = renderContext.getBindings();
-        return get(bindings, text, locale, hint);
+        return get(bindings, text, locale, basename, hint);
     }
 
-    private String get(final Bindings bindings, String text, String locale, String hint) {
+    private String get(final Bindings bindings, String text, String locale, String basename, String hint) {
 
         final SlingScriptHelper slingScriptHelper = BindingsUtils.getHelper(bindings);
         final SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
@@ -76,17 +77,17 @@ public class I18nRuntimeExtension implements RuntimeExtension {
                 Enumeration<Locale> requestLocales = request.getLocales();
                 while (requestLocales.hasMoreElements()) {
                     Locale l = requestLocales.nextElement();
-                    ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
-                    if (resourceBundle != null && resourceBundle.containsKey(key)) {
-                        return resourceBundle.getString(key);
+                    String translation = getTranslation(resourceBundleProvider, basename, key, l);
+                    if (translation != null) {
+                        return translation;
                     }
                 }
             } else {
                 try {
                     Locale l = LocaleUtils.toLocale(locale);
-                    ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
-                    if (resourceBundle != null && resourceBundle.containsKey(key)) {
-                        return resourceBundle.getString(key);
+                    String translation = getTranslation(resourceBundleProvider, basename, key, l);
+                    if (translation != null) {
+                        return translation;
                     }
                 } catch (IllegalArgumentException e) {
                     LOG.warn("Invalid locale detected: {}.", locale);
@@ -98,5 +99,18 @@ public class I18nRuntimeExtension implements RuntimeExtension {
         LOG.warn("No translation found for string '{}' using expression provided locale '{}' or default locale '{}'",
                 new String[] {text, locale, request.getLocale().getLanguage()});
         return text;
+    }
+
+    private String getTranslation(ResourceBundleProvider resourceBundleProvider, String basename, String key, Locale locale) {
+        ResourceBundle resourceBundle;
+        if (StringUtils.isNotEmpty(basename)) {
+            resourceBundle = resourceBundleProvider.getResourceBundle(basename, locale);
+        } else {
+            resourceBundle = resourceBundleProvider.getResourceBundle(locale);
+        }
+        if (resourceBundle != null && resourceBundle.containsKey(key)) {
+            return resourceBundle.getString(key);
+        }
+        return null;
     }
 }
