@@ -40,6 +40,7 @@ public interface SlingScript {
 
     /**
      * Returns the Resource providing the script source code.
+     * @return The script resource.
      */
     @Nonnull Resource getScriptResource();
 
@@ -52,9 +53,9 @@ public interface SlingScript {
      *            requirements of the {@link SlingBindings} predefined variables
      *            set.
      * @return The value returned by the script.
-     * @throws ScriptEvaluationException If an error occurrs executing the
+     * @throws ScriptEvaluationException If an error occurs executing the
      *             script or preparing the script execution. The cause of the
-     *             evaluation execption is available as the exception cause.
+     *             evaluation exception is available as the exception cause.
      */
     Object eval(@Nonnull SlingBindings props);
 
@@ -69,9 +70,9 @@ public interface SlingScript {
      * @param method The name of the method to call.
      * @param args The arguments for the method call.
      * @return The value returned by the method from the script.
-     * @throws ScriptEvaluationException If an error occurrs executing the
+     * @throws ScriptEvaluationException If an error occurs executing the
      *             script or preparing the script execution. The cause of the
-     *             evaluation execption is available as the exception cause.
+     *             evaluation exception is available as the exception cause.
      */
     Object call(@Nonnull SlingBindings props, @Nonnull String method, Object... args);
 }

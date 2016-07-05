@@ -45,7 +45,7 @@ public interface ResourceProviderFactory {
      * resource resolver is created. Only if authentication against all required
      * resource provider factories is successful, a resource resolver is created
      * by the resource resolver factory. Boolean service property, default value
-     * is <code>false</true>
+     * is {@code false}.
      */
     String PROPERTY_REQUIRED = "required";
 
