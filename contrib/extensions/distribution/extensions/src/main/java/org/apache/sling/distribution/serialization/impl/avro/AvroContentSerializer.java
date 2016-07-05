@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -110,7 +111,7 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         try {
             for (String path : request.getPaths()) {
                 Resource resource = resourceResolver.getResource(path);
-                AvroShallowResource avroShallowResource = getAvroShallowResource(request.isDeep(path), path, resource);
+                AvroShallowResource avroShallowResource = getAvroShallowResource(request, path, resource);
                 writer.append(avroShallowResource);
             }
             outputStream.flush();
@@ -144,7 +145,7 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         return name;
     }
 
-    private AvroShallowResource getAvroShallowResource(boolean deep, String path, Resource resource) throws IOException {
+    private AvroShallowResource getAvroShallowResource(DistributionRequest request, String path, Resource resource) throws IOException {
         AvroShallowResource avroShallowResource = new AvroShallowResource();
         avroShallowResource.setName("avro_" + System.nanoTime());
         avroShallowResource.setPath(path);
@@ -167,17 +168,45 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         }
         avroShallowResource.setValueMap(map);
         List<AvroShallowResource> children = new LinkedList<AvroShallowResource>();
+        boolean deep = request.isDeep(path);
+        String[] filters = request.getFilters(path);
         if (deep) {
             for (Resource child : resource.getChildren()) {
                 String childPath = child.getPath();
                 if (!ignoredNodeNames.contains(child.getName())) {
-                    children.add(getAvroShallowResource(true, childPath, child));
+                    children.add(getAvroShallowResource(request, childPath, child));
+                }
+            }
+        } else {
+            for (Resource child : resource.getChildren()) {
+                String childPath = child.getPath();
+                if (filtersAllow(filters, childPath) && !ignoredNodeNames.contains(child.getName())) {
+                    children.add(getAvroShallowResource(request, childPath, child));
                 }
             }
         }
         avroShallowResource.setChildren(children);
         return avroShallowResource;
     }
+
+    private boolean filtersAllow(String[] filters, String path) {
+        boolean allowed = false;
+        for (String pattern : filters) {
+            if (pattern.startsWith("+")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = true;
+                }
+            } else if (pattern.startsWith("-")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = false;
+                }
+            } else {
+                allowed = Pattern.compile(pattern).matcher(path).matches();
+            }
+        }
+        return allowed;
+    }
+
 
     private Collection<AvroShallowResource> readAvroResources(byte[] bytes) throws IOException {
         DatumReader<AvroShallowResource> datumReader = new SpecificDatumReader<AvroShallowResource>(AvroShallowResource.class);

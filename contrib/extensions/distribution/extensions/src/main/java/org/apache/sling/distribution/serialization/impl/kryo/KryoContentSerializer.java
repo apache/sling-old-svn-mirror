@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
@@ -92,7 +93,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
         for (String p : paths) {
             Resource resource = resourceResolver.getResource(p);
             if (resource != null) {
-                addResource(request.isDeep(p), resources, resource);
+                addResource(request, resources, resource);
             }
         }
         kryo.writeObject(output, resources);
@@ -228,12 +229,45 @@ public class KryoContentSerializer implements DistributionContentSerializer {
         }
     }
 
-    private void addResource(boolean deep, LinkedList<Resource> resources, Resource resource) {
+    private void addResource(DistributionRequest request, LinkedList<Resource> resources, Resource resource) {
         resources.add(resource);
-        for (Resource child : resource.getChildren()) {
-            if (deep && !ignoredNodeNames.contains(resource.getName())) {
-                addResource(true, resources, child);
+        String path = resource.getPath();
+        boolean deep = request.isDeep(path);
+        String[] filters = request.getFilters(path);
+        if (deep) {
+            for (Resource child : resource.getChildren()) {
+                if (!ignoredNodeNames.contains(resource.getName())) {
+                    addResource(request, resources, child);
+                }
+            }
+        } else {
+            for (Resource child : resource.getChildren()) {
+                String childPath = child.getPath();
+                if (filtersAllow(filters, childPath) && !ignoredNodeNames.contains(child.getName())) {
+                    addResource(request, resources, child);
+                }
             }
         }
+
     }
+
+    private boolean filtersAllow(String[] filters, String path) {
+        boolean allowed = false;
+        for (String pattern : filters) {
+            if (pattern.startsWith("+")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = true;
+                }
+            } else if (pattern.startsWith("-")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = false;
+                }
+            } else {
+                allowed = Pattern.compile(pattern).matcher(path).matches();
+            }
+        }
+        return allowed;
+    }
+
+
 }
