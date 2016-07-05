@@ -39,7 +39,7 @@ import aQute.bnd.annotation.ProviderType;
  * request URI after the content path is a dot, the string after the dot upto
  * but not including the last dot before the next slash character or the end of
  * the request URI. If the content path spans the complete request URI or if a
- * slash follows the content path in the request, then no seletors exist. If
+ * slash follows the content path in the request, then no selectors exist. If
  * only one dot follows the content path before the end of the request URI or
  * the next slash, no selectors exist. The selectors are available as
  * {@link #getSelectorString() a single string} and as an
@@ -56,7 +56,7 @@ import aQute.bnd.annotation.ProviderType;
  * path.
  * </ol>
  * <p>
- * Examples: <table>
+ * Examples: <table summary="">
  * <tr>
  * <th>URI</th>
  * <th>Content Path</th>
@@ -160,6 +160,7 @@ public interface RequestPathInfo {
      * Rather it is equal to the
      * {@link org.apache.sling.api.resource.ResourceMetadata#RESOLUTION_PATH resolution path metadata property}
      * of the resource.
+     * @return The resource path
      */
     @Nonnull String getResourcePath();
 
@@ -181,6 +182,7 @@ public interface RequestPathInfo {
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
      *
+     * @return The selector string or {@code null}
      * @see #getSelectors()
      */
     @CheckForNull String getSelectorString();
@@ -194,6 +196,7 @@ public interface RequestPathInfo {
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
      *
+     * @return An array of selectors
      * @see #getSelectorString()
      */
     @Nonnull String[] getSelectors();
@@ -217,6 +220,7 @@ public interface RequestPathInfo {
      * as an argument to the
      * {@link org.apache.sling.api.resource.ResourceResolver#getResource(String)}
      * method.
+     * @return The suffix resource or {@code null}.
      *
      * @since 2.3 (Sling API Bundle 2.3.2)
      */

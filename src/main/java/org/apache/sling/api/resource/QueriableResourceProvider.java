@@ -31,7 +31,7 @@ import aQute.bnd.annotation.ConsumerType;
  * returned through a {@link ResourceProviderFactory}.
  *
  * @since 2.2  (Sling API Bundle 2.2.0)
- * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
 @Deprecated
 @ConsumerType
@@ -56,6 +56,7 @@ public interface QueriableResourceProvider extends ResourceProvider {
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
      *
+     * @param resolver The resource resolver
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching the
@@ -85,6 +86,7 @@ public interface QueriableResourceProvider extends ResourceProvider {
      * converted into the respective Java object, such as <code>Boolean</code>
      * for a value of property type <em>Boolean</em>.
      *
+     * @param resolver The resource resolver
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances providing

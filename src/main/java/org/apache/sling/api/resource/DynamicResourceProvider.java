@@ -38,7 +38,7 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
  *
  * @since 2.2 (Sling API Bundle 2.2.0)
- * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
 @Deprecated
 @ConsumerType
