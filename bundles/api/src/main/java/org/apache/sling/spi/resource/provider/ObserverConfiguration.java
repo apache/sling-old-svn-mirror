@@ -37,6 +37,7 @@ public interface ObserverConfiguration {
 
     /**
      * {@code true} if a listener is interested in external events.
+     * @return {@code true} if a listener is interested in external events.
      */
     boolean includeExternal();
 

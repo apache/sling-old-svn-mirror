@@ -34,7 +34,10 @@ import org.apache.sling.api.SlingHttpServletResponse;
 public class SlingHttpServletResponseWrapper extends HttpServletResponseWrapper
         implements SlingHttpServletResponse {
 
-    /** Create a wrapper for the supplied wrappedRequest */
+    /**
+     * Create a wrapper for the supplied wrappedRequest
+     * @param wrappedResponse The response
+     */
     public SlingHttpServletResponseWrapper(SlingHttpServletResponse wrappedResponse) {
         super(wrappedResponse);
     }
