@@ -44,7 +44,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
         implements SlingHttpServletRequest {
 
-    /** Create a wrapper for the supplied wrappedRequest */
+    /**
+     * Create a wrapper for the supplied wrappedRequest
+     * @param wrappedRequest The request.
+     */
     public SlingHttpServletRequestWrapper(SlingHttpServletRequest wrappedRequest) {
         super(wrappedRequest);
     }

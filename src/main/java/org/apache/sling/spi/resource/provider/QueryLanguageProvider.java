@@ -43,6 +43,8 @@ public interface QueryLanguageProvider<T> {
 
     /**
      * The supported languages of the resource provider.
+     * @param ctx The resolve context
+     * @return The array of supported languages
      */
     String[] getSupportedLanguages(@Nonnull ResolveContext<T> ctx);
 
@@ -57,6 +59,7 @@ public interface QueryLanguageProvider<T> {
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
      *
+     * @param ctx The resolve context
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching the
@@ -86,6 +89,7 @@ public interface QueryLanguageProvider<T> {
      * converted into the respective Java object, such as <code>Boolean</code>
      * for a value of property type <em>Boolean</em>.
      *
+     * @param ctx The resolve context
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances providing

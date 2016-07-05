@@ -142,6 +142,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #CHARACTER_ENCODING} property to <code>encoding</code>
      * if not <code>null</code>.
+     * @param encoding The encoding
      */
     public void setCharacterEncoding(String encoding) {
         if (encoding != null) {
@@ -153,6 +154,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Returns the {@link #CHARACTER_ENCODING} property if not <code>null</code>
      * and a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
+     * @return The character encoding
      */
     public @CheckForNull String getCharacterEncoding() {
         Object value = get(CHARACTER_ENCODING);
@@ -166,6 +168,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #CONTENT_TYPE} property to <code>contentType</code> if
      * not <code>null</code>.
+     * @param contentType The content type
      */
     public void setContentType(String contentType) {
         if (contentType != null) {
@@ -177,6 +180,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Returns the {@link #CONTENT_TYPE} property if not <code>null</code> and
      * a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
+     * @return The content type
      */
     public @CheckForNull String getContentType() {
         Object value = get(CONTENT_TYPE);
@@ -190,6 +194,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #CONTENT_LENGTH} property to <code>contentType</code>
      * if not <code>null</code>.
+     * @param contentLength The content length
      */
     public void setContentLength(long contentLength) {
         if (contentLength > 0) {
@@ -200,6 +205,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Returns the {@link #CONTENT_LENGTH} property if not <code>null</code>
      * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     * @return The content length
      */
     public long getContentLength() {
         Object value = get(CONTENT_LENGTH);
@@ -213,6 +219,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #CREATION_TIME} property to <code>creationTime</code>
      * if not negative.
+     * @param creationTime The creation time
      */
     public void setCreationTime(long creationTime) {
         if (creationTime >= 0) {
@@ -223,6 +230,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Returns the {@link #CREATION_TIME} property if not <code>null</code>
      * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     * @return The creation time
      */
     public long getCreationTime() {
         Object value = get(CREATION_TIME);
@@ -236,6 +244,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #MODIFICATION_TIME} property to
      * <code>modificationTime</code> if not negative.
+     * @param modificationTime The modification time
      */
     public void setModificationTime(long modificationTime) {
         if (modificationTime >= 0) {
@@ -246,6 +255,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Returns the {@link #MODIFICATION_TIME} property if not <code>null</code>
      * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     * @return The modification time
      */
     public long getModificationTime() {
         Object value = get(MODIFICATION_TIME);
@@ -259,6 +269,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #RESOLUTION_PATH} property to <code>resolutionPath</code>
      * if not <code>null</code>.
+     * @param resolutionPath The resolution path
      */
     public void setResolutionPath(String resolutionPath) {
         if (resolutionPath != null) {
@@ -270,6 +281,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Returns the {@link #RESOLUTION_PATH} property if not <code>null</code>
      * and a <code>String</code> instance. Otherwise <code>null</code> is
      * returned.
+     * @return The resolution path
      */
     public @CheckForNull String getResolutionPath() {
         Object value = get(RESOLUTION_PATH);
@@ -283,6 +295,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #RESOLUTION_PATH_INFO} property to
      * <code>resolutionPathInfo</code> if not <code>null</code>.
+     * @param resolutionPathInfo The resolution path info
      */
     public void setResolutionPathInfo(String resolutionPathInfo) {
         if (resolutionPathInfo != null) {
@@ -294,6 +307,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Returns the {@link #RESOLUTION_PATH_INFO} property if not
      * <code>null</code> and a <code>String</code> instance. Otherwise
      * <code>null</code> is returned.
+     * @return The resolution path info
      */
     public @CheckForNull String getResolutionPathInfo() {
         Object value = get(RESOLUTION_PATH_INFO);
@@ -307,6 +321,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Sets the {@link #PARAMETER_MAP} property to
      * <code>parameterMap</code> if not <code>null</code>.
+     * @param parameterMap The parameter map
      */
     public void setParameterMap(Map<String, String> parameterMap) {
         if (parameterMap != null) {
@@ -322,6 +337,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Returns the {@link #PARAMETER_MAP} property if not
      * <code>null</code> and a <code>Map</code> instance. Otherwise
      * <code>null</code> is returned.
+     * @return The parameter map
      */
     @SuppressWarnings("unchecked")
     public @CheckForNull Map<String, String> getParameterMap() {
@@ -333,7 +349,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
         return null;
     }
 
-    
+
     /**
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!
@@ -375,11 +391,11 @@ public class ResourceMetadata extends HashMap<String, Object> {
         this.checkReadOnly();
         return super.remove(key);
     }
-    
+
     protected void internalPut(@Nonnull String key, Object value) {
         super.put(key, value);
     }
-    
+
     @Override
     public Object clone() {
         ResourceMetadata result = (ResourceMetadata) super.clone();

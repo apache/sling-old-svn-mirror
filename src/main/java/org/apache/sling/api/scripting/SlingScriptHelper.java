@@ -264,6 +264,7 @@ public interface SlingScriptHelper {
      * Same as {@link #forward(Resource,RequestDispatcherOptions)}, but using
      * empty options.
      *
+     * @param resource The resource to forward to.
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the forward.
      * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
@@ -337,6 +338,7 @@ public interface SlingScriptHelper {
      * <a href="https://osgi.org/javadoc/r5/core/org/osgi/framework/BundleContext.html#getServiceReference(java.lang.Class)">
      * BundleContext.getServiceReference(Class)</a>.</p>
      * @param serviceType The type (interface) of the service.
+     * @param <ServiceType> The type (interface) of the service.
      * @return The service instance, or {@code null} if no services are registered which implement the specified class.
      */
     @CheckForNull <ServiceType> ServiceType getService(@Nonnull Class<ServiceType> serviceType);
@@ -351,6 +353,7 @@ public interface SlingScriptHelper {
      * </p>
      *
      * @param serviceType The type (interface) of the service.
+     * @param <ServiceType> The type (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
      * @return An array of services objects or {@code null}.
      * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>

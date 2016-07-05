@@ -36,7 +36,6 @@ import aQute.bnd.annotation.ProviderType;
  * Applications of the Sling Framework generally do not need the servlet
  * resolver as resolution of the servlets to process requests and sub-requests
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
- * <p>
  */
 @ProviderType
 public interface ServletResolver {

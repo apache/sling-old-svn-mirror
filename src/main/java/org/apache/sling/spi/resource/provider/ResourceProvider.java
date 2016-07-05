@@ -552,6 +552,7 @@ public abstract class ResourceProvider<T> {
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
      *
      * @param ctx The {@link ResolveContext}.
+     * @return {@code true} if there are pending changes.
      */
     public boolean hasChanges(final @Nonnull ResolveContext<T> ctx) {
         return false;
@@ -586,6 +587,7 @@ public abstract class ResourceProvider<T> {
      * it by setting the {@link #PROPERTY_ADAPTABLE} to the value {@code true}.
      *
      * @param ctx The {@link ResolveContext}.
+     * @param <AdapterType> The generic type to which this resource is adapted to.
      * @param type The generic type to which this resource is adapted to.
      * @return The adapter target or {@code null} if the provider cannot
      *         be adapt to the requested type.
