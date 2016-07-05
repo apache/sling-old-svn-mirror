@@ -16,6 +16,8 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.compiler;
 
+import java.util.Locale;
+
 /**
  * <p>
  *     This class documents what runtime functions (abstracted by
@@ -55,6 +57,8 @@ public final class RuntimeFunction {
      *         <li>the String to translate</li>
      *         <li>optional: locale information</li>
      *         <li>optional: hint information</li>
+     *         <li>optional (not part of the specification): basename information; for more details see
+     *         {@link java.util.ResourceBundle#getBundle(String, Locale)}</li>
      *     </ol>
      * </p>
      * <p>
