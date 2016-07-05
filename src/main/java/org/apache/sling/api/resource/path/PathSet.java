@@ -125,7 +125,7 @@ public class PathSet implements Iterable<Path> {
     /**
      * Check whether the provided path is in the sub tree of any
      * of the paths in this set.
-     * @param otherPath
+     * @param otherPath The path to match
      * @return The path which matches the provided path, {@code null} otherwise.
      * @see Path#matches(String)
      */
@@ -166,6 +166,7 @@ public class PathSet implements Iterable<Path> {
 
     /**
      * Create a unmodifiable set of strings
+     * @return A set of strings
      */
     public Set<String> toStringSet() {
         final Set<String> set = new HashSet<String>();
@@ -177,6 +178,7 @@ public class PathSet implements Iterable<Path> {
 
     /**
      * Return an unmodifiable iterator for the paths.
+     * @return An iterator for the paths
      */
     @Override
     public Iterator<Path> iterator() {

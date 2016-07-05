@@ -163,6 +163,8 @@ public class SlingBindings extends HashMap<String, Object> {
 
     /**
      * Helper method to get an object with a given type from this map.
+     * @param key The key for the object
+     * @param <ObjectType> The object type
      * @return The searched object if it has the specified type, otherwise <code>null</code> is returned.
      */
     @SuppressWarnings("unchecked")
@@ -176,6 +178,8 @@ public class SlingBindings extends HashMap<String, Object> {
 
     /**
      * Helper method which invokes {@link #put(Object, Object)} only if the value is not null.
+     * @param key The key of the object
+     * @param value The value
      */
     protected void safePut(final String key, final Object value) {
         if ( value != null ) {
@@ -185,6 +189,7 @@ public class SlingBindings extends HashMap<String, Object> {
 
     /**
      * Sets the {@link #FLUSH} property to <code>flush</code>.
+     * @param flush Whether to flush or not
      */
     public void setFlush(boolean flush) {
         put(FLUSH, flush);
@@ -193,6 +198,7 @@ public class SlingBindings extends HashMap<String, Object> {
     /**
      * Returns the {@link #FLUSH} property if not <code>null</code> and a
      * <code>boolean</code>. Otherwise <code>false</code> is returned.
+     * @return {@code true} if flush
      */
     public boolean getFlush() {
         Boolean value = this.get(FLUSH, Boolean.class);
