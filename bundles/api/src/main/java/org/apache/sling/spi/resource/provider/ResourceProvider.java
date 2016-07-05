@@ -60,7 +60,7 @@ import aQute.bnd.annotation.ConsumerType;
  * provider is not used anymore within the resource tree, the
  * {@link #stop()} method is called. Whenever
  * information concerning the provider is changed while the provider
- * is used, the {@link #update()} method is called. The provider context
+ * is used, the {@link #update(long)} method is called. The provider context
  * instance which is passed to the {@link #start(ProviderContext)} method
  * contains the updated state.
  * <p>
@@ -72,12 +72,12 @@ import aQute.bnd.annotation.ConsumerType;
  * cases, the resource resolver calls {@link #authenticate(Map)} and on
  * successful authentication the provider returns a state object for
  * the current user. This object is passed into the provider with
- * every method through {@link ResourceContext#getProviderState()}.
+ * every method through {@link ResolveContext#getProviderState()}.
  * If a provider requires authentication, the {@link #logout(Object)} method
  * is called, when the resource resolver is closed. If the provider
  * does not set this service property or sets it to {@link #AUTHENTICATE_NO}
  * the {@link #authenticate(Map)} and {@link #logout(Object)} method
- * are never called and therefore {@link ResourceContext#getProviderState()}
+ * are never called and therefore {@link ResolveContext#getProviderState()}
  * will return {@code null}.
  * <p>
  * Each method gets the {@link ResourceContext} which gives access to
@@ -108,7 +108,7 @@ public abstract class ResourceProvider<T> {
      * flag indicating if the ResourceAccessSecurity service should be used for
      * this provider or not. ResourceAccessSecurity should only be used if the
      * underlying storage does not provide access control
-     * The default for this value is <code>false</code>.
+     * The default for this value is {@code false}.
      * (value is "provider.useResourceAccessSecurity")
      */
     public static final String PROPERTY_USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
@@ -145,15 +145,15 @@ public abstract class ResourceProvider<T> {
      * are not accessible.
      * If this property is not set or set to {@link #AUTHENTICATE_NO}, no authentication
      * is required for this provider and the {@link #authenticate(Map)} is never invoked.
-     * String service property, default value is <code>{@link #AUTHENTICATE_NO}</code>.
+     * String service property, default value is {@link #AUTHENTICATE_NO}.
      * (value is "provider.authenticate")
      */
     public static final String PROPERTY_AUTHENTICATE = "provider.authenticate";
 
     /**
      * A modifiable resource provider is capable of creating, changing and deleting resources.
-     * This means the methods {@link #create(ResourceContext, String, Map)},
-     * {@link #delete(ResourceContext, Resource)} and adapting a resource to a modifiable
+     * This means the methods {@link #create(ResolveContext, String, Map)},
+     * {@link #delete(ResolveContext, Resource)} and adapting a resource to a modifiable
      * value map is supported.
      * If this flag is set to {@code false}, the resource resolver does not take this
      * provider into account for modifications and modification operations to this provider
@@ -161,7 +161,7 @@ public abstract class ResourceProvider<T> {
      * If this is set to {@code true}, the property {@link ResourceProvider#PROPERTY_AUTHENTICATE}
      * must require authentication, otherwise this provider registration is considered
      * invalid and the provider is not used.
-     * Boolean service property, default value is <code>false</true>.
+     * Boolean service property, default value is {@code false}.
      * (value is "provider.modifiable")
      */
     public static final String PROPERTY_MODIFIABLE = "provider.modifiable";
@@ -169,15 +169,15 @@ public abstract class ResourceProvider<T> {
     /**
      * If this flag is set to {@code true}, the resource resolver will use this provider
      * for the adaptTo() operation.
-     * Boolean service property, default value is <code>false</true>.
+     * Boolean service property, default value is {@code false}.
      * (value is "provider.adaptable")
      */
     public static final String PROPERTY_ADAPTABLE = "provider.adaptable";
 
     /**
-     * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResourceContext)}
+     * If this flag is set to {@code true}, the resource resolver will call {@link #refresh(ResolveContext)}
      * when it's refreshed itself.
-     * Boolean service property, default value is <code>false</true>.
+     * Boolean service property, default value is {@code false}.
      * (value is "provider.refreshable")
      */
     public static final String PROPERTY_REFRESHABLE = "provider.refreshable";
@@ -185,7 +185,7 @@ public abstract class ResourceProvider<T> {
     /**
      * If this flag is set to {@code true}, the resource resolver will try to get the attribute
      * names and the attribute values from this provider.
-     * Boolean service property, default value is <code>false</true>.
+     * Boolean service property, default value is {@code false}.
      * (value is "provider.attributable")
      */
     public static final String PROPERTY_ATTRIBUTABLE = "provider.attributable";
@@ -203,7 +203,7 @@ public abstract class ResourceProvider<T> {
      * use a resource provider factory.
      * <p>
      * The type of this property, if present, is
-     * <code>org.osgi.framework.Bundle</code>.
+     * {@code org.osgi.framework.Bundle}.
      */
     public static final String AUTH_SERVICE_BUNDLE = "sling.service.bundle";
 
@@ -216,12 +216,12 @@ public abstract class ResourceProvider<T> {
 
     /**
      * The resource type be set on resources returned by the
-     * {@link #listChildren(Resource)} method to enable traversing the
+     * {@link #listChildren(ResolveContext, Resource)} method to enable traversing the
      * resource
      * tree down to a deeply nested provided resource which has no concrete
      * parent hierarchy (value is"sling:syntheticResourceProviderResource").
      *
-     * @see #listChildren(Resource)
+     * @see #listChildren(ResolveContext, Resource)
      */
     public static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
 
@@ -279,7 +279,7 @@ public abstract class ResourceProvider<T> {
      * The returned context object grants access to the provided resources with
      * privileges assigned to the service provided by the calling bundle.
      * <p>
-     * The <code>authenticationInfo</code> map will in general contain the same
+     * The {@code authenticationInfo} map will in general contain the same
      * information as provided to the respective {@link ResourceResolver}
      * method. For
      * <p>
@@ -287,10 +287,10 @@ public abstract class ResourceProvider<T> {
      * additional information such as the {@link #AUTH_SERVICE_BUNDLE}.
      * If this property is provided, additional information like
      * {@link ResourceResolverFactory#SUBSERVICE} might be provided, but the
-     * {@link #USER} and {@link #PASSWORD} properties provided in the map must
-     * be ignored.
+     * {@link ResourceResolverFactory#USER} and {@link ResourceResolverFactory#PASSWORD}
+     * properties provided in the map must be ignored.
      * <p>
-     * The {@link #USER_IMPERSONATION} property is obeyed but requires that the
+     * The {@link ResourceResolverFactory#USER_IMPERSONATION} property is obeyed but requires that the
      * authenticated user has permission to impersonate as the requested user.
      * If such permission is missing, a {@code LoginException} is thrown.
      * <p>
@@ -305,7 +305,7 @@ public abstract class ResourceProvider<T> {
      *            may be used by the implementation to parameterize how the
      *            resource resolver is created.
      * @return A context data object according to the
-     *         <code>authenticationInfo</code>.
+     *         {@code authenticationInfo}.
      * @throws LoginException If an error occurs authenticating with the
      *            provided credential data.
      *
@@ -331,7 +331,7 @@ public abstract class ResourceProvider<T> {
     /**
      * The provider is updated to reflect the latest state.
      * Resources which have changes pending are not discarded.
-     * {@link #revert(ResourceContext)} can be called to discard changes.
+     * {@link #revert(ResolveContext)} can be called to discard changes.
      * <p>
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_REFRESHABLE} to the value {@code true}.
@@ -343,7 +343,7 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * Returns <code>true</code> if this resource provider has not been closed
+     * Returns {@code true} if this resource provider has not been closed
      * yet and can still be used.
      * <p>
      * This method will never throw an exception
@@ -353,16 +353,16 @@ public abstract class ResourceProvider<T> {
      * require authentication.
      *
      * @param ctx The {@link ResolveContext}.
-     * @return <code>true</code> if the resource provider has not been closed
+     * @return {@code true} if the resource provider has not been closed
      *         yet and is still active.. Once the resource provider has been closed
-     *         or is not active anymore, this method returns <code>false</code>.
+     *         or is not active anymore, this method returns {@code false}.
      */
     public boolean isLive(final @Nonnull ResolveContext<T> ctx) {
         return true;
     }
 
     /**
-     * Returns the parent resource from this resource provider or <code>null</code> if
+     * Returns the parent resource from this resource provider or {@code null} if
      * the resource provider cannot find it.
      *
      * The resource provider must not return cached instances for a resource as
@@ -373,10 +373,10 @@ public abstract class ResourceProvider<T> {
      *
      * @param ctx The {@link ResolveContext}.
      * @param child The child resource.
-     * @return <code>null</code> if this provider does not have a resource for
+     * @return {@code null} if this provider does not have a resource for
      *         the parent.
      * @throws org.apache.sling.api.SlingException
-     *             may be thrown in case of any problem creating the <code>Resource</code> instance.
+     *             may be thrown in case of any problem creating the {@code Resource} instance.
      */
     public @CheckForNull Resource getParent(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource child) {
         final String parentPath = ResourceUtil.getParent(child.getPath());
@@ -387,7 +387,7 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * Returns a resource from this resource provider or <code>null</code> if
+     * Returns a resource from this resource provider or {@code null} if
      * the resource provider cannot find it. The path must have the {@link #PROPERTY_ROOT}
      * strings as its prefix.
      *
@@ -401,10 +401,10 @@ public abstract class ResourceProvider<T> {
      * @param path The full path of the resource.
      * @param resourceContext Additional information for resolving the resource
      * @param parent Optional parent resource
-     * @return <code>null</code> If this provider does not have a resource for
+     * @return {@code null} If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
-     *             may be thrown in case of any problem creating the <code>Resource</code> instance.
+     *             may be thrown in case of any problem creating the {@code Resource} instance.
      */
     public abstract @CheckForNull Resource getResource(@Nonnull final ResolveContext<T> ctx,
             @Nonnull final String path,
@@ -412,10 +412,10 @@ public abstract class ResourceProvider<T> {
             @CheckForNull final Resource parent);
 
     /**
-     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
-     * the children of the given <code>Resource</code>. The returned {@link Resource} instances
+     * Returns an {@code Iterator} of {@link Resource} objects loaded from
+     * the children of the given {@code Resource}. The returned {@link Resource} instances
      *  are attached to the same
-     * {@link ResourceResolver} as the given <code>parent</code> resource.
+     * {@link ResourceResolver} as the given {@code parent} resource.
      * <p>
      * This method may be called for resource providers whose root path list contains a path such
      * that the resource path is a
@@ -428,16 +428,16 @@ public abstract class ResourceProvider<T> {
      * tree. Such resources SHOULD be {@link SyntheticResource} objects whose resource type MUST be set to
      * {@link #RESOURCE_TYPE_SYNTHETIC}.
      *
-     * As with {@link #getResource(ResourceResolver, String)} the returned Resource objects must
+     * As with {@link #getResource(ResolveContext, String, ResourceContext, Resource)} the returned Resource objects must
      * not be cached objects.
      *
      * @param ctx The {@link ResolveContext}.
      * @param parent
      *            The {@link Resource Resource} whose children are requested.
-     * @return An <code>Iterator</code> of {@link Resource} objects or <code>null</code> if the resource
+     * @return An {@code Iterator} of {@link Resource} objects or {@code null} if the resource
      *         provider has no children for the given resource.
      * @throws NullPointerException
-     *             If <code>parent</code> is <code>null</code>.
+     *             If {@code parent} is {@code null}.
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
@@ -445,13 +445,13 @@ public abstract class ResourceProvider<T> {
 
     /**
      * Returns a collection of attribute names whose value can be retrieved
-     * calling the {@link #getAttribute(ResourceResolver, String)} method.
+     * calling the {@link #getAttribute(ResolveContext, String)} method.
      * <p>
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_ATTRIBUTABLE} to the value {@code true}.
      *
      * @param ctx The {@link ResolveContext}.
-     * @return A collection of attribute names or <code>null</code>
+     * @return A collection of attribute names or {@code null}
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
      */
@@ -460,7 +460,7 @@ public abstract class ResourceProvider<T> {
     }
 
     /**
-     * Returns the value of the given resource provider attribute or <code>null</code>
+     * Returns the value of the given resource provider attribute or {@code null}
      * if the attribute is not set or not visible (as e.g. security
      * sensitive attributes).
      * <p>
@@ -469,7 +469,7 @@ public abstract class ResourceProvider<T> {
      *
      * @param ctx The {@link ResolveContext}.
      * @param name  The name of the attribute to access
-     * @return The value of the attribute or <code>null</code> if the attribute
+     * @return The value of the attribute or {@code null} if the attribute
      *         is not set or not accessible.
      * @throws IllegalStateException
      *             if this resource provider has already been closed.
@@ -481,7 +481,7 @@ public abstract class ResourceProvider<T> {
     /**
      * Create a new resource at the given path.
      * The new resource is put into the transient space of this provider
-     * until {@link #commit(ResourceResolver)} is called.
+     * until {@link #commit(ResolveContext)} is called.
      * <p>
      * A resource provider must value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
      * to set the resource type of a resource.
@@ -504,7 +504,7 @@ public abstract class ResourceProvider<T> {
     /**
      * Delete the resource at the given path.
      * This change is kept in the transient space of this provider
-     * until {@link #commit(ResourceResolver)} is called.
+     * until {@link #commit(ResolveContext)} is called.
      * <p>
      * This method is only called if the provider supports this and indicates
      * it by setting the {@link #PROPERTY_MODIFIABLE} to the value {@code true}.
@@ -575,7 +575,7 @@ public abstract class ResourceProvider<T> {
      * Adapts the provider to another type.
      * <p>
      * Please not that it is explicitly left as an implementation detail whether
-     * each call to this method with the same <code>type</code> yields the same
+     * each call to this method with the same {@code type} yields the same
      * object or a new object on each call.
      * <p>
      * Implementations of this method should document their adapted types as
@@ -597,14 +597,14 @@ public abstract class ResourceProvider<T> {
 
     /**
      * This method copies the subgraph rooted at, and including, the resource at
-     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
-     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     * {@code srcAbsPath} to the new location at {@code destAbsPath} and
+     * adds it as a child node of the resource at {@code destAbsPath}.
      * <p>
      * Both resources are resources from this provider and the full tree is
      * provided by this provider as well.
      * <p>
-     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
-     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * The resource at {@code destAbsPath} needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at {@code destAbsPath}
      * a {@code PersistenceException} is thrown.
      * <p>
      * This method is only called if the provider supports this and indicates
@@ -613,7 +613,7 @@ public abstract class ResourceProvider<T> {
      * @param ctx The {@link ResolveContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
-     *                    <code>srcAbsPath</code> is to be copied.
+     *                    {@code srcAbsPath} is to be copied.
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the copy
      */
@@ -625,14 +625,14 @@ public abstract class ResourceProvider<T> {
 
     /**
      * This method moves the subgraph rooted at, and including, the resource at
-     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
-     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     * {@code srcAbsPath} to the new location at {@code destAbsPath} and
+     * adds it as a child node of the resource at {@code destAbsPath}.
      * <p>
      * Both resources are resources from this provider and the full tree is
      * provided by this provider as well.
      * <p>
-     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
-     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * The resource at {@code destAbsPath} needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at {@code destAbsPath}
      * a {@code PersistenceException} is thrown.
      * <p>
      * This method is only called if the provider supports this and indicates
@@ -641,7 +641,7 @@ public abstract class ResourceProvider<T> {
      * @param ctx The {@link ResolveContext}.
      * @param srcAbsPath  the path of the resource to be copied.
      * @param destAbsPath the location to which the resource at
-     *                    <code>srcAbsPath</code> is to be moved.
+     *                    {@code srcAbsPath} is to be moved.
      * @throws PersistenceException If an error occurs.
      * @return {@code true} if the provider can perform the move
      */

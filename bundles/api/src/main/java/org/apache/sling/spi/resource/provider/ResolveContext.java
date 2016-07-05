@@ -61,7 +61,7 @@ public interface ResolveContext<T> {
     /**
      * Return the parent resource provider.
      * If the parent should be used for resolving, a context created with
-     * {@link ResourceContext#getParentResolveContext()} should be passed to that
+     * {@link ResolveContext#getParentResolveContext()} should be passed to that
      * instance.
      * @return The parent provider or {@code null} if there is no parent.
      */
