@@ -60,6 +60,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_REQUEST_ATTRIBUTES = "/sightly/requestattributes.html";
     private static final String SLING_REQUEST_ATTRIBUTES_INCLUDE = "/sightly/requestattributes.include.html";
     private static final String SLING_RESOURCE_USE = "/sightly/use.resource.html";
+    private static final String SLING_I18N = "/sightly/i18n";
 
     @BeforeClass
     public static void init() {
@@ -269,6 +270,14 @@ public class SlingSpecificsSightlyIT {
         assertEquals("foobar-somejava", HTMLExtractor.innerHTML(url, pageContent, "#somejava .data"));
         assertEquals("foobar-somejs", HTMLExtractor.innerHTML(url, pageContent, "#somejs .data"));
         assertEquals("foobar-someecma", HTMLExtractor.innerHTML(url, pageContent, "#someecma .data"));
+    }
+
+    @Test
+    public void testI18nBasename() {
+        String url = launchpadURL + SLING_I18N + ".basename.html";
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("die Bank", HTMLExtractor.innerHTML(url, pageContent, "#i18n-basename-finance"));
+        assertEquals("das Ufer", HTMLExtractor.innerHTML(url, pageContent, "#i18n-nobasename"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {

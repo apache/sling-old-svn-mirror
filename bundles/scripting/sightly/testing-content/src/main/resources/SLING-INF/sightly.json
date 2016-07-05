@@ -56,5 +56,9 @@
     "use-somefolder": {
         "jcr:primaryType": "sling:Folder",
         "data": "foobar-somefolder"
+    },
+    "i18n": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType" : "/apps/sightly/scripts/i18n"
     }
 }
