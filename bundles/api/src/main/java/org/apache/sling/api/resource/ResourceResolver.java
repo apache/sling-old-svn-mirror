@@ -55,7 +55,7 @@ import aQute.bnd.annotation.ProviderType;
  * <code>resolve</code> methods and the <code>getResource</code> methods. The
  * difference lies in the algorithm applied to find the requested resource and
  * in the behavior in case a resource cannot be found:
- * <table>
+ * <table summary="">
  * <tr>
  * <th>Method Kind</th>
  * <th>Access Algorithm</th>
@@ -360,6 +360,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
      * relative path, the search path entry and relative path may just be
      * concatenated.
      *
+     * @return The array of search paths
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
@@ -643,7 +644,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
     /**
      * Persist all pending changes.
      *
-     * @throws PersistenceException
+     * @throws PersistenceException If persisting the changes fails.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
@@ -652,6 +653,7 @@ public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * Are there any pending changes?
+     * @return {@code true} if there are pending changes.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
