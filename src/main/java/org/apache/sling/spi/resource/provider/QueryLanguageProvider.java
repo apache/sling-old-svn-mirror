@@ -64,7 +64,7 @@ public interface QueryLanguageProvider<T> {
      *         returned instead of an empty iterator.
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator or if the query
-     *             language is not supported as specified in {@link #LANGUAGES}.
+     *             language is not supported as specified in {@link #getSupportedLanguages(ResolveContext)}.
      * @throws org.apache.sling.api.SlingException If an error occurs querying
      *             for the resources.
      * @throws IllegalStateException if this resource provider has already been
@@ -93,7 +93,7 @@ public interface QueryLanguageProvider<T> {
      *         might be returned instead of an empty iterator.
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator or if the query
-     *             language is not supported as specified in {@link #LANGUAGES}.
+     *             language is not supported as specified in {@link #getSupportedLanguages(ResolveContext)}.
      * @throws org.apache.sling.api.SlingException If an error occurs querying
      *             for the resources.
      * @throws IllegalStateException if this resource provider has already been

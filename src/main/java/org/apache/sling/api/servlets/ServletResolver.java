@@ -62,7 +62,7 @@ public interface ServletResolver {
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurs
      *             while trying to find an appropriate servlet to handle the
      *             request.
-     * @Throws NullPointerException If {@code request} is null.
+     * @throws NullPointerException If {@code request} is null.
      */
     @CheckForNull Servlet resolveServlet(@Nonnull SlingHttpServletRequest request);
 

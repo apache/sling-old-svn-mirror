@@ -41,7 +41,7 @@ import aQute.bnd.annotation.ConsumerType;
  * or a {@link ResourceProviderFactory} service can be implemented which
  * upon successful authentication returns a resource provider with the
  * given user credentials.
- * 
+ *
  * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
  */
 @ConsumerType
@@ -64,7 +64,7 @@ public interface ResourceProvider {
     /**
      * The name of the service registration property containing the a boolean
      * flag whether this provider owns the tree registered by the roots. The
-     * default for this value is <code>false</code>. If a provider owns a root
+     * default for this value is {@code false}. If a provider owns a root
      * no other providers are asked for resources under this root if this
      * provider does not have a resource. (value is "provider.ownsRoots").
      *
@@ -78,7 +78,7 @@ public interface ResourceProvider {
      * this provider or not. ResourceProvider implementations are encouraged
      * to use the ResourceAccessSecurity service for access control unless
      * the underlying storage already provides it.
-     * The default for this value is <code>false</code>.
+     * The default for this value is {@code false}.
      * (value is "provider.useResourceAccessSecurity")
      * @since 2.4 (Sling API Bundle 2.5.0)
      */
@@ -96,7 +96,7 @@ public interface ResourceProvider {
     String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
 
     /**
-     * Returns a resource from this resource provider or <code>null</code> if
+     * Returns a resource from this resource provider or {@code null} if
      * the resource provider cannot find it. The path should have one of the
      * {@link #ROOTS} strings as its prefix.
      * <p>
@@ -109,17 +109,17 @@ public interface ResourceProvider {
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned
      *            {@link Resource} is attached.
-     * @return <code>null</code> If this provider does not have a resource for
+     * @return {@code null} If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
-     *             may be thrown in case of any problem creating the <code>Resource</code> instance.
+     *             may be thrown in case of any problem creating the {@code Resource} instance.
      * @deprecated since 2.2.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated
     @CheckForNull Resource getResource(@Nonnull ResourceResolver resourceResolver, @Nonnull HttpServletRequest request, @Nonnull String path);
 
     /**
-     * Returns a resource from this resource provider or <code>null</code> if
+     * Returns a resource from this resource provider or {@code null} if
      * the resource provider cannot find it. The path should have one of the {@link #ROOTS}
      * strings as its prefix.
      *
@@ -132,18 +132,18 @@ public interface ResourceProvider {
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
      * @param path The full path of the resource.
-     * @return <code>null</code> If this provider does not have a resource for
+     * @return {@code null} If this provider does not have a resource for
      *         the path.
      * @throws org.apache.sling.api.SlingException
-     *             may be thrown in case of any problem creating the <code>Resource</code> instance.
+     *             may be thrown in case of any problem creating the {@code Resource} instance.
      */
     @CheckForNull Resource getResource(@Nonnull ResourceResolver resourceResolver, @Nonnull String path);
 
     /**
-     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
-     * the children of the given <code>Resource</code>. The returned {@link Resource} instances
+     * Returns an {@code Iterator} of {@link Resource} objects loaded from
+     * the children of the given {@code Resource}. The returned {@link Resource} instances
      *  are attached to the same
-     * {@link ResourceResolver} as the given <code>parent</code> resource.
+     * {@link ResourceResolver} as the given {@code parent} resource.
      * <p>
      * This method may be called for resource providers whose root path list contains a path such
      * that the resource path is a
@@ -161,10 +161,10 @@ public interface ResourceProvider {
      *
      * @param parent
      *            The {@link Resource Resource} whose children are requested.
-     * @return An <code>Iterator</code> of {@link Resource} objects or <code>null</code> if the resource
+     * @return An {@code Iterator} of {@link Resource} objects or {@code null} if the resource
      *         provider has no children for the given resource.
      * @throws NullPointerException
-     *             If <code>parent</code> is <code>null</code>.
+     *             If {@code parent} is {@code null}.
      * @throws SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
