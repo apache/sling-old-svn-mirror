@@ -42,7 +42,7 @@ import aQute.bnd.annotation.ConsumerType;
  * upon successful authentication returns a resource provider with the
  * given user credentials.
  *
- * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider<T>}
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
 @ConsumerType
 @Deprecated

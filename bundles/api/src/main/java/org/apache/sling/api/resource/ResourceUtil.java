@@ -484,6 +484,7 @@ public class ResourceUtil {
      *
      * @param iterator A resource iterator.
      * @param <T> The adapted type
+     * @param type The adapted type
      * @return An iterator of the adapted objects
      * @since 2.0.6 (Sling API Bundle 2.0.6)
      */
