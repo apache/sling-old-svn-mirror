@@ -58,15 +58,12 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;
-    private final Kryo kryo = new Kryo();
     private final Set<String> ignoredProperties;
     private final Set<String> ignoredNodeNames;
 
     public KryoContentSerializer(String name) {
         this.name = name;
-        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
-        kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
+
         Set<String> iProps = new HashSet<String>();
         iProps.add(JcrConstants.JCR_FROZENMIXINTYPES);
         iProps.add(JcrConstants.JCR_FROZENPRIMARYTYPE);
@@ -87,6 +84,10 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     @Override
     public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
 
+        Kryo kryo = new Kryo();
+        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
+        kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
         String[] paths = request.getPaths();
         Output output = new Output(outputStream);
         LinkedList<Resource> resources = new LinkedList<Resource>();
@@ -103,6 +104,10 @@ public class KryoContentSerializer implements DistributionContentSerializer {
 
     @Override
     public void importFromStream(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
+        Kryo kryo = new Kryo();
+        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
+        kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
         try {
             Input input = new Input(stream);
             LinkedList<Resource> resources = (LinkedList<Resource>) kryo.readObject(input, LinkedList.class);
