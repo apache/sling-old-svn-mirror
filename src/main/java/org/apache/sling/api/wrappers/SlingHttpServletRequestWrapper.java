@@ -52,77 +52,95 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
     /**
      * Return the original {@link SlingHttpServletRequest} object wrapped by
      * this.
+     * @return The wrapped request.
      */
     public SlingHttpServletRequest getSlingRequest() {
         return (SlingHttpServletRequest) getRequest();
     }
 
+    @Override
     public Cookie getCookie(String name) {
         return getSlingRequest().getCookie(name);
     }
 
+    @Override
     public RequestProgressTracker getRequestProgressTracker() {
         return getSlingRequest().getRequestProgressTracker();
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return getSlingRequest().getRequestDispatcher(resource);
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource,
             RequestDispatcherOptions options) {
         return getSlingRequest().getRequestDispatcher(resource, options);
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(String path,
             RequestDispatcherOptions options) {
         return getSlingRequest().getRequestDispatcher(path, options);
     }
 
+    @Override
     public RequestParameter getRequestParameter(String name) {
         return getSlingRequest().getRequestParameter(name);
     }
 
+    @Override
     public RequestParameterMap getRequestParameterMap() {
         return getSlingRequest().getRequestParameterMap();
     }
 
+    @Override
     public List<RequestParameter> getRequestParameterList() {
         return getSlingRequest().getRequestParameterList();
     }
 
+    @Override
     public RequestParameter[] getRequestParameters(String name) {
         return getSlingRequest().getRequestParameters(name);
     }
 
+    @Override
     public RequestPathInfo getRequestPathInfo() {
         return getSlingRequest().getRequestPathInfo();
     }
 
+    @Override
     public Resource getResource() {
         return getSlingRequest().getResource();
     }
 
+    @Override
     public ResourceResolver getResourceResolver() {
         return getSlingRequest().getResourceResolver();
     }
 
+    @Override
     public ResourceBundle getResourceBundle(Locale locale) {
         return getSlingRequest().getResourceBundle(locale);
     }
 
+    @Override
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         return getSlingRequest().getResourceBundle(baseName, locale);
     }
 
+    @Override
     public String getResponseContentType() {
         return getSlingRequest().getResponseContentType();
     }
 
+    @Override
     public Enumeration<String> getResponseContentTypes() {
         return getSlingRequest().getResponseContentTypes();
     }
 
+    @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return getSlingRequest().adaptTo(type);
     }
