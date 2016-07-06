@@ -88,6 +88,7 @@
           <excludes>
             <exclude>**/*.json</exclude>
             <exclude>src/test/resources/reader/testfile.txt</exclude>
+            <exclude>src/test/resources/initial-content/ordered-content.ordered-json</exclude>
             <exclude>jackrabbit/**</exclude>
             <exclude>derby.log</exclude>
           </excludes>
