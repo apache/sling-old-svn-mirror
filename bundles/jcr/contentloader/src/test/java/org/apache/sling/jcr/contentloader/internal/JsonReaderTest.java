@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -256,6 +257,49 @@ public class JsonReaderTest {
             allowing(creator).createNode("c1", null, null); inSequence(mySequence);
             allowing(creator).createProperty("c1p1", PropertyType.UNDEFINED, "v1");
             allowing(creator).finishNode(); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
+    @org.junit.Test public void testCreateOnePrincipal() throws Exception {
+        String json = "{\"security:principals\":{ " +
+                "    \"name\" : \"username2\"," +
+                "    \"password\" : \"pwd2\"" +
+                "  }}";
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("foo","bar");
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null);
+            allowing(creator).createUser("username2", "pwd2",new LinkedHashMap<String, Object>());
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
+    @org.junit.Test public void testCreatePrincipals() throws Exception {
+        String json = "{\"security:principals\":[ " +
+                "  { " +
+                "    \"name\" : \"username1\"," +
+                "    \"password\" : \"pwd1\"," +
+                "    \"foo\" : \"bar\"" +
+                "  }," +
+                "  { " +
+                "    \"name\" : \"username2\"," +
+                "    \"password\" : \"pwd2\"" +
+                "  }," +
+                "  { " +
+                "    \"name\" : \"group1\"," +
+                "    \"isgroup\" : true," +
+                "    \"members\" : [\"username1\",\"username2\"]" +
+                "  }]}";
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("foo","bar");
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null);
+            allowing(creator).createUser("username1", "pwd1", map);
+            allowing(creator).createUser("username2", "pwd2",new LinkedHashMap<String, Object>());
+            allowing(creator).createGroup("group1", new String[]{"username1","username2"}, new LinkedHashMap<String, Object>());
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
