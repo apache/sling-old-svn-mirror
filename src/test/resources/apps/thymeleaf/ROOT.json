@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType": "sling:Folder",
+    "sling:scripting": [
+        "html=thymeleaf"
+    ]
+}
