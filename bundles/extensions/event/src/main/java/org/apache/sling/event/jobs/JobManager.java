@@ -43,11 +43,13 @@ public interface JobManager {
 
     /**
      * Return statistics information about all queues.
+     * @return The statistics.
      */
     Statistics getStatistics();
 
     /**
      * Return statistics information about job topics.
+     * @return The statistics for all topics.
      */
     Iterable<TopicStatistics> getTopicStatistics();
 
@@ -60,6 +62,7 @@ public interface JobManager {
 
     /**
      * Return an iterator for all available queues.
+     * @return An iterator for all queues.
      */
     Iterable<Queue> getQueues();
 
@@ -175,6 +178,7 @@ public interface JobManager {
      * When a job is stopped and the job consumer supports stopping the job processing, it is up
      * to the job consumer how the stopping is handled. The job can be marked as finished successful,
      * permanently failed or being retried.
+     * @param jobId The job id
      * @since 1.3
      */
     void stopJobById(String jobId);
@@ -199,6 +203,7 @@ public interface JobManager {
 
     /**
      * Return all available job schedules.
+     * @return A collection of scheduled job infos
      * @since 1.3
      */
     Collection<ScheduledJobInfo> getScheduledJobs();
@@ -211,6 +216,7 @@ public interface JobManager {
      * @param templates A list of filter property maps. Each map acts like a template. The searched job
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
+     * @return All matching scheduled job infos.
      * @since 1.4
      */
     Collection<ScheduledJobInfo> getScheduledJobs(String topic, long limit, Map<String, Object>... templates);

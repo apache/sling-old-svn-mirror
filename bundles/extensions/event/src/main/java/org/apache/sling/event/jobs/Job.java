@@ -215,6 +215,7 @@ public interface Job {
      *
      * @param name The name of the property
      * @param type The class of the type
+     * @param <T> The class of the type
      * @return Return named value converted to type T or <code>null</code> if
      *         non existing or can't be converted.
      */
@@ -232,6 +233,7 @@ public interface Job {
      *            default value is also used to define the type to convert the
      *            value to. If this is <code>null</code> any existing property is
      *            not converted.
+     * @param <T> The class of the type
      * @return Return named value converted to type T or the default value if
      *         non existing or can't be converted.
      */
@@ -240,12 +242,14 @@ public interface Job {
     /**
      * On first execution the value of this property is zero.
      * This property is managed by the job handling.
+     * @return The retry count.
      */
     int getRetryCount();
 
     /**
      * The property to track the retry maximum retry count for jobs.
      * This property is managed by the job handling.
+     * @return The number of retries.
      */
     int getNumberOfRetries();
 
@@ -267,23 +271,27 @@ public interface Job {
      * This property is set by the job handling and contains a calendar object
      * specifying the date and time when this job has been started.
      * This property is only set if the job is currently in processing
+     * @return The time the processing started or {@code null}.
      */
     Calendar getProcessingStarted();
 
     /**
      * This property is set by the job handling and contains a calendar object
      * specifying the date and time when this job has been created.
+     * @return The time the job was created.
      */
     Calendar getCreated();
 
     /**
      * This property is set by the job handling and contains the Sling instance ID
      * of the instance where this job has been created.
+     * @return The instance id the job was created on
      */
     String getCreatedInstance();
 
     /**
      * Get the job state
+     * @return The job state.
      * @since 1.3
      */
     JobState getJobState();

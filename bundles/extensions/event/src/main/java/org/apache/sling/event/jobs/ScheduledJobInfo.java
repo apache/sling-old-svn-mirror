@@ -39,6 +39,7 @@ public interface ScheduledJobInfo {
 
     /**
      * Return the next scheduled execution date.
+     * @return the next scheduled execution date.
      */
     Date getNextScheduledExecution();
 
@@ -63,6 +64,7 @@ public interface ScheduledJobInfo {
      * Reschedule this job with a new rescheduling information.
      * If rescheduling fails (due to wrong arguments), the job
      * schedule is left as is.
+     * @return The schedule builder
      */
     JobBuilder.ScheduleBuilder reschedule();
 
@@ -81,6 +83,7 @@ public interface ScheduledJobInfo {
 
     /**
      * Is the processing currently suspended?
+     * @return {@code true} if processing is suspended.
      */
     boolean isSuspended();
 }
