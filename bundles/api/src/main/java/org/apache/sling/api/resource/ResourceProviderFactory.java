@@ -81,11 +81,11 @@ public interface ResourceProviderFactory {
      * <code>ResourceProvider</code> returned will generally not be
      * authenticated and only provide minimal privileges, if any at all.
      * <p>
-     * Implementations must ignore the {@value ResourceResolverFactory#USER}
+     * Implementations must ignore the {@link ResourceResolverFactory#USER}
      * property the {@link #SERVICE_BUNDLE} property is provided to implement
      * service authentication.
      * <p>
-     * The {@value ResourceResolverFactory#USER_IMPERSONATION} property is
+     * The {@link ResourceResolverFactory#USER_IMPERSONATION} property is
      * obeyed but requires that the actual user has permission to impersonate as
      * the requested user. If such permission is missing, a
      * {@code LoginException} is thrown.
