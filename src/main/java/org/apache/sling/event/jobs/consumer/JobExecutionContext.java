@@ -29,10 +29,11 @@ public interface JobExecutionContext {
 
     /**
      * Report an async result.
+     * @param result Tje job execution result
      * @throws IllegalStateException If the job is not processed asynchronously
      *                               or if this method has already been called.
      */
-    void asyncProcessingFinished(final JobExecutionResult result);
+    void asyncProcessingFinished(JobExecutionResult result);
 
     /**
      * If a job is stoppable, it should periodically check this method
@@ -42,6 +43,7 @@ public interface JobExecutionContext {
      * There might be use cases where the job returns {@link JobExecutionResult#succeeded()}
      * although it didn't process everything, or {@link JobExecutionResult#failed()}
      * to retry later on or {@link JobExecutionResult#cancelled()}.
+     *
      * @return Whether this job has been stopped from the outside.
      */
     boolean isStopped();
@@ -61,7 +63,7 @@ public interface JobExecutionContext {
      * @param eta Number of seconds the process should take or
      *        -1 of it's not known now.
      */
-    void initProgress(final int steps, final long eta);
+    void initProgress(int steps, long eta);
 
     /**
      * Update the progress by additionally marking the provided
@@ -73,7 +75,7 @@ public interface JobExecutionContext {
      * has been called first with a positive number for steps
      * @param steps The number of finished steps since the last call.
      */
-    void incrementProgressCount(final int steps);
+    void incrementProgressCount(int steps);
 
     /**
      * Update the progress to the new ETA.
@@ -81,7 +83,7 @@ public interface JobExecutionContext {
      * has been called first.
      * @param eta The new ETA
      */
-    void updateProgress(final long eta);
+    void updateProgress(long eta);
 
     /**
      * Log a message.
@@ -96,7 +98,7 @@ public interface JobExecutionContext {
      * @param message A message
      * @param args Additional arguments
      */
-    void log(final String message, final Object...args);
+    void log(String message, Object...args);
 
     /**
      * Build a result for the processing.
@@ -108,27 +110,33 @@ public interface JobExecutionContext {
         /**
          * Add an optional processing message.
          * This message can be viewed using {@link org.apache.sling.event.jobs.Job#getResultMessage()}.
+         * @param message The message
+         * @return The builder to continue building the result.
          */
-        ResultBuilder message(final String message);
+        ResultBuilder message(String message);
 
         /**
          * The job processing finished successfully.
+         * @return The job execution result.
          */
         JobExecutionResult succeeded();
 
         /**
          * The job processing failed and might be retried.
+         * @return The job execution result.
          */
         JobExecutionResult failed();
 
         /**
          * The job processing failed and might be retried.
          * @param retryDelayInMs The new retry delay in ms.
+         * @return The job execution result
          */
-        JobExecutionResult failed(final long retryDelayInMs);
+        JobExecutionResult failed(long retryDelayInMs);
 
         /**
          * The job processing failed permanently.
+         * @return The job execution result
          */
         JobExecutionResult cancelled();
     }
