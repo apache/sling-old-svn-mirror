@@ -200,7 +200,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        org.apache.sling.event.impl,org.apache.sling.event.impl.job,org.apache.sling.event.impl.jobs,org.apache.sling.event.impl.jobs.console,org.apache.sling.event.impl.jobs.queue
+                        org.apache.sling.event.impl,org.apache.sling.event.impl.jobs,org.apache.sling.event.impl.jobs.config,org.apache.sling.event.impl.jobs.console,org.apache.sling.event.impl.jobs.jmx,org.apache.sling.event.impl.jobs.notifications,org.apache.sling.event.impl.jobs.queues,org.apache.sling.event.impl.jobs.scheduling,org.apache.sling.event.impl.jobs.stats,org.apache.sling.event.impl.jobs.tasks,org.apache.sling.event.impl.support
                     </excludePackageNames>
                 </configuration>
             </plugin>

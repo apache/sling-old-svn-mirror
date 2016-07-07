@@ -78,6 +78,8 @@ public class QueueJobCache {
     /**
      * Create a new queue job cache
      * @param configuration Current job manager configuration
+     * @param queueName The queue name
+     * @param statisticsManager The statistics manager
      * @param queueType The queue type
      * @param topics The topics handled by this queue.
      */
@@ -136,8 +138,13 @@ public class QueueJobCache {
     /**
      * Get the next job.
      * This method is potentially called concurrently, and
-     * {@link #reschedule(JobHandler)} and {@link #handleNewTopics(Set)}
+     * {@link #reschedule(String, JobHandler, StatisticsManager)} and {@link #handleNewTopics(Set)}
      * can be called concurrently.
+     * @param jobConsumerManager The job consumer manager
+     * @param statisticsManager The statistics manager
+     * @param queue The queue
+     * @param doFull Whether to do a full scan
+     * @return The job handler or {@code null}.
      */
     public JobHandler getNextJob(final JobConsumerManager jobConsumerManager,
             final StatisticsManager statisticsManager,
@@ -318,7 +325,9 @@ public class QueueJobCache {
     /**
      * Reschedule a job
      * Reschedule the job and add it back into the cache.
+     * @param queueName The queue name
      * @param handler The job handler
+     * @param statisticsManager The statistics manager
      */
     public void reschedule(final String queueName, final JobHandler handler, final StatisticsManager statisticsManager) {
         synchronized ( this.cache ) {

@@ -310,6 +310,8 @@ public class QueueManager
     }
 
     /**
+     * @param name The queue name
+     * @return The queue or {@code null}.
      * @see org.apache.sling.event.jobs.JobManager#getQueue(java.lang.String)
      */
     public Queue getQueue(final String name) {
@@ -317,6 +319,7 @@ public class QueueManager
     }
 
     /**
+     * @return An iterator for the available queues.
      * @see org.apache.sling.event.jobs.JobManager#getQueues()
      */
     public Iterable<Queue> getQueues() {
