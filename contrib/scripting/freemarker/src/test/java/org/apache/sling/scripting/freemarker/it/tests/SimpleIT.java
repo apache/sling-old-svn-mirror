@@ -16,47 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.freemarker.it;
+package org.apache.sling.scripting.freemarker.it.tests;
 
+import java.io.IOException;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class FreemarkerScriptEngineFactoryIT extends FreemarkerTestSupport {
+public class SimpleIT extends FreemarkerTestSupport {
 
-    @Test
-    public void testScriptEngineFactory() {
-        assertNotNull(scriptEngineFactory);
+    private Document document;
+
+    @Before
+    public void setup() throws IOException {
+        final String url = String.format("http://localhost:%s/freemarker/simple.html", httpPort());
+        document = Jsoup.connect(url).get();
     }
 
     @Test
-    public void testScriptEngineFactoryEngineName() {
-        assertThat("Apache Sling Scripting FreeMarker", is(scriptEngineFactory.getEngineName()));
+    public void testTitle() {
+        assertThat(document.title(), is("freemarker simple"));
     }
 
     @Test
-    public void testScriptEngineFactoryLanguageName() {
-        assertThat("FreeMarker", is(scriptEngineFactory.getLanguageName()));
-    }
-
-    @Test
-    public void testScriptEngineFactoryLanguageVersion() {
-        assertThat(scriptEngineFactory.getLanguageVersion(), startsWith("2.3"));
-    }
-
-    @Test
-    public void testScriptEngineFactoryNames() {
-        assertThat(scriptEngineFactory.getNames(), hasItem("freemarker"));
+    public void testPageName() {
+        final Element name = document.getElementById("name");
+        assertThat("simple", is(name.text()));
     }
 
 }

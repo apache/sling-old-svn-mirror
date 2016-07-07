@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<#assign page = request.adaptTo(statics["org.apache.sling.scripting.freemarker.it.page.Page"].class)>
+<#assign page = request.adaptTo(statics["org.apache.sling.scripting.freemarker.it.app.Page"].class)>
 <html>
 <head>
   <meta charset="UTF-8"/>

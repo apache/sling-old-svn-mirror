@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.freemarker.it;
+package org.apache.sling.scripting.freemarker.it.tests;
 
 import java.io.IOException;
 
@@ -24,6 +24,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -35,25 +36,27 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SimpleIT extends FreemarkerTestSupport {
+public class AdaptToModelIT extends FreemarkerTestSupport {
 
     private Document document;
 
     @Before
     public void setup() throws IOException {
-        final String url = String.format("http://localhost:%s/freemarker/simple.html", httpPort());
+        final String url = String.format("http://localhost:%s/freemarker/adaptto.html", httpPort());
         document = Jsoup.connect(url).get();
     }
 
     @Test
+    @Ignore
     public void testTitle() {
-        assertThat(document.title(), is("freemarker simple"));
+        assertThat(document.title(), is("Sling Models adaptTo()"));
     }
 
     @Test
+    @Ignore
     public void testPageName() {
         final Element name = document.getElementById("name");
-        assertThat("simple", is(name.text()));
+        assertThat("adaptto", is(name.text()));
     }
 
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.freemarker.it;
+package org.apache.sling.scripting.freemarker.it.tests;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,10 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.testing.paxexam.SlingOptions;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.ProbeBuilder;
+import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.http.HttpService;
 
@@ -44,7 +47,6 @@ import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
@@ -92,13 +94,10 @@ public abstract class FreemarkerTestSupport {
         final String filename = System.getProperty("bundle.filename");
         final File file = new File(filename);
         return new Option[]{
-            keepCaches(),
             workingDirectory(workingDirectory),
             launchpad(workingDirectory),
-            // test app bundle
+            // Sling Scripting FreeMarker
             bundle(file.toURI().toString()),
-            // FreeMarker
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.freemarker").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jaxp-api-1.4").versionAsInProject(),
             bootDelegationPackage("javax.swing.*"),
             // testing
@@ -106,6 +105,17 @@ public abstract class FreemarkerTestSupport {
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
             junitBundles()
         };
+    }
+
+    @ProbeBuilder
+    public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
+        testProbeBuilder.setHeader(Constants.EXPORT_PACKAGE, "org.apache.sling.scripting.freemarker.it.app");
+        testProbeBuilder.setHeader("Sling-Model-Packages", "org.apache.sling.scripting.freemarker.it.app");
+        testProbeBuilder.setHeader("Sling-Initial-Content", String.join(",",
+            "apps/freemarker;path:=/apps/freemarker;overwrite:=true;uninstall:=true",
+            "content;path:=/content;overwrite:=true;uninstall:=true"
+        ));
+        return testProbeBuilder;
     }
 
     protected static Option launchpad(final String workingDirectory) {
