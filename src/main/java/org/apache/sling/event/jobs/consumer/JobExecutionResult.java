@@ -65,7 +65,7 @@ public interface JobExecutionResult {
 
     /**
      * Return the retry delay in ms
-     * @return The new retry delay (>= 0) or <code>null</code>
+     * @return The new retry delay (&gt;= 0) or <code>null</code>
      */
     Long getRetryDelayInMs();
 }

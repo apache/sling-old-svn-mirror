@@ -30,16 +30,19 @@ public interface Queue {
 
     /**
      * Get the queue name.
+     * @return The queue name
      */
     String getName();
 
     /**
      * Return statistics information about this queue.
+     * @return The queue statistics
      */
     Statistics getStatistics();
 
     /**
      * Get the corresponding configuration.
+     * @return The queue configuration
      */
     QueueConfiguration getConfiguration();
 
@@ -66,6 +69,7 @@ public interface Queue {
 
     /**
      * Is the queue currently suspended?
+     * @return {code true} if the queue is supsended
      */
     boolean isSuspended();
 
@@ -79,12 +83,15 @@ public interface Queue {
      * Return some information about the current state of the queue. This
      * method is meant to see the internal state of the queue for debugging
      * or monitoring purposes.
+     * @return Additional state info
      */
     String getStateInfo();
 
     /**
      * For monitoring purposes and possible extensions from the different
      * queue types. This method allows to query state information.
+     * @param key The key for the state
+     * @return The state or {@code null}.
      */
     Object getState(final String key);
 }

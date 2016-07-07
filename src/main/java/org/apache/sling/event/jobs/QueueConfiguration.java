@@ -47,31 +47,37 @@ public interface QueueConfiguration {
 
     /**
      * Return the retry delay in ms
+     * @return The retry delay
      */
     long getRetryDelayInMs();
 
     /**
      * Return the max number of retries, -1 for endless retry!
+     * @return Max number of retries
      */
     int getMaxRetries();
 
     /**
      * Return the queue type.
+     * @return The queue type
      */
     Type getType();
 
     /**
      * Return the thread priority for the job thread
+     * @return Thread priority
      */
     ThreadPriority getThreadPriority();
 
     /**
      * Return the max number of parallel processes.
+     * @return Max parallel processes
      */
     int getMaxParallel();
 
     /**
      * The list of topics this queue is bound to.
+     * @return All topics for this queue.
      */
     String[] getTopics();
 
@@ -92,11 +98,13 @@ public interface QueueConfiguration {
 
     /**
      * Get the ranking of this configuration.
+     * @return The ranking
      */
     int getRanking();
 
     /**
      * Prefer to run the job on the same instance it was created on.
+     * @return {@code true} if running on the creation instance is preferred.
      * @since 1.4
      */
     boolean isPreferRunOnCreationInstance();

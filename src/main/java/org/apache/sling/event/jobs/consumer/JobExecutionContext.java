@@ -102,6 +102,7 @@ public interface JobExecutionContext {
 
     /**
      * Build a result for the processing.
+     * @return The build for the result
      */
     ResultBuilder result();
 
