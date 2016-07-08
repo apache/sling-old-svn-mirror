@@ -26,8 +26,10 @@ import java.io.Reader;
 public interface CompilationUnit {
 
     /**
-     * Return an input stream for the contents.
-     * The compiler will close this stream in all cases!
+     * Return a reader for the contents.
+     * The compiler will close this reader in all cases!
+     * @return The reader.
+     * @throws IOException If the source can't be read.
      */
     Reader getSource()
     throws IOException;
