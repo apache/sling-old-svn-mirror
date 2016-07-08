@@ -130,6 +130,8 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
                 output = (String) obj;
             } else if (isPrimitive(obj)) {
                 output = obj.toString();
+            } else if (obj instanceof Enum) {
+                return ((Enum) obj).name();
             } else {
                 Collection<?> col = obtainCollection(obj);
                 if (col != null) {
