@@ -79,7 +79,7 @@ public final class RankedServices<T> implements Iterable<T> {
 
   /**
    * Instantiate without change listener in ascending order (lowest service ranking first).
-   * @deprecated Use {@link #RankedService(Order)} to explicitly give the order.
+   * @deprecated Use {@link #RankedServices(Order)} to explicitly give the order.
    */
   @Deprecated
   public RankedServices() {

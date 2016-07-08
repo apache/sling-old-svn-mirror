@@ -34,7 +34,7 @@ public class ServiceUtil {
     /**
      * @deprecated Use {@link #getComparableForServiceRanking(Map, Order)} instead.
      * @param props The service properties.
-     * @return the same comparable as returned by {@link #getComparableForServiceRanking(Map, Order.ASCENDING)}
+     * @return the same comparable as returned by {@code getComparableForServiceRanking(Map, Order.ASCENDING)}
      * @see #getComparableForServiceRanking(Map, Order)
      */
     @Deprecated

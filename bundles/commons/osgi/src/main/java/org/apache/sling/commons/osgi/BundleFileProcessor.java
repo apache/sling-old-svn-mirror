@@ -44,11 +44,19 @@ public abstract class BundleFileProcessor {
         this.outputFolder = outputFolder;
     }
     
-    /** Process the bundle Manifest. Can return the original
-     *  one if no changes are needed */
+    /** 
+     * Process the bundle Manifest. Can return the original
+     * one if no changes are needed.
+     * @param originalManifest The manifest to process
+     * @return The processed manifest.
+     */
     protected abstract Manifest processManifest(Manifest originalManifest);
 
-    /** Return the filename to use for the newly created bundle file */
+    /** 
+     * Return the filename to use for the newly created bundle file 
+     * @param inputJarManifest The manifest
+     * @return The filename
+     */
     protected abstract String getTargetFilename(Manifest inputJarManifest);
     
     /**
