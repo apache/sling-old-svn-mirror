@@ -43,7 +43,7 @@
     </scm>
 
     <properties>
-        <jackrabbit.version>2.12.1</jackrabbit.version>
+        <jackrabbit.version>2.12.2</jackrabbit.version>
     </properties>
 
     <build>
