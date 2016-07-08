@@ -42,6 +42,7 @@ public interface DynamicClassLoaderManager {
 
     /**
      * The dynamic class loader.
+     * @return The dynamic class loader.
      */
     ClassLoader getDynamicClassLoader();
 }

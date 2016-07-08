@@ -100,10 +100,6 @@
                     </includes>
                 </configuration>
             </plugin>
-       </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -113,8 +109,8 @@
                     </excludePackageNames>
                 </configuration>
             </plugin>
-        </plugins>
-    </reporting>
+       </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
