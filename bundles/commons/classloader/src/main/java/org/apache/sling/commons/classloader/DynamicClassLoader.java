@@ -30,6 +30,7 @@ public interface DynamicClassLoader {
 
     /**
      * Is this class loader still alive/valid?
+     * @return {@code true} if still alive/valid.
      */
     boolean isLive();
 }
