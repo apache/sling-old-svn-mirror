@@ -62,8 +62,16 @@
                         <Private-Package>
                             org.apache.sling.servlets.get.*
                         </Private-Package>
-
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>
+                        org.apache.sling.servlets.get.impl
+                    </excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
