@@ -86,22 +86,33 @@ public class Options extends HashMap<String, Object> {
 
     /**
      * Create a new options object based on an existing one.
+     * @param options The base options.
      */
     public Options(final Options options) {
         super(options);
     }
 
+    /**
+     * Get the source version.
+     * @return The source version.
+     */
     public String getSourceVersion() {
         return (String) this.get(KEY_SOURCE_VERSION);
     }
 
     /**
+     * Get the target version.
+     * @return The target version
      * @since 2.0
      */
     public String getTargetVersion() {
         return (String) this.get(KEY_TARGET_VERSION);
     }
 
+     /**
+      * Should debug info be generated?
+      * @return {@code true} if debug info should be generated.
+      */
     public boolean isGenerateDebugInfo() {
         if ( this.get(KEY_GENERATE_DEBUG_INFO) != null ) {
             return (Boolean) this.get(KEY_GENERATE_DEBUG_INFO);
