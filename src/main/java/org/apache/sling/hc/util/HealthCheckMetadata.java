@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -140,10 +141,10 @@ public class HealthCheckMetadata {
     private String getHealthCheckTitle(final ServiceReference ref) {
         String name = (String) ref.getProperty(HealthCheck.NAME);
         if (StringUtils.isBlank(name)) {
-            name = (String) ref.getProperty(Constants.SERVICE_DESCRIPTION);
+            name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
         }
         if (StringUtils.isBlank(name)) {
-            name = (String) ref.getProperty(Constants.SERVICE_PID);
+            name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
         }
         if (StringUtils.isBlank(name)) {
             name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
