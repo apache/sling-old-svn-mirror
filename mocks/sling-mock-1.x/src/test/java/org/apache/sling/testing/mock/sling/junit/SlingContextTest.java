@@ -36,21 +36,34 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SlingContextTest {
 
-    private final SlingContextCallback contextSetup = mock(SlingContextCallback.class);
-    private final SlingContextCallback contextTeardown = mock(SlingContextCallback.class);
+    private final SlingContextCallback contextBeforeSetup = mock(SlingContextCallback.class);
+    private final SlingContextCallback contextAfterSetup = mock(SlingContextCallback.class);
+    private final SlingContextCallback contextBeforeTeardown = mock(SlingContextCallback.class);
+    private final SlingContextCallback contextAfterTeardown = mock(SlingContextCallback.class);
 
     // Run all unit tests for each resource resolver types listed here
     @Rule
-    public SlingContext context = new SlingContext(contextSetup, contextTeardown,
-            ResourceResolverType.RESOURCERESOLVER_MOCK);
+    public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
+        .beforeSetUp(contextBeforeSetup)
+        .afterSetUp(contextAfterSetup)
+        .beforeTearDown(contextBeforeTeardown)
+        .afterTearDown(contextAfterTeardown)
+        .resourceResolverFactoryActivatorProps(ImmutableMap.<String, Object>of("resource.resolver.searchpath", new String[] {
+            "/apps",
+            "/libs",
+            "/testpath",
+        }))
+        .build();
 
     @Before
     public void setUp() throws IOException, PersistenceException {
-        verify(contextSetup).execute(context);
+        verify(contextBeforeSetup).execute(context);
+        verify(contextAfterSetup).execute(context);
     }
 
     @Test
@@ -58,6 +71,26 @@ public class SlingContextTest {
         assertNotNull(context.request());
     }
 
+    /**
+     * Test if custom searchpath /testpath added in this SlingContext is handled correctly.
+     */
+    @Test
+    public void testResourceResolverFactoryActivatorProps() {
+      context.create().resource("/apps/node1");
+
+      context.create().resource("/libs/node1");
+      context.create().resource("/libs/node2");
+
+      context.create().resource("/testpath/node1");
+      context.create().resource("/testpath/node2");
+      context.create().resource("/testpath/node3");
+
+      assertEquals("/apps/node1", context.resourceResolver().getResource("node1").getPath());
+      assertEquals("/libs/node2", context.resourceResolver().getResource("node2").getPath());
+      assertEquals("/testpath/node3", context.resourceResolver().getResource("node3").getPath());
+      assertNull(context.resourceResolver().getResource("node4"));
+    }
+    
     @Test
     public void testRegisterAdapter() {
         
