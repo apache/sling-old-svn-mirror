@@ -32,6 +32,7 @@ public interface ThreadPool extends Executor {
     /**
      * Submits a callable for execution
      * @param callable The {@link Callable} to submit
+     * @param <T> The generic type for the callable.
      * @return A {@link Future} representing pending completion of the {@link Callable}
      * @since 3.2
      */
@@ -47,11 +48,13 @@ public interface ThreadPool extends Executor {
 
     /**
      * The name of the thread pool.
+     * @return The thread pool name.
      */
     String getName();
 
     /**
      * The thread pool configuration.
+     * @return The thread pool configuration
      */
     ThreadPoolConfig getConfiguration();
 }

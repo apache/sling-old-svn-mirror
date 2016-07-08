@@ -63,6 +63,7 @@ public interface ThreadPoolManager {
 
     /**
      * Release the thread pool again.
+     * @param pool The thread pool to release
      */
     void release(ThreadPool pool);
 }
