@@ -28,8 +28,9 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * JUnit rule for setting up and tearing down Sling context objects for unit
- * tests.
+ * JUnit rule for setting up and tearing down Sling context objects for unit tests.
+ * You can use {@link SlingContextBuilder} alternatively to the constructors on this class - it offers
+ * more options and fine-grained control about setting up the test context.
  */
 public final class SlingContext extends SlingContextImpl implements TestRule {
 
