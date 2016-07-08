@@ -28,6 +28,7 @@ public interface FilterProcessorMBean {
      * Returns the number of invocations collected since last resetting the
      * statistics.
      *
+     * @return Get invocation count
      * @see #resetStatistics()
      */
     long getInvocationsCount();
@@ -36,6 +37,7 @@ public interface FilterProcessorMBean {
      * Returns the mean filter invocation time in milliseconds since resetting
      * the statistics.
      *
+     * @return Get mean filter duration
      * @see #resetStatistics()
      */
     double getMeanFilterDurationMsec();

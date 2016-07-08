@@ -30,6 +30,7 @@ public interface SlingSettingsService {
 
     /**
      * The identifier of the running Sling instance.
+     * @return The Sling identifier
      */
     String getSlingId();
 }

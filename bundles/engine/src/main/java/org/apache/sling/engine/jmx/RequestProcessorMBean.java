@@ -28,6 +28,7 @@ public interface RequestProcessorMBean {
      * Returns the number of requests collected since last resetting the
      * statistics.
      *
+     * @return Number of requests
      * @see #resetStatistics()
      */
     long getRequestsCount();
@@ -36,6 +37,7 @@ public interface RequestProcessorMBean {
      * Returns the time in milliseconds used by the longest request since last
      * resetting the statistics.
      *
+     * @return Max request duration
      * @see #resetStatistics()
      */
     long getMaxRequestDurationMsec();
@@ -44,6 +46,7 @@ public interface RequestProcessorMBean {
      * Returns the time in milliseconds used by the shortest request since last
      * resetting the statistics.
      *
+     * @return Min request duration
      * @see #resetStatistics()
      */
     long getMinRequestDurationMsec();
@@ -52,6 +55,7 @@ public interface RequestProcessorMBean {
      * Returns the mean request processing time in milliseconds since resetting
      * the statistics.
      *
+     * @return Mean request duration
      * @see #resetStatistics()
      */
     double getMeanRequestDurationMsec();
@@ -61,6 +65,7 @@ public interface RequestProcessorMBean {
      * statistics. If zero or one requests have been collected only, this method
      * returns zero.
      *
+     * @return Standard deviation 
      * @see #resetStatistics()
      */
     double getStandardDeviationDurationMsec();
@@ -69,6 +74,7 @@ public interface RequestProcessorMBean {
      * Returns the maximum peak recursive execution depth since last
      * resetting the statistics.
      *
+     * @return Max peak recursion depth
      * @see #resetStatistics()
      */
     int getMaxPeakRecursionDepth();
@@ -78,6 +84,7 @@ public interface RequestProcessorMBean {
      * Returns the minimal peak recursive execution depth since last
      * resetting the statistics.
      *
+     * @return Min peak recursion depth
      * @see #resetStatistics()
      */
     int getMinPeakRecursionDepth();
@@ -87,6 +94,7 @@ public interface RequestProcessorMBean {
      * Returns the mean peak recursive execution depth since last
      * resetting the statistics.
      *
+     * @return Mean peak recursion depth
      * @see #resetStatistics()
      */
     double getMeanPeakRecursionDepth();
@@ -96,6 +104,7 @@ public interface RequestProcessorMBean {
      * Returns the standard deviation of peak recursive execution depth since last
      * resetting the statistics.
      *
+     * @return Standard deviation of peak recursion depth
      * @see #resetStatistics()
      */
     double getStandardDeviationPeakRecursionDepth();
@@ -104,6 +113,7 @@ public interface RequestProcessorMBean {
      * Returns the maximum servlet call count since last
      * resetting the statistics.
      *
+     * @return Max servlet count call
      * @see #resetStatistics()
      */
     int getMaxServletCallCount();
@@ -113,6 +123,7 @@ public interface RequestProcessorMBean {
      * Returns the minimum servlet call count since last
      * resetting the statistics.
      *
+     * @return Min servlet count call
      * @see #resetStatistics()
      */
     int getMinServletCallCount();
@@ -121,6 +132,7 @@ public interface RequestProcessorMBean {
      * Returns the mean servlet call count since last
      * resetting the statistics.
      *
+     * @return Mean servlet count call
      * @see #resetStatistics()
      */
     double getMeanServletCallCount();
@@ -129,6 +141,7 @@ public interface RequestProcessorMBean {
      * Returns the standard deviation servlet call counts since last
      * resetting the statistics.
      *
+     * @return Mean standard deviation for servlet count call
      * @see #resetStatistics()
      */
     double getStandardDeviationServletCallCount();
