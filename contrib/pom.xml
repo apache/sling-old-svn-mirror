@@ -121,6 +121,7 @@
           <module>extensions/security</module>
           <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
+          <module>extensions/sling-oak-restrictions</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
           <module>extensions/tracer</module>
