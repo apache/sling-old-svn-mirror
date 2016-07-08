@@ -21,16 +21,20 @@
     <head>
         <title>Sightly Use-API - Sling implementation</title>
     </head>
-    <body>
-        <div id="reqmodel" data-sly-use.reqmodel="${'org.apache.sling.scripting.sightly.testing.models.RequestModel' @
-            argument='SUCCESS'}">${reqmodel.title}</div>
+    <body data-sly-use.reqmodel="${'org.apache.sling.scripting.sightly.testing.models.RequestModel' @ argument='SUCCESS'}"
+          data-sly-use.resmodel="org.apache.sling.scripting.sightly.testing.models.ResourceModel"
+          data-sly-use.reqadapt="org.apache.sling.scripting.sightly.testing.adaptable.RequestAdapterUseObject"
+          data-sly-use.resadapt="org.apache.sling.scripting.sightly.testing.adaptable.ResourceAdapterUseObject"
+          data-sly-use.osgi="org.apache.sling.scripting.sightly.testing.use.TestService"
+          data-sly-use.repoNoPkg="RepoPojoNoPkg"
+          data-sly-use.testEnum="TestEnumHolder">
+        <div id="reqmodel">${reqmodel.title}</div>
         <div id="reqmodel-reqarg">${reqmodel.requestArgument}</div>
-        <div id="resmodel" data-sly-use.resmodel="org.apache.sling.scripting.sightly.testing.models.ResourceModel">${resmodel.title}</div>
-        <div id="reqadapt"
-             data-sly-use.reqadapt="org.apache.sling.scripting.sightly.testing.adaptable.RequestAdapterUseObject">${reqadapt.title}</div>
-        <div id="resadapt"
-             data-sly-use.resadapt="org.apache.sling.scripting.sightly.testing.adaptable.ResourceAdapterUseObject">${resadapt.title}</div>
-        <div id="osgi" data-sly-use.osgi="org.apache.sling.scripting.sightly.testing.use.TestService">${osgi.sayHello}</div>
-        <div id="repopojo-nopkg" data-sly-use.repoNoPkg="RepoPojoNoPkg">${repoNoPkg.FIELD}</div>
+        <div id="resmodel">${resmodel.title}</div>
+        <div id="reqadapt">${reqadapt.title}</div>
+        <div id="resadapt">${resadapt.title}</div>
+        <div id="osgi">${osgi.sayHello}</div>
+        <div id="repopojo-nopkg">${repoNoPkg.FIELD}</div>
+        <div id="test-enum">${testEnum.constantValue}</div>
     </body>
 </html>

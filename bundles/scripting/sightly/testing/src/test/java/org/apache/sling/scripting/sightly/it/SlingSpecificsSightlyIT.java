@@ -94,6 +94,13 @@ public class SlingSpecificsSightlyIT {
     }
 
     @Test
+    public void testEnumConstantAsString() {
+        String url = launchpadURL + SLING_USE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("ENUM_CONSTANT", HTMLExtractor.innerHTML(url, pageContent, "#test-enum"));
+    }
+
+    @Test
     public void testErroneousUseObject() {
         String url = launchpadURL + SLING_JAVA_USE_NPE;
         String pageContent = client.getStringContent(url, 500);
