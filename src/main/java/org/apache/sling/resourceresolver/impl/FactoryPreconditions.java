@@ -95,7 +95,7 @@ public class FactoryPreconditions {
                     canRegister = false;
                     for (final ResourceProviderHandler h : localTracker.getResourceProviderStorage().getAllHandlers()) {
                         final ServiceReference ref = h.getInfo().getServiceReference();
-                        final String servicePid = (String)ref.getProperty(Constants.SERVICE_PID);
+                        final Object servicePid = ref.getProperty(Constants.SERVICE_PID);
                         if ( unavailableServicePid != null && unavailableServicePid.equals(servicePid) ) {
                             // ignore this service
                             continue;

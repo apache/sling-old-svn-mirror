@@ -107,7 +107,11 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                 final ServiceReference ref = (ServiceReference)service;
                 final ResourceProviderInfo info = infos.remove(ref);
                 if ( info != null ) {
-                    unregister(info, (String)ref.getProperty(Constants.SERVICE_PID));
+                    Object pid = ref.getProperty(Constants.SERVICE_PID);
+                    if ( pid != null && !(pid instanceof String) ) {
+                        pid = null;
+                    }
+                    unregister(info, (String)pid);
                 }
             }
 
@@ -199,7 +203,11 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
            if ( deactivateHandler != null ) {
                final ResourceProviderInfo handlerInfo = deactivateHandler.getInfo();
                if ( cl != null ) {
-                   cl.providerRemoved((String)handlerInfo.getServiceReference().getProperty(Constants.SERVICE_PID),
+                   Object pid = handlerInfo.getServiceReference().getProperty(Constants.SERVICE_PID);
+                   if ( pid != null && !(pid instanceof String) ) {
+                       pid = null;
+                   }
+                   cl.providerRemoved((String)pid,
                                handlerInfo.getAuthType() != AuthType.no,
                                        deactivateHandler.isUsed());
                }
@@ -479,15 +487,15 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
     private static final class ProviderEvent {
         public final boolean isAdd;
-        public final String pid;
+        public final Object pid;
         public final String path;
 
         public ProviderEvent(final boolean isAdd, final ResourceProviderInfo info) {
             this.isAdd = isAdd;
             this.path = info.getPath();
-            String pid = (String) info.getServiceReference().getProperty(Constants.SERVICE_PID);
+            Object pid = info.getServiceReference().getProperty(Constants.SERVICE_PID);
             if (pid == null) {
-                pid = (String) info.getServiceReference().getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID);
+                pid = info.getServiceReference().getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID);
             }
             this.pid = pid;
         }
