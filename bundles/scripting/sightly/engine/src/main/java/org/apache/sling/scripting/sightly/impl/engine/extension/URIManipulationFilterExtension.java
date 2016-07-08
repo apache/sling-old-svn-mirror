@@ -94,79 +94,89 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
         if (prependPath == null) {
             prependPath = StringUtils.EMPTY;
         }
-        if (StringUtils.isNotEmpty(prependPath)) {
-            if (sb.length() > 0 && !prependPath.startsWith("/")) {
-                prependPath = "/" + prependPath;
-            }
-            if (!prependPath.endsWith("/")) {
-                prependPath += "/";
-            }
-        }
         String path = getOption(PATH, options, pathInfo.getPath());
         if (StringUtils.isEmpty(path)) {
             // if the path is forced to be empty don't remove the path
             path = pathInfo.getPath();
         }
-        String appendPath = getOption(APPEND_PATH, options, StringUtils.EMPTY);
-        if (appendPath == null) {
-            appendPath = StringUtils.EMPTY;
-        }
-        if (StringUtils.isNotEmpty(appendPath)) {
-            if (!appendPath.startsWith("/")) {
-                appendPath = "/" + appendPath;
+        if (StringUtils.isNotEmpty(path) && !"/".equals(path)) {
+            if (StringUtils.isNotEmpty(prependPath)) {
+                if (sb.length() > 0 && !prependPath.startsWith("/")) {
+                    prependPath = "/" + prependPath;
+                }
+                if (!prependPath.endsWith("/")) {
+                    prependPath += "/";
+                }
             }
-        }
-        String newPath;
-        try {
-            newPath = new URI(prependPath + path + appendPath).normalize().getPath();
-        } catch (URISyntaxException e) {
-            newPath = prependPath + path + appendPath;
-        }
-        if (sb.length() > 0 && sb.lastIndexOf("/") != sb.length() - 1 && StringUtils.isNotEmpty(newPath) && !newPath.startsWith("/")) {
-            sb.append("/");
-        }
-        sb.append(newPath);
-        Set<String> selectors = pathInfo.getSelectors();
-        handleSelectors(runtimeObjectModel, selectors, options);
-        for (String selector : selectors) {
-            if (StringUtils.isNotBlank(selector) && !selector.contains(" ")) {
-                // make sure not to append empty or invalid selectors
-                sb.append(".").append(selector);
-            }
-        }
-        String extension = getOption(EXTENSION, options, pathInfo.getExtension());
-        if (StringUtils.isNotEmpty(extension)) {
-            sb.append(".").append(extension);
-        }
 
-        String prependSuffix = getOption(PREPEND_SUFFIX, options, StringUtils.EMPTY);
-        if (StringUtils.isNotEmpty(prependSuffix)) {
-            if (!prependSuffix.startsWith("/")) {
-                prependSuffix = "/" + prependSuffix;
+
+            String appendPath = getOption(APPEND_PATH, options, StringUtils.EMPTY);
+            if (appendPath == null) {
+                appendPath = StringUtils.EMPTY;
             }
-            if (!prependSuffix.endsWith("/")) {
-                prependSuffix += "/";
+            if (StringUtils.isNotEmpty(appendPath)) {
+                if (!appendPath.startsWith("/")) {
+                    appendPath = "/" + appendPath;
+                }
             }
-        }
-        String pathInfoSuffix = pathInfo.getSuffix();
-        String suffix = getOption(SUFFIX, options, pathInfoSuffix == null ? StringUtils.EMPTY : pathInfoSuffix);
-        if (suffix == null) {
-            suffix = StringUtils.EMPTY;
-        }
-        String appendSuffix = getOption(APPEND_SUFFIX, options, StringUtils.EMPTY);
-        if (StringUtils.isNotEmpty(appendSuffix)) {
-            appendSuffix = "/" + appendSuffix;
-        }
-        String newSuffix = FilenameUtils.normalize(prependSuffix + suffix + appendSuffix, true);
-        if (StringUtils.isNotEmpty(newSuffix)) {
-            if (!newSuffix.startsWith("/")) {
+            String newPath;
+            try {
+                newPath = new URI(prependPath + path + appendPath).normalize().getPath();
+            } catch (URISyntaxException e) {
+                newPath = prependPath + path + appendPath;
+            }
+            if (sb.length() > 0 && sb.lastIndexOf("/") != sb.length() - 1 && StringUtils.isNotEmpty(newPath) && !newPath.startsWith("/")) {
                 sb.append("/");
             }
-            sb.append(newSuffix);
+            sb.append(newPath);
+            Set<String> selectors = pathInfo.getSelectors();
+            handleSelectors(runtimeObjectModel, selectors, options);
+            for (String selector : selectors) {
+                if (StringUtils.isNotBlank(selector) && !selector.contains(" ")) {
+                    // make sure not to append empty or invalid selectors
+                    sb.append(".").append(selector);
+                }
+            }
+            String extension = getOption(EXTENSION, options, pathInfo.getExtension());
+            if (StringUtils.isNotEmpty(extension)) {
+                sb.append(".").append(extension);
+            }
+
+            String prependSuffix = getOption(PREPEND_SUFFIX, options, StringUtils.EMPTY);
+            if (StringUtils.isNotEmpty(prependSuffix)) {
+                if (!prependSuffix.startsWith("/")) {
+                    prependSuffix = "/" + prependSuffix;
+                }
+                if (!prependSuffix.endsWith("/")) {
+                    prependSuffix += "/";
+                }
+            }
+            String pathInfoSuffix = pathInfo.getSuffix();
+            String suffix = getOption(SUFFIX, options, pathInfoSuffix == null ? StringUtils.EMPTY : pathInfoSuffix);
+            if (suffix == null) {
+                suffix = StringUtils.EMPTY;
+            }
+            String appendSuffix = getOption(APPEND_SUFFIX, options, StringUtils.EMPTY);
+            if (StringUtils.isNotEmpty(appendSuffix)) {
+                appendSuffix = "/" + appendSuffix;
+            }
+            String newSuffix = FilenameUtils.normalize(prependSuffix + suffix + appendSuffix, true);
+            if (StringUtils.isNotEmpty(newSuffix)) {
+                if (!newSuffix.startsWith("/")) {
+                    sb.append("/");
+                }
+                sb.append(newSuffix);
+            }
+
+        } else if ("/".equals(path)) {
+            sb.append(path);
         }
         Map<String, Collection<String>> parameters = pathInfo.getParameters();
         handleParameters(runtimeObjectModel, parameters, options);
-        if (!parameters.isEmpty()) {
+        if (sb.length() > 0 && !parameters.isEmpty()) {
+            if (StringUtils.isEmpty(path)) {
+                sb.append("/");
+            }
             sb.append("?");
             for (Map.Entry<String, Collection<String>> entry : parameters.entrySet()) {
                 for (String value : entry.getValue()) {
