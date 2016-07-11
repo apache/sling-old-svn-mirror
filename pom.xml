@@ -33,7 +33,7 @@
 
     <name>Apache Sling Oak Repository Server</name>
     <description>
-        This bundle provides a SlingRepository based on Apache Oak.
+        This bundle provides a SlingRepository based on Apache Jackrabbit Oak.
     </description>
 
     <scm>
