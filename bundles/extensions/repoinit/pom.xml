@@ -41,7 +41,6 @@
   
   <modules>
     <module>parser</module>
-    <module>jcr</module>
     <module>it</module>
   </modules>
 </project>
