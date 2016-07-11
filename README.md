@@ -31,3 +31,4 @@ relevant Thymeleaf issues
 
 * [Create OSGi bundle](https://github.com/thymeleaf/thymeleaf/issues/32)
 * [keep (custom) IContext accessible](https://github.com/thymeleaf/thymeleaf/issues/388)
+* [Make IContext available in ITemplateResolver](https://github.com/thymeleaf/thymeleaf/issues/514)
