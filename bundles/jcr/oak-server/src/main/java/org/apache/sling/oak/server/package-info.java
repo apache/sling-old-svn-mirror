@@ -15,8 +15,9 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+
 /**
- * Contains in implementation of a SlingRepository based on Apache Oak.
+ * Contains an implementation of a SlingRepository based on Apache Jackrabbit Oak.
  * The package is not exported.
  */
 package org.apache.sling.oak.server;
