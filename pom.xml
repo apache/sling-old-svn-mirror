@@ -41,9 +41,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/jcr</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/jcr</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/jcr</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</url>
   </scm>
   
   <build>
@@ -103,7 +103,7 @@
      <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.repoinit.parser</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
