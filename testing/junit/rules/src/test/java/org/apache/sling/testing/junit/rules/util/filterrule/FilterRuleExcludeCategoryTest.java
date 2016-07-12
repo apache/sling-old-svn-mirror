@@ -72,17 +72,7 @@ public class FilterRuleExcludeCategoryTest {
     public void testIgnoreIfPropExixtsandExcludedCategoryNotExists() {
         Assert.assertTrue("Test should be Run", true);
     }
-
-    /*
-     * System prop is set for excluding a category only Setup: a test is annotated with @Category which is excluded
-     * Result: The test is skipped
-     */
-    @Test
-    @Category(Issue.class)
-    public void testExcludedCategoryExists() {
-        Assume.assumeTrue(System.getProperty(FilterRule.CATEGORY_PROPERTY).equals("Issue"));
-        Assert.fail("Test should be Ignored");
-    }
+    
 
     /*
      * System prop is set for excluding a category only Setup: a test is annotated with @Category which is not
