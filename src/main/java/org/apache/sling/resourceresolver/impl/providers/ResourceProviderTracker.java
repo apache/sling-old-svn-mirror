@@ -69,7 +69,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
 
         void providerAdded();
 
-        void providerRemoved(String pid, boolean stateful, boolean used);
+        void providerRemoved(String name, String pid, boolean stateful, boolean used);
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -207,7 +207,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
                    if ( pid != null && !(pid instanceof String) ) {
                        pid = null;
                    }
-                   cl.providerRemoved((String)pid,
+                   cl.providerRemoved(handlerInfo.getName(), (String)pid,
                                handlerInfo.getAuthType() != AuthType.no,
                                        deactivateHandler.isUsed());
                }
@@ -251,7 +251,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
             if ( deactivateHandler != null ) {
                 final ChangeListener cl = this.listener;
                 if ( cl != null ) {
-                    cl.providerRemoved(pid,
+                    cl.providerRemoved(info.getName(), pid,
                             info.getAuthType() != AuthType.no,
                                     deactivateHandler.isUsed());
                 }

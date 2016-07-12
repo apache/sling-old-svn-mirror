@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class FactoryPreconditions {
 
     private static final class RequiredProvider {
+        public String name;
         public String pid;
         public Filter filter;
     };
@@ -47,14 +48,17 @@ public class FactoryPreconditions {
 
     private volatile List<RequiredProvider> requiredProviders;
 
-    public void activate(final BundleContext bc, final String[] configuration, final ResourceProviderTracker tracker) {
+    public void activate(final BundleContext bc,
+            final String[] legycyConfiguration,
+            final String[] namesConfiguration,
+            final ResourceProviderTracker tracker) {
         synchronized ( this ) {
             this.tracker = tracker;
 
             final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
-            if ( configuration != null ) {
+            if ( legycyConfiguration != null ) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                for(final String r : configuration) {
+                for(final String r : legycyConfiguration) {
                     if ( r != null && r.trim().length() > 0 ) {
                         final String value = r.trim();
                         RequiredProvider rp = new RequiredProvider();
@@ -74,6 +78,16 @@ public class FactoryPreconditions {
                     }
                 }
             }
+            if ( namesConfiguration != null ) {
+                for(final String r : namesConfiguration) {
+                    final String value = r.trim();
+                    if ( !value.isEmpty() ) {
+                        final RequiredProvider rp = new RequiredProvider();
+                        rp.name = value;
+                        rps.add(rp);
+                    }
+                }
+            }
             this.requiredProviders = rps;
         }
     }
@@ -85,7 +99,7 @@ public class FactoryPreconditions {
         }
     }
 
-    public boolean checkPreconditions(final String unavailableServicePid) {
+    public boolean checkPreconditions(final String unavailableName, final String unavailableServicePid) {
         synchronized ( this ) {
             final List<RequiredProvider> localRequiredProviders = this.requiredProviders;
             final ResourceProviderTracker localTracker = this.tracker;
@@ -100,7 +114,14 @@ public class FactoryPreconditions {
                             // ignore this service
                             continue;
                         }
-                        if (rp.filter != null && rp.filter.match(ref)) {
+                        if ( unavailableName != null && unavailableName.equals(h.getInfo().getName()) ) {
+                            // ignore this service
+                            continue;
+                        }
+                        if ( rp.name != null && rp.name.equals(h.getInfo().getName()) ) {
+                            canRegister = true;
+                            break;
+                        } else if (rp.filter != null && rp.filter.match(ref)) {
                             canRegister = true;
                             break;
                         } else if (rp.pid != null && rp.pid.equals(servicePid)){

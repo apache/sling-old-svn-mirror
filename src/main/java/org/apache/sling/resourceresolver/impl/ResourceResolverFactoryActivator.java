@@ -19,6 +19,7 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -55,6 +56,8 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceResolverFactoryActivator/code> keeps track of required services for the
@@ -134,13 +137,20 @@ public class ResourceResolverFactoryActivator {
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
-              value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory",
-              label = "Required Providers",
+              label = "Required Providers (Deprecated)",
               description = "A resource resolver factory is only " +
                              "available (registered) if all resource providers mentioned in this configuration " +
                              "are available. Each entry is either a service PID or a filter expression.  " +
                              "Invalid filters are ignored.")
-    private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providers";
+    private static final String PROP_REQUIRED_PROVIDERS_LEGACY = "resource.resolver.required.providers";
+
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            value = "JCR",
+            label = "Required Providers ",
+            description = "A resource resolver factory is only " +
+                           "available (registered) if all resource providers mentioned in this configuration " +
+                           "are available. Each entry is refers to the name of a registered provider.")
+    private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providernames";
 
     /**
      * The resolver.virtual property has no default configuration. But the Sling
@@ -252,6 +262,9 @@ public class ResourceResolverFactoryActivator {
                   "with the point where the used resolver was closed. It's advisable to not enable this feature on " +
                   "production systems.")
     private static final String PROP_LOG_RESOURCE_RESOLVER_CLOSING = "resource.resolver.log.closing";
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
@@ -524,13 +537,18 @@ public class ResourceResolverFactoryActivator {
         final BundleContext bc = componentContext.getBundleContext();
 
         // check for required property
-        final String[] requiredResourceProviders = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
+        final String[] requiredResourceProvidersLegacy = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS_LEGACY));
+        final String[] requiredResourceProviderNames = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
 
+        if ( requiredResourceProvidersLegacy != null && requiredResourceProvidersLegacy.length > 0 ) {
+            logger.error("ResourceResolverFactory is using deprecated required providers configuration (" + PROP_REQUIRED_PROVIDERS_LEGACY +
+                    "). Please change to use the property " + PROP_REQUIRED_PROVIDERS + " for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+        }
         // for testing: if we run unit test, both trackers are set from the outside
         if ( this.resourceProviderTracker == null ) {
             this.resourceProviderTracker = new ResourceProviderTracker();
             this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
-            this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
+            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
             this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
                 this.resourceProviderTracker, searchPath);
             this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
@@ -540,24 +558,24 @@ public class ResourceResolverFactoryActivator {
                         @Override
                         public void providerAdded() {
                             if ( factoryRegistration == null ) {
-                                checkFactoryPreconditions(null);
+                                checkFactoryPreconditions(null, null);
                             }
 
                         }
 
                         @Override
-                        public void providerRemoved(final String pid, final boolean stateful, final boolean isUsed) {
+                        public void providerRemoved(final String name, final String pid, final boolean stateful, final boolean isUsed) {
                             if ( factoryRegistration != null ) {
                                 if ( isUsed && (stateful || paranoidProviderHandling) ) {
                                     unregisterFactory();
                                 }
-                                checkFactoryPreconditions(pid);
+                                checkFactoryPreconditions(name, pid);
                             }
                         }
                     });
         } else {
-            this.preconds.activate(bc, requiredResourceProviders, resourceProviderTracker);
-            this.checkFactoryPreconditions(null);
+            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.checkFactoryPreconditions(null, null);
          }
     }
 
@@ -657,10 +675,10 @@ public class ResourceResolverFactoryActivator {
     /**
      * Check the preconditions and if it changed, either register factory or unregister
      */
-    private void checkFactoryPreconditions(final String unavailableServicePid) {
+    private void checkFactoryPreconditions(final String unavailableName, final String unavailableServicePid) {
         final ComponentContext localContext = this.componentContext;
         if ( localContext != null ) {
-            final boolean result = this.preconds.checkPreconditions(unavailableServicePid);
+            final boolean result = this.preconds.checkPreconditions(unavailableName, unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
                 boolean create = true;
                 synchronized ( this ) {
