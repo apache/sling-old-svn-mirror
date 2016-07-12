@@ -50,7 +50,6 @@ import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingJsp;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
@@ -101,7 +100,6 @@ public abstract class ThymeleafTestSupport {
         final String filename = System.getProperty("bundle.filename");
         final File file = new File(filename);
         return new Option[]{
-            keepCaches(),
             workingDirectory(workingDirectory),
             launchpad(workingDirectory),
             // Sling Scripting Thymeleaf
