@@ -22,6 +22,7 @@ import org.apache.sling.testing.junit.rules.annotation.Issue;
 import org.apache.sling.testing.junit.rules.category.FailingTest;
 import org.apache.sling.testing.junit.rules.util.IgnoreTestsConfig;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,6 +80,7 @@ public class FilterRuleExcludeCategoryTest {
     @Test
     @Category(Issue.class)
     public void testExcludedCategoryExists() {
+        Assume.assumeTrue(System.getProperty(FilterRule.CATEGORY_PROPERTY).equals("Issue"));
         Assert.fail("Test should be Ignored");
     }
 

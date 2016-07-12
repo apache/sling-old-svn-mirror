@@ -70,7 +70,7 @@ public class FilterRuleIncludeCategoryIgnoreIfTest {
     @Test
     @IgnoreIfProperty(name = "test.filterrule.a", value = "a")
     @Category(FailingTest.class)
-    public void testIgnoreIfPropExixtsandIncludedCategoryNotExists() {
+    public void testIgnoreIfPropExistsandIncludedCategoryNotExists() {
         Assert.fail("Test should be Ignored");
     }
 
