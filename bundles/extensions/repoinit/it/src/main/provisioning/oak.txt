@@ -20,7 +20,7 @@
 [feature name=oak]
 
 [variables]
-    oak.version=1.5.3
+    oak.version=1.5.5
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10]
@@ -42,7 +42,7 @@
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
 [artifacts startLevel=16]
-    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.0
+    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
 
 [configurations]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
