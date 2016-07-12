@@ -36,28 +36,16 @@
 [artifacts startLevel=15 runModes=oak_tar]
     org.apache.jackrabbit/oak-segment/${oak.version}
 
-[artifacts startLevel=15 runModes=oak_mongo]
-    org.mongodb/mongo-java-driver/2.14.0
-
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
 [artifacts startLevel=16]
+    # TODO replace with 1.0.2 once that's released
     org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
 
 [configurations]
-  org.apache.felix.jaas.Configuration.factory-GuestLoginModule
-    jaas.controlFlag="optional"
-    jaas.classname="org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule"
-    jaas.ranking=I"300"
-
   org.apache.felix.jaas.Configuration.factory-LoginModuleImpl
     jaas.controlFlag="required"
     jaas.classname="org.apache.jackrabbit.oak.security.authentication.user.LoginModuleImpl"
-
-  org.apache.felix.jaas.Configuration.factory-TokenLoginModule
-    jaas.controlFlag="sufficient"
-    jaas.classname="org.apache.jackrabbit.oak.security.authentication.token.TokenLoginModule"
-    jaas.ranking=I"200"
 
   org.apache.felix.jaas.ConfigurationSpi
     jaas.defaultRealmName="jackrabbit.oak"
@@ -77,15 +65,7 @@
     userPrivilegeNames=["jcr:all"]
     groupPrivilegeNames=["jcr:read"]
 
-  org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService
-    localIndexDir="sling/repository/index"
-
 [configurations runModes=oak_tar]
   org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
     name="Default\ NodeStore"
     repository.home="sling/repository"
-
-[configurations runModes=oak_mongo]
-  org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService
-    mongouri="mongodb://localhost:27017"
-    db="sling"
