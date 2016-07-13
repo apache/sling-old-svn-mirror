@@ -144,13 +144,11 @@ public class HealthCheckMetadata {
             name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
         }
         if (StringUtils.isBlank(name)) {
-            name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
-            if ( !StringUtils.isBlank(name) ) {
-                name = name + " (" + ref.getProperty(Constants.SERVICE_ID) + ")";
-            }
-        }
-        if (StringUtils.isBlank(name)) {
             name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
+            final String pid = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
+            if ( !StringUtils.isBlank(pid) ) {
+                name = name + " (" + pid + ")";
+            }
         }
         return name;
     }
