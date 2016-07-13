@@ -31,7 +31,7 @@ public class SlingVersionResolver implements VersionResolver {
     private final Map<String, String> versions = new HashMap<>();
 
     public SlingVersionResolver() {
-        versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.8");
+        versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.10");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.6");
         versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.2.0");
         versions.put("org.apache.felix:org.apache.felix.http.servlet-api", "1.1.2");
@@ -42,7 +42,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.whiteboard", "1.1.5");
         versions.put("org.apache.felix:org.apache.felix.inventory", "1.0.4");
         versions.put("org.apache.felix:org.apache.felix.metatype", "1.1.2");
-        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.2");
+        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.4");
         versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");[# th:each="bundle : ${bundles}"]
         versions.put("[(${bundle.groupId})]:[(${bundle.artifactId})]", "[(${bundle.version})]");
 [/]    }
