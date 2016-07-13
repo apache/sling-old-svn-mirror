@@ -47,4 +47,13 @@ public class PathTest {
 
         assertFalse(path.matches("/content1"));
     }
+
+    @Test public void testPatternMatching() {
+        final Path path = new Path("/apps/**/*.html");
+        assertTrue(path.matches("/apps/project/a.html"));
+        assertTrue(path.matches("/apps/project/1/a.html"));
+        assertTrue(path.matches("/apps/project/1/2/a.html"));
+        assertFalse(path.matches("/apps/a.html"));
+        assertFalse(path.matches("/apps/project/a.html/b"));
+    }
 }
