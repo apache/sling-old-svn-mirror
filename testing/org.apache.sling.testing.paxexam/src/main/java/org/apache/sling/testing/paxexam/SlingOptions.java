@@ -386,6 +386,17 @@ public class SlingOptions {
         );
     }
 
+    public static Option slingJcrRepoinit() {
+        return composite(
+            sling(),
+            slingJcr(),
+            slingJcrJackrabbitSecurity(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version(versionResolver)
+        );
+    }
+
     public static Option slingLaunchpadContent() {
         return composite(
             sling(),
