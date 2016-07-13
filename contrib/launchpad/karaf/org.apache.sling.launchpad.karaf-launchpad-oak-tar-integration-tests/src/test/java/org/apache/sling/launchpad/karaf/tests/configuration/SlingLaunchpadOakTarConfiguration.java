@@ -57,7 +57,8 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-scripting-javascript",
                 "sling-scripting-jsp",
                 "sling-installer-provider-jcr",
-                "sling-jcr-jackrabbit-security"
+                "sling-jcr-jackrabbit-security",
+                "sling-jcr-repoinit"
             ),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
@@ -71,11 +72,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
             mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
             // TODO PAXWEB-935
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version("2.2.2"),
-            // TODO repoinit
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("0.0.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.oak-jcr").version("0.0.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.4.4")
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version("2.2.2")
         );
     }
 

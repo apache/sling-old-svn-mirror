@@ -293,6 +293,9 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
                 <!-- TODO -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/MappingEventsProxyTest.*</exclude>
+                <!-- TODO repoinit -->
+                <exclude>**/RepoinitPathTest.*</exclude>
+                <exclude>**/SystemUsersTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
