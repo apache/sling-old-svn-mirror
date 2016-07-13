@@ -54,23 +54,23 @@ public interface ResourceChangeListener {
 
     /**
      * <p>Array of paths or glob patterns - required.</p>
-     * <p>A path is either absolute or relative. If it's a relative path, the relative path
-     * will be appended to all search paths of the resource resolver.</p>
-     * <p>If the whole tree
-     * of all search paths should be observed, the special value {@code .} should be used.</p>
-     * <p>
-     *     The following rules are used to interpret glob patterns:
-     *     <ul>
-     *         <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
-     *         <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
-     *         <li>The {@code ?} character matches exactly one character of a name component.</li>
-     *     </ul>
      *
-     * </p>
-     * <p>If one of the paths is a sub resource of another specified path,
-     * the sub path is ignored.</p>
-     * <p>If this property is missing or invalid, the listener is ignored. The type of the
-     * property must either be String, or a String array.</p>
+     * <p>A path is either absolute or relative. If it's a relative path, the relative path will be appended to all search paths of the
+     * resource resolver.</p>
+     *
+     * <p>If the whole tree of all search paths should be observed, the special value {@code .} should be used.</p>
+     *
+     * <p>The following rules are used to interpret glob patterns:</p>
+     * <ul>
+     *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
+     *     <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
+     *     <li>The {@code ?} character matches exactly one character of a name component.</li>
+     * </ul>
+     *
+     * <p>If one of the paths is a sub resource of another specified path, the sub path is ignored.</p>
+     *
+     * <p>If this property is missing or invalid, the listener is ignored. The type of the property must either be String, or a String
+     * array.</p>
      */
     String PATHS = "resource.paths";
 

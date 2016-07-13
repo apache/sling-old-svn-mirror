@@ -36,14 +36,14 @@ public class Path implements Comparable<Path> {
     private final boolean isPattern;
 
     /**
-     * <p>
-     * Create a new path object either from a concrete path or from a glob pattern. The following rules are used to interpret glob patterns:
-     *     <ul>
-     *         <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
-     *         <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
-     *         <li>The {@code ?} character matches exactly one character of a name component.</li>
-     *     </ul>
-     * </p>
+     * <p>Create a new path object either from a concrete path or from a glob pattern.</p>
+     *
+     * <p>The following rules are used to interpret glob patterns:</p>
+     * <ul>
+     *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
+     *     <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
+     *     <li>The {@code ?} character matches exactly one character of a name component.</li>
+     * </ul>
      *
      * @param path the resource path or a glob pattern.
      */
