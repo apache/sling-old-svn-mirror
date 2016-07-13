@@ -42,7 +42,7 @@ public class HealthCheckMetadata {
     private final long serviceId;
 
     private final List<String> tags;
-    
+
     private final String asyncCronExpression;
 
     private final transient ServiceReference serviceReference;
@@ -93,8 +93,8 @@ public class HealthCheckMetadata {
     public List<String> getTags() {
         return tags;
     }
-    
-    
+
+
     /**
      * Return the cron expression used for asynchronous execution.
      */
@@ -145,6 +145,9 @@ public class HealthCheckMetadata {
         }
         if (StringUtils.isBlank(name)) {
             name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
+            if ( !StringUtils.isBlank(name) ) {
+                name = name + " (" + ref.getProperty(Constants.SERVICE_ID) + ")";
+            }
         }
         if (StringUtils.isBlank(name)) {
             name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
