@@ -18,6 +18,10 @@
  */
 package org.apache.sling.api.resource.path;
 
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+
 /**
  * Simple helper class for path matching.
  *
@@ -29,26 +33,42 @@ public class Path implements Comparable<Path> {
 
     private final String prefix;
 
+    private final boolean isPattern;
+
     /**
-     * Create a new path object.
-     * @param path The resource path.
+     * <p>
+     * Create a new path object either from a concrete path or from a glob pattern. The following rules are used to interpret glob patterns:
+     *     <ul>
+     *         <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
+     *         <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
+     *         <li>The {@code ?} character matches exactly one character of a name component.</li>
+     *     </ul>
+     * </p>
+     *
+     * @param path the resource path or a glob pattern.
      */
     public Path(final String path) {
         this.path = path;
         this.prefix = path.equals("/") ? "/" : path.concat("/");
+        if (path.contains("?") || path.contains("*")) {
+            isPattern = true;
+        } else {
+            isPattern = false;
+        }
+
     }
 
     /**
-     * Check whether the provided path is equal to this path or a sub path
-     * of it.
+     * Check whether the provided path is equal to this path or a sub path of it.
      * @param otherPath Path to check
      * @return {@code true} If other path is within the sub tree of this path.
      */
     public boolean matches(final String otherPath) {
-        if ( this.path.equals(otherPath) || otherPath.startsWith(this.prefix) ) {
-            return true;
+        if (isPattern) {
+            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + path);
+            return matcher.matches(Paths.get(otherPath));
         }
-        return false;
+        return this.path.equals(otherPath) || otherPath.startsWith(this.prefix);
     }
 
     /**
