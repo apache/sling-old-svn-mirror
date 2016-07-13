@@ -183,9 +183,6 @@ public class HealthCheckMBean implements DynamicMBean {
         if ( serviceReference.getProperty(HealthCheck.TAGS) != null ) {
             attrs.add(new MBeanAttributeInfo(HealthCheck.TAGS, String.class.getName(), "The tags of the health check service.", true, false, false));
         }
-        if ( serviceReference.getProperty(Constants.SERVICE_PID) != null ) {
-            attrs.add(new MBeanAttributeInfo(Constants.SERVICE_PID, String.class.getName(), "The persistence identifier of the service.", true, false, false));
-        }
 
         // add standard attributes
         attrs.add(new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The health check result", true, false, false));
@@ -222,9 +219,7 @@ public class HealthCheckMBean implements DynamicMBean {
                 list.put(HealthCheck.TAGS, value.toString());
             }
         }
-        if ( serviceReference.getProperty(Constants.SERVICE_PID) != null ) {
-            list.put(Constants.SERVICE_PID, serviceReference.getProperty(Constants.SERVICE_PID).toString());
-        }
+
         return list;
     }
 

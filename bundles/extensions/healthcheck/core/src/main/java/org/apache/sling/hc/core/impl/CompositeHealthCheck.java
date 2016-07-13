@@ -149,7 +149,7 @@ public class CompositeHealthCheck implements HealthCheck {
         if (!intersection.isEmpty()) {
             return new Result(Status.HEALTH_CHECK_ERROR,
                     "INVALID CONFIGURATION: Cycle detected in composite health check hierarchy. Health check '" + thisCheckMetadata.getName()
-                            + "' (" + hcReference.getProperty(Constants.SERVICE_PID) + ") must not have tag(s) " + intersection
+                            + "' (" + hcReference.getProperty(Constants.SERVICE_ID) + ") must not have tag(s) " + intersection
                             + " as a composite check in the hierarchy is itself already tagged alike (tags assigned to composite checks: "
                             + bannedTagsForThisCompositeCheck + ")");
         }
