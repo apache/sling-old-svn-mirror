@@ -35,8 +35,8 @@
     <description>Implementation of Apache Sling Discovery based on Jackrabbit Oak using its discovery-lite descriptor for in-cluster view detection and a TopologyView through HTTP POST heartbeats announcing sub-topologies to each other.</description>
 
     <properties>
-      <jackrabbit.version>2.12.1</jackrabbit.version>
-
+      <jackrabbit.version>2.12.2</jackrabbit.version>
+      <oak.version>1.4.4</oak.version>
       <!-- by default Slow tests are excluded - use -PincludeSlowTests to include them -->
       <sling.excluded.surefire.groups>org.apache.sling.commons.testing.junit.categories.Slow</sling.excluded.surefire.groups>
     </properties>
@@ -317,13 +317,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
-            <version>1.3.7</version>
+            <version>${oak.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-jcr</artifactId>
-            <version>1.3.7</version>
+            <version>${oak.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
