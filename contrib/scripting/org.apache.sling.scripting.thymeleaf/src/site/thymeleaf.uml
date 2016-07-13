@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.sling.scripting.thymeleaf</OriginalElement>
+  <nodes>
+    <node x="1235.0" y="105.0">org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicResolver</node>
+    <node x="999.0" y="705.0">org.thymeleaf.dialect.IDialect</node>
+    <node x="1443.5" y="825.0">org.apache.sling.scripting.thymeleaf.internal.SlingResourceTemplateResolver</node>
+    <node x="971.0" y="-15.0">org.thymeleaf.ITemplateEngine</node>
+    <node x="1243.5" y="945.0">org.thymeleaf.templateresource.ITemplateResource</node>
+    <node x="768.5" y="705.0">org.thymeleaf.dialect.IProcessorDialect</node>
+    <node x="1191.5" y="825.0">org.apache.sling.scripting.thymeleaf.TemplateModeProvider</node>
+    <node x="1527.5" y="305.0">org.thymeleaf.messageresolver.IMessageResolver</node>
+    <node x="1141.5" y="425.0">org.apache.sling.scripting.thymeleaf.AbsentMessageRepresentationProvider</node>
+    <node x="1255.5" y="545.0">org.thymeleaf.cache.ICacheManager</node>
+    <node x="-39.0" y="105.0">javax.script.ScriptEngineFactory</node>
+    <node x="1306.0" y="225.0">org.thymeleaf.linkbuilder.ILinkBuilder</node>
+    <node x="928.5" y="105.0">org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory</node>
+    <node x="1470.0" y="945.0">org.apache.sling.scripting.thymeleaf.internal.SlingTemplateResource</node>
+    <node x="471.5" y="185.0">org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngine</node>
+    <node x="785.5" y="825.0">org.apache.sling.scripting.thymeleaf.internal.dialect.SlingDialect</node>
+    <node x="192.0" y="185.0">org.thymeleaf.context.IEngineContextFactory</node>
+    <node x="744.0" y="185.0">javax.script.ScriptEngine</node>
+    <node x="1169.5" y="705.0">org.apache.sling.scripting.thymeleaf.internal.PatternTemplateModeProvider</node>
+    <node x="1480.0" y="425.0">org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolver</node>
+    <node x="1485.5" y="625.0">org.thymeleaf.templateresolver.ITemplateResolver</node>
+    <node x="434.5" y="825.0">org.apache.sling.scripting.thymeleaf.internal.processor.SlingIncludeAttributeTagProcessor</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.ITemplateEngine">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.PatternTemplateModeProvider" target="org.apache.sling.scripting.thymeleaf.TemplateModeProvider">
+      <point x="0.0" y="15.0" />
+      <point x="0.0" y="-15.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.dialect.IDialect">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.messageresolver.IMessageResolver">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.linkbuilder.ILinkBuilder">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.SlingResourceTemplateResolver" target="org.apache.sling.scripting.thymeleaf.internal.SlingTemplateResource">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="javax.script.ScriptEngineFactory">
+      <point x="-111.5" y="0.0" />
+      <point x="79.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicResolver">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.dialect.SlingDialect" target="org.apache.sling.scripting.thymeleaf.internal.processor.SlingIncludeAttributeTagProcessor">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.dialect.SlingDialect" target="org.thymeleaf.dialect.IDialect">
+      <point x="54.5" y="0.0" />
+      <point x="1040.0" y="840.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngine" target="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.SlingResourceTemplateResolver" target="org.thymeleaf.templateresolver.ITemplateResolver">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngine">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.cache.ICacheManager">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolver" target="org.thymeleaf.messageresolver.IMessageResolver">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.SlingTemplateResource" target="org.thymeleaf.templateresource.ITemplateResource">
+      <point x="-90.0" y="0.0" />
+      <point x="76.5" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.templateresolver.ITemplateResolver">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolver" target="org.apache.sling.scripting.thymeleaf.AbsentMessageRepresentationProvider">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.SlingResourceTemplateResolver" target="org.apache.sling.scripting.thymeleaf.TemplateModeProvider">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="org.thymeleaf.dialect.IProcessorDialect" target="org.thymeleaf.dialect.IDialect">
+      <point x="71.5" y="0.0" />
+      <point x="-41.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.dialect.SlingDialect" target="org.thymeleaf.dialect.IProcessorDialect">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngine" target="javax.script.ScriptEngine">
+      <point x="88.5" y="0.0" />
+      <point x="-56.0" y="0.0" />
+    </edge>
+    <edge source="org.apache.sling.scripting.thymeleaf.internal.ThymeleafScriptEngineFactory" target="org.thymeleaf.context.IEngineContextFactory">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.6000000000000001" x="819.9999999999998" y="498.66666666666663" />
+  <SelectedNodes />
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+
