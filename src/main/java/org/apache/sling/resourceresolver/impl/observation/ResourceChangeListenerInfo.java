@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.PathSet;
@@ -61,16 +62,17 @@ public class ResourceChangeListenerInfo {
         final String paths[] = toStringArray(ref.getProperty(PATHS), null);
         if ( paths != null ) {
             for(final String p : paths) {
-                if ( p.isEmpty() ) {
+                String normalisedPath = ResourceUtil.normalize(p);
+                if (!".".equals(p) && normalisedPath.isEmpty()) {
                     configValid = false;
-                } else if ( p.startsWith("/") ) {
-                    pathsSet.add(p);
+                } else if ( normalisedPath.startsWith("/") ) {
+                    pathsSet.add(normalisedPath);
                 } else {
                     for(final String sp : searchPaths) {
                         if ( p.equals(".") ) {
                             pathsSet.add(sp);
                         } else {
-                            pathsSet.add(sp + p);
+                            pathsSet.add(ResourceUtil.normalize(sp + normalisedPath));
                         }
                     }
                 }
