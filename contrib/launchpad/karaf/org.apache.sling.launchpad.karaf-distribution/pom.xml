@@ -173,6 +173,7 @@
             <feature>sling-extension-healthcheck</feature>
             <feature>sling-extension-query</feature>
             <feature>sling-extension-resourcemerger</feature>
+            <feature>sling-extension-rewriter</feature>
             <feature>sling-extension-security</feature>
             <feature>sling-extension-urlrewriter</feature>
             <!-- Apache Sling Launchpad (contrib) -->
