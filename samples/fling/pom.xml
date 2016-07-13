@@ -98,7 +98,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.api</artifactId>
-      <version>2.11.0</version>
+      <version>2.12.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -122,7 +122,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.base</artifactId>
-      <version>2.3.2</version>
+      <version>2.4.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -135,14 +135,14 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>2.12.1</version>
+      <version>2.12.2</version>
       <scope>provided</scope>
     </dependency>
     <!-- Thymeleaf -->
     <dependency>
       <groupId>org.thymeleaf</groupId>
       <artifactId>thymeleaf</artifactId>
-      <version>3.0.0.BETA02</version>
+      <version>3.0.0.RELEASE</version>
       <scope>provided</scope>
     </dependency>
     <!-- SubEtha SMTP -->
