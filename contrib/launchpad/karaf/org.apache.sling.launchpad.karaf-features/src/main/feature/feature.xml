@@ -272,6 +272,15 @@
     <!-- TODO SLING-5796 Make Oak Lucene optional -->
     <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
   </feature>
+  <feature name="sling-jcr-repoinit" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.0</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">sling-jcr</feature>
+    <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.4.4</bundle>
+  </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.content/2.0.8</bundle>
