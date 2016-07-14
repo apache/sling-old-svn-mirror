@@ -29,15 +29,15 @@
 
     <artifactId>org.apache.sling.discovery.base</artifactId>
     <packaging>bundle</packaging>
-    <version>1.1.3-SNAPSHOT</version>
+    <version>1.1.4</version>
 
     <name>Apache Sling Discovery Base</name>
     <description>Contains Connector and Properties support that some implementations might choose to build upon</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/base</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/base</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/discovery/base</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.base-1.1.4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.discovery.base-1.1.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.discovery.base-1.1.4</url>
     </scm>
 
     <properties>
@@ -104,7 +104,7 @@
                 achieve that. -->
             <id>includeSlowTests</id>
             <properties>
-                <sling.excluded.surefire.groups></sling.excluded.surefire.groups>
+                <sling.excluded.surefire.groups />
             </properties>
         </profile>
     </profiles>
