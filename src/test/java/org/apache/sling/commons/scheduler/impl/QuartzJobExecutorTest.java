@@ -16,6 +16,17 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import static org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER;
+import static org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -26,18 +37,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
-import org.quartz.*;
-
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER;
-import static org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QuartzJobExecutorTest {
@@ -59,7 +63,7 @@ public class QuartzJobExecutorTest {
 
         Field schedulerField = QuartzScheduler.class.getDeclaredField("scheduler");
         schedulerField.setAccessible(true);
-        scheduler = (Scheduler) schedulerField.get(quartzScheduler);
+        scheduler = ((SchedulerProxy) schedulerField.get(quartzScheduler)).getScheduler();
     }
 
     @Test
@@ -183,12 +187,14 @@ public class QuartzJobExecutorTest {
     }
 
     private class SimpleJob implements Job {
+        @Override
         public void execute(JobContext context) {
             isRunnablePseudoJobCompleted = true;
         }
     }
 
     private class SimpleRunnableJob implements Runnable {
+        @Override
         public void run() {
             isRunnablePseudoJobCompleted = true;
         }
