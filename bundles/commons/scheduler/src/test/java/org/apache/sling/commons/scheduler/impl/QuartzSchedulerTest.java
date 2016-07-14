@@ -16,6 +16,18 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.Date;
+import java.util.HashMap;
+
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.After;
@@ -34,17 +46,11 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Date;
-import java.util.HashMap;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
 public class QuartzSchedulerTest {
+
     private Scheduler s;
+    private SchedulerProxy proxy;
     private BundleContext context;
     private QuartzScheduler quartzScheduler;
 
@@ -59,6 +65,9 @@ public class QuartzSchedulerTest {
         context = MockOsgi.newBundleContext();
         quartzScheduler = ActivatedQuartzSchedulerFactory.create(context, "testName");
         s = quartzScheduler.getScheduler();
+        Field sField = QuartzScheduler.class.getDeclaredField("scheduler");
+        sField.setAccessible(true);
+        this.proxy = (SchedulerProxy) sField.get(quartzScheduler);
     }
 
     @Test
@@ -282,8 +291,8 @@ public class QuartzSchedulerTest {
     private void returnInternalSchedulerBack() throws NoSuchFieldException, IllegalAccessException {
         Field sField = QuartzScheduler.class.getDeclaredField("scheduler");
         sField.setAccessible(true);
-        if (quartzScheduler.getScheduler() == null && s != null) {
-            sField.set(quartzScheduler, s);
+        if (quartzScheduler.getScheduler() == null && proxy != null) {
+            sField.set(quartzScheduler, proxy);
         }
     }
 }
