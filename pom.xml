@@ -1111,7 +1111,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.9.12</version>
+                <version>1.11.0</version>
                 <scope>provided</scope>
             </dependency>
             <!-- this version must match the version being used by the maven-bundle-plugin -->
