@@ -102,6 +102,21 @@ public interface Scheduler {
     String VALUE_RUN_ON_SINGLE = "SINGLE";
 
     /**
+     * Name of the configuration property to define the thread pool to be used.
+     * Scheduled jobs can run using different thread pools. By default, the default
+     * thread pool from the thread pool manager service is used.
+     * If a thread pool name is specified, a pool with that name will be get from
+     * the thread pool manager. If such a pool does not exist, it will be created.
+     * This option must be used with special care as it might create new thread pools.
+     * It should only be used if there is a good reason to not use the default thread
+     * pool.
+     * @param name The thread pool name
+     * @return The schedule options.
+     * @since 2.5.0
+     */
+    String PROPERTY_SCHEDULER_THREAD_POOL = "scheduler.threadPool";
+
+    /**
      * Schedule a job based on the options.
      *
      * Note that if a job with the same name has already been added, the old job is
@@ -145,7 +160,7 @@ public interface Scheduler {
 
     /**
      * Create a schedule options to fire a job immediately and only once.
-     * @return The schedule options.     
+     * @return The schedule options.
      * @since 2.3
      */
     ScheduleOptions NOW();
@@ -155,7 +170,7 @@ public interface Scheduler {
      * @param times The number of times this job should be started (must be higher than 1 or
      *              -1 for endless)
      * @param period Every period seconds this job is started (must be at higher than 0).
-     * @return The schedule options.     
+     * @return The schedule options.
      * @since 2.3
      */
     ScheduleOptions NOW(int times, long period);
@@ -163,7 +178,7 @@ public interface Scheduler {
     /**
      * Create a schedule options to fire a job once at a specific date
      * @param date The date this job should be run.
-     * @return The schedule options.     
+     * @return The schedule options.
      * @since 2.3
      */
     ScheduleOptions AT(Date date);
@@ -174,7 +189,7 @@ public interface Scheduler {
      * @param times The number of times this job should be started (must be higher than 1 or
      *              -1 for endless)
      * @param period Every period seconds this job is started (must be at higher than 0).
-     * @return The schedule options.     
+     * @return The schedule options.
      * @since 2.3
      */
     ScheduleOptions AT(Date date, int times, long period);
@@ -182,7 +197,7 @@ public interface Scheduler {
     /**
      * Create a schedule options to schedule the job based on the expression
      * @param expression The cron exception
-     * @return The schedule options.     
+     * @return The schedule options.
      * @since 2.3
      */
     ScheduleOptions EXPR(String expression);

@@ -95,4 +95,19 @@ public interface ScheduleOptions {
      * @return The schedule options.
      */
     ScheduleOptions onInstancesOnly(String[] slingIds);
+
+    /**
+     * Define the thread pool to be used.
+     * Scheduled jobs can run using different thread pools. By default, the default
+     * thread pool from the thread pool manager service is used.
+     * If a thread pool name is specified, a pool with that name will be get from
+     * the thread pool manager. If such a pool does not exist, it will be created.
+     * This option must be used with special care as it might create new thread pools.
+     * It should only be used if there is a good reason to not use the default thread
+     * pool.
+     * @param name The thread pool name
+     * @return The schedule options.
+     * @since 2.5.0
+     */
+    ScheduleOptions threadPoolName(String name);
 }
