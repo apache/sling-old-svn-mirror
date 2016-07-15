@@ -316,9 +316,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         scheduler.schedule(new Runnable() {
             @Override
             public void run() {
-                synchronized(JcrResourceBundleProvider.this) {
-                    reloadBundle(key);
-                }
+                reloadBundle(key);
                 scheduledJobNames.remove(jobName);
             }
         }, options);
@@ -329,7 +327,10 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         resourceBundleCache.remove(key);
         log.info("Reloading resource bundle for {}", key);
         // unregister bundle
-        ServiceRegistration serviceRegistration = bundleServiceRegistrations.remove(key);
+        ServiceRegistration serviceRegistration = null;
+        synchronized (this) {
+            serviceRegistration = bundleServiceRegistrations.remove(key);
+        }
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         } else {
