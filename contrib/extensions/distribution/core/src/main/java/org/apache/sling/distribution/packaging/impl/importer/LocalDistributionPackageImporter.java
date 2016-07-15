@@ -23,6 +23,9 @@ import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.event.DistributionEventTopics;
+import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
@@ -40,13 +43,27 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
 
     private final DistributionPackageBuilder packageBuilder;
 
-    public LocalDistributionPackageImporter(DistributionPackageBuilder packageBuilder) {
+    private final DistributionEventFactory eventFactory;
+
+    private final String name;
+
+    public LocalDistributionPackageImporter(String name, DistributionEventFactory eventFactory, DistributionPackageBuilder packageBuilder) {
 
         if (packageBuilder == null) {
             throw new IllegalArgumentException("A package builder is required");
         }
 
+        if (eventFactory == null) {
+            throw new IllegalArgumentException("EventFactory is required");
+        }
+
+        if (name == null) {
+            throw new IllegalArgumentException("An importer name is required");
+        }
+
         this.packageBuilder = packageBuilder;
+        this.eventFactory = eventFactory;
+        this.name = name;
     }
 
     @Override
@@ -56,12 +73,16 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         if (!success) {
             log.warn("could not install distribution package {}", distributionPackage.getId());
         }
+
+        eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackage.getInfo());
     }
 
     @Override
     @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
-        return packageBuilder.installPackage(resourceResolver, stream);
+        DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
+        eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, packageInfo);
+        return packageInfo;
     }
 
 }
