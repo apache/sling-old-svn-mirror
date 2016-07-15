@@ -110,8 +110,6 @@ public interface Scheduler {
      * This option must be used with special care as it might create new thread pools.
      * It should only be used if there is a good reason to not use the default thread
      * pool.
-     * @param name The thread pool name
-     * @return The schedule options.
      * @since 2.5.0
      */
     String PROPERTY_SCHEDULER_THREAD_POOL = "scheduler.threadPool";
