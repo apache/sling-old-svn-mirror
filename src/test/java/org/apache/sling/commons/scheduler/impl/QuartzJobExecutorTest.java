@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,12 +39,10 @@ import org.osgi.framework.BundleContext;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
-import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QuartzJobExecutorTest {
-    private Scheduler scheduler;
     private BundleContext context;
     private QuartzJobExecutor jobExecutor;
     private QuartzScheduler quartzScheduler;
@@ -60,10 +57,6 @@ public class QuartzJobExecutorTest {
         jobExecutor = new QuartzJobExecutor();
 
         quartzScheduler = ActivatedQuartzSchedulerFactory.create(context, "testName");
-
-        Field schedulerField = QuartzScheduler.class.getDeclaredField("scheduler");
-        schedulerField.setAccessible(true);
-        scheduler = ((SchedulerProxy) schedulerField.get(quartzScheduler)).getScheduler();
     }
 
     @Test
@@ -75,7 +68,7 @@ public class QuartzJobExecutorTest {
         //Adding a job just to receive a JobDetail object which is needed for testing
         quartzScheduler.addJob(1L, 1L, jobName, job, jobConfig, "0 * * * * ?", true);
 
-        JobDetail jobDetail = scheduler.getJobDetail(JobKey.jobKey(jobName));
+        JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(JobKey.jobKey(jobName));
         when(executionContext.getJobDetail()).thenReturn(jobDetail);
 
         isRunnablePseudoJobCompleted = false;
@@ -99,7 +92,7 @@ public class QuartzJobExecutorTest {
         //Adding a job just to receive a JobDetail object which is needed for testing
         quartzScheduler.addJob(1L, 1L, jobName, job, jobConfig, "0 * * * * ?", true);
 
-        JobDetail jobDetail = scheduler.getJobDetail(JobKey.jobKey(jobName));
+        JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(JobKey.jobKey(jobName));
         when(executionContext.getJobDetail()).thenReturn(jobDetail);
 
         isRunnablePseudoJobCompleted = false;
@@ -116,7 +109,7 @@ public class QuartzJobExecutorTest {
         //Adding a job just to receive a JobDetail object which is needed for testing
         quartzScheduler.addJob(1L, 1L, jobName, job, jobConfig, "0 * * * * ?", true);
 
-        JobDetail jobDetail = scheduler.getJobDetail(JobKey.jobKey(jobName));
+        JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(JobKey.jobKey(jobName));
         when(executionContext.getJobDetail()).thenReturn(jobDetail);
         //Job with this config should not be executed
         jobDetail.getJobDataMap().put(QuartzScheduler.DATA_MAP_RUN_ON, new String[]{VALUE_RUN_ON_LEADER});
@@ -135,7 +128,7 @@ public class QuartzJobExecutorTest {
         //Adding a job just to receive a JobDetail object which is needed for testing
         quartzScheduler.addJob(1L, 1L, jobName, job, jobConfig, "0 * * * * ?", true);
 
-        JobDetail jobDetail = scheduler.getJobDetail(JobKey.jobKey(jobName));
+        JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(JobKey.jobKey(jobName));
         when(executionContext.getJobDetail()).thenReturn(jobDetail);
         //Job with this config should not be executed
         jobDetail.getJobDataMap().put(QuartzScheduler.DATA_MAP_RUN_ON,
@@ -157,7 +150,7 @@ public class QuartzJobExecutorTest {
         //Adding a job just to receive a JobDetail object which is needed for testing
         quartzScheduler.addJob(1L, 1L, jobName, job, jobConfig, "0 * * * * ?", true);
 
-        JobDetail jobDetail = scheduler.getJobDetail(JobKey.jobKey(jobName));
+        JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(JobKey.jobKey(jobName));
         when(executionContext.getJobDetail()).thenReturn(jobDetail);
         //Job with this config should not be executed
         jobDetail.getJobDataMap().put(QuartzScheduler.DATA_MAP_RUN_ON,
@@ -179,6 +172,11 @@ public class QuartzJobExecutorTest {
 
         assertTrue(underTest.getConfiguration().equals(testMap));
         assertTrue(underTest.getName().equals(testName));
+    }
+
+    @Test
+    public void testLazyScheduler() {
+        assertTrue(quartzScheduler.getSchedulers().isEmpty());
     }
 
     @After

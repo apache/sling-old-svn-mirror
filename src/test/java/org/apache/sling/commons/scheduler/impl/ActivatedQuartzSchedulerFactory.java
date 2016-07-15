@@ -16,21 +16,22 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
-import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-
 import java.lang.reflect.Field;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+
 /**
  * This is just a class with helper static method,
  * since we need an activated QuartzScheduler in many tests.
  */
 class ActivatedQuartzSchedulerFactory {
+
     public static QuartzScheduler create(BundleContext context, String poolName) throws Exception {
         QuartzScheduler quartzScheduler = null;
         if (context != null) {
@@ -45,6 +46,9 @@ class ActivatedQuartzSchedulerFactory {
 
             Map<String, Object> scheduleActivationProps = new HashMap<String, Object>();
             scheduleActivationProps.put("poolName", poolName == null ? "testName" : poolName);
+            if ( poolName != null ) {
+                scheduleActivationProps.put("allowedPoolNames", new String[] {"testName", "allowed"});
+            }
 
             quartzScheduler.activate(context, scheduleActivationProps);
             context.registerService("scheduler", quartzScheduler, props);

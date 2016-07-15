@@ -16,6 +16,13 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.lang.reflect.Field;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.After;
@@ -28,13 +35,6 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
-
-import java.lang.reflect.Field;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class WhiteboardHandlerTest {
     private WhiteboardHandler handler;
@@ -71,7 +71,6 @@ public class WhiteboardHandlerTest {
 
     @Test
     public void testAddingService() throws SchedulerException {
-        org.quartz.Scheduler s = quartzScheduler.getScheduler();
         Thread service = new Thread();
         String serviceName = "serviceName";
         String schedulerName = "testScheduler";
@@ -94,14 +93,13 @@ public class WhiteboardHandlerTest {
         ServiceReference reference = context.getServiceReference(serviceName);
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
-        assertNull(s.getJobDetail(jobKey));
+        assertNull(quartzScheduler.getSchedulers().get("testName"));
         customizer.addingService(reference);
-        assertNotNull(s.getJobDetail(jobKey));
+        assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
 
     @Test
     public void testUnregisterService() throws SchedulerException {
-        org.quartz.Scheduler s = quartzScheduler.getScheduler();
         Thread service = new Thread();
         String serviceName = "serviceName";
         String schedulerName = "testScheduler";
@@ -125,11 +123,11 @@ public class WhiteboardHandlerTest {
         ServiceReference reference = context.getServiceReference(serviceName);
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
-        assertNull(s.getJobDetail(jobKey));
+        assertNull(quartzScheduler.getSchedulers().get("testName"));
         customizer.addingService(reference);
-        assertNotNull(s.getJobDetail(jobKey));
+        assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
         customizer.removedService(reference, service);
-        assertNull(s.getJobDetail(jobKey));
+        assertNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
 
     @After
