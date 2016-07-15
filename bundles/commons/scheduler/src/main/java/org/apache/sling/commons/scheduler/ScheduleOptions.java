@@ -91,6 +91,7 @@ public interface ScheduleOptions {
      *
      * If {@link #onLeaderOnly(boolean)} or {@link #onSingleInstanceOnly(boolean)} has been called before,
      * that option is reset and overwritten by the value of this method.
+     *
      * @param slingIds Array of Sling IDs this job should run on
      * @return The schedule options.
      */
@@ -99,12 +100,13 @@ public interface ScheduleOptions {
     /**
      * Define the thread pool to be used.
      * Scheduled jobs can run using different thread pools. By default, the default
-     * thread pool from the thread pool manager service is used.
-     * If a thread pool name is specified, a pool with that name will be get from
-     * the thread pool manager. If such a pool does not exist, it will be created.
+     * thread pool of the scheduler is used.
+     * If a thread pool name is specified, it is up to the scheduler to put the job
+     * in the defined thread pool or any other thread pool.
      * This option must be used with special care as it might create new thread pools.
      * It should only be used if there is a good reason to not use the default thread
      * pool.
+     *
      * @param name The thread pool name
      * @return The schedule options.
      * @since 2.5.0

@@ -104,9 +104,9 @@ public interface Scheduler {
     /**
      * Name of the configuration property to define the thread pool to be used.
      * Scheduled jobs can run using different thread pools. By default, the default
-     * thread pool from the thread pool manager service is used.
-     * If a thread pool name is specified, a pool with that name will be get from
-     * the thread pool manager. If such a pool does not exist, it will be created.
+     * thread pool of the scheduler is used.
+     * If a thread pool name is specified, it is up to the scheduler to put the job
+     * in the defined thread pool or any other thread pool.
      * This option must be used with special care as it might create new thread pools.
      * It should only be used if there is a good reason to not use the default thread
      * pool.
