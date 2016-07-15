@@ -52,6 +52,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#schedule(java.lang.Object, org.apache.sling.commons.scheduler.ScheduleOptions)
      */
+    @Override
     public boolean schedule(final Object job, final ScheduleOptions options) {
         return this.scheduler.schedule(this.bundleId, null, job, options);
     }
@@ -59,6 +60,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#unschedule(java.lang.String)
      */
+    @Override
     public boolean unschedule(final String jobName) {
         return this.scheduler.unschedule(this.bundleId, jobName);
     }
@@ -66,6 +68,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#NOW()
      */
+    @Override
     public ScheduleOptions NOW() {
         return this.scheduler.NOW();
     }
@@ -73,6 +76,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#NOW(int, long)
      */
+    @Override
     public ScheduleOptions NOW(final int times, final long period) {
         return this.scheduler.NOW(times, period);
     }
@@ -80,6 +84,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#AT(java.util.Date)
      */
+    @Override
     public ScheduleOptions AT(final Date date) {
         return this.scheduler.AT(date);
     }
@@ -87,6 +92,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#AT(java.util.Date, int, long)
      */
+    @Override
     public ScheduleOptions AT(final Date date, final int times, final long period) {
         return this.scheduler.AT(date, times, period);
     }
@@ -94,6 +100,7 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#EXPR(java.lang.String)
      */
+    @Override
     public ScheduleOptions EXPR(final String expression) {
         return this.scheduler.EXPR(expression);
     }
@@ -101,6 +108,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public void addJob(final String name, final Object job,
             final Map<String, Serializable> config, final String schedulingExpression,
             final boolean canRunConcurrently) throws Exception {
@@ -110,6 +119,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public void addPeriodicJob(final String name, final Object job,
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently) throws Exception {
@@ -119,6 +130,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean, boolean)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public void addPeriodicJob(final String name, final Object job,
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently, final boolean startImmediate)
@@ -129,6 +142,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public void fireJob(final Object job, final Map<String, Serializable> config)
             throws Exception {
         this.scheduler.fireJob(this.bundleId, null, job, config);
@@ -137,6 +152,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map, int, long)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public boolean fireJob(final Object job, final Map<String, Serializable> config,
             final int times, final long period) {
         return this.scheduler.fireJob(this.bundleId, null, job, config, times, period);
@@ -145,6 +162,8 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public void fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date) throws Exception {
         this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date);
@@ -153,11 +172,18 @@ public class SchedulerServiceFactory implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date, int, long)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public boolean fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date, final int times, final long period) {
         return this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date, times, period);
     }
 
+    /**
+     * @see org.apache.sling.commons.scheduler.Scheduler#removeJob(java.lang.String)
+     */
+    @Override
+    @SuppressWarnings("deprecation")
     public void removeJob(final String name) throws NoSuchElementException {
         this.scheduler.removeJob(this.bundleId, name);
     }

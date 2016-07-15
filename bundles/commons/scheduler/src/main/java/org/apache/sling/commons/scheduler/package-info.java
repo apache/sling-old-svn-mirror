@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.4.0")
+@Version("2.5.0")
 package org.apache.sling.commons.scheduler;
 
 import aQute.bnd.annotation.Version;

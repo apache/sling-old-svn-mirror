@@ -67,16 +67,19 @@ public class WhiteboardHandler {
                 btx.createFilter(SCHEDULED_JOB_FILTER),
                 new ServiceTrackerCustomizer() {
 
+            @Override
             public void  removedService(final ServiceReference reference, final Object service) {
                 unregister(reference);
                 btx.ungetService(reference);
             }
 
+            @Override
             public void modifiedService(final ServiceReference reference, final Object service) {
                 unregister(reference);
                 register(reference, service);
             }
 
+            @Override
             public Object addingService(final ServiceReference reference) {
                 final Object obj = btx.getService(reference);
                 if ( obj != null ) {
@@ -252,9 +255,18 @@ public class WhiteboardHandler {
         final Boolean concurrent = getBooleanProperty(ref, Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
         final String[] runOnOpts = getRunOpts(ref);
 
+        final Object poolNameObj = ref.getProperty(Scheduler.PROPERTY_SCHEDULER_THREAD_POOL);
+        final String poolName;
+        if ( poolNameObj != null && poolNameObj.toString().trim().length() > 0 ) {
+            poolName = poolNameObj.toString().trim();
+        } else {
+            poolName = null;
+        }
+
         final ScheduleOptions options = scheduleOptions
                 .name(name)
                 .canRunConcurrently((concurrent != null ? concurrent : true))
+                .threadPoolName(poolName)
                 .onInstancesOnly(runOnOpts);
 
         final long bundleId = ref.getBundle().getBundleId();
