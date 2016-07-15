@@ -50,13 +50,16 @@ public class SchedulerProxy {
 
     public SchedulerProxy(final ThreadPoolManager manager,
             final String pName) throws SchedulerException {
-        this.poolName = pName == null ? ThreadPoolManager.DEFAULT_THREADPOOL_NAME : pName;
-
-        this.threadPoolManager = manager;
         // sanity null check
-        if ( this.threadPoolManager == null ) {
+        if ( manager == null ) {
             throw new SchedulerException("Thread pool manager missing");
         }
+        if ( pName == null ) {
+            throw new SchedulerException("Thread pool name missing");
+        }
+
+        this.threadPoolManager = manager;
+        this.poolName = pName;
 
         // create the pool
         this.threadPool = this.threadPoolManager.get(poolName);
