@@ -118,7 +118,7 @@ public class QuartzScheduler implements BundleListener {
         ctx.addBundleListener(this);
 
         // start scheduler
-        this.scheduler = new SchedulerProxy(this.threadPoolManager, poolName);
+        this.scheduler = new SchedulerProxy(this.threadPoolManager, getThreadPoolName(poolName));
     }
 
     /**
@@ -134,6 +134,13 @@ public class QuartzScheduler implements BundleListener {
         if ( s != null ) {
             s.dispose();
         }
+    }
+
+    private String getThreadPoolName(final String name) {
+        if ( name == null || name.trim().isEmpty() ) {
+            return ThreadPoolManager.DEFAULT_THREADPOOL_NAME;
+        }
+        return name.trim();
     }
 
     private org.quartz.Scheduler getScheduler(final SchedulerProxy proxy) {
