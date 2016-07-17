@@ -119,7 +119,7 @@
   </feature>
   <feature name="sling-extension-discovery" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.api/1.0.4</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.base/1.1.3-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.base/1.1.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.commons/1.0.12</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.support/1.0.0</bundle>
     <!-- dependencies -->
@@ -128,13 +128,13 @@
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.2</bundle>
   </feature>
   <feature name="sling-extension-discovery-impl" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.impl/1.2.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.impl/1.2.8</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling-extension-discovery</feature>
   </feature>
   <feature name="sling-extension-discovery-oak" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.oak/1.2.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.oak/1.2.8</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling-extension-discovery</feature>
