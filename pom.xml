@@ -362,7 +362,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <dependency>
                             <groupId>org.slf4j</groupId>
                             <artifactId>slf4j-simple</artifactId>
-                            <version>1.5.2</version>
+                            <version>1.7.6</version>
                         </dependency>
                     </dependencies>
                     <executions>
@@ -1103,7 +1103,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.5.2</version>
+                <version>1.7.6</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -1145,7 +1145,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.5.2</version>
+                <version>1.7.6</version>
                 <scope>test</scope>
             </dependency>
 
