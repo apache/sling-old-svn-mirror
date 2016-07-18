@@ -1114,14 +1114,21 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <version>6.0.1</version>
                 <scope>provided</scope>
             </dependency>
-             
-            <!-- OSGi support annotations -->
+
+            <!-- OSGi annotations for DS and metatype -->
             <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.11.0</version>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.component.annotations</artifactId>
+                <version>1.3.0</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.metatype.annotations</artifactId>
+                <version>1.3.0</version>
+                <scope>provided</scope>
+            </dependency>
+             
 
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -1151,6 +1158,14 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             </dependency>
 
          
+            <!-- DEPRECATED: Use official OSGi annotations -->
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.scr.annotations</artifactId>
+                <version>1.11.0</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- DEPRECATED : Use the osgi.annotation instead -->
             <!-- this version must match the version being used by the maven-bundle-plugin -->
             <dependency>
@@ -1164,11 +1179,25 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
     </dependencyManagement>
 
     <dependencies>
-        <!-- OSGi support annotations -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.metatype.annotations</artifactId>
+        </dependency>
+
+        <!-- DEPRECATED: OSGi support annotations -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+        <!-- DEPRECATED: OSGi support annotations -->
         <dependency>
             <groupId>biz.aQute.bnd</groupId>
             <artifactId>biz.aQute.bndlib</artifactId>
