@@ -28,6 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.jcr.oak.server</artifactId>
+    <!-- next version for release with Oak 1.5 should be 1.1.0 -->
     <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
