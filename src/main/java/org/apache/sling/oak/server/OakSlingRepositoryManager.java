@@ -228,7 +228,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(indexProvider)
         .with(indexEditorProvider)
         .with(getDefaultWorkspace())
-        .withAsyncIndexing()
+        .withAsyncIndexing("async", 5)
         .with(whiteboard)
         ;
         
