@@ -1,7 +1,7 @@
 # Test parsing embedded CNDs
 
 register nodetypes
-<<<===
+<<===
     <slingevent='http://sling.apache.org/jcr/event/1.0'>
     <nt='http://www.jcp.org/jcr/nt/1.0'>
     <mix='http://www.jcp.org/jcr/mix/1.0'>
@@ -23,9 +23,15 @@ register nodetypes
       - slingevent:expression (string)
       - slingevent:date (date)
       - slingevent:period (long)
-===>>>
+===>>
 
 register nodetypes
-<<<===
+<<===
 Just one line, not indented
-===>>>
+===>>
+
+register nodetypes
+<<===
+<< Using line prefixes
+<< to avoid conflicts with Sling provisioning model parser
+===>>

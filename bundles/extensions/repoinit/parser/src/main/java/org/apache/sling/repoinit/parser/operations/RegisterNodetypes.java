@@ -21,8 +21,15 @@ package org.apache.sling.repoinit.parser.operations;
 public class RegisterNodetypes extends Operation {
     private final String cndStatements;
     
+    /** Optional prefix used at the beginning of CND lines,
+     *  to avoid conflicts with Sling provisioning
+     *  model parser. If present at the beginning of CND lines,
+     *  this string is removed.
+     */
+    public static final String CND_OPTIONAL_PREFIX = "<< ";
+    
     public RegisterNodetypes(String cndStatements) {
-        this.cndStatements = cndStatements;
+        this.cndStatements = new LinePrefixCleaner().removePrefix(CND_OPTIONAL_PREFIX, cndStatements);
     }
     
     @Override
