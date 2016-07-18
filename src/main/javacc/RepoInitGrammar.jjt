@@ -8,6 +8,8 @@ options
     STATIC=false;
     LOOKAHEAD=3;
     //FORCE_LA_CHECK=true;
+    //DEBUG_PARSER=true;
+    //DEBUG_LOOKAHEAD=true;
 }
 
 PARSER_BEGIN(RepoInitParserImpl)
@@ -65,13 +67,17 @@ TOKEN:
 |   < END: "end" >
 |   < USER: "user" >
 |   < NODETYPES: "nodetypes" >
+|   < REGISTER: "register" >
+|   < NAMESPACE: "namespace" >
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
-|   < PRINCIPAL: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-")+ >
 |   < COMMA: "," >
 |   < STAR: "*" >
+
+/* The order of these fuzzy statements is important (first match wins?) */ 
 |   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
 |   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
+|   < STRING: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"] | [":"]) * >
 |   < EOL: "\n" >
 }
 
@@ -85,6 +91,7 @@ List<Operation> parse() :
         | setAclPaths(result) 
         | setAclPrincipals(result)
         | createPathStatement(result)
+        | registerNamespaceStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -104,8 +111,8 @@ List<String> principalsList() :
     List<String> principals = new ArrayList<String>(); 
 }
 {
-    t = <PRINCIPAL> { principals.add(t.image); } 
-    ( <COMMA> t = <PRINCIPAL> { principals.add(t.image); } )* 
+    t = <STRING> { principals.add(t.image); } 
+    ( <COMMA> t = <STRING> { principals.add(t.image); } )* 
     { return principals; }
 }
 
@@ -121,11 +128,11 @@ void serviceUserStatement(List<Operation> result) :
     (<EOL> | <EOF>)
     
     {
-        for(String PRINCIPAL : principals) {
+        for(String principal : principals) {
             if(CREATE == t.kind) {
-                result.add(new CreateServiceUser(PRINCIPAL));
+                result.add(new CreateServiceUser(principal));
             } else {
-                result.add(new DeleteServiceUser(PRINCIPAL));
+                result.add(new DeleteServiceUser(principal));
             }
         } 
     }
@@ -273,4 +280,25 @@ void setAclPrincipals(List<Operation> result) :
     {
         result.add(new SetAclPrincipals(principals, lines));
     }
+}
+
+void registerNamespaceStatement(List<Operation> result) :
+{
+    Token prefix = null;
+    Token uri;
+}
+{
+    <REGISTER> <NAMESPACE> 
+    ( <LPAREN> prefix = <STRING> <RPAREN> )? 
+    uri = <STRING> 
+
+    {
+        if(prefix == null) {
+            result.add(new RegisterNamespace(null, uri.image)); 
+        } else {
+            result.add(new RegisterNamespace(prefix.image, uri.image)); 
+        } 
+    }
+    
+    (<EOL> | <EOF>)
 }
