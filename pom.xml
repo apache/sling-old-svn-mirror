@@ -54,13 +54,13 @@
         <!--
             Java API and class file compliance. This property supports
             one of three values:
-              - 6: Java 6 (default)
-              - 7: Java 7
+              - 6: Java 6 
+              - 7: Java 7 (default)
               - 8: Java 8
             Using anything else causes the set-bundle-required-execution-environment
             to fail the build with an exception
         -->
-        <sling.java.version>6</sling.java.version>
+        <sling.java.version>7</sling.java.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
