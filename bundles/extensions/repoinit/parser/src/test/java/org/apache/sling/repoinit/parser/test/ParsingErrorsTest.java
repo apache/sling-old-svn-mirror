@@ -56,9 +56,13 @@ public class ParsingErrorsTest {
             
             add(new Object[] { "create service user bob, alice, tom21", null  });
             add(new Object[] { "create service user bob-221_BOB", null  });
-            add(new Object[] { "create service user bob/221", ParseException.class  });
+            
+            // this passes since introducing "register namespace" and loosening
+            // the PRINCIPAL regexp
+            add(new Object[] { "create service user bob/221", null  });
+            
             add(new Object[] { "create service user bob,/alice, tom21", ParseException.class  });
-            add(new Object[] { "create service user bob,alice,tom21 # comment not allowed here", TokenMgrError.class  });
+            add(new Object[] { "create service user bob,alice,tom21 # comment not allowed here", ParseException.class });
             add(new Object[] { "CREATE service user bob, alice, tom21", ParseException.class });
             add(new Object[] { "create SERVICE user bob, alice, tom21", ParseException.class });
         }};
@@ -73,17 +77,20 @@ public class ParsingErrorsTest {
     @Test
     public void checkResult() throws ParseException, IOException {
         final StringReader r = new StringReader(input);
+        boolean noException = false;
         try {
             new RepoInitParserImpl(r).parse();
-            if(expected != null) {
-                fail("Expected a " + expected.getSimpleName() + " for [" + input + "]");
-            }
+            noException = true;
         } catch(Exception e) {
-            assertEquals(expected, e.getClass());
+            assertEquals("for input " + input, expected, e.getClass());
         } catch(Error err) {
-            assertEquals(expected, err.getClass());
+            assertEquals("for input " + input, expected, err.getClass());
         } finally {
             r.close();
+        }
+        
+        if(noException && expected != null) {
+            fail("Expected a " + expected.getSimpleName() + " for [" + input + "]");
         }
     }
 }

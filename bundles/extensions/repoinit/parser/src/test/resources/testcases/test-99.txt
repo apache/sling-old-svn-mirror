@@ -31,4 +31,6 @@ set ACL for alice, bob,fred
     
 end
 
+register namespace ( NSprefix ) uri:someURI/v1.42
+
 create service user the-last-one

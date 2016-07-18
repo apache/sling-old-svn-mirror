@@ -16,4 +16,5 @@ SetAclPrincipals for alice bob fred
   AclLine ALLOW {paths=[/content, /var], privileges=[jcr:read]}
   AclLine DENY {paths=[/content/example.com], privileges=[jcr:write]}
   AclLine DENY {nodetypes=[example:Page], paths=[/], privileges=[jcr:all]}
+RegisterNamespace (NSprefix) uri:someURI/v1.42
 CreateServiceUser the-last-one

@@ -25,6 +25,7 @@ import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
+import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
 import org.apache.sling.repoinit.parser.operations.SetAclPaths;
 import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 
@@ -76,6 +77,11 @@ class OperationToStringVisitor implements OperationVisitor {
     @Override
     public void visitCreatePath(CreatePath cp) {
         out.println(cp.toString());
+    }
+    
+    @Override
+    public void visitRegisterNamespace(RegisterNamespace rn) {
+        out.println(rn.toString());
     }
 
     private void dumpAclLines(Collection<AclLine> c) {

@@ -23,4 +23,5 @@ public interface OperationVisitor {
     void visitSetAclPrincipal(SetAclPrincipals s);
     void visitSetAclPaths(SetAclPaths s);
     void visitCreatePath(CreatePath cp);
+    void visitRegisterNamespace(RegisterNamespace rn);
 }
