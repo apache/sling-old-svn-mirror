@@ -32,6 +32,7 @@ import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.repoinit.parser.operations.PathSegmentDefinition;
 import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
+import org.apache.sling.repoinit.parser.operations.RegisterNodetypes;
 import org.apache.sling.repoinit.parser.operations.SetAclPaths;
 import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 import org.slf4j.Logger;
@@ -144,5 +145,10 @@ class JcrRepoInitOperationVisitor implements OperationVisitor {
     @Override
     public void visitRegisterNamespace(RegisterNamespace rn) {
         throw new UnsupportedOperationException(rn.toString());
+    }
+
+    @Override
+    public void visitRegisterNodetypes(RegisterNodetypes b) {
+        throw new UnsupportedOperationException(b.getClass().getName());
     }
 }
