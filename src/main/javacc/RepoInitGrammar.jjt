@@ -69,6 +69,7 @@ TOKEN:
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
 |   < NAMESPACE: "namespace" >
+|   < START_TEXTBLOCK: "<<<===" > : TEXTBLOCK
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
 |   < COMMA: "," >
@@ -81,6 +82,17 @@ TOKEN:
 |   < EOL: "\n" >
 }
 
+<TEXTBLOCK> SKIP : 
+{
+    "\r"
+}
+
+<TEXTBLOCK> TOKEN :
+{
+    < TEXT : ~[] > 
+|   < END_TEXTBLOCK: "===>>>" > : DEFAULT
+} 
+
 List<Operation> parse() :
 {}
 {
@@ -92,6 +104,7 @@ List<Operation> parse() :
         | setAclPrincipals(result)
         | createPathStatement(result)
         | registerNamespaceStatement(result)
+        | registerNodetypesStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -301,4 +314,27 @@ void registerNamespaceStatement(List<Operation> result) :
     }
     
     (<EOL> | <EOF>)
+}
+
+void textBlock(StringBuilder b) : 
+{
+    Token t;
+}
+{
+    <START_TEXTBLOCK>
+    ( t = <TEXT> { b.append(t.image); } )*
+    <END_TEXTBLOCK>
+}
+     
+void registerNodetypesStatement(List<Operation> result) :
+{
+    StringBuilder b = new StringBuilder();
+}
+{
+    <REGISTER> <NODETYPES> <EOL> 
+    textBlock(b) 
+    (<EOL> | <EOF>)
+    {
+        result.add(new RegisterNodetypes(b.toString()));
+    }
 }

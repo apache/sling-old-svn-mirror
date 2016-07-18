@@ -17,4 +17,12 @@ SetAclPrincipals for alice bob fred
   AclLine DENY {paths=[/content/example.com], privileges=[jcr:write]}
   AclLine DENY {nodetypes=[example:Page], paths=[/], privileges=[jcr:all]}
 RegisterNamespace (NSprefix) uri:someURI/v1.42
+RegisterNodetypes:
+
+    <slingevent='http://sling.apache.org/jcr/event/1.0'>
+    
+    [slingevent:Event] > nt:unstructured, nt:hierarchyNode
+      - slingevent:topic (string)
+      - slingevent:properties (binary)
+
 CreateServiceUser the-last-one

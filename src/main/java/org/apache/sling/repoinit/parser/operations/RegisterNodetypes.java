@@ -17,12 +17,32 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
-    void visitCreatePath(CreatePath cp);
-    void visitRegisterNamespace(RegisterNamespace rn);
-    void visitRegisterNodetypes(RegisterNodetypes b);
+/** An embedded block of text */
+public class RegisterNodetypes extends Operation {
+    private final String cndStatements;
+    
+    public RegisterNodetypes(String cndStatements) {
+        this.cndStatements = cndStatements;
+    }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":\n" + getParametersDescription();
+    }
+    
+    @Override
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getCndStatements());
+        return sb.toString();
+    }
+    
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitRegisterNodetypes(this);
+    }
+    
+    public String getCndStatements() {
+        return cndStatements;
+    }
 }
