@@ -1107,18 +1107,19 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <scope>provided</scope>
             </dependency>
 
+            <!-- OSGi annotations: @Version, @ProviderType, @ConsumerType -->
+           <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.annotation</artifactId>
+                <version>6.0.1</version>
+                <scope>provided</scope>
+            </dependency>
+             
             <!-- OSGi support annotations -->
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr.annotations</artifactId>
                 <version>1.11.0</version>
-                <scope>provided</scope>
-            </dependency>
-            <!-- this version must match the version being used by the maven-bundle-plugin -->
-            <dependency>
-                <groupId>biz.aQute.bnd</groupId>
-                <artifactId>biz.aQute.bndlib</artifactId>
-                <version>3.0.0</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -1149,6 +1150,15 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <scope>test</scope>
             </dependency>
 
+         
+            <!-- DEPRECATED : Use the osgi.annotation instead -->
+            <!-- this version must match the version being used by the maven-bundle-plugin -->
+            <dependency>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>biz.aQute.bndlib</artifactId>
+                <version>3.0.0</version>
+                <scope>provided</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
