@@ -69,7 +69,7 @@ TOKEN:
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
 |   < NAMESPACE: "namespace" >
-|   < START_TEXTBLOCK: "<<<===" > : TEXTBLOCK
+|   < START_TEXTBLOCK: "<<===" > : TEXTBLOCK
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
 |   < COMMA: "," >
@@ -90,7 +90,7 @@ TOKEN:
 <TEXTBLOCK> TOKEN :
 {
     < TEXT : ~[] > 
-|   < END_TEXTBLOCK: "===>>>" > : DEFAULT
+|   < END_TEXTBLOCK: "===>>" > : DEFAULT
 } 
 
 List<Operation> parse() :
