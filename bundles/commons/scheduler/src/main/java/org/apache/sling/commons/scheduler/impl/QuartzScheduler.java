@@ -165,15 +165,23 @@ public class QuartzScheduler implements BundleListener {
         }
     }
 
+    /**
+     * Get the thread pool name to use based on the provided/configured name
+     * @param name The configured name
+     * @return The name to use
+     */
     private String getThreadPoolName(final String name) {
+        // no name specified
         if ( name == null || name.trim().isEmpty() ) {
             return this.defaultPoolName;
         }
+        // checked allowed list
         for(final String n : this.allowedPoolNames) {
             if ( name.trim().equals(n) ) {
                 return n;
             }
         }
+        logger.warn("Scheduler job requested thread pool with name " + name + " but this thread pool is not in the list of allowed pools.");
         return this.defaultPoolName;
     }
 
