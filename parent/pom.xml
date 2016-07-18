@@ -37,7 +37,7 @@
     <url>http://sling.apache.org</url>
 
     <prerequisites>
-        <maven>3.0.5</maven>
+        <maven>3.3.9</maven>
     </prerequisites>
 
 
