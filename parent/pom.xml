@@ -42,7 +42,7 @@
              Therefore the enforcer plugin needs to verify the maven version. See configuration
              of the plugin further below
         -->
-        <maven>3.3.3</maven>
+        <maven>3.3.9</maven>
     </prerequisites>
 
 
@@ -142,7 +142,7 @@
                                     <version>1.7.0</version>
                                 </requireJavaVersion>
                                 <requireMavenVersion>
-                                    <version>3.3.3</version>
+                                    <version>3.3.9</version>
                                 </requireMavenVersion>
                             </rules>
                         </configuration>
