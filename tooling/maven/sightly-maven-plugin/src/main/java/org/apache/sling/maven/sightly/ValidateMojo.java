@@ -116,7 +116,10 @@ public class ValidateMojo extends AbstractMojo {
             getLog().info("No files found to validate, skipping");
             return;
         }
-        
+
+        // don't fail execution in Eclipse as it generates an error marker in the POM file, which is not desired
+        boolean mayFailExecution = !buildContext.getClass().getName().startsWith("org.eclipse.m2e");
+
         sourceDirectoryLength = sourceDirectory.getAbsolutePath().length();
         processedIncludes = processIncludes();
         processedExcludes = processExcludes();
@@ -160,10 +163,10 @@ public class ValidateMojo extends AbstractMojo {
             
             getLog().info("Processed " + processedFiles.size() + " files in " + ( System.currentTimeMillis() - start ) + " milliseconds");
             
-            if (hasWarnings && failOnWarnings) {
+            if (mayFailExecution && hasWarnings && failOnWarnings) {
                 throw new MojoFailureException("Compilation warnings were configured to fail the build.");
             }
-            if (hasErrors) {
+            if (mayFailExecution && hasErrors) {
                 throw new MojoFailureException("Please check the reported syntax errors.");
             }
         } catch (IOException e) {
