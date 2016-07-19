@@ -38,23 +38,18 @@ import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** JCR visitor for the Operations produced by the repoinit parser */
-class JcrRepoInitOperationVisitor implements OperationVisitor {
+/** OperationVisitor which processes only operations related to
+ *  service users and ACLs. Having several such specialized visitors 
+ *  makes it easy to control the execution order. 
+ */
+class ServiceAndAclVisitor extends DoNothingVisitor {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    private Session session;
-    
     /** Create a visitor using the supplied JCR Session.
      * @param s must have sufficient rights to create users
      *      and set ACLs.
      */
-    public JcrRepoInitOperationVisitor(Session s) {
-        session = s;
-    }
-    
-    private void report(Exception e, String message) {
-        throw new RuntimeException(message, e);
+    public ServiceAndAclVisitor(Session s) {
+        super(s);
     }
     
     @Override
@@ -140,15 +135,5 @@ class JcrRepoInitOperationVisitor implements OperationVisitor {
         } catch(Exception e) {
             throw new RuntimeException("Session.save failed: "+ e, e);
         }
-    }
-
-    @Override
-    public void visitRegisterNamespace(RegisterNamespace rn) {
-        throw new UnsupportedOperationException(rn.toString());
-    }
-
-    @Override
-    public void visitRegisterNodetypes(RegisterNodetypes b) {
-        throw new UnsupportedOperationException(b.getClass().getName());
     }
 }
