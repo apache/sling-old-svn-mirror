@@ -19,6 +19,9 @@ package org.apache.sling.repoinit.it;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.UUID;
+
+import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
@@ -26,7 +29,6 @@ import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,6 +38,7 @@ public class ProvisioningModelIT {
     private Session session;
     private static final String TEST_PATH = "/repoinit/fromProvisioningModel";
     private static final String TEST_USER = "userFromProvisioningModel";
+    private final String uniqueID = UUID.randomUUID().toString();
     
     @Rule
     public TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "IT");
@@ -54,13 +57,20 @@ public class ProvisioningModelIT {
     }
     
     @Test
-    public void provisioningModelUserExists() throws Exception {
+    public void userCreated() throws Exception {
         assertTrue("Expecting user " + TEST_USER, U.userExists(session, TEST_USER));
     }
     
     @Test
-    public void provisioningModelUserAcl() throws Exception {
+    public void userAclSet() throws Exception {
         assertTrue("Expecting read access", U.canRead(session, TEST_USER, TEST_PATH));
         assertFalse("Expecting no write access",  U.canWrite(session, TEST_USER, TEST_PATH));
+    }
+    
+    @Test
+    public void namespaceAndCndRegistered() throws Exception {
+        final String nodeName = "ns-" + uniqueID;
+        session.getRootNode().addNode(nodeName, "slingtest:unstructured");
+        session.save();
     }
 }

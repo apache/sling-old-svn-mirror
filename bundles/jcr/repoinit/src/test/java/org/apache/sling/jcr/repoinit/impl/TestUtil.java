@@ -93,10 +93,8 @@ public class TestUtil {
     }
     
     public void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
-        final JcrRepoInitOperationVisitor v = new JcrRepoInitOperationVisitor(adminSession);
-        for(Operation o : parse(input)) {
-            o.accept(v);
-        }
+        final JcrRepoInitOpsProcessorImpl p = new JcrRepoInitOpsProcessorImpl();
+        p.apply(adminSession, parse(input));
         adminSession.save();
     }
     
@@ -108,5 +106,26 @@ public class TestUtil {
     public Session loginService(String serviceUsername) throws RepositoryException {
         final SimpleCredentials cred = new SimpleCredentials(serviceUsername, new char[0]);
         return adminSession.impersonate(cred);
+    }
+    
+    public Session getAdminSession() {
+        return adminSession;
+    }
+    
+    public void cleanup() {
+        adminSession.logout();
+    }
+    
+    public String getTestCndStatement(String nsPrefix, String nsURI) throws RepositoryException, RepoInitParsingException {
+        return "register nodetypes\n"
+                + "<<===\n"
+                + getTestCND(nsPrefix, nsURI)
+                + "===>>\n"
+        ;
+    }
+    
+    public String getTestCND(String nsPrefix, String nsURI) {
+        return "<" + nsPrefix + "='" + nsURI + "'>\n"
+                + "[" + nsPrefix + ":foo] > nt:unstructured\n";
     }
 }

@@ -40,3 +40,11 @@ set ACL for userFromProvisioningModel
   allow jcr:read on /repoinit/fromProvisioningModel
   deny jcr:write on /repoinit/fromProvisioningModel
 end
+
+register namespace (slingtest) http://sling.apache.org/ns/test/repoinit-it/v1.0
+
+register nodetypes
+<<===
+<< <slingtest='http://sling.apache.org/ns/test/repoinit-it/v1.0'>
+<< [slingtest:unstructured] > nt:unstructured
+===>>
