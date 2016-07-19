@@ -25,6 +25,7 @@ import org.apache.maven.plugin.testing.SilentLog;
 import org.apache.maven.project.MavenProject;
 import org.junit.Rule;
 import org.junit.Test;
+import org.sonatype.plexus.build.incremental.DefaultBuildContext;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -99,12 +100,17 @@ public class ValidateMojoTest {
     }
 
     private ValidateMojo getMojo(File baseDir, String pomFile) throws Exception {
+        SilentLog log = new SilentLog();
+        DefaultBuildContext buildContext = new DefaultBuildContext();
+        
         File pom = new File(baseDir, pomFile);
         ValidateMojo validateMojo = new ValidateMojo();
         mojoRule.configureMojo(validateMojo, mojoRule.extractPluginConfiguration("sightly-maven-plugin", pom));
         MavenProject mavenProject = new ProjectStub(pom);
         mojoRule.setVariableValueToObject(validateMojo, "project", mavenProject);
-        validateMojo.setLog(new SilentLog());
+        validateMojo.setLog(log);
+        buildContext.enableLogging(log);
+        validateMojo.setBuildContext(buildContext);
         return validateMojo;
     }
 
