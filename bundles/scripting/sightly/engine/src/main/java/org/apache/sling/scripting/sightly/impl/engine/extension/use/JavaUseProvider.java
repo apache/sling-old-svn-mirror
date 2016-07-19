@@ -34,7 +34,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
-import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.engine.ResourceBackedPojoChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -69,7 +69,7 @@ public class JavaUseProvider implements UseProvider {
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Reference
-    private UnitChangeMonitor unitChangeMonitor = null;
+    private ResourceBackedPojoChangeMonitor resourceBackedPojoChangeMonitor = null;
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
@@ -89,9 +89,9 @@ public class JavaUseProvider implements UseProvider {
         try {
             LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
             Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
-            if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
+            if (resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
                 // the object is a POJO that was changed in the repository but not recompiled;
-                LOG.debug("Class {} was available in the classloader cache but it needs to be recompiled.");
+                LOG.debug("Class {} is available in the classloader cache but it needs to be recompiled.", identifier);
                 result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
                 if (result instanceof Use) {
                     ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
