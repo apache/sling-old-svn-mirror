@@ -43,4 +43,12 @@ public class RegisterNamespace extends Operation {
     public void accept(OperationVisitor v) {
         v.visitRegisterNamespace(this);
     }
+    
+    public String getPrefix() {
+        return prefix;
+    }
+    
+    public String getURI() {
+        return uri;
+    }
 }
