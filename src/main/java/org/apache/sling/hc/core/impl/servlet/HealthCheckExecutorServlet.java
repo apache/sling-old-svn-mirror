@@ -29,8 +29,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -281,7 +281,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         sb.append("<h3>Supported URL parameters</h3>\n");
         for(Param p : PARAM_LIST) {
             sb.append("<b>").append(p.name).append("</b>:");
-            sb.append(StringEscapeUtils.escapeHtml4(p.description));
+            sb.append(StringEscapeUtils.escapeHtml(p.description));
             sb.append("<br/>");
         }
         return sb.toString();
