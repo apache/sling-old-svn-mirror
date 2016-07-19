@@ -134,11 +134,15 @@ public class QuartzScheduler implements BundleListener {
         } else if ( value != null ) {
             this.allowedPoolNames = new String[] {value.toString()};
         }
-        for(int i=0;i<this.allowedPoolNames.length;i++) {
-            if ( this.allowedPoolNames[i] == null ) {
-                this.allowedPoolNames[i] = "";
-            } else {
-                this.allowedPoolNames[i] = this.allowedPoolNames[i].trim();
+        if ( this.allowedPoolNames == null ) {
+            this.allowedPoolNames = new String[0];
+        } else {
+            for(int i=0;i<this.allowedPoolNames.length;i++) {
+                if ( this.allowedPoolNames[i] == null ) {
+                    this.allowedPoolNames[i] = "";
+                } else {
+                    this.allowedPoolNames[i] = this.allowedPoolNames[i].trim();
+                }
             }
         }
         ctx.addBundleListener(this);
