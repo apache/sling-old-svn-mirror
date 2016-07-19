@@ -102,7 +102,7 @@ public class SlingModelsUseProvider implements UseProvider {
         try {
             cls = dynamicClassLoaderManager.getDynamicClassLoader().loadClass(identifier);
         } catch (ClassNotFoundException e) {
-            LOGGER.debug("Could not find class with the given name {}: {}", identifier, e.getMessage());
+            LOGGER.debug("Could not find class with the given name {}.", identifier);
             // next use provider will be queried
             return ProviderOutcome.failure();
         }
