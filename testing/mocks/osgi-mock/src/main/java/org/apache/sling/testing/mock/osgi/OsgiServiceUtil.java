@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.SortedSet;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.impl.helper.Annotations;
+import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.FieldCollectionType;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
