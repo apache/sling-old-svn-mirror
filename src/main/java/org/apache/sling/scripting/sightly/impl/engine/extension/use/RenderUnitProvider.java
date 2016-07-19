@@ -109,10 +109,13 @@ public class RenderUnitProvider implements UseProvider {
                 } else {
                     SightlyScriptEngine sightlyScriptEngine =
                             (SightlyScriptEngine) scriptEngineManager.getEngineByName(SightlyScriptEngineFactory.SHORT_NAME);
-                    InputStream inputStream = renderUnitResource.adaptTo(InputStream.class);
                     String encoding = renderUnitResource.getResourceMetadata().getCharacterEncoding();
                     if (StringUtils.isEmpty(encoding)) {
                         encoding = "UTF-8";
+                    }
+                    InputStream inputStream = renderUnitResource.adaptTo(InputStream.class);
+                    if (inputStream == null) {
+                        return ProviderOutcome.failure();
                     }
                     InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding);
                     compiledScript = (SightlyCompiledScript) sightlyScriptEngine.compile(inputStreamReader);

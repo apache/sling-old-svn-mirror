@@ -68,7 +68,7 @@ public class SightlyJavaCompilerService {
     private JavaCompiler javaCompiler = null;
 
     @Reference
-    private UnitChangeMonitor unitChangeMonitor = null;
+    private ResourceBackedPojoChangeMonitor resourceBackedPojoChangeMonitor = null;
 
     @Reference
     private SightlyEngineConfiguration sightlyEngineConfiguration = null;
@@ -87,16 +87,16 @@ public class SightlyJavaCompilerService {
         RenderContextImpl rci = (RenderContextImpl) renderContext;
         LOG.debug("Attempting to load class {}.", className);
         if (className.contains(".")) {
-            if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
+            if (resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
                 LOG.debug("Class {} identifies a POJO from the repository that was changed since the last time it was instantiated.",
                         className);
                 Object result = compileRepositoryJavaClass(rci.getScriptResourceResolver(), className);
-                unitChangeMonitor.clearJavaUseObject(className);
+                resourceBackedPojoChangeMonitor.clearJavaUseObject(className);
                 return result;
             }
             try {
-                // the object either comes from a bundle or from the repo but it was not registered by the UnitChangeMonitor
+                // the object either comes from a bundle or from the repo but it was not registered by the ResourceBackedPojoChangeMonitor
                 LOG.debug("Attempting to load class {} from the classloader cache.", className);
                 return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
             } catch (Exception e) {

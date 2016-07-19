@@ -83,6 +83,9 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
         SlingBindings slingBindings = new SlingBindings();
         slingBindings.putAll(bindings);
         final SlingHttpServletRequest request = slingBindings.getRequest();
+        if (request == null) {
+            throw new SightlyException("Missing SlingHttpServletRequest from ScriptContext.");
+        }
         final Object oldValue = request.getAttribute(SlingBindings.class.getName());
         try {
             request.setAttribute(SlingBindings.class.getName(), slingBindings);

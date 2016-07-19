@@ -32,9 +32,9 @@ import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
+import org.apache.sling.scripting.sightly.impl.engine.ResourceBackedPojoChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
-import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -50,21 +50,21 @@ import static org.mockito.Mockito.*;
 public class SightlyJavaCompilerServiceTest {
 
     private SightlyJavaCompilerService compiler;
-    private UnitChangeMonitor ucm;
+    private ResourceBackedPojoChangeMonitor resourceBackedPojoChangeMonitor;
 
     @Before
     public void setUp() throws Exception {
         compiler = new SightlyJavaCompilerService();
-        ucm = spy(new UnitChangeMonitor());
+        resourceBackedPojoChangeMonitor = spy(new ResourceBackedPojoChangeMonitor());
         SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
         Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
-        Whitebox.setInternalState(compiler, "unitChangeMonitor", ucm);
+        Whitebox.setInternalState(compiler, "resourceBackedPojoChangeMonitor", resourceBackedPojoChangeMonitor);
     }
 
     @After
     public void tearDown() throws Exception {
         compiler = null;
-        ucm = null;
+        resourceBackedPojoChangeMonitor = null;
     }
 
     @Test
@@ -95,9 +95,9 @@ public class SightlyJavaCompilerServiceTest {
         Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
             put(className, System.currentTimeMillis());
         }};
-        Whitebox.setInternalState(ucm, "slyJavaUseMap", slyJavaUseMap);
+        Whitebox.setInternalState(resourceBackedPojoChangeMonitor, "slyJavaUseMap", slyJavaUseMap);
         getInstancePojoTest(pojoPath, className);
-        verify(ucm).clearJavaUseObject(className);
+        verify(resourceBackedPojoChangeMonitor).clearJavaUseObject(className);
     }
 
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {
