@@ -73,7 +73,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.4</version>
             <scope>provided</scope>
         </dependency>
 
@@ -133,7 +133,7 @@
                 <configuration>
                     <instructions>
                         <Embed-Dependency>
-                            org.apache.felix.scr;inline="org/apache/felix/scr/impl/helper/Annotations*|org/apache/felix/scr/impl/helper/Coercions*"
+                            org.apache.felix.scr;inline="org/apache/felix/scr/impl/inject/Annotations*|org/apache/felix/scr/impl/helper/Coercions*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
