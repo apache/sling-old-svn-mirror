@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.packaging.impl.importer;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.junit.Test;
@@ -33,7 +34,9 @@ public class LocalDistributionPackageImporterTest {
     @Test
     public void testDummyImport() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
-        LocalDistributionPackageImporter localdistributionPackageImporter = new LocalDistributionPackageImporter(packageBuilder);
+        DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
+        LocalDistributionPackageImporter localdistributionPackageImporter =
+                new LocalDistributionPackageImporter("mockImporter", distributionEventFactory, packageBuilder);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         localdistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
