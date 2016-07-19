@@ -54,8 +54,6 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An OSGi service factory for "reverse agents" that pull resources from remote instances (e.g. from "queueing agents").
@@ -74,8 +72,6 @@ import org.slf4j.LoggerFactory;
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
 public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFactory {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -183,16 +179,13 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
-
         String[] exporterEndpoints = PropertiesUtil.toStringArray(config.get(EXPORTER_ENDPOINTS), new String[0]);
         exporterEndpoints = SettingsUtils.removeEmptyEntries(exporterEndpoints);
 
-
         int pullItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
-
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, pullItems);
-        DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(packageBuilder);
+        DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(agentName, distributionEventFactory, packageBuilder);
         DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy = new SingleQueueDispatchingStrategy();
@@ -206,7 +199,6 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, processingQueues,
                 serviceName, packageImporter, packageExporter, requestAuthorizationStrategy,
                 queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository, distributionLog, allowedRequests, null, 0);
-
 
     }
 }
