@@ -24,7 +24,7 @@
  *
  * @version 1.2
  */
-@Version("1.2")
+@Version("1.3")
 @Export(optional = "provide:=true")
 package org.apache.sling.auth.core;
 

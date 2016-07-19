@@ -23,13 +23,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import javax.annotation.Nonnull;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.login.AccountLockedException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -59,6 +64,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
+import org.apache.sling.auth.core.AuthenticationRequirement;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
@@ -95,10 +101,10 @@ import org.slf4j.LoggerFactory;
  * URL.
  */
 @Component(name = "org.apache.sling.engine.impl.auth.SlingAuthenticator", label = "%auth.name", description = "%auth.description", metatype = true)
-@Service(value = { Authenticator.class, AuthenticationSupport.class, ServletRequestListener.class })
+@Service(value = { Authenticator.class, AuthenticationSupport.class, ServletRequestListener.class, AuthenticationRequirement.class })
 @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 public class SlingAuthenticator implements Authenticator,
-        AuthenticationSupport, ServletRequestListener {
+        AuthenticationSupport, ServletRequestListener, AuthenticationRequirement {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
@@ -206,8 +212,9 @@ public class SlingAuthenticator implements Authenticator,
 
     private PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authHandlerCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
 
-    // package protected for access in inner class ...
-    PathBasedHolderCache<AuthenticationRequirementHolder> authRequiredCache = new PathBasedHolderCache<AuthenticationRequirementHolder>();
+    private PathBasedHolderCache<AuthenticationRequirementHolder> authRequiredCache = new PathBasedHolderCache<AuthenticationRequirementHolder>();
+
+    private ExternalAuthenticationRequirements externalAuthenticationRequirements = new ExternalAuthenticationRequirements(authRequiredCache);
 
     /** The name of the impersonation parameter */
     private String sudoParameterName;
@@ -300,7 +307,7 @@ public class SlingAuthenticator implements Authenticator,
             "javax.servlet.Servlet", plugin, props);
 
         serviceListener = SlingAuthenticatorServiceListener.createListener(
-            bundleContext, this);
+                bundleContext, externalAuthenticationRequirements);
 
         authHandlerTracker = new AuthenticationHandlerTracker(bundleContext,
             authHandlerCache);
@@ -348,7 +355,7 @@ public class SlingAuthenticator implements Authenticator,
             for (String authReq : authReqs) {
                 if (authReq != null && authReq.length() > 0) {
                     authRequiredCache.addHolder(AuthenticationRequirementHolder.fromConfig(
-                        authReq, null));
+                            authReq, null));
                 }
             }
         }
@@ -371,10 +378,10 @@ public class SlingAuthenticator implements Authenticator,
         authRequiredCache.addHolder(new AuthenticationRequirementHolder(
             LogoutServlet.SERVLET_PATH, false, null));
 
-        // add all registered services
-        if (serviceListener != null) {
-            serviceListener.registerServices();
-        }
+        // update the authRequiredCache for all external auth-requirements that
+        // have been registered through service-listener or through
+        // AuthenticationRequirement API calls
+        externalAuthenticationRequirements.registerAll();
 
         final String http;
         if (anonAllowed) {
@@ -865,7 +872,7 @@ public class SlingAuthenticator implements Authenticator,
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
                 if (DefaultAuthenticationFeedbackHandler.handleRedirect(
-                    request, response)) {
+                        request, response)) {
 
                     // request will now be terminated, so close the resolver
                     // to release resources
@@ -1519,18 +1526,120 @@ public class SlingAuthenticator implements Authenticator,
         return builder.toString();
     }
 
+    //------------------------------------------< AuthenticationRequirement >---
+    @Override
+    public void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
+        externalAuthenticationRequirements.setRequirements(serviceReference, createHolders(serviceReference, requirements));
+    }
+
+    @Override
+    public void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
+        externalAuthenticationRequirements.appendRequirements(serviceReference, createHolders(serviceReference, requirements));
+    }
+
+    @Override
+    public void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements) {
+        externalAuthenticationRequirements.removeRequirements(serviceReference, createHolders(serviceReference, requirements));
+    }
+
+    @Override
+    public void clearRequirements(@Nonnull ServiceReference serviceReference) {
+        externalAuthenticationRequirements.clearRequirements(serviceReference);
+    }
+
+    private static Set<AuthenticationRequirementHolder> createHolders(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
+        Set<AuthenticationRequirementHolder> holders = new HashSet<AuthenticationRequirementHolder>(requirements.size());
+        for (Map.Entry<String, Boolean> entry : requirements.entrySet()) {
+            holders.add(new AuthenticationRequirementHolder(entry.getKey(), entry.getValue(), serviceReference));
+        }
+        return holders;
+    }
+
+    //--------------------------------------------------------------------------
+    private static final class ExternalAuthenticationRequirements {
+
+        private final ConcurrentMap<String, Set<AuthenticationRequirementHolder>> props = new ConcurrentHashMap<String, Set<AuthenticationRequirementHolder>>();
+        private final PathBasedHolderCache<AuthenticationRequirementHolder> authRequiredCache;
+
+        private ExternalAuthenticationRequirements(@Nonnull PathBasedHolderCache<AuthenticationRequirementHolder> authRequiredCache) {
+            this.authRequiredCache = authRequiredCache;
+        }
+
+        private void registerAll() {
+            for (Set<AuthenticationRequirementHolder> authReqs : props.values()) {
+                register(authReqs);
+            }
+        }
+
+        private void register(@Nonnull final Collection<AuthenticationRequirementHolder> authReqs) {
+            for (AuthenticationRequirementHolder authReq : authReqs) {
+                authRequiredCache.addHolder(authReq);
+            }
+        }
+
+        private void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
+            // remove existing entries
+            clearRequirements(serviceReference);
+
+            // register the new entries
+            register(reqHolders);
+            props.put(getKey(serviceReference), newConcurrentSet(reqHolders));
+        }
+
+        private void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
+            register(reqHolders);
+
+            Set<AuthenticationRequirementHolder> existing = props.get(getKey(serviceReference));
+            if (existing == null) {
+                props.put(getKey(serviceReference), newConcurrentSet(reqHolders));
+            } else {
+                existing.addAll(reqHolders);
+            }
+        }
+
+        private void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull  Collection<AuthenticationRequirementHolder> reqHolders) {
+            Set<AuthenticationRequirementHolder> existing = props.get(getKey(serviceReference));
+            if (existing != null) {
+                existing.removeAll(reqHolders);
+            }
+
+            for (AuthenticationRequirementHolder authReq : reqHolders) {
+                authRequiredCache.removeHolder(authReq);
+            }
+        }
+
+        private void clearRequirements(@Nonnull ServiceReference serviceReference) {
+            Set<AuthenticationRequirementHolder> authReqs = props.remove(getKey(serviceReference));
+
+            if (authReqs != null) {
+                for (AuthenticationRequirementHolder authReq : authReqs) {
+                    authRequiredCache.removeHolder(authReq);
+                }
+            }
+        }
+
+        @Nonnull
+        private static String getKey(@Nonnull ServiceReference serviceReference) {
+            return PathBasedHolder.buildDescription(serviceReference);
+        }
+
+        private static Set<AuthenticationRequirementHolder> newConcurrentSet(@Nonnull Collection<AuthenticationRequirementHolder> requirementHolders) {
+            Set<AuthenticationRequirementHolder> set = Collections.newSetFromMap(new ConcurrentHashMap<AuthenticationRequirementHolder, Boolean>());
+            set.addAll(requirementHolders);
+            return set;
+        }
+    }
+
+
     private static class SlingAuthenticatorServiceListener implements
             AllServiceListener {
 
-        private final SlingAuthenticator authenticator;
-
-        private final HashMap<Object, AuthenticationRequirementHolder[]> props = new HashMap<Object, AuthenticationRequirementHolder[]>();
+        private final ExternalAuthenticationRequirements authenticationRequirements;
 
         static SlingAuthenticatorServiceListener createListener(
                 final BundleContext context,
-                final SlingAuthenticator authenticator) {
-            SlingAuthenticatorServiceListener listener = new SlingAuthenticatorServiceListener(
-                authenticator);
+                final ExternalAuthenticationRequirements authenticationRequirements) {
+            SlingAuthenticatorServiceListener listener = new SlingAuthenticatorServiceListener(authenticationRequirements);
             try {
                 final String filter = "(" + AuthConstants.AUTH_REQUIREMENTS + "=*)";
                 context.addServiceListener(listener, filter);
@@ -1548,70 +1657,43 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         private SlingAuthenticatorServiceListener(
-                final SlingAuthenticator authenticator) {
-            this.authenticator = authenticator;
+                final ExternalAuthenticationRequirements authenticationRequirements) {
+            this.authenticationRequirements = authenticationRequirements;
         }
 
         @Override
         public void serviceChanged(final ServiceEvent event) {
-            synchronized ( props ) {
-                // modification of service properties, unregistration of the
-                // service or service properties does not contain requirements
-                // property any longer (new event with type 8 added in OSGi Core
-                // 4.2)
-                if ((event.getType() & (ServiceEvent.MODIFIED
+            // modification of service properties, unregistration of the
+            // service or service properties does not contain requirements
+            // property any longer (new event with type 8 added in OSGi Core
+            // 4.2)
+            if ((event.getType() & (ServiceEvent.MODIFIED
                     | ServiceEvent.UNREGISTERING | 8)) != 0) {
-                    removeService(event.getServiceReference());
-                }
+                removeService(event.getServiceReference());
+            }
 
-                // add requirements for newly registered services and for
-                // updated services
-                if ((event.getType() & (ServiceEvent.REGISTERED | ServiceEvent.MODIFIED)) != 0) {
-                    addService(event.getServiceReference());
-                }
+            // add requirements for newly registered services and for
+            // updated services
+            if ((event.getType() & (ServiceEvent.REGISTERED | ServiceEvent.MODIFIED)) != 0) {
+                addService(event.getServiceReference());
             }
         }
 
-        void registerServices() {
-            AuthenticationRequirementHolder[][] authReqsList;
-            authReqsList = props.values().toArray(new AuthenticationRequirementHolder[props.size()][]);
-
-            for (AuthenticationRequirementHolder[] authReqs : authReqsList) {
-                registerService(authReqs);
-            }
-        }
-
-        private void registerService(
-                final AuthenticationRequirementHolder[] authReqs) {
-            for (AuthenticationRequirementHolder authReq : authReqs) {
-                authenticator.authRequiredCache.addHolder(authReq);
-            }
-        }
-
-        private void addService(final ServiceReference ref) {
+        private void addService(@Nonnull final ServiceReference ref) {
             final String[] authReqPaths = OsgiUtil.toStringArray(ref.getProperty(PAR_AUTH_REQ));
 
             ArrayList<AuthenticationRequirementHolder> authReqList = new ArrayList<AuthenticationRequirementHolder>();
             for (String authReq : authReqPaths) {
                 if (authReq != null && authReq.length() > 0) {
                     authReqList.add(AuthenticationRequirementHolder.fromConfig(
-                        authReq, ref));
+                            authReq, ref));
                 }
             }
-
-            final AuthenticationRequirementHolder[] authReqs = authReqList.toArray(new AuthenticationRequirementHolder[authReqList.size()]);
-
-            registerService(authReqs);
-            props.put(ref.getProperty(Constants.SERVICE_ID), authReqs);
+            authenticationRequirements.setRequirements(ref, authReqList);
         }
 
-        private void removeService(final ServiceReference ref) {
-            final AuthenticationRequirementHolder[] authReqs = props.remove(ref.getProperty(Constants.SERVICE_ID));
-            if (authReqs != null) {
-                for (AuthenticationRequirementHolder authReq : authReqs) {
-                    authenticator.authRequiredCache.removeHolder(authReq);
-                }
-            }
+        private void removeService(@Nonnull final ServiceReference ref) {
+            authenticationRequirements.clearRequirements(ref);
         }
     }
 

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 public class PathBasedHolderCache<Type extends PathBasedHolder> {
@@ -45,7 +45,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public void addHolder(final Type holder) {
+    public void addHolder(@Nonnull final Type holder) {
         this.rwLock.writeLock().lock();
         try {
 
@@ -73,7 +73,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public void removeHolder(final Type holder) {
+    public void removeHolder(@Nonnull final Type holder) {
         this.rwLock.writeLock().lock();
         try {
             final Map<String, SortedSet<Type>> byHostMap = cache.get(holder.protocol);
@@ -99,7 +99,8 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public Collection<Type>[] findApplicableHolder(final HttpServletRequest request) {
+    @Nonnull
+    public Collection<Type>[] findApplicableHolder(@Nonnull final HttpServletRequest request) {
         this.rwLock.readLock().lock();
         try {
             final String hostname = request.getServerName()
@@ -126,6 +127,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
+    @Nonnull
     public List<Type> getHolders() {
         this.rwLock.readLock().lock();
         try {

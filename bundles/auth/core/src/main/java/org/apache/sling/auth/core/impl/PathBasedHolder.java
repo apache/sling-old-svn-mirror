@@ -18,6 +18,9 @@
  */
 package org.apache.sling.auth.core.impl;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -83,8 +86,8 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * @param serviceReference The reference to the service providing the
      *            configuration for this instance.
      */
-    protected PathBasedHolder(final String url,
-            final ServiceReference serviceReference) {
+    protected PathBasedHolder(@Nonnull final String url,
+            @Nullable final ServiceReference serviceReference) {
 
         String path = url;
         String host = "";
@@ -122,6 +125,19 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
         this.serviceReference = serviceReference;
     }
 
+    @Nonnull
+    static String buildDescription(@Nonnull ServiceReference ref) {
+        final String descr = OsgiUtil.toString(
+                ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
+        if (descr != null) {
+            return descr;
+        }
+
+        return "Service "
+                + OsgiUtil.toString(
+                ref.getProperty(Constants.SERVICE_ID), "unknown");
+    }
+
     /**
      * Returns a descriptive string of the provider of this instance. The string
      * is derived from the service reference with which this instance has been
@@ -129,21 +145,13 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * is ordered the service description of the {@link SlingAuthenticator} is
      * returned.
      */
+    @Nonnull
     final String getProvider() {
         // assume the commons/auth SlingAuthenticator provides the entry
         if (serviceReference == null) {
             return SlingAuthenticator.DESCRIPTION;
         }
-
-        final String descr = OsgiUtil.toString(
-            serviceReference.getProperty(Constants.SERVICE_DESCRIPTION), null);
-        if (descr != null) {
-            return descr;
-        }
-
-        return "Service "
-            + OsgiUtil.toString(
-                serviceReference.getProperty(Constants.SERVICE_ID), "unknown");
+        return buildDescription(serviceReference);
     }
 
     /**
@@ -164,7 +172,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * returned; if the <code>other</code> service reference is
      * <code>null</code>, <code>+1</code> is returned.
      */
-    public final int compareTo(PathBasedHolder other) {
+    public final int compareTo(@Nonnull PathBasedHolder other) {
 
         // compare the path first, and return if not equal
         final int pathResult = other.path.compareTo(path);
