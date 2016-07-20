@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +40,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by mpetria on 5/31/16.
+ * Manager implementation which represents the distribution configurations as OSGI configuration.
  */
 public class OsgiConfigurationManager implements DistributionConfigurationManager {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-
     final ConfigurationAdmin configurationAdmin;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public OsgiConfigurationManager(ConfigurationAdmin configurationAdmin) {
 
@@ -57,7 +56,7 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
         List<Configuration> configurations = getOsgiConfigurations(kind, null);
 
         List<DistributionConfiguration> result = new ArrayList<DistributionConfiguration>();
-        if (configurations == null || configurations.size() == 0) {
+        if (configurations == null || configurations.isEmpty()) {
             return result;
         }
 
@@ -78,8 +77,13 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
     public DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
         List<Configuration> configurations = getOsgiConfigurations(kind, name);
 
-        if (configurations == null || configurations.size() == 0) {
+        if (configurations == null || configurations.isEmpty()) {
             return null;
+        }
+
+        if (configurations.size() > 1) {
+            log.warn("Found more than one configuration of kind: {} and with name: {}",
+                    new String[]{kind.getName(), name});
         }
 
         Configuration configuration = configurations.get(0);
@@ -111,6 +115,18 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
 
         String factoryPid = componentKind.getFactory(componentType);
         if (factoryPid != null) {
+
+            // SLING-5872 - Management of agent configurations must identify configurations by name
+            // Remove the agents with the same name wich are not bind to the same factory.
+            List<Configuration> configs = getOsgiConfigurations(componentKind, componentName);
+            for (Iterator<Configuration> iter = configs.iterator() ; iter.hasNext() ; ) {
+                Configuration conf = iter.next();
+                if (factoryPid.equals(conf.getFactoryPid())) {
+                    iter.remove();
+                }
+            }
+            deleteOsgiConfigs(configs);
+
             properties.put(DistributionComponentConstants.PN_NAME, componentName);
             Configuration configuration = saveOsgiConfig(factoryPid, componentName, properties);
         }
@@ -157,7 +173,7 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
         try {
             List<Configuration> configurations = getOsgiConfigurationsFromFactory(factoryPid, componentName);
             Configuration configuration = null;
-            if (configurations == null || configurations.size() == 0) {
+            if (configurations == null || configurations.isEmpty()) {
                 configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
             } else {
                 configuration = configurations.get(0);
