@@ -264,9 +264,10 @@ public class QuartzSchedulerTest {
 
     @Test
     public void testThreadPools() throws SchedulerException {
-        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.NOW().name("j1").threadPoolName("tp1"));
-        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.NOW().name("j2").threadPoolName("tp2"));
-        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.NOW().name("j3").threadPoolName("allowed"));
+        final Date future = new Date(System.currentTimeMillis() + 1000 * 60 * 60);
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
+        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.AT(future).name("j2").threadPoolName("tp2"));
+        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.AT(future).name("j3").threadPoolName("allowed"));
 
         assertNull(proxies.get("tp1"));
         assertNull(proxies.get("tp2"));
@@ -279,21 +280,30 @@ public class QuartzSchedulerTest {
 
     @Test
     public void testNameAcrossPools() throws SchedulerException {
-        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.NOW().name("j1").threadPoolName("tp1"));
+        final Date future = new Date(System.currentTimeMillis() + 1000 * 60 * 60);
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
         assertNull(proxies.get("tp1"));
         assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
 
-        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.NOW().name("j1").threadPoolName("allowed"));
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("allowed"));
         assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
         assertTrue(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
-
-        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.NOW().name("j1"));
-        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
         assertFalse(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
 
-        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.NOW().name("j1").threadPoolName("tp1"));
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1"));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        assertFalse(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
         assertNull(proxies.get("tp1"));
         assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
     }
 
     @After
