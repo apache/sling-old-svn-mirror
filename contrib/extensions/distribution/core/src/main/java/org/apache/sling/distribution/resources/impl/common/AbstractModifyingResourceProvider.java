@@ -96,6 +96,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         saveInternalResources(resolver, changedResources, deletedResources);
 
         reset();
+        resolver.commit();
     }
 
     public boolean hasChanges(ResourceResolver resolver) {
