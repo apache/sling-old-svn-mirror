@@ -41,10 +41,10 @@ public class HeadServletTest {
     private final HttpTest H = new HttpTest();
     
     /** Test content provided by the test-services bundle */
-    public static final String HTML_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/some.html";
+    public static final String HTML_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/sling/sling-test.html";
     
     /** Test content provided by the test-services bundle */
-    public static final String PNG_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/sling-logo.png";
+    public static final String PNG_URL = HttpTestBase.HTTP_BASE_URL + "/sling-logo.png";
     
     public static final String NONEXISTENT_URL = HttpTestBase.HTTP_BASE_URL + "/notfound-" + UUID.randomUUID().toString();  
     
@@ -75,7 +75,7 @@ public class HeadServletTest {
     @Test
     public void htmlGet() throws IOException {
         final String content = H.getContent(HTML_URL, HttpTest.CONTENT_TYPE_HTML);
-        HttpTest.assertContains(content, "This is some HTML for testing Sling.");
+        HttpTest.assertContains(content, "Automated Sling client library tests");
     }
     
     @Test
