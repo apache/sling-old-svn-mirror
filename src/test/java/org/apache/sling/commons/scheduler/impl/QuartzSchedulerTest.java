@@ -173,7 +173,7 @@ public class QuartzSchedulerTest {
     public void testPeriodicWithIncorrectPeriod() throws SchedulerException {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Period argument must be higher than 0");
-        quartzScheduler.addPeriodicJob(3L, 3L, "anyName", new Thread(), new HashMap(), 0L, true, true);
+        quartzScheduler.addPeriodicJob(3L, 3L, "anyName", new Thread(), null, 0L, true, true);
     }
 
     @Test
@@ -181,10 +181,10 @@ public class QuartzSchedulerTest {
         String jobName = "anyName";
         String otherJobName = "anyOtherName";
 
-        quartzScheduler.addPeriodicJob(4L, 4L, jobName, new Thread(), new HashMap(), 2L, true, true);
+        quartzScheduler.addPeriodicJob(4L, 4L, jobName, new Thread(), null, 2L, true, true);
         assertTrue("Job must exists", proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(jobName)));
 
-        quartzScheduler.addPeriodicJob(5L, 5L, otherJobName, new Thread(), new HashMap(), 2L, true, false);
+        quartzScheduler.addPeriodicJob(5L, 5L, otherJobName, new Thread(), null, 2L, true, false);
         assertTrue("Job must exists", proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(otherJobName)));
     }
 
