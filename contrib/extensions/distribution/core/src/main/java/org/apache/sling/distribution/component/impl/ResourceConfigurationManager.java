@@ -33,13 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Manager implementation which represents the distribution configurations as resources.
+ */
 public class ResourceConfigurationManager implements DistributionConfigurationManager {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
 
     final String CONTENT_NODE = "jcr:content";
     final String configRootPath;
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final String[] configProperties;
     private final Map<String, String> configDefaults;
 
@@ -100,7 +101,9 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
         }
 
         Resource configResource = configRoot.getChild(config.getName());
-        Resource contentResource = null;
+        Resource contentResource = (configResource != null)
+                ? configResource.getChild(CONTENT_NODE)
+                : null ;
 
         try {
             if (configResource == null) {
@@ -121,7 +124,6 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
 
             ModifiableValueMap valueMap = contentResource.adaptTo(ModifiableValueMap.class);
             valueMap.putAll(properties);
-            resolver.commit();
         } catch (PersistenceException e) {
             log.error("cannot save config {}", config.getName(),  e);
         }
