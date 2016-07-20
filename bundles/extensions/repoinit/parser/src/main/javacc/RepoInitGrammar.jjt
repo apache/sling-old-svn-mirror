@@ -302,15 +302,11 @@ void registerNamespaceStatement(List<Operation> result) :
 }
 {
     <REGISTER> <NAMESPACE> 
-    ( <LPAREN> prefix = <STRING> <RPAREN> )? 
+    <LPAREN> prefix = <STRING> <RPAREN> 
     uri = <STRING> 
 
     {
-        if(prefix == null) {
-            result.add(new RegisterNamespace(null, uri.image)); 
-        } else {
-            result.add(new RegisterNamespace(prefix.image, uri.image)); 
-        } 
+        result.add(new RegisterNamespace(prefix.image, uri.image)); 
     }
     
     (<EOL> | <EOF>)
