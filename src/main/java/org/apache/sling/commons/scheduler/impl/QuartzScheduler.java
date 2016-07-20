@@ -452,7 +452,9 @@ public class QuartzScheduler implements BundleListener {
                 }
             }
         }
-        throw new NoSuchElementException("No job found with name " + jobName);
+        if ( this.active ) {
+            throw new NoSuchElementException("No job found with name " + jobName);
+        }
     }
 
    /**
