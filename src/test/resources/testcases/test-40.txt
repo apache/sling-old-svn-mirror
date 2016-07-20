@@ -1,4 +1,3 @@
 # Test the register namespace statement
 register namespace (foo) uri:some-uri/V/1.0
-register namespace uri:without-prefix
 register namespace ( prefix_with-other.things ) andSimpleURI
