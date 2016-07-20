@@ -18,9 +18,8 @@
  */
 package org.apache.sling.api.resource.path;
 
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
+import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 
 /**
  * Simple helper class for path matching.
@@ -34,26 +33,29 @@ public class Path implements Comparable<Path> {
     private final String prefix;
 
     private final boolean isPattern;
+    private final Pattern regexPattern;
 
     /**
      * <p>Create a new path object either from a concrete path or from a glob pattern.</p>
      *
-     * <p>The following rules are used to interpret glob patterns:</p>
+     * <p>A glob pattern should start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
+     * to interpret glob patterns:</p>
      * <ul>
      *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
-     *     <li>The {@code **} characters matches zero or more characters crossing directory boundaries.</li>
-     *     <li>The {@code ?} character matches exactly one character of a name component.</li>
+     *     <li>The {@code **} characters match zero or more characters crossing directory boundaries.</li>
      * </ul>
      *
      * @param path the resource path or a glob pattern.
      */
-    public Path(final String path) {
+    public Path(@Nonnull final String path) {
         this.path = path;
         this.prefix = path.equals("/") ? "/" : path.concat("/");
-        if (path.contains("?") || path.contains("*")) {
+        if (path.startsWith("glob:")) {
             isPattern = true;
+            regexPattern = Pattern.compile(toRegexPattern(path.substring(5)));
         } else {
             isPattern = false;
+            regexPattern = null;
         }
 
     }
@@ -65,8 +67,7 @@ public class Path implements Comparable<Path> {
      */
     public boolean matches(final String otherPath) {
         if (isPattern) {
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + path);
-            return matcher.matches(Paths.get(otherPath));
+            return regexPattern.matcher(otherPath).matches();
         }
         return this.path.equals(otherPath) || otherPath.startsWith(this.prefix);
     }
@@ -80,7 +81,7 @@ public class Path implements Comparable<Path> {
     }
 
     @Override
-    public int compareTo(final Path o) {
+    public int compareTo(@Nonnull final Path o) {
         return this.getPath().compareTo(o.getPath());
     }
 
@@ -98,6 +99,42 @@ public class Path implements Comparable<Path> {
             return false;
         }
         return this.getPath().equals(((Path)obj).getPath());
+    }
+
+    private static String toRegexPattern(String pattern) {
+        StringBuilder stringBuilder = new StringBuilder("^");
+        int index = 0;
+        while (index < pattern.length()) {
+            char currentChar = pattern.charAt(index++);
+            switch (currentChar) {
+                case '*':
+                    if (getCharAtIndex(pattern, index) == '*') {
+                        stringBuilder.append(".*");
+                        ++index;
+                    } else {
+                        stringBuilder.append("[^/]*");
+                    }
+                    break;
+                case '/':
+                    stringBuilder.append(currentChar);
+                    break;
+                default:
+                    if (isRegexMeta(currentChar)) {
+                        stringBuilder.append('\\');
+                    }
+
+                    stringBuilder.append(currentChar);
+            }
+        }
+        return stringBuilder.append('$').toString();
+    }
+
+    private static char getCharAtIndex(String string, int index) {
+        return index < string.length() ? string.charAt(index) : 0;
+    }
+
+    private static boolean isRegexMeta(char character) {
+        return ".^$+{[]|()".indexOf(character) != -1;
     }
 
 }
