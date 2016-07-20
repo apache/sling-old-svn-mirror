@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.apache.sling.repoinit.parser.impl.ParseException;
 import org.apache.sling.repoinit.parser.impl.RepoInitParserImpl;
-import org.apache.sling.repoinit.parser.impl.TokenMgrError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
