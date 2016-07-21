@@ -18,6 +18,8 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import java.util.Collections;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventJournal;
 import javax.jcr.observation.EventListener;
@@ -41,26 +43,27 @@ class MockObservationManager implements ObservationManager {
         // do nothing
     }
 
-    // --- unsupported operations ---
     @Override
     public EventListenerIterator getRegisteredEventListeners() throws RepositoryException {
-        throw new UnsupportedOperationException();
+        return new MockEventListenerIterator(Collections.emptyList());
     }
 
     @Override
     public void setUserData(final String userData) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        // accept call but ignore it
     }
 
     @Override
     public EventJournal getEventJournal() throws RepositoryException {
-        throw new UnsupportedOperationException();
+        // always return null
+        return null;
     }
 
     @Override
     public EventJournal getEventJournal(final int eventTypes, final String absPath, final boolean isDeep,
             final String[] uuid, final String[] nodeTypeName) throws RepositoryException {
-        throw new UnsupportedOperationException();
+        // always return null
+        return null;
     }
 
 }
