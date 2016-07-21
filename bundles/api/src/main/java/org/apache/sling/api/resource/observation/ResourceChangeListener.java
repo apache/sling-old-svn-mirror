@@ -60,7 +60,7 @@ public interface ResourceChangeListener {
      *
      * <p>If the whole tree of all search paths should be observed, the special value {@code .} should be used.</p>
      *
-     * <p>A glob pattern should start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
+     * <p>A glob pattern must start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
      * to interpret glob patterns:</p>
      * <ul>
      *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
