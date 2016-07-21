@@ -340,8 +340,22 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 }
             });
             this.stillRunningFutures.put(metadata, future);
-
-            this.hcThreadPool.execute(future);
+            
+            final HealthCheckFuture newFuture = future;
+            this.hcThreadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    newFuture.run();
+                    synchronized ( stillRunningFutures ) {
+                        // notify executor threads that newFuture is finished. Wrapping it in another runnable
+                        // ensures that newFuture.isDone() will return true (if e.g. done in callback above, there are 
+                        // still a few lines of code until the future is really done and hence then the executor thread
+                        // is sometime notified a bit too early, still receives the result isDone()=false and then waits 
+                        // for another 50ms, even though the future was about to be done one ms later)
+                        stillRunningFutures.notifyAll(); 
+                    }
+                }
+            });
         }
 
         return future;
@@ -359,10 +373,16 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (options != null && options.getOverrideGlobalTimeout() > 0) {
             effectiveTimeout = options.getOverrideGlobalTimeout();
         }
+        
+        if(futuresForResultOfThisCall.isEmpty()) {
+            return; // nothing to wait for (usually because of cached results)
+        }
 
         do {
             try {
-                Thread.sleep(50);
+                synchronized (stillRunningFutures) {
+                    stillRunningFutures.wait(50); // wait for notifications of callbacks of HealthCheckFutures
+                }
             } catch (final InterruptedException ie) {
                 logger.warn("Unexpected InterruptedException while waiting for healthCheckContributors", ie);
             }
