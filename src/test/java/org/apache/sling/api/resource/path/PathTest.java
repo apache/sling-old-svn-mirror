@@ -18,11 +18,10 @@
  */
 package org.apache.sling.api.resource.path;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import org.apache.sling.api.resource.path.Path;
-import org.junit.Test;
 
 public class PathTest {
 
@@ -59,5 +58,13 @@ public class PathTest {
         final Path path_2 = new Path("glob:/apps/*.html");
         assertTrue(path_2.matches("/apps/a.html"));
         assertFalse(path_2.matches("/apps/a/a.html"));
+
+        final Path path_3 = new Path("glob:/a/m-p/$structure/**/[cmp]/*.html");
+        assertTrue(path_3.matches("/a/m-p/$structure/1/2/3/[cmp]/test.html"));
+        assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/test.html"));
+        assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/te-[s]t$.html"));
+        assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/.html"));
+        assertFalse(path_3.matches("/a/m-p/$structure/1/[cmp]/html"));
+        assertFalse(path_3.matches("/a/m-p/$structure/[cmp]/test.html"));
     }
 }

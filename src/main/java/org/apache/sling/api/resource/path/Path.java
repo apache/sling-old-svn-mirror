@@ -38,7 +38,7 @@ public class Path implements Comparable<Path> {
     /**
      * <p>Create a new path object either from a concrete path or from a glob pattern.</p>
      *
-     * <p>A glob pattern should start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
+     * <p>A glob pattern must start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
      * to interpret glob patterns:</p>
      * <ul>
      *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
@@ -57,7 +57,6 @@ public class Path implements Comparable<Path> {
             isPattern = false;
             regexPattern = null;
         }
-
     }
 
     /**
@@ -120,10 +119,10 @@ public class Path implements Comparable<Path> {
                     break;
                 default:
                     if (isRegexMeta(currentChar)) {
-                        stringBuilder.append('\\');
+                        stringBuilder.append(Pattern.quote(Character.toString(currentChar)));
+                    } else {
+                        stringBuilder.append(currentChar);
                     }
-
-                    stringBuilder.append(currentChar);
             }
         }
         return stringBuilder.append('$').toString();
@@ -134,7 +133,7 @@ public class Path implements Comparable<Path> {
     }
 
     private static boolean isRegexMeta(char character) {
-        return ".^$+{[]|()".indexOf(character) != -1;
+        return "<([{\\^-=$!|]})?*+.>".indexOf(character) != -1;
     }
 
 }
