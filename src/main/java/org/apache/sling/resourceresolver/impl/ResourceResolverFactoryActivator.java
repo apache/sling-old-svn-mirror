@@ -30,6 +30,7 @@ import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -541,8 +542,17 @@ public class ResourceResolverFactoryActivator {
         final String[] requiredResourceProviderNames = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
 
         if ( requiredResourceProvidersLegacy != null && requiredResourceProvidersLegacy.length > 0 ) {
-            logger.error("ResourceResolverFactory is using deprecated required providers configuration (" + PROP_REQUIRED_PROVIDERS_LEGACY +
-                    "). Please change to use the property " + PROP_REQUIRED_PROVIDERS + " for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+            boolean hasRealValue = false;
+            for(final String name : requiredResourceProvidersLegacy) {
+                if ( name != null && !name.trim().isEmpty() ) {
+                    hasRealValue = true;
+                    break;
+                }
+            }
+            if ( hasRealValue ) {
+                logger.error("ResourceResolverFactory is using deprecated required providers configuration (" + PROP_REQUIRED_PROVIDERS_LEGACY +
+                        "). Please change to use the property " + PROP_REQUIRED_PROVIDERS + " for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+            }
         }
         // for testing: if we run unit test, both trackers are set from the outside
         if ( this.resourceProviderTracker == null ) {
@@ -579,6 +589,12 @@ public class ResourceResolverFactoryActivator {
          }
     }
 
+    @Modified
+    protected void modified(final ComponentContext context) {
+        this.deactivate();
+        this.activate(context);
+    }
+
     /**
      * Deactivates this component (called by SCR to take out of service)
      */
@@ -589,9 +605,14 @@ public class ResourceResolverFactoryActivator {
         this.componentContext = null;
 
         this.changeListenerWhiteboard.deactivate();
+        this.changeListenerWhiteboard = null;
         this.resourceProviderTracker.deactivate();
+        this.resourceProviderTracker = null;
+
         this.preconds.deactivate();
         this.resourceDecoratorTracker.close();
+
+        this.unregisterFactory();
     }
 
     /**
