@@ -112,10 +112,10 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.commons.scheduler", "2.4.14");
         versions.put("org.apache.sling:org.apache.sling.commons.threads", "3.2.6");
         versions.put("org.apache.sling:org.apache.sling.discovery.api", "1.0.4");
-        versions.put("org.apache.sling:org.apache.sling.discovery.base", "1.1.3-SNAPSHOT");
+        versions.put("org.apache.sling:org.apache.sling.discovery.base", "1.1.4");
         versions.put("org.apache.sling:org.apache.sling.discovery.commons", "1.0.12");
-        versions.put("org.apache.sling:org.apache.sling.discovery.impl", "1.2.7-SNAPSHOT");
-        versions.put("org.apache.sling:org.apache.sling.discovery.oak", "1.2.7-SNAPSHOT");
+        versions.put("org.apache.sling:org.apache.sling.discovery.impl", "1.2.8");
+        versions.put("org.apache.sling:org.apache.sling.discovery.oak", "1.2.8");
         versions.put("org.apache.sling:org.apache.sling.discovery.standalone", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.discovery.support", "1.0.0");
         versions.put("org.apache.sling:org.apache.sling.distribution.api", "0.3.0");
