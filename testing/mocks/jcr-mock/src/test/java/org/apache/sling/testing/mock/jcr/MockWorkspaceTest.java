@@ -19,7 +19,9 @@
 package org.apache.sling.testing.mock.jcr;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
@@ -49,11 +51,14 @@ public class MockWorkspaceTest {
 
     @Test
     public void testObservationManager() throws RepositoryException {
-        // just mage sure listener methods can be called, although they do
-        // nothing
-        ObservationManager observationManager = underTest.getObservationManager();
-        observationManager.addEventListener(null, 0, null, false, null, null, false);
-        observationManager.removeEventListener(null);
+        // just make sure observation manager methods can be called, although they do nothing
+        ObservationManager mgr = underTest.getObservationManager();
+        mgr.addEventListener(null, 0, null, false, null, null, false);
+        mgr.removeEventListener(null);
+        assertFalse(mgr.getRegisteredEventListeners().hasNext());
+        mgr.setUserData("abc");
+        assertNull(mgr.getEventJournal());
+        assertNull(mgr.getEventJournal(0, "/any", true, null, null));
     }
 
     @Test
