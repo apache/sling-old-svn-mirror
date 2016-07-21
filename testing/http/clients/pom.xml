@@ -35,7 +35,6 @@
     <description>
         Sling testing http clients and utils
     </description>
-    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/http/clients</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/http/clients</developerConnection>
