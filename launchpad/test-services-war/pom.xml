@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
     <packaging>war</packaging>
-    <version>2.0.10</version>
+    <version>2.0.11-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing Services WAR</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.10</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.10</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.10</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/test-services-war</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/test-services-war</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/test-services-war</url>
     </scm>
 
     <build>
