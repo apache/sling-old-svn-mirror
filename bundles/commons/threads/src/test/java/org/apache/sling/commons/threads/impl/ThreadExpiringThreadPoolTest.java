@@ -51,10 +51,97 @@ public class ThreadExpiringThreadPoolTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThreadExpiringThreadPoolTest.class);
 
-    private static final int MAX_THREAD_AGE_MS = 15; // let threads expire after this many ms
+    private static final int MAX_THREAD_AGE_MS = 90; // let threads expire after this many ms
 
     @Rule
     public ThreadPoolContext context = new ThreadPoolContext();
+
+
+    /**
+     * Attempts to isolate failures that happen > 0.2% of the time related to the
+     * way in which the underlying thread pool behaves. This is not normally run as
+     * a test , but use it if you want to isolate a rare failure.
+     */
+    //@Test
+    public void shouldLetMultipleThreadsDieAfterExpiryMulti() {
+        int fail = 0;
+        int success = 0;
+        for (int i = 0; i < 500; i++) {
+            try {
+                LOG.info("Running {} ", i);
+                context = new ThreadPoolContext();
+                context.before();
+                shouldLetMultipleThreadsDieAfterExpiry();
+                success++;
+            } catch (Throwable e) {
+                LOG.error("Failed ", e);
+                fail++;
+                fail("Race condition encountered");
+            } finally {
+                context.after();
+            }
+        }
+        LOG.info("Failed {} sucess {}", fail, success);
+        assertEquals(0, fail);
+    }
+    /**
+     * Attempts to isolate failures that happen > 0.2% of the time related to the
+     * way in which the underlying thread pool behaves. This is not normally run as
+     * a test, but use it if you want to isolate a rare failure.
+     */
+    // @Test
+    public void shouldCreateNewThreadAfterExpiryMulti() {
+
+        int fail = 0;
+        int success = 0;
+        for (int i = 0; i < 500; i++) {
+            try {
+                LOG.info("Running {} ", i);
+                context = new ThreadPoolContext();
+                context.before();
+                shouldCreateNewThreadAfterExpiry();
+                success++;
+            } catch (Throwable e ) {
+                LOG.error("Failed ",e);
+                fail++;
+                fail("Race condition encountered");
+            } finally {
+                context.after();
+            }
+        }
+        LOG.info("Failed {} sucess {}", fail, success);
+        assertEquals(0, fail);
+    }
+    /**
+     * Attempts to isolate failures that happen > 0.2% of the time related to the
+     * way in which the underlying thread pool behaves. This is not normally run as
+     * a test, but use it if you want to isolate a rare failure.
+     */
+    // @Test
+    public void shouldCreateNewThreadAfterExpiryForFailingTasksMulti() {
+
+        int fail = 0;
+        int success = 0;
+        for (int i = 0; i < 500; i++) {
+            try {
+                LOG.info("Running {} ", i);
+                context = new ThreadPoolContext();
+                context.before();
+                shouldCreateNewThreadAfterExpiryForFailingTasks();
+                success++;
+            } catch (Throwable e ) {
+                LOG.error("Failed ",e);
+                fail++;
+                fail("Race condition encountered");
+            } finally {
+                context.after();
+            }
+        }
+        LOG.info("Failed {} sucess {}", fail, success);
+        assertEquals(0, fail);
+
+    }
+
 
     @Test
     public void shouldCreateNewThreadAfterExpiry() throws InterruptedException, ExecutionException {
@@ -249,6 +336,7 @@ public class ThreadExpiringThreadPoolTest {
         }
 
         public Set<String> getActiveThreads() {
+            letThreadsDie();
             final HashSet<String> active = new HashSet<String>();
             for (final Thread thread : threadHistory) {
                 if (thread.isAlive()) {
@@ -259,6 +347,7 @@ public class ThreadExpiringThreadPoolTest {
         }
 
         public Set<String> getExpiredThreads() {
+            letThreadsDie();
             final HashSet<String> expired = new HashSet<String>();
             for (final Thread thread : threadHistory) {
                 if (!thread.isAlive()) {
@@ -266,6 +355,19 @@ public class ThreadExpiringThreadPoolTest {
                 }
             }
             return expired;
+        }
+
+        /**
+         * This avoids a race condition where a thread has been evicted from the pool but is still alive becuase it evicted itself.
+         * JDK8 java.util.concurrent.ThreadPoolExecutor does this. The 15ms assumes the process takes no more than 15ms to complete.
+         * That is OS and VM dependent.
+         */
+        public void letThreadsDie() {
+            try {
+                Thread.sleep(15);
+            } catch ( Exception e) {
+                LOG.debug(e.getMessage(),e);
+            }
         }
 
         @Override
