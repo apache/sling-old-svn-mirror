@@ -275,13 +275,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>3.0.4</version>
+            <version>3.0.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
