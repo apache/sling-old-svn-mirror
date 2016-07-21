@@ -21,12 +21,12 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>26</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2</version>
 
   <name>Apache Sling Integration Tests</name>
   <description>
@@ -58,9 +58,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/integration-tests</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.2</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.2</url>
   </scm>
 
   <build>
