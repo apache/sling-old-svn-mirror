@@ -428,7 +428,7 @@ public class ResourceResolverFactoryActivator {
     // ---------- SCR Integration ---------------------------------------------
 
     /**
-     * Activates this component, called by SCR before registering as a service
+     * Activates this component (called by SCR before)
      */
     @Activate
     protected void activate(final ComponentContext componentContext) {
@@ -589,10 +589,13 @@ public class ResourceResolverFactoryActivator {
          }
     }
 
+    /**
+     * Modifies this component (called by SCR to update this component)
+     */
     @Modified
-    protected void modified(final ComponentContext context) {
+    protected void modified(final ComponentContext componentContext) {
         this.deactivate();
-        this.activate(context);
+        this.activate(componentContext);
     }
 
     /**
@@ -612,6 +615,9 @@ public class ResourceResolverFactoryActivator {
         this.preconds.deactivate();
         this.resourceDecoratorTracker.close();
 
+        // this is just a sanity call to make sure that unregister
+        // in the case that a registration happened again
+        // while deactivation
         this.unregisterFactory();
     }
 
@@ -689,6 +695,10 @@ public class ResourceResolverFactoryActivator {
         }
     }
 
+    /**
+     * Get the runtime service
+     * @return The runtime service
+     */
     public RuntimeService getRuntimeService() {
         return new RuntimeServiceImpl(this.resourceProviderTracker);
     }
@@ -732,6 +742,10 @@ public class ResourceResolverFactoryActivator {
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
     }
 
+    /**
+     * Get the resource provider tracker
+     * @return The tracker
+     */
     public ResourceProviderTracker getResourceProviderTracker() {
         return resourceProviderTracker;
     }
