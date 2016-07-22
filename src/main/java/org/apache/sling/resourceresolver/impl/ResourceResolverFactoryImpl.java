@@ -60,6 +60,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getServiceResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getServiceResourceResolver(final Map<String, Object> passedAuthenticationInfo) throws LoginException {
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
@@ -94,6 +95,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
+    @Override
     public ResourceResolver getResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
         return commonFactory.getResourceResolver(authenticationInfo);
@@ -102,6 +104,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
+    @Override
+    @SuppressWarnings("deprecation")
     public ResourceResolver getAdministrativeResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
         return commonFactory.getAdministrativeResourceResolver(authenticationInfo);
@@ -110,6 +114,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
+    @Override
     public ResourceResolver getThreadResourceResolver() {
         return commonFactory.getThreadResourceResolver();
     }
