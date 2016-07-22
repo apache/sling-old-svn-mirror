@@ -85,4 +85,22 @@ public class SlingOptions {
         );
     }
 
-[/]}
+[/]    public static Option slingLaunchpadOakTarConfiguration(final String workingDirectory, final int httpPort) {
+        final String slingHome = String.format("%s/sling", workingDirectory);
+        final String repositoryHome = String.format("%s/repository", slingHome);
+        final String localIndexDir = String.format("%s/index", repositoryHome);
+        return composite(
+            newConfiguration("org.apache.felix.http")
+                .put("org.osgi.service.http.port", httpPort)
+                .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
+                .put("repository.home", repositoryHome)
+                .put("name", "Default NodeStore")
+                .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", localIndexDir)
+                .asOption()
+        );
+    }
+
+}
