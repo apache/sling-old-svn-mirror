@@ -45,6 +45,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,8 +61,8 @@ import org.osgi.service.event.EventHandler;
 public class ChaosTest extends AbstractJobHandlingTest {
 
     /** Duration for firing jobs in seconds. */
-    private static final long DURATION = 4 * 60;
-
+    private static final long DURATION = 1 * 60;
+    
     private static final int NUM_ORDERED_THREADS = 3;
     private static final int NUM_PARALLEL_THREADS = 6;
     private static final int NUM_ROUND_THREADS = 6;
@@ -305,7 +306,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
         }
     }
 
-    @Test(timeout=DURATION * 4000)
+    @Test(timeout=DURATION * 16000L)
     public void testDoChaos() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
