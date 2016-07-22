@@ -15,38 +15,41 @@ org.apache.sling.event.jobs with the consumers exported from org.apache.sling.ev
 
 ## Processing model
 
-The implementation builds on the OSGi Event model using OSGi Events to notify listeners of a change in Job state.  The
-events used are contained in [NotificationConstants.java](src/main/java/org/apache/sling/event/jobs/NotificationConstants.java).
-Although the underlying system uses OSGi Events notify listeners of state changes, users of the API are encouraged to use
-the JobManager interface to create events.
+Jobs are created using the JobManager API. When a Job is created the JobManager writes an entry into the resource tree
+(usually backed up by JCR) via the ResourceResolver. 
 
-When a Job is created the JobManager writes an entry into the JCR via the ResourceResolver. That operation emits an OSGi 
+For notification of interested parties - not for processing the jobs(!) - adding a job emits an OSGi 
 Event on org/apache/sling/api/resource/Resource/ADDED topic, which is picked up by the 
 [NewJobSender](src/main/java/org/apache/sling/event/impl/jobs/notifications/NewJobSender.java) which emits a new OSGi
 Event on the org/apache/sling/event/notification/job/ADDED topic.
 
-The org/apache/sling/event/notification/job/ADDED topic is listened to by the QueueManager which identifies the queue
-from the event, and triggers the JobQueueImpl to start processing. Various other operations ensure
-that the JobQueueImpl runs jobs according to its configuration. These are either periodic maintenance classes or
-triggered by calls to the QueueManager or triggered by Jobs on the queue changing state.
+Similar other notification events are sent out if the state of a job changes. However these events are just FYI events.
+The events used are contained in [NotificationConstants.java](src/main/java/org/apache/sling/event/jobs/NotificationConstants.java).
 
-The queue is maintained by the JobManagerImpl, but each Queue is managed by a JobQueueImpl that receives OSGi Events to
-trigger processing. Any thread may update the persisted job state, by resolving the Job name and performing the operation.
+The QueueManager which identifies the queue from s job is periodically scanning the resource tree for new jobs. In
+addition it listens to the org/apache/sling/event/notification/job/ADDED topic for optimization and picking up new
+jobs faster (than by scanning). Once a new job is found, the manager triggers the JobQueueImpl to start processing. 
+Various other operations ensure that the JobQueueImpl runs jobs according to its configuration. These are either 
+periodic maintenance classes or triggered by calls to the QueueManager or triggered by Jobs on the queue changing state.
+
+The queue is maintained by the JobManagerImpl, but each Queue is managed by a JobQueueImpl that receives calls from the
+QueueManager to process jobs. Any thread may update the persisted job state, by resolving the Job name and performing the operation.
 
 ## Storage
 
-The JobManager uses the JCR repository provided by Oak for persisting Jobs. The content tree structure was developed in
-conjunction with advice from the Oak team to avoid write concurrency issues and the need for maintaining in Oak repository
-locks. To avoid OakMergeConflicts on write, each Sling instance writes only to its own subtree, and reads jobs only form
-its own subtree under /var/eventing/jobs/assigned/<SlingID>. This prevents more than one instance from
-attempting to write to Jobs at the same time. This means that when a Job is started, the path of the job is formed from
+The JobManager uses the resource tree and therefore by default the JCR repository provided by Oak for persisting Jobs. The 
+content tree structure was developed in conjunction with advice from the Oak team to avoid write concurrency issues and the 
+need for maintaining in Oak repository locks. To avoid OakMergeConflicts on write, each job gets a UUID. If a new job is
+created on a Sling instance, this instance decides - based on configuration - which Sling instance will process the job
+and writes the new job to an area dedicated to that instance (/var/eventing/jobs/assigned/<SlingID>). Each Sling instance
+only reads and modifies its own subtree under /var/eventing/jobs/assigned/<SlingID>. This prevents more than one instance from
+attempting to process a Job at the same time. This means that when a Job is started, the path of the job is formed from
 the target SlingID and the queue name. The target SlingID is formed from the queue configuration informed
 by properties contained within Topology. Every Sling instance advertises is capabilities for processing jobs via topology,
 hence the JobManager pre-allocates Jobs to instance when the job is created.
 
-The JobQueueImpl then receives the event. The JobQueueImpl only considers jobs allocated to the local instance, and runs
-those jobs. Jobs that are allocated to remote instances by the JobManger will get picked up by periodic scanning for new
-jobs.
+The JobQueueImpl then receives the job. The JobQueueImpl only considers jobs allocated to the local instance, and runs
+those jobs. 
 
 Since the SlingID is part of the JobID, there is no risk of 2 instances writing to the same job at the same time when the 
 job is allocated or re-allocated to an instance. In the case of first allocation, the creating sling instance will perform 
