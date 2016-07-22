@@ -19,9 +19,6 @@
 package org.apache.sling.scripting.thymeleaf.it.tests;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.Dictionary;
 
 import javax.inject.Inject;
 import javax.script.ScriptEngineFactory;
@@ -31,13 +28,13 @@ import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.scripting.thymeleaf.it.app.Activator;
 import org.apache.sling.testing.paxexam.SlingOptions;
+import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.http.HttpService;
 import org.thymeleaf.ITemplateEngine;
 
@@ -45,16 +42,15 @@ import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionI18n;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionModels;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingJcrOak;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOak;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTarConfiguration;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScripting;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingJsp;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
-public abstract class ThymeleafTestSupport {
+public abstract class ThymeleafTestSupport extends TestSupport {
 
     @Inject
     protected ServletResolver servletResolver;
@@ -75,33 +71,13 @@ public abstract class ThymeleafTestSupport {
     @Inject
     protected ITemplateEngine templateEngine;
 
-    @Inject
-    protected ConfigurationAdmin configurationAdmin;
-
-    protected static synchronized int findFreePort() {
-        try {
-            final ServerSocket serverSocket = new ServerSocket(0);
-            final int port = serverSocket.getLocalPort();
-            serverSocket.close();
-            return port;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected int httpPort() throws IOException {
-        final Dictionary<String, Object> properties = configurationAdmin.getConfiguration("org.apache.felix.http").getProperties();
-        return Integer.parseInt(properties.get("org.osgi.service.http.port").toString());
-    }
-
     @Configuration
     public Option[] configuration() {
-        final String workingDirectory = String.format("target/paxexam/%s", getClass().getSimpleName());
         final String filename = System.getProperty("bundle.filename");
         final File file = new File(filename);
         return new Option[]{
-            workingDirectory(workingDirectory),
-            launchpad(workingDirectory),
+            baseConfiguration(),
+            launchpad(),
             // Sling Scripting Thymeleaf
             bundle(file.toURI().toString()),
             mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
@@ -125,28 +101,17 @@ public abstract class ThymeleafTestSupport {
         return testProbeBuilder;
     }
 
-    protected static Option launchpad(final String workingDirectory) {
+    protected Option launchpad() {
         final int httpPort = findFreePort();
-        final String slingHome = String.format("%s/sling", workingDirectory);
-        final String repositoryHome = String.format("%s/repository", slingHome);
-        final String localIndexDir = String.format("%s/index", repositoryHome);
+        final String workingDirectory = workingDirectory();
         return composite(
+            slingLaunchpadOakTarConfiguration(workingDirectory, httpPort),
             slingJcrOak(), // TODO if slingJcrOak() is called elsewhere, ResourceResolverFactory will not be created
             slingLaunchpadOak(),
             slingExtensionI18n(),
             slingExtensionModels(),
             slingScripting(),
             slingScriptingJsp(),
-            newConfiguration("org.apache.felix.http")
-                .put("org.osgi.service.http.port", httpPort)
-                .asOption(),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
-                .put("repository.home", repositoryHome)
-                .put("name", "Default NodeStore")
-                .asOption(),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
-                .put("localIndexDir", localIndexDir)
-                .asOption(),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver)
         );
     }
