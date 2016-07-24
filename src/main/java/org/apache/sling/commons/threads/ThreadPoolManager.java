@@ -17,7 +17,7 @@
 package org.apache.sling.commons.threads;
 
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ThreadPoolManager</code> manages thread pools.

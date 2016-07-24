@@ -16,7 +16,7 @@
  */
 package org.apache.sling.commons.threads;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
