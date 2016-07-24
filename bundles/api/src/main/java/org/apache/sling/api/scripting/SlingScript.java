@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>SlingScript</code> defines the API for objects which encapsulate

@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A {@code ResourceProvider} must use an observation reporter

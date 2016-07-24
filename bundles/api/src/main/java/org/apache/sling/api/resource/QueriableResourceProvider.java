@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 /**

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.resource.observation;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * This is a marker interface to receive external events.

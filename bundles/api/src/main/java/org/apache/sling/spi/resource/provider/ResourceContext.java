@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.annotation.CheckForNull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The resource context provides additional information for resource resolving.
