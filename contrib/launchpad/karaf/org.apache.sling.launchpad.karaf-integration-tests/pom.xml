@@ -28,12 +28,12 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
+  <artifactId>org.apache.sling.karaf-integration-tests</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Apache Sling Launchpad Karaf - Integration Tests</name>
-  <description>Integration Tests for Apache Sling Launchpad Karaf</description>
+  <name>Apache Sling - Karaf Integration Tests</name>
+  <description>Integration Tests for Apache Sling Karaf</description>
 
   <properties>
     <org.apache.jackrabbit.version>2.12.2</org.apache.jackrabbit.version>
@@ -98,7 +98,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+      <artifactId>org.apache.sling.karaf-features</artifactId>
       <version>${project.version}</version>
       <type>xml</type>
       <classifier>features</classifier>
