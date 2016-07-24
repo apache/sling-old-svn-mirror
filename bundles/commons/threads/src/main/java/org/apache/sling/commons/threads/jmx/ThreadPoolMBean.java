@@ -16,7 +16,7 @@
  */
 package org.apache.sling.commons.threads.jmx;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This is the management interface for a Sling Thread Pool.
