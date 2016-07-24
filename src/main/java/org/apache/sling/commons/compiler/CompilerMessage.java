@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.compiler;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * This class encapsulates a message produced the compiler.
  * A message is either a warning or an error.
@@ -23,6 +25,7 @@ package org.apache.sling.commons.compiler;
  *
  * @since 2.0
  */
+@ProviderType
 public class CompilerMessage {
 
     /**
