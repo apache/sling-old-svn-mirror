@@ -28,11 +28,11 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+  <artifactId>org.apache.sling.karaf-features</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>feature</packaging>
 
-  <name>Apache Sling Launchpad Karaf - Features</name>
+  <name>Apache Sling - Karaf Features</name>
   <description>Apache Sling Features for provisioning with Apache Karaf</description>
 
   <properties>
