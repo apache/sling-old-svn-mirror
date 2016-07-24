@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>27</version>
         <relativePath/>
     </parent>
 
@@ -49,8 +49,8 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <pax-exam.version>4.6.0</pax-exam.version>
-        <pax-link.version>2.4.3</pax-link.version>
+        <pax-exam.version>4.9.1</pax-exam.version>
+        <pax-link.version>2.4.7</pax-link.version>
     </properties>
 
     <build>
@@ -68,18 +68,11 @@
                         <Bundle-Activator>
                             org.apache.sling.commons.classloader.impl.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            org.apache.sling.commons.classloader;version=1.3.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.classloader.impl
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.12</version>
                 <executions>
                     <execution>
                          <goals>
@@ -122,11 +115,11 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
       <!-- Unit Testing -->
         <dependency>
