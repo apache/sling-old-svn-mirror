@@ -18,6 +18,8 @@
  */
 package org.apache.sling.commons.classloader;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * A dynamic class loader provider allows to provide
  * class loaders that will be used by the dynamic
@@ -30,6 +32,7 @@ package org.apache.sling.commons.classloader;
  *             considered for dynamic class loading anymore!
  */
 @Deprecated
+@ConsumerType
 public interface DynamicClassLoaderProvider {
 
     /**
