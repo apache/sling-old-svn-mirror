@@ -28,23 +28,23 @@
     <relativePath/>
   </parent>
 
-  <artifactId>sling-launchpad-karaf-builder</artifactId>
+  <artifactId>sling-karaf-builder</artifactId>
   <version>1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Apache Sling Launchpad Karaf Builder</name>
+  <name>Apache Sling - Karaf Builder</name>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/karaf</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/karaf</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/launchpad/karaf</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf</url>
   </scm>
 
   <modules>
-    <module>org.apache.sling.launchpad.karaf-distribution</module>
-    <module>org.apache.sling.launchpad.karaf-features</module>
-    <module>org.apache.sling.launchpad.karaf-integration-tests</module>
-    <module>org.apache.sling.launchpad.karaf-launchpad-oak-tar-integration-tests</module>
+    <module>org.apache.sling.karaf-distribution</module>
+    <module>org.apache.sling.karaf-features</module>
+    <module>org.apache.sling.karaf-integration-tests</module>
+    <module>org.apache.sling.karaf-launchpad-oak-tar-integration-tests</module>
   </modules>
 
   <build>
