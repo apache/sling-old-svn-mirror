@@ -152,7 +152,6 @@
           <module>nosql</module>
 
           <module>launchpad/testing</module>
-          <module>launchpad/karaf</module>
     </modules>
     <profiles>
       <profile>
