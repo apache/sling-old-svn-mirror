@@ -21,7 +21,7 @@ package org.apache.sling.api.adapter;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>Adaptable</code> interface identifies objects which can be adapted

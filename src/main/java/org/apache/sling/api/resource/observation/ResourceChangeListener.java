@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Listener for resource change events.

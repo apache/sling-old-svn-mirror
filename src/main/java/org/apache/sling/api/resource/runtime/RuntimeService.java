@@ -20,7 +20,7 @@ package org.apache.sling.api.resource.runtime;
 
 import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Runtime service providing introspection of the state of the resource resolver

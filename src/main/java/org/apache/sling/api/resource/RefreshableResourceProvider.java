@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 

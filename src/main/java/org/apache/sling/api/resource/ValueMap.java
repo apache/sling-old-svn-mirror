@@ -26,7 +26,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ValueMap</code> is an easy way to access properties of a resource.

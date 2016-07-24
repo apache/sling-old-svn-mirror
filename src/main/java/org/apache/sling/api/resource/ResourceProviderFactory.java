@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ResourceProviderFactory</code> defines the service API to get and

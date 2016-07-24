@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Collection;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The attributes provider is an extensions of a {@link ResourceProvider}.
