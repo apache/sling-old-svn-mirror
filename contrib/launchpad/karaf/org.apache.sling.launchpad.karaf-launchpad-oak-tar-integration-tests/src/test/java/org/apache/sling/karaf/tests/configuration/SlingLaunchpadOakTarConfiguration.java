@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launchpad.karaf.tests.configuration;
+package org.apache.sling.karaf.tests.configuration;
 
-import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
+import org.apache.sling.karaf.testing.KarafTestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;

@@ -28,12 +28,12 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.launchpad.karaf-launchpad-oak-tar-integration-tests</artifactId>
+  <artifactId>org.apache.sling.karaf-launchpad-oak-tar-integration-tests</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Apache Sling Launchpad Karaf - Launchpad Oak Tar Integration Tests</name>
-  <description>Launchpad Oak Tar Integration Tests for Apache Sling Launchpad Karaf</description>
+  <name>Apache Sling - Karaf Launchpad Integration Tests (Oak Tar)</name>
+  <description>Launchpad Integration Tests for Apache Sling with Oak Tar on Karaf</description>
 
   <properties>
     <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
@@ -75,7 +75,7 @@
     <!-- Apache Sling -->
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+      <artifactId>org.apache.sling.karaf-features</artifactId>
       <version>0.1.1-SNAPSHOT</version>
       <type>xml</type>
       <classifier>features</classifier>
@@ -103,7 +103,7 @@
     <!-- testing -->
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
+      <artifactId>org.apache.sling.karaf-integration-tests</artifactId>
       <version>0.1.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
@@ -219,7 +219,7 @@
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>exam-maven-plugin</artifactId>
             <configuration>
-              <configClass>org.apache.sling.launchpad.karaf.tests.configuration.SlingLaunchpadOakTarConfiguration</configClass>
+              <configClass>org.apache.sling.karaf.tests.configuration.SlingLaunchpadOakTarConfiguration</configClass>
             </configuration>
             <executions>
               <execution>
