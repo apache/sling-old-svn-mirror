@@ -28,12 +28,12 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.launchpad.karaf-distribution</artifactId>
+  <artifactId>org.apache.sling.karaf-distribution</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>karaf-assembly</packaging>
 
-  <name>Apache Sling Launchpad Karaf - Distribution</name>
-  <description>Apache Sling Launchpad Karaf Distribution</description>
+  <name>Apache Sling - Karaf Distribution</name>
+  <description>Apache Sling Karaf Distribution</description>
 
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
@@ -62,7 +62,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
+      <artifactId>org.apache.sling.karaf-features</artifactId>
       <version>${project.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
