@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A scheduler to schedule time/cron based jobs.

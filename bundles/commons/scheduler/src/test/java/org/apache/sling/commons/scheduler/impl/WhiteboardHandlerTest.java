@@ -31,8 +31,7 @@ import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.osgi.framework.ServiceRegistration;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
@@ -40,9 +39,6 @@ public class WhiteboardHandlerTest {
     private WhiteboardHandler handler;
     private BundleContext context;
     private QuartzScheduler quartzScheduler;
-    //We will test WhiteboardHandler methods from ServiceTrackerCustomizer
-    //since it uses its methods.
-    private ServiceTrackerCustomizer customizer;
 
     @Before
     public void setUp() throws Exception {
@@ -53,20 +49,13 @@ public class WhiteboardHandlerTest {
         Field schedulerField = WhiteboardHandler.class.getDeclaredField("scheduler");
         schedulerField.setAccessible(true);
 
-        //Creating quartzscheduler for private field and activating it
+        // Creating quartz scheduler for private field and activating it
         quartzScheduler = ActivatedQuartzSchedulerFactory.create(context, "testName");
 
         //Injecting quartzScheduler to WhiteboardHandler
         schedulerField.set(handler, quartzScheduler);
 
         handler.activate(context);
-        Field trackerField = WhiteboardHandler.class.getDeclaredField("serviceTracker");
-        trackerField.setAccessible(true);
-
-        ServiceTracker serviceTracker = (ServiceTracker) trackerField.get(handler);
-        Field customizerField = ServiceTracker.class.getDeclaredField("customizer");
-        customizerField.setAccessible(true);
-        customizer = (ServiceTrackerCustomizer) customizerField.get(serviceTracker);
     }
 
     @Test
@@ -87,14 +76,10 @@ public class WhiteboardHandlerTest {
         serviceProps.put(Constants.SERVICE_PID, "1");
         serviceProps.put(Constants.SERVICE_ID, 1L);
 
-        //Register service only to get a reference of it.
-        //This reference is needed to test our method.
-        context.registerService(serviceName, service, serviceProps);
-        ServiceReference reference = context.getServiceReference(serviceName);
+        final ServiceRegistration<?> reg = context.registerService(serviceName, service, serviceProps);
+        ServiceReference<?> reference = reg.getReference();
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
-        assertNull(quartzScheduler.getSchedulers().get("testName"));
-        customizer.addingService(reference);
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
 
@@ -119,14 +104,13 @@ public class WhiteboardHandlerTest {
 
         //Register service only to get a reference of it.
         //This reference is needed to test our method.
-        context.registerService(serviceName, service, serviceProps);
-        ServiceReference reference = context.getServiceReference(serviceName);
+        final ServiceRegistration<?> reg = context.registerService(serviceName, service, serviceProps);
+        ServiceReference<?> reference = reg.getReference();
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
-        assertNull(quartzScheduler.getSchedulers().get("testName"));
-        customizer.addingService(reference);
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
-        customizer.removedService(reference, service);
+
+        reg.unregister();
         assertNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
 

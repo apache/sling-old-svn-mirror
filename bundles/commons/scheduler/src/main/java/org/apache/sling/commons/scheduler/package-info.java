@@ -17,8 +17,8 @@
  * under the License.
  */
 
-@Version("2.5.0")
+@Version("2.5.1")
 package org.apache.sling.commons.scheduler;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 
