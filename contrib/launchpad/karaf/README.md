@@ -11,7 +11,7 @@ Getting Started
 
 2) Add the Apache Sling features repository and install a `sling-launchpad-*` (`oak-tar` | `oak-mongo`) feature:
 
-    karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features
+    karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.karaf-features/0.1.1-SNAPSHOT/xml/features
     karaf@root()> feature:install sling-launchpad-oak-tar
 
 3) Install Launchpad content and Explorer:
@@ -25,4 +25,4 @@ Getting Started
 KAR - Karaf Archive
 -------------------
 
-    karaf@root()> kar:install mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/kar
+    karaf@root()> kar:install mvn:org.apache.sling/org.apache.sling.karaf-features/0.1.1-SNAPSHOT/kar
