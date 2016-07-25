@@ -27,7 +27,7 @@ import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfigurati
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 /**
- * NOTE: This file is generated from Sling's Launchpad Karaf Features
+ * NOTE: This file is generated from Sling's Karaf Features
  */
 public class SlingOptions {
 
