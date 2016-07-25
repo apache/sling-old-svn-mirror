@@ -218,6 +218,7 @@
             <artifactId>exam-maven-plugin</artifactId>
             <configuration>
               <configClass>org.apache.sling.karaf.tests.configuration.SlingLaunchpadOakTarConfiguration</configClass>
+              <propagatedProperties>http.port</propagatedProperties>
             </configuration>
             <executions>
               <execution>
@@ -253,7 +254,7 @@
             </executions>
             <configuration>
               <systemPropertyVariables>
-                <jar.executor.server.port>8888</jar.executor.server.port>
+                <launchpad.http.server.url>http://localhost:${http.port}</launchpad.http.server.url>
                 <server.ready.path.1>/:script src="/system/sling.js"</server.ready.path.1>
                 <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
                 <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
@@ -286,6 +287,23 @@
                 <exclude>**/SystemUsersTest.*</exclude>
               </excludes>
             </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.11</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>reserve-network-port</goal>
+                </goals>
+                <configuration>
+                  <portNames>
+                    <portName>http.port</portName>
+                  </portNames>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

@@ -31,7 +31,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
-        final int httpPort = 8888; // TODO findFreePort();
+        final int httpPort = Integer.getInteger("http.port");
         return OptionUtils.combine(baseConfiguration(),
             cleanCaches(true),
             editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "ERROR, out, sift, osgi:*"),
