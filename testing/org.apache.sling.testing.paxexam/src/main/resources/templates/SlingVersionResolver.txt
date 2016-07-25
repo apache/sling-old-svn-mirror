@@ -33,7 +33,7 @@ public class SlingVersionResolver implements VersionResolver {
     public SlingVersionResolver() {
         versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.10");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.6");
-        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.2.0");
+        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.2.2");
         versions.put("org.apache.felix:org.apache.felix.http.whiteboard", "3.0.0");
         versions.put("org.apache.aries:org.apache.aries.util", "1.1.1");
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.api", "1.1.5");
