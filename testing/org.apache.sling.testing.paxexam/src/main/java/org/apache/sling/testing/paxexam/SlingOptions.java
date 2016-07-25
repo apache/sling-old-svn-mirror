@@ -103,8 +103,7 @@ public class SlingOptions {
             mavenBundle().groupId("commons-lang").artifactId("commons-lang").version(versionResolver),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").version(versionResolver),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-math").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver)
         );
     }
 
@@ -128,8 +127,7 @@ public class SlingOptions {
             slingCommonsClassloader(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.fsclassloader").version(versionResolver),
             mavenBundle().groupId("commons-io").artifactId("commons-io").version(versionResolver),
-            mavenBundle().groupId("commons-lang").artifactId("commons-lang").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("commons-lang").artifactId("commons-lang").version(versionResolver)
         );
     }
 
@@ -164,8 +162,8 @@ public class SlingOptions {
             scr(),
             slingCommonsThreads(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.scheduler").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-jta_1.1_spec").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version(versionResolver),
+            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-jta_1.1_spec").version(versionResolver)
         );
     }
 
@@ -491,8 +489,7 @@ public class SlingOptions {
             sling(),
             webconsole(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.api").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.core").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.core").version(versionResolver)
         );
     }
 
@@ -553,12 +550,12 @@ public class SlingOptions {
             mavenBundle().groupId("commons-lang").artifactId("commons-lang").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
             mavenBundle().groupId("com.google.guava").artifactId("guava").version(versionResolver),
+            mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-atinject_1.0_spec").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-el_2.2_spec").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-interceptor_1.1_spec").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-jcdi_1.0_spec").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-jta_1.1_spec").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-jta_1.1_spec").version(versionResolver)
         );
     }
 
@@ -728,8 +725,7 @@ public class SlingOptions {
         return composite(
             sling(),
             slingScripting(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.java").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.specs").artifactId("geronimo-servlet_3.0_spec").version(versionResolver)
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.java").version(versionResolver)
         );
     }
 
