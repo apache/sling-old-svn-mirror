@@ -399,7 +399,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
 
         pw.println("<br>");
         pw.println("<div class='table'>");
-        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Guages</div>");
+        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Gauges</div>");
         pw.println("<table class='nicetable' id='data-guages'>");
         pw.println("<thead>");
         pw.println("<tr>");
