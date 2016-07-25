@@ -36,14 +36,8 @@
     </scm>
 
     <properties>
-        <!--
-            Jetty default port (override with -D)
-        -->
-        <http.port>8888</http.port>
-
-        <!-- path suffix for HTTP access to Sling -->
-        <http.base.path />
         <sling.java.version>7</sling.java.version>
+        <IT.expected.bundles.count>125</IT.expected.bundles.count>
     </properties>
 
     <build>
@@ -81,25 +75,64 @@
                 <artifactId>slingstart-maven-plugin</artifactId>
                 <version>1.4.2</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                         <id>start-container</id>
+                        <goals>
+                            <goal>start</goal>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>                
                 <configuration>
                     <createWebapp>true</createWebapp>
+                    <servers>
+                        <server>
+                            <port>${http.port}</port>
+                            <controlPort>${sling.control.port}</controlPort>
+                        </server>
+                    </servers>                    
                 </configuration>
             </plugin>
 
             <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.2.12.v20150709</version>
-                <configuration>
-                    <stopKey>alpha</stopKey>
-                    <stopPort>9099</stopPort>
-                    <httpConnector>
-                        <port>${http.port}</port>
-                    </httpConnector>
-                    <contextPath>${http.base.path}</contextPath>
-                    <war>${project.build.directory}/${project.build.finalName}.war</war>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <!-- pre-integration-test is too late -->
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                                <portName>sling.control.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <launchpad.http.port>${http.port}</launchpad.http.port>
+                        <IT.expected.bundles.count>${IT.expected.bundles.count}</IT.expected.bundles.count>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>            
         </plugins>
 
         <pluginManagement>
@@ -119,5 +152,25 @@
         </pluginManagement>
 
     </build>
+    
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20160212</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
 
