@@ -57,6 +57,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("io.wcm.osgi.wrapper:io.wcm.osgi.wrapper.rxjava", "1.0.14-0000");
         versions.put("javax.jcr:jcr", "2.0");
         versions.put("javax.mail:javax.mail-api", "1.5.5");
+        versions.put("javax.servlet:javax.servlet-api", "3.1.0");
         versions.put("org.apache.commons:commons-email", "1.4");
         versions.put("org.apache.commons:commons-lang3", "3.4");
         versions.put("org.apache.commons:commons-math", "2.2");
@@ -72,7 +73,6 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.geronimo.specs:geronimo-interceptor_1.1_spec", "1.0");
         versions.put("org.apache.geronimo.specs:geronimo-jcdi_1.0_spec", "1.0");
         versions.put("org.apache.geronimo.specs:geronimo-jta_1.1_spec", "1.1.1");
-        versions.put("org.apache.geronimo.specs:geronimo-servlet_3.0_spec", "1.0");
         versions.put("org.apache.httpcomponents:httpclient-osgi", "4.5.2");
         versions.put("org.apache.httpcomponents:httpcore-osgi", "4.4.5");
         versions.put("org.apache.jackrabbit:jackrabbit-api", "2.12.2");
@@ -92,7 +92,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.servicemix.bundles:org.apache.servicemix.bundles.rhino", "1.7.7.1_1");
         versions.put("org.apache.servicemix.bundles:org.apache.servicemix.bundles.urlrewritefilter", "4.0.4_1");
         versions.put("org.apache.sling:org.apache.sling.adapter", "2.1.8");
-        versions.put("org.apache.sling:org.apache.sling.api", "2.12.0");
+        versions.put("org.apache.sling:org.apache.sling.api", "2.14.0");
         versions.put("org.apache.sling:org.apache.sling.auth.core", "1.3.16");
         versions.put("org.apache.sling:org.apache.sling.auth.form", "1.0.8");
         versions.put("org.apache.sling:org.apache.sling.auth.openid", "1.0.4");
@@ -108,7 +108,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.commons.metrics", "1.0.0");
         versions.put("org.apache.sling:org.apache.sling.commons.mime", "2.1.8");
         versions.put("org.apache.sling:org.apache.sling.commons.osgi", "2.4.0");
-        versions.put("org.apache.sling:org.apache.sling.commons.scheduler", "2.4.14");
+        versions.put("org.apache.sling:org.apache.sling.commons.scheduler", "2.5.0");
         versions.put("org.apache.sling:org.apache.sling.commons.threads", "3.2.6");
         versions.put("org.apache.sling:org.apache.sling.discovery.api", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.discovery.base", "1.1.4");
@@ -163,7 +163,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.repoinit.parser", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.resource.inventory", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.resourcemerger", "1.3.0");
-        versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.4.12");
+        versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.4.16");
         versions.put("org.apache.sling:org.apache.sling.rewriter", "1.1.4");
         versions.put("org.apache.sling:org.apache.sling.scripting.api", "2.1.8");
         versions.put("org.apache.sling:org.apache.sling.scripting.core", "2.0.38");
