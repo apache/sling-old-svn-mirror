@@ -24,7 +24,7 @@ import java.util.Map;
 import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
 
 /**
- * NOTE: This file is generated from Sling's Launchpad Karaf Features
+ * NOTE: This file is generated from Sling's Karaf Features
  */
 public class SlingVersionResolver implements VersionResolver {
 
