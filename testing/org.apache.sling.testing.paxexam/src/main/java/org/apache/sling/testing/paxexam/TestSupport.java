@@ -31,6 +31,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 public abstract class TestSupport {
 
@@ -62,6 +63,7 @@ public abstract class TestSupport {
     protected Option baseConfiguration() {
         return composite(
             keepCaches(),
+            systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
             CoreOptions.workingDirectory(workingDirectory()),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.paxexam").versionAsInProject()
         );
