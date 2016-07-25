@@ -269,22 +269,25 @@
               <excludes>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
-                <!-- TODO PAXWEB-935 -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/WebdavDeleteTest.*</exclude>
-                <!-- TODO -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
-                <!-- TODO OakAccess0000: Access denied -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
-                <!-- TODO testWithJspForward: 404 -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <!-- SLING-5414 Launchpad/Provisioning Model only -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
-                <!-- TODO -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/MappingEventsProxyTest.*</exclude>
-                <!-- TODO repoinit -->
-                <exclude>**/RepoinitPathTest.*</exclude>
-                <exclude>**/SystemUsersTest.*</exclude>
+                <!-- TODO (PAXWEB-935) SlingWebDavServletTest.testHandlerOrder:76->checkHandler:93->RenderingTestBase.assertContains:36 Content does not contain 'test-io-handler-1-' -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
+                <!-- TODO (PAXWEB-935) WebdavDeleteTest.testDelete:70 expected:<200> but was:<404> -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/WebdavDeleteTest.*</exclude>
+                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectCookie:118->assertXReason:245 » IO -->
+                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectHttpBasicCredentials:134->assertXReason:245 » IO -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
+                <!-- TODO UpdateUserTest.testChangeUserPassword:100 expected:<200> but was:<500> -->
+                <!-- TODO UpdateUserTest.testUpdateUser:76 expected:<200> but was:<500> -->
+                <!-- TODO UpdateUserTest.testUpdateUserResponseAsJSON:148 Expected status 200 for http://localhost:55658/system/userManager/user/testUser1469444618835.update.json ... expected:<200> but was:<500> -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
+                <!-- TODO JspForwardTest.testWithJspForward:152 Content includes JSP marker -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
+                <!-- TODO RepoinitPathTest.pathExists:42 null -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/RepoinitPathTest.*</exclude>
+                <!-- TODO SystemUsersTest.provisioningModelUser:62->assertSystemUser:45 Impersonation as provisioningModelUser failed: javax.jcr.LoginException: Login Failure: all modules ignored -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/SystemUsersTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
