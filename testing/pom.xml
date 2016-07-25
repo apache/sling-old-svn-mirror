@@ -90,7 +90,9 @@
     <module>sling-pax-util</module>
     <module>samples/bundle-with-it</module>
     <module>samples/module-with-it</module>
+    <!-- disabled due to build error: Java heap space
     <module>org.apache.sling.testing.paxexam</module>
+    -->
   </modules>
 
 </project>
