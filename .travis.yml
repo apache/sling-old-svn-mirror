@@ -9,9 +9,12 @@ sudo: false
 
 install: true
 
+env:
+  global:
+     - MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=256M -enableassertions"
+
 script: 
   - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
-  - export MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=256M -enableassertions"
   - ./mvnw -q clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
 
 notifications:
