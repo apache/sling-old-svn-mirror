@@ -55,27 +55,6 @@
             <version>6.0.0</version>
             <scope>compile</scope>
         </dependency>
-    
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.4.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.0.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <!-- The required classes o.a.f.scr.impl.helper.Annotations and o.a.f.scr.impl.helper.Coercions are inlined -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr</artifactId>
-            <version>2.0.4</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -100,6 +79,28 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+    
+        <!-- Artifact is shaded and inlined, only some classes included (see below) -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.4.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Artifact is shaded and inlined, only some classes included (see below) -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>5.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Artifact is shaded and inlined, only some classes included (see below) -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr</artifactId>
+            <version>2.0.4</version>
             <scope>compile</scope>
         </dependency>
     
@@ -130,13 +131,6 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Embed-Dependency>
-                            org.apache.felix.scr;inline="org/apache/felix/scr/impl/inject/Annotations*|org/apache/felix/scr/impl/helper/Coercions*"
-                        </Embed-Dependency>
-                    </instructions>
-                </configuration>
             </plugin>
       
             <plugin>
@@ -152,10 +146,70 @@
                         <exclude>src/test/resources/META-INF/test.txt</exclude>
                         <exclude>src/test/resources/bundleData/nested/first.txt</exclude>
                         <exclude>src/test/resources/bundleData/nested/second.txt</exclude>
+                        <exclude>dependency-reduced-pom.xml</exclude>
                     </excludes>
                 </configuration>
             </plugin>
-    
+
+           <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.sling:org.apache.sling.commons.osgi</include>
+                                    <include>org.apache.felix:org.apache.felix.framework</include>
+                                    <include>org.apache.felix:org.apache.felix.scr</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.sling.commons.osgi</pattern>
+                                    <shadedPattern>osgimock.org.apache.sling.commons.osgi</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.felix.framework</pattern>
+                                    <shadedPattern>osgimock.org.apache.felix.framework</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.felix.scr.impl</pattern>
+                                    <shadedPattern>osgimock.org.apache.felix.scr.impl</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.sling:org.apache.sling.commons.osgi</artifact>
+                                    <includes>
+                                        <include>org/apache/sling/commons/osgi/ServiceUtil*</include>
+                                        <include>org/apache/sling/commons/osgi/Order*</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.felix:org.apache.felix.framework</artifact>
+                                    <includes>
+                                        <include>org/apache/felix/framework/FilterImpl*</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.felix:org.apache.felix.scr</artifact>
+                                    <includes>
+                                        <include>org/apache/felix/scr/impl/inject/Annotations*</include>
+                                        <include>org/apache/felix/scr/impl/helper/Coercions*</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
     
