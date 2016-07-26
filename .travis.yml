@@ -15,8 +15,7 @@ env:
 
 script: 
   - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
-  - cat ./mvnw
-  - ./mvnw -v clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
+  - sh -x ./mvnw clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
 
 notifications:
   email: false
