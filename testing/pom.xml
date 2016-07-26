@@ -51,6 +51,7 @@
                       <excludes combine.children="append">
                           <exclude>derby.log</exclude>
                           <exclude>sling/**</exclude>
+                          <exclude>**/README.*</exclude>
                       </excludes>
                   </configuration>
               </plugin>
