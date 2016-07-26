@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  *  from a configurable URL.
  */
 @Component(
-        name="Apache Sling Repository Initializer",
+        label="Apache Sling Repository Initializer",
         description="Initializes the JCR content repository using repoinit statements",
         metatype=true)
 @Service(SlingRepositoryInitializer.class)
