@@ -10,9 +10,9 @@ sudo: false
 install: true
 
 script: 
-  - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
+  - mvn -q -N io.takari:maven:wrapper -Dmaven=3.3.9
   - echo 'MAVEN_OPTS="-Xmx800M -XX:MaxPermSize=256M -enableassertions"' > $HOME/.mavenrc
-  - ./mvnw -q  -Dmaven.surefire.debug="-Dorg.slf4j.simpleLogger.defaultLogLevel=warn" clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
+  - ./mvnw -q  -Dmaven.surefire.debug="-Dorg.slf4j.simpleLogger.defaultLogLevel=warn -Dorg.apache.sling.commons.log.level=WARN" clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests 2>&1 |  grep -v DEBUG | grep -v INFO | grep -v REGISTER
 
 notifications:
   email: false
