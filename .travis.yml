@@ -11,7 +11,7 @@ install: true
 
 script: 
   - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
-  - echo -Xmx800M -XX:MaxPermSize=256M -enableassertions > $HOME/.mavenrc
+  - echo 'MAVEN_OPTS="-Xmx800M -XX:MaxPermSize=256M -enableassertions"' > $HOME/.mavenrc
   - sh -x ./mvnw clean install -DHttpTestBase.readyTimeoutSeconds=300 -PintegrationTests
 
 notifications:
