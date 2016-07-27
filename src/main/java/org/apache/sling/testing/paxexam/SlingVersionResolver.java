@@ -30,6 +30,8 @@ public class SlingVersionResolver implements VersionResolver {
 
     private final Map<String, String> versions = new HashMap<>();
 
+    public static final String SLING_GROUP_ID = "org.apache.sling";
+
     public SlingVersionResolver() {
         versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.10");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.6");
