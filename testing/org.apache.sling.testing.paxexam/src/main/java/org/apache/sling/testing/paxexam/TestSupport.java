@@ -32,6 +32,7 @@ import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
 public abstract class TestSupport {
 
@@ -61,9 +62,13 @@ public abstract class TestSupport {
     }
 
     protected Option baseConfiguration() {
+        final String localRepository = System.getProperty("maven.repo.local", ""); // PAXEXAM-543
         return composite(
-            keepCaches(),
             systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
+            when(localRepository.length() > 0).useOptions(
+                systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository)
+            ),
+            keepCaches(),
             CoreOptions.workingDirectory(workingDirectory()),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.paxexam").versionAsInProject()
         );
