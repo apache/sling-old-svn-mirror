@@ -30,6 +30,7 @@ import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
@@ -53,12 +54,14 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     private final JobManager jobManager;
 
     private final boolean isActive;
+    private final DistributionQueueType type;
 
-    JobHandlingDistributionQueue(String name, String topic, JobManager jobManager, boolean isActive) {
+    JobHandlingDistributionQueue(String name, String topic, JobManager jobManager, boolean isActive, DistributionQueueType type) {
         this.name = name;
         this.topic = topic;
         this.jobManager = jobManager;
         this.isActive = isActive;
+        this.type = type;
     }
 
     @Nonnull
@@ -80,12 +83,10 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         }
     }
 
-
     public DistributionQueueEntry getHead() {
         Job firstJob = getFirstJob();
         if (firstJob != null) {
-            DistributionQueueEntry entry = JobHandlingUtils.getEntry(firstJob);
-            return entry;
+            return JobHandlingUtils.getEntry(firstJob);
         } else {
             return null;
         }
@@ -150,8 +151,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         Job job = getJob(id);
 
         if (job != null) {
-            DistributionQueueEntry entry = JobHandlingUtils.getEntry(job);
-            return entry;
+            return JobHandlingUtils.getEntry(job);
         }
 
         return null;
@@ -190,6 +190,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         int itemsCount = jobs.size();
 
         return new DistributionQueueStatus(itemsCount, state);
+    }
+
+    @Override
+    public DistributionQueueType getType() {
+        return type;
     }
 
 }

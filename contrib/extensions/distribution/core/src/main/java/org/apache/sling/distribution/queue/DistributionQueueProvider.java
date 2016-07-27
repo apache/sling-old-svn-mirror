@@ -30,7 +30,7 @@ import org.apache.sling.distribution.common.DistributionException;
 public interface DistributionQueueProvider {
 
     /**
-     * provide a named queue for the given agent
+     * provide an {@link DistributionQueueType#ORDERED} queue with the given name
      *
      * @param queueName the name of the queue to retrieve
      * @return a {@link DistributionQueue}
@@ -39,12 +39,19 @@ public interface DistributionQueueProvider {
     DistributionQueue getQueue(@Nonnull String queueName) throws DistributionException;
 
     /**
+     * provde a queue of the given type with the given name
+     * @param queueName the name of the queue
+     * @param type the type of the queue
+     * @return a {@link DistributionQueue}
+     */
+    DistributionQueue getQueue(@Nonnull String queueName, @Nonnull DistributionQueueType type);
+
+    /**
      * enables queue processing
      *
      * @param queueProcessor the queue processor to be used
      */
     void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionException;
-
 
     /**
      * disables queue processing

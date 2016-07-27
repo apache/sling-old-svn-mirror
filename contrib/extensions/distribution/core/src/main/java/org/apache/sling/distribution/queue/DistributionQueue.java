@@ -54,7 +54,6 @@ public interface DistributionQueue {
      */
     DistributionQueueEntry add(@Nonnull DistributionQueueItem item);
 
-
     /**
      * get the first item (in a FIFO strategy, the next to be processed) from the queue
      *
@@ -72,7 +71,6 @@ public interface DistributionQueue {
      */
     @Nonnull
     Iterable<DistributionQueueEntry> getItems(int skip, int limit);
-
 
     /**
      * gets an item from the queue by specifying its id
@@ -94,11 +92,16 @@ public interface DistributionQueue {
     @CheckForNull
     DistributionQueueEntry remove(@Nonnull String itemId);
 
-
     /**
-     * returns the status of the queue
+     * get the status of the queue
      * @return the queue status
      */
     @Nonnull
     DistributionQueueStatus getStatus();
+
+    /**
+     * get the type of this queue
+     * @return the type
+     */
+    DistributionQueueType getType();
 }

@@ -118,8 +118,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             log.debug("getting package from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
-            String itemId = distributionPackageId;
-            DistributionQueueEntry entry = queue.getItem(itemId);
+            DistributionQueueEntry entry = queue.getItem(distributionPackageId);
             DistributionPackage distributionPackage;
 
             if (entry != null) {

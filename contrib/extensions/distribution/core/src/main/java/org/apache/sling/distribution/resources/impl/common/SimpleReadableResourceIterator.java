@@ -50,8 +50,7 @@ public class SimpleReadableResourceIterator  implements Iterator<Resource> {
         Map<String, Object> itemProperties = itemsIterator.next();
         String itemName = (String) itemProperties.remove(AbstractReadableResourceProvider.INTERNAL_NAME);
         String resourcePath = parentPath + "/" + itemName;
-        Resource itemResource = new SimpleReadableResource(resourceResolver, resourcePath, itemProperties);
-        return itemResource;
+        return new SimpleReadableResource(resourceResolver, resourcePath, itemProperties);
     }
 
     @Override

@@ -22,6 +22,7 @@ package org.apache.sling.distribution.queue.impl;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 
 import javax.annotation.Nonnull;
 
@@ -40,6 +41,11 @@ public class SimpleAgentDistributionQueue extends DistributionQueueWrapper {
     @Override
     public DistributionQueueStatus getStatus() {
         return calculateStatus();
+    }
+
+    @Override
+    public DistributionQueueType getType() {
+        return wrappedQueue.getType();
     }
 
 

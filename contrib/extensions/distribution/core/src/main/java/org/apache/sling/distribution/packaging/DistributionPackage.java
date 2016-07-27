@@ -56,7 +56,6 @@ public interface DistributionPackage {
     @Nonnull
     InputStream createInputStream() throws IOException;
 
-
     /**
      *
      * @return the size in bytes
