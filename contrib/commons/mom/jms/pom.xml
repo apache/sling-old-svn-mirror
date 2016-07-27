@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>26</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>org.apache.sling.jms</artifactId>
+    <packaging>bundle</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Apache Sling MoM Implementation using JMS with AMQ</name>
+    <description>
+        Provides a JMS Connection provider that works OOTB in a cluster or uses a pre-existing AMQ endpoint depending on the configuration.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/jms</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/jms</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/mom/jms</url>
+    </scm>
+
+    <properties>
+        <site.jira.version.id>12315369</site.jira.version.id>
+        <sling.java.version>7</sling.java.version>
+        <exam.version>4.4.0</exam.version>
+        <url.version>2.4.5</url.version>
+        <bundle.build.dir>${basedir}/target</bundle.build.dir>
+        <bundle.file.name>${bundle.build.dir}/${project.build.finalName}.jar</bundle.file.name>
+        <min.port>37000</min.port>
+        <max.port>37999</max.port>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Embed-Dependency>
+                            activemq-broker,
+                            activemq-client,
+                            activemq-pool,
+                            activemq-protobuf,
+                            activemq-kahadb-store,
+                            activemq-jms-pool,
+                            hawtbuf</Embed-Dependency>
+                        <Import-Package>
+                            org.apache.activemq.jaas*;resolution:=optional,
+                            org.apache.commons.net.ftp*;resolution:=optional,
+                            org.apache.geronimo.transaction*;resolution:=optional,
+                            org.fusesource.hawtbuf*;resolution:=optional,
+                            org.apache.commons.pool2*;resolution:=optional,
+                            javax.jmdns*;resolution:=optional,
+                            !org.apache.maven*,
+                            *
+
+                        </Import-Package>
+                        <!--
+                        <Import-Package>com.thoughtworks.xstream*;resolution:=optional,
+                            org.apache.activeio*;resolution:=optional,
+                            org.apache.commons.pool*;resolution:=optional,
+                            org.apache.derby*;resolution:=optional,
+                            org.apache.tools.ant*;resolution:=optional,
+                            org.apache.maven*;resolution:=optional,
+                            org.apache.xbean*;resolution:=optional,
+                            '=org.apache.xbean.spring.context.v2;resolution:=optional',
+                            org.apache.xpath*;resolution:=optional,
+                            org.codehaus.jam*;resolution:=optional,
+                            org.springframework*;resolution:=optional,
+                            org.springframework.beans.factory.xml;resolution:=optional,
+                            org.w3c.dom.traversal*;resolution:=optional,
+                            org.apache.commons.net*;resolution:=optional,
+                            org.apache.kahadb*;resolution:=optional,
+                            org.apache.activemq.ra*;resolution:=optional,
+                            org.apache.geronimo.transaction.manager*;resolution:=optional,
+                            *
+                        </Import-Package>
+                        -->
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>activemq-data/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.mom</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ActiveMQ -->
+        <!-- The released OSGi bindle contains a bleuprint config with an invalid import that cant be satisfied without a custom
+         bundle, hence these will be embeded. -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>5.13.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-client</artifactId>
+            <version>5.13.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+            <version>5.13.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-jms-pool</artifactId>
+            <version>5.13.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>5.13.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq.protobuf</groupId>
+            <artifactId>activemq-protobuf</artifactId>
+            <version>1.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.fusesource.hawtbuf</groupId>
+            <artifactId>hawtbuf</artifactId>
+            <version>1.11</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.2.4</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+      <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
