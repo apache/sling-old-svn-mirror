@@ -67,4 +67,10 @@ public class PathTest {
         assertFalse(path_3.matches("/a/m-p/$structure/1/[cmp]/html"));
         assertFalse(path_3.matches("/a/m-p/$structure/[cmp]/test.html"));
     }
+
+    @Test public void testPatternRootMatching() {
+        final Path path = new Path("/");
+        assertTrue(path.matches("glob:/apps/myproject/components/**/*.html"));
+        assertTrue(path.matches("glob:/apps/**/*.html"));
+    }
 }

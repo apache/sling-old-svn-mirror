@@ -28,10 +28,10 @@ import javax.annotation.Nonnull;
  */
 public class Path implements Comparable<Path> {
 
+    private static final String GLOB_PREFIX = "glob:";
+
     private final String path;
-
     private final String prefix;
-
     private final boolean isPattern;
     private final Pattern regexPattern;
 
@@ -49,13 +49,15 @@ public class Path implements Comparable<Path> {
      */
     public Path(@Nonnull final String path) {
         this.path = path;
-        this.prefix = path.equals("/") ? "/" : path.concat("/");
-        if (path.startsWith("glob:")) {
+        if (path.startsWith(GLOB_PREFIX)) {
             isPattern = true;
             regexPattern = Pattern.compile(toRegexPattern(path.substring(5)));
+            String patternPath = path.substring(GLOB_PREFIX.length());
+            this.prefix = patternPath.equals("/") ? "/" : patternPath.concat("/");
         } else {
             isPattern = false;
             regexPattern = null;
+            this.prefix = this.path.equals("/") ? "/" : this.path.concat("/");
         }
     }
 
@@ -65,10 +67,11 @@ public class Path implements Comparable<Path> {
      * @return {@code true} If other path is within the sub tree of this path.
      */
     public boolean matches(final String otherPath) {
+        Path oPath = new Path(otherPath);
         if (isPattern) {
-            return regexPattern.matcher(otherPath).matches();
+            return this.regexPattern.equals(oPath.regexPattern) || this.regexPattern.matcher(otherPath).matches();
         }
-        return this.path.equals(otherPath) || otherPath.startsWith(this.prefix);
+        return this.path.equals(otherPath) || oPath.prefix.startsWith(this.prefix);
     }
 
     /**
