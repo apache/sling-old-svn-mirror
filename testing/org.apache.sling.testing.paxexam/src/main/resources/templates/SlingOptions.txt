@@ -38,18 +38,25 @@ public class SlingOptions {
     }
 
     public static Option eventadmin() {
-        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").version(versionResolver);
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").version(versionResolver),
+            config()
+        );
     }
 
     public static Option http() {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
-            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver)
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver),
+            config()
         );
     }
 
     public static Option httpWhiteboard() {
-        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.whiteboard").version(versionResolver);
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.whiteboard").version(versionResolver),
+            http()
+        );
     }
 
     public static Option management() {
@@ -57,21 +64,27 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.aries").artifactId("org.apache.aries.util").version(versionResolver),
             mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.api").version(versionResolver),
             mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.core").version(versionResolver),
-            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.whiteboard").version(versionResolver)
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.whiteboard").version(versionResolver),
+            config()
         );
     }
 
     public static Option scr() {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.metatype").version(versionResolver),
-            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version(versionResolver)
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version(versionResolver),
+            config()
         );
     }
 
     public static Option webconsole() {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole").version(versionResolver),
-            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.inventory").version(versionResolver)
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.inventory").version(versionResolver),
+            mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version(versionResolver),
+            mavenBundle().groupId("commons-io").artifactId("commons-io").version(versionResolver),
+            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver),
+            http()
         );
     }
 [# th:each="feature : ${features}"]
