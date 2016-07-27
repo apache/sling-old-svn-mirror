@@ -31,11 +31,13 @@ public class ResourceChangeListenerInfoTest {
     @Test
     public void testGetExpandedRelativePaths() {
         ServiceReference reference = mock(ServiceReference.class);
-        when(reference.getProperty(ResourceChangeListener.PATHS)).thenReturn(new String[] {"./**/*.html"});
+        when(reference.getProperty(ResourceChangeListener.PATHS)).thenReturn(new String[] {"project/components/page/page.html"});
         final ResourceChangeListenerInfo rcli = new ResourceChangeListenerInfo(reference, new String[] {"/apps/", "/libs/"});
         Set<String> paths = rcli.getPaths().toStringSet();
-        assertTrue("PathSet " + paths.toString() + " does not contain /apps/**/*.html.", paths.contains("/apps/**/*.html"));
-        assertTrue("PathSet " + paths.toString() + " does not contain /libs/**/*.html.", paths.contains("/libs/**/*.html"));
+        assertTrue("PathSet " + paths.toString() + " does not contain /apps/project/components/page/page.html.",
+                paths.contains("/apps/project/components/page/page.html"));
+        assertTrue("PathSet " + paths.toString() + " does not contain /libs/project/components/page/page.html.",
+                paths.contains("/libs/project/components/page/page.html"));
     }
 
     @Test
@@ -46,5 +48,15 @@ public class ResourceChangeListenerInfoTest {
         Set<String> paths = rcli.getPaths().toStringSet();
         assertTrue("PathSet " + paths.toString() + " does not contain /apps/", paths.contains("/apps/"));
         assertTrue("PathSet " + paths.toString() + " does not contain /libs/.", paths.contains("/libs/"));
+    }
+
+    @Test
+    public void testGlobPatternExpansion() {
+        ServiceReference reference = mock(ServiceReference.class);
+        when(reference.getProperty(ResourceChangeListener.PATHS)).thenReturn(new String[] {"glob:./**/*.html"});
+        final ResourceChangeListenerInfo rcli = new ResourceChangeListenerInfo(reference, new String[] {"/apps/", "/libs/"});
+        Set<String> paths = rcli.getPaths().toStringSet();
+        assertTrue("PathSet " + paths.toString() + " does not contain glob:/apps/**/*.html.", paths.contains("glob:/apps/**/*.html"));
+        assertTrue("PathSet " + paths.toString() + " does not contain glob:/libs/**/*.html.", paths.contains("glob:/libs/**/*.html"));
     }
 }

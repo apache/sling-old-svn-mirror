@@ -18,10 +18,6 @@
  */
 package org.apache.sling.resourceresolver.impl.observation;
 
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
-import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
-
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -31,9 +27,13 @@ import java.util.Set;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.path.PathSet;
 import org.osgi.framework.ServiceReference;
+
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
+import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
 
 /**
  * Information about a resource change listener.
@@ -56,23 +56,36 @@ public class ResourceChangeListenerInfo {
 
     private volatile ResourceChangeListener listener;
 
+    private static final String GLOB_PREFIX = "glob:";
+
     public ResourceChangeListenerInfo(final ServiceReference ref, final String[] searchPaths) {
         boolean configValid = true;
         final Set<String> pathsSet = new HashSet<String>();
         final String paths[] = toStringArray(ref.getProperty(PATHS), null);
         if ( paths != null ) {
             for(final String p : paths) {
+                boolean isGlobPattern = false;
                 String normalisedPath = ResourceUtil.normalize(p);
+                if (p.startsWith(GLOB_PREFIX)) {
+                    isGlobPattern = true;
+                    normalisedPath =  ResourceUtil.normalize(p.substring(GLOB_PREFIX.length()));
+                }
                 if (!".".equals(p) && normalisedPath.isEmpty()) {
                     configValid = false;
-                } else if ( normalisedPath.startsWith("/") ) {
+                } else if ( normalisedPath.startsWith("/") && !isGlobPattern ) {
                     pathsSet.add(normalisedPath);
+                } else if (normalisedPath.startsWith("/") && isGlobPattern) {
+                    pathsSet.add(GLOB_PREFIX + normalisedPath);
                 } else {
                     for(final String sp : searchPaths) {
                         if ( p.equals(".") ) {
                             pathsSet.add(sp);
                         } else {
-                            pathsSet.add(ResourceUtil.normalize(sp + normalisedPath));
+                            if (isGlobPattern) {
+                                pathsSet.add(GLOB_PREFIX + ResourceUtil.normalize(sp + normalisedPath));
+                            } else {
+                                pathsSet.add(ResourceUtil.normalize(sp + normalisedPath));
+                            }
                         }
                     }
                 }
