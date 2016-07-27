@@ -19,7 +19,6 @@
 package org.apache.sling.testing.paxexam;
 
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
 
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -31,7 +30,7 @@ import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
  */
 public class SlingOptions {
 
-    public static VersionResolver versionResolver = new SlingVersionResolver();
+    public static SlingVersionResolver versionResolver = new SlingVersionResolver();
 
     public static Option config() {
         return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version(versionResolver);
