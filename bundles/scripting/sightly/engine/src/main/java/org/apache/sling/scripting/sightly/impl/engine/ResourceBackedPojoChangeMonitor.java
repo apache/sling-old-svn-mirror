@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service({ResourceBackedPojoChangeMonitor.class, ResourceChangeListener.class})
 @Properties({
-    @Property(name = ResourceChangeListener.PATHS, value = "**/*.java"),
+    @Property(name = ResourceChangeListener.PATHS, value = "glob:**/*.java"),
     @Property(name = ResourceChangeListener.CHANGES, value = {"ADDED", "CHANGED", "REMOVED"})
 })
 public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener {
