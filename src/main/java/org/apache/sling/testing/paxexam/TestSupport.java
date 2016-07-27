@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.paxexam;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Dictionary;
@@ -28,6 +29,7 @@ import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.osgi.service.cm.ConfigurationAdmin;
 
+import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -76,6 +78,12 @@ public abstract class TestSupport {
         return when(localRepository.length() > 0).useOptions(
             systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository)
         );
+    }
+
+    protected Option testBundle(final String systemProperty) {
+        final String filename = System.getProperty(systemProperty);
+        final File file = new File(filename);
+        return bundle(file.toURI().toString());
     }
 
 }
