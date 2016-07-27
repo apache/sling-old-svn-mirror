@@ -35,6 +35,7 @@ import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +116,11 @@ public class SimpleDistributionQueue implements DistributionQueue {
     @Override
     public DistributionQueueStatus getStatus() {
         return new DistributionQueueStatus(queue.size(), getState());
+    }
+
+    @Override
+    public DistributionQueueType getType() {
+        return DistributionQueueType.ORDERED;
     }
 
 

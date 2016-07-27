@@ -234,8 +234,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 items = queue.getItems(fetched, MAX_QUEUE_CHUNK).iterator();
             }
 
-            boolean hasNext = items.hasNext();
-            return hasNext;
+            return items.hasNext();
         }
 
         @Override

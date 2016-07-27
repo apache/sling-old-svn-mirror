@@ -49,7 +49,8 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
         this.queueNames = Arrays.copyOf(queueNames, queueNames.length);
     }
 
-    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage,
+                                                     @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
 
         if (!(distributionPackage instanceof SharedDistributionPackage) && queueNames.length > 1) {
             throw new DistributionException("distribution package must be a shared package to be added in multiple queues");

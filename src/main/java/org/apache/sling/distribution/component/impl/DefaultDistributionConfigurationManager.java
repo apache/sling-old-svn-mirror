@@ -69,7 +69,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     DistributionConfigurationManager resourceManager;
 
     static String resourcePrefix;
-    static String OSGI_PREFIX = "";
+    static final String OSGI_PREFIX = "";
 
 
 
@@ -100,8 +100,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public List<DistributionConfiguration> getConfigs(ResourceResolver resolver, DistributionComponentKind kind) {
-        List<DistributionConfiguration> osgiConfigs = osgiManager.getConfigs(resolver, kind);
-        List<DistributionConfiguration> result = osgiConfigs;
+        List<DistributionConfiguration> result = osgiManager.getConfigs(resolver, kind);
 
         if (resourceManager != null) {
             List<DistributionConfiguration> resourceConfigs = resourceManager.getConfigs(resolver, kind);
@@ -113,9 +112,8 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
-        DistributionConfiguration osgiConfig = osgiManager.getConfig(resolver, kind, name);
 
-        DistributionConfiguration resultConfig = osgiConfig;
+        DistributionConfiguration resultConfig = osgiManager.getConfig(resolver, kind, name);
 
         if (resourceManager != null) {
             DistributionConfiguration resourceConfig = resourceManager.getConfig(resolver, kind, name);

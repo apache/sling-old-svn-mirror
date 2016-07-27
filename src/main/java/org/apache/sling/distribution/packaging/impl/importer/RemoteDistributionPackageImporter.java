@@ -50,7 +50,6 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
-
         for (Map.Entry<String, String> entry : endpointsMap.entrySet()) {
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();

@@ -92,9 +92,19 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         Map<String, Object> headerInfo = new HashMap<String, Object>();
         DistributionPackageUtils.readInfo(stream, headerInfo);
 
+        try {
+            stream.reset();
+        } catch (IOException e) {
+            // do nothing
+        }
+
         DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
-        stream.mark(-1);
+        try {
+            stream.reset();
+        } catch (IOException e) {
+            // do nothing
+        }
 
         // not a simple package
         if (distributionPackage == null) {
@@ -138,8 +148,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
         DistributionPackage distributionPackage = SimpleDistributionPackage.fromStream(stream, type);
 
-        stream.mark(-1);
-
         boolean installed;
         // not a simple package
         if (distributionPackage == null) {
@@ -152,7 +160,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (installed) {
             return packageInfo;
         } else {
-            return null;
+            throw new DistributionException("could not install package from stream");
         }
     }
 
@@ -199,7 +207,13 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
         // not a simple package
         if (distributionPackage == null) {
-            distributionPackage = getPackageInternal(resourceResolver, id);
+            if (id.startsWith("reference")) {
+                String localId = id.substring("reference-".length());
+                distributionPackage = new ReferencePackage(getPackageInternal(resourceResolver, localId));
+            } else {
+                distributionPackage = getPackageInternal(resourceResolver, id);
+            }
+
         }
         return distributionPackage;
     }
@@ -225,7 +239,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             }
         }
     }
-
 
 
     @CheckForNull

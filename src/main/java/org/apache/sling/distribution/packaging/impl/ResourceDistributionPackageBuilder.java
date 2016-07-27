@@ -19,17 +19,6 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
-
 import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import java.io.BufferedInputStream;
@@ -44,10 +33,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class ResourceDistributionPackageBuilder extends AbstractDistributionPackageBuilder {
     private static final String PREFIX_PATH = "/var/sling/distribution/packages/";
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final String packagesPath;
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
@@ -67,7 +70,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
 
         File file = null;
         try {
-            file = File.createTempFile("distrpck-create-" + System.nanoTime(),  "." + getType(), tempDirectory);
+            file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
 
             OutputStream outputStream = null;
 
@@ -78,7 +81,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             } finally {
                 IOUtils.closeQuietly(outputStream);
             }
-
 
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
 
@@ -116,7 +118,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream  inputStream)
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream inputStream)
             throws DistributionException {
         try {
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
@@ -129,12 +131,40 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
 
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        return new ResourceDistributionPackage(resourceResolver.getResource(id), getType(), resourceResolver);
+        Resource resource = resourceResolver.getResource(id);
+        if (resource != null) {
+            return new ResourceDistributionPackage(resource, getType(), resourceResolver);
+        } else {
+            return null;
+        }
     }
 
 
     Resource uploadStream(Resource parent, InputStream stream, long size) throws PersistenceException {
-        String name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+
+        String name;
+        log.info("uploading stream");
+        if (size == -1) {
+            // stable id
+            Map<String, Object> info = new HashMap<String, Object>();
+            DistributionPackageUtils.readInfo(stream, info);
+            log.info("read header {}", info);
+            Object remoteId = info.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
+            if (remoteId != null) {
+                name = remoteId.toString();
+                if (name.contains("/")) {
+                    name = name.substring(name.lastIndexOf('/') + 1);
+                }
+                log.info("preserving remote id {}", name);
+            } else {
+                name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+                log.info("generating a new id {}", name);
+            }
+        } else {
+            name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+        }
+        log.info("name ok");
+
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, "sling:Folder");
         props.put("type", getType());
@@ -143,7 +173,15 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             props.put("size", size);
         }
 
-        Resource resource = parent.getResourceResolver().create(parent, name, props);
+
+        ResourceResolver resourceResolver = parent.getResourceResolver();
+
+        Resource r = resourceResolver.getResource(parent, name);
+        if (r != null) {
+            resourceResolver.delete(r);
+        }
+
+        Resource resource = resourceResolver.create(parent, name, props);
         try {
             DistributionPackageUtils.uploadStream(resource, stream);
         } catch (RepositoryException e) {
@@ -151,7 +189,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
 
         }
 
-        parent.getResourceResolver().commit();
+        resourceResolver.commit();
 
         return resource;
     }

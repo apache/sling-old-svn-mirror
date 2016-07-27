@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.queue.impl;
-
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -36,8 +35,8 @@ public class CachingDistributionQueue extends DistributionQueueWrapper {
     // cache status for 30 sec as it is expensive to count items
     private static final int EXPIRY_QUEUE_CACHE = 30 * 1000;
 
-    static Map<String, DistributionQueueStatus> queueCache = new ConcurrentHashMap<String, DistributionQueueStatus>();
-    static Map<String, Long> queueCacheExpiry = new ConcurrentHashMap<String, Long>();
+    static final Map<String, DistributionQueueStatus> queueCache = new ConcurrentHashMap<String, DistributionQueueStatus>();
+    static final Map<String, Long> queueCacheExpiry = new ConcurrentHashMap<String, Long>();
     private final String cacheKey;
 
     public CachingDistributionQueue(String cacheKey, DistributionQueue wrappedQueue) {
@@ -66,12 +65,15 @@ public class CachingDistributionQueue extends DistributionQueueWrapper {
 
         queueStatus = wrappedQueue.getStatus();
 
-        if (queueStatus != null) {
-            queueCache.put(cacheKey, queueStatus);
-            queueCacheExpiry.put(cacheKey,  System.currentTimeMillis() + EXPIRY_QUEUE_CACHE);
-        }
+        queueCache.put(cacheKey, queueStatus);
+        queueCacheExpiry.put(cacheKey,  System.currentTimeMillis() + EXPIRY_QUEUE_CACHE);
 
         return queueStatus;
+    }
+
+    @Override
+    public DistributionQueueType getType() {
+        return wrappedQueue.getType();
     }
 
     @Override

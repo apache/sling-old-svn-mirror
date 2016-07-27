@@ -27,6 +27,7 @@ import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,9 @@ class JobHandlingUtils {
         if (topic == null || !topic.startsWith(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC)) return null;
 
         String queue = topic.substring(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC.length() + 1);
-        int idx = queue.indexOf("/");
+
+
+        int idx = queue.lastIndexOf("/");
 
         if (idx < 0) return "";
 
@@ -115,8 +118,7 @@ class JobHandlingUtils {
         if (jobId == null) {
             return null;
         }
-        String itemId = ID_START + jobId.replace("/", "--");
-        return itemId;
+        return ID_START + jobId.replace("/", "--");
     }
 
     public static String unescapeId(String itemId) {
@@ -127,9 +129,7 @@ class JobHandlingUtils {
             return null;
         }
 
-        String jobId = itemId.replace(ID_START, "").replace("--","/");
-
-        return jobId;
+        return itemId.replace(ID_START, "").replace("--","/");
     }
 
 
