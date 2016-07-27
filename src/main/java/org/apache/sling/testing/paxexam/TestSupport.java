@@ -62,15 +62,19 @@ public abstract class TestSupport {
     }
 
     protected Option baseConfiguration() {
-        final String localRepository = System.getProperty("maven.repo.local", ""); // PAXEXAM-543
         return composite(
+            localMavenRepo(),
             systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
-            when(localRepository.length() > 0).useOptions(
-                systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository)
-            ),
             keepCaches(),
             CoreOptions.workingDirectory(workingDirectory()),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.paxexam").versionAsInProject()
+        );
+    }
+
+    protected Option localMavenRepo() {
+        final String localRepository = System.getProperty("maven.repo.local", ""); // PAXEXAM-543
+        return when(localRepository.length() > 0).useOptions(
+            systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository)
         );
     }
 
