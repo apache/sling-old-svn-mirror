@@ -29,12 +29,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HttpTransportUtils {
-
-    private static final Logger log = LoggerFactory.getLogger(HttpTransportUtils.class);
 
     public static InputStream fetchNextPackage(Executor executor, URI distributionURI) throws URISyntaxException, IOException {
         URI fetchUri = getFetchUri(distributionURI);

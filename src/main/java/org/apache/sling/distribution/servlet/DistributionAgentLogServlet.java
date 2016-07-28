@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to ask {@link org.apache.sling.distribution.agent.DistributionAgent}s to distribute (via HTTP POST).
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.LOG_RESOURCE_TYPE, methods = "GET", extensions = "txt")
 public class DistributionAgentLogServlet extends SlingAllMethodsServlet {
 

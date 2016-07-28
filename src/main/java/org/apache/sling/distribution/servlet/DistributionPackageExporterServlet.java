@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle fetching of distribution content.
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.EXPORTER_RESOURCE_TYPE, methods = "POST")
 public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 

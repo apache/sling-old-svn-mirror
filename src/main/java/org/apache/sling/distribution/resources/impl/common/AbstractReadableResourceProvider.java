@@ -119,6 +119,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
+    @SuppressWarnings( "unchecked" )
     public Iterator<Resource> listChildren(Resource parent) {
         String path = parent.getPath();
         ResourceResolver resourceResolver = parent.getResourceResolver();

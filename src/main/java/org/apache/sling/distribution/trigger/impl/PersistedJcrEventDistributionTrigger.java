@@ -81,9 +81,10 @@ public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigge
                     createdNode.setProperty("userData", event.getUserData());
                     createdNode.setProperty("userID", event.getUserID());
 
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
                     Set<Map.Entry> set = event.getInfo().entrySet();
                     Collection<String> values = new ArrayList<String>();
-                    for (Map.Entry entry : set) {
+                    for (@SuppressWarnings("rawtypes") Map.Entry entry : set) {
                         values.add(String.valueOf(entry.getKey()) + ":" + String.valueOf(entry.getValue()));
                     }
                     createdNode.setProperty("info", values.toArray(new String[values.size()]));

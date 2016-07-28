@@ -140,7 +140,7 @@ public class OsgiUtils {
                 continue;
             }
 
-            Class valueClass = entry.getValue().getClass();
+            Class<?> valueClass = entry.getValue().getClass();
             Object value = entry.getValue();
             if (valueClass.isArray()) {
                 valueClass = valueClass.getComponentType();

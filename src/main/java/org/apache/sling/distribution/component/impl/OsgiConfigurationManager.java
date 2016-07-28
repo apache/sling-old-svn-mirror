@@ -19,6 +19,17 @@
 
 package org.apache.sling.distribution.component.impl;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
@@ -27,17 +38,6 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Manager implementation which represents the distribution configurations as OSGI configuration.
@@ -62,7 +62,8 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
 
 
         for (Configuration configuration : configurations) {
-            Dictionary propertiesDict = configuration.getProperties();
+            @SuppressWarnings( "unchecked" )
+            Dictionary<String, Object> propertiesDict = configuration.getProperties();
             Map<String, Object> properties = OsgiUtils.fromDictionary(propertiesDict);
 
             properties = filterBeforeRead(properties);
@@ -89,7 +90,8 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
         Configuration configuration = configurations.get(0);
 
         if (configuration != null) {
-            Dictionary properties = configuration.getProperties();
+            @SuppressWarnings( "unchecked" )
+            Dictionary<String, Object> properties = configuration.getProperties();
             Map<String, Object> result = OsgiUtils.fromDictionary(properties);
 
             String factoryPid = PropertiesUtil.toString(result.get(ConfigurationAdmin.SERVICE_FACTORYPID), null);
@@ -128,7 +130,7 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
             deleteOsgiConfigs(configs);
 
             properties.put(DistributionComponentConstants.PN_NAME, componentName);
-            Configuration configuration = saveOsgiConfig(factoryPid, componentName, properties);
+            saveOsgiConfig(factoryPid, componentName, properties);
         }
 
     }
