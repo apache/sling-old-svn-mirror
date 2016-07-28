@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -33,10 +34,14 @@ import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.apache.sling.distribution.queue.impl.CachingDistributionQueue;
+import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +64,14 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     private BundleContext context;
     private Set<String> processingQueueNames = null;
 
+    private ConfigurationAdmin configAdmin;
 
     public JobHandlingDistributionQueueProvider(String prefix, JobManager jobManager, BundleContext context) {
+        this(prefix, jobManager, context, null);
+    }
+
+    public JobHandlingDistributionQueueProvider(String prefix, JobManager jobManager, BundleContext context, ConfigurationAdmin configAdmin) {
+        this.configAdmin = configAdmin;
         if (prefix == null || jobManager == null || context == null) {
             throw new IllegalArgumentException("all arguments are required");
         }
@@ -84,19 +95,23 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + type.name().toLowerCase() + '/' + prefix + "/" + queueName;
         boolean isActive = jobConsumer != null && (processingQueueNames == null || processingQueueNames.contains(queueName));
 
-//        if (jobManager.getQueue(queueName) == null) {
-//            Configuration config = configAdmin.createFactoryConfiguration(
-//                    QueueConfiguration.class.getName(), null);
-//            Dictionary<String, Object> props = new Hashtable<String, Object>();
-//            props.put(ConfigurationConstants.PROP_NAME, queueName);
-//            props.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.PARALLEL.name());
-//            props.put(ConfigurationConstants.PROP_TOPICS, new String[]{topic});
-//            props.put(ConfigurationConstants.PROP_RETRIES, -1);
-//            props.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
-//            props.put(ConfigurationConstants.PROP_KEEP_JOBS, true);
-//            props.put(ConfigurationConstants.PROP_PRIORITY, "MAX");
-//            config.update(props);
-//        }
+        try {
+            if (configAdmin != null && jobManager.getQueue(queueName) == null && configAdmin.getConfiguration(queueName) == null) {
+                Configuration config = configAdmin.createFactoryConfiguration(
+                        QueueConfiguration.class.getName(), null);
+                Dictionary<String, Object> props = new Hashtable<String, Object>();
+                props.put(ConfigurationConstants.PROP_NAME, queueName);
+                props.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.UNORDERED.name());
+                props.put(ConfigurationConstants.PROP_TOPICS, new String[]{topic});
+                props.put(ConfigurationConstants.PROP_RETRIES, -1);
+                props.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
+                props.put(ConfigurationConstants.PROP_KEEP_JOBS, true);
+                props.put(ConfigurationConstants.PROP_PRIORITY, "MAX");
+                config.update(props);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("could not create config for queue " + queueName, e);
+        }
 
         DistributionQueue queue = new JobHandlingDistributionQueue(queueName, topic, jobManager, isActive, type);
         queue = new CachingDistributionQueue(topic, queue);
