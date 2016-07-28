@@ -24,16 +24,15 @@ import org.ops4j.pax.exam.Option;
 
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 public abstract class SlingOptionsTestSupport extends TestSupport {
 
     @Override
     protected Option baseConfiguration() {
         return composite(
-            localMavenRepo(),
-            systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
+            failOnUnresolvedBundles(),
             keepCaches(),
+            localMavenRepo(),
             CoreOptions.workingDirectory(workingDirectory()),
             testBundle("bundle.filename")
         );
