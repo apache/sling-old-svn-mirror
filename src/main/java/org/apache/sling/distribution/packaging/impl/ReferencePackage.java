@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.packaging.impl;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
  * by its {@link DistributionPackage#getId()}.
  */
 public class ReferencePackage extends AbstractDistributionPackage {
-    private static final String REFERENCE_PREFIX = "reference-";
+    static final String REFERENCE_PREFIX = "reference-";
     private final DistributionPackage distributionPackage;
     private final String reference;
 
@@ -43,14 +44,14 @@ public class ReferencePackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void acquire(@Nonnull String[] holderNames) {
+    public void acquire(@Nonnull String... holderNames) {
         if (distributionPackage instanceof AbstractDistributionPackage) {
             ((AbstractDistributionPackage) distributionPackage).acquire(holderNames);
         }
     }
 
     @Override
-    public void release(@Nonnull String[] holderNames) {
+    public void release(@Nonnull String... holderNames) {
         if (distributionPackage instanceof AbstractDistributionPackage) {
             ((AbstractDistributionPackage) distributionPackage).release(holderNames);
         }
@@ -93,9 +94,8 @@ public class ReferencePackage extends AbstractDistributionPackage {
         return string.startsWith(REFERENCE_PREFIX);
     }
 
+    @CheckForNull
     public static String idFromReference(String reference) {
-        return reference.substring(REFERENCE_PREFIX.length());
-
-
+        return isReference(reference) ? reference.substring(REFERENCE_PREFIX.length()) : null;
     }
 }

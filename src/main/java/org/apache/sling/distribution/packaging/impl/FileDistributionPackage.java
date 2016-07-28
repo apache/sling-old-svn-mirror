@@ -72,7 +72,7 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void acquire(@Nonnull String[] holderNames) {
+    public void acquire(@Nonnull String... holderNames) {
         try {
             DistributionPackageUtils.acquire(getStatusFile(), holderNames);
         } catch (IOException e) {
@@ -81,7 +81,7 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void release(@Nonnull String[] holderNames) {
+    public void release(@Nonnull String... holderNames) {
         try {
             boolean doDelete = DistributionPackageUtils.release(getStatusFile(), holderNames);
 

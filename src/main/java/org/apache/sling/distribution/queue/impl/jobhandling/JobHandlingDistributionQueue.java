@@ -119,16 +119,19 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         int actualSkip = skip < 0 ? 0 : skip;
         int actualLimit = limit < 0 ? -1 : actualSkip + limit;
 
-
-        Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
         List<Job> result = new ArrayList<Job>();
+        try {
+            Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
 
-        int i = 0;
-        for (Job job : jobs) {
-            if (i >= actualSkip) {
-                result.add(job);
+            int i = 0;
+            for (Job job : jobs) {
+                if (i >= actualSkip) {
+                    result.add(job);
+                }
+                i++;
             }
-            i++;
+        } catch (Exception e) {
+            log.warn("could not get jobs for topic {}", topic, e);
         }
 
         return result;
