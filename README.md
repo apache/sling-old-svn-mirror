@@ -6,6 +6,12 @@ Apache Sling Testing Pax Exam
 * _Sling's Karaf Features_ as `Option`s for Pax Exam (without Karaf)
 * `TestSupport` with common helper methods and `Option`s
 
+**Provided features:**
+
+* run integration tests in a Sling instance in the same module (with the build artifact under test)
+* use different versions in build (e.g. *minimal*) and tests (e.g. *latest*)
+* overriding of versions
+
 Getting Started
 ---------------
 
@@ -56,3 +62,7 @@ Create a test class (extend `TestSupport` to use helper methods and `Option`s) a
             slingScriptingThymeleaf() // from SlingOptions (for illustration)
         );
     }
+
+**Overriding (or adding) versions:**
+
+    SlingOptions.versionResolver.setVersion(SLING_GROUP_ID, "org.apache.sling.jcr.oak.server", "1.1.0");
