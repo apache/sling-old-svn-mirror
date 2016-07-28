@@ -95,7 +95,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
                 DistributionQueueEntry deliveryQueueEntry = deliveryQueue.add(item);
                 if (deliveryQueueEntry != null) {
                     DistributionQueueItemStatus status = deliveryQueueEntry.getStatus();
-                    log.info("item {} added to delivery queue: {}", item, status);
+                    log.debug("item {} added to delivery queue: {}", item, status);
                     result.add(status);
                 } else {
                     DistributionPackageUtils.release(distributionPackage, deliveryQueueName);
@@ -109,7 +109,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
                 DistributionQueueEntry referenceQueueEntry = referenceQueue.add(referenceQueueItem);
                 if (referenceQueueEntry != null) {
                     DistributionQueueItemStatus status = referenceQueueEntry.getStatus();
-                    log.info("item {} added to reference queue: {}", referenceQueueItem, status);
+                    log.debug("item {} added to reference queue: {}", referenceQueueItem, status);
                 } else {
                     DistributionPackageUtils.release(referencePackage, referenceQueueName);
                     log.error("cannot add package {} to reference queue {}", distributionPackageId, referenceQueueName);
@@ -128,7 +128,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
 
                 if (queueEntry != null) {
                     status = queueEntry.getStatus();
-                    log.info("item {} added to queue: {}", item, status);
+                    log.debug("item {} added to queue: {}", item, status);
                 } else {
                     DistributionPackageUtils.release(distributionPackage, referenceQueueName);
                     log.error("cannot add package {} to queue {}", distributionPackageId, referenceQueueName);

@@ -116,7 +116,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             throws DistributionException {
         try {
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
-
             return true;
         } finally {
             IOUtils.closeQuietly(inputStream);
@@ -137,7 +136,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     Resource uploadStream(Resource parent, InputStream stream, long size) throws PersistenceException {
 
         String name;
-        log.info("uploading stream");
+        log.debug("uploading stream");
         if (size == -1) {
             // stable id
             Map<String, Object> info = new HashMap<String, Object>();
@@ -157,7 +156,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         } else {
             name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
         }
-        log.info("name ok");
 
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, "sling:Folder");
@@ -166,7 +164,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         if (size != -1) {
             props.put("size", size);
         }
-
 
         ResourceResolver resourceResolver = parent.getResourceResolver();
 

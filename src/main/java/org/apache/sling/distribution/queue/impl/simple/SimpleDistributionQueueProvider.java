@@ -102,7 +102,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
 
     @Override
     public DistributionQueue getQueue(@Nonnull String queueName, @Nonnull DistributionQueueType type) {
-        throw new RuntimeException("not supported");
+        return getQueue(queueName);
     }
 
     Collection<SimpleDistributionQueue> getQueues() {
