@@ -65,12 +65,16 @@ public abstract class TestSupport {
 
     protected Option baseConfiguration() {
         return composite(
+            failOnUnresolvedBundles(),
             localMavenRepo(),
-            systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
             keepCaches(),
             CoreOptions.workingDirectory(workingDirectory()),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.paxexam").versionAsInProject()
         );
+    }
+
+    protected Option failOnUnresolvedBundles() {
+        return systemProperty("pax.exam.osgi.unresolved.fail").value("true");
     }
 
     protected Option localMavenRepo() {
