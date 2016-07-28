@@ -155,12 +155,12 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     }
 
     @Override
-    public void acquire(@Nonnull String[] holderNames) {
+    public void acquire(@Nonnull String... holderNames) {
 
     }
 
     @Override
-    public void release(@Nonnull String[] holderNames) {
+    public void release(@Nonnull String... holderNames) {
 
     }
 }

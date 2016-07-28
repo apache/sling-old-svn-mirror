@@ -99,19 +99,23 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         if (reference != null) {
             if (ReferencePackage.isReference(reference)) {
                 String actualPackageId = ReferencePackage.idFromReference(reference);
-                log.info("installing from reference {}", actualPackageId);
-                DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, actualPackageId);
-                if (distributionPackage != null) {
-                    if (packageBuilder.installPackage(resourceResolver, distributionPackage)) {
-                        DistributionPackageInfo info = distributionPackage.getInfo();
-                        log.info("package installed {}", info);
-                        eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, info);
-                        return info;
+                if (actualPackageId != null) {
+                    log.info("installing from reference {}", actualPackageId);
+                    DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, actualPackageId);
+                    if (distributionPackage != null) {
+                        if (packageBuilder.installPackage(resourceResolver, distributionPackage)) {
+                            DistributionPackageInfo info = distributionPackage.getInfo();
+                            log.info("package installed {}", info);
+                            eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, info);
+                            return info;
+                        } else {
+                            throw new DistributionException("could not install package {}" + distributionPackage);
+                        }
                     } else {
-                        throw new DistributionException("could not install package {}" + distributionPackage);
+                        throw new DistributionException("could not install package from reference " + actualPackageId);
                     }
                 } else {
-                    throw new DistributionException("could not install package from reference " + actualPackageId);
+                    throw new DistributionException("could not install package from invalid reference " + reference);
                 }
             } else {
                 try {

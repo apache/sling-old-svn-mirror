@@ -86,7 +86,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void acquire(@Nonnull String[] holderNames) {
+    public void acquire(@Nonnull String... holderNames) {
         try {
             DistributionPackageUtils.acquire(resource, holderNames);
             if (resourceResolver.hasChanges()) {
@@ -101,7 +101,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void release(@Nonnull String[] holderNames) {
+    public void release(@Nonnull String... holderNames) {
         try {
             boolean doDelete = DistributionPackageUtils.release(resource, holderNames);
 
