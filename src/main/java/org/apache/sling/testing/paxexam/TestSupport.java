@@ -66,8 +66,8 @@ public abstract class TestSupport {
     protected Option baseConfiguration() {
         return composite(
             failOnUnresolvedBundles(),
-            localMavenRepo(),
             keepCaches(),
+            localMavenRepo(),
             CoreOptions.workingDirectory(workingDirectory()),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.paxexam").versionAsInProject()
         );
