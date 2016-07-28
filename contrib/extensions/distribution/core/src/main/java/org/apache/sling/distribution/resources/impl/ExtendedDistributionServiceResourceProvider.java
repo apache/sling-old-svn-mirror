@@ -66,7 +66,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
 
     @Override
-    protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
+    protected Map<String, Object> getChildResourceProperties(DistributionComponent<?> component, String childResourceName) {
         DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
@@ -97,7 +97,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     }
 
     @Override
-    protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+    protected Iterable<String> getChildResourceChildren(DistributionComponent<?> component, String childResourceName) {
 
         DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {

@@ -33,8 +33,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
@@ -44,8 +42,6 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(DistributionConfigurationManager.class)
 public class DefaultDistributionConfigurationManager implements DistributionConfigurationManager {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Resource Config Enabled", description = "If storing config in resource tree is enabled.", boolValue = false)
     public static final String CONFIG_ENABLED = "resource.config.enabled";

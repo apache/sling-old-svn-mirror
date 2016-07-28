@@ -44,7 +44,7 @@ public class DefaultDistributionLog implements DistributionLog {
     private final Logger logger;
     private final LogLevel logLevel;
 
-    public DefaultDistributionLog(DistributionComponentKind kind, String name, Class clazz, LogLevel logLevel) {
+    public DefaultDistributionLog(DistributionComponentKind kind, String name, Class<?> clazz, LogLevel logLevel) {
 
         this.kind = kind;
         this.name = name;

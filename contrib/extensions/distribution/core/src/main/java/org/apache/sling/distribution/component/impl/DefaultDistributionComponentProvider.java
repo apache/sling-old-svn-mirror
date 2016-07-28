@@ -32,15 +32,12 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link DistributionComponentProvider} OSGi service.
@@ -61,8 +58,6 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private static final String NAME = DistributionComponentConstants.PN_NAME;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final Map<String, DistributionComponent<DistributionAgent>> distributionAgentMap = new ConcurrentHashMap<String, DistributionComponent<DistributionAgent>>();
     private final Map<String, DistributionComponent<DistributionQueueProvider>> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueProvider>>();
     private final Map<String, DistributionComponent<DistributionQueueDispatchingStrategy>> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueDispatchingStrategy>>();
@@ -71,36 +66,35 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     private final Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
     private final Map<String, DistributionComponent<DistributionPackageBuilder>> distributionPackageBuilderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageBuilder>>();
 
-    private BundleContext bundleContext;
-
-
-    public DistributionComponent getComponent(DistributionComponentKind kind, String componentName) {
-        Map<String, DistributionComponent> componentMap = getComponentMap(kind.asClass());
+    public DistributionComponent<?> getComponent(DistributionComponentKind kind, String componentName) {
+        Map<String, DistributionComponent<?>> componentMap = getComponentMap(kind.asClass());
         return componentMap.get(componentName);
     }
 
-    public List<DistributionComponent> getComponents(DistributionComponentKind kind) {
-        Map<String, DistributionComponent> componentMap = getComponentMap(kind.asClass());
+    public List<DistributionComponent<?>> getComponents(DistributionComponentKind kind) {
+        Map<String, DistributionComponent<?>> componentMap = getComponentMap(kind.asClass());
 
-        List<DistributionComponent> componentList = new ArrayList<DistributionComponent>();
+        List<DistributionComponent<?>> componentList = new ArrayList<DistributionComponent<?>>();
         componentList.addAll(componentMap.values());
 
         return componentList;
     }
 
     public <ComponentType> ComponentType getService(Class<ComponentType> type, String componentName) {
-        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(type);
-        DistributionComponent<ComponentType> component = componentMap.get(componentName);
+        Map<String, DistributionComponent<?>> componentMap = getComponentMap(type);
+        DistributionComponent<?> component = componentMap.get(componentName);
 
         if (component == null) {
             return null;
         }
 
-        return component.getService();
+        // safe cast driven by the input type?
+        return type.cast(component.getService());
     }
 
 
-    private <ComponentType> Map<String, DistributionComponent<ComponentType>> getComponentMap(Class<ComponentType> type) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Map<String, DistributionComponent<?>> getComponentMap(Class<?> type) {
         if (type.isAssignableFrom(DistributionAgent.class)) {
             return (Map) distributionAgentMap;
         } else if (type.isAssignableFrom(DistributionPackageExporter.class)) {
@@ -119,6 +113,8 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
         return null;
     }
+
+    // TODO are these methods still needed?!?
 
     private void bindDistributionQueueProvider(DistributionQueueProvider distributionQueueProvider, Map<String, Object> config) {
 
@@ -196,7 +192,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     }
 
     private <ComponentType> void put(Class<ComponentType> typeClass, ComponentType service, Map<String, Object> config) {
-        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(typeClass);
+        Map<String, DistributionComponent<?>> componentMap = getComponentMap(typeClass);
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         DistributionComponentKind kind = DistributionComponentKind.fromClass(typeClass);
@@ -208,7 +204,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private <ComponentType> void remove(Class<ComponentType> typeClass, ComponentType service, Map<String, Object> config) {
 
-        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(typeClass);
+        Map<String, DistributionComponent<?>> componentMap = getComponentMap(typeClass);
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         if (name != null) {

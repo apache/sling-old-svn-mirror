@@ -35,8 +35,6 @@ import org.apache.sling.distribution.component.impl.DistributionConfigurationMan
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.AbstractModifyingResourceProvider;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link ResourceProvider} for Osgi configurations for a specific configuration factory.
@@ -44,8 +42,6 @@ import org.slf4j.LoggerFactory;
  * The accepted path is resourceRoot/{friendlyNameProperty}/childResourceName.
  */
 public class DistributionConfigurationResourceProvider extends AbstractModifyingResourceProvider implements ResourceProvider, ModifyingResourceProvider {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String SETTINGS_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SETTING_RESOURCE_TYPE;
 
