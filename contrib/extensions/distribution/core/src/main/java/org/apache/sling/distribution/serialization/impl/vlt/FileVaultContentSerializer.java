@@ -113,7 +113,6 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
             session = getSession(resourceResolver);
             ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode, autosaveThreshold);
 
-
             if (inputStream instanceof FileDistributionPackage.PackageInputStream) {
                 file = ((FileDistributionPackage.PackageInputStream) inputStream).getFile();
                 isTmp = false;

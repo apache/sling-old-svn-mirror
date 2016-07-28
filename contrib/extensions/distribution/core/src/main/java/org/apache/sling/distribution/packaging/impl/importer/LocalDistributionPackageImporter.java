@@ -101,7 +101,7 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
                 String actualPackageId = ReferencePackage.idFromReference(reference);
                 log.info("installing from reference {}", actualPackageId);
                 DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, actualPackageId);
-                if (distributionPackage != null && packageBuilder.installPackage(resourceResolver, distributionPackage)) {
+                if (distributionPackage != null) {
                     DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
                     log.info("package installed {}", packageInfo);
                     eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, packageInfo);
