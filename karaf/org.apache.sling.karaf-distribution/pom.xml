@@ -112,6 +112,7 @@
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
             <!-- Apache Sling Commons -->
+            <feature>sling-commons-compiler</feature>
             <feature>sling-commons-classloader</feature>
             <feature>sling-commons-fsclassloader</feature>
             <feature>sling-commons-messaging</feature>
