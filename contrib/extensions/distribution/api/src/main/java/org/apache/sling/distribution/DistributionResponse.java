@@ -18,11 +18,10 @@
  */
 package org.apache.sling.distribution;
 
-import aQute.bnd.annotation.ProviderType;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * A {@link org.apache.sling.distribution.DistributionResponse} represents the outcome of a
