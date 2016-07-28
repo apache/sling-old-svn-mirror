@@ -162,6 +162,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <createSourcesJar>true</createSourcesJar>
+                            <shadeSourcesContent>true</shadeSourcesContent>
                             <artifactSet>
                                 <includes>
                                     <include>org.apache.sling:org.apache.sling.commons.osgi</include>
@@ -194,7 +196,7 @@
                                 <filter>
                                     <artifact>org.apache.felix:org.apache.felix.framework</artifact>
                                     <includes>
-                                        <include>org/apache/felix/framework/FilterImpl*</include>
+                                        <include>org/apache/felix/framework/**</include>
                                     </includes>
                                 </filter>
                                 <filter>
