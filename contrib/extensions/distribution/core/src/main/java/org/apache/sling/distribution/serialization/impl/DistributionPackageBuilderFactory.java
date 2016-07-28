@@ -88,6 +88,16 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
+    // 128K
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1024000;
+
+    @Property(
+        label="File threshold (in bytes)",
+        description = "Once the data reaches the configurable size value, buffering to memory switches to file buffering.",
+        intValue = DEFAULT_FILE_THRESHOLD_VALUE
+    )
+    public static final String FILE_THRESHOLD = "fileThreshold";
+
     private DistributionPackageBuilder packageBuilder;
 
     @Activate
@@ -100,7 +110,8 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
         if ("file".equals(persistenceType)) {
             packageBuilder = new FileDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
         } else {
-            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
+            final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
+            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold);
         }
 
 

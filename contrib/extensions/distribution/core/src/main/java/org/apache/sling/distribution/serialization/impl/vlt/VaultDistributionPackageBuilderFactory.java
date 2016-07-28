@@ -117,7 +117,17 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
     @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
     public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
-    
+
+    // 128K
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1024000;
+
+    @Property(
+        label="File threshold (in bytes)",
+        description = "Once the data reaches the configurable size value, buffering to memory switches to file buffering.",
+        intValue = DEFAULT_FILE_THRESHOLD_VALUE
+    )
+    public static final String FILE_THRESHOLD = "fileThreshold";
+
     @Reference
     private Packaging packaging;
 
@@ -156,7 +166,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         if ("filevlt".equals(type)) {
             packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         } else {
-            packageBuilder = new ResourceDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
+            final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
+            packageBuilder = new ResourceDistributionPackageBuilder(name, contentSerializer, tempFsFolder, fileThreshold);
         }
     }
 
