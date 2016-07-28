@@ -98,11 +98,14 @@ public class SlingOptions {
         );
     }
 
-[/]    public static Option slingLaunchpadOakTarConfiguration(final String workingDirectory, final int httpPort) {
+[/]    public static Option slingLaunchpadOakTar(final String workingDirectory, final int httpPort) {
         final String slingHome = String.format("%s/sling", workingDirectory);
         final String repositoryHome = String.format("%s/repository", slingHome);
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
+            slingJcrOak(),
+            slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
                 .asOption(),
