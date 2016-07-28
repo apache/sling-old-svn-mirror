@@ -61,6 +61,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,6 +195,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private Scheduler scheduler;
 
+    @Reference
+    private ConfigurationAdmin configAdmin;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -232,7 +235,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionQueueProvider queueProvider;
         String queueProviderName = PropertiesUtil.toString(config.get(QUEUE_PROVIDER), JobHandlingDistributionQueueProvider.TYPE);
         if (JobHandlingDistributionQueueProvider.TYPE.equals(queueProviderName)) {
-            queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+            queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context, configAdmin);
         } else if (SimpleDistributionQueueProvider.TYPE.equals(queueProviderName)) {
             queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, false);
         } else {
