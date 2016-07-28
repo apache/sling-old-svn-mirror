@@ -22,7 +22,6 @@ import javax.inject.Inject;
 
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.karaf.testing.KarafTestSupport;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -137,17 +136,8 @@ public class SlingIT extends KarafTestSupport {
     }
 
     @Test
-    @Ignore
     public void testJavaxJcr() {
         final Bundle bundle = findBundle("javax.jcr");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    @Ignore
-    public void testOrgApacheGeronimoBundlesJson() {
-        final Bundle bundle = findBundle("org.apache.geronimo.bundles.json");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

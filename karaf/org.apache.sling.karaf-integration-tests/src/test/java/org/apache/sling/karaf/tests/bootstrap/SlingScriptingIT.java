@@ -19,7 +19,6 @@
 package org.apache.sling.karaf.tests.bootstrap;
 
 import org.apache.sling.karaf.testing.KarafTestSupport;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -54,14 +53,6 @@ public class SlingScriptingIT extends KarafTestSupport {
     @Test
     public void testOrgApacheSlingScriptingCore() {
         final Bundle bundle = findBundle("org.apache.sling.scripting.core");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    @Ignore
-    public void testOrgApacheGeronimoSpecsGeronimoServlet_3_0_Spec() {
-        final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-servlet_3.0_spec");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.karaf.testing.KarafTestSupport;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
@@ -383,7 +382,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
     }
 
     @Test
-    @Ignore // TODO failure: OSGi add resource events are missing for 2500/2500 paths after 5000 msec: 2500 paths missing
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
