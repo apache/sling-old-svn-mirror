@@ -19,21 +19,16 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
-import javax.annotation.Nonnull;
-import javax.jcr.RepositoryException;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
+import javax.annotation.Nonnull;
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -43,6 +38,7 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,28 +50,24 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     private final String packagesPath;
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
+    private final int fileThreshold;
 
-    public ResourceDistributionPackageBuilder(String type, DistributionContentSerializer distributionContentSerializer, String tempFilesFolder) {
+    public ResourceDistributionPackageBuilder(String type, DistributionContentSerializer distributionContentSerializer, String tempFilesFolder, int fileThreshold) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.packagesPath = PREFIX_PATH + type + "/data";
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
-
+        this.fileThreshold = fileThreshold;
     }
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
-        // TODO : write to file if size > threshold
 
-        File file = null;
+        FileBackedMemoryOutputStream outputStream = null;
         try {
-            file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
-
-            OutputStream outputStream = null;
-
             try {
-                outputStream = new BufferedOutputStream(new FileOutputStream(file));
+                outputStream = new FileBackedMemoryOutputStream(fileThreshold, tempDirectory, "distrpck-create-", "." + getType());
                 distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
                 outputStream.flush();
             } finally {
@@ -88,9 +80,9 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             Resource packageResource = null;
 
             try {
-                inputStream = new BufferedInputStream(new FileInputStream(file));
+                inputStream = outputStream.openWrittenDataInputStream();
 
-                packageResource = uploadStream(packagesRoot, inputStream, file.length());
+                packageResource = uploadStream(packagesRoot, inputStream, outputStream.size());
             } finally {
                 IOUtils.closeQuietly(inputStream);
             }
@@ -99,7 +91,9 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         } catch (IOException e) {
             throw new DistributionException(e);
         } finally {
-            FileUtils.deleteQuietly(file);
+            if (outputStream != null) {
+                outputStream.clean();
+            }
         }
         return distributionPackage;
     }
