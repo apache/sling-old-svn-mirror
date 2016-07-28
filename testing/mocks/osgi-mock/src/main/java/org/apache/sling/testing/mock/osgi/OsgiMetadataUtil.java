@@ -414,7 +414,7 @@ final class OsgiMetadataUtil {
                 try {
                     this.targetFilter = new FilterImpl(this.target);
                 } catch (InvalidSyntaxException ex) {
-                    throw new RuntimeException("Invalid target filet in reference '" + this.name + "' of class " + clazz.getName(), ex);
+                    throw new RuntimeException("Invalid target filter in reference '" + this.name + "' of class " + clazz.getName(), ex);
                 }
             }
             else {
