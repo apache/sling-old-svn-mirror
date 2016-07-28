@@ -250,6 +250,7 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
+    <feature version="${feature.version}">sling-commons-compiler</feature>
   </feature>
   <feature name="sling-jcr-jackrabbit-security" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2</bundle>
@@ -386,6 +387,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.6</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-scripting</feature>
+    <feature version="${feature.version}">sling-commons-compiler</feature>
   </feature>
   <feature name="sling-scripting-sightly" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.18</bundle>
@@ -592,6 +594,7 @@
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
+    <feature version="${feature.version}">sling-commons-compiler</feature>
   </feature>
   <feature name="sling-scripting-thymeleaf" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/1.0.0</bundle>
