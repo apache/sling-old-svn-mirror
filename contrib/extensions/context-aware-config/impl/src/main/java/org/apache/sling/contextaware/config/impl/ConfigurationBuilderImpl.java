@@ -21,7 +21,6 @@ package org.apache.sling.contextaware.config.impl;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -32,7 +31,9 @@ import org.osgi.framework.Bundle;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
-    private final Resource resource;
+    private static final String NAME = "sling:configs";
+
+    private final Resource contentResource;
     private final ConfigurationResourceResolver configurationResourceResolver;
     private final Bundle bundle;
 
@@ -40,7 +41,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     public ConfigurationBuilderImpl(Resource resource,
             ConfigurationResourceResolver configurationResourceResolver, Bundle bundle) {
-        this.resource = resource;
+        this.contentResource = resource;
         this.configurationResourceResolver = configurationResourceResolver;
         this.bundle = bundle;
     }
@@ -51,12 +52,43 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return this;
     }
 
+    /**
+     * Check the name.
+     * A name must not be null and relative.
+     * @param name The name
+     * @return {@code true} if it is valid
+     */
+    private boolean checkName(final String name) {
+        if (name == null || name.isEmpty() || name.startsWith("/") || name.contains("../") ) {
+            return false;
+        }
+        return true;
+    }
+
+    private String getConfigurationName(final String defaultName) {
+        String name;
+        if ( this.configName != null ) {
+            name = this.configName;
+        } else {
+            name = defaultName;
+        }
+        if ( checkName(name) ) {
+            return NAME + '/' + name;
+        }
+        return null;
+    }
+
+
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T as(Class<T> clazz) {
-        // TODO: this is only a dummy implementation
-        String name = StringUtils.defaultString(configName, clazz.getName());
-        ValueMap props = getValueMap(configurationResourceResolver, resource, name);
+    public <T> T as(final Class<T> clazz) {
+        final String name = getConfigurationName(clazz.getName());
+        // TODO - what to return on null?
+        if ( name == null ) {
+            return null;
+        }
+        final Resource configResource = this.configurationResourceResolver.getResource(this.contentResource, name);
+        final ValueMap props = configResource.getValueMap();
         if (clazz == ValueMap.class) {
             return (T)props;
         }
@@ -66,9 +98,15 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     @SuppressWarnings("unchecked")
     @Override
     public <T> Collection<T> asCollection(Class<T> clazz) {
-        // TODO: this is only a dummy implementation
-        String name = StringUtils.defaultString(configName, clazz.getName());
-        Collection<ValueMap> propsList = getValueMapCollection(configurationResourceResolver, resource, name);
+        final String name = getConfigurationName(clazz.getName());
+        // TODO - what to return on null?
+        if ( name == null ) {
+            return null;
+        }
+        Collection<Resource> configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, name);
+        Collection<ValueMap> propsList = configResources.stream()
+                .map(res -> ResourceUtil.getValueMap(res))
+                .collect(Collectors.toList());
         if (clazz == ValueMap.class) {
             return (Collection<T>)propsList;
         }
@@ -76,19 +114,4 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             .map(props -> Annotations.toObject(clazz, props, bundle, true))
             .collect(Collectors.toList());
     }
-
-    private static ValueMap getValueMap(ConfigurationResourceResolver resolver, Resource resource, String configName) {
-        // TODO: this is only a dummy implementation
-        Resource configResource = resolver.getResource(resource, configName);
-        return ResourceUtil.getValueMap(configResource);
-    }
-
-    private static Collection<ValueMap> getValueMapCollection(ConfigurationResourceResolver resolver, Resource resource, String configName) {
-        // TODO: this is only a dummy implementation
-        Collection<Resource> configResources = resolver.getResourceList(resource, configName);
-        return configResources.stream()
-                .map(res -> ResourceUtil.getValueMap(res))
-                .collect(Collectors.toList());
-    }
-
 }
