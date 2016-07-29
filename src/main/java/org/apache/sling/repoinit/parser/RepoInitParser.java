@@ -23,12 +23,17 @@ import java.util.List;
 
 import org.apache.sling.repoinit.parser.operations.Operation;
 
-/** ACL definitions parser service interface */
+/**
+ * repoinit parser service interface
+ */
 public interface RepoInitParser {
-    /** Parse the supplied input.
-     * @param r Input in ACL definitions format. The reader is closed
-     *  by this method. 
-     * @throws AclParsingException on parsing errors
+
+    /**
+     * Parse the supplied input.
+     *
+     * @param reader Input in repoinit format. The reader is closed by this method.
+     * @throws RepoInitParsingException on parsing errors
      */
-    List<Operation> parse(Reader r) throws RepoInitParsingException;
+    List<Operation> parse(Reader reader) throws RepoInitParsingException;
+
 }
