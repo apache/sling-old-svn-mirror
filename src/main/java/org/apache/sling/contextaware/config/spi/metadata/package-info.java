@@ -16,29 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.spi.metadata;
-
-import java.util.regex.Pattern;
-
-import javax.annotation.Nonnull;
-
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
- * Part of configuration set.
+ * Defining configuration and parameter metadata for the SPI.
  */
-@ProviderType
-public interface ConfigurationPart {
-
-    /**
-     * Pattern for allowed configuration part names.
-     */
-    Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\-\\_\\.]+(/[a-zA-Z0-9\\-\\_\\.]+)*$");
-    
-    /**
-     * Configuration part name
-     * @return
-     */
-    @Nonnull String getName();
-    
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.contextaware.config.spi.metadata;

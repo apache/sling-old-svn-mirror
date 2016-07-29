@@ -16,26 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config;
+package org.apache.sling.contextaware.config.spi;
+
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
-import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Getting context-specific configurations for a given resource context.
- * Context-specific configuration may be different for different parts of the resource
- * hierarchy, and configuration parameter inheritance may take place.
+ * Allows application to define a strategy to find context paths for content paths.
+ * Each context path may have it's own context-specific configuration.
  */
-@ProviderType
-public interface ConfigurationResolver {
+@ConsumerType
+public interface ContextPathStrategy {
 
     /**
-     * Get configuration for given resource.
+     * Finds context paths for the given context resource.
      * @param resource Context resource
-     * @return Configuration builder
+     * @return Context paths that where detected in the given path
+     *      (in order of closest matching first).
+     *      If none are found an empty list is returned.
      */
-    @Nonnull ConfigurationBuilder get(@Nonnull Resource resource);
+    @Nonnull Collection<String> findContextPaths(@Nonnull Resource resource);
 
 }

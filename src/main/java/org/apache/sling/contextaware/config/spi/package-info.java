@@ -16,24 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.spi;
-
-import java.util.Collection;
-
-import javax.annotation.Nonnull;
-
-import org.apache.sling.config.spi.metadata.ConfigurationMetadata;
-import org.osgi.annotation.versioning.ConsumerType;
-
 /**
- * Allows application to provide the necessary metadata for configurations.
+ * SPI for applications hooking into the configuration infrastructure for parameterizing and customizing.
  */
-@ConsumerType
-public interface ConfigurationMetadataProvider {
-
-    /**
-     * @return Configuration metadata that the application defines
-     */
-    @Nonnull Collection<ConfigurationMetadata> getConfigSets();
-
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.contextaware.config.spi;

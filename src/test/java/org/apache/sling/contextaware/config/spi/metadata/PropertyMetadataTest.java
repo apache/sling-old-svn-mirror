@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.spi.metadata;
+package org.apache.sling.contextaware.config.spi.metadata;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.apache.sling.contextaware.config.spi.metadata.PropertyMetadata;
 import org.junit.Test;
 
 public class PropertyMetadataTest {

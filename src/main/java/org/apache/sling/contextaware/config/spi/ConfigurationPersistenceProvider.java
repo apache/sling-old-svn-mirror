@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.spi;
+package org.apache.sling.contextaware.config.spi;
 
 import java.util.Map;
 

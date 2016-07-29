@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config;
+package org.apache.sling.contextaware.config;
 
 import java.util.Collection;
 
@@ -29,14 +29,19 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface ConfigurationBuilder {
-    
+
     /**
-     * Define configuration name. Optional when using annotation class, mandatory when getting configuration as value map.
+     * Define configuration name. This parameter is optional, it defaults to the class
+     * name of the argument provided either to {@link #as(Class)} or {@link #asCollection(Class)}.
+     *
+     * TODO - what happens if an invalid name is provided? I assume the same as if no
+     * configuration resource exists.
+     *
      * @param configName Relative path
      * @return Configuration builder
      */
     @Nonnull ConfigurationBuilder name(@Nonnull String configName);
-    
+
     /**
      * Get configuration as singleton and its properties mapped to the given annotation class.
      * @param clazz Annotation class or {@link org.apache.sling.api.resource.ValueMap}

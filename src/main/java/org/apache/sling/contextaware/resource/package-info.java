@@ -16,29 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.spi;
-
-import java.util.Collection;
-
-import javax.annotation.Nonnull;
-
-import org.apache.sling.api.resource.Resource;
-import org.osgi.annotation.versioning.ConsumerType;
-
 /**
- * Allows application to define a strategy to find context paths for content paths.
- * Each context path may have it's own context-specific configuration.
+ * API for accessing context-specific configuration resources.
+ * This is a low-level API.
  */
-@ConsumerType
-public interface ContextPathStrategy {
-
-    /**
-     * Finds context paths for the given context resource.
-     * @param resource Context resource
-     * @return Context paths that where detected in the given path
-     *      (in order of closest matching first).
-     *      If none are found an empty list is returned.
-     */
-    @Nonnull Collection<String> findContextPaths(@Nonnull Resource resource);
-
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.contextaware.resource;
