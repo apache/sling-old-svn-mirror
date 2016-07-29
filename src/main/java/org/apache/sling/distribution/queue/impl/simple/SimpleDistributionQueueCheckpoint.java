@@ -68,8 +68,8 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
                 StringWriter w = new StringWriter();
                 JSONWriter jsonWriter = new JSONWriter(w);
                 jsonWriter.object();
-                for (Map.Entry entry : item.entrySet()) {
-                    jsonWriter.key(String.valueOf(entry.getKey()));
+                for (Map.Entry<String, Object> entry : item.entrySet()) {
+                    jsonWriter.key(entry.getKey());
                     Object value = entry.getValue();
                     boolean isArray = value instanceof String[];
                     if (isArray) {

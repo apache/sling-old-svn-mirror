@@ -121,7 +121,8 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
         List<Job> result = new ArrayList<Job>();
         try {
-            Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
+            Map<String, Object>[] templates = null; // vargars compiler warning
+            Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit, templates);
 
             int i = 0;
             for (Job job : jobs) {
