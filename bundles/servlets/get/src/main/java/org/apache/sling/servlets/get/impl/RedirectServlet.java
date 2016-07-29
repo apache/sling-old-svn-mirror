@@ -166,7 +166,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             // into an absolute URI.
             response.reset();
             response.setStatus(status);
-            response.sendRedirect(targetPath);
+            response.setHeader("Location", targetPath);
             response.flushBuffer();
 
             return;
