@@ -84,7 +84,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             label="Model section name", 
             description=
                 "Optional provisioning model additional section name (without leading colon) used to extract"
-                + " repoinit statements from the raw text provided by our text URL. Leave empty or set to <RAW> to consider the content"
+                + " repoinit statements from the raw text provided by the configured source text URL. Leave empty or set to <RAW> to consider the content"
                 + " provided by that URL to already be in repoinit format", 
             value=DEFAULT_MODEL_SECTION_NAME)
     public static final String PROP_MODEL_SECTION_NAME = "model.section.name";
