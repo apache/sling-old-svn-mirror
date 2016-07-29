@@ -23,6 +23,7 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -34,21 +35,21 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface ConfigurationResourceResolver {
 
     /**
-     * Get a context-specific singleton configuration resource defined by the given configuration name. 
+     * Get a context-specific singleton configuration resource defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
      * @param configName Configuration name or relative path.
      * @return Configuration resource
      */
     @Nonnull Resource getResource(@Nonnull Resource resource, @Nonnull String configName);
-    
+
     /**
-     * Get a list of context-specific configuration resources defined by the given configuration name. 
+     * Get a collection of context-specific configuration resources defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
      * @param configName Configuration name or relative path.
-     * @return List of configuration resources
+     * @return Collection of configuration resources
      */
-    @Nonnull Collection<Resource> getResourceList(@Nonnull Resource resource, @Nonnull String configName);
-    
+    @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String configName);
+
     /**
      * Get the inner-most context path (deepest path) returned by {@link #getAllContextPaths(Resource)}.
      * @param resource Context resource to fetch configuration for
@@ -64,5 +65,5 @@ public interface ConfigurationResourceResolver {
      * @return List of context paths
      */
     @Nonnull Collection<String> getAllContextPaths(@Nonnull Resource resource);
-    
+
 }
