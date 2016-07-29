@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jcr.Session;
-
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.repoinit.impl.JcrRepoInitOpsProcessorImpl;
 import org.apache.sling.jcr.repoinit.impl.RepositoryInitializer;
@@ -70,7 +68,7 @@ public class RepositoryInitializerTest {
         result.add(new Object[] { "All empty, just setup + parsing", "", false });
         result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), true }); 
         result.add(new Object[] { "Raw repoinit/empty section", "", true}); 
-        result.add(new Object[] { "Raw repoinit/null section", "", true}); 
+        result.add(new Object[] { "Default value of model section config", null, true}); 
         return result;
     }
     
@@ -78,8 +76,10 @@ public class RepositoryInitializerTest {
         serviceUser = getClass().getSimpleName() + "-" + UUID.randomUUID();
         
         String txt = "create service user " + serviceUser; 
-        if(modelSection != null && modelSection.length() > 0) {
-            txt = "[feature name=foo]\n[:" + modelSection + "]\n" + txt; 
+        if(modelSection == null) {
+            txt = "[feature name=foo]\n[:repoinit]\n" + txt; 
+        } else if(modelSection.length() > 0) {
+            txt = "[feature name=bar]\n[:" + modelSection + "]\n" + txt; 
         }
         this.repoInitText = txt + "\n";
         this.url = getTestUrl(repoInitText);
@@ -94,7 +94,9 @@ public class RepositoryInitializerTest {
         initializer = new RepositoryInitializer();
         config = new HashMap<String, Object>();
         config.put(RepositoryInitializer.PROP_TEXT_URL, url);
-        config.put(RepositoryInitializer.PROP_MODEL_SECTION_NAME, modelSection);
+        if(modelSection != null) {
+            config.put(RepositoryInitializer.PROP_MODEL_SECTION_NAME, modelSection);
+        }
         initializer.activate(config);
         
         context.registerInjectActivateService(new RepoInitParserService());
