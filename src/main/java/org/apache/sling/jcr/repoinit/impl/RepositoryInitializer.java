@@ -135,33 +135,32 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     }
     
     private String getRepoInitText() {
-        final boolean parseRawText = modelSectionName.trim().length() > 0;
-        if(parseRawText) {
-            log.info("Reading repoinit statements from {}", textURL);
+        final String rawText = getRawRepoInitText();
+        log.debug("Raw text from {}: \n{}", textURL, rawText);
+        log.info("Got {} characters from {}", rawText.length(), textURL);
+        final boolean parseRawText = modelSectionName.trim().length() == 0;
+        if (parseRawText) {
+            log.info("Parsing raw repoinit statements from {}", textURL);
+            return rawText;
         } else {
-            log.info("Extracting repoinit statements from section {} of provisioning model {}", modelSectionName, textURL);
-        }
-        String result = getRawRepoInitText();
-        log.debug("Raw text from {}: \n{}", textURL, result);
-        log.info("Got {} characters from {}", result.length(), textURL);
-        if(parseRawText) {
-            final StringReader r = new StringReader(result);
+            log.info("Extracting repoinit statements from section '{}' of provisioning model {}", modelSectionName, textURL);
+            final StringReader reader = new StringReader(rawText);
             try {
-                final Model m = ModelReader.read(r, textURL);
-                final StringBuilder b = new StringBuilder();
-                for(Feature f : m.getFeatures()) {
-                    for(Section s : f.getAdditionalSections(modelSectionName)) {
-                        b.append("# ").append(modelSectionName).append(" from ").append(f.getName()).append("\n");
-                        b.append("# ").append(s.getComment()).append("\n");
-                        b.append(s.getContents()).append("\n");
+                final Model model = ModelReader.read(reader, textURL);
+                final StringBuilder sb = new StringBuilder();
+                for (final Feature feature : model.getFeatures()) {
+                    for (final Section section : feature.getAdditionalSections(modelSectionName)) {
+                        sb.append("# ").append(modelSectionName).append(" from ").append(feature.getName()).append("\n");
+                        sb.append("# ").append(section.getComment()).append("\n");
+                        sb.append(section.getContents()).append("\n");
                     }
                 }
-                result = b.toString();
+                return sb.toString();
             } catch (IOException e) {
-                result = "";
                 log.warn("Error parsing provisioning model from " + textURL, e);
+                return "";
             }
         }
-        return result;
     }
+
 }
