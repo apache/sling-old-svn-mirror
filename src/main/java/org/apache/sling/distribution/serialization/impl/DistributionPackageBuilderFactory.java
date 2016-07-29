@@ -88,8 +88,8 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
-    // 128K
-    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1024000;
+    // 1M
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 10240000;
 
     @Property(
         label="File threshold (in bytes)",
