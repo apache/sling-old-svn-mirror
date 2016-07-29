@@ -118,8 +118,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
     public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
 
-    // 128K
-    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1024000;
+    // 1M
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 10240000;
 
     @Property(
         label="File threshold (in bytes)",
