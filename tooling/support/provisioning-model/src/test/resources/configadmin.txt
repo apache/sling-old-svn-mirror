@@ -32,7 +32,7 @@ org.apache.test.B
       "two",
       "three"
     ]
-    name="B"    
+    name="B"
 
 org.apache.test.C
     array=I[
@@ -46,4 +46,27 @@ org.apache.test.D
   textA="Here is
     a multiline
     string"     
-  textB="Another one\nusing\nescaped newlines"     
+  textB="Another one\nusing\nescaped newlines"
+  
+# TODO SLING-5914 this is the input format that's
+# specified by the provisioning model, fails with 
+# NumberFormatException if activated  
+#org.apache.test.E
+#    doubleValue=D"5.5"
+#    floatValue=F"1.0"
+#	doubles=D["0.0", "3.0"]
+#	floats=F[
+#	  "-1.0",
+#	  "1.0"
+#    ]
+	 
+# TODO deactivate this once
+# the previous variant works
+org.apache.test.E
+    doubleValue=D"123456789"
+    floatValue=F"223456789"
+   doubles=D["323456789", "423456789"]
+   floats=F[
+     "523456789",
+     "623456789"
+    ]     	 
