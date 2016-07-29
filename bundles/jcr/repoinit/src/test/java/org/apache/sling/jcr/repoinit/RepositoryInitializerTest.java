@@ -65,20 +65,21 @@ public class RepositoryInitializerTest {
     public static Collection<Object[]> data() {
         final List<Object []> result = new ArrayList<Object[]>();
         
-        result.add(new Object[] { "All empty, just setup + parsing", "", false });
-        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), true }); 
-        result.add(new Object[] { "Raw repoinit/empty section", "", true}); 
-        result.add(new Object[] { "Default value of model section config", null, true}); 
+        result.add(new Object[] { "All empty, just setup + parsing", "", false, false });
+        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), true, true }); 
+        result.add(new Object[] { "Raw repoinit/empty section", "", false, true}); 
+        result.add(new Object[] { "Raw repoinit/special section name", "<RAW>", false, true}); 
+        result.add(new Object[] { "Default value of model section config", null, true, true}); 
         return result;
     }
     
-    public RepositoryInitializerTest(String description, String modelSection, boolean testLogin) throws IOException {
+    public RepositoryInitializerTest(String description, String modelSection, boolean useProvisioningModel, boolean testLogin) throws IOException {
         serviceUser = getClass().getSimpleName() + "-" + UUID.randomUUID();
         
         String txt = "create service user " + serviceUser; 
-        if(modelSection == null) {
+        if(useProvisioningModel && modelSection == null) {
             txt = "[feature name=foo]\n[:repoinit]\n" + txt; 
-        } else if(modelSection.length() > 0) {
+        } else if(useProvisioningModel) {
             txt = "[feature name=bar]\n[:" + modelSection + "]\n" + txt; 
         }
         this.repoInitText = txt + "\n";

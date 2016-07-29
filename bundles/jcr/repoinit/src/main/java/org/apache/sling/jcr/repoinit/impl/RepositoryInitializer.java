@@ -66,6 +66,10 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
 
     public static final String DEFAULT_TEXT_URL = "context:/resources/provisioning/model.txt";
     
+    /** Special value for model section name config parameter, which indicates that
+     *  the configured URL provides raw repoinit statements */ 
+    public static final String RAW_SECTION_MARKER = "<RAW>";
+    
     @Property(
             label="Text URL", 
             description="URL of the source text that provides repoinit statements."
@@ -80,7 +84,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             label="Model section name", 
             description=
                 "Optional provisioning model additional section name (without leading colon) used to extract"
-                + " repoinit statements from the raw text provided by our text URL. Leave empty to consider the content"
+                + " repoinit statements from the raw text provided by our text URL. Leave empty or set to <RAW> to consider the content"
                 + " provided by that URL to already be in repoinit format", 
             value=DEFAULT_MODEL_SECTION_NAME)
     public static final String PROP_MODEL_SECTION_NAME = "model.section.name";
@@ -138,7 +142,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
         final String rawText = getRawRepoInitText();
         log.debug("Raw text from {}: \n{}", textURL, rawText);
         log.info("Got {} characters from {}", rawText.length(), textURL);
-        final boolean parseRawText = modelSectionName.trim().length() == 0;
+        final boolean parseRawText = modelSectionName.trim().length() == 0 || RAW_SECTION_MARKER.equals(modelSectionName);
         if (parseRawText) {
             log.info("Parsing raw repoinit statements from {}", textURL);
             return rawText;
