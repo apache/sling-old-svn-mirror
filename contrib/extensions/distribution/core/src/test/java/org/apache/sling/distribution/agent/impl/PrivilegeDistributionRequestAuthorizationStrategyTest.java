@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
@@ -28,27 +31,18 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.common.DistributionException;
 import org.junit.Test;
 
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Tests for {@link PrivilegeDistributionRequestAuthorizationStrategy}
  */
 public class PrivilegeDistributionRequestAuthorizationStrategyTest {
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testCheckPermissionWithoutSession() throws Exception {
         String jcrPrivilege = "foo";
         PrivilegeDistributionRequestAuthorizationStrategy strategy = new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
         DistributionRequest distributionRequest = mock(DistributionRequest.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        try {
-            strategy.checkPermission(resourceResolver, distributionRequest);
-            fail("permission check should fail without a Session");
-        } catch (DistributionException e) {
-            // expected
-        }
+        strategy.checkPermission(resourceResolver, distributionRequest);
     }
 
     @Test
@@ -62,7 +56,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategyTest {
         strategy.checkPermission(resourceResolver, distributionRequest);
     }
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testNoPermissionOnAdd() throws Exception {
         String jcrPrivilege = "somePermission";
         PrivilegeDistributionRequestAuthorizationStrategy strategy = new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
@@ -82,12 +76,8 @@ public class PrivilegeDistributionRequestAuthorizationStrategyTest {
         when(distributionRequest.getPaths()).thenReturn(paths);
 
         when(distributionRequest.getRequestType()).thenReturn(DistributionRequestType.ADD);
-        try {
-            strategy.checkPermission(resourceResolver, distributionRequest);
-            fail("should throw an exception when ACM privilege check fails");
-        } catch (DistributionException e) {
-            // expected
-        }
+
+        strategy.checkPermission(resourceResolver, distributionRequest);
     }
 
     @Test
@@ -115,7 +105,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategyTest {
         strategy.checkPermission(resourceResolver, distributionRequest);
     }
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testNoPermissionOnDelete() throws Exception {
         String jcrPrivilege = "somePermission";
         PrivilegeDistributionRequestAuthorizationStrategy strategy = new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
@@ -136,12 +126,8 @@ public class PrivilegeDistributionRequestAuthorizationStrategyTest {
         when(distributionRequest.getPaths()).thenReturn(paths);
 
         when(distributionRequest.getRequestType()).thenReturn(DistributionRequestType.DELETE);
-        try {
-            strategy.checkPermission(resourceResolver, distributionRequest);
-            fail("should throw an exception when ACM privilege check fails");
-        } catch (DistributionException e) {
-            // expected
-        }
+
+        strategy.checkPermission(resourceResolver, distributionRequest);
     }
 
     @Test

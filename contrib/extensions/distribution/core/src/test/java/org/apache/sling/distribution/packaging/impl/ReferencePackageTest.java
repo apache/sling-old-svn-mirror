@@ -82,7 +82,9 @@ public class ReferencePackageTest {
         ReferencePackage referencePackage = new ReferencePackage(distributionPackage);
         assertNotNull(referencePackage);
         long size = referencePackage.getSize();
-        assertTrue(referencePackage.getSize() == size);
+        // failing assertion with assertEquals shows more details in the message
+        // TODO don't we already know the expetced size? this assertion is not accurate...
+        assertEquals(size, referencePackage.getSize());
     }
 
     @Test

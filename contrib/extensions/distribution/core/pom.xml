@@ -68,7 +68,9 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.core</Bundle-SymbolicName>
                         <Export-Package>
-                            org.apache.sling.distribution.util
+                            org.apache.sling.distribution.util,
+                            org.apache.sling.distribution.common,
+                            org.apache.sling.distribution.serialization
                         </Export-Package>
                         <Import-Package>
                             org.apache.sling.event.jobs;version="[1.5.0,3.0)",org.apache.sling.event.jobs.consumer;version="[1.1,2)",org.apache.sling.jcr.api;version="2.2.0",*

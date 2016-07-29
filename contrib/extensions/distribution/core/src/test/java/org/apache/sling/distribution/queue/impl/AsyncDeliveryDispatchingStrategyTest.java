@@ -18,6 +18,13 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,17 +42,12 @@ import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Tests for {@link AsyncDeliveryDispatchingStrategy}
  */
 public class AsyncDeliveryDispatchingStrategyTest {
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testAddWithNotSharedPackage() throws Exception {
         Map<String, String> deliveryMappings = new HashMap<String, String>();
         deliveryMappings.put("queue1", "delivery1");
@@ -53,12 +55,7 @@ public class AsyncDeliveryDispatchingStrategyTest {
         AsyncDeliveryDispatchingStrategy asyncDeliveryDispatchingStrategy = new AsyncDeliveryDispatchingStrategy(deliveryMappings);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        try {
-            asyncDeliveryDispatchingStrategy.add(distributionPackage, queueProvider);
-            fail("should not be able to pass not shared packages");
-        } catch (DistributionException e) {
-            // expected
-        }
+        asyncDeliveryDispatchingStrategy.add(distributionPackage, queueProvider);
     }
 
     @Test
