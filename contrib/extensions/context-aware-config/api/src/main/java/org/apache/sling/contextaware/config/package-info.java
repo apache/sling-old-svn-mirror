@@ -17,8 +17,7 @@
  * under the License.
  */
 /**
- * API for accessing context-specific configuration resources.
- * This is a low-level API.
+ * API for accessing context-specific configuration.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.config.resource;
+package org.apache.sling.contextaware.config;
