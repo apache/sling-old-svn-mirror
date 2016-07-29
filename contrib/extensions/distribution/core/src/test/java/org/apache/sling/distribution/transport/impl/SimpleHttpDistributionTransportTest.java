@@ -18,6 +18,13 @@
  */
 package org.apache.sling.distribution.transport.impl;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
@@ -41,12 +48,6 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link SimpleHttpDistributionTransport}
@@ -76,7 +77,7 @@ public class SimpleHttpDistributionTransportTest {
         InputStream stream = mock(InputStream.class);
         when(distributionPackage.createInputStream()).thenReturn(stream);
         DistributionTransportContext distributionContext = mock(DistributionTransportContext.class);
-        when(distributionContext.get(any(String.class), any(Class.class))).thenReturn(executor);
+        when(distributionContext.get(any(String.class), same(Executor.class))).thenReturn(executor);
         when(distributionContext.containsKey(any(String.class))).thenReturn(true);
         simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage, distributionContext);
     }
@@ -141,7 +142,7 @@ public class SimpleHttpDistributionTransportTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionTransportContext distributionContext = mock(DistributionTransportContext.class);
-        when(distributionContext.get(any(String.class), any(Class.class))).thenReturn(executor);
+        when(distributionContext.get(any(String.class), same(Executor.class))).thenReturn(executor);
         when(distributionContext.containsKey(any(String.class))).thenReturn(true);
 
         RemoteDistributionPackage retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext);

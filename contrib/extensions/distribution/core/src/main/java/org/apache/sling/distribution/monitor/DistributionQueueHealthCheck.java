@@ -38,7 +38,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
@@ -113,7 +112,6 @@ public class DistributionQueueHealthCheck implements HealthCheck {
 
                         DistributionQueueEntry entry = q.getHead();
                         if (entry != null) {
-                            DistributionQueueItem item = entry.getItem();
                             DistributionQueueItemStatus status = entry.getStatus();
                             if (status.getAttempts() <= numberOfRetriesAllowed) {
                                 resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), entry.getId(), status.getAttempts());

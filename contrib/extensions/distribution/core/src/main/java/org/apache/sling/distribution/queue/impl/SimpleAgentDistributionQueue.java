@@ -48,6 +48,9 @@ public class SimpleAgentDistributionQueue extends DistributionQueueWrapper {
         return wrappedQueue.getType();
     }
 
+    public String getAgentName() {
+        return agentName;
+    }
 
     private DistributionQueueStatus calculateStatus() {
         DistributionQueueStatus status = super.getStatus();

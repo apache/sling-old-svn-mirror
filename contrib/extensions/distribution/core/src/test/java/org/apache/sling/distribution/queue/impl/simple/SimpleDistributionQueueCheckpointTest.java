@@ -18,10 +18,15 @@
  */
 package org.apache.sling.distribution.queue.impl.simple;
 
-import java.io.File;
-import java.util.LinkedList;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.apache.commons.collections.map.HashedMap;
+import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
@@ -29,12 +34,6 @@ import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link SimpleDistributionQueueCheckpoint}
@@ -58,7 +57,7 @@ public class SimpleDistributionQueueCheckpointTest {
         String queueName = "sample-queue";
         when(queue.getName()).thenReturn(queueName);
         LinkedList<DistributionQueueEntry> entries = new LinkedList<DistributionQueueEntry>();
-        HashedMap base = new HashedMap();
+        Map<String, Object> base = new HashMap<String, Object>();
         base.put("here","there");
         base.put("foo","bar");
         base.put("multi", new String[]{"1", "2"});
@@ -71,6 +70,5 @@ public class SimpleDistributionQueueCheckpointTest {
         simpleDistributionQueueCheckpoint.run();
         File checkpointFile = new File(checkpointDirectory, "sample-queue-checkpoint");
         assertTrue(checkpointFile.exists());
-        System.err.println(checkpointDirectory.getAbsolutePath());
     }
 }

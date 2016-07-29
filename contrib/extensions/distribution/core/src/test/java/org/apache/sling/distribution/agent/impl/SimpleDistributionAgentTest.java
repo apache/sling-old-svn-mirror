@@ -85,9 +85,9 @@ public class SimpleDistributionAgentTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("type"));
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Object[] args = invocationOnMock.getArguments();
                 ((DistributionPackageProcessor) args[2]).process(distributionPackage);
                 return null;
@@ -127,9 +127,9 @@ public class SimpleDistributionAgentTest {
         Iterable<DistributionQueueItemStatus> states = Collections.singletonList(new DistributionQueueItemStatus(DistributionQueueItemState.QUEUED,
                 DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Object[] args = invocationOnMock.getArguments();
                 ((DistributionPackageProcessor) args[2]).process(distributionPackage);
                 return null;
@@ -168,9 +168,9 @@ public class SimpleDistributionAgentTest {
         when(distributionPackage.getInfo()).thenReturn(packageInfo);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Object[] args = invocationOnMock.getArguments();
                 ((DistributionPackageProcessor) args[2]).process(distributionPackage);
                 return null;
@@ -261,9 +261,9 @@ public class SimpleDistributionAgentTest {
 
         queueDistributionStrategy.add(distributionPackage, queueProvider);
 
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Object[] args = invocationOnMock.getArguments();
                 ((DistributionPackageProcessor) args[2]).process(distributionPackage);
                 return null;
@@ -307,9 +307,9 @@ public class SimpleDistributionAgentTest {
 
         queueDistributionStrategy.add(distributionPackage, queueProvider);
 
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Object[] args = invocationOnMock.getArguments();
                 ((DistributionPackageProcessor) args[2]).process(distributionPackage);
                 return null;
