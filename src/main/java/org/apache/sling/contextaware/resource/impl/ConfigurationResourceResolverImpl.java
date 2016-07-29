@@ -21,34 +21,236 @@ package org.apache.sling.contextaware.resource.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service=ConfigurationResourceResolver.class)
+@Designate(ocd=ConfigurationResourceResolverImpl.Config.class)
 public class ConfigurationResourceResolverImpl implements ConfigurationResourceResolver {
 
-    @Override
-    public Resource getResource(Resource resource, String configName) {
-        // TODO: this is only a dummy implementation
-        String configPath = "/conf" + getContextPath(resource) + "/" + configName;
-        return resource.getResourceResolver().getResource(configPath);
+    @ObjectClassDefinition(name="Apache Sling Context Aware Configuration Resolver",
+                           description="Standardized access to configurations in the resource tree.")
+    public static @interface Config {
+
+        @AttributeDefinition(name="Allowed paths",
+                             description = "Whitelist of paths where configurations can reside in.")
+        String[] allowedPaths() default {"/config", "/apps", "/libs"};
+
+        @AttributeDefinition(name="Fallback paths",
+                description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
+        String[] fallbackPaths() default {"/config/global", "/apps", "/libs"};
+    }
+
+    public static final String PROPERTY_CONFIG = "sling:config";
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private volatile Config configuration;
+
+    Config getConfiguration() {
+        return this.configuration;
+    }
+
+    @Activate
+    private void activate(final Config config) {
+        this.configuration = config;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        this.configuration = null;
+    }
+
+
+    public List<String> getResolvePaths(final Resource contentResource) {
+        final List<String> refs = new ArrayList<String>();
+
+        // find property reference
+        String ref = this.findConfigRef(contentResource);
+
+        if (ref == null) {
+            // nothing found so far, check if we are in a configured tree itself
+            if (isAllowedConfigPath(contentResource.getPath())) {
+                ref = contentResource.getPath();
+            }
+        }
+
+        if ( ref != null ) {
+            refs.add(ref);
+        }
+
+        // finally add the global fallbacks
+        if ( this.configuration.fallbackPaths() != null ) {
+            for(final String path : this.configuration.fallbackPaths()) {
+                logger.debug("[{}] fallback config => {}", refs.size(), path);
+                refs.add(path);
+            }
+        }
+
+        return refs;
+    }
+
+    /**
+     * Check the name.
+     * A name must not be null and relative.
+     * @param name The name
+     * @return {@code true} if it is valid
+     */
+    private boolean checkName(final String name) {
+        if (name == null || name.isEmpty() || name.startsWith("/") || name.contains("../") ) {
+            return false;
+        }
+        return true;
+    }
+
+
+   private String findConfigRef(final Resource startResource) {
+        // start at resource, go up
+        Resource resource = startResource;
+        while (resource != null) {
+            String ref = getReference(resource);
+            if (ref != null) {
+                // if absolute path found we are (probably) done
+                if (ref.startsWith("/")) {
+                    // combine full path if relativeRef is present
+                    ref = ResourceUtil.normalize(ref);
+
+                    if (ref != null && !isAllowedConfigPath(ref)) {
+                        logger.warn("Ignoring reference to {} from {} - not in allowed paths.", ref, resource.getPath());
+                        ref = null;
+                    }
+
+                    if (ref != null && isFallbackConfigPath(ref)) {
+                        logger.warn("Ignoring reference to {} from {} - already a fallback path.", ref, resource.getPath());
+                        ref = null;
+                    }
+
+                    if (ref != null) {
+                        return ref;
+                    }
+
+                } else {
+                    logger.error("Invalid relative reference found for {} : {}. This entry is ignored", resource.getPath(), ref);
+                }
+            }
+            // if getParent() returns null, stop
+            resource = resource.getParent();
+        }
+
+        // if hit root and nothing found, return null
+        return null;
+    }
+
+    private String getReference(final Resource resource) {
+        final String ref = resource.getValueMap().get(PROPERTY_CONFIG, String.class);
+        logger.trace("Reference '{}' found at {}", ref, resource.getPath());
+
+        return ref;
+    }
+
+    private boolean isAllowedConfigPath(String path) {
+        if (this.configuration.allowedPaths() == null) {
+            return false;
+        }
+        for (String pattern : this.configuration.allowedPaths()) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("- checking if '{}' starts with {}", path, pattern);
+            }
+            if (path.equals(pattern) || path.startsWith(pattern + "/")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isFallbackConfigPath(final String ref) {
+        if ( this.configuration.fallbackPaths() != null ) {
+            for(final String name : this.configuration.fallbackPaths()) {
+                if ( name.equals(ref) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
-    public Collection<Resource> getResourceList(Resource resource, String configName) {
-        // TODO: this is only a dummy implementation
-        String configPath = "/conf" + getContextPath(resource) + "/" + configName;
-        Resource configResource = resource.getResourceResolver().getResource(configPath);
-        if (configResource != null) {
-            return StreamSupport.stream(configResource.getChildren().spliterator(), false)
-                    .collect(Collectors.toList());
+    public Resource getResource(final Resource contentResource, final String name) {
+        if (contentResource == null || !checkName(name)) {
+            return null;
         }
-        return Collections.emptyList();
+        logger.debug("Searching {} for resource {}", name, contentResource.getPath());
+
+        // strategy: find first item among all configured paths
+        int idx = 1;
+        for (final String path : getResolvePaths(contentResource)) {
+            final Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            if (item != null) {
+                logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
+
+                return item;
+            }
+            idx++;
+        }
+
+        logger.debug("Could not resolve any config item for '{}' (or no permissions to read it)", name);
+
+        // nothing found
+        return null;
+    }
+
+    @Override
+    public Collection<Resource> getResourceCollection(final Resource contentResource, final String name) {
+        if (contentResource == null || !checkName(name)) {
+            return Collections.emptyList();
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("- searching for list '{}'", name);
+        }
+
+        final Set<String> names = new HashSet<String>();
+        final List<Resource> result = new ArrayList<Resource>();
+        int idx = 1;
+        for (String path : this.getResolvePaths(contentResource)) {
+            Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            if (item != null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
+                }
+
+                for (Resource child : item.getChildren()) {
+                    if ( !child.getName().contains(":") && !names.contains(child.getName()) ) {
+                        result.add(child);
+                        names.add(child.getName());
+                    }
+                }
+
+            } else {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("- no item '{}' under config '{}'", name, path);
+                }
+            }
+            idx++;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("- final list has {} items", result.size());
+        }
+
+        return result;
     }
 
     @Override
