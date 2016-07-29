@@ -93,7 +93,7 @@ public class IOTest {
             configs.add(c);
         }
 
-        assertEquals(4, configs.size());
+        assertEquals(5, configs.size());
 
         final Configuration cfgA = configs.get(0);
         assertEquals("org.apache.test.A", cfgA.getPid());
@@ -119,6 +119,17 @@ public class IOTest {
         assertEquals("org.apache.test.D", cfgD.getPid());
         assertEquals("Here is\na multiline\nstring", cfgD.getProperties().get("textA"));
         assertEquals("Another one\nusing\nescaped newlines", cfgD.getProperties().get("textB"));
+        
+        final Configuration cfgE = configs.get(4);
+        assertEquals("org.apache.test.E", cfgE.getPid());
+        assertNull(cfgE.getFactoryPid());
+        assertEquals(4, cfgE.getProperties().size());
+        
+        // TODO values will need to change once SLING-5914 is fixed
+        assertEquals(6.0995758E-316, cfgE.getProperties().get("doubleValue"));
+        assertEquals(6.461264E-31f, cfgE.getProperties().get("floatValue"));
+        assertArrayEquals(new Double[] { 1.598088874E-315d, 2.09215452E-315d }, (Double[]) cfgE.getProperties().get("doubles"));
+        assertArrayEquals(new Float[] { 3.7971794E-20f, 1.4675382E-16f }, (Float[]) cfgE.getProperties().get("floats"));
     }
 
     @Test public void testAddition() throws Exception {
