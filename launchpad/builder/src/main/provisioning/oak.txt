@@ -72,6 +72,9 @@
     defaultDepth="1"
     importBehavior="besteffort"  
 
+  org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName
+    length=21
+
   org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider
     enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
     userPrivilegeNames=["jcr:all"]
