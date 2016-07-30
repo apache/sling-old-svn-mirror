@@ -46,7 +46,12 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.felix:org.apache.felix.inventory", "1.0.4");
         versions.put("org.apache.felix:org.apache.felix.metatype", "1.1.2");
         versions.put("org.apache.felix:org.apache.felix.scr", "2.0.4");
-        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");[# th:each="bundle : ${bundles}"]
+        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");
+        versions.put("org.ops4j.base:ops4j-base-lang", "1.5.0");
+        versions.put("org.ops4j.base:ops4j-base-util-property", "1.5.0");
+        versions.put("org.ops4j.pax.swissbox:pax-swissbox-property", "1.8.2");
+        versions.put("org.ops4j.pax.url:pax-url-classpath", "2.4.7");
+        versions.put("org.ops4j.pax.url:pax-url-commons", "2.4.7");[# th:each="bundle : ${bundles}"]
         versions.put("[(${bundle.groupId})]:[(${bundle.artifactId})]", "[(${bundle.version})]");
 [/]    }
 

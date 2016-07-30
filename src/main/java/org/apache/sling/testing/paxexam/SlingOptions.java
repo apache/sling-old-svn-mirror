@@ -87,6 +87,23 @@ public class SlingOptions {
         );
     }
 
+    public static Option paxUrl() {
+        return composite(
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-commons").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-lang").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-util-property").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.pax.swissbox").artifactId("pax-swissbox-property").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option paxUrlClasspath() {
+        return composite(
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-classpath").version(versionResolver),
+            paxUrl()
+        );
+    }
+
     public static Option sling() {
         return composite(
             config(),
