@@ -62,7 +62,7 @@
   org.apache.felix.jaas.ConfigurationSpi
     jaas.defaultRealmName="jackrabbit.oak"
     jaas.configProviderName="FelixJaasProvider"
-  
+
   org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl
     org.apache.jackrabbit.oak.authentication.configSpiName="FelixJaasProvider"
 
@@ -70,10 +70,10 @@
     groupsPath="/home/groups"
     usersPath="/home/users"
     defaultDepth="1"
-    importBehavior="besteffort"  
+    importBehavior="besteffort"
 
   org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName
-    length=21
+    length=I"21"
 
   org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider
     enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
