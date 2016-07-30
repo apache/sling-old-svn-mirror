@@ -121,7 +121,6 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.resourceresolver").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.serviceusermapper").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.settings").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.compiler").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.mime").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.osgi").version(versionResolver),
@@ -141,6 +140,13 @@ public class SlingOptions {
         return composite(
             sling(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.auth.form").version(versionResolver)
+        );
+    }
+
+    public static Option slingCommonsCompiler() {
+        return composite(
+            slingCommonsClassloader(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.compiler").version(versionResolver)
         );
     }
 
@@ -383,6 +389,7 @@ public class SlingOptions {
         return composite(
             sling(),
             slingJcr(),
+            slingCommonsCompiler(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.compiler").version(versionResolver)
         );
     }
@@ -533,6 +540,7 @@ public class SlingOptions {
     public static Option slingScriptingJsp() {
         return composite(
             slingScripting(),
+            slingCommonsCompiler(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.jsp").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.jsp.taglib").version(versionResolver)
         );
@@ -755,6 +763,7 @@ public class SlingOptions {
         return composite(
             sling(),
             slingScripting(),
+            slingCommonsCompiler(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.java").version(versionResolver)
         );
     }
