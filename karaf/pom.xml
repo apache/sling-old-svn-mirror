@@ -45,6 +45,7 @@
     <module>org.apache.sling.karaf-features</module>
     <module>org.apache.sling.karaf-integration-tests</module>
     <module>org.apache.sling.karaf-launchpad-oak-tar-integration-tests</module>
+    <module>org.apache.sling.karaf-repoinit</module>
   </modules>
 
   <build>
