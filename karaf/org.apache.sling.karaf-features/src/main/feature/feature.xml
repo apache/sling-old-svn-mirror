@@ -293,7 +293,7 @@
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
     <config name="org.apache.sling.jcr.repoinit.impl.RepositoryInitializer">
-      text.url=file:etc/repoinit.txt
+      text.url=classpath://org.apache.sling.karaf-repoinit/repoinit.txt
       model.section.name=
     </config>
     <config name="org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge">
