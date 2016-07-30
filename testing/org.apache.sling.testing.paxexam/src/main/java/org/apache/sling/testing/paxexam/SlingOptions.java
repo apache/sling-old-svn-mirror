@@ -483,6 +483,9 @@ public class SlingOptions {
                 .put("defaultDepth", "1")
                 .put("groupsPath", "/home/groups")
                 .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName")
+                .put("length", "21")
+                .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider")
                 .put("groupPrivilegeNames", "[\"jcr:read\"]")
                 .put("enabledActions", "[\"org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction\"]")
