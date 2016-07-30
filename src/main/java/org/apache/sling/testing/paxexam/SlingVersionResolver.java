@@ -155,11 +155,12 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.jcr.jackrabbit.usermanager", "2.2.4");
         versions.put("org.apache.sling:org.apache.sling.jcr.oak.server", "1.0.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.registration", "1.0.2");
-        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.0.0");
+        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.0.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.resource", "2.8.0");
         versions.put("org.apache.sling:org.apache.sling.jcr.webconsole", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.4");
         versions.put("org.apache.sling:org.apache.sling.jmx.provider", "1.0.2");
+        versions.put("org.apache.sling:org.apache.sling.karaf-repoinit", "0.1.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.launchpad.content", "2.0.8");
         versions.put("org.apache.sling:org.apache.sling.models.api", "1.2.2");
         versions.put("org.apache.sling:org.apache.sling.models.impl", "1.2.8");
@@ -169,7 +170,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.nosql.mongodb-resourceprovider", "1.1.0");
         versions.put("org.apache.sling:org.apache.sling.provisioning.model", "1.4.4");
         versions.put("org.apache.sling:org.apache.sling.query", "3.0.0");
-        versions.put("org.apache.sling:org.apache.sling.repoinit.parser", "1.0.2");
+        versions.put("org.apache.sling:org.apache.sling.repoinit.parser", "1.0.3-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.resource.inventory", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.resourcemerger", "1.3.0");
         versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.4.16");

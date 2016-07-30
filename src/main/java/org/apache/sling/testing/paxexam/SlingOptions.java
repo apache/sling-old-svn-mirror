@@ -446,12 +446,18 @@ public class SlingOptions {
             sling(),
             slingServlets(),
             slingInstaller(),
+            slingJcrRepoinit(),
             slingExtensionAdapter(),
             slingExtensionBundleresource(),
             slingExtensionDiscoveryOak(),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.prefs").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.memoryusage").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.packageadmin").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.karaf-repoinit").version(versionResolver),
+            newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
+                .put("model.section.name", "")
+                .put("text.url", "classpath://org.apache.sling.karaf-repoinit/repoinit.txt")
+                .asOption(),
             newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
                 .put("resource.change.types", "[\"ADDED\", \"CHANGED\", \"REMOVED\"]")
                 .put("resource.paths", "/")
@@ -825,6 +831,7 @@ public class SlingOptions {
         return composite(
             slingJcrOak(),
             slingLaunchpadOak(),
+            paxUrlClasspath(), // for reading repoinit from bundle
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
