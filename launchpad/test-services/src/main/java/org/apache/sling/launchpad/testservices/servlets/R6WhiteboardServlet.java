@@ -19,13 +19,13 @@ package org.apache.sling.launchpad.testservices.servlets;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * Example Sling servlets registered using the R6 HTTP Whiteboard
@@ -34,13 +34,12 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 @Service(javax.servlet.Servlet.class)
 @Component
 @Property(name="osgi.http.whiteboard.servlet.pattern", value="/whiteboard_r6")
-public class R6WhiteboardServlet extends SlingSafeMethodsServlet {
+public class R6WhiteboardServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         response.setContentType("text/plain");
         response.getWriter().write("R6 OK");
