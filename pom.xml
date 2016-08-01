@@ -33,7 +33,7 @@
 
     <name>Apache Sling Engine Implementation</name>
     <description>
-        Bundle implementing the core of Sling.
+        Bundle implementing the core of Apache Sling.
     </description>
 
     <scm>
@@ -63,7 +63,6 @@
                             javax.servlet;javax.servlet.http;version="[2.6,4)",
                             javax.servlet.descriptor;version="[2.6,4)",
                             org.osgi.service.useradmin;
-                            org.apache.commons.math.*;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
