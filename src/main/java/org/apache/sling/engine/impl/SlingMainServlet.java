@@ -130,7 +130,7 @@ public class SlingMainServlet extends GenericServlet {
     /**
      * The name of the servlet context for Sling
      */
-    private static final String SERVLET_CONTEXT_NAME = "org.apache.sling";
+    public static final String SERVLET_CONTEXT_NAME = "org.apache.sling";
 
     /**
      * The name of the product to report in the {@link #getServerInfo()} method
