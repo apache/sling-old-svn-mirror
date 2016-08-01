@@ -31,8 +31,7 @@ start an instance by running
 
    mvn slingstart:start -Dlaunchpad.keep.running=true -Dhttp.port=8080
 
-in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
-use Oak instead of Jackrabbit. Since that instance is using an arbitrary
+in the launchpad/testing folder. Since that instance is using an arbitrary
 http port you have to give exactly that port as parameter if you execute the test.
 
 The standard -Dmaven.surefire.debug option can be used to debug the tests
