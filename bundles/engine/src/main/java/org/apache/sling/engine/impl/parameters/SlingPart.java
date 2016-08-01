@@ -34,34 +34,42 @@ public class SlingPart implements Part {
         this.param = param;
     }
 
+    @Override
     public InputStream getInputStream() throws IOException {
         return this.param.getInputStream();
     }
 
+    @Override
     public String getContentType() {
         return this.param.getContentType();
     }
 
+    @Override
     public String getName() {
         return this.param.getFileItem().getFieldName();
     }
 
+    @Override
     public long getSize() {
         return this.param.getSize();
     }
 
+    @Override
     public void write(String fileName) throws IOException {
         throw new IOException("Unsupported yet");
     }
 
+    @Override
     public void delete() {
         this.param.getFileItem().delete();
     }
 
+    @Override
     public String getHeader(String name) {
         return this.param.getFileItem().getHeaders().getHeader(name);
     }
 
+    @Override
     public Collection<String> getHeaders(String name) {
         final ArrayList<String> headers = new ArrayList<String>();
         final Iterator<String> itemHeaders = this.param.getFileItem().getHeaders().getHeaders(name);
@@ -71,6 +79,7 @@ public class SlingPart implements Part {
         return headers;
     }
 
+    @Override
     public Collection<String> getHeaderNames() {
         final ArrayList<String> headers = new ArrayList<String>();
         final Iterator<String> itemHeaders = this.param.getFileItem().getHeaders().getHeaderNames();
@@ -78,5 +87,10 @@ public class SlingPart implements Part {
             headers.add(itemHeaders.next());
         }
         return headers;
+    }
+
+    @Override
+    public String getSubmittedFileName() {
+        return this.param.getFileName();
     }
 }

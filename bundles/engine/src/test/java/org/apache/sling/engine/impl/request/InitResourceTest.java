@@ -26,8 +26,6 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,14 +40,14 @@ public class InitResourceTest {
     private HttpServletRequest req;
     private HttpServletResponse resp;
     private ResourceResolver resourceResolver;
-    
+
     private final String requestURL;
     private final String pathInfo;
     private final String expectedResolvePath;
-    
+
     @Parameters(name="URL={0} path={1}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {   
+        return Arrays.asList(new Object[][] {
                 { "/one;v=1.1", "one;v=1.1", "/one;v=1.1" },
                 { "/two;v=1.1", "two", "/two;v=1.1" },
                 { "/three", "three", "/three" },
@@ -59,52 +57,50 @@ public class InitResourceTest {
                 { "/seven", "seven;v=1.1", "/seven;v=1.1" },
         });
     }
-    
+
     public InitResourceTest(String requestURL, String pathInfo, String expectedResolvePath) {
         this.requestURL = requestURL;
         this.pathInfo = pathInfo;
         this.expectedResolvePath = expectedResolvePath;
     }
-    
+
     @Before
     public void setup() throws Exception {
-        context = new JUnit4Mockery() {{
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }};
-        
+        context = new Mockery();
+
         req = context.mock(HttpServletRequest.class);
         resp = context.mock(HttpServletResponse.class);
         resourceResolver = context.mock(ResourceResolver.class);
-        
+
         context.checking(new Expectations() {{
             allowing(req).getRequestURL();
             will(returnValue(new StringBuffer(requestURL)));
-            
+
             allowing(req).getRequestURI();
-            
+
             allowing(req).getPathInfo();
             will(returnValue(pathInfo));
-            
+
             allowing(req).getServletPath();
             will(returnValue("/"));
-            
+
             allowing(req).getMethod();
             will(returnValue("GET"));
-            
+
             allowing(req).getAttribute(RequestData.REQUEST_RESOURCE_PATH_ATTR);
             will(returnValue(null));
             allowing(req).setAttribute(with(equal(RequestData.REQUEST_RESOURCE_PATH_ATTR)), with(any(Object.class)));
-            
+
             allowing(req).getAttribute(RequestProgressTracker.class.getName());
             will(returnValue(null));
-            
+
             // Verify that the ResourceResolver is called with the expected path
             allowing(resourceResolver).resolve(with(any(HttpServletRequest.class)),with(equal(expectedResolvePath)));
         }});
-        
+
         requestData = new RequestData(null, req, resp);
     }
-    
+
     @Test
     public void resolverPathMatches() {
         requestData.initResource(resourceResolver);

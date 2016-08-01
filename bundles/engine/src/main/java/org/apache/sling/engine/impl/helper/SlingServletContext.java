@@ -664,4 +664,9 @@ public class SlingServletContext implements ServletContext {
     protected ServletContext wrapServletContext(ServletContext context) {
         return new ExternalServletContextWrapper(context);
     }
+
+    @Override
+    public String getVirtualServerName() {
+        return getServletContext().getVirtualServerName();
+    }
 }

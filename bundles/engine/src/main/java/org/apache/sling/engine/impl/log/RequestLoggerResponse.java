@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -254,6 +255,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         return this.requestEnd - this.requestStart;
     }
 
+    @Override
     public int getStatus() {
         return this.status;
     }
@@ -416,6 +418,16 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
             } catch(IOException ioe) {
                 throw new ClientAbortException(ioe);
             }
+        }
+
+        @Override
+        public boolean isReady() {
+            return this.delegatee.isReady();
+        }
+
+        @Override
+        public void setWriteListener(final WriteListener writeListener) {
+            this.delegatee.setWriteListener(writeListener);
         }
     }
 
