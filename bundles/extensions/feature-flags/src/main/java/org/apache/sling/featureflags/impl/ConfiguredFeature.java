@@ -22,42 +22,44 @@ import java.util.Map;
 
 import javax.servlet.ServletRequest;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.featureflags.ExecutionContext;
 import org.apache.sling.featureflags.Feature;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@Component(
-        name = "org.apache.sling.featureflags.Feature",
-        metatype = true,
-        configurationFactory = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        label = "Apache Sling Configured Feature",
-        description = "Allows for the definition of statically configured features which are defined and enabled through OSGi configuration")
-@Service
+@Designate(ocd = ConfiguredFeature.Config.class, factory = true)
+@Component(service = Feature.class,
+           configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ConfiguredFeature implements Feature {
+
+    @ObjectClassDefinition(name = "Apache Sling Configured Feature",
+            description = "Allows for the definition of statically configured features which are defined and enabled through OSGi configuration",
+            factoryPid = "org.apache.sling.featureflags.Feature")
+    public static @interface Config {
+
+        @AttributeDefinition(name = "Name", description = "Short name of this feature. This name is used "
+            + "to refer to this feature when checking for it to be enabled or not. This "
+            + "property is required and defaults to a name derived from the feature's class "
+            + "name and object identity. It is strongly recommended to define a useful and unique for the feature")
+        String name();
+
+        @AttributeDefinition(name = "Description", description = "Description for the feature. The "
+                + "intent is to descibe the behaviour of the application if this feature would be "
+                + "enabled. It is recommended to define this property. The default value is the value of the name property.")
+        String description();
+
+        @AttributeDefinition(name = "Enabled", description = "Boolean flag indicating whether the feature is "
+                + "enabled or not by this configuration")
+        boolean enabled() default false;
+    }
 
     private static final String PROP_FEATURE = "feature";
 
-    @Property(label = "Name", description = "Short name of this feature. This name is used "
-        + "to refer to this feature when checking for it to be enabled or not. This "
-        + "property is required and defaults to a name derived from the feature's class "
-        + "name and object identity. It is strongly recommended to define a useful and unique for the feature")
-    private static final String NAME = "name";
-
-    @Property(label = "Description", description = "Description for the feature. The "
-        + "intent is to descibe the behaviour of the application if this feature would be "
-        + "enabled. It is recommended to define this property. The default value is the value of the name property.")
-    private static final String DESCRIPTION = "description";
-
-    @Property(boolValue = false, label = "Enabled", description = "Boolean flag indicating whether the feature is "
-        + "enabled or not by this configuration")
-    private static final String ENABLED = "enabled";
 
     private String name;
 
@@ -66,12 +68,22 @@ public class ConfiguredFeature implements Feature {
     private boolean enabled;
 
     @Activate
-    private void activate(final Map<String, Object> configuration) {
-        final String pid = PropertiesUtil.toString(configuration.get(Constants.SERVICE_PID), getClass().getName() + "$"
-            + System.identityHashCode(this));
-        this.name = PropertiesUtil.toString(configuration.get(NAME), pid);
-        this.description = PropertiesUtil.toString(configuration.get(DESCRIPTION), this.name);
-        this.enabled = PropertiesUtil.toBoolean(configuration.get(ENABLED), false);
+    private void activate(final Config config, final Map<String, Object> properties) {
+        this.name = config.name();
+        if ( this.name == null ) {
+            Object pid = properties.get(Constants.SERVICE_PID);
+            if ( pid == null ) {
+                this.name = getClass().getName() + "$" + System.identityHashCode(this);
+            } else {
+                this.name = pid.toString();
+            }
+
+        }
+        this.description = config.description();
+        if ( this.description == null ) {
+            this.description = this.name;
+        }
+        this.enabled = config.enabled();
     }
 
     @Override
