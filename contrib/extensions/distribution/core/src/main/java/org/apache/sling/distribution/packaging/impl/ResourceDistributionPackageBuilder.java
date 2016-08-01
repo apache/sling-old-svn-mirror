@@ -39,6 +39,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +52,22 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
     private final int fileThreshold;
+    private final MemoryUnit memoryUnit;
+    private final boolean useOffHeapMemory;
 
-    public ResourceDistributionPackageBuilder(String type, DistributionContentSerializer distributionContentSerializer, String tempFilesFolder, int fileThreshold) {
+    public ResourceDistributionPackageBuilder(String type,
+                                              DistributionContentSerializer distributionContentSerializer,
+                                              String tempFilesFolder,
+                                              int fileThreshold,
+                                              MemoryUnit memoryUnit,
+                                              boolean useOffHeapMemory) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.packagesPath = PREFIX_PATH + type + "/data";
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.fileThreshold = fileThreshold;
+        this.memoryUnit = memoryUnit;
+        this.useOffHeapMemory = useOffHeapMemory;
     }
 
     @Override
@@ -67,7 +77,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         FileBackedMemoryOutputStream outputStream = null;
         try {
             try {
-                outputStream = new FileBackedMemoryOutputStream(fileThreshold, tempDirectory, "distrpck-create-", "." + getType());
+                outputStream = new FileBackedMemoryOutputStream(fileThreshold, memoryUnit, useOffHeapMemory, tempDirectory, "distrpck-create-", "." + getType());
                 distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
                 outputStream.flush();
             } finally {

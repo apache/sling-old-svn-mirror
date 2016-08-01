@@ -18,16 +18,18 @@
  */
 package org.apache.sling.distribution.util.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import static java.lang.Math.pow;
+import static java.io.File.createTempFile;
+import static java.nio.ByteBuffer.allocate;
+import static java.nio.ByteBuffer.allocateDirect;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import static java.io.File.createTempFile;
+import java.nio.ByteBuffer;
 
 /**
  * {@link OutputStream} implementation which writes into a {@code byte[]} until a certain {@link #fileThreshold} is
@@ -35,9 +37,22 @@ import static java.io.File.createTempFile;
  */
 public class FileBackedMemoryOutputStream extends OutputStream {
 
-    private final int fileThreshold;
+    public enum MemoryUnit {
 
-    private final ByteArrayOutputStream memory;
+        BYTES(1),
+        KILO_BYTES(1000),
+        MEGA_BYTES((int) pow(10, 6)),
+        GIGA_BYTES((int) pow(10, 9));
+
+        private final int memoryFactor;
+
+        private MemoryUnit(int memoryFactor) {
+            this.memoryFactor = memoryFactor;
+        }
+
+    };
+
+    private final ByteBuffer memory;
 
     private final File tempDirectory;
 
@@ -49,9 +64,21 @@ public class FileBackedMemoryOutputStream extends OutputStream {
 
     private File file;
 
-    public FileBackedMemoryOutputStream(int fileThreshold, File tempDirectory, String fileName, String fileExtension) {
-        this.fileThreshold = fileThreshold;
-        this.memory = new ByteArrayOutputStream(fileThreshold);
+    public FileBackedMemoryOutputStream(int fileThreshold,
+                                        MemoryUnit memoryUnit,
+                                        boolean useOffHeapMemory,
+                                        File tempDirectory,
+                                        String fileName,
+                                        String fileExtension) {
+        if (fileThreshold < 0) {
+            throw new IllegalArgumentException("Negative fileThreshold size has no semantic in this version.");
+        }
+        int threshold = fileThreshold * memoryUnit.memoryFactor;
+        if (useOffHeapMemory) {
+            memory = allocateDirect(threshold);
+        } else {
+            memory = allocate(threshold);
+        }
         this.tempDirectory = tempDirectory;
         this.fileName = fileName;
         this.fileExtension = fileExtension;
@@ -59,25 +86,22 @@ public class FileBackedMemoryOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        OutputStream current;
-        if (memory.size() < fileThreshold) {
-            current = memory;
+        if (memory.hasRemaining()) {
+            memory.put((byte) (b & 0xff));
         } else {
             if (out == null) {
                 file = createTempFile(fileName, fileExtension, tempDirectory);
                 out = new FileOutputStream(file);
-                memory.writeTo(out);
+                memory.flip();
+                out.getChannel().write(memory);
             }
 
-            current = out;
+            out.write(b);
         }
-
-        current.write(b);
     }
 
     @Override
     public void flush() throws IOException {
-        memory.flush();
         if (out != null) {
             out.flush();
         }
@@ -85,7 +109,6 @@ public class FileBackedMemoryOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        memory.close();
         if (out != null) {
             out.close();
         }
@@ -100,10 +123,12 @@ public class FileBackedMemoryOutputStream extends OutputStream {
         if (file != null) {
             return file.length();
         }
-        return memory.size();
+        return memory.position();
     }
 
     public void clean() {
+        memory.clear();
+        memory.rewind();
         if (file != null) {
             file.delete();
         }
@@ -113,7 +138,8 @@ public class FileBackedMemoryOutputStream extends OutputStream {
         if (file != null) {
             return new FileInputStream(file);
         }
-        return new ByteArrayInputStream(memory.toByteArray());
+        memory.flip();
+        return new ByteBufferBackedInputStream(memory);
     }
 
 }
