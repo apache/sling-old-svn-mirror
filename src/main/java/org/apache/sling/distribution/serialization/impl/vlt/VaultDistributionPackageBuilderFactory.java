@@ -40,6 +40,7 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
@@ -119,7 +120,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
 
     // 1M
-    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 10240000;
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1;
 
     @Property(
         label="File threshold (in bytes)",
@@ -127,6 +128,30 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         intValue = DEFAULT_FILE_THRESHOLD_VALUE
     )
     public static final String FILE_THRESHOLD = "fileThreshold";
+
+    @Property(
+        label = "The memory unit for the file threshold",
+        description = "The memory unit for the file threshold, Megabytes by default",
+        value = "MEGA_BYTES",
+        options = {
+                @PropertyOption(name = "BYTES", value = "Bytes"),
+                @PropertyOption(name = "KILO_BYTES", value = "Kilobytes"),
+                @PropertyOption(name = "MEGA_BYTES", value = "Megabytes"),
+                @PropertyOption(name = "GIGA_BYTES", value = "Gigabytes")
+        }
+    )
+    private static final String MEMORY_UNIT = "MEGA_BYTES";
+
+    private static final String DEFAULT_MEMORY_UNIT = "MEGA_BYTES";
+
+    private static final boolean DEFAULT_USE_OFF_HEAP_MEMORY = false;
+
+    @Property(
+        label="Flag to enable/disable the off-heap memory",
+        description = "Flag to enable/disable the off-heap memory, false by default",
+        boolValue = DEFAULT_USE_OFF_HEAP_MEMORY
+    )
+    public static final String USE_OFF_HEAP_MEMORY = "useOffHeapMemory";
 
     @Reference
     private Packaging packaging;
@@ -167,7 +192,10 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder);
         } else {
             final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
-            packageBuilder = new ResourceDistributionPackageBuilder(name, contentSerializer, tempFsFolder, fileThreshold);
+            String memoryUnitName = PropertiesUtil.toString(config.get(MEMORY_UNIT), DEFAULT_MEMORY_UNIT);
+            final MemoryUnit memoryUnit = MemoryUnit.valueOf(memoryUnitName);
+            final boolean useOffHeapMemory = PropertiesUtil.toBoolean(config.get(USE_OFF_HEAP_MEMORY), DEFAULT_USE_OFF_HEAP_MEMORY);
+            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory);
         }
     }
 

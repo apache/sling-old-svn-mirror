@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 import org.junit.Test;
 
 public class FileBackedMemoryOutputStreamTest {
@@ -36,6 +37,8 @@ public class FileBackedMemoryOutputStreamTest {
     @Test
     public void justKeepDataInMemory() throws IOException {
         FileBackedMemoryOutputStream output = new FileBackedMemoryOutputStream(10,
+                                                                               MemoryUnit.BYTES,
+                                                                               false,
                                                                                new File("/tmp"),
                                                                                "FileBackedMemoryOutputStreamTest.justKeepDataInMemory",
                                                                                ".tmp");
@@ -51,6 +54,8 @@ public class FileBackedMemoryOutputStreamTest {
     @Test
     public void backedToFile() throws IOException {
         FileBackedMemoryOutputStream output = new FileBackedMemoryOutputStream(2,
+                                                                               MemoryUnit.BYTES,
+                                                                               false,
                                                                                new File("/tmp"),
                                                                                "FileBackedMemoryOutputStreamTest.backedToFile",
                                                                                ".tmp");

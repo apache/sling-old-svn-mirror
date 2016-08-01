@@ -76,7 +76,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
         for (String referenceQueueName : deliveryMappings.keySet()) {
             DistributionQueue queue = queueProvider.getQueue(referenceQueueName);
 
-            if (queue.getStatus().getItemsCount() > 30) {
+            if (queue.getStatus().getItemsCount() > 100) {
                 // too many items in the queue, let's send actual packages and references separately
 
                 distributionPackage.getInfo().put("reference-required", true);
