@@ -52,6 +52,7 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.AsyncDeliveryDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
@@ -91,7 +92,6 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
-
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     private static final String SERVICE_NAME = "serviceName";
@@ -170,6 +170,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             label = "Queue provider", description = "The queue provider implementation."
     )
     public static final String QUEUE_PROVIDER = "queue.provider";
+
+    @Property(boolValue = false, label = "Async delivery", description = "Whether or not to use a separate delivery queue to maximize transport throughput when queue has more than 100 items")
+    public static final String ASYNC_DELIVERY = "async.delivery";
 
     @Reference
     private Packaging packaging;
@@ -261,14 +264,19 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             importerEndpointsMap = SettingsUtils.expandUriMap(importerEndpointsMap, queueAliases);
             exportQueueStrategy = dispatchingStrategy;
         } else {
-            // delivery queues' names
-            Map<String, String> deliveryQueues = new HashMap<String, String>();
-            for (String e : endpointNames) {
-                deliveryQueues.put(e, "delivery-"+e);
-            }
+            boolean asyncDelivery = PropertiesUtil.toBoolean(config.get(ASYNC_DELIVERY), false);
+            if (asyncDelivery) {
+                // delivery queues' names
+                Map<String, String> deliveryQueues = new HashMap<String, String>();
+                for (String e : endpointNames) {
+                    deliveryQueues.put(e, "delivery-" + e);
+                }
 
-            processingQueues.addAll(deliveryQueues.values());
-            exportQueueStrategy = new AsyncDeliveryDispatchingStrategy(deliveryQueues);
+                processingQueues.addAll(deliveryQueues.values());
+                exportQueueStrategy = new AsyncDeliveryDispatchingStrategy(deliveryQueues);
+            } else {
+                exportQueueStrategy = new MultipleQueueDispatchingStrategy(endpointNames.toArray(new String[endpointNames.size()]));
+            }
         }
 
         processingQueues.addAll(endpointNames);
