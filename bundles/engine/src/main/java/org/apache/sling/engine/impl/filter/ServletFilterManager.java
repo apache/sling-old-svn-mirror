@@ -103,13 +103,10 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
 
     private final SlingFilterChainHelper[] filterChains;
 
-    private final boolean compatMode;
-
     private Map <Long, ServiceRegistration<FilterProcessorMBean>> mbeanMap;
 
     public ServletFilterManager(final BundleContext context,
-            final SlingServletContext servletContext,
-            final boolean compatMode) {
+            final SlingServletContext servletContext) {
         super(context, Filter.class, null);
         this.servletContext = servletContext;
         this.filterChains = new SlingFilterChainHelper[FilterChainType.values().length];
@@ -118,7 +115,6 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
         this.filterChains[FilterChainType.INCLUDE.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.FORWARD.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.COMPONENT.ordinal()] = new SlingFilterChainHelper();
-        this.compatMode = compatMode;
         this.mbeanMap = new HashMap<Long, ServiceRegistration<FilterProcessorMBean>>();
     }
 
@@ -167,14 +163,6 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
         if ( reference.getProperty(EngineConstants.SLING_FILTER_SCOPE) != null
              || reference.getProperty(EngineConstants.FILTER_SCOPE) != null ) {
             exclude = false;
-        } else {
-            // in compat mode we allow all filters not having the felix pattern prop!
-            if ( this.compatMode ) {
-                // Check if filter will be registered by Felix HttpService Whiteboard
-                if (reference.getProperty(FELIX_WHITEBOARD_PATTERN_PROPERTY) == null) {
-                    exclude = false;
-                }
-            }
         }
         if ( !exclude ) {
             final String filterName = SlingFilterConfig.getName(reference);
