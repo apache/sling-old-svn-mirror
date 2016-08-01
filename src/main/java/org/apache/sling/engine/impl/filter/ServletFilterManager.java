@@ -90,12 +90,6 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
         }
     }
 
-    /**
-     * The service property used by Felix's HttpService whiteboard
-     * implementation.
-     */
-    private static String FELIX_WHITEBOARD_PATTERN_PROPERTY = "pattern";
-
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -209,6 +203,8 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
                 // addition we allow different types than Integer
                 orderObj = reference.getProperty(EngineConstants.FILTER_ORDER);
                 if (orderObj != null) {
+                    log.warn("Filter service {} is using deprecated property {}. Use {} instead.",
+                            new Object[] {reference, EngineConstants.FILTER_ORDER, Constants.SERVICE_RANKING});
                     // we can use 0 as the default as this will be applied
                     // in the next step anyway if this props contains an
                     // invalid value
@@ -231,6 +227,8 @@ public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
             if ( scopes == null ) {
                 scopes = OsgiUtil.toStringArray(
                     reference.getProperty(EngineConstants.FILTER_SCOPE), null);
+                log.warn("Filter service {} is using deprecated property {}. Use {} instead.",
+                        new Object[] {reference, EngineConstants.FILTER_SCOPE, EngineConstants.SLING_FILTER_SCOPE});
             }
             if (scopes != null && scopes.length > 0) {
                 for (String scope : scopes) {
