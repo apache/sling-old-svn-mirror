@@ -126,7 +126,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <ClientSideTeleporter.baseUrl>http://${http.host}:${http.port}/</ClientSideTeleporter.baseUrl>
-                        <ClientSideTeleporter.testReadyTimeoutSeconds>5</ClientSideTeleporter.testReadyTimeoutSeconds>
+                        <ClientSideTeleporter.testReadyTimeoutSeconds>20</ClientSideTeleporter.testReadyTimeoutSeconds>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
