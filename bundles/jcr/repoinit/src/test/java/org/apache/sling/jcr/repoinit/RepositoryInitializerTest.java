@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jcr.repoinit;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -31,6 +32,7 @@ import java.util.UUID;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.repoinit.impl.JcrRepoInitOpsProcessorImpl;
 import org.apache.sling.jcr.repoinit.impl.RepositoryInitializer;
+import org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.TextFormat;
 import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.impl.RepoInitParserService;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -58,22 +60,33 @@ public class RepositoryInitializerTest {
     private final String repoInitText;
     private final String url;
     private final String modelSection;
+    private final String textFormat;
     private final boolean testLogin;
     private final String serviceUser;
+    private final Class<?> expectedActivateException;
     
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
         final List<Object []> result = new ArrayList<Object[]>();
         
-        result.add(new Object[] { "All empty, just setup + parsing", "", false, false });
-        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), true, true }); 
-        result.add(new Object[] { "Raw repoinit/empty section", "", false, true}); 
-        result.add(new Object[] { "Raw repoinit/special section name", "<RAW>", false, true}); 
-        result.add(new Object[] { "Default value of model section config", null, true, true}); 
+        // Realistic cases
+        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), TextFormat.MODEL.toString(), true, true, null }); 
+        result.add(new Object[] { "Default value of model section config", null, TextFormat.MODEL.toString(), true, true, null });
+        result.add(new Object[] { "Raw repoinit/empty section", "", TextFormat.RAW.toString(), false, true, null }); 
+        result.add(new Object[] { "Raw repoinit/ignored section name", "IGNORED_SectionName", TextFormat.RAW.toString(), false, true, null }); 
+        
+        // Edge and failure cases 
+        result.add(new Object[] { "All empty, just setup + parsing", "", TextFormat.RAW.toString(), false, false, null });
+        result.add(new Object[] { "Raw repoinit/null format", null, null, true, false, RuntimeException.class });
+        result.add(new Object[] { "With model/null format", null, null, false, false, RuntimeException.class });
+        result.add(new Object[] { "Invalid format", null, "invalidFormat", false, false, RuntimeException.class }); 
+        result.add(new Object[] { "Empty model section", "", TextFormat.MODEL.toString(), false, false, IllegalStateException.class }); 
+        result.add(new Object[] { "Null model section", null, TextFormat.MODEL.toString(), false, false, IllegalStateException.class }); 
         return result;
     }
     
-    public RepositoryInitializerTest(String description, String modelSection, boolean useProvisioningModel, boolean testLogin) throws IOException {
+    public RepositoryInitializerTest(String description, String modelSection, String textFormat, 
+            boolean useProvisioningModel, boolean testLogin, Class<?> expectedException) throws IOException {
         serviceUser = getClass().getSimpleName() + "-" + UUID.randomUUID();
         
         String txt = "create service user " + serviceUser; 
@@ -86,6 +99,8 @@ public class RepositoryInitializerTest {
         this.url = getTestUrl(repoInitText);
         this.modelSection = modelSection;
         this.testLogin = testLogin;
+        this.textFormat = textFormat;
+        this.expectedActivateException = expectedException;
     }
     
     @Before
@@ -98,14 +113,26 @@ public class RepositoryInitializerTest {
         if(modelSection != null) {
             config.put(RepositoryInitializer.PROP_MODEL_SECTION_NAME, modelSection);
         }
-        initializer.activate(config);
+        if(textFormat != null) {
+            config.put(RepositoryInitializer.PROP_TEXT_FORMAT, textFormat);
+        }
         
         context.registerInjectActivateService(new RepoInitParserService());
         context.registerInjectActivateService(new JcrRepoInitOpsProcessorImpl());
-        context.registerInjectActivateService(initializer, config);
         
-        // Mock environment doesn't cause this to be called
-        initializer.processRepository(context.getService(SlingRepository.class));
+        try {
+            context.registerInjectActivateService(initializer, config);
+            
+            // Mock environment doesn't cause this to be called
+            initializer.processRepository(context.getService(SlingRepository.class));
+        } catch(Exception e) {
+            if(expectedActivateException != null) {
+                assertEquals(expectedActivateException, e.getClass());
+            } else {
+                fail("Got unexpected " + e.getClass().getName() + " in activation");
+            }
+        }
+        
     }
     
     @Test
