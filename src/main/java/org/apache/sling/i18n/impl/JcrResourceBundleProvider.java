@@ -139,7 +139,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     /**
      * Each ResourceBundle is registered as a service. Each registration is stored in this map with the locale & base name used as a key.
      */
-    private Map<Key, ServiceRegistration> bundleServiceRegistrations;
+    private Map<Key, ServiceRegistration<ResourceBundle>> bundleServiceRegistrations;
 
     private boolean preloadBundles;
 
@@ -324,7 +324,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         resourceBundleCache.remove(key);
         log.info("Reloading resource bundle for {}", key);
         // unregister bundle
-        ServiceRegistration serviceRegistration = null;
+        ServiceRegistration<ResourceBundle> serviceRegistration = null;
         synchronized (this) {
             serviceRegistration = bundleServiceRegistrations.remove(key);
         }
@@ -382,7 +382,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.preloadBundles = PropertiesUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
 
         this.bundleContext = context;
-        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
+        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration<ResourceBundle>>();
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
             if (repoCredentials == null) {
@@ -448,7 +448,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
             serviceProps.put("baseName", key.baseName);
         }
         serviceProps.put("locale", key.locale.toString());
-        ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
+        ServiceRegistration<ResourceBundle> serviceReg = bundleContext.registerService(ResourceBundle.class,
                 resourceBundle, serviceProps);
         synchronized (this) {
             bundleServiceRegistrations.put(key, serviceReg);
@@ -532,7 +532,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         languageRootPaths.clear();
 
         synchronized (this) {
-            for (ServiceRegistration serviceReg : bundleServiceRegistrations.values()) {
+            for (ServiceRegistration<ResourceBundle> serviceReg : bundleServiceRegistrations.values()) {
                 serviceReg.unregister();
             }
             bundleServiceRegistrations.clear();
