@@ -256,7 +256,7 @@ public class I18NFilter implements Filter {
         }
 
         @Override
-        public Enumeration<?> getLocales() {
+        public Enumeration<Locale> getLocales() {
             return Collections.enumeration(getLocaleList());
         }
 
@@ -357,7 +357,7 @@ public class I18NFilter implements Filter {
         }
 
         @Override
-        public Enumeration<?> getLocales() {
+        public Enumeration<Locale> getLocales() {
             return Collections.enumeration(getLocaleList());
         }
 
