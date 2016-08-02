@@ -38,9 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Dispatching strategy that delivers items to their target queue unless the queue contains too many items, in such a case
- * a reference package is created and put into that queue while the actual package is sent using a different queue for
- * storage at the receiving side so that it'll be installed only once the reference is processed.
+ * Dispatching strategy that delivers items to their target queue unless the queue contains too many items (beyond {@code MAX_QUEUE_ITEMS_THRESHOLD}),
+ * in such a case a reference package is created and put into that queue while the actual package is sent using a different
+ * queue for storage at the receiving side so that it'll be installed only once the reference is processed.
  * This guarantees delivery order while maximizing the network throughput when there're many items in the queues.
  */
 public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispatchingStrategy {
@@ -49,6 +49,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
 
     private final List<String> queues;
     private final Map<String, String> deliveryMappings;
+    private final int MAX_QUEUE_ITEMS_THRESHOLD = 100;
 
     /**
      * create an async delivery strategy
@@ -76,7 +77,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
         for (String referenceQueueName : deliveryMappings.keySet()) {
             DistributionQueue queue = queueProvider.getQueue(referenceQueueName);
 
-            if (queue.getStatus().getItemsCount() > 100) {
+            if (queue.getStatus().getItemsCount() > MAX_QUEUE_ITEMS_THRESHOLD) {
                 // too many items in the queue, let's send actual packages and references separately
 
                 distributionPackage.getInfo().put("reference-required", true);

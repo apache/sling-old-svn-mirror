@@ -83,7 +83,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
         DistributionPackageInfo info = distributionPackage.getInfo();
         URI packageOrigin = info.get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
-//        Boolean store = info.get("store", Boolean.class);
 
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
@@ -93,10 +92,6 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 Executor executor = getExecutor(distributionContext);
 
                 Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
-
-//                if (noInstall) {
-//                    req = req.addHeader("noinstall", noInstall.toString());
-//                }
 
                 InputStream inputStream = null;
                 try {
