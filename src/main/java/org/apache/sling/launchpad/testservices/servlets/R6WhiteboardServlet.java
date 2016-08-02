@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 
@@ -33,7 +34,10 @@ import org.apache.felix.scr.annotations.Service;
  */
 @Service(javax.servlet.Servlet.class)
 @Component
-@Property(name="osgi.http.whiteboard.servlet.pattern", value="/whiteboard_r6")
+@Properties({
+    @Property(name="osgi.http.whiteboard.servlet.pattern", value="/whiteboard_r6"),
+    @Property(name="osgi.http.whiteboard.context.select", value="(osgi.http.whiteboard.context.name=org.apache.sling)"),
+})
 public class R6WhiteboardServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
