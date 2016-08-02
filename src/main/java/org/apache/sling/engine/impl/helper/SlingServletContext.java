@@ -109,7 +109,7 @@ public class SlingServletContext implements ServletContext {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling ServletContext");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put("name", "org.apache.sling"); // property to identify this context
+        props.put("name", SlingMainServlet.class); // property to identify this context
         registration = bundleContext.registerService(
             ServletContext.class, this, props);
     }
