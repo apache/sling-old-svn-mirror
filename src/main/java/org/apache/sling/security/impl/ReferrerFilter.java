@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
@@ -55,12 +56,17 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(metatype=true, description="%referrer.description",
         label="%referrer.name")
-@Property(name="pattern", value="/.*", propertyPrivate=true)
+@Properties({
+    @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/", propertyPrivate=true),
+    @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+              value="(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=org.apache.sling)", propertyPrivate=true)
+})
 @Service(value=Filter.class)
 public class ReferrerFilter implements Filter {
 
@@ -123,7 +129,7 @@ public class ReferrerFilter implements Filter {
     /** Methods to be filtered. */
     private String[] filterMethods;
 
-    private ServiceRegistration configPrinterRegistration;
+    private ServiceRegistration<Object> configPrinterRegistration;
 
     /**
      * Create a default list of referrers
@@ -201,7 +207,7 @@ public class ReferrerFilter implements Filter {
                 final Pattern pattern  = Pattern.compile(regexp);
                 patterns.add(pattern);
             } catch (final Exception e) {
-                logger.warn("Unable to create Pattern from {} : {}", new String[]{regexp, e.getMessage()});
+                logger.warn("Unable to create Pattern from {} : {}", new Object[]{regexp, e.getMessage()});
             }
         }
         return patterns.toArray(new Pattern[patterns.size()]);
@@ -241,7 +247,7 @@ public class ReferrerFilter implements Filter {
         this.configPrinterRegistration.unregister();
     }
 
-    private ServiceRegistration registerConfigPrinter(BundleContext bundleContext) {
+    private ServiceRegistration<Object> registerConfigPrinter(BundleContext bundleContext) {
         final ConfigurationPrinter cfgPrinter = new ConfigurationPrinter();
         final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
@@ -251,7 +257,7 @@ public class ReferrerFilter implements Filter {
         serviceProps.put("felix.webconsole.title", "Sling Referrer Filter");
         serviceProps.put("felix.webconsole.configprinter.modes", "always");
 
-       return bundleContext.registerService(Object.class.getName(),
+       return bundleContext.registerService(Object.class,
                 cfgPrinter, serviceProps);
     }
 
