@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -69,8 +70,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     
     @Property(
             label="Text URL", 
-            description="URL of the source text that provides repoinit statements."
-                + " That text is processed according to the model section name parameter.", 
+            description="URL of the source text that provides repoinit statements.",
             value=DEFAULT_TEXT_URL)
     public static final String PROP_TEXT_URL = "text.url";
     private String textURL;
@@ -92,7 +92,11 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
                 "The format to use to interpret the text provided by the configured source text URL. "
                 + "That text can be either a Sling provisioning model with repoinit statements embedded in additional sections,"
                 + " or raw repoinit statements",
-            value=DEFAULT_MODEL_SECTION_NAME)
+            options = {
+                    @PropertyOption(name = "MODEL", value = "Provisioning Model (MODEL)"),
+                    @PropertyOption(name = "RAW", value = "Raw Repoinit statements (RAW)")
+                },                
+            value="MODEL")
     public static final String PROP_TEXT_FORMAT = "text.format";
     public static enum TextFormat { RAW, MODEL };
     private TextFormat textFormat;
@@ -184,7 +188,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             log.info("Parsing raw repoinit statements from {}", textURL);
             return rawText;
         } else {
-            log.info("Extracting repoinit statements from section '{}' of provisioning model {}", modelSectionName, textURL);
+            log.info("Extracting repoinit statements from section ':{}' of provisioning model {}", modelSectionName, textURL);
             final StringReader reader = new StringReader(rawText);
             try {
                 final Model model = ModelReader.read(reader, textURL);
