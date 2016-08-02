@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>27</version>
         <relativePath />
     </parent>
 
@@ -71,7 +71,11 @@
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*|org/apache/jackrabbit/commons/json/Json*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ServiceUtil*|org/apache/sling/commons/osgi/PropertiesUtil*"
                         </Embed-Dependency>
-
+<!-- 
+                        <Require-Capability>
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version=1.0))"
+                        </Require-Capability>
+ -->
                     </instructions>
                 </configuration>
             </plugin>
@@ -130,6 +134,20 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.event</artifactId>
+            <version>1.3.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>2.2.4</version>
@@ -152,28 +170,11 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.scheduler</artifactId>
             <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -186,13 +187,11 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <version>2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -235,13 +234,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.0</version>
+            <version>1.7.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.13</version>
+            <version>1.2.17</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -271,7 +270,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.2.1</version>
+            <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
       </dependencies>
