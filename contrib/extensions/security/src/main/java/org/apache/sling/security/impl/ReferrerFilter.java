@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -54,7 +55,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,9 +211,7 @@ public class ReferrerFilter implements Filter {
      * Activate
      */
     @Activate
-    protected void activate(final ComponentContext ctx) {
-        final Dictionary props = ctx.getProperties();
-
+    protected void activate(final BundleContext context, final Map<String, Object> props) {
         this.allowEmpty = PropertiesUtil.toBoolean(props.get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
 
         final String[] allowRegexHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS_REGEX),
@@ -235,7 +233,7 @@ public class ReferrerFilter implements Filter {
                 filterMethods[i] = filterMethods[i].toUpperCase();
             }
         }
-        this.configPrinterRegistration = registerConfigPrinter(ctx.getBundleContext());
+        this.configPrinterRegistration = registerConfigPrinter(context);
     }
 
     @Deactivate
@@ -270,6 +268,7 @@ public class ReferrerFilter implements Filter {
         return false;
     }
 
+    @Override
     public void doFilter(final ServletRequest req,
                          final ServletResponse res,
                          final FilterChain chain)
@@ -373,6 +372,7 @@ public class ReferrerFilter implements Filter {
     /**
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
+    @Override
     public void init(final FilterConfig config) throws ServletException {
         // nothing to do
     }
@@ -380,6 +380,7 @@ public class ReferrerFilter implements Filter {
     /**
      * @see javax.servlet.Filter#destroy()
      */
+    @Override
     public void destroy() {
         // nothing to do
     }

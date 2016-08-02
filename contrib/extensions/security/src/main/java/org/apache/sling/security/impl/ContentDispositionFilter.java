@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,17 +35,16 @@ import javax.servlet.ServletResponse;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,30 +56,30 @@ label=" Apache Sling Content Disposition Filter")
         @Property(name = "sling.filter.scope", value = { "request" }, propertyPrivate = true),
         @Property(name = "service.ranking", intValue = -25000, propertyPrivate = true) })
 public class ContentDispositionFilter implements Filter {
-    
+
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
-    @Property(label = "Content Disposition Paths", 
+
+    @Property(label = "Content Disposition Paths",
             description = "These paths are checked by the filter. "+
                     "Each entry is of the form 'path [ \":\" CSV of excluded content types ]'. " +
                     "Invalid entries are logged and ignored."
                     , unbounded = PropertyUnbounded.ARRAY, value = { "" })
     private static final String PROP_CONTENT_DISPOSTION_PATHS = "sling.content.disposition.paths";
-    
-    @Property(label = "Content Disposition Excluded Paths", 
+
+    @Property(label = "Content Disposition Excluded Paths",
             description = "These paths are excluded by the filter. "+
                     "Each entry is of the form 'path'. "
                     , unbounded = PropertyUnbounded.ARRAY, value = { "" })
     private static final String PROP_CONTENT_DISPOSTION_EXCLUDED_PATHS = "sling.content.disposition.excluded.paths";
-    
+
     private static final boolean DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = false;
     @Property(boolValue = DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS ,
               label = "Enable Content Disposition for all paths",
               description ="This flag controls whether to enable" +
                       " Content Disposition for all paths, except for the excluded paths defined by sling.content.disposition.excluded.paths")
     private static final String PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = "sling.content.disposition.all.paths";
-   
+
     /**
      * Set of paths
      */
@@ -91,29 +89,27 @@ public class ContentDispositionFilter implements Filter {
      * Array of prefixes of paths
      */
     private String[] contentDispositionPathsPfx;
-    
-    Set contentDispositionExcludedPaths;
+
+    Set<String> contentDispositionExcludedPaths;
 
     private Map<String, Set<String>> contentTypesMapping;
-    
+
     private boolean enableContentDispositionAllPaths;
-    
+
     @Activate
-    private void activate(final ComponentContext ctx) {
-        final Dictionary props = ctx.getProperties();
-        
+    private void activate(final Map<String, Object> props) {
         String[] contentDispostionProps = PropertiesUtil.toStringArray(props.get(PROP_CONTENT_DISPOSTION_PATHS));
-        
+
         Set<String> paths = new HashSet<String>();
         List<String> pfxs = new ArrayList<String>();
         Map<String, Set<String>> contentTypesMap = new HashMap<String, Set<String>>();
-        
+
         for (String path : contentDispostionProps) {
             path = path.trim();
             if (path.length() > 0) {
                 int idx = path.indexOf('*');
                 int colonIdx = path.indexOf(":");
-                
+
                 if (colonIdx > -1 && colonIdx < idx) {
                     // ':'  in paths is not allowed
                     logger.info("':' in paths is not allowed.");
@@ -135,7 +131,7 @@ public class ContentDispositionFilter implements Filter {
                             p = path;
                         }
                         paths.add(p);
-                    }                   
+                    }
                     if (colonIdx != -1 && p != null) {
                         Set <String> contentTypes = getContentTypes(path.substring(colonIdx+1));
                         contentTypesMap.put(p, contentTypes);
@@ -144,35 +140,38 @@ public class ContentDispositionFilter implements Filter {
 
             }
         }
-        
+
         contentDispositionPaths = paths.isEmpty() ? Collections.<String>emptySet() : paths;
         contentDispositionPathsPfx = pfxs.toArray(new String[pfxs.size()]);
         contentTypesMapping = contentTypesMap.isEmpty()?Collections.<String, Set<String>>emptyMap(): contentTypesMap;
-        
+
         enableContentDispositionAllPaths =  PropertiesUtil.toBoolean(props.get(PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS),DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS);
-        
-        
+
+
         String[] contentDispostionExcludedPathsArray = PropertiesUtil.toStringArray(props.get(PROP_CONTENT_DISPOSTION_EXCLUDED_PATHS));
-        
+
         contentDispositionExcludedPaths = new HashSet<String>(Arrays.asList(contentDispostionExcludedPathsArray));
-        
+
         logger.info("Initialized. content disposition paths: {}, content disposition paths-pfx {}, content disposition excluded paths: {}. Enable Content Disposition for all paths is set to {}", new Object[]{
                 contentDispositionPaths, contentDispositionPathsPfx, contentDispositionExcludedPaths, enableContentDispositionAllPaths}
         );
     }
-    
 
+
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // nothing to do
     }
 
+    @Override
     public void destroy() {
         // nothing to do
     }
 
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
-  
+
         final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) request;
         final SlingHttpServletResponse slingResponse = (SlingHttpServletResponse) response;
 
@@ -180,9 +179,9 @@ public class ContentDispositionFilter implements Filter {
 
         chain.doFilter(request, rewriterResponse);
     }
-    
+
     //---------- PRIVATE METHODS ---------
-    
+
     private static Set<String> getContentTypes(String contentTypes) {
         Set<String> contentTypesSet = new HashSet<String>();
         if (contentTypes != null && contentTypes.length() > 0) {
@@ -193,37 +192,38 @@ public class ContentDispositionFilter implements Filter {
         }
         return contentTypesSet;
     }
-    
-    //----------- INNER CLASSES ------------ 
+
+    //----------- INNER CLASSES ------------
 
     protected class RewriterResponse extends SlingHttpServletResponseWrapper {
-        
+
         private static final String CONTENT_DISPOSTION = "Content-Disposition";
 
         private static final String CONTENT_DISPOSTION_ATTACHMENT = "attachment";
-        
+
         private static final String PROP_JCR_DATA = "jcr:data";
-        
+
         private static final String JCR_CONTENT_LEAF = "jcr:content";
-        
+
         static final String ATTRIBUTE_NAME =
                 "org.apache.sling.security.impl.ContentDispositionFilter.RewriterResponse.contentType";
-        
+
         /** The current request. */
         private final SlingHttpServletRequest request;
-        
+
         private final Resource resource;
 
         public RewriterResponse(SlingHttpServletRequest request, SlingHttpServletResponse wrappedResponse) {
-            super(wrappedResponse);            
+            super(wrappedResponse);
             this.request = request;
             this.resource = request.getResource();
         }
-        
+
         /**
          * @see javax.servlet.ServletResponseWrapper#setContentType(java.lang.String)
          */
-        public void setContentType(String type) { 
+        @Override
+        public void setContentType(String type) {
             if ("GET".equals(request.getMethod())) {
                 String previousContentType = (String) request.getAttribute(ATTRIBUTE_NAME);
 
@@ -231,14 +231,14 @@ public class ContentDispositionFilter implements Filter {
                     return;
                 }
                 request.setAttribute(ATTRIBUTE_NAME, type);
-                
+
                 String resourcePath = resource.getPath();
 
                 if (!contentDispositionExcludedPaths.contains(resourcePath)) {
 
                     if (enableContentDispositionAllPaths) {
                         setContentDisposition(resource);
-                    } else {               
+                    } else {
 
                         boolean contentDispositionAdded = false;
                         if (contentDispositionPaths.contains(resourcePath)) {
@@ -251,7 +251,7 @@ public class ContentDispositionFilter implements Filter {
                             } else {
                                 contentDispositionAdded = setContentDisposition(resource);
                             }
-                        }            
+                        }
                         if (!contentDispositionAdded) {
                             for (String path : contentDispositionPathsPfx) {
                                 if (resourcePath.startsWith(path)) {
@@ -273,10 +273,10 @@ public class ContentDispositionFilter implements Filter {
                 }
             }
             super.setContentType(type);
-        }    
-        
+        }
+
       //---------- PRIVATE METHODS ---------
-        
+
         private boolean setContentDisposition(Resource resource) {
             boolean contentDispositionAdded = false;
             if (!this.containsHeader(CONTENT_DISPOSTION) && this.isJcrData(resource)) {
@@ -285,7 +285,7 @@ public class ContentDispositionFilter implements Filter {
             }
             return contentDispositionAdded;
         }
-        
+
         private boolean isJcrData(Resource resource){
             boolean jcrData = false;
             if (resource!= null) {
@@ -300,7 +300,7 @@ public class ContentDispositionFilter implements Filter {
                             jcrData = true;
                         }
                     }
-                }     
+                }
             }
             return jcrData;
         }
