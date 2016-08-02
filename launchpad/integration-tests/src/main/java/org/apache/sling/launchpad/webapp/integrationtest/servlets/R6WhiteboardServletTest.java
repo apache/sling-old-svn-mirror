@@ -19,7 +19,6 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets;
 import java.io.IOException;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
-import org.junit.Ignore;
 
 /**
  * Test class which validates that the <tt>R6WhiteboardServlet</tt> is registered
@@ -27,7 +26,6 @@ import org.junit.Ignore;
  */
 public class R6WhiteboardServletTest extends HttpTestBase {
 
-    @Ignore("SLING-5931")
     public void testGetServletContent() throws IOException {
         
         String content = getContent(HTTP_BASE_URL + "/whiteboard_r6", CONTENT_TYPE_PLAIN);
