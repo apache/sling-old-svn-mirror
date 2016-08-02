@@ -22,6 +22,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -66,10 +67,6 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
 
     public static final String DEFAULT_TEXT_URL = "context:/resources/provisioning/model.txt";
     
-    /** Special value for model section name config parameter, which indicates that
-     *  the configured URL provides raw repoinit statements */ 
-    public static final String RAW_SECTION_MARKER = "<RAW>";
-    
     @Property(
             label="Text URL", 
             description="URL of the source text that provides repoinit statements."
@@ -83,12 +80,22 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     @Property(
             label="Model section name", 
             description=
-                "Optional provisioning model additional section name (without leading colon) used to extract"
-                + " repoinit statements from the raw text provided by the configured source text URL. Leave empty or set to <RAW> to consider the content"
-                + " provided by that URL to already be in repoinit format", 
+                "If using the provisioning model format, this specifies the additional section name (without leading colon) used to extract"
+                + " repoinit statements from the raw text provided by the configured source text URL.",
             value=DEFAULT_MODEL_SECTION_NAME)
     public static final String PROP_MODEL_SECTION_NAME = "model.section.name";
     private String modelSectionName;
+    
+    @Property(
+            label="Text format", 
+            description=
+                "The format to use to interpret the text provided by the configured source text URL. "
+                + "That text can be either a Sling provisioning model with repoinit statements embedded in additional sections,"
+                + " or raw repoinit statements",
+            value=DEFAULT_MODEL_SECTION_NAME)
+    public static final String PROP_TEXT_FORMAT = "text.format";
+    public static enum TextFormat { RAW, MODEL };
+    private TextFormat textFormat;
     
     @Reference
     private RepoInitParser parser;
@@ -99,12 +106,43 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     @Activate
     public void activate(Map<String, Object> config) {
         textURL = PropertiesUtil.toString(config.get(PROP_TEXT_URL), DEFAULT_TEXT_URL);
+        
+        final String fmt = PropertiesUtil.toString(config.get(PROP_TEXT_FORMAT), TextFormat.MODEL.toString());
+        try {
+            textFormat = TextFormat.valueOf(fmt);
+        } catch(Exception e) {
+            throw new IllegalArgumentException("Invalid text format '" + fmt + "',"
+                    + " valid values are " + Arrays.asList(TextFormat.values()));
+        }
+        
         modelSectionName = PropertiesUtil.toString(config.get(PROP_MODEL_SECTION_NAME), DEFAULT_MODEL_SECTION_NAME);
+        
+        log.debug("Activated: {}", this.toString());
+    }
+    
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName()).append(": ");
+        sb.append(PROP_TEXT_URL).append("=").append(textURL).append(", ");
+        sb.append(PROP_TEXT_FORMAT).append("=").append(textFormat).append(", ");
+        sb.append(PROP_MODEL_SECTION_NAME).append("=").append(modelSectionName);
+        return sb.toString();
     }
     
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
         final String repoinit = getRepoInitText();
+        
+        if(TextFormat.MODEL.equals(textFormat)) {
+            if(modelSectionName == null) {
+                throw new IllegalStateException("Section name is null, cannot read model");
+            }
+            if(modelSectionName.trim().length() == 0) {
+                throw new IllegalStateException("Empty " + PROP_MODEL_SECTION_NAME + " is not supported anymore, please use " 
+                        + PROP_TEXT_FORMAT + " to specify the input text format");
+            }
+        }
         
         // loginAdministrative is ok here, definitely an admin operation
         final Session s = repo.loginAdministrative(null);
@@ -142,8 +180,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
         final String rawText = getRawRepoInitText();
         log.debug("Raw text from {}: \n{}", textURL, rawText);
         log.info("Got {} characters from {}", rawText.length(), textURL);
-        final boolean parseRawText = modelSectionName.trim().length() == 0 || RAW_SECTION_MARKER.equals(modelSectionName);
-        if (parseRawText) {
+        if(TextFormat.RAW.equals(textFormat)) {
             log.info("Parsing raw repoinit statements from {}", textURL);
             return rawText;
         } else {
@@ -152,6 +189,9 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             try {
                 final Model model = ModelReader.read(reader, textURL);
                 final StringBuilder sb = new StringBuilder();
+                if(modelSectionName == null) {
+                    throw new IllegalStateException("Model section name is null, cannot read model");
+                }
                 for (final Feature feature : model.getFeatures()) {
                     for (final Section section : feature.getAdditionalSections(modelSectionName)) {
                         sb.append("# ").append(modelSectionName).append(" from ").append(feature.getName()).append("\n");
