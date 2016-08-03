@@ -21,13 +21,12 @@ package org.apache.sling.contextaware.config.impl;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
-import org.osgi.framework.Bundle;
+import org.osgi.service.converter.Converter;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
@@ -35,15 +34,17 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private final Resource contentResource;
     private final ConfigurationResourceResolver configurationResourceResolver;
-    private final Bundle bundle;
+
+    private final Converter converter;
 
     private String configName;
 
-    public ConfigurationBuilderImpl(Resource resource,
-            ConfigurationResourceResolver configurationResourceResolver, Bundle bundle) {
+    public ConfigurationBuilderImpl(final Resource resource,
+            final ConfigurationResourceResolver configurationResourceResolver,
+            final Converter converter) {
         this.contentResource = resource;
         this.configurationResourceResolver = configurationResourceResolver;
-        this.bundle = bundle;
+        this.converter = converter;
     }
 
     @Override
@@ -92,7 +93,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (clazz == ValueMap.class) {
             return (T)props;
         }
-        return Annotations.toObject(clazz, props, bundle, true);
+        // TODO - handle conversion exception
+        return converter.convert(props).to(clazz);
     }
 
     @SuppressWarnings("unchecked")
@@ -110,8 +112,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (clazz == ValueMap.class) {
             return (Collection<T>)propsList;
         }
+        // TODO - handle conversion exception
         return propsList.stream()
-            .map(props -> Annotations.toObject(clazz, props, bundle, true))
+            .map(props -> converter.convert(props).to(clazz))
             .collect(Collectors.toList());
     }
 }
