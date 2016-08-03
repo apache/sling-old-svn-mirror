@@ -28,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Getting context-specific configuration resources for a given resource context.
- * This is a low-level interface for supporting advanced usecases. If you just want to fetch
+ * This is a low-level interface for supporting advanced use cases. If you just want to fetch
  * some configuration parameters {@link ConfigurationResolver} is the right place.
  */
 @ProviderType
@@ -36,6 +36,8 @@ public interface ConfigurationResourceResolver {
 
     /**
      * Get a context-specific singleton configuration resource defined by the given configuration name.
+     *
+     * TODO - can we always ensure to return a resource?
      * @param resource Context resource to fetch configuration for
      * @param configName Configuration name or relative path.
      * @return Configuration resource

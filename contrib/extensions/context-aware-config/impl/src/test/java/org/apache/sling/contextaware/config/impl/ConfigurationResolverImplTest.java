@@ -36,6 +36,8 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.util.ConverterFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -52,15 +54,16 @@ public class ConfigurationResolverImplTest {
     @Before
     public void setUp() {
         context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
+        context.registerService(Converter.class, ConverterFactory.standardConverter());
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1")
                 .put("intParam", 111)
                 .put("boolParam", true)
                 .build());
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.AllTypesConfig", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.AllTypesConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue2")
                 .put("intParam", 222)
                 .put("longParam", 3456L)
@@ -68,22 +71,22 @@ public class ConfigurationResolverImplTest {
                 .put("boolParam", true)
                 .build());
 
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.NestedConfig", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.NestedConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue3")
                 .build());
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.NestedConfig/subConfig", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.NestedConfig/subConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue4")
                 .put("intParam", 444)
                 .put("boolParam", true)
                 .build());
 
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.ListConfig/1", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.ListConfig/1", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1.1")
                 .build());
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.ListConfig/2", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.ListConfig/2", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1.2")
                 .build());
-        context.create().resource("/conf/content/site2/org.apache.sling.config.example.ListConfig/3", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.config.example.ListConfig/3", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1.3")
                 .build());
 
