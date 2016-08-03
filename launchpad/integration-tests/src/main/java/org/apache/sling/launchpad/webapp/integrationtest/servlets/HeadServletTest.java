@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.Header;
@@ -44,6 +45,8 @@ public class HeadServletTest {
     
     /** Test content provided by the test-services bundle */
     public static final String PNG_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/sling-logo.png";
+    
+    public static final String NONEXISTENT_URL = HttpTestBase.HTTP_BASE_URL + "/notfound-" + UUID.randomUUID().toString();  
     
     private void assertResponseHeader(HttpMethod m, String name, String expectedRegex) {
         final Header h = m.getResponseHeader(name);
@@ -101,5 +104,17 @@ public class HeadServletTest {
         assertEquals(200, status);
         assertNull("Expecting null body", head.getResponseBody());
         assertCommonHeaders(head, "image/png");
+    }
+    
+    @Test
+    public void nonexistentGet() throws IOException {
+        final GetMethod get = new GetMethod(NONEXISTENT_URL);
+        assertEquals(404, H.getHttpClient().executeMethod(get));
+    }
+    
+    @Test
+    public void nonexistentHead() throws IOException {
+        final HeadMethod head = new HeadMethod(NONEXISTENT_URL);
+        assertEquals(404, H.getHttpClient().executeMethod(head));
     }
 }
