@@ -39,11 +39,11 @@ public class HeadServletTest {
 
     private final HttpTest H = new HttpTest();
     
-    /** Assumes the default Sling content is present */
-    public static final String HTML_URL = HttpTestBase.HTTP_BASE_URL + "/index.html";
+    /** Test content provided by the test-services bundle */
+    public static final String HTML_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/some.html";
     
-    /** Assumes the default Sling content is present */
-    public static final String PNG_URL = HttpTestBase.HTTP_BASE_URL + "/sling-logo.png";
+    /** Test content provided by the test-services bundle */
+    public static final String PNG_URL = HttpTestBase.HTTP_BASE_URL + "/sling-test/sling-logo.png";
     
     private void assertResponseHeader(HttpMethod m, String name, String expectedRegex) {
         final Header h = m.getResponseHeader(name);
@@ -72,7 +72,7 @@ public class HeadServletTest {
     @Test
     public void htmlGet() throws IOException {
         final String content = H.getContent(HTML_URL, HttpTest.CONTENT_TYPE_HTML);
-        assertTrue("Expecting non-empty content with GET request", content.trim().length() > 0); 
+        HttpTest.assertContains(content, "This is some HTML for testing Sling.");
     }
     
     @Test
