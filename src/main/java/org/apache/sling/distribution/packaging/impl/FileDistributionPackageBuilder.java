@@ -91,10 +91,10 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
             Object remoteId = info.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
             if (remoteId != null) {
                 name = remoteId.toString();
-                log.info("preserving remote id {}", name);
+                log.debug("preserving remote id {}", name);
             } else {
                 name = "distrpck-read-" + System.nanoTime();
-                log.info("generating a new id {}", name);
+                log.debug("generating a new id {}", name);
             }
             File file = File.createTempFile(name, "." + getType(), tempDirectory);
             outputStream = new BufferedOutputStream(new FileOutputStream(file));
