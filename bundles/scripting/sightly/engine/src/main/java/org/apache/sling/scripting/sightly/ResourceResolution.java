@@ -92,9 +92,11 @@ public final class ResourceResolution {
             }
             for (String searchPath : resolver.getSearchPath()) {
                 String componentPath = ResourceUtil.normalize(searchPath + "/" + resourceType);
-                Resource componentResource = resolver.getResource(componentPath);
-                if (componentResource != null) {
-                    return componentResource;
+                if (componentPath != null) {
+                    Resource componentResource = resolver.getResource(componentPath);
+                    if (componentResource != null) {
+                        return componentResource;
+                    }
                 }
             }
         }

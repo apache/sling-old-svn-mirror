@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.utils;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.sling.scripting.sightly.impl.engine.extension.URIManipulationFilterExtension;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -44,21 +45,30 @@ public class PathInfoTest {
     private static final String SUFFIX = "/suffix1/suffix2";
     private static final String FRAGMENT = "fragment";
 
-    private static final PathInfo emptyPathInfo = new PathInfo(EMPTY);
-    private static final PathInfo simplePath = new PathInfo(PATH);
-    private static final PathInfo pathWithExtension = new PathInfo(PATH + "." + EXTENSION);
-    private static final PathInfo pathWithSelectors = new PathInfo(PATH + "." + SELECTOR_STRING + "." + EXTENSION);
-    private static final PathInfo pathWithSelectorsSuffix = new PathInfo(PATH + "." + SELECTOR_STRING + "." + EXTENSION + SUFFIX);
-    private static final PathInfo pathWithScheme = new PathInfo(SCHEME + ":" + "//" + HOST);
-    private static final PathInfo pathWithSchemePath = new PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH);
-    private static final PathInfo pathWithSchemePathExtension = new PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH + "." + EXTENSION);
-    private static final PathInfo pathWithSchemePathExtensionSelectors = new PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH + "." +
+    private static final URIManipulationFilterExtension.PathInfo emptyPathInfo = new URIManipulationFilterExtension.PathInfo(EMPTY);
+    private static final URIManipulationFilterExtension.PathInfo simplePath = new URIManipulationFilterExtension.PathInfo(PATH);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithExtension = new URIManipulationFilterExtension.PathInfo(PATH + "." + EXTENSION);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSelectors = new URIManipulationFilterExtension.PathInfo(PATH + "." + SELECTOR_STRING + "." + EXTENSION);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSelectorsSuffix = new URIManipulationFilterExtension.PathInfo(PATH + "." + SELECTOR_STRING + "." + EXTENSION + SUFFIX);
+    private static final URIManipulationFilterExtension.PathInfo pathWithScheme = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePath = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePathExtension = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH + "." + EXTENSION);
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePathExtensionSelectors = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH + "." +
             SELECTOR_STRING + "." + EXTENSION);
-    private static final PathInfo pathWithSchemePathExtensionSelectorsSuffix = new PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH +
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePathExtensionSelectorsSuffix = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST + ABSOLUTE_PATH +
             "." + SELECTOR_STRING + "." + EXTENSION + SUFFIX);
-    private static final PathInfo pathWithSchemePathExtensionSelectorsSuffixFragment = new PathInfo(SCHEME + ":" + "//" + HOST +
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePathExtensionSelectorsSuffixFragment = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST +
             ABSOLUTE_PATH + "." + SELECTOR_STRING + "." + EXTENSION + SUFFIX + "#" + FRAGMENT);
-    private static final PathInfo pathWithSchemePortPathExtensionSelectorsSuffixFragment = new PathInfo(SCHEME + ":" + "//" + HOST +
+    private static final URIManipulationFilterExtension.PathInfo
+            pathWithSchemePortPathExtensionSelectorsSuffixFragment = new URIManipulationFilterExtension.PathInfo(SCHEME + ":" + "//" + HOST +
             ":" + PORT + ABSOLUTE_PATH + "." + SELECTOR_STRING + "." + EXTENSION + SUFFIX + "#" + FRAGMENT);
 
     @Test

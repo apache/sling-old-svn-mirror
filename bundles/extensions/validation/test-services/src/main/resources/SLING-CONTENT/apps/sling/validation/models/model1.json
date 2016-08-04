@@ -13,13 +13,13 @@
                 "jcr:primaryType" : "nt:unstructured",
                 "org.apache.sling.validation.impl.validators.RegexValidator": {
                     "jcr:primaryType" : "nt:unstructured",
-                    "validatorArguments" : ["regex=^\\p{L}+$"]
+                    "validatorArguments" : ["regex=^\\\p{Upper}+$"],
+                    "severity" : "10"
                 }
             }
         },
         "field2" : {
-            "jcr:primaryType" : "nt:unstructured",
-            "propertyType" : "date"
+            "jcr:primaryType" : "nt:unstructured"
         }
     }
 }

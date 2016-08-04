@@ -26,9 +26,9 @@
  * being an abstract base implementation from which concrete
  * implementations may inherit.
  *
- * @version 1.1.0
+ * @version 1.2.0
  */
-@Version("1.1.0")
+@Version("1.2.0")
 package org.apache.sling.auth.core.spi;
 
 import aQute.bnd.annotation.Version;

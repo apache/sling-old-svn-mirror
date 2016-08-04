@@ -19,5 +19,5 @@
 /**
  * Adapter for NoSQL resource provider implementation.
  */
-@aQute.bnd.annotation.Version("0.5")
+@aQute.bnd.annotation.Version("2.0.0")
 package org.apache.sling.nosql.generic.adapter;

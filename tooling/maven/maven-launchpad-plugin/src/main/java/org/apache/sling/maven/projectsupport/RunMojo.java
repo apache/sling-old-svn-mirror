@@ -19,17 +19,16 @@ package org.apache.sling.maven.projectsupport;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.osgi.framework.BundleException;
 
 /**
  * Run a Launchpad application.
- *
- * @goal run
- * @requiresDependencyResolution test
- *
  */
+@Mojo( name = "run", requiresDependencyResolution = ResolutionScope.TEST)
 public class RunMojo extends AbstractLaunchpadStartingMojo {
 
 

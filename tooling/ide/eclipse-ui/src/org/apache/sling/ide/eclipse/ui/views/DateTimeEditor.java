@@ -20,8 +20,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrProperty;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;

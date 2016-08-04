@@ -20,21 +20,51 @@ package org.apache.sling.spi.resource.provider;
 
 import java.util.Set;
 
-import org.apache.sling.api.resource.observation.ResourceChange;
+import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.path.PathSet;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A observer configuration describes active configurations from registered listeners.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ObserverConfiguration {
 
+    /**
+     * {@code true} if a listener is interested in external events.
+     * @return {@code true} if a listener is interested in external events.
+     */
     boolean includeExternal();
 
-    Set<String> getPaths();
+    /**
+     * The set of paths this listener is interested in. Each entry is absolute.
+     * @return Non empty set of paths
+     */
+    @Nonnull PathSet getPaths();
 
-    Set<String> getExcludedPaths();
+    /**
+     * The set of excluded paths.
+     * All the paths are sub paths from one entry of {@link #getPaths()}
+     * @return A set of excluded paths, might be empty.
+     */
+    @Nonnull PathSet getExcludedPaths();
 
-    Set<ResourceChange.ChangeType> getChangeTypes();
+    /**
+     * The set of types listeners are interested in.
+     * @return Non empty set of types
+     */
+    @Nonnull Set<ResourceChange.ChangeType> getChangeTypes();
+
+    /**
+     * Checks whether a path matches one of the paths of this configuration
+     * but is not in the excluded paths set.
+     * @param path The path to check
+     * @return {@code true} if the path matches the configuration.
+     */
+    boolean matches(String path);
 }

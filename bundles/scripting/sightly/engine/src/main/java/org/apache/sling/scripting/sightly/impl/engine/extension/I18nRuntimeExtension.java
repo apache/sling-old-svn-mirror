@@ -22,29 +22,29 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import javax.script.Bindings;
 
+import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.impl.filter.I18nFilter;
-import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
 @Service(RuntimeExtension.class)
 @Properties({
-        @Property(name = RuntimeExtension.NAME, value = I18nFilter.FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.I18N)
 })
 public class I18nRuntimeExtension implements RuntimeExtension {
 
@@ -52,19 +52,21 @@ public class I18nRuntimeExtension implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
-        ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 2);
-        String text = RenderUtils.toString(arguments[0]);
+        ExtensionUtils.checkArgumentCount(RuntimeFunction.I18N, arguments, 2);
+        RuntimeObjectModel runtimeObjectModel = renderContext.getObjectModel();
+        String text = runtimeObjectModel.toString(arguments[0]);
         Map<String, Object> options = (Map<String, Object>) arguments[1];
-        String locale = RenderUtils.toString(options.get(I18nFilter.LOCALE_OPTION));
-        String hint = RenderUtils.toString(options.get(I18nFilter.HINT_OPTION));
+        String locale = runtimeObjectModel.toString(options.get("locale"));
+        String hint = runtimeObjectModel.toString(options.get("hint"));
+        String basename = runtimeObjectModel.toString(options.get("basename"));
         final Bindings bindings = renderContext.getBindings();
-        return get(bindings, text, locale, hint);
+        return get(bindings, text, locale, basename, hint);
     }
 
-    private String get(final Bindings bindings, String text, String locale, String hint) {
+    private String get(final Bindings bindings, String text, String locale, String basename, String hint) {
 
-        final SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+        final SlingScriptHelper slingScriptHelper = BindingsUtils.getHelper(bindings);
+        final SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
         final ResourceBundleProvider resourceBundleProvider = slingScriptHelper.getService(ResourceBundleProvider.class);
         if (resourceBundleProvider != null) {
             String key = text;
@@ -75,21 +77,40 @@ public class I18nRuntimeExtension implements RuntimeExtension {
                 Enumeration<Locale> requestLocales = request.getLocales();
                 while (requestLocales.hasMoreElements()) {
                     Locale l = requestLocales.nextElement();
-                    ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
-                    if (resourceBundle != null && resourceBundle.containsKey(key)) {
-                        return resourceBundle.getString(key);
+                    String translation = getTranslation(resourceBundleProvider, basename, key, l);
+                    if (translation != null) {
+                        return translation;
                     }
                 }
             } else {
-                Locale l = new Locale(locale);
-                ResourceBundle resourceBundle = resourceBundleProvider.getResourceBundle(l);
-                if (resourceBundle != null && resourceBundle.containsKey(key)) {
-                    return resourceBundle.getString(key);
+                try {
+                    Locale l = LocaleUtils.toLocale(locale);
+                    String translation = getTranslation(resourceBundleProvider, basename, key, l);
+                    if (translation != null) {
+                        return translation;
+                    }
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("Invalid locale detected: {}.", locale);
+                    return text;
                 }
+
             }
         }
         LOG.warn("No translation found for string '{}' using expression provided locale '{}' or default locale '{}'",
                 new String[] {text, locale, request.getLocale().getLanguage()});
         return text;
+    }
+
+    private String getTranslation(ResourceBundleProvider resourceBundleProvider, String basename, String key, Locale locale) {
+        ResourceBundle resourceBundle;
+        if (StringUtils.isNotEmpty(basename)) {
+            resourceBundle = resourceBundleProvider.getResourceBundle(basename, locale);
+        } else {
+            resourceBundle = resourceBundleProvider.getResourceBundle(locale);
+        }
+        if (resourceBundle != null && resourceBundle.containsKey(key)) {
+            return resourceBundle.getString(key);
+        }
+        return null;
     }
 }

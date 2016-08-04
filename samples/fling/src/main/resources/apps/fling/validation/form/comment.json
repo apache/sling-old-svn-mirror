@@ -1,0 +1,37 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "sling:resourceType": "sling/validation/model",
+  "applicablePaths": [
+    "/content/fling/"
+  ],
+  "validatedResourceType": "fling/form/comment",
+  "properties": {
+    "jcr:primaryType": "nt:unstructured",
+    "name": {
+      "jcr:primaryType": "nt:unstructured",
+      "propertyType": "string",
+      "validators": {
+        "jcr:primaryType": "nt:unstructured",
+        "org.apache.sling.validation.impl.validators.RegexValidator": {
+          "jcr:primaryType": "nt:unstructured",
+          "validatorArguments": ["regex=^\\p{L}+$"]
+        }
+      }
+    },
+    "comment": {
+      "jcr:primaryType": "nt:unstructured",
+      "propertyType": "string",
+      "validators": {
+        "jcr:primaryType": "nt:unstructured",
+        "org.apache.sling.samples.fling.validation.CommentValidator": {
+          "jcr:primaryType": "nt:unstructured",
+          "validatorArguments": ["comment=I love Apache Sling!"]
+        },
+        "org.apache.sling.validation.impl.validators.RegexValidator": {
+          "jcr:primaryType": "nt:unstructured",
+          "validatorArguments": ["regex=^\\D*$"]
+        }
+      }
+    }
+  }
+}

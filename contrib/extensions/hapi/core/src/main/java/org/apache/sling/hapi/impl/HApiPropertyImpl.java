@@ -105,7 +105,7 @@ public class HApiPropertyImpl implements HApiProperty {
         return "HApiProperty{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", type=" + type +
+                ", type=" + type.getPath() +
                 ", multiple=" + multiple +
                 '}';
     }

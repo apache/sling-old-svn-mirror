@@ -19,27 +19,40 @@
 
 package org.apache.sling.distribution.queue;
 
-
+/**
+ * The status of a certain {@link DistributionQueue}
+ */
 public final class DistributionQueueStatus {
-    final int itemsCount;
+    private final int itemsCount;
 
-    final DistributionQueueState queueState;
+    private final DistributionQueueState queueState;
 
     public DistributionQueueStatus(int itemsCount, DistributionQueueState queueState) {
-
         this.itemsCount = itemsCount;
         this.queueState = queueState;
     }
 
 
+    /**
+     * get the no. of items in the queue
+     * @return the no. of items in the queue
+     */
     public int getItemsCount() {
         return itemsCount;
     }
 
+    /**
+     * get the state associated with the status of this queue
+     * @return a {@link DistributionQueueItemState}
+     */
     public DistributionQueueState getState() {
         return queueState;
     }
 
+    /**
+     * check if the queue is empty
+     * @return {@code true} if the queue is empty
+     */
     public boolean isEmpty() {
         return itemsCount == 0;
     }

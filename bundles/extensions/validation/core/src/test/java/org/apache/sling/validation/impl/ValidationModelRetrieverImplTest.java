@@ -23,21 +23,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
 import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.collections.MultiMap;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.validation.Validator;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.ValidationModelProvider;
+import org.apache.sling.validation.model.spi.ValidationModelProvider;
+import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Description;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
@@ -71,7 +69,7 @@ public class ValidationModelRetrieverImplTest {
         int counter = 0;
 
         @Override
-        public @Nonnull Collection<ValidationModel> getModel(@Nonnull String relativeResourceType,
+        public @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
                 @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,

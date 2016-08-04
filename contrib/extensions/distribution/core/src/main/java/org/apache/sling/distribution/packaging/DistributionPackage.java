@@ -22,17 +22,16 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 
-import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * A distribution package
  */
-@ConsumerType
+@ProviderType
 public interface DistributionPackage {
 
     /**
-     * get package id. the id is a unique string that can be used to retrieve
-     * the package from an {@link DistributionPackageExporter}
+     * get package id. the id is a unique string that can be used to identify the package
      *
      * @return the package id
      */
@@ -56,6 +55,12 @@ public interface DistributionPackage {
      */
     @Nonnull
     InputStream createInputStream() throws IOException;
+
+    /**
+     *
+     * @return the size in bytes
+     */
+    long getSize();
 
     /**
      * closes all resources associated with this instance

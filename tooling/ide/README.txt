@@ -8,23 +8,10 @@ Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build environment. 
-It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
+It requires a Java 7 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.4 or later. We recommend to use the latest Maven version.
 
-For the moment, this project depends on unreleased Maven artifacts which
-are not part the Apache Snapshots Maven repository. As a prerequisite, you need
-to install  the following projects' artifacts in the local Maven repository:
-
-- The Sling Tooling Support Install bundle, located at
-  http://svn.apache.org/viewvc/sling/trunk/tooling/support/install
-
-For each of these locations, install the Maven artifacts in your local
-Maven repository using the following command:
-
-    mvn install
-
-After installing them, you can can compile and package the p2 update site
-using the following command:
+You can can compile and package the p2 update site using the following command:
 
     mvn package
 
@@ -43,7 +30,7 @@ See the Subversion documentation for other source control features.
 How to run the Sling IDE tools in a test Eclipse instance
 ---------------------------------------------------------
 
-This howto assumes that you are running Eclipse Kepler with the Plug-In 
+This howto assumes that you are running Eclipse Mars or Later with the Plug-In 
 Development Environment and Maven features installed. You should have
 previously built the projects using
 
@@ -60,7 +47,7 @@ After the projects are imported, you need to set your target environment to
 ensure that all dependencies are met and that you are working against the
 project's declared baseline. To do that, open the following file in Eclipse
 
-    target-definition/org.apache.sling.ide.target-definition-dev.target
+    target-definition/org.apache.sling.ide.target-definition.target
 
 In the target editor which appears, click 'Set as Target Platform'. Once
 the target platform is set up, you can create a new launch configuration.

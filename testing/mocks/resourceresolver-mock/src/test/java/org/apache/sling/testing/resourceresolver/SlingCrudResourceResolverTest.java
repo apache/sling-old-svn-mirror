@@ -36,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -181,6 +182,19 @@ public class SlingCrudResourceResolverTest {
     }
 
     @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource resource1 = resourceResolver.getResource("/");
+
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertEquals(1, children.size());
+        assertEquals("test", children.get(0).getName());
+
+        children = Lists.newArrayList(resource1.getChildren());
+        assertEquals(1, children.size());
+        assertEquals("test", children.get(0).getName());
+    }
+
+    @Test
     public void testBinaryData() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
 
@@ -234,4 +248,18 @@ public class SlingCrudResourceResolverTest {
         assertEquals("/", rootResource.getPath());
     }
 
+    @Test
+    public void testResolveExistingResource() {
+        Resource resource = resourceResolver.resolve(testRoot.getPath() + "/node1");
+        assertNotNull(resource);
+        assertEquals(testRoot.getPath() + "/node1", resource.getPath());
+    }
+    
+    @Test
+    public void testResolveNonexistingResource() {
+        Resource resource = resourceResolver.resolve("/non/existing/path");
+        assertTrue(resource instanceof NonExistingResource);
+        assertEquals("/non/existing/path", resource.getPath());
+    }
+    
 }

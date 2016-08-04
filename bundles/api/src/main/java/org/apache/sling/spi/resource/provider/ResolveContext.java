@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The resolve context is passed to most of the methods of the {@link ResourceProvider}
@@ -33,6 +33,8 @@ import aQute.bnd.annotation.ProviderType;
  *
  * If the provider requires authentication, the object returned by {@link ResourceProvider#authenticate(Map)}
  * is returned in {@link #getProviderState()}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ResolveContext<T> {
@@ -42,14 +44,6 @@ public interface ResolveContext<T> {
      * @return The resource resolver.
      */
     @Nonnull ResourceResolver getResourceResolver();
-
-    /**
-     * Return optional parameters for resolving the resource.
-     * For example if the resource is resolved through an http request, this
-     * map could contain the path parameters of the url.
-     * @return A non empty map with parameters or {@code null}.
-     */
-    @CheckForNull Map<String, String> getResolveParameters();
 
     /**
      * This is the object returned by {@link ResourceProvider#authenticate(Map)}
@@ -67,7 +61,7 @@ public interface ResolveContext<T> {
     /**
      * Return the parent resource provider.
      * If the parent should be used for resolving, a context created with
-     * {@link #getParentResolveContext()} should be passed to that
+     * {@link ResolveContext#getParentResolveContext()} should be passed to that
      * instance.
      * @return The parent provider or {@code null} if there is no parent.
      */

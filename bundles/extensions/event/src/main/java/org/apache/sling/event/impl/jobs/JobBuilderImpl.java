@@ -56,7 +56,7 @@ public class JobBuilderImpl implements JobBuilder {
 
     @Override
     public Job add(final List<String> errors) {
-        return this.jobManager.addJob(this.topic, null, this.properties, errors);
+        return this.jobManager.addJob(this.topic, this.properties, errors);
     }
 
     @Override
@@ -65,14 +65,6 @@ public class JobBuilderImpl implements JobBuilder {
                 this.topic,
                 this.properties,
                 UUID.randomUUID().toString(),
-                this.jobManager.getJobScheduler());
-    }
-
-    public ScheduleBuilder schedule(final String name) {
-        return new JobScheduleBuilderImpl(
-                this.topic,
-                this.properties,
-                name,
                 this.jobManager.getJobScheduler());
     }
 }

@@ -37,11 +37,11 @@ public class JobsImplTest {
         final Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(Job.PROPERTY_JOB_CREATED, now);
 
-        final JobImpl job1 = new JobImpl("test", null, "hello_1", properties);
-        final JobImpl job2 = new JobImpl("test", null, "hello_2", properties);
-        final JobImpl job3 = new JobImpl("test", null, "hello_4", properties);
-        final JobImpl job4 = new JobImpl("test", null, "hello_30", properties);
-        final JobImpl job5 = new JobImpl("test", null, "hello_50", properties);
+        final JobImpl job1 = new JobImpl("test", "hello_1", properties);
+        final JobImpl job2 = new JobImpl("test", "hello_2", properties);
+        final JobImpl job3 = new JobImpl("test", "hello_4", properties);
+        final JobImpl job4 = new JobImpl("test", "hello_30", properties);
+        final JobImpl job5 = new JobImpl("test", "hello_50", properties);
 
         final List<JobImpl> list = new ArrayList<JobImpl>();
         list.add(job5);

@@ -191,7 +191,7 @@ public class JobSchedulerImpl
     }
 
     /**
-     * Remove a scheduled job
+     * Unschedule a scheduled job
      */
     public void unscheduleJob(final ScheduledJobInfoImpl info) {
         synchronized ( this.scheduledJobs ) {
@@ -199,6 +199,14 @@ public class JobSchedulerImpl
                 this.stopScheduledJob(info);
             }
         }
+    }
+
+    /**
+     * Remove a scheduled job
+     */
+    public void removeJob(final ScheduledJobInfoImpl info) {
+        this.unscheduleJob(info);
+        this.scheduledJobHandler.remove(info);
     }
 
     /**
@@ -253,7 +261,8 @@ public class JobSchedulerImpl
      * @param info The scheduling info
      */
     private void stopScheduledJob(final ScheduledJobInfoImpl info) {
-        if ( this.active.get() ) {
+        final Scheduler localScheduler = this.scheduler;
+        if ( localScheduler != null ) {
             this.configuration.getAuditLogger().debug("SCHEDULED STOP name={}, topic={}, properties={} : {}",
                     new Object[] {info.getName(),
                                   info.getJobTopic(),
@@ -261,7 +270,7 @@ public class JobSchedulerImpl
                                   info.getSchedules()});
             for(int index = 0; index<info.getSchedules().size(); index++) {
                 final String name = info.getSchedulerJobId() + "-" + String.valueOf(index);
-                this.scheduler.unschedule(name);
+                localScheduler.unschedule(name);
             }
         }
     }
@@ -271,6 +280,10 @@ public class JobSchedulerImpl
      */
     @Override
     public void execute(final JobContext context) {
+        if ( !active.get() ) {
+            // not active anymore, simply return
+            return;
+        }
         final ScheduledJobInfoImpl info = (ScheduledJobInfoImpl) context.getConfiguration().get(PROPERTY_READ_JOB);
 
         if ( info.isSuspended() ) {
@@ -317,9 +330,11 @@ public class JobSchedulerImpl
             if ( path != null && path.startsWith(this.configuration.getScheduledJobsPath(true)) ) {
                 if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
                     // removal
+                    logger.debug("Remove scheduled job {}, event {}", path, event.getTopic());
                     this.scheduledJobHandler.handleRemove(path);
                 } else {
                     // add or update
+                    logger.debug("Add or update scheduled job {}, event {}", path, event.getTopic());
                     this.scheduledJobHandler.handleAddUpdate(path);
                 }
             }

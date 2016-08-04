@@ -19,6 +19,7 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -37,14 +39,16 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ChangeListener;
+import org.apache.sling.resourceresolver.impl.providers.RuntimeServiceImpl;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -53,6 +57,8 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceResolverFactoryActivator/code> keeps track of required services for the
@@ -60,7 +66,6 @@ import org.osgi.service.event.EventAdmin;
  * One all required providers and provider factories are available a resource resolver factory
  * is registered.
  *
- * TODO : Should we implement modifiable? It would be easy but what about long running resolvers?
  */
 @Component(
      name = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl",
@@ -73,15 +78,16 @@ import org.osgi.service.event.EventAdmin;
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 })
 @References({
-    @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-    @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-public class ResourceResolverFactoryActivator implements Runnable {
+public class ResourceResolverFactoryActivator {
 
     private static final class FactoryRegistration {
         /** Registration .*/
         public volatile ServiceRegistration factoryRegistration;
+
+        /** Runtime registration. */
+        public volatile ServiceRegistration runtimeRegistration;
 
         public volatile CommonResourceResolverFactoryImpl commonFactory;
     }
@@ -132,13 +138,20 @@ public class ResourceResolverFactoryActivator implements Runnable {
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
-              value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory",
-              label = "Required Providers",
+              label = "Required Providers (Deprecated)",
               description = "A resource resolver factory is only " +
                              "available (registered) if all resource providers mentioned in this configuration " +
                              "are available. Each entry is either a service PID or a filter expression.  " +
                              "Invalid filters are ignored.")
-    private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providers";
+    private static final String PROP_REQUIRED_PROVIDERS_LEGACY = "resource.resolver.required.providers";
+
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            value = "JCR",
+            label = "Required Providers ",
+            description = "A resource resolver factory is only " +
+                           "available (registered) if all resource providers mentioned in this configuration " +
+                           "are available. Each entry is refers to the name of a registered provider.")
+    private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providernames";
 
     /**
      * The resolver.virtual property has no default configuration. But the Sling
@@ -191,7 +204,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
               description = "The maximum number of cached vanity path entries. " +
                             "Default is -1 (no limit)")
     private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.vanitypath.maxEntries";
-    
+
     private static final boolean DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP = true;
     @Property(boolValue = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP,
               label = "Limit the maximum number of cached vanity path entries only at startup",
@@ -243,29 +256,40 @@ public class ResourceResolverFactoryActivator implements Runnable {
                           + "for memory leaks caused by objects hold from that resource provider.")
     private static final String PROP_PARANOID_PROVIDER_HANDLING = "resource.resolver.providerhandling.paranoid";
 
+    private static final boolean DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING = false;
+    @Property(boolValue = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING,
+              label = "Log resource resolver closing",
+              description = "When enabled CRUD operations with a closed resource resolver will log a stack trace " +
+                  "with the point where the used resolver was closed. It's advisable to not enable this feature on " +
+                  "production systems.")
+    private static final String PROP_LOG_RESOURCE_RESOLVER_CLOSING = "resource.resolver.log.closing";
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
     /** all mappings */
-    private Mapping[] mappings;
+    private volatile Mapping[] mappings;
 
     /** The fake URLs */
-    private BidiMap virtualURLMap;
+    private volatile BidiMap virtualURLMap;
 
     /** <code>true</code>, if direct mappings from URI to handle are allowed */
-    private boolean allowDirect = false;
+    private volatile boolean allowDirect = false;
 
     /** the search path for ResourceResolver.getResource(String) */
-    private String[] searchPath;
+    private volatile String[] searchPath;
 
     /** the root location of the /etc/map entries */
-    private String mapRoot;
+    private volatile String mapRoot;
 
     /** whether to mangle paths with namespaces or not */
-    private boolean mangleNamespacePrefixes;
+    private volatile boolean mangleNamespacePrefixes;
 
-    /** The root provider entry. */
-    private final RootResourceProviderEntry rootProviderEntry = new RootResourceProviderEntry();
+    /** paranoid provider handling. */
+    private volatile boolean paranoidProviderHandling;
 
     /** Event admin. */
     @Reference
@@ -278,55 +302,46 @@ public class ResourceResolverFactoryActivator implements Runnable {
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
+    volatile ResourceProviderTracker resourceProviderTracker;
+
+    volatile ResourceChangeListenerWhiteboard changeListenerWhiteboard;
+
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
-    private int defaultVanityPathRedirectStatus;
+    private volatile int defaultVanityPathRedirectStatus;
 
     /** vanityPath enabled? */
-    private boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
+    private volatile boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
 
     /** alias resource resolution optimization enabled? */
-    private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
+    private volatile boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
 
     /** max number of cache vanity path entries */
-    private long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
-    
+    private volatile long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
+
     /** limit max number of cache vanity path entries only at startup*/
-    private boolean maxCachedVanityPathEntriesStartup = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP;
+    private volatile boolean maxCachedVanityPathEntriesStartup = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP;
 
     /** Maximum number of vanity bloom filter bytes */
-    private int vanityBloomFilterMaxBytes = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES;
+    private volatile int vanityBloomFilterMaxBytes = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES;
 
     /** vanity paths will have precedence over existing /etc/map mapping? */
-    private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
+    private volatile boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
 
+    /** log the place where a resource resolver is closed */
+    private volatile boolean logResourceResolverClosing = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING;
 
     /** Vanity path whitelist */
-    private String[] vanityPathWhiteList;
+    private volatile String[] vanityPathWhiteList;
 
     /** Vanity path blacklist */
-    private String[] vanityPathBlackList;
+    private volatile String[] vanityPathBlackList;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
     /** Factory registration. */
     private volatile FactoryRegistration factoryRegistration;
-
-    /** Background thread coordination. */
-    private final Object coordinator = new Object();
-
-    /** Paranoid provider handling? */
-    private volatile boolean paranoidProviderHandling;
-
-    /** Background thread operation */
-    private enum BG_OP {
-        CHECK,                // check preconditions
-        UNREGISTER_AND_CHECK, // unregister first, then check preconditions
-        STOP                  // stop
-    }
-
-    private final List<BG_OP> operations = new ArrayList<BG_OP>();
 
     /**
      * Get the resource decorator tracker.
@@ -341,13 +356,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     public EventAdmin getEventAdmin() {
         return this.eventAdmin;
-    }
-
-    /**
-     * Getter for rootProviderEntry.
-     */
-    public RootResourceProviderEntry getRootProviderEntry() {
-        return rootProviderEntry;
     }
 
     /**
@@ -404,7 +412,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
     public long getMaxCachedVanityPathEntries() {
         return this.maxCachedVanityPathEntries;
     }
-    
+
     public boolean isMaxCachedVanityPathEntriesStartup() {
         return this.maxCachedVanityPathEntriesStartup;
     }
@@ -413,15 +421,18 @@ public class ResourceResolverFactoryActivator implements Runnable {
         return this.vanityBloomFilterMaxBytes;
     }
 
+    public boolean shouldLogResourceResolverClosing() {
+        return logResourceResolverClosing;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /**
-     * Activates this component, called by SCR before registering as a service
+     * Activates this component (called by SCR before)
      */
     @Activate
     protected void activate(final ComponentContext componentContext) {
         this.componentContext = componentContext;
-        this.rootProviderEntry.setEventAdmin(this.eventAdmin);
         final Dictionary<?, ?> properties = componentContext.getProperties();
 
         final BidiMap virtuals = new TreeBidiMap();
@@ -468,7 +479,6 @@ public class ResourceResolverFactoryActivator implements Runnable {
         if (searchPath == null) {
             searchPath = new String[] { "/" };
         }
-
         // namespace mangling
         mangleNamespacePrefixes = PropertiesUtil.toBoolean(properties.get(PROP_MANGLE_NAMESPACES), false);
 
@@ -521,21 +531,71 @@ public class ResourceResolverFactoryActivator implements Runnable {
         this.vanityBloomFilterMaxBytes = PropertiesUtil.toInteger(properties.get(PROP_VANITY_BLOOM_FILTER_MAX_BYTES), DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES);
 
         this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
+        this.logResourceResolverClosing = PropertiesUtil.toBoolean(properties.get(PROP_LOG_RESOURCE_RESOLVER_CLOSING),
+            DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING);
+        this.paranoidProviderHandling = PropertiesUtil.toBoolean(properties.get(PROP_PARANOID_PROVIDER_HANDLING), DEFAULT_PARANOID_PROVIDER_HANDLING);
 
         final BundleContext bc = componentContext.getBundleContext();
 
         // check for required property
-        final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
-        this.preconds.activate(bc, required);
+        final String[] requiredResourceProvidersLegacy = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS_LEGACY));
+        final String[] requiredResourceProviderNames = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
 
-        this.paranoidProviderHandling = PropertiesUtil.toBoolean(properties.get(PROP_PARANOID_PROVIDER_HANDLING),
-                DEFAULT_PARANOID_PROVIDER_HANDLING);
+        if ( requiredResourceProvidersLegacy != null && requiredResourceProvidersLegacy.length > 0 ) {
+            boolean hasRealValue = false;
+            for(final String name : requiredResourceProvidersLegacy) {
+                if ( name != null && !name.trim().isEmpty() ) {
+                    hasRealValue = true;
+                    break;
+                }
+            }
+            if ( hasRealValue ) {
+                logger.error("ResourceResolverFactory is using deprecated required providers configuration (" + PROP_REQUIRED_PROVIDERS_LEGACY +
+                        "). Please change to use the property " + PROP_REQUIRED_PROVIDERS + " for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+            }
+        }
+        // for testing: if we run unit test, both trackers are set from the outside
+        if ( this.resourceProviderTracker == null ) {
+            this.resourceProviderTracker = new ResourceProviderTracker();
+            this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
+            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
+                this.resourceProviderTracker, searchPath);
+            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
+                    this.eventAdmin,
+                    new ChangeListener() {
 
-        this.checkFactoryPreconditions();
+                        @Override
+                        public void providerAdded() {
+                            if ( factoryRegistration == null ) {
+                                checkFactoryPreconditions(null, null);
+                            }
 
-        final Thread t = new Thread(this);
-        t.setDaemon(true);
-        t.start();
+                        }
+
+                        @Override
+                        public void providerRemoved(final String name, final String pid, final boolean stateful, final boolean isUsed) {
+                            if ( factoryRegistration != null ) {
+                                if ( isUsed && (stateful || paranoidProviderHandling) ) {
+                                    unregisterFactory();
+                                }
+                                checkFactoryPreconditions(name, pid);
+                            }
+                        }
+                    });
+        } else {
+            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.checkFactoryPreconditions(null, null);
+         }
+    }
+
+    /**
+     * Modifies this component (called by SCR to update this component)
+     */
+    @Modified
+    protected void modified(final ComponentContext componentContext) {
+        this.deactivate();
+        this.activate(componentContext);
     }
 
     /**
@@ -543,13 +603,22 @@ public class ResourceResolverFactoryActivator implements Runnable {
      */
     @Deactivate
     protected void deactivate() {
+        this.unregisterFactory();
+
         this.componentContext = null;
+
+        this.changeListenerWhiteboard.deactivate();
+        this.changeListenerWhiteboard = null;
+        this.resourceProviderTracker.deactivate();
+        this.resourceProviderTracker = null;
+
         this.preconds.deactivate();
-        this.rootProviderEntry.setEventAdmin(null);
         this.resourceDecoratorTracker.close();
 
+        // this is just a sanity call to make sure that unregister
+        // in the case that a registration happened again
+        // while deactivation
         this.unregisterFactory();
-        this.addOperation(BG_OP.STOP);
     }
 
     /**
@@ -576,8 +645,11 @@ public class ResourceResolverFactoryActivator implements Runnable {
             if ( local.factoryRegistration != null ) {
                 local.factoryRegistration.unregister();
             }
+            if ( local.runtimeRegistration != null ) {
+                local.runtimeRegistration.unregister();
+            }
             if ( local.commonFactory != null ) {
-                local.commonFactory.deactivate();;
+                local.commonFactory.deactivate();
             }
         }
     }
@@ -599,71 +671,61 @@ public class ResourceResolverFactoryActivator implements Runnable {
             local.factoryRegistration = localContext.getBundleContext().registerService(
                 ResourceResolverFactory.class.getName(), new ServiceFactory() {
 
+                    @Override
                     public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                        if ( ResourceResolverFactoryActivator.this.componentContext == null ) {
+                            return null;
+                        }
                         final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
                                 local.commonFactory, bundle,
                             ResourceResolverFactoryActivator.this.serviceUserMapper);
                         return r;
                     }
 
+                    @Override
                     public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
                         // nothing to do
                     }
                 }, serviceProps);
+
+            local.runtimeRegistration = localContext.getBundleContext().registerService(RuntimeService.class.getName(),
+                    this.getRuntimeService(), null);
 
             this.factoryRegistration = local;
         }
     }
 
     /**
+     * Get the runtime service
+     * @return The runtime service
+     */
+    public RuntimeService getRuntimeService() {
+        return new RuntimeServiceImpl(this.resourceProviderTracker);
+    }
+
+    /**
      * Check the preconditions and if it changed, either register factory or unregister
      */
-    private void checkFactoryPreconditions() {
+    private void checkFactoryPreconditions(final String unavailableName, final String unavailableServicePid) {
         final ComponentContext localContext = this.componentContext;
         if ( localContext != null ) {
-            final boolean result = this.preconds.checkPreconditions();
+            final boolean result = this.preconds.checkPreconditions(unavailableName, unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
-                this.registerFactory(localContext);
+                boolean create = true;
+                synchronized ( this ) {
+                    if ( this.factoryRegistration == null ) {
+                        this.factoryRegistration = new FactoryRegistration();
+                    } else {
+                        create = false;
+                    }
+                }
+                if ( create ) {
+                    this.registerFactory(localContext);
+                }
             } else if ( !result && this.factoryRegistration != null ) {
                 this.unregisterFactory();
             }
         }
-    }
-
-    /**
-     * Bind a resource provider.
-     */
-    protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        this.rootProviderEntry.bindResourceProvider(provider, props);
-        this.preconds.bindProvider(props);
-        this.addOperation(BG_OP.CHECK);
-    }
-
-    /**
-     * Unbind a resource provider.
-     */
-    protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-        this.rootProviderEntry.unbindResourceProvider(provider, props);
-        this.preconds.unbindProvider(props);
-        this.addOperation(this.paranoidProviderHandling ? BG_OP.UNREGISTER_AND_CHECK : BG_OP.CHECK);
-    }
-
-    /**
-     * Bind a resource provider factory.
-     */
-    protected void bindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
-        this.rootProviderEntry.bindResourceProviderFactory(provider, props);
-        this.preconds.bindProvider(props);
-        this.addOperation(BG_OP.CHECK);
-    }
-
-    /**
-     * Unbind a resource provider factory.
-     */
-    protected void unbindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
-        this.rootProviderEntry.unbindResourceProviderFactory(provider, props);
-        this.preconds.unbindProvider(props);
-        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
     }
 
     /**
@@ -680,54 +742,11 @@ public class ResourceResolverFactoryActivator implements Runnable {
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
     }
 
-    public void run() {
-        boolean isRunning = true;
-        while ( isRunning ) {
-            final List<BG_OP> ops = new ArrayList<BG_OP>();
-            synchronized ( this.coordinator ) {
-                while ( this.operations.isEmpty() ) {
-                    try {
-                        this.coordinator.wait();
-                    } catch ( final InterruptedException ie ) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                ops.addAll(this.operations);
-                this.operations.clear();
-            }
-            isRunning = !ops.contains(BG_OP.STOP);
-
-            if ( isRunning && ops.lastIndexOf(BG_OP.UNREGISTER_AND_CHECK) != -1 ) {
-                this.unregisterFactory();
-                // we only delay between unregister and check
-                // the delay is not really necessary but it provides
-                // a smoother unregistration/registration cascade
-                // and delaying for 2 secs should not hurt
-                try {
-                    Thread.sleep(2000);
-                } catch ( final InterruptedException ie ) {
-                    Thread.currentThread().interrupt();
-                }
-                // check for new operations and simply ignore them (except for STOP)
-                ops.clear();
-                synchronized ( this.coordinator ) {
-                    ops.addAll(this.operations);
-                    this.operations.clear();
-                }
-                isRunning = !ops.contains(BG_OP.STOP);
-            }
-
-            if ( isRunning ) {
-                this.checkFactoryPreconditions();
-            }
-        }
-        this.unregisterFactory();
-    }
-
-    private void addOperation(final BG_OP op) {
-        synchronized ( this.coordinator ) {
-            this.operations.add(op);
-            this.coordinator.notify();
-        }
+    /**
+     * Get the resource provider tracker
+     * @return The tracker
+     */
+    public ResourceProviderTracker getResourceProviderTracker() {
+        return resourceProviderTracker;
     }
 }

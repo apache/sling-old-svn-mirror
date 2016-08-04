@@ -33,19 +33,27 @@ public class ModelClass<ModelType> {
 
     private final Class<ModelType> type;
     private final Model modelAnnotation;
-    private final ModelClassConstructor[] constructors;
-    private final InjectableField[] injectableFields;
-    private final InjectableMethod[] injectableMethods;
+    final DefaultInjectionStrategy defaultInjectionStrategy;
+    private volatile ModelClassConstructor[] constructors;
+    private volatile InjectableField[] injectableFields;
+    private volatile InjectableMethod[] injectableMethods;
 
     public ModelClass(Class<ModelType> type, StaticInjectAnnotationProcessorFactory[] processorFactories) {
         this.type = type;
         this.modelAnnotation = type.getAnnotation(Model.class);
-        final DefaultInjectionStrategy defaultInjectionStrategy;
         if (modelAnnotation == null) {
             defaultInjectionStrategy = DefaultInjectionStrategy.REQUIRED;
         } else {
             defaultInjectionStrategy = modelAnnotation.defaultInjectionStrategy();
         }
+        updateProcessorFactories(processorFactories);
+    }
+    
+    /**
+     * Updates processor factories after the model class was instantiated.
+     * @param processorFactories Static injector annotation processor factories
+     */
+    public void updateProcessorFactories(StaticInjectAnnotationProcessorFactory[] processorFactories) {
         this.constructors = getConstructors(type, processorFactories, defaultInjectionStrategy);
         this.injectableFields = getInjectableFields(type, processorFactories, defaultInjectionStrategy);
         this.injectableMethods = getInjectableMethods(type, processorFactories, defaultInjectionStrategy);

@@ -61,7 +61,17 @@ public class FileDataStore {
     public static FileDataStore SHARED;
 
     /** Cache for url to digest mapping. */
-    private final Map<String, String> digestCache = new HashMap<String, String>();
+    private final Map<String, CacheEntry> digestCache = new HashMap<String, CacheEntry>();
+
+    private static final class CacheEntry {
+        public final File file;
+        public final String digest;
+
+        public CacheEntry(final File file, final String digest) {
+            this.file = file;
+            this.digest = digest;
+        }
+    }
 
     /**
      * Create a file util instance and detect the installer directory.
@@ -139,34 +149,35 @@ public class FileDataStore {
         // check if we already have this data
         if ( digest != null ) {
             synchronized ( this.digestCache ) {
-                final String storedDigest = this.digestCache.get(url);
-                if ( storedDigest != null && storedDigest.equals(digest) ) {
-                    return null;
+                final CacheEntry storedDigest = this.digestCache.get(url);
+                if ( storedDigest != null && storedDigest.digest.equals(digest) ) {
+                    return storedDigest.file;
                 }
             }
         }
         final int pos = url.lastIndexOf('/');
         final String name = url.substring(pos + 1);
         final String filename = (hint == null ? "rsrc" : hint) + '-' + name + '-' + getNextSerialNumber() + ".ser";
-        
+
         //replace special characters from the filename that are not allowed by the OS
         final String filename2 = filename.replaceAll("[\\*\"/\\\\\\[\\]\\:\\;\\|\\=\\,]+", "_"); // Windows
-      
+
         final File file = this.getDataFile(filename2);
 
         this.copyToLocalStorage(stream, file);
 
         if ( digest != null ) {
             synchronized ( this.digestCache ) {
-                this.digestCache.put(url, digest);
+                this.digestCache.put(url, new CacheEntry(file, digest));
             }
         }
+
         return file;
     }
 
-    public void updateDigestCache(final String url, final String digest) {
+    public void updateDigestCache(final String url, final File file, final String digest) {
         synchronized ( this.digestCache ) {
-            this.digestCache.put(url, digest);
+            this.digestCache.put(url, new CacheEntry(file, digest));
         }
     }
 
@@ -200,8 +211,8 @@ public class FileDataStore {
 
     public void removeFromDigestCache(final String url, final String digest) {
         synchronized ( this.digestCache ) {
-            final String storedDigest = this.digestCache.get(url);
-            if ( storedDigest != null && storedDigest.equals(digest) ) {
+            final CacheEntry entry = this.digestCache.get(url);
+            if ( entry != null && entry.digest.equals(digest) ) {
                 this.digestCache.remove(url);
             }
         }

@@ -88,14 +88,17 @@ public class ViewHelper {
         final Resource establishedParent = resourceResolver
                 .getResource(config.getEstablishedViewPath());
         if (establishedParent == null) {
+            logger.debug("getEstablishedView: no established view found: {}", config.getEstablishedViewPath());
             return null;
         }
         final Iterable<Resource> children = establishedParent.getChildren();
         if (children == null) {
+            logger.debug("getEstablishedView: no children found of {}", establishedParent);
             return null;
         }
         final Iterator<Resource> it = children.iterator();
         if (!it.hasNext()) {
+            logger.debug("getEstablishedView: no it of children of {}", establishedParent);
             return null;
         }
         Resource establishedView = it.next();
@@ -111,19 +114,6 @@ public class ViewHelper {
                 return null;
             }
             establishedView = it.next();
-        }
-    }
-
-    /**
-     * Check if the established view matches the given set of slingIds
-     */
-    public static boolean establishedViewMatches(
-            final ResourceResolver resourceResolver, final Config config, final Set<String> view) {
-        final View establishedView = ViewHelper.getEstablishedView(resourceResolver, config);
-        if (establishedView == null) {
-            return false;
-        } else {
-            return (establishedView.matches(view));
         }
     }
 

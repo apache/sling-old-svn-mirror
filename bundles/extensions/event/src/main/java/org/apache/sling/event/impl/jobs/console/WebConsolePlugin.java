@@ -372,7 +372,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         pw.printf("<tr><td>Max Parallel</td><td>%s</td></tr>", c.getMaxParallel());
         pw.printf("<tr><td>Max Retries</td><td>%s</td></tr>", c.getMaxRetries());
         pw.printf("<tr><td>Retry Delay</td><td>%s ms</td></tr>", c.getRetryDelayInMs());
-        pw.printf("<tr><td>Priority</td><td>%s</td></tr>", c.getPriority());
+        pw.printf("<tr><td>Priority</td><td>%s</td></tr>", c.getThreadPriority());
         pw.printf("<tr><td>Ranking</td><td>%s</td></tr>", c.getRanking());
 
         pw.println("</tbody></table>");
@@ -403,8 +403,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             case ORDERED : return "Ordered";
             case TOPIC_ROUND_ROBIN : return "Topic Round Robin";
             case UNORDERED : return "Parallel";
-            case IGNORE : return "Ignore";
-            case DROP : return "Drop";
         }
         return type.toString();
     }

@@ -1,25 +1,44 @@
 {
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "fling/page/simple",
+    "sling:resourceSuperType": "fling/page",
+    "sling:scripting": [
+        "html=thymeleaf"
+    ],
     "title": "Sling Fling Sample",
     "content": "<p>This is a sample using <em>Sling Models</em>, <em>Sling Query</em> and <em>Sling Scripting Thymeleaf</em>.</p><ul><li><a href=\"http://sling.apache.org/documentation/bundles/models.html\">Sling Models</a></li><li><a href=\"https://github.com/Cognifide/Sling-Query\">Sling Query</a></li><li><a href=\"http://sling.apache.org/documentation/bundles/scripting/scripting-thymeleaf.html\">Sling Scripting Thymeleaf</a> (<a href=\"http://www.thymeleaf.org\">Thymeleaf</a>, <a href=\"http://sling.apache.org/documentation/bundles/internationalization-support-i18n.html\">Sling i18n</a>)</li></ul><p>Additional features used in this sample:</p><ul><li><a href=\"http://sling.apache.org/documentation/the-sling-engine/authentication.html\">Authentication</a>: see <code>org.apache.sling.samples.fling.internal.Activator</code></li><li><a href=\"http://sling.apache.org/documentation/bundles/bundle-resources-extensions-bundleresource.html\">Bundle Resources</a>: see <code>Sling-Bundle-Resources</code> in <code>pom.xml</code></li><li><a href=\"http://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html\">Content Loading</a>: see <code>Sling-Initial-Content</code> in <code>pom.xml</code></li><li><a href=\"http://sling.apache.org/documentation/development/sling.html\">Maven Sling Plugin</a>: see <code>maven-sling-plugin</code> in <code>pom.xml</code></li></ul>",
     "models": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "fling/page/simple",
+        "sling:resourceSuperType": "fling/page",
         "title": "Sling Models",
         "content": "<p><em>Sling Models</em> for mapping resources to <code>Page.class</code>:</p><pre>[...]\n@Model(adaptables = Resource.class)\npublic class Page {\n\n    private final Resource resource;\n\n    @Inject\n    private String title;\n\n    [...]\n\n    public Page(final Resource resource) {\n        this.resource = resource;\n    }\n\n    public String getName() {\n        return resource.getName();\n    }\n\n    [...]\n\n    public String getTitle() {\n        return title;\n    }\n\n    [...]\n\n}</pre>"
     },
     "query": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "fling/page/simple",
+        "sling:resourceSuperType": "fling/page",
         "title": "Sling Query",
         "content": "<p><em>Sling Query</em> for collecting resources to build the navigation:</p><pre>[...]\npublic class Page {\n\n    [...]\n\n    public Iterable&lt;Page&gt; getParents() {\n      return $(resource).parents().map(Page.class);\n    }\n\n    public Iterable&lt;Page&gt; getChildren() {\n      return $(resource).children().map(Page.class);\n    }\n\n    [...]\n\n}</pre>"
     },
     "thymeleaf": {
         "jcr:primaryType": "nt:unstructured",
         "sling:resourceType": "fling/page/simple",
+        "sling:resourceSuperType": "fling/page",
         "title": "Sling Scripting Thymeleaf",
         "content": "<p><em>Sling Scripting Thymeleaf</em> with <em>Sling Models</em> and <code>adaptTo()</code> to render resources:</p><pre>&lt;html data-th-with=\"page=${resource.adaptTo(@org.apache.sling.samples.fling.Page@class)}\"&gt;\n&lt;head&gt;\n  &lt;meta charset=\"UTF-8\"/&gt;\n  &lt;meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/&gt;\n  &lt;title data-th-text=\"${page.title}\"&gt;Page Title&lt;/title&gt;\n[...]</pre><p><em>Sling Scripting Thymeleaf</em> with <em>Sling i18n</em> for localized messages:</p><pre>&lt;a href=\"/system/sling/logout\" data-th-text=\"#{action.logout}\"&gt;logout&lt;/a&gt;</pre><pre>{\n    \"en\": {\n        \"jcr:mixinTypes\": [\n            \"mix:language\"\n        ],\n        \"jcr:language\": \"en\",\n        \"sling:basename\": \"org.apache.sling.samples.fling\",\n        \"action.logout\": {\n            \"jcr:primaryType\": \"sling:MessageEntry\",\n            \"sling:key\": \"action.logout\",\n            \"sling:message\": \"logout\"\n        },\n        [...]\n    }\n}\n</pre>"
+    },
+    "validation": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling/page/form",
+        "sling:resourceSuperType": "fling/page",
+        "title": "Sling Validation"
+    },
+    "messaging": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling/page/messages",
+        "sling:resourceSuperType": "fling/page",
+        "title": "Sling Commons Messaging"
     },
     "auth": {
         "jcr:primaryType": "nt:unstructured",
@@ -29,6 +48,7 @@
         "user": {
             "jcr:primaryType": "nt:unstructured",
             "sling:resourceType": "fling/page/user",
+            "sling:resourceSuperType": "fling/page",
             "title": "User"
         }
     }

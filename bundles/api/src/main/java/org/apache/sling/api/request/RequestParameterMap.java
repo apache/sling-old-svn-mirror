@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
@@ -33,12 +33,17 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface RequestParameterMap extends Map<String, RequestParameter[]> {
 
-    /** Returns all values for the named parameter or null if none
+    /**
+     * Returns all values for the named parameter or null if none
+     * @param name The parameter name
+     * @return The request parameter array or {@code null}.
      */
     @CheckForNull RequestParameter[] getValues(@Nonnull String name);
 
-    /** Returns the first value for the named parameter or null if none
+    /**
+     * Returns the first value for the named parameter or null if none
+     * @param name The parameter name
+     * @return The request parameter or {@code null}.
      */
     @CheckForNull RequestParameter getValue(String name);
-
 }

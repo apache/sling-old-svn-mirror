@@ -16,15 +16,16 @@
  */
 package org.apache.sling.models.validation;
 
-import java.util.List;
-import java.util.Map.Entry;
+import java.util.ResourceBundle;
 
-import org.apache.commons.lang.StringUtils;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 
 /**
- * Exception embedding a ValidationResult from Sling Validation.
+ * Exception embedding a {@link ValidationResult} from Sling Validation.
  *
  */
 public class InvalidResourceException extends InvalidModelException {
@@ -57,12 +58,16 @@ public class InvalidResourceException extends InvalidModelException {
         return path;
     }
 
-    @Override
-    public String getMessage() {
+    /**
+     * This is not the regular {@link Exception#getMessage()} as it requires an additional resourceBundle parameter to look up the localized message.
+     * @param resourceBundle
+     * @return the localized validation messages bound to the {@link ValidationResult} wrapped by this exception
+     */
+    public String getMessage(@Nonnull ResourceBundle resourceBundle) {
         StringBuilder builder = new StringBuilder("Validation errors for ");
         builder.append("'" + path +"':");
-        for (Entry<String, List<String>> entry : result.getFailureMessages().entrySet()) {
-            builder.append("\n" + entry.getKey() + ":" + StringUtils.join(entry.getValue(), "\n\t"));
+        for (ValidationFailure failure : result.getFailures()) {
+            builder.append("\n" + failure.getLocation() + ":" + failure.getMessage(resourceBundle) + "\n\t");
         }
         return builder.toString();
     }

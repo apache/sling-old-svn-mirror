@@ -18,7 +18,7 @@
  */
 
 /**
- * Provides commons utility for the Discovery API.
+ * Provides commons utility for providers of the Discovery API.
  *
  * @version 1.0.0
  */

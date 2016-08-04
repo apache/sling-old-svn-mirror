@@ -52,6 +52,7 @@ import org.osgi.framework.Constants;
     @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling OSGi Installer Web Console Plugin"),
     @Property(name="felix.webconsole.label", value="osgi-installer"),
     @Property(name="felix.webconsole.title", value="OSGi Installer"),
+    @Property(name="felix.webconsole.category", value="OSGi"),
     @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"})
 })
 @SuppressWarnings("serial")

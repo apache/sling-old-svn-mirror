@@ -63,8 +63,5 @@
  * @version 1.0
  * @see <a href="http://sling.apache.org/documentation/the-sling-engine/featureflags.html">Feature Flags</a>
  */
-@Version("1.0")
+@org.osgi.annotation.versioning.Version("1.0.1")
 package org.apache.sling.featureflags;
-
-import aQute.bnd.annotation.Version;
-

@@ -18,11 +18,16 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -52,11 +57,18 @@ import org.apache.sling.testing.mock.sling.services.MockSlingSettingService;
 import org.apache.sling.testing.mock.sling.servlet.MockRequestPathInfo;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import aQute.bnd.annotation.ConsumerType;
-
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Defines Sling context objects with lazy initialization. Should not be used
@@ -69,6 +81,10 @@ public class SlingContextImpl extends OsgiContextImpl {
     // default to publish instance run mode
     static final Set<String> DEFAULT_RUN_MODES = ImmutableSet.<String> builder().add("publish").build();
 
+    private static final String RESOURCERESOLVERFACTORYACTIVATOR_PID = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl";
+    
+    private static final Logger log = LoggerFactory.getLogger(SlingContextImpl.class);
+    
     protected ResourceResolverFactory resourceResolverFactory;
     protected ResourceResolverType resourceResolverType;
     protected ResourceResolver resourceResolver;
@@ -77,6 +93,9 @@ public class SlingContextImpl extends OsgiContextImpl {
     protected SlingScriptHelper slingScriptHelper;
     protected ContentLoader contentLoader;
     protected ContentBuilder contentBuilder;
+    protected UniqueRoot uniqueRoot;
+    
+    private Map<String, Object> resourceResolverFactoryActivatorProps;
 
     /**
      * @param resourceResolverType Resource resolver type
@@ -85,12 +104,38 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.resourceResolverType = resourceResolverType;
     }
 
+    protected void setResourceResolverFactoryActivatorProps(Map<String, Object> props) {
+        this.resourceResolverFactoryActivatorProps = props;
+    }
+    
     /**
      * Setup actions before test method execution
      */
     protected void setUp() {
         super.setUp();
         MockSling.setAdapterManagerBundleContext(bundleContext());
+        
+        if (this.resourceResolverFactoryActivatorProps != null) {
+            // use OSGi ConfigurationAdmin to pass over customized configuration to Resource Resolver Factory Activator service
+            ConfigurationAdmin configAdmin = getService(ConfigurationAdmin.class);
+            if (configAdmin == null) {
+              log.warn("ConfigAdmin not found in osgi-mock context - please make sure osgi-mock 1.7.0 or higher is used.");
+            }
+            else {
+              try {
+                Configuration resourceResolverFactoryActivatorConfig = configAdmin.getConfiguration(RESOURCERESOLVERFACTORYACTIVATOR_PID);
+                Dictionary<String, Object> props = new Hashtable<String, Object>();
+                for (Map.Entry<String, Object> item : this.resourceResolverFactoryActivatorProps.entrySet()) {
+                    props.put(item.getKey(), item.getValue());
+                }
+                resourceResolverFactoryActivatorConfig.update(props);
+              }
+              catch (IOException ex) {
+                throw new RuntimeException(ex);
+              }
+            }
+        }
+        
         this.resourceResolverFactory = newResourceResolverFactory();
         registerDefaultServices();
     }
@@ -108,9 +153,6 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     protected void registerDefaultServices() {
 
-        // resource resolver factory
-        registerService(ResourceResolverFactory.class, this.resourceResolverFactory);
-        
         // adapter factories
         registerInjectActivateService(new ModelAdapterFactory());
 
@@ -136,8 +178,9 @@ public class SlingContextImpl extends OsgiContextImpl {
      * Teardown actions after test method execution
      */
     protected void tearDown() {
-
+        
         if (this.resourceResolver != null) {
+            
             // revert potential unsaved changes in resource resolver/JCR session
             this.resourceResolver.revert();
             Session session = this.resourceResolver.adaptTo(Session.class);
@@ -148,17 +191,25 @@ public class SlingContextImpl extends OsgiContextImpl {
                     // ignore
                 }
             }
+            
+            // remove unique roots
+            if (this.uniqueRoot != null) {
+                this.uniqueRoot.cleanUp();
+            }
+            
+            // close resource resolver
+            this.resourceResolver.close();
         }
 
-        this.componentContext = null;
+        MockSling.clearAdapterManagerBundleContext();
+        
         this.resourceResolver = null;
         this.request = null;
         this.response = null;
         this.slingScriptHelper = null;
         this.contentLoader = null;
         this.contentBuilder = null;
-
-        MockSling.clearAdapterManagerBundleContext();
+        this.uniqueRoot = null;
         
         super.tearDown();
     }
@@ -171,6 +222,8 @@ public class SlingContextImpl extends OsgiContextImpl {
     }
 
     /**
+     * Returns the singleton resource resolver bound to this context.
+     * It is automatically closed after the test.
      * @return Resource resolver
      */
     public final ResourceResolver resourceResolver() {
@@ -298,11 +351,71 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     public final void runMode(String... runModes) {
         Set<String> newRunModes = ImmutableSet.<String> builder().add(runModes).build();
-        ServiceReference ref = bundleContext().getServiceReference(SlingSettingsService.class.getName());
+        ServiceReference<SlingSettingsService> ref = bundleContext().getServiceReference(SlingSettingsService.class);
         if (ref != null) {
-            MockSlingSettingService slingSettings = (MockSlingSettingService) bundleContext().getService(ref);
+            MockSlingSettingService slingSettings = (MockSlingSettingService)bundleContext().getService(ref);
             slingSettings.setRunModes(newRunModes);
         }
+    }
+    
+    /**
+     * Create unique root paths for unit tests (and clean them up after the test run automatically).
+     * @return Unique root path helper
+     */
+    public UniqueRoot uniqueRoot() {
+        if (uniqueRoot == null) {
+            uniqueRoot = new UniqueRoot(this);
+        }
+        return uniqueRoot;
+    }
+    
+    /**
+     * Create a Sling AdapterFactory on the fly which can adapt from <code>adaptableClass</code>
+     * to <code>adapterClass</code> and just returns the given value as result.
+     * @param adaptableClass Class to adapt from
+     * @param adapterClass Class to adapt to
+     * @param adapter Object which is always returned for this adaption.
+     * @param <T1> Adaptable type
+     * @param <T2> Adapter type
+     */
+    public final <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
+            final T2 adapter) {
+        registerAdapter(adaptableClass, adapterClass, new Function<T1, T2>() {
+            @Override
+            public T2 apply(T1 input) {
+                return adapter;
+            }
+        });
+    }
+
+    /**
+     * Create a Sling AdapterFactory on the fly which can adapt from <code>adaptableClass</code>
+     * to <code>adapterClass</code> and delegates the adapter mapping to the given <code>adaptHandler</code> function.
+     * @param adaptableClass Class to adapt from
+     * @param adapterClass Class to adapt to
+     * @param adaptHandler Function to handle the adaption
+     * @param <T1> Adaptable type
+     * @param <T2> Adapter type
+     */
+    public final <T1, T2> void registerAdapter(final Class<T1> adaptableClass, final Class<T2> adapterClass,
+            final Function<T1,T2> adaptHandler) {
+        AdapterFactory adapterFactory = new AdapterFactory() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
+                return (AdapterType)adaptHandler.apply((T1)adaptable);
+            }
+        };
+        registerService(AdapterFactory.class, adapterFactory, ImmutableMap.<String, Object>builder()
+                .put(AdapterFactory.ADAPTABLE_CLASSES, new String[] {
+                    adaptableClass.getName()
+                })
+                .put(AdapterFactory.ADAPTER_CLASSES, new String[] {
+                    adapterClass.getName()
+                })
+                // make sure this overlay has higher ranking than other adapter factories
+                .put(Constants.SERVICE_RANKING, Integer.MAX_VALUE)
+                .build());
     }
 
 }

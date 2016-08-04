@@ -94,10 +94,7 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
             saxParser.parse(new InputSource(source), h);
 
             return new ResourceProxy(filePath, h.getResult());
-        } catch (ParserConfigurationException e) {
-            // TODO proper exception handling
-            throw new RuntimeException(e);
-        } catch (SAXException e) {
+        } catch (ParserConfigurationException | SAXException e) {
             // TODO proper exception handling
             throw new RuntimeException(e);
         }
@@ -136,7 +133,7 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
             handler.setResult(sr);
             handler.startDocument();
             startElement(handler, TAG_RESOURCE);
-            Set<Entry<String, Object>> entrySet = new TreeMap<String, Object>(content).entrySet();
+            Set<Entry<String, Object>> entrySet = new TreeMap<>(content).entrySet();
             for (Map.Entry<String, Object> property : entrySet) {
                 Object value = property.getValue();
                 if (value instanceof String) {
@@ -159,13 +156,7 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
 
             // TODO - also add the serialization type
             return new SerializationData(resource.getPath(), CONTENT_XML, result.toByteArray(), null);
-        } catch (TransformerConfigurationException e) {
-            // TODO proper exception handling
-            throw new RuntimeException(e);
-        } catch (TransformerFactoryConfigurationError e) {
-            // TODO proper exception handling
-            throw new RuntimeException(e);
-        } catch (SAXException e) {
+        } catch (TransformerConfigurationException | TransformerFactoryConfigurationError | SAXException e) {
             // TODO proper exception handling
             throw new RuntimeException(e);
         }
@@ -203,7 +194,7 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
 
         @Override
         public void startDocument() throws SAXException {
-            result = new HashMap<String, Object>();
+            result = new HashMap<>();
         }
 
         @Override

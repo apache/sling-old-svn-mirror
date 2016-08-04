@@ -43,8 +43,8 @@ public class ResourceProxy {
 
     private final String path;
     private final Map<String, Object> properties;
-    private final List<ResourceProxy> children = new ArrayList<ResourceProxy>();
-    private final Map<Class<?>, Object> adapted = new HashMap<Class<?>, Object>(1);
+    private final List<ResourceProxy> children = new ArrayList<>();
+    private final Map<Class<?>, Object> adapted = new HashMap<>(1);
 
     public ResourceProxy(String path) {
         this(path, new HashMap<String, Object>());
@@ -99,7 +99,7 @@ public class ResourceProxy {
 
     public List<ResourceProxy> getCoveredChildren() {
 
-        List<ResourceProxy> coveredChildren = new ArrayList<ResourceProxy>();
+        List<ResourceProxy> coveredChildren = new ArrayList<>();
         for (ResourceProxy child : getChildren()) {
             if (child.getProperties().isEmpty()) {
                 continue;

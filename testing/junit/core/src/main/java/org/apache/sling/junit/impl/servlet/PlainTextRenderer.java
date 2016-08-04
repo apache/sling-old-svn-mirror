@@ -109,6 +109,7 @@ public class PlainTextRenderer extends RunListener implements Renderer, Renderer
     public void testFailure(Failure failure) throws Exception {
         super.testFailure(failure);
         output.println("FAILURE " + failure);
+        output.println("Stack Trace: " + failure.getTrace());
     }
 
     @Override

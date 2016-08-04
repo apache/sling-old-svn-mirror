@@ -22,11 +22,15 @@ import org.apache.sling.api.resource.runtime.dto.AuthType;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Information about a registered resource provider
  */
 public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResourceProviderInfo.class);
 
     private final ServiceReference ref;
 
@@ -40,6 +44,12 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
 
     private final boolean modifiable;
 
+    private final boolean adaptable;
+
+    private final boolean refreshable;
+
+    private final boolean attributable;
+
     public ResourceProviderInfo(final ServiceReference ref) {
         this.ref = ref;
         this.path = PropertiesUtil.toString(ref.getProperty(ResourceProvider.PROPERTY_ROOT), "");
@@ -50,18 +60,23 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
         try {
             aType = AuthType.valueOf(authType);
         } catch ( final IllegalArgumentException iae) {
-            // ignore
+            logger.error("Illegal auth type {} for resource provider {}", authType, name);
         }
         this.authType = aType;
         this.modifiable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_MODIFIABLE), false);
+        this.adaptable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_ADAPTABLE), false);
+        this.refreshable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_REFRESHABLE), false);
+        this.attributable = PropertiesUtil.toBoolean(ref.getProperty(ResourceProvider.PROPERTY_ATTRIBUTABLE), false);
     }
 
     public boolean isValid() {
         // TODO - do real path check
         if ( !path.startsWith("/") ) {
+            logger.debug("ResourceProvider path does not start with /, invalid: {}", path);
             return false;
         }
         if ( this.authType == null ) {
+            logger.debug("ResourceProvider has null authType, invalid");
             return false;
         }
         return true;
@@ -94,8 +109,20 @@ public class ResourceProviderInfo implements Comparable<ResourceProviderInfo> {
         return this.authType;
     }
 
-    public boolean getModifiable() {
+    public boolean isModifiable() {
         return this.modifiable;
+    }
+
+    public boolean isAdaptable() {
+        return adaptable;
+    }
+
+    public boolean isRefreshable() {
+        return refreshable;
+    }
+
+    public boolean isAttributable() {
+        return attributable;
     }
 
     public String getName() {

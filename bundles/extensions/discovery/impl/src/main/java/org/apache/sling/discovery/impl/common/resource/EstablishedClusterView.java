@@ -27,8 +27,8 @@ import java.util.List;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
+import org.apache.sling.discovery.commons.providers.spi.LocalClusterView;
 import org.apache.sling.discovery.impl.Config;
-import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * as stored in the repository at the according location
  *
  */
-public class EstablishedClusterView extends DefaultClusterViewImpl {
+public class EstablishedClusterView extends LocalClusterView {
 
     /**
      * use static logger to avoid frequent initialization as is potentially the
@@ -50,7 +50,7 @@ public class EstablishedClusterView extends DefaultClusterViewImpl {
     /** Construct a new established cluster view **/
     public EstablishedClusterView(final Config config, final View view,
             final String localId) {
-        super(view.getViewId());
+        super(view.getViewId(), view.getResource().getName());
 
         final Resource viewRes = view.getResource();
         if (viewRes == null) {

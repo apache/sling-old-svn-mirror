@@ -216,11 +216,17 @@ public class RequestData {
         this.slingResponse = new SlingHttpServletResponseImpl(this,
             servletResponse);
 
-        this.requestProgressTracker = new SlingRequestProgressTracker();
-        this.requestProgressTracker.log(
-        		"Method={0}, PathInfo={1}",
-        		this.slingRequest.getMethod(), this.slingRequest.getPathInfo()
-        );
+        // Getting the RequestProgressTracker from the request attributes like
+        // this should not be generally used, it's just a way to pass it from
+        // its creation point to here, so it's made available via 
+        // the Sling request's getRequestProgressTracker method.
+        final Object o = request.getAttribute(RequestProgressTracker.class.getName());
+        if(o instanceof SlingRequestProgressTracker) {
+            this.requestProgressTracker = (SlingRequestProgressTracker)o;
+        } else {
+            log.warn("SlingRequestProgressTracker not found in request attributes");
+            this.requestProgressTracker = new SlingRequestProgressTracker(request);
+        }
     }
 
     public Resource initResource(ResourceResolver resourceResolver) {

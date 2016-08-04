@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.discovery.standalone</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
 
     <name>Apache Sling Discovery Standalone Implementation</name>
     <description>
@@ -79,6 +79,16 @@
             <artifactId>org.apache.sling.settings</artifactId>
             <version>1.1.0</version>
             <scope>provided</scope>
+        </dependency>
+        
+      <!-- Testing -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
     </dependencies>
 </project>

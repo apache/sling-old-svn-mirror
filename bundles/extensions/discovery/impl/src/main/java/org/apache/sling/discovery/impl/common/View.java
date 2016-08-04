@@ -102,9 +102,12 @@ public class View {
     /**
      * Checks whether this view matches the 'live view' as represented in the clusterInstances resource
      * @param clusterInstancesRes the clusterInstances resource against which to check
-     * @return
+     * @return null if view matches, not-null-details about what differs if they don't match
+     * @throws Exception thrown the view cannot be properly matched
+     * - eg when the ./members resource doesn't exist at all or
+     * a RuntimeException occurs
      */
-    public boolean matchesLiveView(final Resource clusterInstancesRes, final Config config) {
+    public String matchesLiveView(final Resource clusterInstancesRes, final Config config) throws Exception {
         return matches(ViewHelper.determineLiveInstances(clusterInstancesRes,
                 config));
     }
@@ -113,31 +116,55 @@ public class View {
      * Compare this view with the given set of slingIds
      * @param view a set of slingIds against which to compare this view
      * @return true if this view matches the given set of slingIds
+     * @throws Exception thrown the view cannot be properly matched
+     * - eg when the ./members resource doesn't exist at all or
+     * a RuntimeException occurs
      */
-    public boolean matches(final Set<String> view) {
+    public String matches(final Set<String> view) throws Exception {
         final Set<String> viewCopy = new HashSet<String>(view);
         final Resource members = getResource().getChild("members");
         if (members == null) {
-            return false;
+            throw new Exception("no members resource found");
         }
         try{
 	        final Iterator<Resource> it = members.getChildren().iterator();
+	        StringBuffer sb = new StringBuffer();
+	        boolean success = true;
 	        while (it.hasNext()) {
 	            Resource aMemberRes = it.next();
 	
-	            if (!viewCopy.remove(aMemberRes.getName())) {
-	                return false;
+	            if (sb.length() != 0) {
+	                sb.append(", ");
 	            }
+	            if (!viewCopy.remove(aMemberRes.getName())) {
+	                success = false;
+	                sb.append("old: " + aMemberRes.getName());
+	            } else {
+	                sb.append("fine: " + aMemberRes.getName());
+	            }
+	        }
+	        // now the ViewCopy set must be empty to represent a match
+	        if (viewCopy.size() != 0) {
+	            success = false;
+                if (sb.length() != 0) {
+                    sb.append(", ");
+                }
+                for (String newlyAdded : viewCopy) {
+                    sb.append("new: " + newlyAdded);
+                }
+	        }
+	        if (success) {
+	            return null;
+	        } else {
+	            return sb.toString();
 	        }
         } catch(RuntimeException re) {
         	// SLING-2945 : the members resource could have been deleted
         	//              by another party simultaneously
         	//              so treat this situation nicely
         	logger.info("matches: cannot compare due to "+re);
-        	return false;
+        	throw new Exception("RuntimeException: "+re, re);
         }
-        // now the ViewCopy set must be empty to represent a match
-        return (viewCopy.size() == 0);
     }
 
     /**

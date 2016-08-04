@@ -18,23 +18,22 @@
  */
 package org.apache.sling.distribution.packaging;
 
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
- * A {@link DistributionPackageExporter ) is responsible of exporting
- * {@link DistributionPackage }s to be then imported by a {@link org.apache.sling.distribution.agent.DistributionAgent }
- * (via a {@link DistributionPackageImporter }).
- * <p/>
- * Exporting a {@link org.apache.sling.distribution.packaging.DistributionPackage} means obtaining that package by either
- * directly creating it by bundling local Sling resources together or retrieving it from a remote endpoint, e.g. by
- * executing an HTTP POST request on another Sling instance exposing already created packages (for remotely changed resources).
+ * A {@link DistributionPackageExporter) is responsible of exporting {@link DistributionPackage}s from a local or remote
+ * Sling instance.
+ * Such packages are usually imported by a {@link DistributionPackageImporter} or put inside
+ * {@link org.apache.sling.distribution.queue.DistributionQueue}s for others to consume them.
+ * Exporting a {@link DistributionPackage} means obtaining that package by e.g. directly creating it by bundling local
+ * Sling resources, retrieving it from a remote endpoint (by executing an HTTP POST request on another Sling
+ * instance exposing packages ina queue).
  */
 @ConsumerType
 public interface DistributionPackageExporter {
@@ -43,15 +42,15 @@ public interface DistributionPackageExporter {
      * Exports the {@link DistributionPackage}s built from the
      * passed {@link org.apache.sling.distribution.DistributionRequest}.
      *
-     * @param resourceResolver    - the resource resolver used to export the packages, for example a 'local' exporter
+     * @param resourceResolver    the resource resolver used to export the packages, for example a 'local' exporter
      *                            will use the resource resolver to read the content and assemble the binary in a certain
      *                            location in the repository while a 'remote' exporter will use the resolver just to
      *                            store the binary of the remotely fetched packages in the repository.
-     * @param distributionRequest - the request containing the needed information for content to be exported
-     * @return a {@link java.util.List} of {@link DistributionPackage}s
+     * @param distributionRequest the request containing the needed information for content to be exported
+     * @param packageProcessor    a callback to process the exported package
      */
-    @Nonnull
-    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
+    void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest,
+                        @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException;
 
     /**
      * Retrieves a {@link DistributionPackage} given its identifier, if it already exists.
@@ -63,5 +62,5 @@ public interface DistributionPackageExporter {
      * @return a {@link DistributionPackage} if available, {@code null} otherwise
      */
     @CheckForNull
-    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId);
+    DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException;
 }

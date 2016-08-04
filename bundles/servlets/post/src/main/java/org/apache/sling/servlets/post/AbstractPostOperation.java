@@ -64,6 +64,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      * @param request the request to operate on
      * @param response The <code>PostResponse</code> to record execution
      *            progress.
+     * @param processors The array of processors
      */
     public void run(final SlingHttpServletRequest request,
                     final PostResponse response,
@@ -181,6 +182,8 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     /**
      * Get the versioning configuration.
+     * @param request The http request
+     * @return The versioning configuration
      */
     protected VersioningConfiguration getVersioningConfiguration(SlingHttpServletRequest request) {
         VersioningConfiguration versionableConfiguration =
@@ -190,6 +193,8 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     /**
      * Check if checkin should be skipped
+     * @param request The http request
+     * @return {@code true} if checkin should be skipped
      */
     protected boolean isSkipCheckin(SlingHttpServletRequest request) {
         return !getVersioningConfiguration(request).isAutoCheckin();
@@ -197,6 +202,8 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     /**
      * Check whether changes should be written back
+     * @param request The http request
+     * @return {@code true} If session handling should be skipped
      */
     protected boolean isSkipSessionHandling(SlingHttpServletRequest request) {
         return Boolean.parseBoolean((String) request.getAttribute(SlingPostConstants.ATTR_SKIP_SESSION_HANDLING)) == true;
@@ -204,6 +211,9 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     /**
      * Check whether commit to the resource resolver should be called.
+     * @param session The JCR session
+     * @param request The http request
+     * @return {@code true} if a save is required.
      */
     protected boolean isSessionSaveRequired(Session session, SlingHttpServletRequest request)
             throws RepositoryException {
@@ -213,6 +223,9 @@ public abstract class AbstractPostOperation implements PostOperation {
     /**
      * Remove the workspace name, if any, from the start of the path and validate that the
      * session's workspace name matches the path workspace name.
+     * @param path The path
+     * @param session The JCR session
+     * @return The path without the workspace
      */
     protected String removeAndValidateWorkspace(String path, Session session) throws RepositoryException {
         final int wsSepPos = path.indexOf(":/");
@@ -233,6 +246,8 @@ public abstract class AbstractPostOperation implements PostOperation {
      * <p>
      * This method may be overwritten by extension if the operation has
      * different requirements on path processing.
+     * @param request The http request
+     * @return The item path
      */
     protected String getItemPath(SlingHttpServletRequest request) {
         return request.getResource().getPath();
@@ -266,6 +281,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      * Returns an external form of the given path prepending the context path
      * and appending a display extension.
      *
+     * @param request The http request
      * @param path the path to externalize
      * @return the url
      */
@@ -290,6 +306,7 @@ public abstract class AbstractPostOperation implements PostOperation {
     /**
      * Resolves the given path with respect to the current root path.
      *
+     * @param absPath The absolute base path
      * @param relPath the path to resolve
      * @return the given path if it starts with a '/'; a resolved path
      *         otherwise.
@@ -311,6 +328,9 @@ public abstract class AbstractPostOperation implements PostOperation {
      * considered as providing content to be stored. Otherwise all parameters
      * not starting with the command prefix <code>:</code> are considered as
      * parameters to be stored.
+     *
+     * @param request The http request
+     * @return If a prefix is required.
      */
     protected final boolean requireItemPathPrefix(
             SlingHttpServletRequest request) {
@@ -332,6 +352,9 @@ public abstract class AbstractPostOperation implements PostOperation {
      * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
      * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
      * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
+     *
+     * @param name The name
+     * @return {@code true} if the name has a prefix
      */
     protected boolean hasItemPathPrefix(String name) {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
@@ -345,7 +368,9 @@ public abstract class AbstractPostOperation implements PostOperation {
      * before child node A | after A | after child node A | last | after all
      * nodes | N | at a specific position, N being an integer </xmp>
      *
+     * @param request The http request
      * @param item node to order
+     * @param changes The list of modifications
      * @throws RepositoryException if an error occurs
      */
     protected void orderNode(SlingHttpServletRequest request, Item item,

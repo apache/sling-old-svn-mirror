@@ -25,15 +25,15 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.testing-content</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Sightly Integration Tests Content</name>
@@ -100,7 +100,7 @@
                                 <artifactItem>
                                     <groupId>io.sightly</groupId>
                                     <artifactId>io.sightly.tck</artifactId>
-                                    <version>1.1.2</version>
+                                    <version>1.2.3</version>
                                     <type>jar</type>
                                     <outputDirectory>${project.build.directory}/sightlytck/</outputDirectory>
                                     <includes>**/*.html,**/*.js,**/*.java</includes>
@@ -141,7 +141,7 @@
                             javax.inject;version=1.0.0,
                             *
                         </Import-Package>
-                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Initial-Content>SLING-INF;uninstall:=true;ignoreImportProviders:=jar</Sling-Initial-Content>
                         <Sling-Model-Packages>org.apache.sling.scripting.sightly.testing.models</Sling-Model-Packages>
                         <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
                     </instructions>

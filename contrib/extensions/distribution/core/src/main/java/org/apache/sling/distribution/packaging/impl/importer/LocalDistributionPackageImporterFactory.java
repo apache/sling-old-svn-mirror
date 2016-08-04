@@ -30,21 +30,17 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
-import org.apache.sling.distribution.event.DistributionEventTopics;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
- * based {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * OSGi configuration factory for {@link LocalDistributionPackageImporter}s.
  */
 @Component(label = "Apache Sling Distribution Importer - Local Package Importer Factory",
         metatype = true,
@@ -52,18 +48,16 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Importer name: {name}")
 public class LocalDistributionPackageImporterFactory implements DistributionPackageImporter {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     /**
      * name of this importer.
      */
     @Property(label = "Name", description = "The name of the importer.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
-
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
@@ -72,29 +66,20 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
 
     private DistributionPackageImporter importer;
 
-    private String name;
-
     @Activate
     public void activate(Map<String, Object> config) {
-        name = PropertiesUtil.toString(config.get(NAME), null);
-        importer = new LocalDistributionPackageImporter(packageBuilder);
+        String name = PropertiesUtil.toString(config.get(NAME), null);
+        importer = new LocalDistributionPackageImporter(name, eventFactory, packageBuilder);
     }
 
 
-    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         importer.importPackage(resourceResolver, distributionPackage);
-        eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackage.getInfo());
     }
 
-    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
-        DistributionPackageInfo distributionPackageInfo = importer.importStream(resourceResolver, stream);
-
-
-        if (distributionPackageInfo != null) {
-            eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackageInfo);
-        }
-
-        return distributionPackageInfo;
+    @Nonnull
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        return importer.importStream(resourceResolver, stream);
     }
 
 }

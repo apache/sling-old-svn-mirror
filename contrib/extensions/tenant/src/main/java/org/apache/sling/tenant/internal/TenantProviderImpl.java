@@ -32,12 +32,12 @@ import java.util.TreeMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -53,6 +53,7 @@ import org.apache.sling.tenant.TenantManager;
 import org.apache.sling.tenant.TenantProvider;
 import org.apache.sling.tenant.internal.console.WebConsolePlugin;
 import org.apache.sling.tenant.spi.TenantCustomizer;
+import org.apache.sling.tenant.spi.TenantManagerHook;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -69,15 +70,20 @@ import org.slf4j.LoggerFactory;
         label = "Apache Sling Tenant Provider",
         description = "Service responsible for providing Tenants",
         immediate = true)
-@Service
-@Properties(value = {
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Tenant Provider")
-})
-@Reference(
+@Service(value = {TenantProvider.class, TenantManager.class})
+@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Tenant Provider")
+@References({
+    @Reference(
         name = "tenantSetup",
         referenceInterface = TenantCustomizer.class,
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC)
+        policy = ReferencePolicy.DYNAMIC),
+    @Reference(
+            name = "hook",
+            referenceInterface = TenantManagerHook.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC)
+})
 public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     /** default log */
@@ -96,6 +102,9 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     private SortedMap<Comparable<Object>, TenantCustomizer> registeredTenantHandlers = new TreeMap<Comparable<Object>, TenantCustomizer>(
         Collections.reverseOrder());
 
+    private SortedMap<Comparable<Object>, TenantManagerHook> registeredHooks = new TreeMap<Comparable<Object>, TenantManagerHook>(
+            Collections.reverseOrder());
+
     @Property(
             value = {},
             unbounded = PropertyUnbounded.ARRAY,
@@ -113,14 +122,14 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     private WebConsolePlugin plugin;
 
     @Activate
-    private void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
+    protected void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
         this.tenantRootPath = PropertiesUtil.toString(properties.get(TENANT_ROOT), RESOURCE_TENANT_ROOT);
         this.adapterFactory = new TenantAdapterFactory(bundleContext, this, PropertiesUtil.toStringArray(properties.get(TENANT_PATH_MATCHER), DEFAULT_PATH_MATCHER));
         this.plugin = new WebConsolePlugin(bundleContext, this);
     }
 
     @Deactivate
-    private void deactivate() {
+    protected void deactivate() {
         if (this.adapterFactory != null) {
             this.adapterFactory.dispose();
             this.adapterFactory = null;
@@ -146,9 +155,25 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return registeredTenantHandlers.values();
     }
 
+    @SuppressWarnings("unused")
+    private synchronized void bindHook(TenantManagerHook action, Map<String, Object> config) {
+        registeredHooks.put(ServiceUtil.getComparableForServiceRanking(config), action);
+    }
+
+    @SuppressWarnings("unused")
+    private synchronized void unbindHook(TenantManagerHook action, Map<String, Object> config) {
+        registeredHooks.remove(ServiceUtil.getComparableForServiceRanking(config));
+    }
+
+    private synchronized Collection<TenantManagerHook> getHooks() {
+        return registeredHooks.values();
+    }
+
+    @Override
     public Tenant getTenant(final String tenantId) {
         if (tenantId != null && tenantId.length() > 0) {
             return call(new ResourceResolverTask<Tenant>() {
+                @Override
                 public Tenant call(ResourceResolver resolver) {
                     Resource tenantRes = getTenantResource(resolver, tenantId);
                     return (tenantRes != null) ? new TenantImpl(tenantRes) : null;
@@ -160,10 +185,12 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return null;
     }
 
+    @Override
     public Iterator<Tenant> getTenants() {
         return getTenants(null);
     }
 
+    @Override
     public Iterator<Tenant> getTenants(final String tenantFilter) {
         final Filter filter;
         if (tenantFilter != null && tenantFilter.length() > 0) {
@@ -177,20 +204,24 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
 
         Iterator<Tenant> result = call(new ResourceResolverTask<Iterator<Tenant>>() {
+            @SuppressWarnings("unchecked")
+            @Override
             public Iterator<Tenant> call(ResourceResolver resolver) {
                 Resource tenantRootRes = resolver.getResource(tenantRootPath);
+                if ( tenantRootRes != null ) {
+                    List<Tenant> tenantList = new ArrayList<Tenant>();
+                    Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
+                    while (tenantResourceList.hasNext()) {
+                        Resource tenantRes = tenantResourceList.next();
 
-                List<Tenant> tenantList = new ArrayList<Tenant>();
-                Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
-                while (tenantResourceList.hasNext()) {
-                    Resource tenantRes = tenantResourceList.next();
-
-                    if (filter == null || filter.matches(ResourceUtil.getValueMap(tenantRes))) {
-                        TenantImpl tenant = new TenantImpl(tenantRes);
-                        tenantList.add(tenant);
+                        if (filter == null || filter.matches(ResourceUtil.getValueMap(tenantRes))) {
+                            TenantImpl tenant = new TenantImpl(tenantRes);
+                            tenantList.add(tenant);
+                        }
                     }
+                    return tenantList.iterator();
                 }
-                return tenantList.iterator();
+                return Collections.EMPTY_LIST.iterator();
             }
         });
 
@@ -202,15 +233,17 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return result;
     }
 
+    @Override
     public Tenant create(final String tenantId, final Map<String, Object> properties) {
         return call(new ResourceResolverTask<Tenant>() {
+            @Override
             public Tenant call(ResourceResolver adminResolver) {
                 try {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
                     TenantImpl tenant = new TenantImpl(tenantRes);
                     adminResolver.commit();
-                    customizeTenant(tenantRes, tenant);
+                    customizeTenant(tenantRes, tenant, true);
                     adminResolver.commit();
 
                     // refresh tenant instance, as it copies property from
@@ -231,8 +264,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         });
     }
 
+    @Override
     public void remove(final Tenant tenant) {
         call(new ResourceResolverTask<Void>() {
+            @Override
             public Void call(ResourceResolver resolver) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
@@ -243,6 +278,14 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                                 ts.remove(tenant, resolver);
                             } catch (Exception e) {
                                 log.info("removeTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+                            }
+                        }
+                        // call tenant hooks
+                        for (TenantManagerHook ts : getHooks()) {
+                            try {
+                                ts.remove(tenant);
+                            } catch (Exception e) {
+                                log.info("removeTenant: Unexpected problem calling TenantManagerHook " + ts, e);
                             }
                         }
 
@@ -258,8 +301,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         });
     }
 
+    @Override
     public void setProperty(final Tenant tenant, final String name, final Object value) {
         updateProperties(tenant, new PropertiesUpdater() {
+            @Override
             public void update(ModifiableValueMap properties) {
                 if (value != null) {
                     properties.put(name, value);
@@ -270,8 +315,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         });
     }
 
+    @Override
     public void setProperties(final Tenant tenant, final Map<String, Object> properties) {
         updateProperties(tenant, new PropertiesUpdater() {
+            @Override
             public void update(ModifiableValueMap vm) {
                 for (Entry<String, Object> entry : properties.entrySet()) {
                     if (entry.getValue() != null) {
@@ -284,8 +331,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         });
     }
 
+    @Override
     public void removeProperties(final Tenant tenant, final String... propertyNames) {
         updateProperties(tenant, new PropertiesUpdater() {
+            @Override
             public void update(ModifiableValueMap properties) {
                 for (String name : propertyNames) {
                     properties.remove(name);
@@ -334,7 +383,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return resolver.getResource(tenantRootPath + "/" + tenantId);
     }
 
-    private void customizeTenant(final Resource tenantRes, final Tenant tenant) {
+    private void customizeTenant(final Resource tenantRes, final Tenant tenant, boolean isCreate) {
 
         // call tenant setup handler
         Map<String, Object> tenantProps = tenantRes.adaptTo(ModifiableValueMap.class);
@@ -352,7 +401,18 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     tenantProps.putAll(props);
                 }
             } catch (Exception e) {
-                log.info("addTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+                log.info("addTenant/updateTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+            }
+        }
+        // call tenant hooks
+        for (TenantManagerHook ts : getHooks()) {
+            try {
+                Map<String, Object> props = (isCreate ? ts.setup(tenant) : ts.change(tenant));
+                if (props != null) {
+                    tenantProps.putAll(props);
+                }
+            } catch (Exception e) {
+                log.info("addTenant/updateTenant: Unexpected problem calling TenantManagerHook " + ts, e);
             }
         }
     }
@@ -377,6 +437,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     private void updateProperties(final Tenant tenant, final PropertiesUpdater updater) {
         call(new ResourceResolverTask<Void>() {
+            @Override
             public Void call(ResourceResolver resolver) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
@@ -388,7 +449,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                             ((TenantImpl) tenant).loadProperties(tenantRes);
                         }
 
-                        customizeTenant(tenantRes, tenant);
+                        customizeTenant(tenantRes, tenant, false);
                         resolver.commit();
 
                         if (tenant instanceof TenantImpl) {

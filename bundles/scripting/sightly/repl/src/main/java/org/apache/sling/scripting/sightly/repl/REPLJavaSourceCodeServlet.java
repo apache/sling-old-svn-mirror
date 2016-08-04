@@ -63,23 +63,36 @@ public class REPLJavaSourceCodeServlet extends SlingSafeMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/plain");
-        response.getWriter().write(getClassSourceCode());
+        String sourceCode = getClassSourceCode();
+        if (sourceCode.length() == 0) {
+            StringBuilder configurationLink = new StringBuilder();
+            configurationLink.append(request.getScheme()).append("://").append(request.getServerName());
+            if (request.getServerPort() != 80) {
+                configurationLink.append(":").append(request.getServerPort());
+            }
+            configurationLink.append(request.getContextPath())
+                    .append("/system/console/configMgr/org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration");
+            response.getWriter().write("/**\n * Please enable the \"Keep Generated Java Source Code\" option at\n * " + configurationLink
+                    .toString() + "\n */");
+        } else {
+            response.getWriter().write(getClassSourceCode());
+        }
     }
 
     private String getClassSourceCode() {
         if (classesFolder != null && classesFolder.isDirectory()) {
-            File classFile = new File(classesFolder, "/apps/repl/components/repl/SightlyJava_template.java");
+            File classFile = new File(classesFolder, "org/apache/sling/scripting/sightly/apps/repl/components/repl/template_html.java");
             if (classFile.isFile()) {
                 try {
                     return IOUtils.toString(new FileInputStream(classFile), "UTF-8");
                 } catch (IOException e) {
                     LOGGER.error("Unable to read file " + classFile.getAbsolutePath(), e);
-                    return "";
                 }
             }
+            LOGGER.warn("Source code for " + (classesFolder.isDirectory() ? classesFolder.getAbsolutePath() : "") +
+                    "/org/apache/sling/scripting/sightly/apps/repl/components/repl/template_html.java was not found. Maybe you need to " +
+                    "configure the Sightly Scripting Engine to keep the generated source files?");
         }
-        LOGGER.warn("Source code for " + (classesFolder.isDirectory() ? classesFolder.getAbsolutePath() : "") +
-                "/apps/repl/components/repl/SightlyJava_template.java was not found. Maybe you need to enable dev mode for Sightly?");
         return "";
     }
 

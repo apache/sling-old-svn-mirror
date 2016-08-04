@@ -18,10 +18,9 @@
  */
 package org.apache.sling.distribution.event.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
-
-import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;

@@ -42,7 +42,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -106,9 +105,6 @@ public class DefaultStartupHandler
     private final long startedAt;
 
     private volatile Object[] logService;
-
-    /** Registration of the startup service. */
-    private volatile ServiceRegistration<StartupService> startupServiceReg;
 
     /**
      * Constructor.
@@ -389,7 +385,7 @@ public class DefaultStartupHandler
         serviceProps.put(StartupMode.class.getName(), this.startupMode.name());
         serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Startup Service");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.startupServiceReg = this.bundleContext.registerService(StartupService.class, new StartupService() {
+        this.bundleContext.registerService(StartupService.class, new StartupService() {
 
             @Override
             public StartupMode getStartupMode() {

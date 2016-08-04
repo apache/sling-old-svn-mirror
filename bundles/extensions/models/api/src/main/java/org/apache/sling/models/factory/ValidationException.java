@@ -16,14 +16,16 @@
  */
 package org.apache.sling.models.factory;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Thrown in case an validation could not be performed for the given model.
  * (although it would be required through {@link org.apache.sling.models.annotations.ValidationStrategy#REQUIRED}).
  * Depends on the actual implementation under which exact circumstances this is thrown.
  * @see ModelFactory
  */
+@ProviderType
 public class ValidationException extends RuntimeException {
-
     private static final long serialVersionUID = 1115037385798809055L;
 
     public ValidationException(String message) {

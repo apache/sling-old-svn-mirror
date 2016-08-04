@@ -21,17 +21,16 @@ package org.apache.sling.api;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.adapter.Adaptable;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>SlingHttpServletResponse</code> defines the interface to assist a
  * servlet in creating and sending a response to the client.
  * <p>
- * This interface is currently empty and merely exists to paralell the
+ * This interface is currently empty and merely exists to parallel the
  * {@link SlingHttpServletRequest} interface.
  * <p>
- * Starting with Sling API 2.0.6, this interface als extends the
+ * Starting with Sling API 2.0.6, this interface also extends the
  * {@link Adaptable} interface.
  */
 @ProviderType

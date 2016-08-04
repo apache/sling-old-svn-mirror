@@ -19,13 +19,10 @@
 package org.apache.sling.event.impl.jobs.notifications;
 
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
@@ -42,33 +39,11 @@ public abstract class NotificationUtility {
      */
     public static void sendNotification(final EventAdmin eventAdmin,
             final String eventTopic,
-            final String jobTopic,
-            final String jobName,
-            final Map<String, Object> jobProperties,
-            final Long time) {
-        if ( eventAdmin != null ) {
-            // create job object
-            final Map<String, Object> jobProps;
-            if ( jobProperties == null ) {
-                jobProps = new HashMap<String, Object>();
-            } else {
-                jobProps = jobProperties;
-            }
-            final Job job = new JobImpl(jobTopic, jobName, "<unknown>", jobProps);
-            sendNotificationInternal(eventAdmin, eventTopic, job, time);
-        }
-    }
-
-    /**
-     * Helper method for sending the notification events.
-     */
-    public static void sendNotification(final EventAdmin eventAdmin,
-            final String eventTopic,
             final Job job,
             final Long time) {
         if ( eventAdmin != null ) {
             // create new copy of job object
-            final Job jobCopy = new JobImpl(job.getTopic(), job.getName(), job.getId(), ((JobImpl)job).getProperties());
+            final Job jobCopy = new JobImpl(job.getTopic(), job.getId(), ((JobImpl)job).getProperties());
             sendNotificationInternal(eventAdmin, eventTopic, jobCopy, time);
         }
     }
@@ -84,9 +59,6 @@ public abstract class NotificationUtility {
         // add basic job properties
         eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
         eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
-        if ( job.getName() != null ) {
-            eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
-        }
         // copy payload
         for(final String name : job.getPropertyNames()) {
             eventProps.put(name, job.getProperty(name));

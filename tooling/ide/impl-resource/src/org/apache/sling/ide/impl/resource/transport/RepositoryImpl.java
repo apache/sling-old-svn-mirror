@@ -18,6 +18,7 @@ package org.apache.sling.ide.impl.resource.transport;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
@@ -39,7 +40,7 @@ public class RepositoryImpl implements Repository {
     }
 
     private <T> Command<T> wrap(AbstractCommand<T> command) {
-        return new TracingCommand<T>(command, eventAdmin);
+        return new TracingCommand<>(command, eventAdmin);
     }
 
 	@Override
@@ -64,7 +65,7 @@ public class RepositoryImpl implements Repository {
 	}
 	
 	@Override
-    public Command<Void> newAddOrUpdateNodeCommand(final FileInfo fileInfo, ResourceProxy resource,
+    public Command<Void> newAddOrUpdateNodeCommand(CommandContext context, final FileInfo fileInfo, ResourceProxy resource,
             CommandExecutionFlag... flags) {
         if (flags.length != 0) {
             throw new UnsupportedOperationException("This implementation does not support any flags");

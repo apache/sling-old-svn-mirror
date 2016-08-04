@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.resources.impl;
 
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -37,9 +39,9 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
-
+/**
+ * A {@link ResourceProviderFactory} for distribution configuration resources.
+ */
 @Component(metatype = true,
         label = "Apache Sling Distribution Resources - Configuration Resource Provider Factory",
         description = "Distribution Configuration Resource Provider Factory",
@@ -51,14 +53,16 @@ import java.util.Map;
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
+@Property(name="webconsole.configurationFactory.nameHint", value="Resource kind: {kind}")
 public class DistributionConfigurationResourceProviderFactory implements ResourceProviderFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property
-    public final static String KIND = DistributionComponentConstants.PN_KIND;
+    private final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
+    private
     DistributionConfigurationManager configurationManager;
 
     private String resourceRoot;

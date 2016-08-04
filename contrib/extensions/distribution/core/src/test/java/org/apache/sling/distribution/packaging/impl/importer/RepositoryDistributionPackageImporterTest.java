@@ -18,7 +18,12 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.InputStream;
+
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
@@ -28,63 +33,48 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
-
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}
  */
 public class RepositoryDistributionPackageImporterTest {
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testImportPackageWithUnauthorizedServiceUser() throws Exception {
-        try {
-            SlingRepository repository = mock(SlingRepository.class);
-            String serviceName = "admin";
-            String path = "/var/something";
-            String privilegeName = "jcr:read";
-            RepositoryDistributionPackageImporter repositoryDistributionPackageImporter =
-                    new RepositoryDistributionPackageImporter(repository, serviceName, path, privilegeName);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionPackage distributionPackage = mock(DistributionPackage.class);
-            when(distributionPackage.getId()).thenReturn("someid");
-            repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-            fail("import cannot succeed if service is user is unable to obtain a session");
-        } catch (DistributionPackageImportException e) {
-            // expected to fail
-        }
+        SlingRepository repository = mock(SlingRepository.class);
+        String serviceName = "admin";
+        String path = "/var/something";
+        String privilegeName = "jcr:read";
+        RepositoryDistributionPackageImporter repositoryDistributionPackageImporter =
+                new RepositoryDistributionPackageImporter(repository, serviceName, path, privilegeName);
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        when(distributionPackage.getId()).thenReturn("someid");
+        repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
     }
 
-    @Test
+    @Test(expected = DistributionException.class)
     public void testImportPackageWithoutRequiredPrivileges() throws Exception {
-        try {
-            SlingRepository repository = mock(SlingRepository.class);
-            String serviceName = "admin";
-            Session session = mock(Session.class);
-            AccessControlManager acm = mock(AccessControlManager.class);
-            String privilegeName = "jcr:read";
-            Privilege privilege = mock(Privilege.class);
-            when(acm.privilegeFromName(privilegeName)).thenReturn(privilege);
-            when(session.getAccessControlManager()).thenReturn(acm);
-            when(repository.loginService(serviceName, null)).thenReturn(session);
-            String path = "/var/something";
-            RepositoryDistributionPackageImporter repositoryDistributionPackageImporter =
-                    new RepositoryDistributionPackageImporter(repository, serviceName, path, privilegeName);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionPackage distributionPackage = mock(DistributionPackage.class);
-            when(distributionPackage.getId()).thenReturn("someid");
-            repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-            fail("import cannot succeed if privileges are not sufficient");
-        } catch (DistributionPackageImportException e) {
-            // expected to fail
-        }
+        SlingRepository repository = mock(SlingRepository.class);
+        String serviceName = "admin";
+        Session session = mock(Session.class);
+        AccessControlManager acm = mock(AccessControlManager.class);
+        String privilegeName = "jcr:read";
+        Privilege privilege = mock(Privilege.class);
+        when(acm.privilegeFromName(privilegeName)).thenReturn(privilege);
+        when(session.getAccessControlManager()).thenReturn(acm);
+        when(repository.loginService(serviceName, null)).thenReturn(session);
+        String path = "/var/something";
+        RepositoryDistributionPackageImporter repositoryDistributionPackageImporter =
+                new RepositoryDistributionPackageImporter(repository, serviceName, path, privilegeName);
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        when(distributionPackage.getId()).thenReturn("someid");
+        repositoryDistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
     }
 
     @Test

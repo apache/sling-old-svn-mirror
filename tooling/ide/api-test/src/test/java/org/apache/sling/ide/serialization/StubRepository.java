@@ -17,6 +17,7 @@
 package org.apache.sling.ide.serialization;
 
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FallbackNodeTypeRegistry;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
@@ -47,7 +48,7 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceInfo,
+    public Command<Void> newAddOrUpdateNodeCommand(CommandContext context, FileInfo fileInfo, ResourceProxy resourceInfo,
             CommandExecutionFlag... flags) {
         return null;
     }

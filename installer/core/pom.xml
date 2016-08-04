@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.installer.core</artifactId>
-    <version>3.6.7-SNAPSHOT</version>
+    <version>3.6.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Installer</name>
@@ -133,7 +133,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.1.0</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>

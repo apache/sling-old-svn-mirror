@@ -82,7 +82,7 @@ public class ProjectAdapter {
 
         // get dependency to required artifacts
 
-        List<Artifact> resolvedArtifacts = new ArrayList<Artifact>(dependencies.length);
+        List<Artifact> resolvedArtifacts = new ArrayList<>(dependencies.length);
         for (MavenDependency d : dependencies) {
             resolvedArtifacts.add(MavenPlugin.getMaven().resolve(d.getGroupId(), d.getArtifactId(), d.getVersion(),
                     "jar", "", MavenPlugin.getMaven().getArtifactRepositories(), new NullProgressMonitor()));
@@ -90,7 +90,7 @@ public class ProjectAdapter {
 
         // create java project
         javaProject = JavaCore.create(project);
-        Set<IClasspathEntry> entries = new HashSet<IClasspathEntry>();
+        Set<IClasspathEntry> entries = new HashSet<>();
         entries.add(JavaRuntime.getDefaultJREContainerEntry());
         for (Artifact artifact : resolvedArtifacts) {
             entries.add(JavaCore.newLibraryEntry(Path.fromOSString(artifact.getFile().getAbsolutePath()), null, null));
@@ -124,31 +124,13 @@ public class ProjectAdapter {
             throw new IllegalArgumentException("resourceAsStream may not be null");
         }
 
-        IContainer current = project;
-
         try {
-            for (int i = 0; i < fileLocation.segmentCount() - 1; i++) {
+            
+            IContainer holder = ensureDirectoryExists(fileLocation.removeLastSegments(1));
 
-                String currentSegment = fileLocation.segment(i);
-                IResource container = current.findMember(currentSegment);
-
-                if (container != null) {
-                    if (container.getType() != IContainer.FOLDER) {
-                        throw new IllegalArgumentException("Resource " + container
-                                + " exists and is not a folder; unable to create file at path " + fileLocation);
-                    }
-
-                    current = (IContainer) container;
-                } else {
-
-                    IFolder newFolder = ((IContainer) current).getFolder(Path.fromPortableString(currentSegment));
-                    newFolder.create(true, true, new NullProgressMonitor());
-                    current = newFolder;
-                }
-            }
-
-            IFile file = current.getFile(Path.fromPortableString(fileLocation.segments()[fileLocation
-                    .segmentCount() - 1]));
+            
+            IPath fileName = Path.fromPortableString(fileLocation.lastSegment());
+            IFile file = holder.getFile(fileName);
             if (file.exists()) {
                 file.setContents(contents, true, true, new NullProgressMonitor());
             } else {
@@ -158,6 +140,40 @@ public class ProjectAdapter {
             IOUtils.closeQuietly(contents);
         }
 
+    }
+    
+    /**
+     * Ensures that the specified directory exists
+     * 
+     * @param path the path where the directory should exist
+     * @return the created or existing directory
+     * @throws CoreException
+     */
+    public IContainer ensureDirectoryExists(IPath path) throws CoreException {
+        
+        IContainer current = project;
+        
+        for (int i = 0; i < path.segmentCount(); i++) {
+
+            String currentSegment = path.segment(i);
+            IResource container = current.findMember(currentSegment);
+
+            if (container != null) {
+                if (container.getType() != IContainer.FOLDER) {
+                    throw new IllegalArgumentException("Resource " + container
+                            + " exists and is not a folder; unable to create file at path " + path);
+                }
+
+                current = (IContainer) container;
+            } else {
+
+                IFolder newFolder = ((IContainer) current).getFolder(Path.fromPortableString(currentSegment));
+                newFolder.create(true, true, new NullProgressMonitor());
+                current = newFolder;
+            }
+        }
+        
+        return current;
     }
 
     public void createVltFilterWithRoots(String... roots) throws CoreException {

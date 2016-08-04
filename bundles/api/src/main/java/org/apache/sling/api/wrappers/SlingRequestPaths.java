@@ -66,6 +66,8 @@ public class SlingRequestPaths {
     /**
      * Return the context path for r, using the appropriate request attribute if
      * the request is an included one.
+     * @param r The request
+     * @return The context path.
      */
     public static String getContextPath(HttpServletRequest r) {
         final String attr = (String) r.getAttribute(INCLUDE_CONTEXT_PATH);
@@ -75,6 +77,8 @@ public class SlingRequestPaths {
     /**
      * Return the context path for r, using the appropriate request attribute if
      * the request is an included one.
+     * @param r The request
+     * @return The path info.
      */
     public static String getPathInfo(HttpServletRequest r) {
         final String attr = (String) r.getAttribute(INCLUDE_PATH_INFO);
@@ -84,6 +88,8 @@ public class SlingRequestPaths {
     /**
      * Return the query string for r, using the appropriate request attribute if
      * the request is an included one.
+     * @param r The request
+     * @return The query string.
      */
     public static String getQueryString(HttpServletRequest r) {
         final String attr = (String) r.getAttribute(INCLUDE_QUERY_STRING);
@@ -93,6 +99,8 @@ public class SlingRequestPaths {
     /**
      * Return the request URI for r, using the appropriate request attribute if
      * the request is an included one.
+     * @param r The request
+     * @return The request uri.
      */
     public static String getRequestURI(HttpServletRequest r) {
         final String attr = (String) r.getAttribute(INCLUDE_REQUEST_URI);
@@ -102,6 +110,8 @@ public class SlingRequestPaths {
     /**
      * Return the servlet path for r, using the appropriate request attribute if
      * the request is an included one.
+     * @param r The request
+     * @return The servlet path.
      */
     public static String getServletPath(HttpServletRequest r) {
         final String attr = (String) r.getAttribute(INCLUDE_SERVLET_PATH);
@@ -111,6 +121,8 @@ public class SlingRequestPaths {
     /**
      * True if r is an included request, in which case it has the
      * INCLUDE_REQUEST_URI attribute
+     * @param r The request
+     * @return {@code true} if this is an include.
      */
     public static boolean isIncluded(HttpServletRequest r) {
         return r.getAttribute(INCLUDE_REQUEST_URI) != null;

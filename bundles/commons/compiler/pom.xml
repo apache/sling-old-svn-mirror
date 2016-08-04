@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>27</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.compiler</artifactId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>2.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons Java Compiler</name>
@@ -42,6 +42,10 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/compiler</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/compiler</url>
     </scm>
+
+    <properties>
+        <sling.java.version>7</sling.java.version>
+    </properties>
 
     <build>
         <plugins>
@@ -59,22 +63,12 @@
                             !org.eclipse.*,
                             !org.apache.tools.*,*
                         </Import-Package>
-                        <Export-Package>
-                            org.apache.sling.commons.compiler;version=2.1.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.compiler.impl
-                        </Private-Package>
                         <Embed-Dependency>
                             ecj
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -85,12 +79,12 @@
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
 
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -105,7 +99,7 @@
         <dependency>
             <groupId>org.eclipse.jdt.core.compiler</groupId>
             <artifactId>ecj</artifactId>
-            <version>P20140317-1600</version>
+            <version>4.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

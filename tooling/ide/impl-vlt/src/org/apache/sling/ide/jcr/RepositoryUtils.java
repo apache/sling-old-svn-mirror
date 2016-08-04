@@ -38,7 +38,7 @@ public abstract class RepositoryUtils {
     private static final Object SYNC = new Object();
     private static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/-/jcr:root", "crx/-/jcr:root" };
     private static final RepositoryFactory FACTORY = new DAVExRepositoryFactory();
-    private static final Map<RepositoryAddress, Repository> REGISTERED_REPOSITORIES = new HashMap<RepositoryAddress, Repository>();
+    private static final Map<RepositoryAddress, Repository> REGISTERED_REPOSITORIES = new HashMap<>();
     
     public static Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
         final RepositoryAddress repositoryAddress = getRepositoryAddress(repositoryInfo);

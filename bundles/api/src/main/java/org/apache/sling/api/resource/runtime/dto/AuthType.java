@@ -20,6 +20,8 @@ package org.apache.sling.api.resource.runtime.dto;
 
 /**
  * Enumeration for the auth type of a resource provider.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public enum AuthType {
 

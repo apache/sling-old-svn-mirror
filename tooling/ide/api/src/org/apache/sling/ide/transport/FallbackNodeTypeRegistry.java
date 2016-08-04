@@ -52,7 +52,7 @@ public class FallbackNodeTypeRegistry implements NodeTypeRegistry {
 
     }
 
-    private final List<NodeType> nodeTypes = new ArrayList<NodeType>();
+    private final List<NodeType> nodeTypes = new ArrayList<>();
 
     @Override
     public boolean isAllowedPrimaryChildNodeType(String parentNodeType, String childNodeType)

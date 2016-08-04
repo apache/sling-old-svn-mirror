@@ -165,6 +165,7 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     @Override
     public void testFailure(Failure failure) throws Exception {
         writer.key("failure").value(failure.toString());
+        writer.key("trace").value(failure.getTrace());
     }
     
     @Override

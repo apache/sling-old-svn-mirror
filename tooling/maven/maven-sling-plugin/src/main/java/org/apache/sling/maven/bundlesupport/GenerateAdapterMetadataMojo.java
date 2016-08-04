@@ -34,6 +34,10 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adaptables;
@@ -48,12 +52,10 @@ import org.objectweb.asm.tree.ClassNode;
 import org.scannotation.AnnotationDB;
 
 /**
- * @goal generate-adapter-metadata
- * @phase process-classes
- * @threadSafe
- * @description Build Adapter Metadata from Annotated Classes
- * @requiresDependencyResolution compile
+ * Build Adapter Metadata from Annotated Classes
  */
+@Mojo(name="generate-adapter-metadata", defaultPhase = LifecyclePhase.PROCESS_CLASSES, 
+    threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     private static final int JSON_INDENTATION = 4;
@@ -74,36 +76,22 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
         }
     }
 
-    /**
-     * @parameter expression="${project.build.outputDirectory}"
-     * @required
-     * @readonly
-     */
+    @Parameter(defaultValue = "${project.build.outputDirectory}", readonly = true)
     private File buildOutputDirectory;
 
     /**
      * Name of the generated descriptor file.
-     * 
-     * @parameter expression="${adapter.descriptor.name}"
-     *            default-value="SLING-INF/adapters.json"
      */
+    @Parameter(property = "adapter.descriptor.name", defaultValue = "SLING-INF/adapters.json")
     private String fileName;
 
-    /**
-     * @parameter 
-     *            expression="${project.build.directory}/adapter-plugin-generated"
-     * @required
-     * @readonly
-     */
+    @Parameter(defaultValue = "${project.build.directory}/adapter-plugin-generated", required = true, readonly = true)
     private File outputDirectory;
 
     /**
      * The Maven project.
-     * 
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
     public void execute() throws MojoExecutionException, MojoFailureException {

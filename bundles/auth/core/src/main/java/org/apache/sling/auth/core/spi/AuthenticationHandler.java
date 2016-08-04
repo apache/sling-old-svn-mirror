@@ -109,17 +109,21 @@ public interface AuthenticationHandler {
     /**
      * This enum indicates the supported detailed login failure reason codes:
      * <ul>
-     *     <li><code>invalid_login</code>:</li> indicates username/password mismatch.
-     *     <li><code>password_expired</code>:</li> indicates password has expired or was never set and
-     *     change initial password is enabled
-     *     <li><code>unknown</code>:</li> an unknown reason for the login failure was encountered.
+     *     <li><code>invalid_login</code>: indicates username/password mismatch.</li>
+     *     <li><code>password_expired</code>: indicates password has expired or was never set and
+     *     change initial password is enabled</li>
+     *     <li><code>account_locked</code>: the account was disabled or locked</li>
+     *     <li><code>account_not_found</code>: the account was not found (not the same as username password mismatch)</li>
      * </ul>
      * @since 1.1.0
      */
-    static enum FAILURE_REASON_CODES {
+    enum FAILURE_REASON_CODES {
         INVALID_LOGIN,
         PASSWORD_EXPIRED,
-        UNKNOWN;
+        PASSWORD_EXPIRED_AND_NEW_PASSWORD_IN_HISTORY,
+        UNKNOWN,
+        ACCOUNT_LOCKED,
+        ACCOUNT_NOT_FOUND;
 
         @Override
         public String toString() {

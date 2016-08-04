@@ -67,6 +67,7 @@ public class ResourceModelInterfacesTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ResourceModelWithRequiredField.class, ChildResourceModel.class, ChildValueMapModel.class, ParentModel.class, ChildModel.class); 
     }
 
     @Test

@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing-war</artifactId>
     <packaging>slingstart</packaging>
-    <version>7-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing WAR version</name>
     <description>
@@ -103,7 +103,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.4.2</version>
                 <extensions>true</extensions>
                 <configuration>
                     <createWebapp>true</createWebapp>
@@ -184,31 +184,6 @@
             <id>warIntegrationTestsInNonRootContext</id>
             <properties>
                 <http.base.path>${project.build.finalName}</http.base.path>
-            </properties>
-        </profile>
-        <profile>
-            <id>jackrabbit</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>!oak</value>
-                </property>
-            </activation>
-            <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</sling.it.excludedGroups>
-            </properties>
-        </profile>
-        <profile>
-            <id>oak</id>
-            <activation>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>oak</value>
-                </property>
-            </activation>
-            <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
             </properties>
         </profile>
     </profiles>

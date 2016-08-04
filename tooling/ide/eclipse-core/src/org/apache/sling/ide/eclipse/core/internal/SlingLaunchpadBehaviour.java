@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME;
+import static org.apache.sling.ide.artifacts.EmbeddedArtifactLocator.SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -25,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
@@ -34,6 +36,7 @@ import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
@@ -49,6 +52,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jdt.core.IJavaProject;
@@ -82,24 +86,43 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         boolean success = false;
         Result<ResourceProxy> result = null;
-        monitor.beginTask("Starting server", 5);
+        monitor = SubMonitor.convert(monitor, "Starting server", 10).setWorkRemaining(50);
         
         Repository repository;
+        RepositoryInfo repositoryInfo;
+        OsgiClient client;
         try {
             repository = ServerUtil.connectRepository(getServer(), monitor);
+            repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+            client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
         } catch (CoreException e) {
             setServerState(IServer.STATE_STOPPED);
             throw e;
+        } catch (URISyntaxException e) {
+            setServerState(IServer.STATE_STOPPED);
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
 
-        monitor.worked(2); // 2/5 done
+        monitor.worked(10); // 10/50 done
+        
+        try {
+            EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
 
+            installBundle(monitor,client, artifactLocator.loadSourceSupportBundle(), SUPPORT_SOURCE_BUNDLE_SYMBOLIC_NAME); // 15/50 done
+            installBundle(monitor,client, artifactLocator.loadToolingSupportBundle(), SUPPORT_BUNDLE_SYMBOLIC_NAME); // 20/50 done
+            
+        } catch ( IOException | OsgiClientException e) {
+            Activator.getDefault().getPluginLogger()
+                .warn("Failed reading the installation support bundle", e);
+        }
+        
         try {
             if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-                debuggerConnection = new JVMDebuggerConnection();
-                success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+                debuggerConnection = new JVMDebuggerConnection(client);
+                
+                success = debuggerConnection.connectInDebugMode(launch, getServer(), SubMonitor.convert(monitor, 30));
 
-                monitor.worked(3); // 5/5 done
+                // 50/50 done
 
             } else {
                 
@@ -107,49 +130,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 result = command.execute();
                 success = result.isSuccess();
                 
-                monitor.worked(1); // 3/5 done
+                monitor.worked(30); // 50/50 done
                 
-                RepositoryInfo repositoryInfo;
-                try {
-                    repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                    OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
-                    EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-                    Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-                    
-                    monitor.worked(1); // 4/5 done
-                    
-                    final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
-
-                    final Version embeddedVersion = new Version(supportBundle.getVersion());
-                    
-                    ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
-                            monitor);
-                    if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
-                        InputStream contents = null;
-                        try {
-                            contents = supportBundle.openInputStream();
-                            client.installBundle(contents, supportBundle.getName());
-                        } finally {
-                            IOUtils.closeQuietly(contents);
-                        }
-                        remoteVersion = embeddedVersion;
-
-                    }
-                    launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
-                            monitor);
-                    
-                    monitor.worked(1); // 5/5 done
-                    
-                } catch ( IOException e) {
-                    Activator.getDefault().getPluginLogger()
-                        .warn("Failed reading the installation support bundle", e);
-                } catch (URISyntaxException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
-                } catch (OsgiClientException e) {
-                    Activator.getDefault().getPluginLogger()
-                            .warn("Failed retrieving information about the installation support bundle", e);
-                }
             }
 
             if (success) {
@@ -162,9 +144,39 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 }
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
             }
+        } catch ( CoreException | RuntimeException e ) {
+            setServerState(IServer.STATE_STOPPED);
+            throw e;
         } finally {
             monitor.done();
         }
+    }
+
+    private void installBundle(IProgressMonitor monitor, OsgiClient client, final EmbeddedArtifact bundle,
+            String bundleSymbolicName) throws OsgiClientException, IOException {
+
+        Version embeddedVersion = new Version(bundle.getOsgiFriendlyVersion());
+        
+        monitor.setTaskName("Installing " + bundleSymbolicName + " " + embeddedVersion);
+
+        Version remoteVersion = client.getBundleVersion(bundleSymbolicName);
+        
+        monitor.worked(2);
+        
+        ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                monitor);
+        if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0 
+                || ( remoteVersion.equals(embeddedVersion) || "SNAPSHOT".equals(embeddedVersion.getQualifier()))) {
+            try ( InputStream contents = bundle.openInputStream() ){
+                client.installBundle(contents, bundle.getName());
+            }
+            remoteVersion = embeddedVersion;
+
+        }
+        launchpadServer.setBundleVersion(bundleSymbolicName, remoteVersion,
+                monitor);
+        
+        monitor.worked(3);
     }
 
     // TODO refine signature
@@ -219,13 +231,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 // SLING-3655 : when doing PUBLISH_CLEAN, the bundle deployment mechanism should 
                 // still be triggered
                 publishBundleModule(module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
 
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
-                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             } catch (SerializationException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                         + traceOperation(kind, deltaKind, module).toString(), e));
@@ -373,14 +383,16 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                     "Unable to find a repository for server " + getServer()));
         }
         
+        Batcher batcher = Activator.getDefault().getBatcherFactory().createBatcher();
+        
         // TODO it would be more efficient to have a module -> filter mapping
         // it would be simpler to implement this in SlingContentModuleAdapter, but
         // the behaviour for resources being filtered out is deletion, and that
         // would be an incorrect ( or at least suprising ) behaviour at development time
 
-        List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
+        List<IModuleResource> addedOrUpdatedResources = new ArrayList<>();
         IModuleResource[] allResources = getResources(module);
-        Set<IPath> handledPaths = new HashSet<IPath>();
+        Set<IPath> handledPaths = new HashSet<>();
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
@@ -418,13 +430,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
                             if (command != null) {
                                 ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
-                                        handledPaths);
+                                        handledPaths, batcher);
                                 addedOrUpdatedResources.add(resourceDelta.getModuleResource());
                             }
-                            execute(command);
+                            enqueue(batcher, command);
                             break;
                         case IModuleResourceDelta.REMOVED:
-                            execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
+                            enqueue(batcher, removeFileCommand(repository, resourceDelta.getModuleResource()));
                             break;
                     }
                 }
@@ -434,7 +446,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
                     Command<?> command = addFileCommand(repository, resource);
-                    execute(command);
+                    enqueue(batcher, command);
                     if (command != null) {
                         addedOrUpdatedResources.add(resource);
                     }
@@ -442,22 +454,35 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 break;
             case ServerBehaviourDelegate.REMOVED:
                 for (IModuleResource resource : getResources(module)) {
-                    execute(removeFileCommand(repository, resource));
+                    enqueue(batcher, removeFileCommand(repository, resource));
                 }
                 break;
         }
 
         // reorder the child nodes at the end, when all create/update/deletes have been processed
         for (IModuleResource resource : addedOrUpdatedResources) {
-            execute(reorderChildNodesCommand(repository, resource));
+            enqueue(batcher, reorderChildNodesCommand(repository, resource));
         }
 
+        execute(batcher);
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
 	}
+
+    private void execute(Batcher batcher) throws CoreException {
+        for ( Command<?> command : batcher.get()) {
+            Result<?> result = command.execute();
+    
+            if (!result.isSuccess()) {
+                // TODO - proper error logging
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing path="
+                        + command.getPath() + ", result=" + result.toString()));
+            }
+        }
+    }
 
     /**
      * Ensures that the parent of this resource has been published to the repository
@@ -472,12 +497,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
      * @param allResources all of the module's resources
      * @param handledPaths the paths that have been handled already in this publish operation, but possibly not
      *            registered as published
+     * @param batcher 
      * @throws IOException
      * @throws SerializationException
      * @throws CoreException
      */
     private void ensureParentIsPublished(IModuleResource moduleResource, Repository repository,
-            IModuleResource[] allResources, Set<IPath> handledPaths)
+            IModuleResource[] allResources, Set<IPath> handledPaths, Batcher batcher)
             throws CoreException, SerializationException, IOException {
 
         Logger logger = Activator.getDefault().getPluginLogger();
@@ -503,9 +529,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         for (IModuleResource maybeParent : allResources) {
             if (maybeParent.getModuleRelativePath().equals(parentPath)) {
                 // handle the parent's parent first, if needed
-                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths);
+                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths, batcher);
                 // create this resource
-                execute(addFileCommand(repository, maybeParent));
+                enqueue(batcher, addFileCommand(repository, maybeParent));
                 handledPaths.add(maybeParent.getModuleRelativePath());
                 logger.trace("Ensured that resource at path {0} is published", parentPath);
                 return;
@@ -517,18 +543,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     }
 
-    private void execute(Command<?> command) throws CoreException {
+    private void enqueue(Batcher batcher, Command<?> command)  {
         if (command == null) {
             return;
         }
-        Result<?> result = command.execute();
-
-        if (!result.isSuccess()) {
-            // TODO - proper error logging
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing path="
-                    + command.getPath() + ", result=" + result.toString()));
-        }
-
+        
+        batcher.add(command);
     }
 
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,

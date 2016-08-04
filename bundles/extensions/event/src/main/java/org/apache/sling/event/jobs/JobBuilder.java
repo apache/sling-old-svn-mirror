@@ -35,6 +35,8 @@ public interface JobBuilder {
 
     /**
      * Set the optional configuration properties for the job.
+     * @param props The properties of the job. All values must be {@code java.io.Serializable}.
+     * @return The job builder to continue building.
      */
     JobBuilder properties(final Map<String, Object> props);
 
@@ -67,6 +69,7 @@ public interface JobBuilder {
         /**
          * Suspend this scheduling by default.
          * Invoking this method several times has the same effect as calling it just once.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder suspend();
 
@@ -74,6 +77,7 @@ public interface JobBuilder {
          * Schedule the job hourly at the given minute.
          * If the minutes argument is less than 0 or higher than 59, the job can't be scheduled.
          * @param minute Between 0 and 59.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder hourly(final int minute);
 
@@ -83,6 +87,7 @@ public interface JobBuilder {
          * a value higher than 59 for minute than the job can't be scheduled.
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder daily(final int hour, final int minute);
 
@@ -94,6 +99,7 @@ public interface JobBuilder {
          * @param day Day of the week, 1:Sunday, 2:Monday, ... 7:Saturday.
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder weekly(final int day, final int hour, final int minute);
 
@@ -105,6 +111,7 @@ public interface JobBuilder {
          * @param day Day of the month from 1 to 28.
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder monthly(final int day, final int hour, final int minute);
 
@@ -118,6 +125,7 @@ public interface JobBuilder {
          * @param day Day of the month from 1 to 28.
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder yearly(final int month, final int day, final int hour, final int minute);
 
@@ -125,6 +133,7 @@ public interface JobBuilder {
          * Schedule the job for a specific date.
          * If no date or a a date in the past is provided, the job can't be scheduled.
          * @param date The date
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder at(final Date date);
 
@@ -132,6 +141,7 @@ public interface JobBuilder {
          * Schedule the job for according to the cron expression.
          * If no expression is specified, the job can't be scheduled.
          * @param expression The cron expression
+         * @return The schedule builder to continue building.
          */
         ScheduleBuilder cron(final String expression);
 

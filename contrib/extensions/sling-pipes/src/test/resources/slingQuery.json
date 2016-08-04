@@ -1,0 +1,9 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "simple": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/slingQuery",
+    "path":"/content/users",
+    "expr":"[type=user]"
+  }
+}

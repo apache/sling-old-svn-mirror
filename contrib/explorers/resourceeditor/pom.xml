@@ -64,7 +64,7 @@
 							SLING-INF/libs/sling/resource-editor;overwrite:=true;path:=/libs/sling/resource-editor
 						</Sling-Initial-Content>
 						<Import-Package>!org.slf4j.impl,*,
-							org.apache.sling.commons.js.nodetypes.javascript,
+							org.apache.sling.jcr.js.nodetypes.javascript,
 							javax.el,
 							javax.naming,
 							javax.servlet.jsp,

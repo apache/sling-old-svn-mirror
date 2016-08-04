@@ -18,7 +18,6 @@
  */
 package org.apache.sling.event.impl.jobs.tasks;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
-import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
@@ -113,24 +111,13 @@ public class CheckTopologyTask {
 
                     // this resource should exist, but we check anyway
                     if ( jobsRoot != null ) {
-                        // check if this instance supports bridged jobs
-                        final List<InstanceDescription> bridgedTargets = caps.getPotentialTargets("/", null);
-                        boolean flag = false;
-                        for(final InstanceDescription desc : bridgedTargets) {
-                            if ( desc.isLocal() ) {
-                                flag = true;
-                                break;
-                            }
-                        }
-                        final boolean supportsBridged = flag;
-
                         final Iterator<Resource> topicIter = jobsRoot.listChildren();
                         while ( caps.isActive() && topicIter.hasNext() ) {
                             final Resource topicResource = topicIter.next();
 
                             final String topicName = topicResource.getName().replace('.', '/');
                             this.logger.debug("Checking topic {}..." , topicName);
-                            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, null);
+                            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName);
                             boolean reassign = true;
                             for(final InstanceDescription desc : potentialTargets) {
                                 if ( desc.isLocal() ) {
@@ -150,37 +137,35 @@ public class CheckTopologyTask {
                                     public boolean handle(final Resource rsrc) {
                                         try {
                                             final ValueMap vm = ResourceHelper.getValueMap(rsrc);
-                                            if ( !supportsBridged || vm.get(JobImpl.PROPERTY_BRIDGED_EVENT) == null ) {
-                                                final String targetId = caps.detectTarget(topicName, vm, info);
+                                            final String targetId = caps.detectTarget(topicName, vm, info);
 
-                                                final Map<String, Object> props = new HashMap<String, Object>(vm);
-                                                props.remove(Job.PROPERTY_JOB_STARTED_TIME);
+                                            final Map<String, Object> props = new HashMap<String, Object>(vm);
+                                            props.remove(Job.PROPERTY_JOB_STARTED_TIME);
 
-                                                final String newPath;
+                                            final String newPath;
+                                            if ( targetId != null ) {
+                                                newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
+                                                props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                                            } else {
+                                                newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
+                                                props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                                            }
+                                            try {
+                                                ResourceHelper.getOrCreateResource(resolver, newPath, props);
+                                                resolver.delete(rsrc);
+                                                resolver.commit();
+                                                final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
                                                 if ( targetId != null ) {
-                                                    newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                                                    props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
-                                                    props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                                                    configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
                                                 } else {
-                                                    newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                                                    props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
-                                                    props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                                                    configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
                                                 }
-                                                try {
-                                                    ResourceHelper.getOrCreateResource(resolver, newPath, props);
-                                                    resolver.delete(rsrc);
-                                                    resolver.commit();
-                                                    final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
-                                                    if ( targetId != null ) {
-                                                        configuration.getAuditLogger().debug("REASSIGN OK {} : {}", targetId, jobId);
-                                                    } else {
-                                                        configuration.getAuditLogger().debug("REUNASSIGN OK : {}", jobId);
-                                                    }
-                                                } catch ( final PersistenceException pe ) {
-                                                    logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
-                                                    resolver.refresh();
-                                                    resolver.revert();
-                                                }
+                                            } catch ( final PersistenceException pe ) {
+                                                logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
+                                                resolver.refresh();
+                                                resolver.revert();
                                             }
                                         } catch (final InstantiationException ie) {
                                             // something happened with the resource in the meantime
@@ -209,7 +194,7 @@ public class CheckTopologyTask {
      * - capabilities
      */
     public void assignUnassignedJobs() {
-        if ( caps.isLeader() && caps.isActive() ) {
+        if ( caps != null && caps.isLeader() && caps.isActive() ) {
             logger.debug("Checking unassigned jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
             if ( resolver != null ) {
@@ -227,9 +212,6 @@ public class CheckTopologyTask {
             }
         }
     }
-
-    /** Properties to include bridge job consumers for the quick test. */
-    private static final Map<String, Object> BRIDGED_JOB = Collections.singletonMap(JobImpl.PROPERTY_BRIDGED_EVENT, (Object)Boolean.TRUE);
 
     /**
      * Try to assign all jobs from the jobs root.
@@ -249,7 +231,7 @@ public class CheckTopologyTask {
             logger.debug("Found topic {}", topicName);
 
             // first check if there is an instance for these topics
-            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, BRIDGED_JOB);
+            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName);
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
                 final QueueConfigurationManager qcm = this.configuration.getQueueConfigurationManager();
                 if ( qcm == null ) {
@@ -336,16 +318,15 @@ public class CheckTopologyTask {
     /**
      * One maintenance run
      */
-    public void fullRun(final boolean topologyChanged,
-                        final boolean configChanged) {
-        // if topology changed, reschedule assigned jobs for stopped instances
-        if ( topologyChanged ) {
+    public void fullRun() {
+        if ( this.caps != null ) {
             this.reassignJobsFromStoppedInstances();
-        }
-        // check for all topics
-        this.reassignStaleJobs();
 
-        // try to assign unassigned jobs
-        this.assignUnassignedJobs();
+            // check for all topics
+            this.reassignStaleJobs();
+
+            // try to assign unassigned jobs
+            this.assignUnassignedJobs();
+        }
     }
 }

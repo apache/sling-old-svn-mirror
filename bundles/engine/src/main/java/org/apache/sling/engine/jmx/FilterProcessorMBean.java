@@ -16,30 +16,32 @@
  */
 package org.apache.sling.engine.jmx;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This is the management interface for the Filter.
  */
 @ProviderType
 public interface FilterProcessorMBean {
-    
+
     /**
      * Returns the number of invocations collected since last resetting the
      * statistics.
      *
+     * @return Get invocation count
      * @see #resetStatistics()
      */
     long getInvocationsCount();
-    
+
     /**
      * Returns the mean filter invocation time in milliseconds since resetting
      * the statistics.
      *
+     * @return Get mean filter duration
      * @see #resetStatistics()
      */
     double getMeanFilterDurationMsec();
-   
+
     /**
      * Resets all statistics values and restarts from zero.
      */

@@ -20,13 +20,13 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>24</version>
-    <relativePath/>
+    <version>26</version>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.3-SNAPSHOT</version>
 
   <name>Apache Sling Integration Tests</name>
   <description>
@@ -49,6 +49,12 @@
 
     <!-- Timeout when checking for Sling readyness before starting tests -->
     <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
+    
+    <!-- Timeout for ClientSideTeleporter when waiting for server-side test to become available -->
+    <ClientSideTeleporter.testReadyTimeoutSeconds>10</ClientSideTeleporter.testReadyTimeoutSeconds>
+    
+    <!-- Content-type for readiness check -->
+    <launchpad.readiness.mediatype>.txt:text/plain</launchpad.readiness.mediatype>
   </properties>
 
   <scm>
@@ -113,52 +119,23 @@
                         ${HttpTestBase.readyTimeoutSeconds}
                      </value>
                  </property>
+                <property>
+                    <name>ClientSideTeleporter.testReadyTimeoutSeconds</name>
+                    <value>
+                        ${ClientSideTeleporter.testReadyTimeoutSeconds}
+                     </value>
+                 </property>
+                <property>
+                    <name>launchpad.readiness.mediatype</name>
+                    <value>
+                        ${launchpad.readiness.mediatype}
+                     </value>
+                 </property>
               </systemProperties>
             </configuration>
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-        <id>jackrabbit</id>
-        <activation>
-            <activeByDefault>true</activeByDefault>
-            <property>
-                <name>sling.run.modes</name>
-                <value>!oak</value>
-            </property>
-        </activation>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</excludedGroups>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
-    <profile>
-        <id>oak</id>
-        <activation>
-            <property>
-                <name>sling.run.modes</name>
-                <value>oak</value>
-            </property>
-        </activation>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</excludedGroups>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </build>
     </profile>
   </profiles>
 
@@ -205,7 +182,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.commons.testing</artifactId>
-      <version>2.0.19-SNAPSHOT</version>
+      <version>2.0.24</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -214,6 +191,10 @@
         <exclusion>
           <groupId>junit</groupId>
           <artifactId>junit-dep</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>asm</groupId>
+          <artifactId>asm</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -258,7 +239,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.12</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -280,6 +261,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.ops4j.pax.tinybundles</groupId>
+      <artifactId>tinybundles</artifactId>
+      <version>2.0.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.base</artifactId>
       <version>2.1.0</version>
@@ -297,7 +284,37 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.junit.remote</artifactId>
-      <version>1.0.11-SNAPSHOT</version>
+      <version>1.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.junit.core</artifactId>
+      <version>1.0.14</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.junit.teleporter</artifactId>
+      <version>1.0.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.test-services</artifactId>
+      <version>2.0.11-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.api</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+     <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.api</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.installer.core</artifactId>
+      <version>3.6.6</version>
     </dependency>
     <dependency>
     	<groupId>org.codehaus.plexus</groupId>

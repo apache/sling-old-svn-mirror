@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Collection;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The attributes provider is an extensions of a {@link ResourceProvider}.
@@ -35,7 +35,9 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceResolver#getAttributeNames()
  *
  * @since 2.2 (Sling API Bundle 2.2.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
+@Deprecated
 @ConsumerType
 public interface AttributableResourceProvider extends ResourceProvider {
 
@@ -43,6 +45,7 @@ public interface AttributableResourceProvider extends ResourceProvider {
      * Returns a collection of attribute names whose value can be retrieved
      * calling the {@link #getAttribute(ResourceResolver, String)} method.
      *
+     * @param resolver The resource resolver
      * @return A collection of attribute names or <code>null</code>
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
@@ -54,6 +57,7 @@ public interface AttributableResourceProvider extends ResourceProvider {
      * if the attribute is not set or not visible (as e.g. security
      * sensitive attributes).
      *
+     * @param resolver The resource resolver
      * @param name
      *            The name of the attribute to access
      * @return The value of the attribute or <code>null</code> if the attribute

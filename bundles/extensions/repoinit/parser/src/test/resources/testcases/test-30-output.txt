@@ -1,0 +1,6 @@
+SetAclPrincipals for user1 u2 
+  AclLine REMOVE_ALL {paths=[/libs, /apps]}
+  AclLine ALLOW {paths=[/content], privileges=[jcr:read]}
+  AclLine DENY {paths=[/apps], privileges=[jcr:write]}
+  AclLine DENY {nodetypes=[sling:Folder, nt:unstructured], paths=[/apps, /content], privileges=[jcr:lockManagement]}
+  AclLine REMOVE {paths=[/apps], privileges=[jcr:understand, some:other]}

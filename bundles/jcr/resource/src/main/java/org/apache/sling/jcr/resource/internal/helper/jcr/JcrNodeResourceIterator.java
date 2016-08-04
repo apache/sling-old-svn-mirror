@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,19 +58,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     private final String parentVersion;
 
-    /**
-     * Creates an instance using the given resource manager and the nodes
-     * provided as a node iterator.
-     *
-     * @param resourceResolver the resolver
-     * @param nodes the node iterator
-     * @param helper the helper
-     */
-    public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
-                                   final NodeIterator nodes,
-                                   final HelperData helper) {
-        this(resourceResolver, null, null, nodes, helper);
-    }
+    private final PathSet excludedPaths;
 
     /**
      * Creates an instance using the given resource manager and the nodes
@@ -81,24 +70,29 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * @param parentVersion the parent version
      * @param nodes the node iterator
      * @param helper the helper
+     * @param excludedPaths the set of excluded paths
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final String parentPath,
                                    final String parentVersion,
                                    final NodeIterator nodes,
-                                   final HelperData helper) {
+                                   final HelperData helper,
+                                   final PathSet excludedPaths) {
         this.resourceResolver = resourceResolver;
         this.parentPath = parentPath;
         this.parentVersion = parentVersion;
         this.nodes = nodes;
         this.helper = helper;
+        this.excludedPaths = excludedPaths == null ? PathSet.EMPTY_SET : excludedPaths;
         this.nextResult = seek();
     }
 
+    @Override
     public boolean hasNext() {
         return nextResult != null;
     }
 
+    @Override
     public Resource next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -113,6 +107,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * Throws <code>UnsupportedOperationException</code> as this method is not
      * supported by this implementation.
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
@@ -122,7 +117,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
             try {
                 final Node n = nodes.nextNode();
                 final String path = getPath(n);
-                if ( path != null ) {
+                if ( path != null && this.excludedPaths.matches(path) == null ) {
                     final Resource resource = new JcrNodeResource(resourceResolver,
                         path, parentVersion, n, helper);
                     LOGGER.debug("seek: Returning Resource {}", resource);
@@ -145,7 +140,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         if (parentPath == null) {
             path = node.getPath();
         } else {
-            path = String.format("%s/%s", "/".equals(parentPath) ? "" : parentPath, node.getName());
+            path = "/".equals(parentPath) ? '/' + node.getName() : parentPath + '/' + node.getName();
         }
         return helper.pathMapper.mapJCRPathToResourcePath(path);
     }

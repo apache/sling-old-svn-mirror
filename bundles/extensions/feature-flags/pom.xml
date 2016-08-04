@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>27</version>
+        <relativePath />
     </parent>
     
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.featureflags</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Feature Flags</name>
     
@@ -42,12 +42,15 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>                
+                        <Require-Capability>
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version=1.0))"
+                        </Require-Capability>
+                    </instructions>                
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -55,11 +58,13 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>org.osgi.service.http.whiteboard</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -68,14 +73,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

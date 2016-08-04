@@ -332,11 +332,6 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
 
         String code = "node['singleRef']";
         assertTrue(script.eval(code, data) instanceof Node);
-        code = "node.singleRef instanceof Array";
-        assertEquals(false, script.eval(code, data));
-
-        code = "node.multiRef instanceof Array";
-        assertEquals(true, script.eval(code, data));
 
         code = "node.multiRef[0]";
         assertTrue(script.eval(code, data) instanceof Node);

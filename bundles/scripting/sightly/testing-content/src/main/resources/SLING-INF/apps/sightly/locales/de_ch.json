@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "jcr:mixinTypes" : ["mix:language"],
+    "jcr:language" : "de_ch",
+    "bun" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "bun",
+        "sling:message" : "Brötli"
+    }
+
+}

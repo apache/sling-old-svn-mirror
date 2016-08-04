@@ -103,14 +103,20 @@ public class PerformanceIT {
             HttpStatus.SC_OK);
     }
 
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 3)
+    public void test5SlyJavaSlingModels() {
+        getStringContent("/sightlyperf/loop.html?selector=sly-java-slingmodels&count=" + CONTENT_LOOP_COUNT,
+            HttpStatus.SC_OK);
+    }
+
     @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
-    public void test5SlyJSAsync() {
+    public void test6SlyJSAsync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-async&count=" + CONTENT_LOOP_COUNT,
                 HttpStatus.SC_OK);
     }
 
     @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
-    public void test6SlyJSSync() {
+    public void test7SlyJSSync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-sync&count=" + CONTENT_LOOP_COUNT,
             HttpStatus.SC_OK);
     }

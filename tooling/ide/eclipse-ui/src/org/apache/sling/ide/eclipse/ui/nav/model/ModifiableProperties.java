@@ -18,10 +18,10 @@ package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jcr.PropertyType;
 
@@ -44,8 +44,8 @@ import de.pdark.decentxml.Text;
 
 public class ModifiableProperties implements IPropertySource {
 	
-	private Map<String, String> properties = new HashMap<String, String>();
-	private List<String> propertiesOrder = new LinkedList<String>();
+	private Map<String, String> properties = new HashMap<>();
+	private List<String> propertiesOrder = new LinkedList<>();
 	private JcrNode node;
 	private Element domElement;
 	private GenericJcrRootFile genericJcrRootFile;
@@ -76,16 +76,15 @@ public class ModifiableProperties implements IPropertySource {
 
 	@Override
 	public IPropertyDescriptor[] getPropertyDescriptors() {
-		final Map<String,IPropertyDescriptor> conversionMap = new HashMap<String,IPropertyDescriptor>();
-		for (Iterator<Map.Entry<String, String>> it = properties.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<String, String> entry = it.next();
+		final Map<String,IPropertyDescriptor> conversionMap = new HashMap<>();
+		for (Entry<String, String> entry : properties.entrySet()) {
 			TextPropertyDescriptor pd = new JcrTextPropertyDescriptor(entry, entry.getKey());
 			conversionMap.put(entry.getKey(), pd);
 		}
-		final List<String> propertiesOrderCopy = new LinkedList<String>(propertiesOrder);
+		final List<String> propertiesOrderCopy = new LinkedList<>(propertiesOrder);
 		final String jcrPrimaryType = "jcr:primaryType";
         if (!properties.containsKey(jcrPrimaryType)) {
-		    Map<String, String> pseudoMap = new HashMap<String, String>();
+		    Map<String, String> pseudoMap = new HashMap<>();
 		    pseudoMap.put(jcrPrimaryType, node.getPrimaryType());
 		    final TextPropertyDescriptor pseudoPd = new JcrTextPropertyDescriptor(pseudoMap.entrySet().iterator().next(), jcrPrimaryType);
 		    propertiesOrderCopy.add(0, jcrPrimaryType);
@@ -175,13 +174,12 @@ public class ModifiableProperties implements IPropertySource {
 		this.domElement = domNode;
 		final List<Attribute> attributes = domNode.getAttributes();
 		if (attributes!=null) {
-			for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
-				final Attribute a = it.next();
-				final String name = a.getName();
+			for (Attribute attribute : attributes) {
+				final String name = attribute.getName();
 				if (name.startsWith("xmlns:")) {
 				    continue;
 				}
-                properties.put(name, a.getValue());
+                properties.put(name, attribute.getValue());
                 propertiesOrder.add(name);
 			}
 		}
@@ -231,8 +229,7 @@ public class ModifiableProperties implements IPropertySource {
                 // guestimate
                 correctPreSpace = NL + INDENT;
             }
-            for (Iterator it = list.iterator(); it.hasNext();) {
-                Attribute attribute = (Attribute) it.next();
+            for (Attribute attribute : list) {
                 if (!attribute.getName().startsWith("xmlns:")) {
                     attribute.setPreSpace(correctPreSpace);
                 }

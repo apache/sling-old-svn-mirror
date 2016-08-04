@@ -163,5 +163,10 @@ public class MockNodeTest {
         assertNotNull(ntFile.getProperty(JcrConstants.JCR_CREATED).getDate());
         assertNotNull(ntFile.getProperty("jcr:createdBy").getString());
     }
+
+    @Test
+    public void testGetMixinNodeTypes() throws Exception {
+        assertEquals(0, this.node1.getMixinNodeTypes().length);
+    }
     
 }

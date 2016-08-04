@@ -85,7 +85,7 @@ public class ResourceChangeCommandFactoryTest {
         assertThat("command.resource.properties", command.getResourceProxy().getProperties(),
                 equalTo(singletonMap("jcr:primaryType", (Object) "nt:folder")));
         assertThat("command.fileinfo", command.getFileInfo(), nullValue());
-        assertThat("command.kind", command.getKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class ResourceChangeCommandFactoryTest {
         SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
                 contentProject.findMember("jcr_root/content/test-root/nested"));
 
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         props.put("jcr:primaryType", "sling:Folder");
         props.put("jcr:title", "Some Folder");
 
@@ -107,7 +107,7 @@ public class ResourceChangeCommandFactoryTest {
         assertThat("command.resource.path", command.getResourceProxy().getPath(), equalTo("/content/test-root/nested"));
         assertThat("command.resource.properties", command.getResourceProxy().getProperties(), equalTo(props));
         assertThat("command.fileinfo", command.getFileInfo(), nullValue());
-        assertThat("command.kind", command.getKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
     }
 
     @Test

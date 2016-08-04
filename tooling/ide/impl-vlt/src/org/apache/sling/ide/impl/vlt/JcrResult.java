@@ -24,13 +24,13 @@ public class JcrResult<T> implements Result<T> {
 
     public static <T> JcrResult<T> success(T payload) {
 
-        return new JcrResult<T>(true, payload, null);
+        return new JcrResult<>(true, payload, null);
 
     }
 
     public static <T> JcrResult<T> failure(Throwable t) {
 
-        return new JcrResult<T>(false, null, new RepositoryException(t));
+        return new JcrResult<>(false, null, new RepositoryException(t));
     }
 
     private final boolean success;

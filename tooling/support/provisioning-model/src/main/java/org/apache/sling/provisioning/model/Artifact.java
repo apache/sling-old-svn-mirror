@@ -16,6 +16,7 @@
  */
 package org.apache.sling.provisioning.model;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,6 +55,24 @@ public class Artifact extends Commentable implements Comparable {
             final String version,
             final String classifier,
             final String type) {
+        this(gId, aId, version, classifier, type, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Create a new artifact object
+     * @param gId   The group id (required)
+     * @param aId   The artifact id (required)
+     * @param version The version (required)
+     * @param classifier The classifier (optional)
+     * @param type The type/extension (optional, defaults to jar)
+     * @param metadata The metadata associated with the Artifact
+     */
+    public Artifact(final String gId,
+            final String aId,
+            final String version,
+            final String classifier,
+            final String type,
+            final Map<String, String> metadata) {
         this.groupId = (gId != null ? gId.trim() : null);
         this.artifactId = (aId != null ? aId.trim() : null);
         this.version = (version != null ? version.trim() : null);
@@ -69,6 +88,7 @@ public class Artifact extends Commentable implements Comparable {
         } else {
             this.classifier = trimmedClassifier;
         }
+        this.metadata.putAll(metadata);
     }
 
     /**

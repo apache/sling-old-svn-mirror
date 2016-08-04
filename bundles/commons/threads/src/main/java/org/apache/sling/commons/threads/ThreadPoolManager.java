@@ -17,10 +17,13 @@
 package org.apache.sling.commons.threads;
 
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The <code>ThreadPoolManager</code> manages thread pools.
  *
  */
+@ProviderType
 public interface ThreadPoolManager {
 
     /** The default thread pool name */
@@ -60,6 +63,7 @@ public interface ThreadPoolManager {
 
     /**
      * Release the thread pool again.
+     * @param pool The thread pool to release
      */
     void release(ThreadPool pool);
 }

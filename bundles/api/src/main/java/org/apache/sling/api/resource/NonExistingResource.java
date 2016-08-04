@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import javax.annotation.Nonnull;
+
 /**
  * Simple helper class representing nonexisting resources.
  *
@@ -43,7 +45,7 @@ public final class NonExistingResource extends SyntheticResource {
     /**
      * @see org.apache.sling.api.resource.SyntheticResource#getResourceType()
      */
-    public final String getResourceType() {
+    public final @Nonnull String getResourceType() {
         // overwrite to prevent overwriting of this method in extensions of
         // this class because the specific resource type is the marker of a
         // NonExistingResource
@@ -54,4 +56,18 @@ public final class NonExistingResource extends SyntheticResource {
         // overwrite to only list the class name and path, type is irrelevant
         return getClass().getSimpleName() + ", path=" + getPath();
     }
+
+    /**
+     * 
+     * @return the parent resource (might be a {@link NonExistingResource} in case the parent does not exist either).
+     */
+    public Resource getParent() {
+        Resource parent = super.getParent();
+        if (parent == null) {
+            return new NonExistingResource(getResourceResolver(), ResourceUtil.getParent(getPath()));
+        } else {
+            return parent;
+        }
+    }
+
 }

@@ -19,7 +19,6 @@
 
 package org.apache.sling.distribution.resources.impl.common;
 
-
 import java.lang.reflect.Array;
 import java.util.Map;
 
@@ -90,7 +89,7 @@ class SimpleReadableResource extends AbstractResource {
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 
         if (type == ValueMap.class || type == Map.class) {
-            return (AdapterType) new ValueMapDecorator(getProperties());
+            return type.cast(new ValueMapDecorator(getProperties()));
         } else {
             if (adapters != null) {
                 for (Object adapter : adapters) {
@@ -103,7 +102,7 @@ class SimpleReadableResource extends AbstractResource {
                             return convertArray(type, adapterArray);
                         }
                     } else if (type.isAssignableFrom(adapter.getClass())) {
-                        return (AdapterType) adapter;
+                        return type.cast(adapter);
                     }
                 }
             }
@@ -120,7 +119,7 @@ class SimpleReadableResource extends AbstractResource {
             }
             result[i] = array[i];
         }
-
+        // TODO is this correct? result = ArrayType[], not ArrayType
         return (ArrayType) result;
     }
 }

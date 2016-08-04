@@ -20,32 +20,16 @@ package org.apache.sling.servlets.resolver.internal.resource;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-public class ServletResourceProvider implements ResourceProvider {
-
-    private static final Iterator<Resource> EMPTY_ITERATOR = new Iterator<Resource>() {
-
-        public boolean hasNext() {
-            return false;
-        }
-
-        public Resource next() {
-            throw new NoSuchElementException();
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    };
+public class ServletResourceProvider extends ResourceProvider<Object> {
 
     private Servlet servlet;
 
@@ -59,22 +43,28 @@ public class ServletResourceProvider implements ResourceProvider {
         this.servlet = servlet;
     }
 
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
-
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
+    @Override
+    public Resource getResource(final ResolveContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         // only return a resource if the servlet has been assigned
         if (servlet != null && resourcePaths.contains(path)) {
-            return new ServletResource(resourceResolver, servlet, path);
+            return new ServletResource(ctx.getResourceResolver(), servlet, path);
         }
 
+        final ResourceProvider parentProvider = ctx.getParentResourceProvider();
+        if ( parentProvider != null ) {
+            final Resource useParent = (parent instanceof ServletResource ? null : parent);
+            return parentProvider.getResource(ctx.getParentResolveContext(), path, resourceContext, useParent);
+        }
         return null;
     }
 
-    public Iterator<Resource> listChildren(final Resource parent) {
-        return EMPTY_ITERATOR;
+    @Override
+    public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+        final ResourceProvider parentProvider = ctx.getParentResourceProvider();
+        if ( parentProvider != null ) {
+            return parentProvider.listChildren(ctx.getParentResolveContext(), parent);
+        }
+        return null;
     }
 
     Servlet getServlet() {

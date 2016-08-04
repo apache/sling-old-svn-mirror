@@ -39,16 +39,15 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 
 abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
 
     /**
      * The URL to the OSGi Bundle repository to which the bundle is posted, e.g.
      * <code>http://obr.sample.com</code>
-     * 
-     * @parameter expression="${obr}"
-     * @required
      */
+    @Parameter(required = true, property="obr")
     private String obr;
 
     /**
@@ -148,9 +147,10 @@ abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
         JarInputStream jis = null;
         JarOutputStream jos;
         OutputStream out = null;
+        JarFile sourceJar = null;
         try {
             // now create a temporary file and update the version
-            final JarFile sourceJar = new JarFile(file);
+            sourceJar = new JarFile(file);
             final Manifest manifest = sourceJar.getManifest();
             manifest.getMainAttributes().putValue("Bundle-Version", newVersion);
 
@@ -183,6 +183,14 @@ abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
             throw new MojoExecutionException(
                 "Unable to update version in jar file.", ioe);
         } finally {
+            if (sourceJar != null) {
+                try {
+                    sourceJar.close();
+                }
+                catch (IOException ex) {
+                    // close
+                }
+            }
             IOUtils.closeQuietly(jis);
             IOUtils.closeQuietly(out);
         }

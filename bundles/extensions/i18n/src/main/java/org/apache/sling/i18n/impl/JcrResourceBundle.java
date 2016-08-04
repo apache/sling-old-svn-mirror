@@ -48,7 +48,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     /** default primary type (=resource type) for message entry dictionaries */
     static final String RT_MESSAGE_ENTRY = "sling:MessageEntry";
-    
+
     static final String MIXIN_MESSAGE = "sling:Message";
 
     static final String MIXIN_LANGUAGE = "mix:language";
@@ -102,7 +102,7 @@ public class JcrResourceBundle extends ResourceBundle {
     protected void setParent(ResourceBundle parent) {
         super.setParent(parent);
     }
-    
+
     public ResourceBundle getParent() {
         return parent;
     }
@@ -164,7 +164,6 @@ public class JcrResourceBundle extends ResourceBundle {
      *
      * @throws NullPointerException if either of the parameters is {@code null}.
      */
-    @SuppressWarnings("deprecation")
     private Map<String, Object> loadFully(final ResourceResolver resolver, Set<String> roots, Set<String> languageRoots) {
 
         final String[] searchPath = resolver.getSearchPath();

@@ -17,7 +17,8 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<html data-sly-use.type="org.apache.sling.hapi.TypeView" lang="${type.lang}">
+<html data-sly-use.type="org.apache.sling.hapi.sightly.TypeView"
+      data-sly-use.hapitype="${'org.apache.sling.hapi.sightly.HApiUse' @type='org.apache.sling.hapi.common.hapi_type'}" lang="${type.lang}">
 
     <head>
         <meta charset="utf-8">
@@ -38,18 +39,18 @@
 
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-sly-attribute="${hapitype.itemtype}">
 
-            <h1>${type.title}</h1>
+            <h1 data-sly-attribute="${hapitype.itemprop.hapi_name}">${type.title}</h1>
             <div>
-                <p>${type.description}</p>
+                <p data-sly-attribute="${hapitype.itemprop.hapi_description}">${type.description}</p>
             </div>
             <h2 data-sly-test.parentUrl="${type.parentUrl}"> extends
-                <a href="${parentUrl}" >${type.parentFqdn}</a>
+                <a data-sly-attribute="${hapitype.itemprop.hapi_parent}" href="${parentUrl}" >${type.parentFqdn}</a>
             </h2>
             <h3 data-sly-test="${type.parameters}">Parameters: </h3>
                 <ul data-sly-list.param="${type.parameters}" title="Parameters" class="list-inline">
-                <li>${param}</li>
+                <li data-sly-attribute="${hapitype.itemprop.hapi_parameter}">${param}</li>
             </ul>
             <h3>Properties: </h3>
             <table class="table" data-sly-test.props="${type.props}">
@@ -62,13 +63,17 @@
                     </tr>
                 </thead>
                 <tbody data-sly-list.prop="${type.props}">
-                    <tr>
-                        <th>${prop.name}</th>
+                    <tr data-sly-attribute="${hapitype.itemprop.hapi_property}"
+                        data-sly-use.hapi_type_prop="${'org.apache.sling.hapi.sightly.HApiUse' @type=hapitype.proptype.hapi_property}">
+
+                        <th data-sly-attribute="${hapi_type_prop.itemprop.hapi_name}">${prop.name}</th>
                         <td>
-                            <a href="${prop.type.url}">${prop.type.name}</a>
+                            <a data-sly-attribute="${hapi_type_prop.itemprop.hapi_property_type}" href="${prop.type.url}">
+                                ${prop.type.name}
+                            </a>
                         </td>
-                        <td>${prop.multiple}</td>
-                        <td>${prop.description}</td>
+                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_multiple}">${prop.multiple}</td>
+                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_description}">${prop.description}</td>
                     </tr>
                 </tbody>
             </table>

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>27</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>org.apache.sling.karaf-distribution</artifactId>
+  <version>0.1.1-SNAPSHOT</version>
+  <packaging>karaf-assembly</packaging>
+
+  <name>Apache Sling - Karaf Distribution</name>
+  <description>Apache Sling Karaf Distribution</description>
+
+  <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
+
+  <properties>
+    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <servicemix.specs.version>2.7.0</servicemix.specs.version>
+    <xerces.version>2.11.0</xerces.version>
+    <xalan.bundle.version>2.7.2_3</xalan.bundle.version>
+    <xalan-serializer.bundle.version>2.7.2_1</xalan-serializer.bundle.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>framework</artifactId>
+      <version>${org.apache.karaf.version}</version>
+      <type>kar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>standard</artifactId>
+      <version>${org.apache.karaf.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-features</artifactId>
+      <version>${project.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>ianal-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <version>${org.apache.karaf.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>process-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>assembly</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>package</id>
+            <goals>
+              <goal>archive</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <installedFeatures>
+            <!-- Apache Karaf -->
+            <feature>wrapper</feature>
+            <feature>wrap</feature>
+            <feature>aries-blueprint</feature>
+            <feature>shell-compat</feature>
+            <feature>kar</feature>
+            <!-- Apache Sling -->
+            <feature>sling</feature>
+            <!-- Apache Sling Auth -->
+            <feature>sling-auth-form</feature>
+            <!-- Apache Sling Commons -->
+            <feature>sling-commons-compiler</feature>
+            <feature>sling-commons-classloader</feature>
+            <feature>sling-commons-fsclassloader</feature>
+            <feature>sling-commons-messaging</feature>
+            <feature>sling-commons-messaging-mail</feature>
+            <feature>sling-commons-metrics</feature>
+            <feature>sling-commons-scheduler</feature>
+            <feature>sling-commons-threads</feature>
+            <!-- Apache Sling Extensions -->
+            <feature>sling-extension-adapter</feature>
+            <feature>sling-extension-bundleresource</feature>
+            <feature>sling-extension-discovery</feature>
+            <feature>sling-extension-discovery-impl</feature>
+            <feature>sling-extension-discovery-oak</feature>
+            <feature>sling-extension-discovery-standalone</feature>
+            <feature>sling-extension-event</feature>
+            <feature>sling-extension-explorer</feature>
+            <feature>sling-extension-featureflags</feature>
+            <feature>sling-extension-fsresource</feature>
+            <feature>sling-extension-i18n</feature>
+            <feature>sling-extension-jmx-provider</feature>
+            <feature>sling-extension-models</feature>
+            <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-threaddump</feature>
+            <feature>sling-extension-validation</feature>
+            <feature>sling-extension-xss</feature>
+            <!-- Apache Sling Installer -->
+            <feature>sling-installer</feature>
+            <feature>sling-installer-provider-file</feature>
+            <feature>sling-installer-provider-jcr</feature>
+            <!-- Apache Sling JCR -->
+            <feature>sling-jcr</feature>
+            <feature>sling-jcr-compiler</feature>
+            <feature>sling-jcr-jackrabbit-security</feature>
+            <feature>sling-jcr-oak</feature>
+            <feature>sling-jcr-repoinit</feature>
+            <!-- Apache Sling Launchpad -->
+            <feature>sling-launchpad-content</feature>
+            <feature>sling-launchpad-oak</feature>
+            <feature>sling-launchpad-oak-tar</feature>
+            <feature>sling-launchpad-oak-mongo</feature>
+            <!-- Apache Sling Scripting -->
+            <feature>sling-scripting</feature>
+            <feature>sling-scripting-javascript</feature>
+            <feature>sling-scripting-jsp</feature>
+            <feature>sling-scripting-sightly</feature>
+            <!-- Apache Sling Servlets -->
+            <feature>sling-servlets</feature>
+            <!-- Apache Jackrabbit -->
+            <feature>jackrabbit-sling</feature>
+            <!-- Apache Tika -->
+            <feature>tika-sling</feature>
+            <!-- Apache Sling Auth (contrib) -->
+            <feature>sling-auth-openid</feature>
+            <feature>sling-auth-selector</feature>
+            <!-- Apache Sling Commons (contrib) -->
+            <feature>sling-commons-html</feature>
+            <!-- Apache Sling Extensions (contrib) -->
+            <feature>sling-extension-distribution</feature>
+            <feature>sling-extension-healthcheck</feature>
+            <feature>sling-extension-query</feature>
+            <feature>sling-extension-resourcemerger</feature>
+            <feature>sling-extension-rewriter</feature>
+            <feature>sling-extension-security</feature>
+            <feature>sling-extension-urlrewriter</feature>
+            <!-- Apache Sling Launchpad (contrib) -->
+            <feature>sling-launchpad-nosql-couchbase</feature>
+            <feature>sling-launchpad-nosql-mongodb</feature>
+            <!-- Apache Sling NoSQL (contrib) -->
+            <feature>sling-nosql-generic</feature>
+            <feature>sling-nosql-couchbase</feature>
+            <feature>sling-nosql-mongodb</feature>
+            <!-- Apache Sling Scripting (contrib) -->
+            <feature>sling-scripting-freemarker</feature>
+            <feature>sling-scripting-groovy</feature>
+            <feature>sling-scripting-java</feature>
+            <feature>sling-scripting-thymeleaf</feature>
+            <!-- Apache Sling Samples -->
+            <feature>sling-samples-fling</feature>
+            <!-- Composum -->
+            <feature>composum-sling</feature>
+          </installedFeatures>
+          <startupFeatures>
+            <!-- <feature>eventadmin</feature> -->
+          </startupFeatures>
+          <bootFeatures>
+            <feature>eventadmin</feature>
+            <feature>shell</feature>
+            <feature>feature</feature>
+            <feature>jaas</feature>
+            <feature>ssh</feature>
+            <feature>management</feature>
+            <feature>bundle</feature>
+            <feature>config</feature>
+            <feature>deployer</feature>
+            <feature>diagnostic</feature>
+            <feature>instance</feature>
+            <feature>log</feature>
+            <feature>package</feature>
+            <feature>service</feature>
+            <feature>system</feature>
+            <!-- TODO -->
+            <feature>scr</feature>
+            <feature>http</feature>
+            <feature>http-whiteboard</feature>
+            <feature>webconsole</feature>
+          </bootFeatures>
+          <libraries>
+            <library>xerces-${xerces.version}.jar;url:="wrap:mvn:xerces/xercesImpl/${xerces.version}$Export-Package=org.apache.*;version=${xerces.version}";type:=endorsed;export:=true;delegate:=true</library>
+
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxp-api-1.4/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxb-api-2.2/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxws-api-2.2/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.saaj-api-1.3/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.activation-api-1.1/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.2/${servicemix.specs.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xalan/${xalan.bundle.version};type:=endorsed;export:=true</library>
+            <library>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xalan-serializer/${xalan-serializer.bundle.version};type:=endorsed;export:=true</library>
+            <library>mvn:javax.annotation/javax.annotation-api/1.2;type:=endorsed;export:=true</library>
+
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.activator/${servicemix.specs.version};type:=default;export:=true</library>
+            <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.locator/${servicemix.specs.version};type:=default;export:=true</library>
+          </libraries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

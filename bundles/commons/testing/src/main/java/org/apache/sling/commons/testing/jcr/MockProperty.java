@@ -67,7 +67,7 @@ public class MockProperty implements Property {
     }
 
     public PropertyDefinition getDefinition() throws RepositoryException {
-        return new MockPropertyDefinition(values.length > 1);
+        return new MockPropertyDefinition(isMultiple());
     }
 
     public double getDouble() throws ValueFormatException, RepositoryException {
@@ -267,8 +267,7 @@ public class MockProperty implements Property {
     }
 
     public boolean isMultiple() throws RepositoryException {
-        // TODO Auto-generated method stub
-        return false;
+        return values.length > 1;
     }
 
     public void setValue(BigDecimal value) throws ValueFormatException,

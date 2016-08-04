@@ -19,11 +19,14 @@
 [feature name=sling]
 # Dependencies
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
-  org.apache.sling/org.apache.sling.scripting.sightly/1.0.5-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.scripting.sightly.compiler/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/0.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly/1.0.19-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.11-SNAPSHOT
-  org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.1-SNAPSHOT
-  org.apache.sling/org.apache.sling.scripting.sightly.testing-content/1.0.5-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.testing-content/1.0.7-SNAPSHOT
 
 
 # additional configuration for testing
@@ -37,6 +40,9 @@
     org.apache.sling.commons.log.names=["org.apache.sling.scripting.sightly.js.impl.jsapi.ProxyAsyncScriptableFactory"]
     org.apache.sling.commons.log.file="logs/error.log"
     org.apache.sling.commons.log.level="error"
+
+  org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl
+    resource.resolver.searchpath=["/apps", "/libs", "/sightlytck/scripts"]
 
 [settings]
   sling.system.packages.class.com.vladium.emma.rt.RT=com.vladium.emma.rt

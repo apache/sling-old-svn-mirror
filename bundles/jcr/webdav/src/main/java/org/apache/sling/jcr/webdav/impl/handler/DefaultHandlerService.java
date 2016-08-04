@@ -26,6 +26,8 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.server.io.DefaultHandler;
+import org.apache.jackrabbit.server.io.DeleteContext;
+import org.apache.jackrabbit.server.io.DeleteHandler;
 import org.apache.jackrabbit.server.io.ExportContext;
 import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.IOManager;
@@ -58,7 +60,8 @@ import javax.jcr.RepositoryException;
     @Property(name = SlingWebDavServlet.TYPE_NONCOLLECTIONS, value = SlingWebDavServlet.TYPE_NONCOLLECTIONS_DEFAULT, propertyPrivate = false),
     @Property(name = SlingWebDavServlet.TYPE_CONTENT, value = SlingWebDavServlet.TYPE_CONTENT_DEFAULT, propertyPrivate = false) })
 @Service
-public class DefaultHandlerService implements IOHandler, PropertyHandler, CopyMoveHandler {
+public class DefaultHandlerService implements IOHandler, PropertyHandler, CopyMoveHandler,
+        DeleteHandler {
 
     private DefaultHandler delegatee;
 
@@ -167,5 +170,15 @@ public class DefaultHandlerService implements IOHandler, PropertyHandler, CopyMo
 
     public boolean move(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
       return delegatee.move(context, source, destination);
+    }
+
+    public boolean delete(DeleteContext deleteContext, DavResource davResource)
+            throws DavException {
+        return delegatee.delete(deleteContext, davResource);
+    }
+
+    public boolean canDelete(DeleteContext deleteContext,
+            DavResource davResource) {
+        return delegatee.canDelete(deleteContext, davResource);
     }
 }

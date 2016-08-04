@@ -37,6 +37,9 @@
         <metatype:AD id="queueSize"
             type="Integer" default="-1" name="%queueSize.name"
             description="%queueSize.description" />
+        <metatype:AD id="maxThreadAge"
+            type="Long" default="300000" name="%maxThreadAge.name"
+            description="%maxThreadAge.description" />
         <metatype:AD id="keepAliveTime"
             type="Long" default="60000" name="%keepAliveTime.name"
             description="%keepAliveTime.description" />
@@ -64,6 +67,8 @@
             <metatype:Option value="MIN" label="Min" />
             <metatype:Option value="MAX" label="Max" />
         </metatype:AD>
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String" default="{name}" />
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory"

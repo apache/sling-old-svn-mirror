@@ -26,7 +26,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ValueMap</code> is an easy way to access properties of a resource.
@@ -61,6 +61,7 @@ public interface ValueMap extends Map<String, Object> {
      *
      * @param name The name of the property
      * @param type The class of the type
+     * @param <T> The class of the type
      * @return Return named value converted to type T or <code>null</code> if
      *         non existing or can't be converted.
      */
@@ -73,6 +74,7 @@ public interface ValueMap extends Map<String, Object> {
      * case.
      *
      * @param name The name of the property
+     * @param <T> The expected type
      * @param defaultValue The default value to use if the named property does
      *            not exist or cannot be converted to the requested type. The
      *            default value is also used to define the type to convert the

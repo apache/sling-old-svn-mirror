@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.auth.core</artifactId>
     <packaging>bundle</packaging>
-    <version>1.3.11-SNAPSHOT</version>
+    <version>1.3.17-SNAPSHOT</version>
 
     <name>Apache Sling Authentication Service</name>
     <description>

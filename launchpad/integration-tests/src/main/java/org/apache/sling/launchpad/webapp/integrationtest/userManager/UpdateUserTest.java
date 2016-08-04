@@ -33,11 +33,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the 'updateAuthorizable' and 'changePassword' Sling Post 
@@ -170,26 +168,6 @@ public class UpdateUserTest {
 		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-	}
-
-	/**
-	 * Test for SLING-2069
-	 * @throws IOException
-	 */
-	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
-	public void testChangeUserPasswordAsUserAdminMemberWithoutOldPwd() throws IOException {
-		testUserId = H.createTestUser();
-		H.addUserToUserAdminGroup(testUserId);
-		
-        String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
-
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
-		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
-		
-		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
 		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 	}
 

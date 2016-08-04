@@ -16,14 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
@@ -36,35 +50,28 @@ import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
-import org.apache.jackrabbit.vault.packaging.Packaging;
+import org.apache.jackrabbit.vault.packaging.PackageProperties;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for creating vlt filters and import/export options
  */
 public class VltUtils {
 
-    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, PathFilterSet> filters) {
+    private final static Logger log = LoggerFactory.getLogger(VltUtils.class);
+
+    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest, NavigableMap<String, List<String>> filters) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
 
         for (String path : distributionRequest.getPaths()) {
-            boolean deep = distributionRequest.isDeep(path);
-            PathFilterSet filterSet = createFilterSet(path, deep, filters);
+
+            PathFilterSet filterSet = createFilterSet(path, filters, distributionRequest);
             filter.add(filterSet);
         }
 
@@ -89,28 +96,45 @@ public class VltUtils {
         return paths;
     }
 
-    private static PathFilterSet createFilterSet(String path, boolean deep, NavigableMap<String, PathFilterSet> filters) {
+    private static PathFilterSet createFilterSet(String path, NavigableMap<String, List<String>> globalFilters, DistributionRequest distributionRequest) {
+        boolean deep = distributionRequest.isDeep(path);
         PathFilterSet filterSet = new PathFilterSet(path);
 
         if (!deep) {
             filterSet.addInclude(new DefaultPathFilter(path));
-        } else {
+        }
 
-            // add the most specific filter rules
-            for (String key : filters.descendingKeySet()) {
-                if (path.startsWith(key)) {
-                    filterSet.addAll(filters.get(key));
-                    break;
-                }
+        List<String> patterns = new ArrayList<String>();
+
+        // add the most specific filter rules
+        for (String key : globalFilters.descendingKeySet()) {
+            if (path.startsWith(key)) {
+                patterns.addAll(globalFilters.get(key));
+                break;
             }
         }
+
+        patterns.addAll(Arrays.asList(distributionRequest.getFilters(path)));
+
+        for (String pattern : patterns) {
+            PathFilterSet.Entry<DefaultPathFilter> entry = extractPathPattern(pattern);
+
+            if (entry.isInclude()) {
+                filterSet.addInclude(entry.getFilter());
+            } else {
+                filterSet.addExclude(entry.getFilter());
+            }
+        }
+
         return filterSet;
     }
+
 
     public static ExportOptions getExportOptions(WorkspaceFilter filter, String[] packageRoots,
                                                  String packageGroup,
                                                  String packageName,
-                                                 String packageVersion) {
+                                                 String packageVersion,
+                                                 boolean useBinaryReferences) {
         DefaultMetaInf inf = new DefaultMetaInf();
         ExportOptions opts = new ExportOptions();
         inf.setFilter(filter);
@@ -119,6 +143,7 @@ public class VltUtils {
         props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
         props.setProperty(VaultPackage.NAME_NAME, packageName);
         props.setProperty(VaultPackage.NAME_VERSION, packageVersion);
+    	props.setProperty(PackageProperties.NAME_USE_BINARY_REFERENCES, String.valueOf(useBinaryReferences));
         inf.setProperties(props);
 
         opts.setMetaInf(inf);
@@ -160,7 +185,6 @@ public class VltUtils {
         }
 
 
-
         if (packageRoot == null || !packageRoot.startsWith("/")) {
             packageRoot = "/";
         }
@@ -169,21 +193,23 @@ public class VltUtils {
 
     }
 
-    public static ImportOptions getImportOptions(AccessControlHandling aclHandling, ImportMode importMode) {
+    public static ImportOptions getImportOptions(AccessControlHandling aclHandling, ImportMode importMode, int autosaveThreshold) {
         ImportOptions opts = new ImportOptions();
         if (aclHandling != null) {
             opts.setAccessControlHandling(aclHandling);
-        }
-        else {
+        } else {
             // default to overwrite
             opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
         }
         if (importMode != null) {
             opts.setImportMode(importMode);
-        }
-        else {
+        } else {
             // default to update
             opts.setImportMode(ImportMode.UPDATE);
+        }
+
+        if (autosaveThreshold >= 0) {
+            opts.setAutoSaveThreshold(autosaveThreshold);
         }
 
         return opts;
@@ -193,8 +219,7 @@ public class VltUtils {
         File file = File.createTempFile("distr-vault-create-" + System.nanoTime(), ".zip", tempFolder);
 
         try {
-            VaultPackage vaultPackage = packageManager.assemble(session, options, file);
-            return vaultPackage;
+            return packageManager.assemble(session, options, file);
         } catch (RepositoryException e) {
             FileUtils.deleteQuietly(file);
             throw e;
@@ -258,7 +283,6 @@ public class VltUtils {
         return directory;
     }
 
-
     public static String findParent(String path, String nodeName) {
         path = path.endsWith("/") ? path : path + "/";
 
@@ -273,10 +297,15 @@ public class VltUtils {
         return path.substring(0, idx);
     }
 
+    public static String appendMatchAll(String path) {
+        path = path.endsWith("/") ? path : path + "/";
+        path = path + ".*";
+        return path;
+    }
 
-    public static TreeMap<String, PathFilterSet> parseFilters(String[] filters) {
+    public static TreeMap<String, List<String>> parseFilters(String[] filters) {
 
-        TreeMap<String, PathFilterSet> result = new TreeMap<String, PathFilterSet>();
+        TreeMap<String, List<String>> result = new TreeMap<String, List<String>>();
 
         if (filters == null || filters.length == 0) {
             return result;
@@ -290,24 +319,69 @@ public class VltUtils {
                     continue;
                 }
 
-                PathFilterSet filterSet = new PathFilterSet();
+                List<String> filterSet = new ArrayList<String>();
 
-                for (int i=1; i < filterParts.length; i++) {
+                for (int i = 1; i < filterParts.length; i++) {
                     String filterPart = SettingsUtils.removeEmptyEntry(filterParts[i]);
                     if (filterPart == null) {
                         continue;
                     }
 
-                    if (filterPart.startsWith("+")) {
-                        filterSet.addInclude(new DefaultPathFilter(filterPart.substring(1)));
-                    } else if (filterPart.startsWith("-")) {
-                        filterSet.addExclude(new DefaultPathFilter(filterPart.substring(1)));
-                    }
+                    filterSet.add(filterPart);
                 }
 
                 result.put(path, filterSet);
 
             }
+        }
+
+        return result;
+    }
+
+    public static DistributionRequest sanitizeRequest(DistributionRequest request) {
+
+        DistributionRequestType requestType = request.getRequestType();
+
+        if (!DistributionRequestType.ADD.equals(requestType) && !DistributionRequestType.DELETE.equals(requestType)) {
+            return request;
+        }
+
+        Set<String> deepPaths = new HashSet<String>();
+        List<String> paths = new ArrayList<String>();
+        Map<String, String[]> filters = new HashMap<String, String[]>();
+
+        for (String path : request.getPaths()) {
+            if (VltUtils.findParent(path, "rep:policy") != null) {
+                if (DistributionRequestType.DELETE.equals(requestType)) {
+                    // vlt cannot properly install delete of rep:policy subnodes
+                    throw new IllegalArgumentException("cannot distribute DELETE node " + path);
+                } else if (DistributionRequestType.ADD.equals(requestType)) {
+                    String newPath = VltUtils.findParent(path, "rep:policy") + "/rep:policy";
+                    paths.add(newPath);
+                    deepPaths.add(newPath);
+                    log.debug("changed distribution path {} to deep path {}", path, newPath);
+                }
+            } else if (request.isDeep(path)) {
+                paths.add(path);
+                deepPaths.add(path);
+            } else {
+                paths.add(path);
+            }
+
+            filters.put(path, request.getFilters(path));
+        }
+
+        return new SimpleDistributionRequest(requestType, paths.toArray(new String[paths.size()]), deepPaths, filters);
+    }
+
+    private static PathFilterSet.Entry<DefaultPathFilter> extractPathPattern(String pattern) {
+        PathFilterSet.Entry<DefaultPathFilter> result = null;
+        if (pattern.startsWith("+")) {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), true);
+        } else if (pattern.startsWith("-")) {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), false);
+        } else {
+            result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern), true);
         }
 
         return result;

@@ -71,7 +71,6 @@ import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.request.SlingRequestListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -92,6 +91,7 @@ import org.apache.sling.servlets.resolver.internal.helper.SlingServletConfig;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 import org.apache.sling.servlets.resolver.jmx.SlingServletResolverCacheMBean;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -222,12 +222,13 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.SlingHttpServletRequest)
      */
+    @Override
     public Servlet resolveServlet(final SlingHttpServletRequest request) {
         final Resource resource = request.getResource();
 
         // start tracking servlet resolution
         final RequestProgressTracker tracker = request.getRequestProgressTracker();
-        final String timerName = "resolveServlet(" + resource + ")";
+        final String timerName = "resolveServlet(" + resource.getPath() + ")";
         tracker.startTimer(timerName);
 
         final String type = resource.getResourceType();
@@ -272,6 +273,7 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.resource.Resource, java.lang.String)
      */
+    @Override
     public Servlet resolveServlet(final Resource resource, final String scriptName) {
         if ( resource == null ) {
             throw new IllegalArgumentException("Resource must not be null");
@@ -298,6 +300,7 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
+    @Override
     public Servlet resolveServlet(final ResourceResolver resolver, final String scriptName) {
         if ( resolver == null ) {
             throw new IllegalArgumentException("Resource resolver must not be null");
@@ -338,7 +341,7 @@ public class SlingServletResolver
         // return a resource wrapper to make sure the implementation
         // switches from the per thread resource resolver to the shared once
         // the per thread resource resolver is closed
-        return new ScriptResource(scriptResource, this.sharedScriptResolver).adaptTo(Servlet.class);
+        return new ScriptResource(scriptResource, perThreadScriptResolver, this.sharedScriptResolver).adaptTo(Servlet.class);
     }
 
     // ---------- ScriptResolver interface ------------------------------------
@@ -346,6 +349,7 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.api.scripting.SlingScriptResolver#findScript(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
+    @Override
     public SlingScript findScript(final ResourceResolver resourceResolver, final String name)
     throws SlingException {
 
@@ -393,6 +397,7 @@ public class SlingServletResolver
      * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(int,
      *      String, SlingHttpServletRequest, SlingHttpServletResponse)
      */
+    @Override
     public void handleError(final int status,
             final String message,
             final SlingHttpServletRequest request,
@@ -449,6 +454,7 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(java.lang.Throwable, org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
      */
+    @Override
     public void handleError(final Throwable throwable, final SlingHttpServletRequest request, final SlingHttpServletResponse response)
     throws IOException {
         // do not handle, if already handling ....
@@ -519,6 +525,7 @@ public class SlingServletResolver
     /**
      * @see org.apache.sling.api.request.SlingRequestListener#onEvent(org.apache.sling.api.request.SlingRequestEvent)
      */
+    @Override
     public void onEvent(final SlingRequestEvent event) {
         if ( event.getType() == SlingRequestEvent.EventType.EVENT_INIT ) {
             try {
@@ -613,11 +620,7 @@ public class SlingServletResolver
      * @param request The request used to give to any <code>OptingServlet</code>
      *            for them to decide on whether they are willing to handle the
      *            request
-     * @param resource The <code>Resource</code> for which to find a script.
-     *            This need not be the same as
-     *            <code>request.getResource()</code> in case of error handling
-     *            where the resource may not have been assigned to the request
-     *            yet.
+     * @param resolver The <code>ResourceResolver</code> used for resolving the servlets.
      * @return a servlet for handling the request or <code>null</code> if no
      *         such servlet willing to handle the request could be found.
      */
@@ -855,18 +858,16 @@ public class SlingServletResolver
 
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
 
-        try {
-            if (this.cacheSize > 0) {
+        if (this.cacheSize > 0) {
+            try {
                 Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-                mbeanProps.put("jmx.objectname",
-                        "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
+                mbeanProps.put("jmx.objectname", "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
 
                 ServletResolverCacheMBeanImpl mbean = new ServletResolverCacheMBeanImpl();
-                mbeanRegistration = context.getBundleContext()
-                        .registerService(SlingServletResolverCacheMBean.class.getName(), mbean, mbeanProps);
+                mbeanRegistration = context.getBundleContext().registerService(SlingServletResolverCacheMBean.class.getName(), mbean, mbeanProps);
+            } catch (Throwable t) {
+                LOGGER.debug("Unable to register mbean");
             }
-        } catch (Throwable t) {
-            LOGGER.debug("Unable to register mbean");
         }
     }
 
@@ -999,24 +1000,27 @@ public class SlingServletResolver
             return false;
         }
 
-        final ServiceRegistration reg = context.getBundleContext().registerService(
-            ResourceProvider.SERVICE_NAME,
-            provider,
-            createServiceProperties(reference, provider));
-
+        final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
+        for(final String root : provider.getServletPaths()) {
+            final ServiceRegistration reg = context.getBundleContext().registerService(
+                ResourceProvider.class.getName(),
+                provider,
+                createServiceProperties(reference, provider, root));
+            regs.add(reg);
+        }
         LOGGER.debug("Registered {}", provider.toString());
         synchronized (this.servletsByReference) {
-            servletsByReference.put(reference, new ServletReg(servlet, reg));
+            servletsByReference.put(reference, new ServletReg(servlet, regs));
         }
-
         return true;
     }
 
     private Dictionary<String, Object> createServiceProperties(final ServiceReference reference,
-            final ServletResourceProvider provider) {
+            final ServletResourceProvider provider,
+            final String root) {
 
         final Dictionary<String, Object> params = new Hashtable<String, Object>();
-        params.put(ResourceProvider.ROOTS, provider.getServletPaths());
+        params.put(ResourceProvider.PROPERTY_ROOT, root);
         params.put(Constants.SERVICE_DESCRIPTION,
             "ServletResourceProvider for Servlets at " + Arrays.asList(provider.getServletPaths()));
 
@@ -1042,7 +1046,9 @@ public class SlingServletResolver
         }
         if (registration != null) {
 
-            registration.registration.unregister();
+            for(final ServiceRegistration reg : registration.registrations) {
+                reg.unregister();
+            }
             final String name = RequestUtil.getServletName(registration.servlet);
             LOGGER.debug("unbindServlet: Servlet {} removed", name);
 
@@ -1057,6 +1063,7 @@ public class SlingServletResolver
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
+    @Override
     public void handleEvent(final Event event) {
         if (this.cache != null) {
             boolean flushCache = false;
@@ -1127,11 +1134,11 @@ public class SlingServletResolver
 
     private static final class ServletReg {
         public final Servlet servlet;
-        public final ServiceRegistration registration;
+        public final List<ServiceRegistration> registrations;
 
-        public ServletReg(final Servlet s, final ServiceRegistration sr) {
+        public ServletReg(final Servlet s, final List<ServiceRegistration> srs) {
             this.servlet = s;
-            this.registration = sr;
+            this.registrations = srs;
         }
     }
 
@@ -1390,14 +1397,17 @@ public class SlingServletResolver
             super(SlingServletResolverCacheMBean.class);
         }
 
+        @Override
         public int getCacheSize() {
-            return cache.size();
+            return cache != null ? cache.size() : 0;
         }
 
+        @Override
         public void flushCache() {
             SlingServletResolver.this.flushCache();
         }
 
+        @Override
         public int getMaximumCacheSize() {
             return cacheSize;
         }

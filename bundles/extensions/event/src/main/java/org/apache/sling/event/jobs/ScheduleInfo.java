@@ -47,6 +47,7 @@ public interface ScheduleInfo {
 
     /**
      * Return the scheduled execution date for a schedule of type date.
+     * @return the scheduled execution date
      */
     Date getAt();
 

@@ -1,0 +1,5 @@
+SetAclPaths on /libs /apps 
+  AclLine REMOVE_ALL {principals=[user1, user2]}
+  AclLine ALLOW {principals=[user1, user2], privileges=[jcr:read]}
+  AclLine REMOVE_ALL {principals=[another]}
+  AclLine ALLOW {principals=[another], privileges=[x:y]}

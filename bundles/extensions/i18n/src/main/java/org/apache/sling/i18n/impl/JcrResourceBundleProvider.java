@@ -41,8 +41,6 @@ import java.util.concurrent.Semaphore;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -56,7 +54,6 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
@@ -119,7 +116,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     private ResourceResolver resourceResolver;
 
     /**
-     * Map of cached resource bundles indexed by a key combined of the base name 
+     * Map of cached resource bundles indexed by a key combined of the base name
      * and <code>Locale</code> used to load and identify the <code>ResourceBundle</code>.
      */
     private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<Key, JcrResourceBundle>();
@@ -142,7 +139,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     /**
      * Each ResourceBundle is registered as a service. Each registration is stored in this map with the locale & base name used as a key.
      */
-    private Map<Key, ServiceRegistration> bundleServiceRegistrations;
+    private Map<Key, ServiceRegistration<ResourceBundle>> bundleServiceRegistrations;
 
     private boolean preloadBundles;
 
@@ -228,7 +225,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     private boolean isDictionaryResource(final String path, final org.osgi.service.event.Event event) {
         // language node changes happen quite frequently (https://issues.apache.org/jira/browse/SLING-2881)
-        // therefore only consider changes either for sling:MessageEntry's 
+        // therefore only consider changes either for sling:MessageEntry's
         // or for JSON dictionaries
         String resourceType = (String) event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
         if (resourceType == null) {
@@ -307,7 +304,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         String baseName = bundle.getBaseName();
         Locale locale = bundle.getLocale();
         final Key key = new Key(baseName, locale);
-        
+
         // defer this job
         ScheduleOptions options = scheduler.AT(new Date(System.currentTimeMillis() + invalidationDelay));
         final String jobName = "JcrResourceBundleProvider: reload bundle with key " + key.toString();
@@ -316,9 +313,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         scheduler.schedule(new Runnable() {
             @Override
             public void run() {
-                synchronized(JcrResourceBundleProvider.this) {
-                    reloadBundle(key);
-                }
+                reloadBundle(key);
                 scheduledJobNames.remove(jobName);
             }
         }, options);
@@ -329,7 +324,10 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         resourceBundleCache.remove(key);
         log.info("Reloading resource bundle for {}", key);
         // unregister bundle
-        ServiceRegistration serviceRegistration = bundleServiceRegistrations.remove(key);
+        ServiceRegistration<ResourceBundle> serviceRegistration = null;
+        synchronized (this) {
+            serviceRegistration = bundleServiceRegistrations.remove(key);
+        }
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         } else {
@@ -363,11 +361,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     /**
      * Activates and configures this component with the repository access
      * details and the default locale to use
-     * @throws LoginException 
+     * @throws LoginException
      */
-    protected void activate(ComponentContext context) throws LoginException {
-        Dictionary<?, ?> props = context.getProperties();
-
+    protected void activate(BundleContext context, Map<String, Object> props) throws LoginException {
         Map<String, Object> repoCredentials;
         String user = PropertiesUtil.toString(props.get(PROP_USER), null);
         if (user == null || user.length() == 0) {
@@ -385,8 +381,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.defaultLocale = toLocale(localeString);
         this.preloadBundles = PropertiesUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
 
-        this.bundleContext = context.getBundleContext();
-        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
+        this.bundleContext = context;
+        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration<ResourceBundle>>();
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
             if (repoCredentials == null) {
@@ -447,12 +443,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     }
 
     private void registerResourceBundle(Key key, JcrResourceBundle resourceBundle) {
-        Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
+        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
         if (key.baseName != null) {
             serviceProps.put("baseName", key.baseName);
         }
         serviceProps.put("locale", key.locale.toString());
-        ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
+        ServiceRegistration<ResourceBundle> serviceReg = bundleContext.registerService(ResourceBundle.class,
                 resourceBundle, serviceProps);
         synchronized (this) {
             bundleServiceRegistrations.put(key, serviceReg);
@@ -536,7 +532,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         languageRootPaths.clear();
 
         synchronized (this) {
-            for (ServiceRegistration serviceReg : bundleServiceRegistrations.values()) {
+            for (ServiceRegistration<ResourceBundle> serviceReg : bundleServiceRegistrations.values()) {
                 serviceReg.unregister();
             }
             bundleServiceRegistrations.clear();
@@ -567,65 +563,72 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     }
 
     /**
-     * Converts the given <code>localeString</code> to valid
-     * <code>java.util.Locale</code>. If the locale string is
-     * <code>null</code> or empty, the platform default locale is assumed. If
+     * Converts the given <code>localeString</code> to a valid
+     * <code>java.util.Locale</code>. It must either be in the format specified by
+     * {@link Locale#toString()} or in <a href="https://tools.ietf.org/html/bcp47">BCP 47 format</a>
+     * If the locale string is <code>null</code> or empty, the platform default locale is assumed. If
      * the localeString matches any locale available per default on the
      * platform, that platform locale is returned. Otherwise the localeString is
      * parsed and the language and country parts are compared against the
      * languages and countries provided by the platform. Any unsupported
      * language or country is replaced by the platform default language and
      * country.
+     * @param localeString the locale as string
+     * @return the {@link Locale} being generated from the {@code localeString}
      */
-    private Locale toLocale(String localeString) {
+    static Locale toLocale(String localeString) {
         if (localeString == null || localeString.length() == 0) {
             return Locale.getDefault();
         }
+        // support BCP 47 compliant strings as well (using a different separator "-" instead of "_")
+        localeString = localeString.replaceAll("-", "_");
 
         // check language and country
-        String[] parts = localeString.split("_");
+        final String[] parts = localeString.split("_");
         if (parts.length == 0) {
             return Locale.getDefault();
         }
 
         // at least language is available
         String lang = parts[0];
+        boolean isValidLanguageCode = false;
         String[] langs = Locale.getISOLanguages();
         for (int i = 0; i < langs.length; i++) {
-            if (langs[i].equals(lang)) {
-                lang = null; // signal ok
+            if (langs[i].equalsIgnoreCase(lang)) {
+                isValidLanguageCode = true;
                 break;
             }
         }
-        if (lang != null) {
-            parts[0] = Locale.getDefault().getLanguage();
+        if (!isValidLanguageCode) {
+            lang = Locale.getDefault().getLanguage();
         }
 
         // only language
         if (parts.length == 1) {
-            return new Locale(parts[0]);
+            return new Locale(lang);
         }
 
         // country is also available
         String country = parts[1];
+        boolean isValidCountryCode = false;
         String[] countries = Locale.getISOCountries();
         for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equals(lang)) {
-                country = null; // signal ok
+            if (countries[i].equalsIgnoreCase(country)) {
+                isValidCountryCode = true; // signal ok
                 break;
             }
         }
-        if (country != null) {
-            parts[1] = Locale.getDefault().getCountry();
+        if (!isValidCountryCode) {
+            country = Locale.getDefault().getCountry();
         }
 
         // language and country
         if (parts.length == 2) {
-            return new Locale(parts[0], parts[1]);
+            return new Locale(lang, country);
         }
 
         // language, country and variant
-        return new Locale(parts[0], parts[1], parts[2]);
+        return new Locale(lang, country, parts[2]);
     }
 
     //---------- internal class

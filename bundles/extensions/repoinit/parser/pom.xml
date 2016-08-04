@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>26</version>
+    <relativePath />
+  </parent>
+
+  <artifactId>org.apache.sling.repoinit.parser</artifactId>
+  <packaging>bundle</packaging>
+  <version>1.0.3-SNAPSHOT</version>
+  <name>Apache Sling RepoInit Parser</name>
+  <description>Parser for the Repository Initialization language used in Sling</description>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</url>
+  </scm>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/test/resources/testcases/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>2.5</version>
+        <executions>
+          <execution>
+            <id>calculator</id>
+            <configuration>
+              <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
+            </configuration>
+            <goals>
+              <goal>jjtree-javacc</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
+  </dependencies>
+</project>

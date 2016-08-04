@@ -35,12 +35,12 @@ import org.apache.sling.engine.jmx.FilterProcessorMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.osgi.framework.ServiceRegistration;
 
-public class ServletFilterManager extends ServiceTracker {
+public class ServletFilterManager extends ServiceTracker<Filter, Filter> {
 
     public static enum FilterChainType {
         /**
@@ -90,15 +90,6 @@ public class ServletFilterManager extends ServiceTracker {
         }
     }
 
-    /**
-     * The service property used by Felix's HttpService whiteboard
-     * implementation.
-     */
-    private static String FELIX_WHITEBOARD_PATTERN_PROPERTY = "pattern";
-
-    // TODO: use filter (&(objectclass=javax.servlet.Filter)(filter.scope=*))
-    private static final String FILTER_SERVICE_NAME = Filter.class.getName();
-
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -106,14 +97,11 @@ public class ServletFilterManager extends ServiceTracker {
 
     private final SlingFilterChainHelper[] filterChains;
 
-    private final boolean compatMode;
-    
-    private Map <Long, ServiceRegistration> mbeanMap;
+    private Map <Long, ServiceRegistration<FilterProcessorMBean>> mbeanMap;
 
     public ServletFilterManager(final BundleContext context,
-            final SlingServletContext servletContext,
-            final boolean compatMode) {
-        super(context, FILTER_SERVICE_NAME, null);
+            final SlingServletContext servletContext) {
+        super(context, Filter.class, null);
         this.servletContext = servletContext;
         this.filterChains = new SlingFilterChainHelper[FilterChainType.values().length];
         this.filterChains[FilterChainType.REQUEST.ordinal()] = new SlingFilterChainHelper();
@@ -121,8 +109,7 @@ public class ServletFilterManager extends ServiceTracker {
         this.filterChains[FilterChainType.INCLUDE.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.FORWARD.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.COMPONENT.ordinal()] = new SlingFilterChainHelper();
-        this.compatMode = compatMode;
-        this.mbeanMap = new HashMap<Long, ServiceRegistration>();
+        this.mbeanMap = new HashMap<Long, ServiceRegistration<FilterProcessorMBean>>();
     }
 
     public SlingFilterChainHelper getFilterChain(final FilterChainType chain) {
@@ -134,161 +121,160 @@ public class ServletFilterManager extends ServiceTracker {
     }
 
     @Override
-    public Object addingService(ServiceReference reference) {
-        Object service = super.addingService(reference);
-        if (service instanceof Filter) {
-            initFilter(reference, (Filter) service);
+    public Filter addingService(ServiceReference<Filter> reference) {
+        if ( this.excludeFilter(reference) ) {
+            return null;
+        }
+        Filter service = super.addingService(reference);
+        if (service != null) {
+            initFilter(reference, service);
         }
         return service;
     }
 
     @Override
-    public void modifiedService(ServiceReference reference, Object service) {
-        if (service instanceof Filter) {
-            destroyFilter(reference, (Filter) service);
-            initFilter(reference, (Filter) service);
+    public void modifiedService(ServiceReference<Filter> reference, Filter service) {
+        destroyFilter(reference, service);
+        if ( !this.excludeFilter(reference) ) {
+            initFilter(reference, service);
         }
-
-        super.modifiedService(reference, service);
     }
 
     @Override
-    public void removedService(ServiceReference reference, Object service) {
-        if (service instanceof Filter) {
-            destroyFilter(reference, (Filter) service);
+    public void removedService(ServiceReference<Filter> reference, Filter service) {
+        if ( service != null ) {
+            destroyFilter(reference, service);
+            super.removedService(reference, service);
         }
-        super.removedService(reference, service);
     }
 
     /**
      * Check if the filter should be excluded.
      */
-    private boolean excludeFilter(final ServiceReference reference) {
+    private boolean excludeFilter(final ServiceReference<Filter> reference) {
+        boolean exclude = true;
         // if the service has a filter scope property, we include it
         if ( reference.getProperty(EngineConstants.SLING_FILTER_SCOPE) != null
              || reference.getProperty(EngineConstants.FILTER_SCOPE) != null ) {
-            return false;
+            exclude = false;
         }
-        // in compat mode we allow all filters not having the felix pattern prop!
-        if ( this.compatMode ) {
-            // Check if filter will be registered by Felix HttpService Whiteboard
-            if (reference.getProperty(FELIX_WHITEBOARD_PATTERN_PROPERTY) != null) {
-                return true;
+        if ( !exclude ) {
+            final String filterName = SlingFilterConfig.getName(reference);
+            if (filterName == null) {
+                log.error("initFilter: Missing name for filter {}", reference);
+                exclude = true;
             }
-            return false;
         }
-        return true;
+        return exclude;
     }
 
-    private void initFilter(final ServiceReference reference,
+    private void initFilter(final ServiceReference<Filter> reference,
             final Filter filter) {
-        if ( this.excludeFilter(reference) ) {
-            return;
-        }
+        // we already checked name in excludeFilter()
         final String filterName = SlingFilterConfig.getName(reference);
-        if (filterName == null) {
-            log.error("initFilter: Missing name for filter {}", reference);
-        } else {
 
-            // initialize the filter first
+        // initialize the filter first
+        try {
+            // service id
+            final Long serviceId = (Long) reference.getProperty(Constants.SERVICE_ID);
+
+            FilterProcessorMBeanImpl mbean;
             try {
-                // service id
-                final Long serviceId = (Long) reference.getProperty(Constants.SERVICE_ID);                
-                
-                FilterProcessorMBeanImpl mbean;
-                try {
-                    Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-                    mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine-filter,service="+filterName);
-                    mbean = new FilterProcessorMBeanImpl();
-                    ServiceRegistration filterProcessorMBeanRegistration = context.registerService(FilterProcessorMBean.class.getName(), mbean, mbeanProps);
-                    mbeanMap.put(serviceId,filterProcessorMBeanRegistration);                    
-                } catch (Throwable t) {
-                    log.debug("Unable to register mbean", t);
-                    mbean = null;
-                }
-                
-                final FilterConfig config = new SlingFilterConfig(
-                    servletContext, reference, filterName);
-                filter.init(config);
-
-                // get the order, Integer.MAX_VALUE by default
-                final String orderSource;
-                Object orderObj = reference.getProperty(Constants.SERVICE_RANKING);
-                if (orderObj == null) {
-                    // filter order is defined as lower value has higher
-                    // priority while service ranking is the opposite In
-                    // addition we allow different types than Integer
-                    orderObj = reference.getProperty(EngineConstants.FILTER_ORDER);
-                    if (orderObj != null) {
-                        // we can use 0 as the default as this will be applied
-                        // in the next step anyway if this props contains an
-                        // invalid value
-                        orderSource = EngineConstants.FILTER_ORDER + "=" + orderObj;
-                        orderObj = Integer.valueOf(-1 * OsgiUtil.toInteger(orderObj, 0));
-                    } else {
-                        orderSource = "none";
-                    }
-                } else {
-                    orderSource = Constants.SERVICE_RANKING + "=" + orderObj;
-                }
-                final int order = (orderObj instanceof Integer) ? ((Integer) orderObj).intValue() : 0;
-
-                // register by scope
-                String[] scopes = OsgiUtil.toStringArray(
-                        reference.getProperty(EngineConstants.SLING_FILTER_SCOPE), null);
-                
-                String pattern = OsgiUtil.toString(reference.getProperty(EngineConstants.SLING_FILTER_PATTERN), "");
-                
-                if ( scopes == null ) {
-                    scopes = OsgiUtil.toStringArray(
-                        reference.getProperty(EngineConstants.FILTER_SCOPE), null);
-                }
-                if (scopes != null && scopes.length > 0) {
-                    for (String scope : scopes) {
-                        scope = scope.toUpperCase();
-                        try {
-                            FilterChainType type = FilterChainType.valueOf(scope.toString());
-                            getFilterChain(type).addFilter(filter, pattern, serviceId,
-                                order, orderSource, mbean);
-
-                            if (type == FilterChainType.COMPONENT) {
-                                getFilterChain(FilterChainType.INCLUDE).addFilter(
-                                    filter, pattern, serviceId, order, orderSource, mbean);
-                                getFilterChain(FilterChainType.FORWARD).addFilter(
-                                    filter, pattern, serviceId, order, orderSource, mbean);
-                            }
-
-                        } catch (IllegalArgumentException iae) {
-                            // TODO: log ...
-                        }
-                    }
-                } else {
-                    log.warn(String.format(
-                        "A Filter (Service ID %s) has been registered without a filter.scope property.",
-                        reference.getProperty(Constants.SERVICE_ID)));
-                    getFilterChain(FilterChainType.REQUEST).addFilter(filter, pattern,
-                        serviceId, order, orderSource,mbean);
-                }
-
-            } catch (ServletException ce) {
-                log.error("Filter " + filterName + " failed to initialize", ce);
+                final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+                mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine-filter,service="+filterName);
+                mbean = new FilterProcessorMBeanImpl();
+                ServiceRegistration<FilterProcessorMBean> filterProcessorMBeanRegistration = context.registerService(FilterProcessorMBean.class, mbean, mbeanProps);
+                mbeanMap.put(serviceId,filterProcessorMBeanRegistration);
             } catch (Throwable t) {
-                log.error("Unexpected Problem initializing ComponentFilter "
-                    + "", t);
+                log.debug("Unable to register mbean", t);
+                mbean = null;
             }
+
+            final FilterConfig config = new SlingFilterConfig(
+                servletContext, reference, filterName);
+            filter.init(config);
+
+            // get the order, Integer.MAX_VALUE by default
+            final String orderSource;
+            Object orderObj = reference.getProperty(Constants.SERVICE_RANKING);
+            if (orderObj == null) {
+                // filter order is defined as lower value has higher
+                // priority while service ranking is the opposite In
+                // addition we allow different types than Integer
+                orderObj = reference.getProperty(EngineConstants.FILTER_ORDER);
+                if (orderObj != null) {
+                    log.warn("Filter service {} is using deprecated property {}. Use {} instead.",
+                            new Object[] {reference, EngineConstants.FILTER_ORDER, Constants.SERVICE_RANKING});
+                    // we can use 0 as the default as this will be applied
+                    // in the next step anyway if this props contains an
+                    // invalid value
+                    orderSource = EngineConstants.FILTER_ORDER + "=" + orderObj;
+                    orderObj = Integer.valueOf(-1 * OsgiUtil.toInteger(orderObj, 0));
+                } else {
+                    orderSource = "none";
+                }
+            } else {
+                orderSource = Constants.SERVICE_RANKING + "=" + orderObj;
+            }
+            final int order = (orderObj instanceof Integer) ? ((Integer) orderObj).intValue() : 0;
+
+            // register by scope
+            String[] scopes = OsgiUtil.toStringArray(
+                    reference.getProperty(EngineConstants.SLING_FILTER_SCOPE), null);
+
+            String pattern = OsgiUtil.toString(reference.getProperty(EngineConstants.SLING_FILTER_PATTERN), "");
+
+            if ( scopes == null ) {
+                scopes = OsgiUtil.toStringArray(
+                    reference.getProperty(EngineConstants.FILTER_SCOPE), null);
+                log.warn("Filter service {} is using deprecated property {}. Use {} instead.",
+                        new Object[] {reference, EngineConstants.FILTER_SCOPE, EngineConstants.SLING_FILTER_SCOPE});
+            }
+            if (scopes != null && scopes.length > 0) {
+                for (String scope : scopes) {
+                    scope = scope.toUpperCase();
+                    try {
+                        FilterChainType type = FilterChainType.valueOf(scope.toString());
+                        getFilterChain(type).addFilter(filter, pattern, serviceId,
+                            order, orderSource, mbean);
+
+                        if (type == FilterChainType.COMPONENT) {
+                            getFilterChain(FilterChainType.INCLUDE).addFilter(
+                                filter, pattern, serviceId, order, orderSource, mbean);
+                            getFilterChain(FilterChainType.FORWARD).addFilter(
+                                filter, pattern, serviceId, order, orderSource, mbean);
+                        }
+
+                    } catch (IllegalArgumentException iae) {
+                        // TODO: log ...
+                    }
+                }
+            } else {
+                log.warn(String.format(
+                    "A Filter (Service ID %s) has been registered without a filter.scope property.",
+                    reference.getProperty(Constants.SERVICE_ID)));
+                getFilterChain(FilterChainType.REQUEST).addFilter(filter, pattern,
+                    serviceId, order, orderSource,mbean);
+            }
+
+        } catch (ServletException ce) {
+            log.error("Filter " + filterName + " failed to initialize", ce);
+        } catch (Throwable t) {
+            log.error("Unexpected Problem initializing ComponentFilter "
+                + "", t);
         }
     }
 
-    private void destroyFilter(final ServiceReference reference,
+    private void destroyFilter(final ServiceReference<Filter> reference,
             final Filter filter) {
         // service id
         Object serviceId = reference.getProperty(Constants.SERVICE_ID);
-        
-        ServiceRegistration mbean = mbeanMap.remove((Long) serviceId);
+
+        ServiceRegistration<FilterProcessorMBean> mbean = mbeanMap.remove(serviceId);
         if (mbean != null) {
             mbean.unregister();
         }
-        
+
         boolean removed = false;
         for (SlingFilterChainHelper filterChain : filterChains) {
             removed |= filterChain.removeFilterById(serviceId);

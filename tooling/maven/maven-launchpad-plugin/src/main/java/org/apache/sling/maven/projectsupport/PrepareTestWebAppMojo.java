@@ -22,42 +22,38 @@ import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
  * Initialize a Sling integration test webapp by extracting bundles into the
  * correct locations, including the current artifact.
- *
- * @goal prepare-test-webapp
- * @requiresDependencyResolution test
- * @phase package
  */
+@Mojo( name = "prepare-test-webapp", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
 public class PrepareTestWebAppMojo extends PreparePackageMojo {
 
     /**
      * The project's build directory (i.e. target).
-     *
-     * @parameter expression="${project.build.directory}"
-     * @readonly
      */
+    @Parameter( property = "project.build.directory", readonly = true)
     private File buildDirectory;
 
     /**
      * The start level for the current artifact.
-     *
-     * @parameter default-value="16"
      */
+    @Parameter( defaultValue = "16")
     private int startLevel;
 
     /**
      * The output directory for bundles.
-     *
-     * @parameter default-value="${project.build.directory}/launchpad-bundles"
      */
+    @Parameter( defaultValue = "${project.build.directory}/launchpad-bundles")
     private File outputDirectory;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactHandlerManager artifactHandlerManager;
 
     @Override

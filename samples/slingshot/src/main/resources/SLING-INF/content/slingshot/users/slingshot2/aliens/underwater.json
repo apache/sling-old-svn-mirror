@@ -1,15 +1,6 @@
 {
-    "jcr:primaryType":"sling:OrderedFolder",
-    "sling:resourceType":"slingshot/Item",
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
     "title":"Underwater",
-    "description":"Surprise down under...",
-    
-    comments : {
-      "jcr:primaryType":"sling:OrderedFolder",
-      "sling:resourceType":"slingshot/Comments",
-    },
-    ratings : {
-      "jcr:primaryType":"sling:OrderedFolder",
-      "sling:resourceType":"slingshot/Ratings",
-    }
+    "description":"Surprise down under..."
 }

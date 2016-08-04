@@ -48,12 +48,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
+@SuppressWarnings("deprecation")
 @Adaptable(adaptableClass=Resource.class, adapters={
         @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
 class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
+
+    private static volatile boolean LOG_DEPRECATED_MAP = true;
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
@@ -88,6 +91,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
+    @Override
     public String getResourceType() {
         if ( this.resourceType == null ) {
             try {
@@ -103,6 +107,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
+    @Override
     public String getResourceSuperType() {
         // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
         if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
@@ -130,11 +135,15 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
         } else if (type == PersistableValueMap.class ) {
+            if ( LOG_DEPRECATED_MAP ) {
+                LOG_DEPRECATED_MAP = false;
+                LOGGER.warn("DEPRECATION WARNING: PersistableValueMap is deprecated, a JcrResource should not be adapted to this anymore. Please switch to ModifiableValueMap.");
+            }
             // check write
             try {
                 getNode().getSession().checkPermission(getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.dynamicClassLoader);
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.getDynamicClassLoader());
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
@@ -241,7 +250,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(), path, version,
-                    getNode().getNodes(), this.helper);
+                    getNode().getNodes(), this.helper, null);
             }
         } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);

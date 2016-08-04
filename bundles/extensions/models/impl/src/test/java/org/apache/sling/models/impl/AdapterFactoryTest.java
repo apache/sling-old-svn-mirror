@@ -33,6 +33,7 @@ import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.BindingsModel;
 import org.apache.sling.models.testmodels.classes.ConstructorWithExceptionModel;
 import org.apache.sling.models.testmodels.classes.DefaultStringModel;
 import org.apache.sling.models.testmodels.classes.InvalidModelWithMissingAnnotation;
@@ -71,9 +72,12 @@ public class AdapterFactoryTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(0, 0));
         factory.bindInjector(new SelfInjector(), new ServicePropertiesMap(1, 1));
+        
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(DefaultStringModel.class, ConstructorWithExceptionModel.class, NestedModel.class, NestedModelWithInvalidAdaptable.class, NestedModelWithInvalidAdaptable2.class, ResourceModelWithRequiredField.class) ;
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void testIsModelClass() {
         Assert.assertTrue(factory.isModelClass(resource, DefaultStringModel.class));
         Assert.assertFalse(factory.isModelClass(resource, InvalidModelWithMissingAnnotation.class));
@@ -85,9 +89,9 @@ public class AdapterFactoryTest {
         Assert.assertFalse(factory.canCreateFromAdaptable(request, DefaultStringModel.class));
     }
 
-    @Test(expected = ModelClassException.class)
+    @Test
     public void testCanCreateFromAdaptableWithInvalidModel() {
-        factory.canCreateFromAdaptable(resource, InvalidModelWithMissingAnnotation.class);
+        Assert.assertFalse(factory.canCreateFromAdaptable(resource, InvalidModelWithMissingAnnotation.class));
     }
 
     @Test(expected = ModelClassException.class)

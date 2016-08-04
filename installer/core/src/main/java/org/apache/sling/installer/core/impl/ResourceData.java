@@ -92,7 +92,7 @@ public class ResourceData {
         if ( digest == null ) {
             digest = FileDataStore.computeDigest(this.dataFile);
         }
-        FileDataStore.SHARED.updateDigestCache(url, digest);
+        FileDataStore.SHARED.updateDigestCache(url, this.dataFile, digest);
         return digest;
 
     }

@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>27</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>org.apache.sling.karaf-launchpad-oak-tar-integration-tests</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+  <name>Apache Sling - Karaf Launchpad Integration Tests (Oak Tar)</name>
+  <description>Launchpad Integration Tests for Apache Sling with Oak Tar on Karaf</description>
+
+  <properties>
+    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
+  </properties>
+
+  <dependencies>
+    <!-- javax -->
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- OSGi -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.cmpn</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Apache Karaf -->
+    <dependency>
+      <groupId>org.apache.karaf</groupId>
+      <artifactId>apache-karaf</artifactId>
+      <type>tar.gz</type>
+      <version>${org.apache.karaf.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.karaf</groupId>
+          <artifactId>org.apache.karaf.client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Apache Sling -->
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-features</artifactId>
+      <version>0.1.1-SNAPSHOT</version>
+      <type>xml</type>
+      <classifier>features</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.servlets.compat</artifactId>
+      <version>1.0.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- bnd -->
+    <dependency>
+      <groupId>biz.aQute.bnd</groupId>
+      <artifactId>biz.aQute.bndlib</artifactId>
+      <version>2.4.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- testing -->
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-integration-tests</artifactId>
+      <version>0.1.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
+      <version>1.0.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.junit.core</artifactId>
+      <version>1.0.16</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.junit.remote</artifactId>
+      <version>1.0.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.junit.scriptable</artifactId>
+      <version>1.0.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.test-services</artifactId>
+      <version>2.0.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.test-fragment</artifactId>
+      <version>2.0.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.tools</artifactId>
+      <version>1.0.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore-osgi</artifactId>
+      <version>4.4.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>4.5.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.ops4j.pax.exam</groupId>
+          <artifactId>exam-maven-plugin</artifactId>
+          <version>${org.ops4j.pax.exam.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.18.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>it</id>
+      <activation>
+        <jdk>[1.7,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>exam-maven-plugin</artifactId>
+            <configuration>
+              <configClass>org.apache.sling.karaf.tests.configuration.SlingLaunchpadOakTarConfiguration</configClass>
+              <propagatedProperties>http.port</propagatedProperties>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>start-container</goal>
+                  <goal>stop-container</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.servicemix.tooling</groupId>
+            <artifactId>depends-maven-plugin</artifactId>
+            <version>1.2</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>generate-depends-file</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <systemPropertyVariables>
+                <launchpad.http.server.url>http://localhost:${http.port}</launchpad.http.server.url>
+                <server.ready.path.1>/:script src="/system/sling.js"</server.ready.path.1>
+                <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
+                <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
+                <server.ready.timeout.seconds>120</server.ready.timeout.seconds>
+              </systemPropertyVariables>
+              <dependenciesToScan>
+                <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+              </dependenciesToScan>
+              <includes>
+                <include>**/*Test.class</include>
+              </includes>
+              <excludes>
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
+                <!-- SLING-5414 Launchpad/Provisioning Model only -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
+                <!-- TODO (PAXWEB-935) SlingWebDavServletTest.testHandlerOrder:76->checkHandler:93->RenderingTestBase.assertContains:36 Content does not contain 'test-io-handler-1-' -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
+                <!-- TODO (PAXWEB-935) WebdavDeleteTest.testDelete:70 expected:<200> but was:<404> -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/WebdavDeleteTest.*</exclude>
+                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectCookie:118->assertXReason:245 » IO -->
+                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectHttpBasicCredentials:134->assertXReason:245 » IO -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
+                <!-- TODO UpdateUserTest.testChangeUserPassword:100 expected:<200> but was:<500> -->
+                <!-- TODO UpdateUserTest.testUpdateUser:76 expected:<200> but was:<500> -->
+                <!-- TODO UpdateUserTest.testUpdateUserResponseAsJSON:148 Expected status 200 for http://localhost:55658/system/userManager/user/testUser1469444618835.update.json ... expected:<200> but was:<500> -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
+                <!-- TODO JspForwardTest.testWithJspForward:152 Content includes JSP marker -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
+                <!-- TODO RepoinitPathTest.pathExists:42 null -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/RepoinitPathTest.*</exclude>
+                <!-- TODO SystemUsersTest.provisioningModelUser:62->assertSystemUser:45 Impersonation as provisioningModelUser failed: javax.jcr.LoginException: Login Failure: all modules ignored -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/SystemUsersTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.11</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>reserve-network-port</goal>
+                </goals>
+                <configuration>
+                  <portNames>
+                    <portName>http.port</portName>
+                  </portNames>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

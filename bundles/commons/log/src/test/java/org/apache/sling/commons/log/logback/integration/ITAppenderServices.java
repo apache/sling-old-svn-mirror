@@ -91,6 +91,23 @@ public class ITAppenderServices extends LogTestBase {
     }
 
     @Test
+    public void testRootAppenderService() throws Exception {
+        TestAppender ta = registerAppender("ROOT");
+        delay();
+
+        Logger root = (Logger)LoggerFactory.getLogger("ROOT");
+        root.setLevel(Level.DEBUG);
+        Logger foobar = (Logger)LoggerFactory.getLogger("foo.bar");
+        foobar.setLevel(Level.INFO);
+
+        root.debug("one");
+        foobar.debug("two");
+        foobar.info("three");
+
+        assertEquals(2, ta.events.size());
+    }
+
+    @Test
     public void testAppenderServiceModified() throws Exception {
         TestAppender ta = registerAppender("foo.bar", "foo.baz");
         delay();

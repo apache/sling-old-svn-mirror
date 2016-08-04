@@ -18,7 +18,7 @@
  */
 package org.apache.sling.engine;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
@@ -30,6 +30,7 @@ public interface SlingSettingsService {
 
     /**
      * The identifier of the running Sling instance.
+     * @return The Sling identifier
      */
     String getSlingId();
 }

@@ -22,9 +22,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
- * A queue is responsible for collecting the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+ * A queue is responsible for collecting the {@link DistributionPackage}s
  * exported by a {@link org.apache.sling.distribution.agent.DistributionAgent} in
  * order to be able to process them also when there are multiple (concurrent)
  * {@link org.apache.sling.distribution.DistributionRequest}s executed
@@ -47,13 +48,11 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item, typically representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     * @param item a distribution item, typically representing a {@link DistributionPackage}
      *             to distribute
-     * @return {@code true} if the item was added correctly to the queue,
-     * {@code false} otherwise
+     * @return the queue entry created for this item or {@code noll} if none is created
      */
-    boolean add(@Nonnull DistributionQueueItem item);
-
+    DistributionQueueEntry add(@Nonnull DistributionQueueItem item);
 
     /**
      * get the first item (in a FIFO strategy, the next to be processed) from the queue
@@ -73,11 +72,10 @@ public interface DistributionQueue {
     @Nonnull
     Iterable<DistributionQueueEntry> getItems(int skip, int limit);
 
-
     /**
      * gets an item from the queue by specifying its id
      *
-     * @param itemId the id of the item
+     * @param itemId the id of the item as returned by {@link DistributionQueueItem#getPackageId()}
      * @return the item, or {@code null} if the item with the given id
      * doesn't exist
      */
@@ -87,18 +85,23 @@ public interface DistributionQueue {
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param itemId the id the item
+     * @param itemId the id the item as returned by {@link DistributionQueueItem#getPackageId()}
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */
     @CheckForNull
     DistributionQueueEntry remove(@Nonnull String itemId);
 
-
     /**
-     * returns the status of the queue
+     * get the status of the queue
      * @return the queue status
      */
     @Nonnull
     DistributionQueueStatus getStatus();
+
+    /**
+     * get the type of this queue
+     * @return the type
+     */
+    DistributionQueueType getType();
 }

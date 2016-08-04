@@ -54,8 +54,8 @@ public class ServersActionModeFiddlerActionDelegate implements
 	private IPropertyChangeListener debugTooltipListener;
 	private IPropertyChangeListener disconnectTooltipListener;
 
-	private List<ActionContributionItem> prependedToolbarActions = new LinkedList<ActionContributionItem>();
-	private List<ActionContributionItem> appendedToolbarActionContributionItems = new LinkedList<ActionContributionItem>();
+	private List<ActionContributionItem> prependedToolbarActions = new LinkedList<>();
+	private List<ActionContributionItem> appendedToolbarActionContributionItems = new LinkedList<>();
     private IServer server;
     private List<IModule[]> modules;
     private Action cleanAction;
@@ -82,7 +82,7 @@ public class ServersActionModeFiddlerActionDelegate implements
 	            modules = null;
 	            if (iss.size()>1) {
 	                // verify that all selected elements are of type IServer
-	                Iterator it = iss.iterator();
+	                Iterator<?> it = iss.iterator();
 	                it.next(); // skip the first, we have that above already
 	                while(it.hasNext()) {
 	                    Object next = it.next();
@@ -94,14 +94,14 @@ public class ServersActionModeFiddlerActionDelegate implements
 	                }
 	            }
 	        } else if (first instanceof IServerModule) {
-	            modules = new LinkedList<IModule[]>();
+	            modules = new LinkedList<>();
 	            IServerModule module = (IServerModule)first;
 	            modules.add(module.getModule());
 	            server = module.getServer();
                 if (iss.size()>1) {
                     // verify that all selected elements are of type IServerModule
                     // plus add the module[] to the modules list
-                    Iterator it = iss.iterator();
+                    Iterator<?> it = iss.iterator();
                     it.next(); // skip the first, we have that above already
                     while(it.hasNext()) {
                         Object next = it.next();
@@ -141,8 +141,7 @@ public class ServersActionModeFiddlerActionDelegate implements
 		
 		findWstPublishAction();
 		
-		for (Iterator it = appendedToolbarActionContributionItems.iterator(); it.hasNext();) {
-		    ActionContributionItem appendedAction = (ActionContributionItem) it.next();
+		for (ActionContributionItem appendedAction : appendedToolbarActionContributionItems) {
             if (!contributionAdded(appendedAction)) {
                 actionBars.getToolBarManager().add(appendedAction);
             }
@@ -212,8 +211,7 @@ public class ServersActionModeFiddlerActionDelegate implements
 	        return;
 	    }
         IContributionItem[] items = actionBars.getToolBarManager().getItems();
-        for (int i = 0; i < items.length; i++) {
-            IContributionItem item = items[i];
+        for (IContributionItem item : items) {
             if (item instanceof ActionContributionItem) {
                 ActionContributionItem actionItem = (ActionContributionItem) item;
                 IAction a = actionItem.getAction();
@@ -229,8 +227,7 @@ public class ServersActionModeFiddlerActionDelegate implements
 
     private boolean contributionAdded(ActionContributionItem action) {
         IContributionItem[] items = actionBars.getToolBarManager().getItems();
-        for (int i = 0; i < items.length; i++) {
-            IContributionItem iContributionItem = items[i];
+        for (IContributionItem iContributionItem : items) {
             if (iContributionItem==action) {
                 return true;
             }
@@ -243,8 +240,9 @@ public class ServersActionModeFiddlerActionDelegate implements
 		this.view = view;
 		actionBars = view.getViewSite().getActionBars();
 		initToolbarContributedActions();
-		for (Iterator it = prependedToolbarActions.iterator(); it.hasNext();) {
-            IAction action = (IAction) it.next();
+		for (ActionContributionItem actionContributionItem : prependedToolbarActions) {
+		    // TODO - this looks wrong
+            IAction action = (IAction) actionContributionItem;
             final ActionContributionItem contribution = new ActionContributionItem(action);
             actionBars.getToolBarManager().add(contribution);
         }

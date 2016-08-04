@@ -188,6 +188,26 @@ public class ContentXmlHandlerTest {
                         (Object) "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"));
     }
 
+    @Test
+    public void escapedCommaInMultiValuedProperty() throws Exception {
+        
+        ResourceProxy root = parseContentXmlFile("escaped-comma-in-multi-valued-property.xml", "/");
+        assertThat("properties[someProp]", (String[]) root.getProperties().get("someProp"),
+                Matchers.is(new String[] { "first,first", "second" }));
+    }
+    
+    @Test
+    public void emptyMultivaluedProperties() throws Exception {
+        
+        ResourceProxy root = parseContentXmlFile("empty-multivalued-property.xml", "/");
+        
+        assertThat("properties[labels]", (String[]) root.getProperties().get("labels"),
+                Matchers.arrayWithSize(0));
+        assertThat("properties[values]", (Long[]) root.getProperties().get("values"),
+                Matchers.arrayWithSize(0));
+        
+    }
+
     private static Matcher<Calendar> millis(long millis) {
 
         return new CalendarTimeInMillisMatcher(millis);

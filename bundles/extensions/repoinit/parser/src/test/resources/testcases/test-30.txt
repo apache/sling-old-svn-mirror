@@ -1,0 +1,12 @@
+# Test the principal-centered ACL syntax
+
+set ACL for user1,u2
+    remove * on /libs,/apps
+    allow jcr:read on /content
+
+    deny jcr:write on /apps
+    
+    # Optional nodetypes clause 
+    deny jcr:lockManagement on /apps, /content nodetypes sling:Folder, nt:unstructured   
+    remove jcr:understand,some:other on /apps
+end

@@ -22,9 +22,13 @@
     <title>Sightly Use-API - Inheritance</title>
 </head>
 <body>
-  <div id="javaobj" data-sly-use.javaobj="S">${javaobj.message}</div>
-  <div id="javascriptobj" data-sly-use.javascriptobj="s.js">${javascriptobj.message}</div>
-  <div id="ecmaobj" data-sly-use.ecmaobj="s.ecma">${ecmaobj}</div>
-  <div id="templateobj" data-sly-use.templateobj="templates.html" data-sly-call="${templateobj.template}"></div>
+    <div id="javaobj" data-sly-use.javaobj="S">${javaobj.message}</div>
+    <div id="javascriptobj" data-sly-use.javascriptobj="s.js">${javascriptobj.message}</div>
+    <div id="ecmaobj" data-sly-use.ecmaobj="s.ecma">${ecmaobj}</div>
+    <div id="templateobj" data-sly-use.templateobj="templates.html" data-sly-call="${templateobj.template}"></div>
+    <div id="partialsjs" data-sly-use.includedjs="partials/included.js">${includedjs.message}</div>
+    <div id="partialsecma" data-sly-use.includedecma="partials/included.ecma">${includedecma}</div>
+    <sly data-sly-use.templates="partials/includedtemplate.html" data-sly-call="${templates.includedtemplate}"/>
+    <sly data-sly-include="partials/included.html" />
 </body>
 </html>

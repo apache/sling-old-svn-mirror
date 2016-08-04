@@ -20,12 +20,22 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -45,7 +55,7 @@ public class ResourceResolverMangleNamespacesTest {
     public static final String NS_URL = "http://example.com/namespaces/testNS";
 
     @Before
-    public void setup() throws RepositoryException {
+    public void setup() throws RepositoryException, LoginException {
         MockitoAnnotations.initMocks(this);
         activeSession = mockedSession;
 
@@ -59,25 +69,40 @@ public class ResourceResolverMangleNamespacesTest {
 
         Mockito.when(mockedSession.getNamespacePrefix(NS_PREFIX)).thenReturn(NS_URL);
 
-        final RootResourceProviderEntry rrpe = new RootResourceProviderEntry() {
-            @Override
+        final ResourceProvider<?> rp = new ResourceProvider<Object>() {
+
             @SuppressWarnings("unchecked")
-            public <AdapterType> AdapterType adaptTo(ResourceResolverContext ctx, Class<AdapterType> type) {
-                if(type == Session.class) {
-                    return (AdapterType)activeSession;
-                }
-                return super.adaptTo(ctx, type);
-            }
-        };
-
-        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act) {
             @Override
-            public RootResourceProviderEntry getRootProviderEntry() {
-                return rrpe;
+            public @CheckForNull <AdapterType> AdapterType adaptTo(final  @Nonnull ResolveContext<Object> ctx,
+                    final @Nonnull Class<AdapterType> type) {
+                if (type.equals(Session.class)) {
+                    return (AdapterType) activeSession;
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext rCtx, Resource parent) {
+                return null;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+                return IteratorUtils.emptyIterator();
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
+
+        rr = new ResourceResolverImpl(fac, false, null, new ResourceProviderStorageProvider() {
+            
+            @Override
+            public ResourceProviderStorage getResourceProviderStorage() {
+                return new ResourceProviderStorage(Arrays.asList(MockedResourceResolverImplTest.createRPHandler(rp, "rp1", 0, "/")));
+            }
+        });
     }
 
     @Test

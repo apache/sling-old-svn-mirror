@@ -25,15 +25,19 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.View;
 import org.apache.sling.discovery.impl.common.ViewHelper;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,14 @@ public class VotingView extends View {
     public static VotingView newVoting(final ResourceResolver resourceResolver,
             final Config config,
             final String newViewId, String initiatorId, final Set<String> liveInstances) throws PersistenceException {
+        if (!liveInstances.contains(initiatorId)) {
+            // SLING-4617 : a voting, on a single instance, was created without the local instance
+            // this should in no case happen - the local instance should always be part of the live
+            // instances. if that's not the case, then something's fishy and we should not create
+            // the new voting - and instead rely on a retry later.
+            logger.warn("newVoting: liveInstances does not include initiatorId (local instance) - not creating new, invalid, voting");
+            return null;
+        }
         final Resource votingResource = ResourceHelper.getOrCreateResource(
                 resourceResolver, config.getOngoingVotingsPath() + "/"
                         + newViewId);
@@ -103,6 +115,7 @@ public class VotingView extends View {
             Map<String, Object> properties = new HashMap<String, Object>();
             if (memberId.equals(initiatorId)) {
                 properties.put("initiator", true);
+                properties.put("vote", true);
                 properties.put("votedAt", Calendar.getInstance());
             }
             Resource instanceResource = ResourceHelper.getOrCreateResource(
@@ -114,7 +127,9 @@ public class VotingView extends View {
 
             resourceResolver.create(membersResource, memberId, properties);
         }
+        logger.debug("newVoting: committing new voting: newViewId="+newViewId+", initiatorId="+initiatorId+", resource="+votingResource+", #members: "+liveInstances.size()+", members: "+liveInstances);
         resourceResolver.commit();
+        logger.info("newVoting: new voting started: newViewId="+newViewId+", initiatorId="+initiatorId+", resource="+votingResource+", #members: "+liveInstances.size()+", members: "+liveInstances);
         return new VotingView(votingResource);
     }
 
@@ -125,32 +140,41 @@ public class VotingView extends View {
     public VotingView(final Resource viewResource) {
         super(viewResource);
     }
+    
+    public String getVotingId() {
+        return getResource().getName();
+    }
 
     @Override
     public String toString() {
-        final Resource members = getResource().getChild("members");
-        String initiatorId = null;
-        final StringBuilder sb = new StringBuilder();
-        if (members != null) {
-            Iterator<Resource> it = members.getChildren().iterator();
-            while (it.hasNext()) {
-                Resource r = it.next();
-                if (sb.length() != 0) {
-                    sb.append(", ");
-                }
-                sb.append(r.getName());
-                ValueMap properties = r.adaptTo(ValueMap.class);
-                if (properties != null) {
-                    Boolean initiator = properties.get("initiator",
-                            Boolean.class);
-                    if (initiator != null && initiator) {
-                        initiatorId = r.getName();
+        try {
+            final Resource members = getResource().getChild("members");
+            String initiatorId = null;
+            final StringBuilder sb = new StringBuilder();
+            if (members != null) {
+                Iterator<Resource> it = members.getChildren().iterator();
+                while (it.hasNext()) {
+                    Resource r = it.next();
+                    if (sb.length() != 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(r.getName());
+                    ValueMap properties = r.adaptTo(ValueMap.class);
+                    if (properties != null) {
+                        Boolean initiator = properties.get("initiator",
+                                Boolean.class);
+                        if (initiator != null && initiator) {
+                            initiatorId = r.getName();
+                        }
                     }
                 }
             }
+            return "a VotingView[viewId=" + getViewId() 
+                    + ", id=" + getResource().getName() + ", initiator="
+                    + initiatorId + ", members=" + sb + "]";
+        } catch(Exception e) {
+            return "a VotingView["+super.toString()+"]";
         }
-        return "a VotingView[viewId=" + getViewId() + ", initiator="
-                + initiatorId + ", members=" + sb + "]";
     }
 
     /**
@@ -223,6 +247,9 @@ public class VotingView extends View {
         while (it.hasNext()) {
             Resource aMemberRes = it.next();
             ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
+            if (properties == null) {
+                continue;
+            }
             Boolean vote = properties.get("vote", Boolean.class);
             if (vote != null && !vote) {
                 return true;
@@ -232,30 +259,37 @@ public class VotingView extends View {
     }
 
     /**
-     * Checks whether the given slingId has voted yes or is the initiator of this voting
+     * Checks whether the given slingId has voted yes for this voting
      * @param slingId the sling id to check for
-     * @return true if the given slingId has voted yes or is the initiator of this voting
+     * @return true if the given slingId has voted yes for this voting
      */
-    public boolean hasVotedOrIsInitiator(final String slingId) {
+    public boolean hasVotedYes(final String slingId) {
+        final Boolean vote = getVote(slingId);
+        return vote != null && vote;
+    }
+
+    /**
+     * Get the vote of the instance with the given slingId
+     * @param slingId
+     * @return null if that instance did not vote yet (or the structure
+     * is faulty), true if the instance voted yes, false if it voted no
+     */
+    public Boolean getVote(String slingId) {
         Resource members = getResource().getChild("members");
         if (members==null) {
-        	return false;
+            return null;
         }
-		final Resource memberResource = members.getChild(
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
-            return false;
+            return null;
         }
         final ValueMap properties = memberResource.adaptTo(ValueMap.class);
         if (properties == null) {
-            return false;
-        }
-        final Boolean initiator = properties.get("initiator", Boolean.class);
-        if (initiator != null && initiator) {
-            return true;
+            return null;
         }
         final Boolean vote = properties.get("vote", Boolean.class);
-        return vote != null && vote;
+        return vote;
     }
 
     /**
@@ -263,17 +297,38 @@ public class VotingView extends View {
      * @return whether this voting was initiated by the given slingId
      */
     public boolean isInitiatedBy(final String slingId) {
-        final Resource memberResource = getResource().getChild("members").getChild(
+        Resource r = getResource();
+        if (r == null) {
+            return false;
+        }
+        Resource members = r.getChild("members");
+        if (members == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", members null!");
+            }
+            return false;
+        }
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", memberResource null!");
+            }
             return false;
         }
         final ValueMap properties = memberResource.adaptTo(ValueMap.class);
         if (properties == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("isInitiatedBy: slingId=" + slingId + ", properties null!");
+            }
             return false;
         }
         final Boolean initiator = properties.get("initiator", Boolean.class);
-        return (initiator != null && initiator);
+        boolean result = initiator != null && initiator;
+        if (logger.isDebugEnabled()) {
+            logger.debug("isInitiatedBy: slingId=" + slingId + ", initiator=" + initiator + ", result=" + result);
+        }
+        return result;
     }
 
     /**
@@ -281,24 +336,86 @@ public class VotingView extends View {
      * @param slingId the slingId which is voting
      * @param vote true for a yes-vote, false for a no-vote
      */
-    public void vote(final String slingId, final Boolean vote) {
+    public void vote(final String slingId, final Boolean vote,
+                     final String leaderElectionId) {
     	if (logger.isDebugEnabled()) {
     		logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
     	}
-        final Resource memberResource = getResource().getChild("members").getChild(
+        Resource r = getResource();
+        if (r == null) {
+            logger.error("vote: no resource set. slingId = " + slingId + ", vote=" + vote);
+            return;
+        }
+        Resource members = r.getChild("members");
+        if (members == null) {
+            logger.error("vote: no members resource available for " + r + ". slingId = " + slingId + ", vote=" + vote);
+            return;
+        }
+        final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
-            logger.error("vote: no memberResource found for slingId=" + slingId
-                    + ", resource=" + getResource());
+            if (vote == null || !vote) {
+                // if I wanted to vote no or empty, then it's no big deal
+                // that I can't find my entry ..
+                logger.debug("vote: no memberResource found for slingId=" + slingId
+                        + ", vote=" + vote + ", resource=" + getResource());
+            } else {
+                // if I wanted to vote yes, then it is a big deal that I can't find myself
+                logger.error("vote: no memberResource found for slingId=" + slingId
+                        + ", vote=" + vote + ", resource=" + getResource());
+            }
             return;
         }
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
 
         if (vote == null) {
+            if (memberMap.containsKey("vote")) {
+                logger.info("vote: removing vote (vote==null) of slingId="+slingId+" on: "+this);
+            } else {
+                logger.debug("vote: removing vote (vote==null) of slingId="+slingId+" on: "+this);
+            }
             memberMap.remove("vote");
         } else {
-            memberMap.put("vote", vote);
-            memberMap.put("votedAt", Calendar.getInstance());
+            boolean shouldVote = true;
+            try {
+                if (memberMap.containsKey("vote")) {
+                    Object v = memberMap.get("vote");
+                    if (v instanceof Property) {
+                        Property p = (Property)v;
+                        if (p.getBoolean() == vote) {
+                            logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                            shouldVote = false;
+                        }
+                    } else if (v instanceof Boolean) {
+                        Boolean b = (Boolean)v;
+                        if (b == vote) {
+                            logger.debug("vote: already voted, with same vote ("+vote+"), not voting again");
+                            shouldVote = false;
+                        }
+                    }
+                }
+            } catch (ValueFormatException e) {
+                logger.warn("vote: got a ValueFormatException: "+e, e);
+            } catch (RepositoryException e) {
+                logger.warn("vote: got a RepositoryException: "+e, e);
+            }
+            if (shouldVote) {
+                logger.info("vote: slingId=" + slingId + " is voting vote=" + vote+" on "+getResource());
+                memberMap.put("vote", vote);
+                memberMap.put("votedAt", Calendar.getInstance());
+                String currentLeaderElectionId = memberMap.get("leaderElectionId", String.class);
+                if (leaderElectionId!=null &&
+                        (currentLeaderElectionId == null || !currentLeaderElectionId.equals(leaderElectionId))) {
+                    // SLING-5030 : to ensure leader-step-down after being
+                    // isolated from the cluster, the leaderElectionId must
+                    // be explicitly set upon voting.
+                    // for 99% of the cases not be necessary,
+                    // for the rejoin-after-isolation case however it is
+                    logger.info("vote: changing leaderElectionId on vote to "+leaderElectionId);
+                    memberMap.put("leaderElectionId", leaderElectionId);
+                    memberMap.put("leaderElectionIdCreatedAt", new Date());
+                }
+            }
         }
         try {
             getResource().getResourceResolver().commit();
@@ -326,12 +443,7 @@ public class VotingView extends View {
 	            Resource aMemberRes = it.next();
 	            try{
 	                ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
-	                Boolean initiator = properties.get("initiator", Boolean.class);
 	                Boolean vote = properties.get("vote", Boolean.class);
-	                if (initiator != null && initiator) {
-	                    isWinning = true;
-	                    continue;
-	                }
 	                if (vote != null && vote) {
 	                    isWinning = true;
 	                    continue;
@@ -353,12 +465,13 @@ public class VotingView extends View {
 
     /**
      * Checks if this voting matches the current live view
+     * @throws Exception when something failed during matching
      */
-    public boolean matchesLiveView(final Config config) {
+    public String matchesLiveView(final Config config) throws Exception {
         Resource clusterNodesRes = getResource().getResourceResolver()
                 .getResource(config.getClusterInstancesPath());
         if (clusterNodesRes == null) {
-            return false;
+            throw new Exception("no clusterNodesRes["+getResource()+"]");
         }
         return matchesLiveView(clusterNodesRes, config);
     }

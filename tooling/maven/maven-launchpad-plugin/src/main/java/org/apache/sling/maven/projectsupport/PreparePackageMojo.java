@@ -27,7 +27,13 @@ import java.util.Properties;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
+import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
@@ -38,73 +44,59 @@ import org.codehaus.plexus.util.FileUtils;
 /**
  * Initialize a Sling application project by extracting bundles into the correct
  * locations.
- *
- * @goal prepare-package
- * @requiresDependencyResolution test
- * @phase prepare-package
- * @description initialize a Sling application project
  */
+@Mojo(name = "prepare-package", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 
     /**
      * The output directory for the default bundles in a WAR-packaged project,
      * the base JAR (in the subdirectory named in the baseDestination
      * parameter), and any additional bundles.
-     *
-     * @parameter default-value="${project.build.directory}/launchpad-bundles"
      */
+    @Parameter(defaultValue = "${project.build.directory}/launchpad-bundles")
     private File warOutputDirectory;
 
     /**
      * The project's packaging type.
-     *
-     * @parameter expression="${project.packaging}"
      */
+    @Parameter(property = "project.packaging")
     private String packaging;
 
     /**
      * The definition of the base JAR.
-     *
-     * @parameter
      */
+    @Parameter
     private ArtifactDefinition base;
 
     /**
      * The definition of the package to be included to provide web support for
      * JAR-packaged projects (i.e. pax-web).
-     *
-     * @parameter
      */
+    @Parameter
     private ArtifactDefinition jarWebSupport;
 
     /**
      * The project's build output directory (i.e. target/classes).
-     *
-     * @parameter expression="${project.build.outputDirectory}"
-     * @readonly
      */
+    @Parameter(property = "project.build.outputDirectory", readonly = true)
     private File buildOutputDirectory;
 
     /**
      * The temp directory (i.e. target/maven-launchpad-plugintmp).
-     *
-     * @parameter expression="${project.build.directory}/maven-launchpad-plugintmp"
-     * @readonly
      */
+    @Parameter(defaultValue = "${project.build.outputDirectory}/maven-launchpad-plugintmp", readonly = true)
     private File tempDirectory;
 
     /**
      * To look up Archiver/UnArchiver implementations
-     *
-     * @component
      */
+    @Component
     private ArchiverManager archiverManager;
 
     /**
      * The Jar archiver.
-     *
-     * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="jar"
      */
+    @Component(role = Archiver.class, hint = "jar")
     private JarArchiver jarArchiver;
 
     @Override

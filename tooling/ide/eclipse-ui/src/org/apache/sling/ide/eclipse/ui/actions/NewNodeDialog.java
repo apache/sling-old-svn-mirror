@@ -64,7 +64,7 @@ public class NewNodeDialog extends InputDialog {
         this.parentNodeType = node.getPrimaryType();
         this.ntManager = ntManager;
         if (ntManager!=null) {
-            final LinkedList<String> ac = new LinkedList<String>(ntManager.getAllowedPrimaryChildNodeTypes(parentNodeType));
+            final LinkedList<String> ac = new LinkedList<>(ntManager.getAllowedPrimaryChildNodeTypes(parentNodeType));
             final NodeType parentNt = ntManager.getNodeType(parentNodeType);
             allChildNodeDefs = parentNt.getChildNodeDefinitions();
             Collections.sort(ac);
@@ -203,8 +203,7 @@ public class NewNodeDialog extends InputDialog {
                         return;
                     }
                     StringBuffer details = new StringBuffer();
-                    for (int i = 0; i < allChildNodeDefs.length; i++) {
-                        NodeDefinition aChildNodeDef = allChildNodeDefs[i];
+                    for (NodeDefinition aChildNodeDef : allChildNodeDefs) {
                         if (details.length()!=0) {
                             details.append(", ");
                         }

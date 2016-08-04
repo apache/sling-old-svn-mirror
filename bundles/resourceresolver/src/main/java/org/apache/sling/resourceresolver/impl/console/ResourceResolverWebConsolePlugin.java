@@ -39,13 +39,20 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.runtime.RuntimeService;
+import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
+import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
+import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 public class ResourceResolverWebConsolePlugin extends HttpServlet {
@@ -63,13 +70,20 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     private transient ServiceRegistration service;
 
-    public ResourceResolverWebConsolePlugin(BundleContext context,
-            CommonResourceResolverFactoryImpl resolverFactory) {
+    private final transient RuntimeService runtimeService;
+
+    private final transient BundleContext bundleContext;
+
+    public ResourceResolverWebConsolePlugin(final BundleContext context,
+            final CommonResourceResolverFactoryImpl resolverFactory,
+            final RuntimeService runtimeService) {
         this.resolverFactory = resolverFactory;
+        this.runtimeService = runtimeService;
+        this.bundleContext = context;
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
-                "Resource Resolver Web Console Plugin");
+                "Apache Sling Resource Resolver Web Console Plugin");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", "jcrresolver");
@@ -169,6 +183,9 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         separatorHtml(pw);
 
+        dumpDTOsHtml(pw);
+
+        separatorHtml(pw);
         dumpMapHtml(
                 pw,
                 "Resolver Map Entries",
@@ -256,7 +273,11 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     // ---------- ConfigurationPrinter
 
-    public void printConfiguration(PrintWriter pw) {
+    public void printConfiguration(final PrintWriter pw) {
+        dumpDTOsText(pw);
+
+        separatorText(pw);
+
         final MapEntries mapEntries = resolverFactory.getMapEntries();
 
         dumpMapText(pw, "Resolver Map Entries", mapEntries.getResolveMaps());
@@ -279,52 +300,55 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content'>Redirect</th>");
         pw.println("</tr>");
 
-        Set<String> usedPatterns = new HashSet<String>();
-        
-        for (MapEntry entry : list) {
-            String pattern = entry.getPattern();
+        final Set<String> usedPatterns = new HashSet<String>();
+
+        for (final MapEntry entry : list) {
+            final String pattern = entry.getPattern();
             pw.print("<tr class='content");
             if (!usedPatterns.add(pattern)) {
                 pw.print(" duplicate");
             }
             pw.println("'>");
-            pw.println("<td class='content' style='vertical-align: top'>"
-                    + pattern + "</td>");
+            pw.println("<td class='content' style='vertical-align: top'>");
+            pw.print(ResponseUtil.escapeXml(pattern));
+            pw.print("</td>");
 
             pw.print("<td class='content' style='vertical-align: top'>");
-            String[] repls = entry.getRedirect();
-            for (String repl : repls) {
-                pw.print(repl + "<br/>");
+            final String[] repls = entry.getRedirect();
+            for (final String repl : repls) {
+                pw.print(ResponseUtil.escapeXml(repl));
+                pw.print("<br/>");
             }
-            pw.println("</td>");
+            pw.print("</td>");
 
             pw.print("<td class='content' style='vertical-align: top'>");
             if (entry.isInternal()) {
                 pw.print("internal");
             } else {
-                pw.print("external: " + entry.getStatus());
+                pw.print("external: ");
+                pw.print(String.valueOf(entry.getStatus()));
             }
-            pw.println("</td>");
+            pw.println("</td></tr>");
 
         }
     }
 
     private void titleHtml(PrintWriter pw, String title, String description) {
-        pw.println("<tr class='content'>");
-        pw.println("<th colspan='3'class='content container'>" + title
-                + "</th>");
-        pw.println("</tr>");
+        pw.print("<tr class='content'>");
+        pw.print("<th colspan='3'class='content container'>");
+        pw.print(ResponseUtil.escapeXml(title));
+        pw.println("</th></tr>");
 
         if (description != null) {
-            pw.println("<tr class='content'>");
-            pw.println("<td colspan='3'class='content'>" + description
-                    + "</th>");
-            pw.println("</tr>");
+            pw.print("<tr class='content'>");
+            pw.print("<td colspan='3'class='content'>");
+            pw.print(ResponseUtil.escapeXml(description));
+            pw.println("</th></tr>");
         }
     }
 
     private void separatorHtml(PrintWriter pw) {
-        pw.println("<tr class='content'>");
+        pw.print("<tr class='content'>");
         pw.println("<td class='content' colspan='3'>&nbsp;</td>");
         pw.println("</tr>");
     }
@@ -342,6 +366,192 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
             final String status = entry.isInternal() ? "internal"
                     : "external: " + entry.getStatus();
             pw.printf(format, entry.getPattern(), redir, status);
+        }
+    }
+
+    private ServiceReference getServiceReference(final long id) {
+        try {
+            final ServiceReference[] refs = this.bundleContext.getServiceReferences(ResourceProvider.class.getName(),
+                    "(" + Constants.SERVICE_ID + "=" + String.valueOf(id) + ")");
+            if ( refs != null && refs.length > 0 ) {
+                return refs[0];
+            }
+        } catch ( final InvalidSyntaxException ise) {
+            // ignore
+        }
+        return null;
+    }
+
+    private void dumpDTOsHtml(final PrintWriter pw) {
+
+        titleHtml(pw, "Resource Providers", "Lists all available and activate resource prodivers.");
+
+        pw.println("<tr class='content'>");
+        pw.println("<th class='content'>Provider</th>");
+        pw.println("<th class='content'>Path</th>");
+        pw.println("<th class='content'>Configuration</th>");
+        pw.println("</tr>");
+
+        final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
+        for(final ResourceProviderDTO dto : runtimeDTO.providers) {
+            // get service reference
+            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final StringBuilder sb = new StringBuilder();
+            if ( dto.name != null ) {
+                sb.append(dto.name);
+                sb.append(' ');
+            } else {
+                sb.append("<unnamed> ");
+            }
+            if ( ref != null ) {
+                sb.append("(serviceId = ");
+                sb.append(dto.serviceId);
+                sb.append(", bundleId = ");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append(")");
+            }
+            pw.print("<tr class='content'>");
+            pw.print("<td class='content' style='vertical-align: top'>");
+            pw.print(ResponseUtil.escapeXml(sb.toString()));
+            pw.print("</td>");
+
+            pw.print("<td class='content' style='vertical-align: top'>");
+            pw.print(ResponseUtil.escapeXml(dto.path));
+            pw.print("</td>");
+
+            pw.print("<td class='content' style='vertical-align: top'>");
+            pw.print("auth=");
+            pw.print(dto.authType.name());
+            pw.print("<br/>");
+            pw.print("adaptable=");
+            pw.print(dto.adaptable);
+            pw.print("<br/>");
+            pw.print("attributable=");
+            pw.print(dto.attributable);
+            pw.print("<br/>");
+            pw.print("modifiable=");
+            pw.print(dto.modifiable);
+            pw.print("<br/>");
+            pw.print("refreshable=");
+            pw.print(dto.refreshable);
+            pw.print("<br/>");
+            pw.print("supportsQueryLanguage=");
+            pw.print(dto.supportsQueryLanguage);
+            pw.print("<br/>");
+            pw.print("useResourceAccessSecurity=");
+            pw.print(dto.useResourceAccessSecurity);
+            pw.println("</td></tr>");
+        }
+
+        if ( runtimeDTO.failedProviders.length > 0 ) {
+            titleHtml(pw, "Failed Resource Providers", "Lists all failed providers.");
+
+            pw.println("<tr class='content'>");
+            pw.println("<th class='content'>Provider</th>");
+            pw.println("<th class='content'>Path</th>");
+            pw.println("<th class='content'>Reason</th>");
+            pw.println("</tr>");
+
+            for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
+                // get service reference
+                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final StringBuilder sb = new StringBuilder();
+                if ( dto.name != null ) {
+                    sb.append(dto.name);
+                    sb.append(' ');
+                } else {
+                    sb.append("<unnamed> ");
+                }
+                if ( ref != null ) {
+                    sb.append("(serviceId = ");
+                    sb.append(dto.serviceId);
+                    sb.append(", bundleId = ");
+                    sb.append(ref.getBundle().getBundleId());
+                    sb.append(")");
+                }
+                pw.print("<tr class='content'>");
+                pw.print("<td class='content' style='vertical-align: top'>");
+                pw.print(ResponseUtil.escapeXml(sb.toString()));
+                pw.print("</td>");
+
+                pw.print("<td class='content' style='vertical-align: top'>");
+                pw.print(ResponseUtil.escapeXml(dto.path));
+                pw.print("</td>");
+
+                pw.print("<td class='content' style='vertical-align: top'>");
+                pw.print(dto.reason.name());
+                pw.println("</td></tr>");
+            }
+        }
+    }
+
+    private void dumpDTOsText(final PrintWriter pw) {
+
+        pw.println("Resource Providers");
+
+        final String format = "%35s %25s %15s\r\n";
+        pw.printf(format, "Provider", "Path", "Configuration");
+
+        final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
+        for(final ResourceProviderDTO dto : runtimeDTO.providers) {
+            // get service reference
+            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final StringBuilder sb = new StringBuilder();
+            if ( dto.name != null ) {
+                sb.append(dto.name);
+                sb.append(' ');
+            } else {
+                sb.append("<unnamed> ");
+            }
+            if ( ref != null ) {
+                sb.append("(serviceId = ");
+                sb.append(dto.serviceId);
+                sb.append(", bundleId = ");
+                sb.append(ref.getBundle().getBundleId());
+                sb.append(")");
+            }
+            final StringBuilder config = new StringBuilder();
+            config.append("auth=");
+            config.append(dto.authType.name());
+            config.append(", adaptable=");
+            config.append(dto.adaptable);
+            config.append(", attributable=");
+            config.append(dto.attributable);
+            config.append(", modifiable=");
+            config.append(dto.modifiable);
+            config.append(", refreshable=");
+            config.append(dto.refreshable);
+            config.append(", supportsQueryLanguage=");
+            config.append(dto.supportsQueryLanguage);
+            config.append(", useResourceAccessSecurity=");
+            config.append(dto.useResourceAccessSecurity);
+            pw.printf(format, sb.toString(), dto.path, config.toString());
+        }
+        pw.println();
+        if ( runtimeDTO.failedProviders.length > 0 ) {
+            pw.println("Failed Resource Providers");
+            pw.printf(format, "Provider", "Path", "Reason");
+
+            for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
+                // get service reference
+                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final StringBuilder sb = new StringBuilder();
+                if ( dto.name != null ) {
+                    sb.append(dto.name);
+                    sb.append(' ');
+                } else {
+                    sb.append("<unnamed> ");
+                }
+                if ( ref != null ) {
+                    sb.append("(serviceId = ");
+                    sb.append(dto.serviceId);
+                    sb.append(", bundleId = ");
+                    sb.append(ref.getBundle().getBundleId());
+                    sb.append(")");
+                }
+                pw.printf(format, sb.toString(), dto.path, dto.reason.name());
+            }
+            pw.println();
         }
     }
 

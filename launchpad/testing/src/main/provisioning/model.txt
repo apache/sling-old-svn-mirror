@@ -19,7 +19,7 @@
 [feature name=launchpad-testing]
 # Dependencies
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
 
 
@@ -34,3 +34,11 @@
 
 [settings]
   org.apache.sling.commons.log.julenabled=true
+  
+ # Test repository initialization from provisioning model
+ # No need to test all repoinit statements, this is done
+ # by the repoinit it module
+ [:repoinit]
+create path /repoinit/provisioningModelTest
+
+create service user provisioningModelUser

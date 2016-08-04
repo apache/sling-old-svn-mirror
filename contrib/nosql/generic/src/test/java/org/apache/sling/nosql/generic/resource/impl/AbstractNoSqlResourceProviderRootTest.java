@@ -18,9 +18,16 @@
  */
 package org.apache.sling.nosql.generic.resource.impl;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -34,6 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Test monting NoSqlResourceProvider as root resource provider.
@@ -77,18 +85,49 @@ public abstract class AbstractNoSqlResourceProviderRootTest {
         context.resourceResolver().delete(test);
     }
     
+    @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource testResource = ResourceUtil.getOrCreateResource(context.resourceResolver(), "/test",
+                ImmutableMap.<String, Object>of(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                JcrConstants.NT_UNSTRUCTURED, true);
+
+        Resource root = context.resourceResolver().getResource("/");
+
+        List<Resource> children = Lists.newArrayList(root.listChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, testResource));
+
+        children = Lists.newArrayList(root.getChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, testResource));
+
+        context.resourceResolver().delete(testResource);
+    }
+
+    private boolean containsResource(List<Resource> children, Resource resource) {
+        for (Resource child : children) {
+            if (StringUtils.equals(child.getPath(), resource.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     @Test(expected = PersistenceException.class)
     public void testDeleteRootPath() throws PersistenceException {
         Resource root = context.resourceResolver().getResource("/");
         context.resourceResolver().delete(root);
     }
 
-    @Test(expected = Throwable.class)
+    @Test
     public void testUpdateRootPath() throws PersistenceException {
         Resource root = context.resourceResolver().getResource("/");
         ModifiableValueMap props = root.adaptTo(ModifiableValueMap.class);
         props.put("prop1", "value1");
         context.resourceResolver().commit();
+        
+        root = context.resourceResolver().getResource("/");
+        assertThat(root.getValueMap().get("prop1", String.class), equalTo("value1"));
     }
 
 }

@@ -21,6 +21,7 @@ package org.apache.sling.commons.scheduler.impl;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.scr.annotations.Component;
@@ -64,93 +65,99 @@ public class WebConsolePrinter {
     public void printConfiguration(PrintWriter pw) {
         pw.println(HEADLINE);
         pw.println();
-        final Scheduler s = this.scheduler.getScheduler();
-        if ( s != null ) {
+        final Map<String, SchedulerProxy> proxies = this.scheduler.getSchedulers();
+        if ( !proxies.isEmpty() ) {
             pw.println("Status : active");
-            try {
-                pw.print  ("Name   : ");
-                pw.println(s.getSchedulerName());
-                pw.print  ("Id     : ");
-                pw.println(s.getSchedulerInstanceId());
-                pw.println();
-                final List<String> groups = s.getJobGroupNames();
-                for(final String group : groups) {
-                    final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
-                    for(final JobKey key : keys) {
-                        final JobDetail detail = s.getJobDetail(key);
-                        final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
-                        final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
-                        // only print jobs started through the sling scheduler
-                        if ( jobName != null && job != null ) {
-                            pw.print("Job : ");
-                            pw.print(detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
-                            if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
-                                pw.print(" (");
-                                pw.print(detail.getDescription());
-                                pw.print(")");
-                            }
-                            pw.print(", class: ");
-                            pw.print(job.getClass().getName());
-                            pw.print(", concurrent: ");
-                            pw.print(!detail.isConcurrentExectionDisallowed());
-                            final String[] runOn = (String[])detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_RUN_ON);
-                            if ( runOn != null ) {
-                                pw.print(", runOn: ");
-                                pw.print(Arrays.toString(runOn));
-                                // check run on information
-                                if ( runOn.length == 1 &&
-                                     (org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) || org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0])) ) {
-                                    if ( QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ) {
-                                        if ( QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.get() ) {
-                                            if ( !QuartzJobExecutor.IS_LEADER.get() ) {
-                                                pw.print(" (inactive: not leader)");
+            for(final Map.Entry<String, SchedulerProxy> entry : proxies.entrySet()) {
+                final Scheduler s = entry.getValue().getScheduler();
+                try {
+                    pw.print  ("Name      : ");
+                    pw.println(s.getSchedulerName());
+                    pw.print  ("ThreadPool: ");
+                    pw.println(entry.getKey());
+                    pw.print  ("Id        : ");
+                    pw.println(s.getSchedulerInstanceId());
+                    pw.println();
+                    final List<String> groups = s.getJobGroupNames();
+                    for(final String group : groups) {
+                        final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
+                        for(final JobKey key : keys) {
+                            final JobDetail detail = s.getJobDetail(key);
+                            final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
+                            final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                            // only print jobs started through the sling scheduler
+                            if ( jobName != null && job != null ) {
+                                pw.print("Job : ");
+                                pw.print(detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
+                                if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
+                                    pw.print(" (");
+                                    pw.print(detail.getDescription());
+                                    pw.print(")");
+                                }
+                                pw.print(", class: ");
+                                pw.print(job.getClass().getName());
+                                pw.print(", concurrent: ");
+                                pw.print(!detail.isConcurrentExectionDisallowed());
+                                final String[] runOn = (String[])detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_RUN_ON);
+                                if ( runOn != null ) {
+                                    pw.print(", runOn: ");
+                                    pw.print(Arrays.toString(runOn));
+                                    // check run on information
+                                    if ( runOn.length == 1 &&
+                                         (org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) || org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0])) ) {
+                                        if ( QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ) {
+                                            if ( QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.get() ) {
+                                                if ( !QuartzJobExecutor.IS_LEADER.get() ) {
+                                                    pw.print(" (inactive: not leader)");
+                                                }
+                                            } else {
+                                                pw.print(" (inactive: no discovery info)");
                                             }
                                         } else {
-                                            pw.print(" (inactive: no discovery info)");
+                                            pw.print(" (inactive: no discovery)");
                                         }
-                                    } else {
-                                        pw.print(" (inactive: no discovery)");
-                                    }
-                                } else { // sling IDs
-                                    final String myId = QuartzJobExecutor.SLING_ID;
-                                    if ( myId == null ) {
-                                        pw.print(" (inactive: no Sling settings)");
-                                    } else {
-                                        boolean schedule = false;
-                                        for(final String id : runOn ) {
-                                            if ( myId.equals(id) ) {
-                                                schedule = true;
-                                                break;
+                                    } else { // sling IDs
+                                        final String myId = QuartzJobExecutor.SLING_ID;
+                                        if ( myId == null ) {
+                                            pw.print(" (inactive: no Sling settings)");
+                                        } else {
+                                            boolean schedule = false;
+                                            for(final String id : runOn ) {
+                                                if ( myId.equals(id) ) {
+                                                    schedule = true;
+                                                    break;
+                                                }
+                                            }
+                                            if ( !schedule ) {
+                                                pw.print(" (inactive: Sling ID)");
                                             }
                                         }
-                                        if ( !schedule ) {
-                                            pw.print(" (inactive: Sling ID)");
-                                        }
-                                    }
-                                }                            }
-                            final Long bundleId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
-                            if ( bundleId != null ) {
-                                pw.print(", bundleId: ");
-                                pw.print(String.valueOf(bundleId));
-                            }
-                            final Long serviceId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_SERVICE_ID);
-                            if ( serviceId != null ) {
-                                pw.print(", serviceId: ");
-                                pw.print(String.valueOf(serviceId));
-                            }
-                            pw.println();
-                            for(final Trigger trigger : s.getTriggersOfJob(key)) {
-                                pw.print("Trigger : ");
-                                pw.print(trigger);
+                                    }                            }
+                                final Long bundleId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
+                                if ( bundleId != null ) {
+                                    pw.print(", bundleId: ");
+                                    pw.print(String.valueOf(bundleId));
+                                }
+                                final Long serviceId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_SERVICE_ID);
+                                if ( serviceId != null ) {
+                                    pw.print(", serviceId: ");
+                                    pw.print(String.valueOf(serviceId));
+                                }
+                                pw.println();
+                                for(final Trigger trigger : s.getTriggersOfJob(key)) {
+                                    pw.print("Trigger : ");
+                                    pw.print(trigger);
+                                    pw.println();
+                                }
                                 pw.println();
                             }
-                            pw.println();
                         }
                     }
+                } catch ( final SchedulerException se ) {
+                    pw.print  ("Unable to print complete configuration: ");
+                    pw.println(se.getMessage());
                 }
-            } catch ( final SchedulerException se ) {
-                pw.print  ("Unable to print complete configuration: ");
-                pw.println(se.getMessage());
+                pw.println();
             }
         } else {
             pw.println("Status : not active");

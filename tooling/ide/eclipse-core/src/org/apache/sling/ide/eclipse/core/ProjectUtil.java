@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.filter.Filter;
@@ -29,6 +28,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -36,11 +36,16 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.osgi.service.prefs.BackingStoreException;
 
 public abstract class ProjectUtil {
 
-    private static final String PROPERTY_SYNC_ROOT = "sync_root";
+    private static final String PROPERTY_SYNC_ROOT = Activator.PLUGIN_ID + ".content_sync_root";
     private static final String PROPERTY_SYNC_ROOT_DEFAULT_VALUE = "jcr_root";
+    
+    private static final QualifiedName PROPERTY_SYNC_ROOT_OLD = new QualifiedName(Activator.PLUGIN_ID, "sync_root");
 
     public static IFolder getSyncDirectory(IProject project) {
     	if (project==null) {
@@ -74,13 +79,47 @@ public abstract class ProjectUtil {
      * @return the value of the sync directory
      */
     public static IPath getSyncDirectoryValue(IProject project) {
-        String value = null;
+        
+        // for compatibility reasons, read the old value first
+        String oldValue = null;
         try {
-            value = project.getPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT));
+            oldValue = project.getPersistentProperty(PROPERTY_SYNC_ROOT_OLD);
         } catch (CoreException e) {
-            Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
+            Activator.getDefault().getPluginLogger().trace("Failed retrieving old values for content sync root for project " + project.getName(), e);
         }
 
+
+        // read a value from the new store, returning a default if none is found 
+        IScopeContext projectScope = new ProjectScope(project);
+        IEclipsePreferences projectNode = projectScope.getNode(Activator.PLUGIN_ID);
+        if ( projectNode == null ) {
+            String value;
+            // try to read from old values
+            if ( oldValue != null ) {
+                value = oldValue;
+            } else {
+                value = PROPERTY_SYNC_ROOT_DEFAULT_VALUE;
+            }
+            return Path.fromOSString(value);
+        }
+        
+        // if no new value if found and an old value exists, use the old value and save it in the new store
+        String value = projectNode.get(PROPERTY_SYNC_ROOT, null);
+        if ( value == null && oldValue != null ) {
+            value = oldValue;
+            setSyncDirectoryPath(project, Path.fromPortableString(value));
+        }
+        
+        // it is now safe to delete the value from the old store
+        if ( oldValue != null ) {
+            try {
+                project.setPersistentProperty(PROPERTY_SYNC_ROOT_OLD, null);
+            } catch (CoreException e) {
+                Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
+            }
+        }
+
+        // convert and return
         // TODO central place for defaults
         if (value == null) {
             return Path.fromOSString(PROPERTY_SYNC_ROOT_DEFAULT_VALUE);
@@ -109,11 +148,16 @@ public abstract class ProjectUtil {
      * @param path the value
      */
     public static void setSyncDirectoryPath(IProject project, IPath path) {
-
-        try {
-            project.setPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT), path.toPortableString());
-        } catch (CoreException e) {
-            Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
+        
+        IScopeContext projectScope = new ProjectScope(project);
+        IEclipsePreferences projectNode = projectScope.getNode(Activator.PLUGIN_ID);
+        if ( projectNode != null ) {
+            projectNode.put(PROPERTY_SYNC_ROOT, path.toPortableString());
+            try {
+                projectNode.flush();
+            } catch (BackingStoreException e) {
+                Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
+            }
         }
     }
     
@@ -136,15 +180,12 @@ public abstract class ProjectUtil {
         IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
         Filter filter = null;
         if (filterFile != null && filterFile.exists()) {
-            InputStream contents = filterFile.getContents();
-            try {
+            try ( InputStream contents = filterFile.getContents() ) {
                 filter = filterLocator.loadFilter(contents);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
                         "Failed loading filter file for project " + project.getName()
                                 + " from location " + filterFile, e));
-            } finally {
-                IOUtils.closeQuietly(contents);
             }
         }
         return filter;

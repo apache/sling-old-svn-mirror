@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -30,22 +29,28 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * OSGi configuration factory for {@link AgentDistributionPackageExporter}s
+ */
 @Component(label = "Apache Sling Distribution Exporter - Agent Based Package Exporter",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageExporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -54,7 +59,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
      * name of this exporter.
      */
     @Property(label = "Name", description = "The name of the exporter.")
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "Queue", description = "The name of the queue from which the packages should be exported.")
     private static final String QUEUE_NAME = "queue";
@@ -62,7 +67,6 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Property(name = "agent.target", label = "The target reference for the DistributionAgent that will be used to export packages.")
     @Reference(name = "agent")
     private DistributionAgent agent;
-
 
     @Reference
     private DistributionPackageBuilderProvider packageBuilderProvider;
@@ -73,17 +77,18 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Activate
     public void activate(Map<String, Object> config) throws Exception {
 
-        String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
+        String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME);
+        String name = PropertiesUtil.toString(config.get(NAME), "");
 
-        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider);
+
+        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider, name);
     }
 
-    @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
-       return packageExporter.exportPackages(resourceResolver, distributionRequest);
+    public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
+        packageExporter.exportPackages(resourceResolver, distributionRequest, packageProcessor);
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         return packageExporter.getPackage(resourceResolver, distributionPackageId);
     }
 

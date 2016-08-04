@@ -100,7 +100,7 @@ public class JsonJcrNode extends JSONObject {
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
             String key = ":" + p.getName();
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 this.put(key, p.getLength());
             } else {
                 final long[] sizes = p.getLengths();
@@ -113,7 +113,7 @@ public class JsonJcrNode extends JSONObject {
         } else {
             String key = p.getName();
 
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 addValue(key, p.getValue());
             } else {
                 for (Value v : p.getValues()) {

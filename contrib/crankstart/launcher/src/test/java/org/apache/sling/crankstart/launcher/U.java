@@ -16,6 +16,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.crankstart.junit.CrankstartSetup;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 
@@ -28,6 +29,14 @@ public class U {
     public static final int STD_INTERVAL = 250;
     public static final String SLING_API_BUNDLE = "org.apache.sling.api";
     
+    static final String [] DEFAULT_MODELS = {
+        "/crankstart-model.txt",
+        "/provisioning-model/base.txt",
+        "/provisioning-model/sling-extensions.txt",
+        "/provisioning-model/start-level-99.txt",
+        "/provisioning-model/crankstart-tests.txt"
+    };
+
     static void setAdminCredentials(DefaultHttpClient c) {
         c.getCredentialsProvider().setCredentials(
                 AuthScope.ANY, 

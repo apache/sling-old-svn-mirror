@@ -164,7 +164,7 @@ public class JsonItemWriter {
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
             w.key(":" + p.getName());
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 w.value(p.getLength());
             } else {
                 final long[] sizes = p.getLengths();
@@ -178,7 +178,7 @@ public class JsonItemWriter {
         }
         w.key(p.getName());
 
-        if (!p.getDefinition().isMultiple()) {
+        if (!p.isMultiple()) {
             dumpValue(w, p.getValue());
         } else {
             w.array();
@@ -191,7 +191,7 @@ public class JsonItemWriter {
 
     /**
      * Writes the given value to the JSON writer. currently the following
-     * conversions are done: <table>
+     * conversions are done: <table><caption></caption>
      * <tr>
      * <th>JSR Property Type</th>
      * <th>JSON Value Type</th>
@@ -217,7 +217,7 @@ public class JsonItemWriter {
      * <td>double</td>
      * </tr>
      * <tr>
-     * <td><i>all other</li>
+     * <td><i>all other</i>
      * </td>
      * <td>string</td>
      * </tr>

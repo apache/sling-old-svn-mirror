@@ -28,11 +28,13 @@ import java.util.TreeMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 //TODO: Consider removing it
+
 /**
  * Utility class that provides parsing from linear set of properties into a tree of properties
  */
 public class SettingsUtils {
 
+    public static final String COMPONENT_NAME_DEFAULT = "(name=default)";
     private static final String COMPONENT_ROOT = "";
     private static final char COMPONENT_DELIM = '/';
     private static final char COMPONENT_MAP_BEGIN = '[';
@@ -64,10 +66,9 @@ public class SettingsUtils {
             String[] componentLines = var.toArray(new String[var.size()]);
 
             if (COMPONENT_ROOT.equals(componentName)) {
-                Map<String, String> map = PropertiesUtil.toMap(componentLines, new String [0]);
+                Map<String, String> map = PropertiesUtil.toMap(componentLines, new String[0]);
                 result.putAll(map);
-            }
-            else {
+            } else {
                 Map<String, Object> componentMap = parseLines(componentLines);
                 result.put(componentName, componentMap);
             }
@@ -109,6 +110,7 @@ public class SettingsUtils {
         return result;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static Map<String, Object> collapseMap(Map<String, Object> valueMap) {
 
         Map<String, Object> result = new HashMap<String, Object>();
@@ -127,17 +129,15 @@ public class SettingsUtils {
                 boolean isNumber = isNumber(partialKey);
 
                 if (!result.containsKey(newKey)) {
-                    result.put(newKey, isNumber? new ArrayList<Object>() : new HashMap<String, Object>());
+                    result.put(newKey, isNumber ? new ArrayList<Object>() : new HashMap<String, Object>());
                 }
 
                 Object existingObject = result.get(newKey);
                 if (existingObject instanceof Map) {
                     ((Map) existingObject).put(partialKey, value);
-                }
-                else if (existingObject instanceof List) {
+                } else if (existingObject instanceof List) {
                     ((List) existingObject).add(value);
-                }
-                else {
+                } else {
                     // skip if there is already something else in there
                 }
             } else {
@@ -153,17 +153,16 @@ public class SettingsUtils {
         try {
             Integer.parseInt(value);
             return true;
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return false;
         }
     }
 
 
-    public static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
+    private static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
         Map<String, AType> result = new TreeMap<String, AType>();
-        for (int i=0; i<aList.size(); i++) {
-            result.put(prefix+i, aList.get(i));
+        for (int i = 0; i < aList.size(); i++) {
+            result.put(prefix + i, aList.get(i));
         }
 
         return result;
@@ -199,8 +198,18 @@ public class SettingsUtils {
             return null;
         }
 
-        return result.toArray(new String[0]);
+        return result.toArray(new String[result.size()]);
     }
+
+    public static String[] removeEmptyEntries(String[] array, String[] defaultArray) {
+        String[] result = removeEmptyEntries(array);
+        if (result == null) {
+            return defaultArray;
+        } else {
+            return result;
+        }
+    }
+
 
 
     public static String removeEmptyEntry(String entry) {
@@ -216,5 +225,41 @@ public class SettingsUtils {
         }
 
         return entry;
+    }
+
+    public static Map<String, String> removeEmptyEntries(Map<String, String> map) {
+        if (map == null) {
+            return null;
+        }
+
+        Map<String, String> result = new HashMap<String, String>();
+        for(Map.Entry<String, String> entry : map.entrySet()) {
+            String key = removeEmptyEntry(entry.getKey());
+            String value = removeEmptyEntry(entry.getValue());
+
+            if (key != null && value!= null) {
+                result.put(key, value);
+            }
+        }
+
+        if (result.size() == 0) {
+            return null;
+        }
+
+       return result;
+    }
+
+
+    public static Map<String, String> expandUriMap(Map<String, String> map, Map<String, String> aliases) {
+        Map<String, String> result = new TreeMap<String, String>(map);
+
+        for (Map.Entry<String, String> aliasEntry : aliases.entrySet()) {
+            if (aliasEntry.getValue() != null && map.containsKey(aliasEntry.getValue())) {
+                result.put(aliasEntry.getKey(), map.get(aliasEntry.getValue()));
+            }
+
+        }
+
+        return result;
     }
 }

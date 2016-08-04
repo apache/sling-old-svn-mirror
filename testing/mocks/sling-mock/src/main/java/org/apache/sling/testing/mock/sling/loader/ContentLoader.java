@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Imports JSON data and binary data into Sling resource hierarchy.
+ * After all import operations from json or binaries {@link ResourceResolver#commit()} is called.
  */
 public final class ContentLoader {
 
@@ -173,7 +174,9 @@ public final class ContentLoader {
 
             String jsonString = convertToJsonString(inputStream).trim();
             JSONObject json = new JSONObject(jsonString);
-            return this.createResource(parentResource, childName, json);
+            Resource resource = this.createResource(parentResource, childName, json);
+            resourceResolver.commit();
+            return resource;
         } catch (JSONException ex) {
             throw new RuntimeException(ex);
         } catch (IOException ex) {
@@ -467,6 +470,7 @@ public final class ContentLoader {
             resourceResolver.create(file, JcrConstants.JCR_CONTENT,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
+            resourceResolver.commit();
             return file;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
@@ -579,9 +583,11 @@ public final class ContentLoader {
      */
     public Resource binaryResource(InputStream inputStream, Resource parentResource, String name, String mimeType) {
         try {
-            return resourceResolver.create(parentResource, name,
+            Resource resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
+            resourceResolver.commit();
+            return resource;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
         }
@@ -597,9 +603,9 @@ public final class ContentLoader {
         String mimeType = null;
         String fileExtension = StringUtils.substringAfterLast(name, ".");
         if (bundleContext != null && StringUtils.isNotEmpty(fileExtension)) {
-            ServiceReference ref = bundleContext.getServiceReference(MimeTypeService.class.getName());
+            ServiceReference<MimeTypeService> ref = bundleContext.getServiceReference(MimeTypeService.class);
             if (ref != null) {
-                MimeTypeService mimeTypeService = (MimeTypeService) bundleContext.getService(ref);
+                MimeTypeService mimeTypeService = (MimeTypeService)bundleContext.getService(ref);
                 mimeType = mimeTypeService.getMimeType(fileExtension);
             }
         }

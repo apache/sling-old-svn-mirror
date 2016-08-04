@@ -24,11 +24,11 @@ import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
 import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
 import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.Executor;
 
 import javax.jcr.Repository;
@@ -41,13 +41,10 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
-import org.apache.jackrabbit.oak.api.ContentRepository;
-import org.apache.jackrabbit.oak.jcr.osgi.OsgiRepository;
+import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
@@ -59,8 +56,7 @@ import org.apache.jackrabbit.oak.plugins.name.NamespaceEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.TypeEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.write.InitialContent;
 import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
-import org.apache.jackrabbit.oak.plugins.version.VersionEditorProvider;
-import org.apache.jackrabbit.oak.spi.commit.EditorHook;
+import org.apache.jackrabbit.oak.plugins.version.VersionHook;
 import org.apache.jackrabbit.oak.spi.lifecycle.RepositoryInitializer;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
@@ -74,14 +70,12 @@ import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -100,11 +94,6 @@ import org.slf4j.LoggerFactory;
             + "and provide it as a SlingRepository and a standard JCR "
             + "Repository. In addition, if the registration URL is not "
             + "empty, the repository is registered as defined.")
-@Reference(
-        name = "namespaceMapper",
-        referenceInterface = NamespaceMapper.class,
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC)
 public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -156,6 +145,13 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
                 + "method. It is intended for this user to provide full read/write access to repository.")
     public static final String PROPERTY_ADMIN_USER = "admin.name";
 
+    @Property(
+        value = "oak-sling-repository",
+        label = "Repository Name",
+        description = "The name under which the repository will be registered in JNDI and RMI registries."
+    )
+    public static final String REPOSITORY_REGISTRATION_NAME = "name";
+
     @Reference
     private ServiceUserMapper serviceUserMapper;
 
@@ -163,10 +159,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     private NodeStore nodeStore;
 
     private ComponentContext componentContext;
-
-    private Map<Long, NamespaceMapper> namespaceMapperRefs = new TreeMap<Long, NamespaceMapper>();
-
-    private NamespaceMapper[] namespaceMappers;
 
     private String adminUserName;
 
@@ -196,11 +188,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         return this.serviceUserMapper;
     }
 
-    @Override
-    protected NamespaceMapper[] getNamespaceMapperServices() {
-        return this.namespaceMappers;
-    }
-
     @Reference(policy = STATIC, policyOption = GREEDY)
     private SecurityProvider securityProvider = null;
 
@@ -223,42 +210,40 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         }, new Hashtable<String, Object>());
 
         final Oak oak = new Oak(nodeStore)
+            .withAsyncIndexing("async", 5);
+
+        Jcr jcr = new Jcr(oak, false)
         .with(new InitialContent())
         .with(new ExtraSlingContent())
 
         .with(JcrConflictHandler.createJcrConflictHandler())
-        .with(new EditorHook(new VersionEditorProvider()))
+        .with(new VersionHook())
 
         .with(securityProvider)
 
         .with(new NameValidatorProvider())
         .with(new NamespaceEditorProvider())
         .with(new TypeEditorProvider())
-//        .with(new RegistrationEditorProvider())
         .with(new ConflictValidatorProvider())
 
         // index stuff
         .with(indexProvider)
         .with(indexEditorProvider)
         .with(getDefaultWorkspace())
-        .withAsyncIndexing()
         .with(whiteboard)
-        ;
-        
+        .withFastQueryResultSize(true)
+        .withObservationQueueLength(observationQueueLength);
+
         if (commitRateLimiter != null) {
-            oak.with(commitRateLimiter);
+            jcr.with(commitRateLimiter);
         }
 
-        final ContentRepository contentRepository = oak.createContentRepository();
-        final boolean fastQueryResultSize = true;
-        return new OsgiRepository(
-                contentRepository, whiteboard, securityProvider, observationQueueLength, 
-                commitRateLimiter, fastQueryResultSize);
+        jcr.createContentRepository();
+
+        return new TCCLWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
     }
 
-    @Override
-    protected void setup(BundleContext bundleContext, SlingRepository repository) {
-        super.setup(bundleContext, repository);
+    private void setup(BundleContext bundleContext, SlingRepository repository) {
 
         final Object o = this.getComponentContext().getProperties().get(ANONYMOUS_READ_PROP);
         if(o != null) {
@@ -297,7 +282,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected AbstractSlingRepository2 create(Bundle usingBundle) {
-        return new OakSlingRepository(this, usingBundle, this.adminUserName);
+        final AbstractSlingRepository2 result = new OakSlingRepository(this, usingBundle, this.adminUserName);
+        setup(usingBundle.getBundleContext(), result);
+        return result;
     }
 
     @Override
@@ -343,30 +330,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     private void deactivate() {
         super.stop();
         this.componentContext = null;
-        this.namespaceMapperRefs.clear();
-        this.namespaceMappers = null;
         this.threadPoolManager.release(this.threadPool);
         this.threadPool = null;
         this.nodeAggregator.unregister();
-        this.tearDown();
-    }
-
-    @SuppressWarnings("unused")
-    private void bindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
-        synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.put((Long)props.get(Constants.SERVICE_ID), namespaceMapper);
-            this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    private void unbindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
-        synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.remove(props.get(Constants.SERVICE_ID));
-            this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
-        }
     }
 
     private static NodeAggregator getNodeAggregator() {
@@ -396,6 +362,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
                 // various
                 property(index, "event.job.topic", "event.job.topic");
+                property(index, "slingeventEventId", "slingevent:eventId");
                 property(index, "extensionType", "extensionType");
                 property(index, "lockCreated", "lock.created");
                 property(index, "status", "status");

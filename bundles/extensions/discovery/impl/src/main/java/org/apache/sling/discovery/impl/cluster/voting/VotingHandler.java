@@ -21,13 +21,17 @@ package org.apache.sling.discovery.impl.cluster.voting;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
@@ -38,10 +42,12 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.discovery.impl.Config;
-import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
@@ -54,17 +60,37 @@ import org.slf4j.LoggerFactory;
  * accordingly
  */
 @Component(immediate = true)
-@Service(value = {EventHandler.class, VotingHandler.class})
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "New Voting Event Listener."),
-        @Property(name = EventConstants.EVENT_TOPIC, value = {
-                SlingConstants.TOPIC_RESOURCE_ADDED,
-                SlingConstants.TOPIC_RESOURCE_CHANGED,
-                SlingConstants.TOPIC_RESOURCE_REMOVED }) })
-// ,
-// @Property(name = EventConstants.EVENT_FILTER, value = "(path="
-// + org.apache.sling.discovery.viewmgr.Constants.ROOT_PATH + ")") })
+@Service(value = {VotingHandler.class})
 public class VotingHandler implements EventHandler {
+    
+    public static enum VotingDetail {
+        PROMOTED,
+        WINNING,
+        VOTED_YES,
+        VOTED_NO,
+        UNCHANGED,
+        TIMEDOUT
+    }
+    
+    private final static Comparator<VotingView> VOTING_COMPARATOR = new Comparator<VotingView>() {
+
+        public int compare(VotingView o1, VotingView o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+            if (o1 == null && o2 != null) {
+                return 1;
+            }
+            if (o2 == null && o1 != null) {
+                return -1;
+            }
+            // now both are non-null
+            return (o1.getVotingId().compareTo(o2.getVotingId()));
+        }
+    };
+    
+    /** the name used for the period job with the scheduler **/
+    protected String NAME = "discovery.impl.analyzeVotings.runner.";
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -80,16 +106,83 @@ public class VotingHandler implements EventHandler {
     /** the sling id of the local instance **/
     private String slingId;
 
+    /** the HeartbeatHandler sets the leaderElectionid - this is subsequently used
+     * to ensure the leaderElectionId is correctly set upon voting
+     */
+    private volatile String leaderElectionId;
+
+    private volatile boolean activated;
+
+    private ComponentContext context;
+    
+    private ServiceRegistration eventHandlerRegistration;
+
+    /** for testing only **/
+    public static VotingHandler testConstructor(SlingSettingsService settingsService,
+            ResourceResolverFactory factory, Config config) {
+        VotingHandler handler = new VotingHandler();
+        handler.slingSettingsService = settingsService;
+        handler.resolverFactory = factory;
+        handler.config = config;
+        return handler;
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        if (eventHandlerRegistration != null) {
+            eventHandlerRegistration.unregister();
+            logger.info("deactivate: VotingHandler unregistered as EventHandler");
+            eventHandlerRegistration = null;
+        }
+        activated = false;
+        logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
+    }
+    
+    @Activate
     protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
         logger = LoggerFactory.getLogger(this.getClass().getCanonicalName()
                 + "." + slingId);
+        this.context = context;
+        activated = true;
+        
+        // once activated, register the eventHandler so that we can 
+        // start receiving and processing votings...
+        registerEventHandler();
+        logger.info("activated: activated ("+slingId+")");
+    }
+
+    private void registerEventHandler() {
+        BundleContext bundleContext = context == null ? null : context.getBundleContext();
+        if (bundleContext == null) {
+            logger.info("registerEventHandler: context or bundleContext is null - cannot register");
+            return;
+        }
+        Dictionary<String,Object> properties = new Hashtable<String,Object>();
+        properties.put(Constants.SERVICE_DESCRIPTION, "Voting Event Listener");
+        String[] topics = new String[] {
+                SlingConstants.TOPIC_RESOURCE_ADDED,
+                SlingConstants.TOPIC_RESOURCE_CHANGED,
+                SlingConstants.TOPIC_RESOURCE_REMOVED };
+        properties.put(EventConstants.EVENT_TOPIC, topics);
+        String path = config.getDiscoveryResourcePath();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length()-1);
+        }
+        path = path + "/*";
+        properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
+        eventHandlerRegistration = bundleContext.registerService(
+                EventHandler.class.getName(), this, properties);
+        logger.info("registerEventHandler: VotingHandler registered as EventHandler");
     }
 
     /**
      * handle repository changes and react to ongoing votings
      */
     public void handleEvent(final Event event) {
+        if (!activated) {
+            return;
+        }
         String resourcePath = (String) event.getProperty("path");
         String ongoingVotingsPath = config.getOngoingVotingsPath();
 
@@ -133,142 +226,130 @@ public class VotingHandler implements EventHandler {
      * SLING-2885: this method must be synchronized as it can be called concurrently
      * by the HearbeatHandler.doCheckView and the VotingHandler.handleEvent.
      */
-    public synchronized void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+    public synchronized Map<VotingView,VotingDetail> analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+        if (!activated) {
+            logger.info("analyzeVotings: VotingHandler not yet initialized, can't vote.");
+            return null;
+        }
+        Map<VotingView,VotingDetail> result = new HashMap<VotingView,VotingDetail>();
         // SLING-3406: refreshing resourceResolver/session here to get the latest state from the repository
+        logger.debug("analyzeVotings: start. slingId: {}", slingId);
         resourceResolver.refresh();
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         if (winningVote != null) {
             if (winningVote.isInitiatedBy(slingId)) {
-            	if (logger.isDebugEnabled()) {
-	                logger.debug("analyzeVotings: my voting was winning. I'll mark it as established then! "
+                logger.info("analyzeVotings: my voting was winning. I'll mark it as established then! "
 	                        + winningVote);
-            	}
-                promote(resourceResolver, winningVote.getResource());
+                try{
+                    promote(resourceResolver, winningVote.getResource());
+                } catch (RuntimeException re) {
+                    logger.error("analyzeVotings: RuntimeException during promotion: "+re, re);
+                    throw re;
+                } catch (Error er) {
+                    logger.error("analyzeVotings: Error during promotion: "+er, er);
+                    throw er;
+                }
                 // SLING-3406: committing resourceResolver/session here, while we're in the synchronized
                 resourceResolver.commit();
+                
+                // for test verification
+                result.put(winningVote, VotingDetail.PROMOTED);
+                return result;
             } else {
-            	if (logger.isDebugEnabled()) {
-            		logger.debug("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
+        		logger.info("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
             				+ winningVote);
-            	}
+        		
+        		result.put(winningVote, VotingDetail.WINNING);
+            	return result;
             }
         }
 
-        List<VotingView> ongoingVotings = VotingHelper
-                .listOpenNonWinningVotings(resourceResolver,
-                        config);
-
-        Resource clusterNodesRes = resourceResolver
-                .getResource(config.getClusterInstancesPath());
-
-        Iterator<VotingView> it = ongoingVotings.iterator();
-        while (it.hasNext()) {
-            VotingView ongoingVotingRes = it.next();
-            if (winningVote != null && !winningVote.equals(ongoingVotingRes)
-                    && !ongoingVotingRes.hasVotedOrIsInitiator(slingId)) {
-                // there is a winning vote, it doesn't equal
-                // ongoingVotingRes, and I have not voted on
-                // ongoingVotingRes yet.
-                // so I vote no there now
-                ongoingVotingRes.vote(slingId, false);
-                it.remove();
-            } else if (!ongoingVotingRes.matchesLiveView(clusterNodesRes,
-                    config)) {
-                logger.warn("analyzeVotings: encountered a voting which does not match mine. Voting no: "
-                        + ongoingVotingRes);
-                ongoingVotingRes.vote(slingId, false);
-                it.remove();
-            } else if (ongoingVotingRes.isInitiatedBy(slingId)
-                    && ongoingVotingRes.hasNoVotes()) {
-            	if (logger.isDebugEnabled()) {
-	                logger.debug("analyzeVotings: there were no votes for my voting, so I have to remove it: "
-	                        + ongoingVotingRes);
-            	}
-                ongoingVotingRes.remove(true);
-                it.remove();
+        List<VotingView> ongoingVotings = VotingHelper.listVotings(resourceResolver, config);
+        if (ongoingVotings == null || ongoingVotings.size() == 0) {
+            logger.debug("analyzeVotings: no ongoing votings at the moment. done.");
+            return result;
+        }
+        Collections.sort(ongoingVotings, VOTING_COMPARATOR);
+        VotingView yesVote = null;
+        for (VotingView voting : ongoingVotings) {
+            Boolean myVote = voting.getVote(slingId);
+            boolean votedNo = myVote != null && !myVote;
+            boolean votedYes = myVote != null && myVote;
+            if (voting.isTimedoutVoting(config)) {
+                // if a voting has timed out, delete it
+                logger.info("analyzeVotings: deleting a timed out voting: "+voting);
+                voting.remove(false);
+                result.put(voting, VotingDetail.TIMEDOUT);
+                continue;
+            }
+            if (voting.hasNoVotes()) {
+                if (!votedNo) {
+                    logger.info("analyzeVotings: vote already has no votes, so I shall also vote no: "+voting);
+                    voting.vote(slingId, false, null);
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    // else ignore silently
+                    result.put(voting, VotingDetail.UNCHANGED);
+                }
+                continue;
+            }
+            if (!voting.isOngoingVoting(config)) {
+                logger.debug("analyzeVotings: vote is not ongoing (ignoring): "+voting);
+                continue;
+            }
+            String liveComparison;
+            try {
+                liveComparison = voting.matchesLiveView(config);
+            } catch (Exception e) {
+                logger.error("analyzeVotings: could not compare voting with live view: "+e, e);
+                continue;
+            }
+            if (liveComparison != null) {
+                if (!votedNo) {
+                    logger.info("analyzeVotings: vote doesnt match my live view, voting no. "
+                            + "comparison result: "+liveComparison+", vote: "+voting);
+                    voting.vote(slingId, false, null);
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    result.put(voting, VotingDetail.UNCHANGED);
+                }
+                continue;
+            }
+            if (yesVote != null) {
+                // as soon as I found the one I should vote yes for, 
+                // vote no for the rest
+                if (!votedNo) {
+                    logger.info("analyzeVotings: already voted yes, so voting no for: "+voting);
+                    voting.vote(slingId, false, null);
+                    result.put(voting, VotingDetail.VOTED_NO);
+                } else {
+                    // else ignore silently
+                    result.put(voting, VotingDetail.UNCHANGED);
+                }
+                continue;
+            }
+            if (!votedYes) {
+                logger.info("analyzeVotings: not timed out, no no-votes, matches live, still ongoing, "
+                        + "I have not yet voted yes, so noting candidate for yes as: "+voting);
+            }
+            yesVote = voting;
+        }
+        if (yesVote != null) {
+            Boolean myVote = yesVote.getVote(slingId);
+            boolean votedYes = myVote != null && myVote;
+            if (!votedYes) {
+                logger.info("analyzeVotings: declaring my personal winner: "+yesVote+" (myVote==null: "+(myVote==null)+")");
+                yesVote.vote(slingId, true, leaderElectionId);
+                result.put(yesVote, VotingDetail.VOTED_YES);
+            } else {
+                // else don't double vote / log
+                result.put(yesVote, VotingDetail.UNCHANGED);
             }
         }
-
-        if (winningVote != null) {
-        	if (logger.isDebugEnabled()) {
-	            logger.debug("analyzeVotings: done with vote-handling. there was a winner.");
-        	}
-            return;
-        }
-
-        if (ongoingVotings.size() == 0) {
-            return;
-        }
-
-        if (ongoingVotings.size() == 1) {
-            VotingView votingResource = ongoingVotings.get(0);
-            if (votingResource.isInitiatedBy(slingId)) {
-            	if (logger.isDebugEnabled()) {
-	                logger.debug("analyzeVotings: only one voting found, and it is mine. I dont have to vote therefore: "
-	                        + votingResource);
-            	}
-                return;
-            } // else:
-        	if (logger.isDebugEnabled()) {
-	            logger.debug("analyzeVotings: only one voting found for which I did not yet vote - and it is not mine. I'll vote yes then: "
-	                    + votingResource);
-        	}
-            votingResource.vote(slingId, true);
-        }
-
-        // otherwise there is more than one voting going on, all matching my
-        // view of the cluster
-        Collections.sort(ongoingVotings, new Comparator<VotingView>() {
-
-            public int compare(VotingView o1, VotingView o2) {
-                if (o1 == o2) {
-                    return 0;
-                }
-                if (o1 == null && o2 != null) {
-                    return 1;
-                }
-                if (o2 == null && o1 != null) {
-                    return -1;
-                }
-                // now both are non-null
-                return (o1.getViewId().compareTo(o2.getViewId()));
-            }
-        });
-
-        // having sorted, the lowest view should now win!
-        // first lets check if I have voted yes already
-        VotingView myYesVoteResource = VotingHelper.getYesVotingOf(resourceResolver,
-                config, slingId);
-        VotingView lowestVoting = ongoingVotings.get(0);
-
-        if (myYesVoteResource != null && lowestVoting.equals(myYesVoteResource)) {
-            // all fine. then I've voted for the lowest viewId - which is
-            // the whole idea
-        	if (logger.isDebugEnabled()) {
-	            logger.debug("analyzeVotings: my voted for view is currently already the lowest id. which is good. I dont have to change any voting. "
-	                    + myYesVoteResource);
-        	}
-        } else if (myYesVoteResource == null) {
-            // I've not voted yet - so I should vote for the lowestVoting
-        	if (logger.isDebugEnabled()) {
-	            logger.debug("analyzeVotings: I apparently have not yet voted. So I shall vote now for the lowest id which is: "
-	                    + lowestVoting);
-        	}
-            lowestVoting.vote(slingId, true);
-        } else {
-            // otherwise I've already voted, but not for the lowest. which
-            // is a shame.
-            // I shall change my mind!
-            logger.warn("analyzeVotings: I've already voted - but it so happened that there was a lower voting created after I voted... so I shall change my vote from "
-                    + myYesVoteResource + " to " + lowestVoting);
-            myYesVoteResource.vote(slingId, null);
-            lowestVoting.vote(slingId, true);
-        }
-    	if (logger.isDebugEnabled()) {
-	        logger.debug("analyzeVotings: all done now. I've voted yes for "
-	                + lowestVoting);
-    	}
+        resourceResolver.commit();
+        logger.debug("analyzeVotings: result: my yes vote was for: " + yesVote);
+        return result;
     }
     
     public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
@@ -366,8 +447,10 @@ public class VotingHandler implements EventHandler {
                 .getChildren().iterator();
         String leaderElectionId = null;
         String leaderid = null;
+        int membersCount = 0;
         while (it2.hasNext()) {
             Resource aMember = it2.next();
+            membersCount++;
             String leid = aMember.adaptTo(ValueMap.class).get(
                     "leaderElectionId", String.class);
             if (leaderElectionId == null
@@ -389,10 +472,8 @@ public class VotingHandler implements EventHandler {
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()
                 + "/" + winningVoteResource.getName();
-    	if (logger.isDebugEnabled()) {
-	        logger.debug("promote: promote to new established node "
-	                + newEstablishedViewPath);
-    	}
+        logger.info("promote: promoting to new established node (#members: " + membersCount + ", path: "
+                + newEstablishedViewPath + ")");
         ResourceHelper.moveResource(winningVoteResource, newEstablishedViewPath);
 
         // step 4: delete all ongoing votings...
@@ -402,6 +483,7 @@ public class VotingHandler implements EventHandler {
             Iterator<Resource> it4 = ongoingVotingsChildren.iterator();
             while (it4.hasNext()) {
                 Resource anOngoingVoting = it4.next();
+                logger.info("promote: deleting ongoing voting: "+anOngoingVoting.getName());
                 resourceResolver.delete(anOngoingVoting);
             }
         }
@@ -431,5 +513,12 @@ public class VotingHandler implements EventHandler {
 
         logger.debug("promote: done with promotiong. saving.");
         resourceResolver.commit();
+        logger.info("promote: promotion done (#members: " + membersCount + ", path: "
+                + newEstablishedViewPath + ")");
+    }
+
+    public void setLeaderElectionId(String leaderElectionId) {
+        logger.info("setLeaderElectionId: leaderElectionId="+leaderElectionId);
+        this.leaderElectionId = leaderElectionId;
     }
 }

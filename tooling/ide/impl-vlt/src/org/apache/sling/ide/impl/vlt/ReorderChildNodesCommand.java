@@ -81,10 +81,10 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
             return;
         }
 
-        Set<String> resourceChildNames = new HashSet<String>(children.size());
-        Set<String> nodeChildNames = new HashSet<String>(children.size());
+        Set<String> resourceChildNames = new HashSet<>(children.size());
+        Set<String> nodeChildNames = new HashSet<>(children.size());
 
-        List<Node> nodeChildren = new LinkedList<Node>();
+        List<Node> nodeChildren = new LinkedList<>();
         NodeIterator nodeChildrenIt = nodeToReorder.getNodes();
         while (nodeChildrenIt.hasNext()) {
             Node node = nodeChildrenIt.nextNode();
@@ -164,5 +164,9 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
         getLogger().trace(out.toString());
     }
-
+    
+    @Override
+    public Kind getKind() {
+        return Kind.REORDER_CHILDREN;
+    }
 }

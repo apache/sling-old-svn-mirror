@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
-VERSION=7
+VERSION=8
 WORKDIR=out
+ALLOW_SNAPSHOT=1
 
 # create work directory
 if [ ! -d $WORKDIR ] ; then
@@ -9,20 +10,28 @@ if [ ! -d $WORKDIR ] ; then
 fi
 
 # get bundle list
-if [ -f $WORKDIR/bundleList.xml ] ; then
-    echo "bundleList.xml already present, not downloading";
+if [ -f $WORKDIR/slingfeature.txt ] ; then
+    echo "slingfeature.txt already present, not downloading";
 else
-    echo "Downloading bundleList for Sling $VERSION"
-    wget https://repo1.maven.org/maven2/org/apache/sling/org.apache.sling.launchpad/$VERSION/org.apache.sling.launchpad-$VERSION-bundlelist.xml -O $WORKDIR/bundleList.xml
+    echo "Downloading bundle list for Sling $VERSION"
+    wget https://repo1.maven.org/maven2/org/apache/sling/org.apache.sling.launchpad/$VERSION/org.apache.sling.launchpad-$VERSION-slingfeature.txt -O $WORKDIR/slingfeature.txt
 fi
 
 # checkout tags
-artifacts=$(xsltproc bundleList-to-tagNames.xslt $WORKDIR/bundleList.xml)
+artifacts=$(awk -F '/' '/org.apache.sling\// { print $2"-"$3 }' < $WORKDIR/slingfeature.txt)
 
 for artifact in $artifacts; do
     if [ -d $WORKDIR/$artifact ] ; then
         echo "Not checking out $artifact, already present";
     else
+        if [[ "$artifact" == *-SNAPSHOT ]]; then
+            if [ $ALLOW_SNAPSHOT == 0 ] ; then
+                echo "Failing build due to SNAPSHOT artifact $artifact";
+                exit 1;
+            else
+                continue
+            fi
+        fi
         echo "Exporting $artifact from source control"
         svn export https://svn.apache.org/repos/asf/sling/tags/$artifact $WORKDIR/$artifact
         if [ -f patches/$artifact ]; then
@@ -61,6 +70,9 @@ echo >> $POM
 echo " <modules> " >> $POM
 
 for artifact in $artifacts; do
+    if [[ "$artifact" == *-SNAPSHOT ]]; then
+        continue
+    fi
     echo "    <module>$artifact</module>" >> $POM
 done
 
@@ -79,7 +91,7 @@ echo "Starting javadoc generation"
 
 pushd $WORKDIR
 mvn -DexcludePackageNames="*.impl:*.internal:*.jsp:sun.misc:*.juli:*.testservices:*.integrationtest:*.maven:javax.*:org.osgi.*" \
-         org.apache.maven.plugins:maven-javadoc-plugin:2.9.1:aggregate
+         org.apache.maven.plugins:maven-javadoc-plugin:2.10.3:aggregate
 popd
 
 echo "Generated Javadocs can be found in $WORKDIR/target/site/apidocs/"

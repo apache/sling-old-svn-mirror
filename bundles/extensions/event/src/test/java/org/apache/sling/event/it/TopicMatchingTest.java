@@ -19,8 +19,8 @@
 package org.apache.sling.event.it;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
@@ -31,14 +31,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
 public class TopicMatchingTest extends AbstractJobHandlingTest {
 
     public static final String TOPIC = "sling/test/a";
@@ -47,6 +44,8 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     @Before
     public void setup() throws IOException {
         super.setup();
+
+        this.sleep(1000L);
     }
 
     @Override
@@ -56,13 +55,13 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
     }
 
     /**
-     * Test simple pattern matching
+     * Test simple pattern matching /*
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSimpleMatching() throws Exception {
-        final AtomicInteger finishedCount = new AtomicInteger();
+        final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerJobExecutor("sling/test/*",
+        this.registerJobExecutor("sling/test/*",
                 new JobExecutor() {
 
                     @Override
@@ -70,34 +69,27 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(final Event event) {
-                        finishedCount.incrementAndGet();
+                        barrier.block();
                     }
                 });
 
-        try {
-            this.getJobManager().addJob(TOPIC, null);
-            while ( finishedCount.get() == 0 ) {
-                this.sleep(10);
-            }
-        } finally {
-            reg.unregister();
-            eventHandler.unregister();
-        }
+        this.getJobManager().addJob(TOPIC, null);
+        barrier.block();
     }
 
     /**
-     * Test deep pattern matching
+     * Test deep pattern matching /**
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDeepMatching() throws Exception {
-        final AtomicInteger finishedCount = new AtomicInteger();
+        final Barrier barrier = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerJobExecutor("sling/**",
+        this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
@@ -105,24 +97,17 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(final Event event) {
-                        finishedCount.incrementAndGet();
+                        barrier.block();
                     }
                 });
 
-        try {
-            this.getJobManager().addJob(TOPIC, null);
-            while ( finishedCount.get() == 0 ) {
-                this.sleep(10);
-            }
-        } finally {
-            reg.unregister();
-            eventHandler.unregister();
-        }
+        this.getJobManager().addJob(TOPIC, null);
+        barrier.block();
     }
 
     /**
@@ -130,57 +115,54 @@ public class TopicMatchingTest extends AbstractJobHandlingTest {
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrdering() throws Exception {
-        final AtomicInteger count1 = new AtomicInteger();
-        final AtomicInteger count2 = new AtomicInteger();
-        final AtomicInteger count3 = new AtomicInteger();
+        final Barrier barrier1 = new Barrier(2);
+        final Barrier barrier2 = new Barrier(2);
+        final Barrier barrier3 = new Barrier(2);
 
-        final ServiceRegistration reg1 = this.registerJobExecutor("sling/**",
+        this.registerJobExecutor("sling/**",
                 new JobExecutor() {
 
                     @Override
                     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
-                        count1.incrementAndGet();
+                        barrier1.block();
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration reg2 = this.registerJobExecutor("sling/test/*",
+        final ServiceRegistration<JobExecutor> reg2 = this.registerJobExecutor("sling/test/*",
                 new JobExecutor() {
 
                     @Override
                     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
-                        count2.incrementAndGet();
+                        barrier2.block();
                         return context.result().succeeded();
                     }
                 });
-        final ServiceRegistration reg3 = this.registerJobExecutor(TOPIC,
+        final ServiceRegistration<JobExecutor> reg3 = this.registerJobExecutor(TOPIC,
                 new JobExecutor() {
 
                     @Override
                     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
-                        count3.incrementAndGet();
+                        barrier3.block();
                         return context.result().succeeded();
                     }
                 });
 
         // first test, all three registered, reg3 should get the precedence
         this.getJobManager().addJob(TOPIC, null);
-        while ( count3.get() != 1 ) {
-            this.sleep(10);
-        }
+        barrier3.block();
 
         // second test, unregister reg3, now it should be reg2
-        reg3.unregister();
+        long cc = this.getConsumerChangeCount();
+        this.unregister(reg3);
+        this.waitConsumerChangeCount(cc + 1);
         this.getJobManager().addJob(TOPIC, null);
-        while ( count2.get() != 1 ) {
-            this.sleep(10);
-        }
+        barrier2.block();
 
         // third test, unregister reg2, reg1 is now the only one
-        reg2.unregister();
+        cc = this.getConsumerChangeCount();
+        this.unregister(reg2);
+        this.waitConsumerChangeCount(cc + 1);
         this.getJobManager().addJob(TOPIC, null);
-        while ( count1.get() != 1 ) {
-            this.sleep(10);
-        }
-        reg1.unregister();
+        barrier1.block();
     }
 }

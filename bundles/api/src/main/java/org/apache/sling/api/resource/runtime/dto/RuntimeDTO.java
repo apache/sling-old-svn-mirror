@@ -20,6 +20,8 @@ package org.apache.sling.api.resource.runtime.dto;
 
 /**
  * Represents the resource resolver runtime
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public class RuntimeDTO {
 

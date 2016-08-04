@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -43,8 +43,8 @@
     </scm>
 
     <properties>
-        <!-- Timeout when checking for Sling readyness before starting tests -->
-        <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
+        <!-- run modes for integration tests -->
+        <sling.run.modes>oak_tar</sling.run.modes>
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path/>
@@ -71,9 +71,6 @@
         otherwise you can provide your own debug settings
         -->
         <debug.options/>
-
-        <slf4j.version>1.7.7</slf4j.version>
-        <logback.version>1.1.2</logback.version>
     </properties>
 
     <build>
@@ -111,10 +108,12 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <!-- Version newer than the one declared in the parent pom -->
+                <version>2.19.1</version>
                 <executions>
                     <execution>
+                        <id>integration-tests</id>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>
@@ -139,17 +138,14 @@
                         <io.sightly.tck.serverURL>http://${test.host}:${http.port}</io.sightly.tck.serverURL>
                         <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                         <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
-                        <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
-
-                        <!-- Additional readyness checks, SLING-3235 -->
-                        <launchpad.ready.1>GET:/index.html:200:.*Welcome to the Sling Launchpad.*</launchpad.ready.1>
+                        <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.4.2</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -165,14 +161,11 @@
                         <server>
                             <port>${http.port}</port>
                             <controlPort>${sling.control.port}</controlPort>
-                            <runmode>oak</runmode>
+                            <runmode>${sling.run.modes}</runmode>
                             <contextPath>${http.base.path}</contextPath>
                             <debug>${debug.options}</debug>
                         </server>
                     </servers>
-                    <!-- TODO
-                    <controlHost>${test.host}</controlHost>
-                    -->
                 </configuration>
             </plugin>
         </plugins>
@@ -203,7 +196,7 @@
         <dependency>
             <groupId>io.sightly</groupId>
             <artifactId>io.sightly.tck</artifactId>
-            <version>1.1.3</version>
+            <version>1.2.3</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -217,7 +210,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.18</version>
+            <version>2.0.24</version>
             <exclusions>
                 <exclusion>
                     <groupId>junit</groupId>
@@ -231,43 +224,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <version>2.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
             <scope>test</scope>
         </dependency>
 

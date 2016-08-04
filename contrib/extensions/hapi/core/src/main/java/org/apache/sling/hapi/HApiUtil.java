@@ -19,20 +19,27 @@
 
 package org.apache.sling.hapi;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-public interface HApiUtil {
-    public static final Logger LOG = LoggerFactory.getLogger(HApiUtil.class);
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
-    public static final String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";
+public interface HApiUtil {
+
+    String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";
+    String RESOURCE_TYPE = "org.apache.sling.hapi.tools.resourcetype";
+
+    String DEFAULT_COLLECTION_RESOURCE_TYPE = "sling/hapi/components/typescollection";
+    String COLLECTION_RESOURCE_TYPE = "org.apache.sling.hapi.tools.collectionresourcetype";
+
+    String SEARCH_PATHS = "org.apache.sling.hapi.tools.searchpaths";
+
+    String DEFAULT_SERVER_URL = "http://localhost:8080";
+    String EXTERNAL_URL = "org.apache.sling.hapi.tools.externalurl";
 
     /**
-     * <p>Get a HApi type object from a type identifier.</p>
+     * <p>Get a HApi type jcr node from a type identifier.</p>
      * <p>The JCR node must be [nt:unstructured], a descendant of any of the HAPi search path defined by the
      * {@see HAPI_PATHS} config and the sling:resourceType should be set to the value defined by the {@see HAPI_RESOURCE_TYPE} config</p>
      * <p>The first result is returned</p>
@@ -43,8 +50,40 @@ public interface HApiUtil {
      * @return The first node that matches that type or null if none is found.
      * @throws RepositoryException
      */
-    public Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException;
+    @Deprecated
+    Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException;
 
+
+    /**
+     * <p>Get a HApi type Resource from a type identifier.</p>
+     * <p>The Resource must be [nt:unstructured], a descendant of any of the HAPi search path defined by the
+     * {@see HAPI_PATHS} config and the sling:resourceType should be set to the value defined by the {@see HapiUtil#RESOURCE_TYPE}
+     * config</p>
+     * <p>The first result is returned</p>
+     * @param resolver The sling resource resolver object
+     * @param type The type identifier, which is either in the form of a jcr path,
+     *             same as the path for {@link: ResourceResolver#getResource(String)}. If the path cannot be resolved, type is treated like
+     *             a fully qualified domain name, which has to match the "fqdn" property on the Resource which represents the type.
+     * @return The first Resource that matches that type or null if none is found.
+     * @throws RepositoryException
+     */
+    Resource getTypeResource(ResourceResolver resolver, String type) throws RepositoryException;
+
+    /**
+     * <p>Get a HApi type collection Resource from a collection identifier.</p>
+     * <p>The Resource must be [nt:unstructured], a descendant of any of the HAPi search path defined by the
+     * {@see HAPI_PATHS} config and the sling:resourceType should be set to the value defined by the
+     * {@see HapiUtil#COLLECTION_RESOURCE_TYPE} config</p>
+     * <p>The first result is returned</p>
+     * @param resolver The sling resource resolver object
+     * @param collection The collection identifier, which is either in the form of a jcr path,
+     *             same as the path for {@link: ResourceResolver#getResource(String)}. If the path cannot be resolved, collection is
+     *             treated like a fully qualified domain name, which has to match the "fqdn" property on the Resource which
+     *                   represents the type.
+     * @return The first Resource that matches that collection or null if none is found.
+     * @throws RepositoryException
+     */
+    Resource getTypeCollectionResource(ResourceResolver resolver, String collection) throws RepositoryException;
 
     /**
      * <p>Get a HApi type object from a type identifier.</p>
@@ -59,7 +98,7 @@ public interface HApiUtil {
      * @return The HApiType resolved from the type identifier
      * @throws javax.jcr.RepositoryException
      */
-    public HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException;
+    HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException;
 
     /**
      * <p>Get a HApi type object from the {@link javax.jcr.Node}.</p>
@@ -89,7 +128,68 @@ public interface HApiUtil {
      * @return The HApiType
      * @throws RepositoryException
      */
-    public HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException;
+    @Deprecated
+    HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException;
+
+    /**
+     * <p>Get a HApi type object from the {@link org.apache.sling.api.resource.Resource}.</p>
+     * The Resource has the following properties:
+     * <ul>
+     *     <li>name: A 'Name' of the type (mandatory)</li>
+     *     <li>description: A 'String' with the description text for this type (mandatory)</li>
+     *     <li>fqdn: A 'String' with the fully qualified domain name; A namespace like a java package (mandatory)</li>
+     *     <li>extends: A type identifier (either a path or a fqdn); (optional). This defines the parent type of this type</li>
+     *     <li>parameter: A multivalue property to define a list of java-like generic types
+     *     that can be used as types for properties; (optional)</li>
+     * </ul>
+     *
+     * <p>The properties of this type are defined as children resources.</p>
+     * <p>The name of property resource defines the name of the property for this type. </p>
+     * The children property nodes have the following properties:
+     * <ul>
+     *     <li>type: The type identifier (mandatory). Can be of type 'Name' or 'Path'
+     *      See {@link HApiUtil#getTypeNode(org.apache.sling.api.resource.ResourceResolver, String)}
+     *      for the format of this value</li>
+     *     <li>description: A 'String' with the description for this property (mandatory)</li>
+     *     <li>multiple: A 'Boolean' that defines whether this property can exist multiple times on an object of this type (optional)</li>
+     * </ul>
+     *
+     * @param resolver The resource resolver
+     * @param typeResource The sling Resource of the HApi type
+     * @return The HApiType
+     * @throws RepositoryException
+     */
+    HApiType fromResource(ResourceResolver resolver, Resource typeResource) throws RepositoryException;
+
+    /**
+     * <p>Get a {@link HApiTypesCollection} object from a {@link org.apache.sling.api.resource.Resource}.</p>
+     * The Resource has the following properties:
+     * <ul>
+     *     <li>name: A 'Name' of the type collection (mandatory)</li>
+     *     <li>description: A 'String' with the description text for this type collection (mandatory)</li>
+     *     <li>fqdn: A 'String' with the fully qualified domain name; A namespace like a java package (mandatory)</li>
+     * </ul>
+     *
+     * <p> The types collection will be populated with direct child Resources of the {{collectionResource}},
+     * which have the resourceType equal to the value of the {@link HApiUtil#RESOURCE_TYPE} property
+     *
+     * @param resolver The resource resolver
+     * @param collectionResource The sling Resource of the HApi type collection
+     * @return The HApiTypesCollection
+     * @throws RepositoryException
+     */
+    HApiTypesCollection collectionFromResource(ResourceResolver resolver, Resource collectionResource) throws RepositoryException;
+
+    /**
+     * <p>Get a {@link HApiTypesCollection} object from a path String.</p>
+     * <p>{@see HApiUtil#collectionFromResource}</p>
+     *
+     * @param resolver The resource resolver
+     * @param collectionPath The sling resource path of the HApi type collection
+     * @return The HApiTypesCollection
+     * @throws RepositoryException
+     */
+    HApiTypesCollection collectionFromPath(ResourceResolver resolver, String collectionPath) throws RepositoryException;
 
     /**
      * Get a new instance of AttributeHelper for the type identified by 'type'
@@ -99,5 +199,5 @@ public interface HApiUtil {
      * @return
      * @throws RepositoryException
      */
-    public MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException;
+    MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException;
 }

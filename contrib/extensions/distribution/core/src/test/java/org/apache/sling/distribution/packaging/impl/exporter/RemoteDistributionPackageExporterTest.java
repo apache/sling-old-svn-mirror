@@ -18,6 +18,12 @@
  */
 package org.apache.sling.distribution.packaging.impl.exporter;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -26,14 +32,10 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * Testcase for {@link RemoteDistributionPackageExporter}
@@ -41,18 +43,35 @@ import static org.mockito.Mockito.mock;
 public class RemoteDistributionPackageExporterTest {
 
     @Test
-    public void testDummyExport() throws Exception {
+    public void testNothingExported() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
-        for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
-            RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                    packageBuilder, distributionTransportSecretProvider, endpoints, strategy, 1);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-            List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);
-            assertNotNull(distributionPackages);
-            assertTrue(distributionPackages.isEmpty());
-        }
+        RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
+        final List<DistributionPackage> distributionPackages = new ArrayList<DistributionPackage>();
+        remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest, new DistributionPackageProcessor() {
+            @Override
+            public void process(DistributionPackage distributionPackage) {
+                distributionPackages.add(distributionPackage);
+            }
+        });
+        assertNotNull(distributionPackages);
+        assertTrue(distributionPackages.isEmpty());
+    }
+
+    @Test
+    public void testFailedPackageRetrieval() throws Exception {
+        DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
+        String[] endpoints = new String[0];
+        RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = remotedistributionPackageExporter.getPackage(resourceResolver, "123");
+        assertNull(distributionPackage);
     }
 }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>8</version>
+        <relativePath />
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling-maven-builder</artifactId>
+    <packaging>pom</packaging>
+    <version>1-SNAPSHOT</version>
+
+    <name>Apache Maven Tooling (Builder)</name>
+    <description>
+        Pseudo project to build all Maven modules.
+    </description>
+
+    <inceptionYear>2007</inceptionYear>
+
+    <prerequisites>
+        <maven>3.0.2</maven>
+    </prerequisites>
+
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.apache.org/jira/browse/SLING</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven
+        </developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven</url>
+    </scm>
+
+    <modules>
+        <module>maven-jcrocm-plugin</module>
+        <module>maven-jspc-plugin</module>
+        <module>maven-sling-plugin</module>
+        <module>maven-launchpad-plugin</module>
+        <module>slingstart-maven-plugin</module>
+        <module>sightly-maven-plugin</module>
+        <module>archetypes</module>
+    </modules>
+</project>

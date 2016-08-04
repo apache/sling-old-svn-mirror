@@ -24,16 +24,15 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 abstract class AbstractBundlePostMojo extends AbstractMojo {
 
     /**
      * Determines whether or not to fail the build if
      * the HTTP POST or PUT returns an non-OK response code.
-     *
-     * @parameter expression="${sling.failOnError}" default-value="true"
-     * @required
      */
+    @Parameter(property = "sling.failOnError", defaultValue = "true", required = true)
     protected boolean failOnError;
 
     /**

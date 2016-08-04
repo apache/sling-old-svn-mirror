@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +67,7 @@ public class ResourceDecoratorReturnsNullTest extends ResourceDecoratorTestBase 
     }
     
     @Before
-    public void setup() {
+    public void setup() throws LoginException {
         super.setup();
         pathsThatReturnNull.add("/tmp/D");
         pathsThatReturnNull.add("/var/two");

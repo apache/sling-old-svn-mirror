@@ -192,7 +192,9 @@ public class DistributedEventSender
                 try {
                     resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                     final Resource eventResource = resolver.getResource(path);
-                    if ( DistributedEventAdminImpl.RESOURCE_TYPE_EVENT.equals(eventResource.getResourceType())) {
+                    if (eventResource == null) {
+                        this.logger.warn("runInBackground : resource not found at "+path);
+                    } else if ( DistributedEventAdminImpl.RESOURCE_TYPE_EVENT.equals(eventResource.getResourceType())) {
                         final Event e = this.readEvent(eventResource);
                         if ( e != null ) {
                             // we check event admin as processing is async

@@ -22,15 +22,20 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.ServiceUtil;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -50,18 +55,34 @@ public final class MockEventAdmin implements EventAdmin {
             cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private final Map<Object, EventHandlerItem> eventHandlers = new TreeMap<Object, EventHandlerItem>();
 
-    private ExecutorService asyncHandler = Executors.newCachedThreadPool();
+    private ExecutorService asyncHandler;
     
     private static final Logger log = LoggerFactory.getLogger(MockEventAdmin.class);
+    
+    @Activate
+    protected void activate(ComponentContext componentContext) {
+        asyncHandler = Executors.newCachedThreadPool();
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext componentContext) {
+        asyncHandler.shutdownNow();
+    }
 
     @Override
     public void postEvent(final Event event) {
-        asyncHandler.execute(new Runnable() {
-            @Override
-            public void run() {
-                distributeEvent(event);
-            }
-        });
+        try {
+            asyncHandler.execute(new Runnable() {
+                @Override
+                public void run() {
+                    distributeEvent(event);
+                }
+            });
+        }
+        catch (RejectedExecutionException ex) {
+            // ignore
+            log.debug("Ignore rejected execution: " + ex.getMessage(), ex);;
+        }
     }
 
     @Override
@@ -86,13 +107,13 @@ public final class MockEventAdmin implements EventAdmin {
     
     protected void bindEventHandler(EventHandler eventHandler, Map<String, Object> props) {
         synchronized (eventHandlers) {
-            eventHandlers.put(ServiceUtil.getComparableForServiceRanking(props), new EventHandlerItem(eventHandler, props));
+            eventHandlers.put(ServiceUtil.getComparableForServiceRanking(props, Order.DESCENDING), new EventHandlerItem(eventHandler, props));
         }
     }
 
     protected void unbindEventHandler(EventHandler eventHandler, Map<String, Object> props) {
         synchronized (eventHandlers) {
-            eventHandlers.remove(ServiceUtil.getComparableForServiceRanking(props));
+            eventHandlers.remove(ServiceUtil.getComparableForServiceRanking(props, Order.DESCENDING));
         }
     }
     

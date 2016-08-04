@@ -28,7 +28,11 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.common.DistributionException;
 
+/**
+ * {@link DistributionRequestAuthorizationStrategy} based on JCR privileges over a certain {@link Session}
+ */
 public class PrivilegeDistributionRequestAuthorizationStrategy implements DistributionRequestAuthorizationStrategy {
 
     private final String jcrPrivilege;
@@ -41,48 +45,50 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
         this.jcrPrivilege = jcrPrivilege;
     }
 
-    public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionRequestAuthorizationException {
+    public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionException {
         Session session = resourceResolver.adaptTo(Session.class);
 
-        try {
-           if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
-               checkPermissionForAdd(session, distributionRequest.getPaths());
-           }
-           else if (DistributionRequestType.DELETE.equals(distributionRequest.getRequestType())) {
-               checkPermissionForDelete(session, distributionRequest.getPaths());
-           }
-
+        if (session == null) {
+            throw new DistributionException("cannot obtain a Session");
         }
-        catch (RepositoryException e) {
-            throw new DistributionRequestAuthorizationException("Not enough privileges");
+
+        try {
+            if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
+                checkPermissionForAdd(session, distributionRequest.getPaths());
+            } else if (DistributionRequestType.DELETE.equals(distributionRequest.getRequestType())) {
+                checkPermissionForDelete(session, distributionRequest.getPaths());
+            }
+
+        } catch (RepositoryException e) {
+            throw new DistributionException("Not enough privileges");
         }
 
     }
 
     private void checkPermissionForAdd(Session session, String[] paths)
-            throws RepositoryException, DistributionRequestAuthorizationException {
+            throws RepositoryException, DistributionException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ) };
+        Privilege[] privileges = new Privilege[]{acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ)};
         for (String path : paths) {
-            if(!acMgr.hasPrivileges(path, privileges)) {
-                throw new DistributionRequestAuthorizationException("Not enough privileges");
+            if (!acMgr.hasPrivileges(path, privileges)) {
+                throw new DistributionException("Not enough privileges");
             }
         }
 
     }
 
     private void checkPermissionForDelete(Session session, String[] paths)
-            throws RepositoryException, DistributionRequestAuthorizationException {
+            throws RepositoryException, DistributionException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
+        Privilege[] privileges = new Privilege[]{acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)};
         for (String path : paths) {
 
             String closestParentPath = getClosestParent(session, path);
 
             if (closestParentPath == null || !acMgr.hasPrivileges(closestParentPath, privileges)) {
-                throw new DistributionRequestAuthorizationException("Not enough privileges");
+                throw new DistributionException("Not enough privileges");
             }
         }
     }

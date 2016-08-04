@@ -54,7 +54,7 @@ import org.eclipse.ui.PlatformUI;
 public class MVPEditor extends Dialog {
 
     private final JcrProperty property;
-    private java.util.List<Line> lines = new ArrayList<MVPEditor.Line>();
+    private java.util.List<Line> lines = new ArrayList<>();
     private TableViewer viewer;
     private final Color greyColor;
     

@@ -35,12 +35,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.config.MainQueueConfiguration;
-import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.EventConstants;
@@ -50,8 +47,6 @@ public abstract class ResourceHelper {
     public static final String RESOURCE_TYPE_FOLDER = "sling:Folder";
 
     public static final String RESOURCE_TYPE_JOB = "slingevent:Job";
-
-    public static final String RESOURCE_TYPE_EVENT = "slingevent:Event";
 
     /** We use the same resource type as for timed events. */
     public static final String RESOURCE_TYPE_SCHEDULED_JOB = "slingevent:TimedEvent";
@@ -67,20 +62,15 @@ public abstract class ResourceHelper {
 
     public static final String PROPERTY_JOB_ID = "slingevent:eventId";
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
+    public static final String PROPERTY_DISTRIBUTE = "event.distribute";
+    public static final String PROPERTY_APPLICATION = "event.application";
 
     /** List of ignored properties to write to the repository. */
-    @SuppressWarnings("deprecation")
     private static final String[] IGNORE_PROPERTIES = new String[] {
-        EventUtil.PROPERTY_DISTRIBUTE,
-        EventUtil.PROPERTY_APPLICATION,
+        ResourceHelper.PROPERTY_DISTRIBUTE,
+        ResourceHelper.PROPERTY_APPLICATION,
         EventConstants.EVENT_TOPIC,
         ResourceHelper.PROPERTY_JOB_ID,
-        JobUtil.PROPERTY_JOB_PARALLEL,
-        JobUtil.PROPERTY_JOB_RUN_LOCAL,
-        JobUtil.PROPERTY_JOB_QUEUE_ORDERED,
-        JobUtil.PROPERTY_NOTIFICATION_JOB,
-        Job.PROPERTY_JOB_PRIORITY,
-        JobStatusNotifier.CONTEXT_PROPERTY_NAME,
         JobImpl.PROPERTY_DELAY_OVERRIDE,
         JobConsumer.PROPERTY_JOB_ASYNC_HANDLER,
         Job.PROPERTY_JOB_PROGRESS_LOG,
@@ -218,16 +208,17 @@ public abstract class ResourceHelper {
                         if ( hasReadError == null ) {
                             hasReadError = new ArrayList<Exception>();
                         }
-                        final int count = hasReadError.size();
                         // let's find out which class might be missing
                         ObjectInputStream ois = null;
                         try {
                             ois = new ObjectInputStream((InputStream)entry.getValue());
                             ois.readObject();
+
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
                         } catch (final ClassNotFoundException cnfe) {
                              hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", cnfe));
                         } catch (final IOException ioe) {
-                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", ioe));
+                            hasReadError.add(new RuntimeException("Unable to deserialize property '" + entry.getKey() + "'", ioe));
                         } finally {
                             if ( ois != null ) {
                                 try {
@@ -236,9 +227,6 @@ public abstract class ResourceHelper {
                                     // ignore
                                 }
                             }
-                        }
-                        if ( hasReadError.size() == count ) {
-                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
                         }
                     }
                 }

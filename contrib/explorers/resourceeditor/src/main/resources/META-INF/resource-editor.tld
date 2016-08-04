@@ -1,6 +1,6 @@
 <taglib version="2.1" xmlns="http://java.sun.com/xml/ns/javaee">
  <tlib-version>1.0-SNAPSHOT</tlib-version>
- <short-name>test</short-name>
+ <short-name>resource-editor</short-name>
  <uri>http://sling.apache.org/resource-editor</uri>
  <tag-file>
   <name>string-editor</name>

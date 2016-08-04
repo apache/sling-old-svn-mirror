@@ -23,18 +23,16 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
-import javax.servlet.ServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Filter;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
@@ -91,71 +89,49 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
 
     private <T> Object getService(Object adaptable, Class<T> type, String filter,
             DisposalCallbackRegistry callbackRegistry) {
-        SlingScriptHelper helper = getScriptHelper(adaptable);
-
-        if (helper != null) {
-            T[] services = helper.getServices(type, filter);
-            if (services == null || services.length == 0) {
+        // cannot use SlingScriptHelper since it does not support ordering by service ranking due to https://issues.apache.org/jira/browse/SLING-5665
+        try {
+            ServiceReference[] refs = bundleContext.getServiceReferences(type.getName(), filter);
+            if (refs == null || refs.length == 0) {
                 return null;
             } else {
-                return services[0];
+                // sort by service ranking (lowest first) (see ServiceReference.compareTo)
+                List<ServiceReference> references = Arrays.asList(refs);
+                Collections.sort(references);
+                callbackRegistry.addDisposalCallback(new Callback(refs, bundleContext));
+                return bundleContext.getService(references.get(references.size() - 1));
             }
-        } else {
-            try {
-                ServiceReference[] refs = bundleContext.getServiceReferences(type.getName(), filter);
-                if (refs == null || refs.length == 0) {
-                    return null;
-                } else {
-                    callbackRegistry.addDisposalCallback(new Callback(refs, bundleContext));
-                    return bundleContext.getService(refs[0]);
-                }
-            } catch (InvalidSyntaxException e) {
-                log.error("invalid filter expression", e);
-                return null;
-            }
+        } catch (InvalidSyntaxException e) {
+            log.error("invalid filter expression", e);
+            return null;
         }
     }
 
     private <T> Object[] getServices(Object adaptable, Class<T> type, String filter,
             DisposalCallbackRegistry callbackRegistry) {
-        SlingScriptHelper helper = getScriptHelper(adaptable);
-
-        if (helper != null) {
-            T[] services = helper.getServices(type, filter);
-            return services;
-        } else {
-            try {
-                ServiceReference[] refs = bundleContext.getServiceReferences(type.getName(), filter);
-                if (refs == null || refs.length == 0) {
-                    return null;
-                } else {
-                    callbackRegistry.addDisposalCallback(new Callback(refs, bundleContext));
-                    List<Object> services = new ArrayList<Object>();
-                    for (ServiceReference ref : refs) {
-                        Object service = bundleContext.getService(ref);
-                        if (service != null) {
-                            services.add(service);
-                        }
-                    }
-                    return services.toArray();
-                }
-            } catch (InvalidSyntaxException e) {
-                log.error("invalid filter expression", e);
+        // cannot use SlingScriptHelper since it does not support ordering by service ranking due to https://issues.apache.org/jira/browse/SLING-5665
+        try {
+            ServiceReference[] refs = bundleContext.getServiceReferences(type.getName(), filter);
+            if (refs == null || refs.length == 0) {
                 return null;
-            }
-        }
-    }
-
-    private SlingScriptHelper getScriptHelper(Object adaptable) {
-        if (adaptable instanceof ServletRequest) {
-            ServletRequest request = (ServletRequest) adaptable;
-            SlingBindings bindings = (SlingBindings) request.getAttribute(SlingBindings.class.getName());
-            if (bindings != null) {
-                return bindings.getSling();
             } else {
-                return null;
+                // sort by service ranking (lowest first) (see ServiceReference.compareTo)
+                List<ServiceReference> references = Arrays.asList(refs);
+                Collections.sort(references);
+                // make highest service ranking being returned first
+                Collections.reverse(references);
+                callbackRegistry.addDisposalCallback(new Callback(refs, bundleContext));
+                List<Object> services = new ArrayList<Object>();
+                for (ServiceReference ref : references) {
+                    Object service = bundleContext.getService(ref);
+                    if (service != null) {
+                        services.add(service);
+                    }
+                }
+                return services.toArray();
             }
-        } else {
+        } catch (InvalidSyntaxException e) {
+            log.error("invalid filter expression", e);
             return null;
         }
     }

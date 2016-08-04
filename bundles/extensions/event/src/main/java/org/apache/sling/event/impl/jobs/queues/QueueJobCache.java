@@ -37,6 +37,7 @@ import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
+import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
@@ -77,6 +78,8 @@ public class QueueJobCache {
     /**
      * Create a new queue job cache
      * @param configuration Current job manager configuration
+     * @param queueName The queue name
+     * @param statisticsManager The statistics manager
      * @param queueType The queue type
      * @param topics The topics handled by this queue.
      */
@@ -135,8 +138,13 @@ public class QueueJobCache {
     /**
      * Get the next job.
      * This method is potentially called concurrently, and
-     * {@link #reschedule(JobHandler)} and {@link #handleNewTopics(Set)}
+     * {@link #reschedule(String, JobHandler, StatisticsManager)} and {@link #handleNewTopics(Set)}
      * can be called concurrently.
+     * @param jobConsumerManager The job consumer manager
+     * @param statisticsManager The statistics manager
+     * @param queue The queue
+     * @param doFull Whether to do a full scan
+     * @return The job handler or {@code null}.
      */
     public JobHandler getNextJob(final JobConsumerManager jobConsumerManager,
             final StatisticsManager statisticsManager,
@@ -168,7 +176,7 @@ public class QueueJobCache {
                         final JobExecutor consumer = jobConsumerManager.getExecutor(job.getTopic());
 
                         handler = new JobHandler(job, consumer, this.configuration);
-                        if ( (consumer != null || (job.isBridgedEvent() && jobConsumerManager.supportsBridgedEvents())) ) {
+                        if ( consumer != null ) {
                             if ( !handler.startProcessing(queue) ) {
                                 statisticsManager.jobDequeued(queue.getName(), handler.getJob().getTopic());
                                 if ( logger.isDebugEnabled() ) {
@@ -276,11 +284,18 @@ public class QueueJobCache {
                     if ( list.size() == maxPreloadLimit ) {
                         scanTopic.set(true);
                     }
+                } else if ( job.getProcessingStarted() != null ) {
+                    logger.debug("Ignoring job {} - processing already started.", job);
                 } else {
-                    if ( job.hasReadErrors() ) {
-                        scanTopic.set(true);
+                    // error reading job
+                    scanTopic.set(true);
+                    if ( job.isReadErrorRecoverable() ) {
+                        logger.debug("Ignoring job {} due to recoverable read errors.", job);
+                    } else {
+                        logger.debug("Failing job {} due to unrecoverable read errors.", job);
+                        final JobHandler handler = new JobHandler(job, null, configuration);
+                        handler.finished(JobState.ERROR, true, null);
                     }
-                    logger.debug("Ignoring job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
                 }
                 return list.size() < maxPreloadLimit;
             }
@@ -310,7 +325,9 @@ public class QueueJobCache {
     /**
      * Reschedule a job
      * Reschedule the job and add it back into the cache.
+     * @param queueName The queue name
      * @param handler The job handler
+     * @param statisticsManager The statistics manager
      */
     public void reschedule(final String queueName, final JobHandler handler, final StatisticsManager statisticsManager) {
         synchronized ( this.cache ) {

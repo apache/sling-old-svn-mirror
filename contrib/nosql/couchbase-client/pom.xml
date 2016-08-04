@@ -17,19 +17,18 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.nosql.couchbase-client</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
     <name>Apache Sling NoSQL Couchbase Client</name>
@@ -43,7 +42,7 @@
 
     <properties>
         <sling.java.version>7</sling.java.version>
-        <couchbase.client.version>2.1.4</couchbase.client.version>
+        <couchbase.client.version>2.2.4</couchbase.client.version>
     </properties>
 
     <dependencies>
@@ -98,7 +97,7 @@
                         <!-- use _exportcontents instead of Export-Package to avoid conflict with Embed-Dependency an inline=true -->
                         <_exportcontents>
                             com.couchbase.client.java.*;version=${couchbase.client.version},
-                            org.apache.sling.nosql.couchbase.client;version=${project.version}
+                            org.apache.sling.nosql.couchbase.client
                         </_exportcontents>
                         <Import-Package>
                             com.barchart.udt.*;resolution:=optional,
@@ -126,6 +125,20 @@
             </plugin>
 
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>README.md</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
 </project>

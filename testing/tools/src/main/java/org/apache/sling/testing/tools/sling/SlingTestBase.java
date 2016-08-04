@@ -33,6 +33,8 @@ import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
 import org.apache.sling.testing.tools.junit.TestDescriptionInterceptor;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
+import org.junit.After;
+import org.junit.runners.ParentRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +50,14 @@ public class SlingTestBase implements SlingInstance {
     public static final String KEEP_JAR_RUNNING_PROP = "keepJarRunning";
     public static final String SERVER_HOSTNAME_PROP = "test.server.hostname";
     public static final String ADDITONAL_BUNDLES_PATH = "additional.bundles.path";
+    public static final String ADDITONAL_BUNDLES_UNINSTALL = "additional.bundles.uninstall";
     public static final String BUNDLE_TO_INSTALL_PREFIX = "sling.additional.bundle";
     public static final String START_BUNDLES_TIMEOUT_SECONDS = "start.bundles.timeout.seconds";
     public static final String BUNDLE_INSTALL_TIMEOUT_SECONDS = "bundle.install.timeout.seconds";
     public static final String ADMIN = "admin";
 
     private final boolean keepJarRunning;
+    private final boolean uninstallAdditionalBundles;
     private final String serverUsername;
     private final String serverPassword;
     private final SlingInstanceState slingTestState;
@@ -86,6 +90,7 @@ public class SlingTestBase implements SlingInstance {
         if(configuredUrl != null && configuredUrl.trim().length() > 0) {
             slingTestState.setServerBaseUrl(configuredUrl);
             slingTestState.setServerStarted(true);
+            uninstallAdditionalBundles = "true".equals(systemProperties.getProperty(ADDITONAL_BUNDLES_UNINSTALL));
         } else {
             synchronized(this.slingTestState) {
                 try {
@@ -102,6 +107,7 @@ public class SlingTestBase implements SlingInstance {
                 serverHost = "localhost";
             }
             slingTestState.setServerBaseUrl("http://" + serverHost + ":" + slingTestState.getJarExecutor().getServerPort());
+            uninstallAdditionalBundles = false; // never undeploy additional bundles in case the server is provisioned here!
         }
 
         // Set configured username using "admin" as default credential
@@ -128,6 +134,17 @@ public class SlingTestBase implements SlingInstance {
         if(!slingTestState.isServerInfoLogged()) {
             log.info("Server base URL={}", slingTestState.getServerBaseUrl());
             slingTestState.setServerInfoLogged(true);
+        }
+    }
+
+    /**
+     * Automatically by the SlingRemoteTestRunner since package version 1.1.0.
+     */
+    @After
+    public void uninstallAdditionalBundlesIfNecessary() {
+        if (uninstallAdditionalBundles) {
+            log.info("Uninstalling additional bundles...");
+            uninstallAdditionalBundles();
         }
     }
 
@@ -162,23 +179,13 @@ public class SlingTestBase implements SlingInstance {
         if(slingTestState.isInstallBundlesFailed()) {
             fail("Bundles could not be installed, cannot run tests");
         } else if(!slingTestState.isExtraBundlesInstalled()) {
-            final String paths = systemProperties.getProperty(ADDITONAL_BUNDLES_PATH);
-            if(paths == null) {
-                log.info("System property {} not set, additional bundles won't be installed",
-                        ADDITONAL_BUNDLES_PATH);
-            } else {
-                final List<File> toInstall = new ArrayList<File>();
+            final List<File> toInstall = getBundlesToInstall();
+            if (!toInstall.isEmpty()) {
                 try {
-                    // Paths can contain a comma-separated list
-                    final String [] allPaths = paths.split(",");
-                    for(String path : allPaths) {
-                        toInstall.addAll(getBundlesToInstall(path.trim()));
-                    }
-                    
                     // Install bundles, check that they are installed and start them all
                     bundlesInstaller.installBundles(toInstall, false);
                     final List<String> symbolicNames = new LinkedList<String>();
-                    for(File f : toInstall) {
+                    for (File f : toInstall) {
                         symbolicNames.add(bundlesInstaller.getBundleSymbolicName(f));
                     }
                     bundlesInstaller.waitForBundlesInstalled(symbolicNames,
@@ -192,14 +199,25 @@ public class SlingTestBase implements SlingInstance {
                     log.info("Exception while installing additional bundles", e);
                     slingTestState.setInstallBundlesFailed(true);
                 }
-
                 if(slingTestState.isInstallBundlesFailed()) {
                     fail("Could not start all installed bundles:" + toInstall);
                 }
+            } else {
+                log.info("Not installing additional bundles, probably System property {} not set",
+                        ADDITONAL_BUNDLES_PATH);
             }
         }
 
         slingTestState.setExtraBundlesInstalled(!slingTestState.isInstallBundlesFailed());
+    }
+    
+    protected void uninstallAdditionalBundles() {
+        try {
+            // always uninstall independent of installation status
+            bundlesInstaller.uninstallBundles(getBundlesToInstall());
+        } catch (Exception e) {
+             log.info("Exception while uninstalling additional bundles", e);
+        }
     }
 
     /** Start server if needed, and return a RequestBuilder that points to it */
@@ -309,7 +327,26 @@ public class SlingTestBase implements SlingInstance {
         }
     }
 
-    /** Get the list of additional bundles to install, as specified by path parameter */
+    /**
+     * Get the list of additional bundles to install, as specified by the system property {@link #ADDITONAL_BUNDLES_PATH} 
+     * @return the list of {@link File}s pointing to the Bundle JARs or the empty list in case no additional bundles should be installed (never {@code null}).
+     */
+    protected List<File> getBundlesToInstall() {
+        final String paths = systemProperties.getProperty(ADDITONAL_BUNDLES_PATH);
+        if(paths == null) {
+            return Collections.emptyList();
+        } 
+        
+        final List<File> toInstall = new ArrayList<File>();
+        // Paths can contain a comma-separated list
+        final String [] allPaths = paths.split(",");
+        for(String path : allPaths) {
+            toInstall.addAll(getBundlesToInstall(path.trim()));
+        }
+        return toInstall;
+    }
+
+    /** Get the list of additional bundles to install, as specified by additionalBundlesPath parameter */
     protected List<File> getBundlesToInstall(String additionalBundlesPath) {
         final List<File> result = new LinkedList<File>();
         if(additionalBundlesPath == null) {

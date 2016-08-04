@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.sling.resource;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,27 +34,31 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.builder.ContentBuilder;
-import org.junit.After;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Implements simple write and read resource and values test. Sling CRUD API is
  * used to create the test data.
  */
 public abstract class AbstractSlingCrudResourceResolverTest {
+    
+    @Rule
+    public SlingContext context = new SlingContext(getResourceResolverType());
 
     private static final String STRING_VALUE = "value1";
     private static final String[] STRING_ARRAY_VALUE = new String[] { "value1", "value2" };
@@ -63,19 +69,11 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     private static final Calendar CALENDAR_VALUE = Calendar.getInstance();
     private static final byte[] BINARY_VALUE = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
-    private ResourceResolver resourceResolver;
     protected Resource testRoot;
-    private static volatile long rootNodeCounter;
-
     protected abstract ResourceResolverType getResourceResolverType();
-
-    protected ResourceResolver newResourceResolver() {
-        return MockSling.newResourceResolver(getResourceResolverType());
-    }
 
     @Before
     public final void setUp() throws IOException {
-        this.resourceResolver = newResourceResolver();
 
         // prepare some test data using Sling CRUD API
         Resource rootNode = getTestRootResource();
@@ -90,44 +88,30 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         props.put("dateProp", DATE_VALUE);
         props.put("calendarProp", CALENDAR_VALUE);
         props.put("binaryProp", new ByteArrayInputStream(BINARY_VALUE));
-        Resource node1 = this.resourceResolver.create(rootNode, "node1", props);
+        Resource node1 = context.resourceResolver().create(rootNode, "node1", props);
 
-        resourceResolver.create(node1, "node11", ImmutableMap.<String, Object>builder()
+        context.resourceResolver().create(node1, "node11", ImmutableMap.<String, Object>builder()
                 .put("stringProp11", STRING_VALUE)
                 .build());
-        this.resourceResolver.create(node1, "node12", ValueMap.EMPTY);
+        context.resourceResolver().create(node1, "node12", ValueMap.EMPTY);
 
-        this.resourceResolver.commit();
-    }
-
-    @After
-    public final void tearDown() {
-        this.testRoot = null;
+        context.resourceResolver().commit();
     }
 
     /**
      * Return a test root resource, created on demand, with a unique path
      * @throws PersistenceException
      */
-    private Resource getTestRootResource() throws PersistenceException {
+    protected Resource getTestRootResource() throws PersistenceException {
         if (this.testRoot == null) {
-            Map<String, Object> props = new HashMap<String, Object>();
-            props.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-            final Resource root = this.resourceResolver.getResource("/");
-            if (getResourceResolverType() == ResourceResolverType.JCR_JACKRABBIT) {
-                final Resource classRoot = this.resourceResolver.create(root, getClass().getSimpleName(), props);
-                this.testRoot = this.resourceResolver.create(classRoot, System.currentTimeMillis() + "_"
-                        + (rootNodeCounter++), props);
-            } else {
-                this.testRoot = this.resourceResolver.create(root, "test", props);
-            }
+            this.testRoot = context.resourceResolver().getResource(context.uniqueRoot().content());
         }
         return this.testRoot;
     }
 
     @Test
     public void testSimpleProperties() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         assertNotNull(resource1);
         assertEquals("node1", resource1.getName());
 
@@ -141,7 +125,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
 
     @Test
     public void testSimpleProperties_DeepPathAccess() throws IOException {
-        Resource resource1 = resourceResolver.getResource(testRoot.getPath());
+        Resource resource1 = context.resourceResolver().getResource(testRoot.getPath());
         assertNotNull(resource1);
         assertEquals(testRoot.getName(), resource1.getName());
 
@@ -156,12 +140,11 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     
     @Test
     public void testDateProperty() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT 
                 && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
         }
@@ -169,12 +152,11 @@ public abstract class AbstractSlingCrudResourceResolverTest {
 
     @Test
     public void testDatePropertyToCalendar() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
         // TODO: enable this test when JCR resource implementation supports
         // writing Date objects (SLING-3846)
         if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_JACKRABBIT
                 && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
             Calendar calendarValue = props.get("dateProp", Calendar.class);
             assertNotNull(calendarValue);
@@ -184,14 +166,14 @@ public abstract class AbstractSlingCrudResourceResolverTest {
 
     @Test
     public void testCalendarProperty() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(CALENDAR_VALUE.getTime(), props.get("calendarProp", Calendar.class).getTime());
     }
 
     @Test
     public void testCalendarPropertyToDate() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
         Date dateValue = props.get("calendarProp", Date.class);
         assertNotNull(dateValue);
@@ -200,7 +182,7 @@ public abstract class AbstractSlingCrudResourceResolverTest {
 
     @Test
     public void testListChildren() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
 
         List<Resource> children = ImmutableList.copyOf(resource1.listChildren());
         assertEquals(2, children.size());
@@ -209,8 +191,30 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     }
 
     @Test
+    public void testListChildren_RootNode() throws IOException {
+        Resource resource1 = context.resourceResolver().getResource("/");
+
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, getTestRootResource().getParent()));
+
+        children = Lists.newArrayList(resource1.getChildren());
+        assertFalse(children.isEmpty());
+        assertTrue(containsResource(children, getTestRootResource().getParent()));
+    }
+    
+    private boolean containsResource(List<Resource> children, Resource resource) {
+        for (Resource child : children) {
+            if (StringUtils.equals(child.getPath(), resource.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Test
     public void testBinaryData() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
 
         Resource binaryPropResource = resource1.getChild("binaryProp");
         InputStream is = binaryPropResource.adaptTo(InputStream.class);
@@ -228,31 +232,46 @@ public abstract class AbstractSlingCrudResourceResolverTest {
 
     @Test
     public void testPrimaryTypeResourceType() throws PersistenceException {
-        Resource resource = this.resourceResolver.getResource(getTestRootResource().getPath());
+        Resource resource = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         assertEquals(JcrConstants.NT_UNSTRUCTURED, resource.getResourceType());
     }
 
     @Test
     public void testGetRootResourceByNullPath() {
-        Resource rootResource = this.resourceResolver.resolve((String)null);
+        Resource rootResource = context.resourceResolver().resolve((String)null);
         assertNotNull(rootResource);
         assertEquals("/", rootResource.getPath());
     }
 
     @Test
     public void testSearchPath() {
-        ContentBuilder builder = new ContentBuilder(this.resourceResolver);
+        ContentBuilder builder = new ContentBuilder(context.resourceResolver());
         builder.resource("/libs/any/path");
 
-        Resource resource = this.resourceResolver.getResource("any/path");
+        Resource resource = context.resourceResolver().getResource("any/path");
         assertNotNull(resource);
         assertEquals("/libs/any/path", resource.getPath());
 
         builder.resource("/apps/any/path");
 
-        resource = this.resourceResolver.getResource("any/path");
+        resource = context.resourceResolver().getResource("any/path");
         assertNotNull(resource);
         assertEquals("/apps/any/path", resource.getPath());
+    }
+
+    @Test
+    public void testPendingChangesCommit() throws PersistenceException {
+        
+        // skip this test for JCR_MOCK because it does not track pending changes
+        if (getResourceResolverType()==ResourceResolverType.JCR_MOCK) {
+            return;
+        }
+        
+        context.resourceResolver().delete(getTestRootResource());
+        assertTrue(context.resourceResolver().hasChanges());
+        
+        context.resourceResolver().commit();
+        assertFalse(context.resourceResolver().hasChanges());
     }
 
 }

@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>27</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
-    <version>3.2.1-SNAPSHOT</version>
+    <version>3.2.7-SNAPSHOT</version>
 
     <name>Apache Sling Thread Support</name>
     <description>
@@ -57,20 +57,9 @@
                         <Bundle-Activator>
                             org.apache.sling.commons.threads.impl.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            org.apache.sling.commons.threads;version=3.2.0,
-                            org.apache.sling.commons.threads.jmx;version=1.0.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.threads.impl
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -81,7 +70,7 @@
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -89,15 +78,23 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
     </dependencies>
 </project>

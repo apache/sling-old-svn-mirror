@@ -19,34 +19,20 @@
 
 package org.apache.sling.distribution.transport.impl;
 
-import org.apache.http.Header;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
 
 public class HttpTransportUtils {
 
-    static final Logger log = LoggerFactory.getLogger(HttpTransportUtils.class);
-
-    public final static String HEADER_DISTRIBUTION_ORIGINAL_ID = "X-Distribution-OriginalId";
-
-
-    public static InputStream fetchNextPackage(Executor executor, URI distributionURI, Map<String, String> headers) throws URISyntaxException, IOException {
-
-        // always clear the result headers map
-        headers.clear();
-
-
+    public static InputStream fetchNextPackage(Executor executor, URI distributionURI) throws URISyntaxException, IOException {
         URI fetchUri = getFetchUri(distributionURI);
         Request fetchReq = Request.Post(fetchUri).useExpectContinue();
         HttpResponse httpResponse = executor.execute(fetchReq).returnResponse();
@@ -57,19 +43,8 @@ public class HttpTransportUtils {
 
         HttpEntity entity = httpResponse.getEntity();
 
-
-        Header header = httpResponse.getFirstHeader(HttpTransportUtils.HEADER_DISTRIBUTION_ORIGINAL_ID);
-        if (header != null && header.getValue() != null) {
-            String originalId = header.getValue();
-            headers.put(HEADER_DISTRIBUTION_ORIGINAL_ID, originalId);
-        } else {
-            log.warn("cannot retrieve original id header");
-        }
-
         return entity.getContent();
     }
-
-
 
     public static boolean deletePackage(Executor executor, URI distributionURI, String remotePackageId) throws URISyntaxException, IOException {
 
@@ -80,17 +55,14 @@ public class HttpTransportUtils {
         return httpResponse.getStatusLine().getStatusCode() == 200;
     }
 
-
-    public static URI getFetchUri(URI uri) throws URISyntaxException {
+    private static URI getFetchUri(URI uri) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter("operation", "fetch");
 
         return uriBuilder.build();
     }
 
-
-
-    public static URI getDeleteUri(URI uri, String id) throws URISyntaxException {
+    private static URI getDeleteUri(URI uri, String id) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter("operation", "delete");
         uriBuilder.addParameter("id", id);

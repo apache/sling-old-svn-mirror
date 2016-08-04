@@ -348,9 +348,12 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 contentType = ct;
             }
         }
-        if (contentType != null) {
-            response.setContentType(contentType);
+        
+        if (contentType == null) {
+            contentType = defaultContentType;
         }
+        
+        response.setContentType(contentType);
 
         String encoding = meta.getCharacterEncoding();
         if (encoding != null) {

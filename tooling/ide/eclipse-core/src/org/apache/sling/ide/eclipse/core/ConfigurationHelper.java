@@ -28,14 +28,23 @@ import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 
 public class ConfigurationHelper {
 
-	public static void convertToContentPackageProject(IProject aContentProject,
-			IProgressMonitor monitor, IPath jcr_root) throws CoreException {
-		IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.content");
-		IFacetedProject fp2 = ProjectFacetsManager.create(aContentProject, true, null);
-		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
+	public static void convertToContentPackageProject(IProject project,
+			IProgressMonitor monitor, IPath contentSyncRoot) throws CoreException {
+
+	    IFacetedProject facetedProject = ProjectFacetsManager.create(project, true, null);
+	    
+	    // install content facet
+	    IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.content");
+		facetedProject.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
+		ProjectUtil.setSyncDirectoryPath(project, contentSyncRoot);
 		
-		ProjectUtil.setSyncDirectoryPath(aContentProject, jcr_root);
-		aContentProject.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+		// also install sightly facet 1.1 by default
+		IProjectFacet sightlyFacet = ProjectFacetsManager.getProjectFacet("sightly");
+		if ( sightlyFacet != null ) {
+		    facetedProject.installProjectFacet(sightlyFacet.getLatestVersion(), null, null);
+		}
+		
+		project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 	}
 
 	public static void convertToBundleProject(IProject aBundleProject)

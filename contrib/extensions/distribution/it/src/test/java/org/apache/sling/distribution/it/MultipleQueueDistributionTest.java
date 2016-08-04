@@ -18,20 +18,21 @@
  */
 package org.apache.sling.distribution.it;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
+
 import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.After;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
-import static org.apache.sling.distribution.it.DistributionUtils.getResource;
 import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**
@@ -43,18 +44,13 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
     @Test
     public void testQueues() throws Exception {
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
+        assertEquals(2, queues.size());
+        assertNotNull(queues.get("endpoint1"));
+        assertEquals(true, queues.get("endpoint1").get("empty"));
+        assertNotNull(queues.get("endpoint2"));
+        assertEquals(true, queues.get("endpoint2").get("empty"));
 
-        JSONObject json = getResource(author, queueUrl("queue-multiple") + ".infinity");
-
-        JSONArray items = json.getJSONArray("items");
-        assertEquals("endpoint1", items.getString(0));
-        assertEquals("endpoint2", items.getString(1));
-
-        JSONObject endpoint1 = json.getJSONObject("endpoint1");
-        assertEquals(true, endpoint1.getBoolean("empty"));
-
-        JSONObject endpoint2 = json.getJSONObject("endpoint2");
-        assertEquals(true, endpoint2.getBoolean("empty"));
 
     }
 
@@ -69,67 +65,87 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         distribute(author, "queue-multiple", DistributionRequestType.ADD, nodePath);
         distribute(author, "queue-multiple", DistributionRequestType.DELETE, nodePath);
 
-        JSONObject json = getResource(author, queueUrl("queue-multiple") + ".infinity");
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
+        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
+        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
 
-        JSONArray items = json.getJSONArray("items");
-        assertEquals("endpoint1", items.getString(0));
-        assertEquals("endpoint2", items.getString(1));
+        assertEquals(2, queues.size());
+        assertEquals(false, queues.get("endpoint1").get("empty"));
+        assertEquals(2, queues.get("endpoint1").get("itemsCount"));
+        assertEquals(false, queues.get("endpoint2").get("empty"));
+        assertEquals(2, queues.get("endpoint2").get("itemsCount"));
+        assertEquals(2, firstQueueItems.size());
+        assertEquals("ADD", firstQueueItems.get(0).get("action"));
+        assertEquals(DistributionUtils.DISTRIBUTOR_USER, firstQueueItems.get(0).get("userid"));
+        assertEquals("DELETE", firstQueueItems.get(1).get("action"));
+        assertEquals(2, secondQueueItems.size());
+        assertEquals("ADD", secondQueueItems.get(0).get("action"));
+        assertEquals("DELETE", secondQueueItems.get(1).get("action"));
 
-        JSONObject queue = json.getJSONObject("endpoint1");
-        assertEquals(false, queue.getBoolean("empty"));
-
-        JSONArray queueItems = queue.getJSONArray("items");
-        assertEquals(2, queueItems.length());
-        assertEquals(2, queue.get("itemsCount"));
-        String firstId = queueItems.getString(0);
-        JSONObject queueItem = queue.getJSONObject(firstId);
-        assertEquals("ADD", queueItem.getString("action"));
-
-
-        String secondId = queueItems.getString(1);
-        queueItem = queue.getJSONObject(secondId);
-        assertEquals("DELETE", queueItem.getString("action"));
-
-        queue = json.getJSONObject("endpoint2");
-        queueItems = queue.getJSONArray("items");
-        assertEquals(2, queueItems.length());
-        assertEquals(2, queue.get("itemsCount"));
+        String secondId = (String) firstQueueItems.get(0).get("id");
 
 
         // Delete second item from endpoint1
         assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "delete", "id", secondId);
 
-        json = getResource(author, queueUrl("queue-multiple") + ".infinity");
-        queue = json.getJSONObject("endpoint1");
-        queueItems = queue.getJSONArray("items");
-        assertEquals(1, queueItems.length());
-        assertEquals(1, queue.get("itemsCount"));
+        queues = DistributionUtils.getQueues(author, "queue-multiple");
 
-        String id = queueItems.getString(0);
-        assertEquals(firstId, id);
-
-        queue = json.getJSONObject("endpoint2");
-        queueItems = queue.getJSONArray("items");
-        assertEquals(2, queueItems.length());
-        assertEquals(2, queue.get("itemsCount"));
+        assertEquals(false, queues.get("endpoint1").get("empty"));
+        assertEquals(1, queues.get("endpoint1").get("itemsCount"));
+        assertEquals("ADD", firstQueueItems.get(0).get("action"));
+        assertEquals(false, queues.get("endpoint2").get("empty"));
+        assertEquals(2, queues.get("endpoint2").get("itemsCount"));
 
         // Delete 2 items from endpoint2
         assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint2",
                 "operation", "delete", "limit", "2");
 
-        json = getResource(author, queueUrl("queue-multiple") + ".infinity");
-        queue = json.getJSONObject("endpoint1");
-        queueItems = queue.getJSONArray("items");
-        assertEquals(1, queueItems.length());
-        assertEquals(1, queue.get("itemsCount"));
+        queues = DistributionUtils.getQueues(author, "queue-multiple");
+
+        assertEquals(false, queues.get("endpoint1").get("empty"));
+        assertEquals(1, queues.get("endpoint1").get("itemsCount"));
+        assertEquals(true, queues.get("endpoint2").get("empty"));
+        assertEquals(0, queues.get("endpoint2").get("itemsCount"));
+    }
+
+    @Test
+    public void testCopyDistributeQueues() throws Exception {
+
+        String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
 
 
-        queue = json.getJSONObject("endpoint2");
-        queueItems = queue.getJSONArray("items");
-        assertEquals(0, queueItems.length());
-        assertEquals(0, queue.get("itemsCount"));
+        // Add two items in both queues
+        distribute(author, "queue-multiple", DistributionRequestType.ADD, nodePath);
 
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
+        assertEquals(1, queues.get("endpoint1").get("itemsCount"));
+        assertEquals(1, queues.get("endpoint2").get("itemsCount"));
+        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+                "operation", "delete", "limit", DELETE_LIMIT);
+
+        queues = DistributionUtils.getQueues(author, "queue-multiple");
+        assertEquals(0, queues.get("endpoint1").get("itemsCount"));
+        assertEquals(1, queues.get("endpoint2").get("itemsCount"));
+
+        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
+        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
+
+        assertEquals(0, firstQueueItems.size());
+        assertEquals(1, secondQueueItems.size());
+
+
+        String secondQueueItemId = (String) secondQueueItems.get(0).get("id");
+
+        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+                "operation", "copy", "id", secondQueueItemId, "from", "endpoint2");
+
+        firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
+        secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
+
+        assertEquals(1, firstQueueItems.size());
+        assertEquals(1, secondQueueItems.size());
     }
 
 

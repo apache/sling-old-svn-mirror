@@ -32,14 +32,15 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.math.BigInteger;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -171,6 +172,7 @@ class ControlListener implements Runnable {
      * Implements the server thread receiving commands from clients and acting
      * upon them.
      */
+    @Override
     public void run() {
         this.configure(false);
 
@@ -202,7 +204,7 @@ class ControlListener implements Runnable {
                     break;
                 }
 
-                // delay processing after unsuccessfull attempts
+                // delay processing after unsuccessful attempts
                 if (delay > 0) {
                     Main.info(s.getRemoteSocketAddress() + ": Delay: " + (delay / 1000), null);
                     try {
@@ -241,6 +243,7 @@ class ControlListener implements Runnable {
                             writeLine(s, RESPONSE_STOPPING);
                         } else {
                             this.shutdownThread = new Thread("Apache Sling Control Listener: Shutdown") {
+                                @Override
                                 public void run() {
                                     slingMain.doStop();
                                     try {
@@ -537,22 +540,12 @@ class ControlListener implements Runnable {
         if (fromConfigFile) {
             final File configFile = this.getConfigFile();
             if (configFile.canRead()) {
-                FileReader fr = null;
-                try {
-                    fr = new FileReader(configFile);
-                    final LineNumberReader lnr = new LineNumberReader(fr);
+                try ( final LineNumberReader lnr = new LineNumberReader(new FileReader(configFile))) {
                     this.socketAddress = getSocketAddress(lnr.readLine());
                     this.secretKey = lnr.readLine();
                     result = true;
                 } catch (final IOException ignore) {
                     // ignore
-                } finally {
-                    if (fr != null) {
-                        try {
-                            fr.close();
-                        } catch (final IOException ignore) {
-                        }
-                    }
                 }
             }
         } else {
@@ -565,14 +558,7 @@ class ControlListener implements Runnable {
     }
 
     private static String generateKey() {
-        String keys = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789";
-        int len = keys.length();
-        Random r = new Random(System.currentTimeMillis() + 33 * System.nanoTime());
-        char[] c = new char[32];
-        for (int i = 0; i < c.length; i++) {
-            c[i] = keys.charAt(r.nextInt(len));
-        }
-        return new String(c);
+         return new BigInteger(165, new SecureRandom()).toString(32);
     }
 
     /**

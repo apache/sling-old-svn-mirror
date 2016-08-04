@@ -1,0 +1,79 @@
+{
+  "properties": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/container",
+    "conf":{
+      "jcr:primaryType":"sling:OrderedFolder",
+      "dummyParent":{
+        "jcr:primaryType":"sling:OrderedFolder",
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "banana":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"},
+          "strangeFruit":{"jcr:primaryType":"nt:unstructured", "color":"yellow"}
+        }
+      },
+      "filter":{
+        "jcr:primaryType":"sling:OrderedFolder",
+        "sling:resourceType":"slingPipes/filter",
+        "jcr:description":"filters resource with green color, and non void name property",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "color":"green",
+          "name":".+"
+        }
+      }
+    }
+  },
+  "noChildrenPasses": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/filter",
+    "path":"/content/fruits/apple",
+    "jcr:description": "filters resource with given subtree having NO child",
+    "conf": {
+      "jcr:primaryType": "nt:unstructured",
+      "isnota": {
+        "jcr:primaryType": "nt:unstructured",
+        "pea": {
+          "jcr:primaryType": "nt:unstructured",
+          "color": "green",
+          "buttheyhavesamecolor": {
+            "jcr:primaryType": "nt:unstructured",
+            "slingPipesFilter_noChildren": "${true}"
+          }
+        }
+      }
+    }
+  },
+  "noChildrenVoid": {
+      "jcr:primaryType":"nt:unstructured",
+      "sling:resourceType":"slingPipes/filter",
+      "jcr:description":"filters resource that shouldn't have child",
+      "path":"/content/fruits/apple",
+      "conf":{
+        "jcr:primaryType":"nt:unstructured",
+        "slingPipesFilter_noChildren":"${true}"
+      }
+  },
+  "testPasses": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/filter",
+    "jcr:description":"filters resource that should have child",
+    "path":"/content/fruits/apple",
+    "conf":{
+      "jcr:primaryType":"nt:unstructured",
+      "slingPipesFilter_test":"${true}"
+    }
+  },
+  "testFails": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/filter",
+    "jcr:description":"filters resource that should have child",
+    "path":"/content/fruits/apple",
+    "conf":{
+      "jcr:primaryType":"nt:unstructured",
+      "slingPipesFilter_test":"${false}"
+    }
+  },
+}

@@ -55,14 +55,12 @@ public class OsgiUtils {
 
             if (entry.getValue() == null) {
                 result += safeString(entry.getValue());
-            }
-            else if (entry.getValue().getClass().isArray()) {
+            } else if (entry.getValue().getClass().isArray()) {
                 Object[] array = (Object[]) entry.getValue();
                 for (Object obj : array) {
                     result += safeString(obj) + ",";
                 }
-            }
-            else {
+            } else {
                 result += safeString(entry.getValue());
             }
 
@@ -73,7 +71,7 @@ public class OsgiUtils {
     }
 
     private static String safeString(Object obj) {
-        return obj == null? "null" : obj.toString();
+        return obj == null ? "null" : obj.toString();
     }
 
 
@@ -81,7 +79,7 @@ public class OsgiUtils {
      * Create a filter for selecting configs of a certain factory
      */
     public static String getFilter(String configFactory, String propertyName, String propertyValue) {
-        if (propertyName!= null && propertyValue != null) {
+        if (propertyName != null && propertyValue != null) {
             return "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")("
                     + OsgiUtils.escape(propertyName) + "=" + OsgiUtils.escape(propertyValue) + "))";
         } else if (configFactory != null) {
@@ -142,7 +140,7 @@ public class OsgiUtils {
                 continue;
             }
 
-            Class valueClass = entry.getValue().getClass();
+            Class<?> valueClass = entry.getValue().getClass();
             Object value = entry.getValue();
             if (valueClass.isArray()) {
                 valueClass = valueClass.getComponentType();

@@ -16,7 +16,6 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -103,7 +102,7 @@ public class SlingFileUploadHandler {
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     public static final String JCR_ENCODING = "jcr:encoding";
     public static final String JCR_DATA = "jcr:data";
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
@@ -379,8 +378,6 @@ public class SlingFileUploadHandler {
             String startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
                 + "0_*";
             NodeIterator nodeItr = parentNode.getNodes(startPattern);
-            InputStream ins = null;
-            int i = 0;
             Set<InputStream> inpStrmSet = new LinkedHashSet<InputStream>();
             while (nodeItr.hasNext()) {
                 if (nodeItr.getSize() > 1) {
@@ -450,7 +447,7 @@ public class SlingFileUploadHandler {
     /**
      * Get the last {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
      * {@link Node}.
-     * 
+     *
      * @param node {@link Node} containing
      *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
      *            {@link Node}s
@@ -470,21 +467,22 @@ public class SlingFileUploadHandler {
             chunkParent = jcrContentNode;
 
         }
-        String startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_" + "0_*";
-        NodeIterator nodeItr = chunkParent.getNodes(startPattern);
+        if (chunkParent == null) {
+            return null;
+        }
+        NodeIterator nodeItr = chunkParent.getNodes(SlingPostConstants.CHUNK_NODE_NAME + "_*");
         Node chunkNode = null;
+        long lastChunkStartIndex = -1;
         while (nodeItr.hasNext()) {
-            if (nodeItr.getSize() > 1) {
-                throw new RepositoryException(
-                    "more than one node found for pattern: " + startPattern);
-            }
-            chunkNode = nodeItr.nextNode();
+            Node currentNode = nodeItr.nextNode();
 
-            String[] indexBounds = chunkNode.getName().substring(
+            String[] indexBounds = currentNode.getName().substring(
                 (SlingPostConstants.CHUNK_NODE_NAME + "_").length()).split("_");
-            startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
-                + String.valueOf(Long.valueOf(indexBounds[1]) + 1) + "_*";
-            nodeItr = chunkParent.getNodes(startPattern);
+            long chunkStartIndex = Long.valueOf(indexBounds[0]);
+            if (chunkStartIndex > lastChunkStartIndex) {
+                chunkNode = currentNode;
+                lastChunkStartIndex = chunkStartIndex;
+            }
         }
         return chunkNode;
     }

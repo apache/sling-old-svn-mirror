@@ -1,0 +1,26 @@
+CreateServiceUser user1
+CreateServiceUser u-ser_2
+SetAclPaths on /libs /apps 
+  AclLine REMOVE_ALL {principals=[user1, u-ser_2]}
+  AclLine ALLOW {principals=[user1, u-ser_2], privileges=[jcr:read]}
+  AclLine DENY {principals=[u-ser_2], privileges=[jcr:write]}
+  AclLine DENY {principals=[user1], privileges=[jcr:lockManagement]}
+  AclLine REMOVE {principals=[u3], privileges=[jcr:understand, some:other]}
+CreateServiceUser bob_the_service
+SetAclPaths on /tmp 
+  AclLine ALLOW {principals=[bob_the_service], privileges=[some:otherPrivilege]}
+CreatePath [content, example.com(sling:Folder)]
+CreatePath [var(nt:unstructured)]
+SetAclPrincipals for alice bob fred 
+  AclLine REMOVE_ALL {paths=[/]}
+  AclLine ALLOW {paths=[/content, /var], privileges=[jcr:read]}
+  AclLine DENY {paths=[/content/example.com], privileges=[jcr:write]}
+  AclLine DENY {nodetypes=[example:Page], paths=[/], privileges=[jcr:all]}
+RegisterNamespace (NSprefix) uri:someURI/v1.42
+RegisterNodetypes:
+    <slingevent='http://sling.apache.org/jcr/event/1.0'>
+    
+ [slingevent:Event] > nt:unstructured, nt:hierarchyNode
+      - slingevent:topic (string)
+      - slingevent:properties (binary)
+CreateServiceUser the-last-one

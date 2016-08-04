@@ -95,9 +95,6 @@ public class MainDelegate implements Launcher {
      */
     private static final String PROP_PORT = "org.osgi.service.http.port";
 
-    /** The default port on which the HTTP service listens. */
-    private static final String DEFAULT_PORT = "8080";
-
     private Notifiable notifiable;
 
     /** The parsed command line mapping (Sling) option name to option value */
@@ -107,19 +104,23 @@ public class MainDelegate implements Launcher {
 
     private Sling sling;
 
+    @Override
     public void setNotifiable(Notifiable notifiable) {
         this.notifiable = notifiable;
     }
 
+    @Override
     public void setCommandLine(Map<String, String> args) {
         commandLine = new HashMap<String, String>();
         parseCommandLine(args, commandLine);
     }
 
+    @Override
     public void setSlingHome(String slingHome) {
         this.slingHome = slingHome;
     }
 
+    @Override
     public boolean start() {
 
         Map<String, String> props = new HashMap<String, String>();
@@ -181,6 +182,7 @@ public class MainDelegate implements Launcher {
                 // overwrite the loadPropertiesOverride method to inject the
                 // command line arguments unconditionally. These will not be
                 // persisted in any properties file, though
+                @Override
                 protected void loadPropertiesOverride(
                         Map<String, String> properties) {
                     if (commandLine != null) {
@@ -205,6 +207,7 @@ public class MainDelegate implements Launcher {
         return false;
     }
 
+    @Override
     public void stop() {
         if (sling != null) {
             sling.destroy();
@@ -381,27 +384,40 @@ public class MainDelegate implements Launcher {
     private static class SlingLogger extends Logger {
 
         @Override
-        protected void doLog(Bundle bundle, ServiceReference sr, int level, String msg, Throwable throwable) {
+        protected void doLog(Bundle bundle, @SuppressWarnings("rawtypes") ServiceReference sr, int level, String msg, Throwable throwable) {
 
             // unwind throwable if it is a BundleException
             if ((throwable instanceof BundleException) && (((BundleException) throwable).getNestedException() != null)) {
                 throwable = ((BundleException) throwable).getNestedException();
             }
 
-            String s = (sr == null) ? null : "SvcRef " + sr;
-            s = (s == null) ? null : s + " Bundle '" + bundle.getBundleId() + "'";
-            s = (s == null) ? msg : s + " " + msg;
-            s = (throwable == null) ? s : s + " (" + throwable + ")";
+            final StringBuilder sb = new StringBuilder();
+            if (sr != null) {
+                sb.append("SvcRef ");
+                sb.append(sr);
+                sb.append(" ");
+            } else if (bundle != null) {
+                sb.append("Bundle '");
+                sb.append(String.valueOf(bundle.getBundleId()));
+                sb.append("' ");
+            }
+            sb.append(msg);
+            if ( throwable != null ) {
+                sb.append(" (");
+                sb.append(throwable);
+                sb.append(")");
+            }
+            final String s = sb.toString();
 
             switch (level) {
                 case LOG_DEBUG:
                     debug("DEBUG: " + s);
                     break;
                 case LOG_INFO:
-                    info("INFO: " + s, null);
+                    info("INFO: " + s, throwable);
                     break;
                 case LOG_WARNING:
-                    warn("WARNING: " + s, null);
+                    warn("WARNING: " + s, throwable);
                     break;
                 case LOG_ERROR:
                     error("ERROR: " + s, throwable);

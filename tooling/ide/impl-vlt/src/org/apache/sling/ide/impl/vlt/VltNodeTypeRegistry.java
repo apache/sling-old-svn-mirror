@@ -32,7 +32,7 @@ import org.apache.sling.ide.transport.RepositoryException;
 
 public class VltNodeTypeRegistry implements NodeTypeRegistry {
     
-    private Map<String,VltNodeType> nodeTypes = new HashMap<String, VltNodeType>();
+    private Map<String,VltNodeType> nodeTypes = new HashMap<>();
 
     public VltNodeTypeRegistry(VltRepository repo) throws RepositoryException {
         VltNodeTypeFactory factory = new VltNodeTypeFactory();
@@ -54,7 +54,7 @@ public class VltNodeTypeRegistry implements NodeTypeRegistry {
     
     @Override
     public List<NodeType> getNodeTypes() {
-        List<NodeType> result = new LinkedList<NodeType>();
+        List<NodeType> result = new LinkedList<>();
         for (Iterator<VltNodeType> it = nodeTypes.values().iterator(); it.hasNext();) {
             VltNodeType nt = it.next();
             result.add(nt);

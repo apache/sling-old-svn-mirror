@@ -21,6 +21,8 @@ package org.apache.sling.models.spi;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Defines a strategy to choose an implementation for a model if multiple are registered 
  * for the same interface or super class.
@@ -36,6 +38,7 @@ import javax.annotation.Nonnull;
  * The first that picks an implementation is the winner.
  * </p>
  */
+@ConsumerType
 public interface ImplementationPicker {
     
     /**

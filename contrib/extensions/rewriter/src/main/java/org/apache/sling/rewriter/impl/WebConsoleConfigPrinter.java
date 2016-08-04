@@ -66,7 +66,7 @@ public class WebConsoleConfigPrinter {
 
     /**
      * Print out the rewriter configs.
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     * See org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter).
      */
     public void printConfiguration(PrintWriter pw) {
         this.manager.printConfiguration(pw);

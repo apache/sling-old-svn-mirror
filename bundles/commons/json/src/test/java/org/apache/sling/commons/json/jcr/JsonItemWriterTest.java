@@ -16,23 +16,25 @@
  */
 package org.apache.sling.commons.json.jcr;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.StringWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.junit.Test;
 
 /** Test the JsonItemWriter */
-public class JsonItemWriterTest extends TestCase {
+public class JsonItemWriterTest {
     
     private final JsonItemWriter writer = new JsonItemWriter(null);
     
@@ -42,12 +44,14 @@ public class JsonItemWriterTest extends TestCase {
         return sw.toString();
     }
     
+    @Test
     public void testBasicJson() throws RepositoryException, JSONException {
         final Node n = new MockNode("/test");
         n.setProperty("testprop", "1234");
         assertEquals("{\"testprop\":\"1234\"}",getJson(n, 0));
     }
     
+    @Test
     public void testMultivalued() throws RepositoryException, JSONException {
         final Node n = new MockNode("/test");
         final String [] values = { "1234", "yes" };
@@ -58,6 +62,7 @@ public class JsonItemWriterTest extends TestCase {
     /**
      * See <a href="https://issues.apache.org/jira/browse/SLING-924">SLING-924</a>
      */
+    @Test
     public void testOutputIterator() throws JSONException, RepositoryException {
         MockNode node1 = new MockNode("/node1");
         MockNode node2 = new MockNode("/node2");

@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -48,8 +49,8 @@ public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigge
 
     private final String nuggetsPath;
 
-    public PersistedJcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, String path, String servicename, String nuggetsPath) {
-        super(repository, scheduler, path, servicename);
+    public PersistedJcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory, String path, String servicename, String nuggetsPath) {
+        super(repository, scheduler, resolverFactory, path, servicename);
         this.nuggetsPath = nuggetsPath == null || nuggetsPath.length() == 0 ? DEFAULT_NUGGETS_PATH : nuggetsPath;
     }
 
@@ -80,9 +81,10 @@ public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigge
                     createdNode.setProperty("userData", event.getUserData());
                     createdNode.setProperty("userID", event.getUserID());
 
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
                     Set<Map.Entry> set = event.getInfo().entrySet();
                     Collection<String> values = new ArrayList<String>();
-                    for (Map.Entry entry : set) {
+                    for (@SuppressWarnings("rawtypes") Map.Entry entry : set) {
                         values.add(String.valueOf(entry.getKey()) + ":" + String.valueOf(entry.getValue()));
                     }
                     createdNode.setProperty("info", values.toArray(new String[values.size()]));

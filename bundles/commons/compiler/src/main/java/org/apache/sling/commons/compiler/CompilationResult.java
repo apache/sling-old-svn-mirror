@@ -18,12 +18,15 @@ package org.apache.sling.commons.compiler;
 
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The compilation result allows clients of the java compiler
  * to check for error messages, warnings (if not disabled by
  * the options) and allows to access the compiled classes.
  * @since 2.0
  */
+@ProviderType
 public interface CompilationResult {
 
     /**
@@ -44,7 +47,7 @@ public interface CompilationResult {
 
     /**
      * Was a compilation required or were all classes recent?
-     * @return <code>true>/code> if classes were compiled.
+     * @return {@code true} if classes were compiled.
      */
     boolean didCompile();
 
@@ -55,6 +58,7 @@ public interface CompilationResult {
      * or if a class loader writer has been used in combination
      * with a class loader that is not able to load the classes
      * written by the class loader writer.
+     * @param className The class name of the compiled class.
      * @return The compiled class
      * @throws ClassNotFoundException If the class could not be found
      *         or compilation failed.

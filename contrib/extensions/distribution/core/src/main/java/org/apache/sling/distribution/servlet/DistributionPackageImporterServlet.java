@@ -27,10 +27,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle reception of distribution content.
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.IMPORTER_RESOURCE_TYPE, methods = "POST")
 public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
 
@@ -58,17 +57,23 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
+            if (request.getParameter("forceError") != null) {
+                throw new Exception("manually forced error");
+            }
+
             DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
 
-            log.info("Package {} imported successfully", distributionPackageInfo);
-            ServletJsonUtils.writeJson(response, 200, "package imported successfully");
+            long end = System.currentTimeMillis();
+
+            log.info("Package {} imported successfully in {}ms", distributionPackageInfo, end - start);
+            ServletJsonUtils.writeJson(response, 200, "package imported successfully", null);
 
         } catch (final Throwable e) {
-            ServletJsonUtils.writeJson(response, 400, "an unexpected error has occurred during distribution import");
+            ServletJsonUtils.writeJson(response, 500, "an unexpected error has occurred during distribution import", null);
             log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();
-            log.info("Processed package import request in {} ms", end - start);
+            log.debug("Processed package import request in {} ms", end - start);
         }
     }
 

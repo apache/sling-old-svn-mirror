@@ -140,28 +140,45 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     }
 
     @Test
-    @Ignore
     public void testAgentConfigurationResourceCreate() throws Exception {
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName);
+        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/distribution/setting/agent",
+                "sling:resourceType", "sling/distribution/setting",
                 "name", agentName);
     }
 
     @Test
-    @Ignore
     public void testAgentConfigurationResourceDelete() throws Exception {
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
-        authorClient.createNode(newConfigResource, "name", agentName);
+        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
         assertNotExists(authorClient, newConfigResource);
+    }
+
+
+
+    @Test
+    public void testAgentConfigurationResourceExtended() throws Exception {
+        String agentName = "sample-create-config" + UUID.randomUUID();
+        String newConfigResource = authorAgentConfigUrl(agentName);
+
+        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
+        assertExists(authorClient, newConfigResource);
+        assertExists(authorClient, "/etc/distribution/" + agentName);
+        assertResponseContains(author, newConfigResource,
+                "sling:resourceType", "sling/distribution/setting",
+                "name", agentName);
+
+        deleteNode(author, newConfigResource);
+        assertNotExists(authorClient, newConfigResource);
+        assertNotExists(authorClient, "/etc/distribution/" + agentName);
     }
 
 

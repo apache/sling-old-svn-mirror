@@ -25,15 +25,15 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.api</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution API</name>

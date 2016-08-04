@@ -75,17 +75,10 @@ public class HasFileMatcher extends TypeSafeMatcher<IProject> {
         IFile file = (IFile) maybeFile;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        InputStream in = null;
-        try {
-            in = file.getContents();
-
+        try ( InputStream in = file.getContents()) {
             IOUtils.copy(in, out);
-        } catch (CoreException e) {
+        } catch (CoreException | IOException e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(in);
         }
 
         return Arrays.equals(out.toByteArray(), contents);

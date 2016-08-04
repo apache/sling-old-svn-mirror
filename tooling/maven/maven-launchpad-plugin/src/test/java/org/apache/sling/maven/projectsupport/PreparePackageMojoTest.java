@@ -41,7 +41,7 @@ public class PreparePackageMojoTest {
 		//		"org.apache.sling.launchpad", "RELEASE", "jar", "bundles", 0);
 
 		makeArtifactAssertions(mojo, "defaultBundleList", "org.apache.sling",
-		        "org.apache.sling.launchpad", "RELEASE", "xml", "bundlelist", 0);
+		        "org.apache.sling.launchpad", "7", "xml", "bundlelist", 0);
 
 		makeArtifactAssertions(mojo, "jarWebSupport", "org.apache.felix",
 				"org.apache.felix.http.jetty", "RELEASE", "jar", null, -1);

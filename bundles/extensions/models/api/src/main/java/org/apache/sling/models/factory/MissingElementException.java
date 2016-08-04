@@ -20,10 +20,13 @@ package org.apache.sling.models.factory;
 
 import java.lang.reflect.AnnotatedElement;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception which is used whenever one element (field, method or constructor) could not be set.
  * @see MissingElementsException
  */
+@ProviderType
 public class MissingElementException extends RuntimeException {
 
     private static final long serialVersionUID = 5782291184414886658L;

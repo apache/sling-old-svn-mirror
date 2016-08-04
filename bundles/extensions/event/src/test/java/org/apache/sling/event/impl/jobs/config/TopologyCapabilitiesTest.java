@@ -57,15 +57,15 @@ public class TopologyCapabilitiesTest {
     }
 
     @Test public void testMatching() {
-        assertEquals(1, caps.getPotentialTargets("foo", null).size());
-        assertEquals(0, caps.getPotentialTargets("foo/a", null).size());
-        assertEquals(0, caps.getPotentialTargets("bar", null).size());
-        assertEquals(1, caps.getPotentialTargets("bar/foo", null).size());
-        assertEquals(0, caps.getPotentialTargets("bar/foo/a", null).size());
-        assertEquals(1, caps.getPotentialTargets("a/b", null).size());
-        assertEquals(1, caps.getPotentialTargets("a/b(c", null).size());
-        assertEquals(0, caps.getPotentialTargets("x", null).size());
-        assertEquals(0, caps.getPotentialTargets("x/y", null).size());
-        assertEquals(1, caps.getPotentialTargets("d/1/2", null).size());
+        assertEquals(1, caps.getPotentialTargets("foo").size());
+        assertEquals(0, caps.getPotentialTargets("foo/a").size());
+        assertEquals(0, caps.getPotentialTargets("bar").size());
+        assertEquals(1, caps.getPotentialTargets("bar/foo").size());
+        assertEquals(0, caps.getPotentialTargets("bar/foo/a").size());
+        assertEquals(1, caps.getPotentialTargets("a/b").size());
+        assertEquals(1, caps.getPotentialTargets("a/b(c").size());
+        assertEquals(0, caps.getPotentialTargets("x").size());
+        assertEquals(0, caps.getPotentialTargets("x/y").size());
+        assertEquals(1, caps.getPotentialTargets("d/1/2").size());
     }
 }

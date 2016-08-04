@@ -24,12 +24,14 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A {@code ResourceProvider} must use an observation reporter
  * to report changes to resources. The resource provider gets
  * an instance of this reporter through the {@link ProviderContext}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
 public interface ObservationReporter {
@@ -46,6 +48,9 @@ public interface ObservationReporter {
      * If the resource provider is not able to report external events on other instances,
      * it should set the distribute flag. In this case the resource resolver implementation
      * will distribute the events to all other instances.
+     *
+     * Due to performance reasons, the observation reporter might not verify if the
+     * reported change matches the observer configurations.
      *
      * @param changes The list of changes.
      * @param distribute Whether the changes should be distributed to other instances.

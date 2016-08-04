@@ -341,6 +341,28 @@ public class XSSAPIImplTest {
     }
 
     @Test
+    public void testGetValidDouble() {
+        String[][] testData = {
+                //         Source                                        Expected Result
+                //
+                {null, "123"},
+                {"100.5", "100.5"},
+                {"0", "0"},
+
+                {"junk", "123"},
+                {"", "123"},
+                {"null", "123"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            Double expected = (aTestData[1] != null) ? new Double(aTestData[1]) : null;
+
+            TestCase.assertEquals("Validating double '" + source + "'", expected, xssAPI.getValidDouble(source, 123));
+        }
+    }
+
+    @Test
     public void testGetValidDimension() {
         String[][] testData = {
                 //         Source                                        Expected Result
@@ -381,7 +403,10 @@ public class XSSAPIImplTest {
                 {"break\"out", "break\\x22out"},
                 {"break'out", "break\\x27out"},
 
-                {"</script>", "<\\/script>"}
+                {"</script>", "<\\/script>"},
+
+                {"'alert(document.cookie)", "\\x27alert(document.cookie)"},
+                {"2014-04-22T10:11:24.002+01:00", "2014\\u002D04\\u002D22T10:11:24.002+01:00"}
         };
 
         for (String[] aTestData : testData) {

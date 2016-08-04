@@ -112,6 +112,7 @@ public class ResourcePathInjectionTest {
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2000));
         factory.bindInjector(new ResourcePathInjector(), new ServicePropertiesMap(3, 2500));
         factory.bindStaticInjectAnnotationProcessorFactory(new ResourcePathInjector(), new ServicePropertiesMap(3, 2500));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ResourcePathModel.class, ResourcePathPartialModel.class, ResourcePathAllOptionalModel.class);
     }
 
     @Test

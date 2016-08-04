@@ -18,19 +18,17 @@
  */
 package org.apache.sling.models.factory;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception which is triggered, whenever the post-construct method has thrown an exception.
  * The cause (accessible via {@link #getCause()}) is always the original exception being thrown from the post-construct method.
  */
+@ProviderType
 public class PostConstructException extends ModelClassException {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2527043835215727726L;
 
     /**
-     * 
      * @param message some message
      * @param cause the original exception being thrown in the post-construct
      */

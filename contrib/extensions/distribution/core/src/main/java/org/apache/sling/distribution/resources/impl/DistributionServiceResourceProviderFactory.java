@@ -19,6 +19,7 @@
 
 package org.apache.sling.distribution.resources.impl;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -34,15 +35,15 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-
-
+/**
+ * A {@link org.apache.sling.api.resource.ResourceProviderFactory} for resources backing distribution services.
+ */
 @Component(metatype = true,
         label = "Apache Sling Distribution Resources - Service Resource Provider Factory",
         description = "Distribution Service Resource Provider Factory",
@@ -54,15 +55,17 @@ import javax.servlet.http.HttpServletRequest;
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
+@Property(name="webconsole.configurationFactory.nameHint", value="Resource kind: {kind}")
 public class DistributionServiceResourceProviderFactory implements ResourceProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
     @Property
-    public final static String KIND = DistributionComponentConstants.PN_KIND;
+    private final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     private ResourceProvider resourceProvider;

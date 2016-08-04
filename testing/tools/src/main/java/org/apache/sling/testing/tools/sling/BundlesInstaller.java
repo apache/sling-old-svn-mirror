@@ -76,13 +76,13 @@ public class BundlesInstaller {
             final String bundleSymbolicName = getBundleSymbolicName(f);
             if (isInstalled(f)) {
                 if (f.getName().contains("SNAPSHOT")) {
-                    log.info("Reinstalling (due to SNAPSHOT version): "+bundleSymbolicName);
+                    log.info("Reinstalling (due to SNAPSHOT version): {}", bundleSymbolicName);
                     webconsoleClient.uninstallBundle(bundleSymbolicName, f);
                 } else if (!isInstalledWithSameVersion(f)) {
-                    log.info("Reinstalling (due to version mismatch): "+bundleSymbolicName);
+                    log.info("Reinstalling (due to version mismatch): {}", bundleSymbolicName);
                     webconsoleClient.uninstallBundle(bundleSymbolicName, f);
                 } else {
-                    log.info("Not reinstalling: "+bundleSymbolicName);
+                    log.info("Not reinstalling: {}", bundleSymbolicName);
                     continue;
                 }
             }
@@ -94,6 +94,24 @@ public class BundlesInstaller {
         webconsoleClient.refreshPackages();
 
         log.info("{} additional bundles installed", toInstall.size());
+    }
+    
+    /** Uninstall a list of bundles supplied as Files */
+    public void uninstallBundles(List<File> toUninstall) throws Exception {
+        for(File f : toUninstall) {
+            final String bundleSymbolicName = getBundleSymbolicName(f);
+            if (isInstalled(f)) {
+                log.info("Uninstalling bundle: {}", bundleSymbolicName);
+                webconsoleClient.uninstallBundle(bundleSymbolicName, f);
+            } else {
+                log.info("Could not uninstall: {} as it never was installed", bundleSymbolicName);
+            }
+        }
+        
+        // ensure that bundles are re-wired esp. if an existing bundle was updated
+        webconsoleClient.refreshPackages();
+
+        log.info("{} additional bundles uninstalled", toUninstall.size());
     }
     
     /** Wait for all bundles specified in symbolicNames list to be installed in the

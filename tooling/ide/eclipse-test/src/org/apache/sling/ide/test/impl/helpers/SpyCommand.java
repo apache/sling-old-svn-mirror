@@ -22,9 +22,9 @@ import java.util.Set;
 
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
-import org.apache.sling.ide.transport.Repository.CommandExecutionFlag;
 
 /**
  * The <tt>SpyCommand</tt> records the arguments passed to it and can be used to verify that the invocation is made with
@@ -76,8 +76,13 @@ public class SpyCommand<T> implements Command<T> {
     public ResourceProxy getResourceProxy() {
         return resourceProxy;
     }
+    
+    @Override
+    public Command.Kind getKind() {
+        return null;
+    }
 
-    public SpyCommand.Kind getKind() {
+    public SpyCommand.Kind getSpyKind() {
         return kind;
     }
 }

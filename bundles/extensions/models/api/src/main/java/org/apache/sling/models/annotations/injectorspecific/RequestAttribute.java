@@ -48,7 +48,7 @@ public @interface RequestAttribute {
      * If set to true, the model can be instantiated even if there is no request attribute
      * with the given name found.
      * Default = false.
-     * @deprecated Use {@link InjectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;

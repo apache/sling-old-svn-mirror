@@ -104,7 +104,7 @@ public class JsonReader implements ContentReader {
     private static final String NAME = "jcr:name:";
     private static final String URI = "jcr:uri:";
 
-    private static final Set<String> ignoredNames = new HashSet<String>();
+    protected static final Set<String> ignoredNames = new HashSet<String>();
     static {
         ignoredNames.add("jcr:primaryType");
         ignoredNames.add("jcr:mixinTypes");
@@ -160,6 +160,36 @@ public class JsonReader implements ContentReader {
         }
     }
 
+    protected boolean handleSecurity(String n, Object o, ContentCreator contentCreator) throws JSONException, RepositoryException{
+        if (SECURITY_PRINCIPLES.equals(n)) {
+            this.createPrincipals(o, contentCreator);
+        } else if (SECURITY_ACL.equals(n)) {
+            this.createAcl(o, contentCreator);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    protected void writeChildren(JSONObject obj, ContentCreator contentCreator) throws JSONException, RepositoryException{
+        // add properties and nodes
+        JSONArray names = obj.names();
+        for (int i = 0; names != null && i < names.length(); i++) {
+            final String n = names.getString(i);
+            // skip well known objects
+            if (!ignoredNames.contains(n)) {
+                Object o = obj.get(n);
+                if (!handleSecurity(n, o, contentCreator)) {
+                    if (o instanceof JSONObject) {
+                        this.createNode(n, (JSONObject) o, contentCreator);
+                    } else {
+                        this.createProperty(n, o, contentCreator);
+                    }
+                }
+            }
+        }
+    }
+
     protected void createNode(String name, JSONObject obj, ContentCreator contentCreator)
     throws JSONException, RepositoryException {
         Object primaryTypeObj = obj.opt("jcr:primaryType");
@@ -179,25 +209,7 @@ public class JsonReader implements ContentReader {
         }
 
         contentCreator.createNode(name, primaryType, mixinTypes);
-
-        // add properties and nodes
-        JSONArray names = obj.names();
-        for (int i = 0; names != null && i < names.length(); i++) {
-            final String n = names.getString(i);
-            // skip well known objects
-            if (!ignoredNames.contains(n)) {
-                Object o = obj.get(n);
-                if (SECURITY_PRINCIPLES.equals(n)) {
-                	this.createPrincipals(o, contentCreator);
-                } else if (SECURITY_ACL.equals(n)) {
-                	this.createAcl(o, contentCreator);
-                } else if (o instanceof JSONObject) {
-                    this.createNode(n, (JSONObject) o, contentCreator);
-                } else {
-                    this.createProperty(n, o, contentCreator);
-                }
-            }
-        }
+        writeChildren(obj, contentCreator);
         contentCreator.finishNode();
     }
 
@@ -225,7 +237,7 @@ public class JsonReader implements ContentReader {
         }
     }
 
-    protected int getType(String name, Object object) {
+    private int getType(String name, Object object) {
         if (object instanceof Double || object instanceof Float) {
             return PropertyType.DOUBLE;
         } else if (object instanceof Number) {
@@ -244,7 +256,7 @@ public class JsonReader implements ContentReader {
         return PropertyType.UNDEFINED;
     }
 
-    protected String getName(String name) {
+    private String getName(String name) {
         if (name.startsWith(REFERENCE)) return name.substring(REFERENCE.length());
         if (name.startsWith(PATH)) return name.substring(PATH.length());
         if (name.startsWith(NAME)) return name.substring(NAME.length());
@@ -321,7 +333,7 @@ public class JsonReader implements ContentReader {
     /**
      * Create or update a user or group
      */
-    protected void createPrincipal(JSONObject json, ContentCreator contentCreator)
+    private void createPrincipal(JSONObject json, ContentCreator contentCreator)
     throws JSONException, RepositoryException {
     	//create a principal
     	String name = json.getString("name");
@@ -381,7 +393,7 @@ public class JsonReader implements ContentReader {
      *  }
      *  </code>
      */
-    protected void createAcl(Object obj, ContentCreator contentCreator)
+    private void createAcl(Object obj, ContentCreator contentCreator)
     throws JSONException, RepositoryException {
     	if (obj instanceof JSONObject) {
     		//single ace
@@ -403,7 +415,7 @@ public class JsonReader implements ContentReader {
     /**
      * Create or update an access control entry
      */
-    protected void createAce(JSONObject ace, ContentCreator contentCreator)
+    private void createAce(JSONObject ace, ContentCreator contentCreator)
     throws JSONException, RepositoryException {
 		String principalID = ace.getString("principal");
 

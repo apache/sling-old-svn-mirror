@@ -31,7 +31,6 @@ import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
 import org.apache.sling.jcr.contentloader.internal.readers.XmlReader;
 import org.apache.sling.jcr.contentloader.internal.readers.ZipReader;
 import org.apache.sling.testing.mock.osgi.MockBundle;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -63,12 +62,7 @@ public class BundleContentLoaderTest {
         RepositoryUtil.registerSlingNodeTypes(session);
         
         // register the content loader service
-        ContentLoaderService contentLoaderService = new ContentLoaderService();
-        MockOsgi.injectServices(contentLoaderService, context.bundleContext());
-        MockOsgi.activate(contentLoaderService);
-        context.registerService(BundleHelper.class, contentLoaderService);
-        
-        BundleHelper bundleHelper = context.getService(BundleHelper.class);
+        BundleHelper bundleHelper = context.registerInjectActivateService(new ContentLoaderService());
         
         ContentReaderWhiteboard whiteboard = context.getService(ContentReaderWhiteboard.class);
         

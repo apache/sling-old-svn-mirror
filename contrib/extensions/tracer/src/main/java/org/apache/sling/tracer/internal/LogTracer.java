@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -36,6 +37,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -108,6 +110,41 @@ public class LogTracer {
     )
     private static final String PROP_TRACER_ENABLED = "enabled";
 
+    private static final boolean PROP_TRACER_SERVLET_ENABLED_DEFAULT = false;
+    @Property(label = "Servlet Enabled",
+            description = "Enable the Tracer Servlet",
+            boolValue = PROP_TRACER_SERVLET_ENABLED_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_ENABLED = "servletEnabled";
+
+    static final int PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT = 50;
+    @Property(label = "Recording Cache Size",
+            description = "Recording cache size in MB which would be used to temporary cache the recording data",
+            intValue = PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_CACHE_SIZE = "recordingCacheSizeInMB";
+
+    static final long PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT = 60 * 15;
+    @Property(label = "Recording Cache Duration",
+            description = "Time in seconds upto which the recording data would be held in memory before expiry",
+            longValue = PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_CACHE_DURATION = "recordingCacheDurationInSecs";
+
+    static final boolean PROP_TRACER_SERVLET_COMPRESS_DEFAULT = true;
+    @Property(label = "Compress Recording",
+            description = "Enable compression for recoding held in memory",
+            boolValue = PROP_TRACER_SERVLET_COMPRESS_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_COMPRESS = "recordingCompressionEnabled";
+
+    static final boolean PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT = true;
+    @Property(label = "GZip Response",
+            description = "If enabled the response sent would be compressed",
+            boolValue = PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT
+    )
+    private static final String PROP_TRACER_SERVLET_GZIP_RESPONSE = "gzipResponse";
+
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LogTracer.class);
 
     private final Map<String, TracerSet> tracers = new HashMap<String, TracerSet>();
@@ -125,6 +162,11 @@ public class LogTracer {
 
     private static final ThreadLocal<TracerContext> requestContextHolder = new ThreadLocal<TracerContext>();
 
+    @Nullable
+    private TracerLogServlet logServlet;
+
+    private TraceLogRecorder recorder = TraceLogRecorder.DEFAULT;
+
     @Activate
     private void activate(Map<String, ?> config, BundleContext context) {
         this.bundleContext = context;
@@ -132,12 +174,34 @@ public class LogTracer {
         boolean enabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_ENABLED), PROP_TRACER_ENABLED_DEFAULT);
         if (enabled) {
             registerFilters(context);
-            LOG.info("Log tracer enabled. Required filters registered");
+            boolean servletEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_ENABLED),
+                    PROP_TRACER_SERVLET_ENABLED_DEFAULT);
+
+            if (servletEnabled) {
+                int cacheSize = PropertiesUtil.toInteger(config.get(PROP_TRACER_SERVLET_CACHE_SIZE),
+                        PROP_TRACER_SERVLET_CACHE_SIZE_DEFAULT);
+                long cacheDuration = PropertiesUtil.toLong(config.get(PROP_TRACER_SERVLET_CACHE_DURATION),
+                        PROP_TRACER_SERVLET_CACHE_DURATION_DEFAULT);
+                boolean compressionEnabled = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_COMPRESS),
+                        PROP_TRACER_SERVLET_COMPRESS_DEFAULT);
+                boolean gzipResponse = PropertiesUtil.toBoolean(config.get(PROP_TRACER_SERVLET_GZIP_RESPONSE),
+                        PROP_TRACER_SERVLET_GZIP_RESPONSE_DEFAULT);
+
+                this.logServlet = new TracerLogServlet(context, cacheSize, cacheDuration, compressionEnabled, gzipResponse);
+                recorder = logServlet;
+                LOG.info("Tracer recoding enabled with cacheSize {} MB, expiry {} secs, compression {}, gzip response {}",
+                        cacheSize, cacheDuration, compressionEnabled, gzipResponse);
+            }
+            LOG.info("Log tracer enabled. Required filters registered. Tracer servlet enabled {}", servletEnabled);
         }
     }
 
     @Deactivate
     private void deactivate() {
+        if (logServlet != null) {
+            logServlet.unregister();
+        }
+
         if (slingFilterRegistration != null) {
             slingFilterRegistration.unregister();
             slingFilterRegistration = null;
@@ -156,7 +220,7 @@ public class LogTracer {
         requestContextHolder.remove();
     }
 
-    TracerContext getTracerContext(String tracerSetNames, String tracerConfig) {
+    TracerContext getTracerContext(String tracerSetNames, String tracerConfig, Recording recording) {
         //No config or tracer set name provided. So tracing not required
         if (tracerSetNames == null && tracerConfig == null) {
             return null;
@@ -185,7 +249,7 @@ public class LogTracer {
             configs.addAll(ts.getConfigs());
         }
 
-        return new TracerContext(configs.toArray(new TracerConfig[configs.size()]));
+        return new TracerContext(configs.toArray(new TracerConfig[configs.size()]), recording);
     }
 
     private void initializeTracerSet(Map<String, ?> config) {
@@ -277,8 +341,13 @@ public class LogTracer {
             //parameter map
 
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+
+            //Invoke at start so that header can be set. If done at end there is a chance
+            //that response is committed
+            Recording recording = recorder.startRecording(httpRequest, (HttpServletResponse) servletResponse);
+
             TracerContext tracerContext = getTracerContext(httpRequest.getHeader(HEADER_TRACER),
-                    httpRequest.getHeader(HEADER_TRACER_CONFIG));
+                    httpRequest.getHeader(HEADER_TRACER_CONFIG), recording);
             try {
                 if (tracerContext != null) {
                     enableCollector(tracerContext);
@@ -288,6 +357,7 @@ public class LogTracer {
                 if (tracerContext != null) {
                     disableCollector();
                 }
+                recorder.endRecording(httpRequest, recording);
             }
         }
 
@@ -304,14 +374,15 @@ public class LogTracer {
                              FilterChain filterChain) throws IOException, ServletException {
             SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) servletRequest;
             TracerContext tracerContext = requestContextHolder.get();
-
+            Recording recording = recorder.getRecordingForRequest(slingRequest);
+            recording.registerTracker(slingRequest.getRequestProgressTracker());
             boolean createdContext = false;
 
             //Check if the global filter created context based on HTTP headers. If not
             //then check from request params
             if (tracerContext == null) {
                 tracerContext = getTracerContext(slingRequest.getParameter(PARAM_TRACER),
-                        slingRequest.getParameter(PARAM_TRACER_CONFIG));
+                        slingRequest.getParameter(PARAM_TRACER_CONFIG), recording);
                 if (tracerContext != null) {
                     createdContext = true;
                 }
@@ -348,11 +419,12 @@ public class LogTracer {
                 return FilterReply.NEUTRAL;
             }
 
-            if (tracer.shouldLog(logger.getName(), level)) {
+            TracerConfig tc = tracer.findMatchingConfig(logger.getName(), level);
+            if (tc != null) {
                 if (format == null) {
                     return FilterReply.ACCEPT;
                 }
-                if (tracer.log(logger.getName(), format, params)) {
+                if (tracer.log(tc, level, logger.getName(), format, params)) {
                     return FilterReply.ACCEPT;
                 }
             }

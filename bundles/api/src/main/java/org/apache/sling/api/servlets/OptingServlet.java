@@ -23,7 +23,7 @@ import javax.servlet.Servlet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>OptingServlet</code> interface may be implemented by

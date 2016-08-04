@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>26</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>org.apache.sling.discovery.base</artifactId>
+    <packaging>bundle</packaging>
+    <version>1.1.5-SNAPSHOT</version>
+
+    <name>Apache Sling Discovery Base</name>
+    <description>Contains Connector and Properties support that some implementations might choose to build upon</description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/base</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/base</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/discovery/base</url>
+    </scm>
+
+    <properties>
+      <jackrabbit.version>2.12.2</jackrabbit.version>
+        <!-- by default Slow tests are excluded - use -PincludeSlowTests to include them -->
+        <sling.excluded.surefire.groups>org.apache.sling.commons.testing.junit.categories.Slow</sling.excluded.surefire.groups>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <argLine>-Xmx2048m</argLine>
+                    <excludedGroups>${sling.excluded.surefire.groups}</excludedGroups>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <!--  with 3.0.0 the following bundle dependency is failing
+                      on AEM 5.6.1 - thus switching back to 2.5.3 here:
+					javax.servlet,version=[2.6,3) - - Cannot be resolved
+					javax.servlet.http,version=[2.6,3) - - Cannot be resolved
+					org.apache.commons.codec.binary,version=[1.6,2) - - Cannot be resolved
+                       -->
+                <version>2.5.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                  <instructions>
+		            <Embed-Dependency>
+		              commons-net;inline=org/apache/commons/net/util/SubnetUtils*
+		            </Embed-Dependency>
+		          </instructions>
+		        </configuration>
+            </plugin>
+			<!-- discovery.base exports a few test classes for reuse.
+                 In order for others to use these, the test-jar must be built/installed too.
+                 Note that 'mvn -Dmaven.test.skip=true' does NOT build the test-jar,
+                 however 'mvn -DskipTests' does. -->
+             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <!-- when -PincludeSlowTests is set, the Slow tests should also be executed, 
+                hence unsetting the category excludes 'sling.excluded.surefire.groups' to 
+                achieve that. -->
+            <id>includeSlowTests</id>
+            <properties>
+                <sling.excluded.surefire.groups />
+            </properties>
+        </profile>
+    </profiles>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+	        <version>1.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.jcr.api</artifactId>
+			<version>2.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+			<version>2.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>jackrabbit-api</artifactId>
+			<version>${jackrabbit.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.commons.osgi</artifactId>
+			<version>2.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.settings</artifactId>
+			<version>1.2.2</version>
+            <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.api</artifactId>
+			<version>1.0.0</version>
+            <scope>provided</scope>
+		</dependency>
+ 		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.discovery.commons</artifactId>
+			<version>1.0.12</version>
+  		</dependency>
+        <!-- besides including discovery.commons' normal jar above, 
+              for testing a few test helper classes are also reused.
+              in order to achieve that, also adding a test/test-jar dependency: --> 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.commons</artifactId>
+            <version>1.0.12</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.api</artifactId>
+			<version>2.4.0</version>
+            <scope>provided</scope>
+		</dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.commons.scheduler</artifactId>
+        	<version>2.3.4</version>
+            <scope>provided</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.webconsole</artifactId>
+			<version>3.0.0</version>
+            <scope>provided</scope>
+		</dependency>
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-servlet</artifactId>
+	      <version>8.1.2.v20120308</version>
+	      <scope>test</scope>
+	    </dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient-osgi</artifactId>
+			<version>4.3.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.commons.json</artifactId>
+			<version>2.0.6</version>
+            <scope>provided</scope>
+		</dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.3</version>
+            <scope>provided</scope>
+        </dependency>
+      <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+            <version>1.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <!-- with 2.5.1 jmock-junit4, which has a dependency on junit 4.4 
+                you get the following: NoSuchMethodError: org.junit.runner.Request.classes(Lorg/junit/runner/Computer;[Ljava/lang/Class;)Lorg/junit/runner/Request; 
+                hence this explicit newer dependency. -->
+            <!-- <version>2.8.2</version> -->
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.jackrabbit</groupId>
+        	<artifactId>jackrabbit-jcr-commons</artifactId>
+        	<version>${jackrabbit.version}</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.commons.testing</artifactId>
+        	<version>2.0.26</version>
+        	<scope>test</scope>
+            <exclusions>
+                <!-- slf4j simple implementation logs INFO + higher to stdout (we don't want that behaviour) -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+                <!--  also excluding jcl-over-slf4j as we need a newer vesion of this which is compatible with slf4j 1.6 -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- using log4j under slf4j to allow fine-grained logging config (see src/test/resources/log4j.properties) -->
+        <dependency>
+        	<groupId>org.slf4j</groupId>
+        	<artifactId>slf4j-log4j12</artifactId>
+        	<version>1.7.5</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.jcr.resource</artifactId>
+        	<version>2.3.8</version>
+        	<scope>test</scope>
+        </dependency>
+	    <dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.13</version>
+			<scope>test</scope>
+	    </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.commons.threads</artifactId>
+        	<version>3.1.0</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.tools</artifactId>
+            <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.sling</groupId>
+          <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+          <version>1.2.0</version>
+          <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

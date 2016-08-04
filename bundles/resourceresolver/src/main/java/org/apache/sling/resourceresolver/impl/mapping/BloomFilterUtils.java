@@ -22,11 +22,6 @@ package org.apache.sling.resourceresolver.impl.mapping;
 public class BloomFilterUtils {
 
     /**
-     * The multiply and shift constants for the supplemental hash function.
-     */
-    private static final int MUL = 2153, SHIFT = 19;
-
-    /**
      * The number of bits needed per stored element.
      * Using the formula m = - (n * ln(p)) / (ln(2)^2) as described in
      * http://en.wikipedia.org/wiki/Bloom_filter
@@ -60,7 +55,7 @@ public class BloomFilterUtils {
             bloom[(h2 >>> 3) % len] |= 1 << (h2 & 7);
         }
     }
-    
+
     /**
      * Remove the key.
      *

@@ -23,10 +23,10 @@ import java.util.Enumeration;
 /**
  * Allows to process a value. A new value is created and for each part in the model a process
  * method is called. Subclasses can overwrite those methods to inject specific behavior.
- * The processor itself does not change anything in the model. 
+ * The processor itself does not change anything in the model.
  */
 class ModelProcessor {
-    
+
     /**
      * Creates a copy of the model and calls a process method for each part found in the model.
      * This allows to modify the parts content (e.g. replace variables), but not to add or remove parts.
@@ -39,8 +39,10 @@ class ModelProcessor {
 
         for(final Feature feature : model.getFeatures()) {
             final Feature newFeature = result.getOrCreateFeature(feature.getName());
+            newFeature.setType(feature.getType());
             newFeature.setComment(feature.getComment());
             newFeature.setLocation(feature.getLocation());
+            newFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
 
             newFeature.getVariables().setComment(feature.getVariables().getComment());
             newFeature.getVariables().setLocation(feature.getVariables().getLocation());
@@ -85,15 +87,15 @@ class ModelProcessor {
         }
         return result;
     }
-    
+
     protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature newFeature) {
         return variables;
     }
-    
+
     protected Artifact processArtifact(Artifact artifact, Feature newFeature, RunMode newRunMode) {
         return artifact;
     }
-    
+
     protected Configuration processConfiguration(Configuration config, Feature newFeature, RunMode newRunMode) {
         return config;
     }
@@ -101,5 +103,5 @@ class ModelProcessor {
     protected KeyValueMap<String> processSettings(KeyValueMap<String> settings, Feature newFeature, RunMode newRunMode) {
         return settings;
     }
-    
+
 }

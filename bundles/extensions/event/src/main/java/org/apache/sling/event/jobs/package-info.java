@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.6.0")
+@Version("2.0.0")
 package org.apache.sling.event.jobs;
 
 import aQute.bnd.annotation.Version;

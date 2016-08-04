@@ -30,9 +30,11 @@ import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.value.BinaryValue;
@@ -76,6 +78,12 @@ public class MockPropertyTest {
         assertFalse(prop1.isMultiple());
         assertFalse(prop1.getDefinition().isMultiple());
         assertEquals(6, prop1.getLength());
+
+        assertFalse(prop1.getDefinition().isProtected());
+        assertFalse(prop1.getDefinition().isAutoCreated());
+        assertFalse(prop1.getDefinition().isMandatory());
+        assertFalse(prop1.getDefinition().isFullTextSearchable());
+        assertFalse(prop1.getDefinition().isQueryOrderable());
     }
 
     @Test
@@ -237,4 +245,20 @@ public class MockPropertyTest {
         assertArrayEquals(new long[] { 2 }, prop1.getLengths());
     }
 
+    @Test
+    public void testEmptyArrayGetType() throws RepositoryException {
+        this.node1.setProperty("prop1", new Value[] {});
+        Property prop1 = this.node1.getProperty("prop1");
+        assertTrue(prop1.isMultiple());
+        assertEquals(PropertyType.UNDEFINED, prop1.getType());
+    }
+    
+    @Test(expected=ValueFormatException.class)
+    public void testSingleValueAsValueArray() throws RepositoryException {
+        this.node1.setProperty("prop1", this.session.getValueFactory().createValue("value1"));
+        Property prop1 = this.node1.getProperty("prop1");
+        assertFalse(prop1.isMultiple());
+        assertEquals("value1", prop1.getValues()[0].getString());
+    }
+    
 }

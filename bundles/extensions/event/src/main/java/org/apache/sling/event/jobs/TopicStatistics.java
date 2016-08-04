@@ -31,21 +31,25 @@ public interface TopicStatistics {
 
     /**
      * The topic this statistics is about.
+     * @return The topic name
      */
     String getTopic();
 
     /**
      * Number of successfully finished jobs.
+     * @return Number of successfully finished jobs.
      */
     long getNumberOfFinishedJobs();
 
     /**
      * Number of permanently failing or cancelled jobs.
+     * @return Number of permanently failing or cancelled jobs.
      */
     long getNumberOfCancelledJobs();
 
     /**
      * Number of failing jobs.
+     * @return Number of failing jobs.
      */
     long getNumberOfFailedJobs();
 
@@ -53,26 +57,31 @@ public interface TopicStatistics {
      * Number of already processed jobs. This adds
      * {@link #getNumberOfFinishedJobs()}, {@link #getNumberOfCancelledJobs()}
      * and {@link #getNumberOfFailedJobs()}
+     * @return Number of already processed jobs.
      */
     long getNumberOfProcessedJobs();
 
     /**
      * The time a job has been started last.
+     * @return The time a job has been started last.
      */
     long getLastActivatedJobTime();
 
     /**
      * The time a job has been finished/failed/cancelled last.
+     * @return The time a job has been finished/failed/cancelled last.
      */
     long getLastFinishedJobTime();
 
     /**
      * The average waiting time of a job in the queue.
+     * @return The average waiting time of a job in the queue.
      */
     long getAverageWaitingTime();
 
     /**
      * The average processing time of a job - this only counts finished jobs.
+     * @return The average processing time of a job
      */
     long getAverageProcessingTime();
 }

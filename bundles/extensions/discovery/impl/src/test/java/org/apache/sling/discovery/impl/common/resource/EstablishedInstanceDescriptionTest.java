@@ -21,17 +21,17 @@ package org.apache.sling.discovery.impl.common.resource;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
-import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
-import org.apache.sling.discovery.impl.common.InstanceDescriptionTest;
-import org.apache.sling.discovery.impl.setup.MockedResource;
-import org.apache.sling.discovery.impl.setup.MockedResourceResolver;
+import org.apache.sling.discovery.base.its.setup.mock.MockedResource;
+import org.apache.sling.discovery.base.its.setup.mock.MockedResourceResolver;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescriptionTest;
 
-public class EstablishedInstanceDescriptionTest extends InstanceDescriptionTest {
+public class EstablishedInstanceDescriptionTest extends DefaultInstanceDescriptionTest {
 
     @Override
-    public DefaultInstanceDescriptionImpl constructInstanceDescription(
-            DefaultClusterViewImpl clusterView, boolean isLeader,
+    public DefaultInstanceDescription constructInstanceDescription(
+            DefaultClusterView clusterView, boolean isLeader,
             boolean isOwn, String theSlingId, Map<String, String> properties)
             throws Exception {
 

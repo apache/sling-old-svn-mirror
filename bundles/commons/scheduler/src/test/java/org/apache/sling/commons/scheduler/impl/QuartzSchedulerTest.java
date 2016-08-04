@@ -16,6 +16,19 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.After;
@@ -30,21 +43,13 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.quartz.JobKey;
-import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Date;
-import java.util.HashMap;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
 public class QuartzSchedulerTest {
-    private Scheduler s;
+
+    private Map<String, SchedulerProxy> proxies;
     private BundleContext context;
     private QuartzScheduler quartzScheduler;
 
@@ -54,11 +59,14 @@ public class QuartzSchedulerTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         context = MockOsgi.newBundleContext();
         quartzScheduler = ActivatedQuartzSchedulerFactory.create(context, "testName");
-        s = quartzScheduler.getScheduler();
+        Field sField = QuartzScheduler.class.getDeclaredField("schedulers");
+        sField.setAccessible(true);
+        this.proxies = (Map<String, SchedulerProxy>) sField.get(quartzScheduler);
     }
 
     @Test
@@ -105,39 +113,28 @@ public class QuartzSchedulerTest {
     }
 
     @Test
-    public void testWithoutScheduler() throws Exception {
-        setInternalSchedulerToNull();
-
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Scheduler is not available anymore.");
-        quartzScheduler.addJob(1L, 1L, "testName", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
-
-        returnInternalSchedulerBack();
-    }
-
-    @Test
     public void testAddJob() throws SchedulerException {
         quartzScheduler.addJob(1L, 1L, "testName", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
-        assertTrue(s.checkExists(JobKey.jobKey("testName")));
-        assertFalse(s.checkExists(JobKey.jobKey("wrongName")));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("testName")));
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("wrongName")));
     }
 
     @Test
     public void testAddJobTwice() throws SchedulerException {
         quartzScheduler.addJob(1L, 1L, "testName", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
-        assertTrue(s.checkExists(JobKey.jobKey("testName")));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("testName")));
         //Add very same job twice to check that there is no conflicts and previous
         quartzScheduler.addJob(1L, 1L, "testName", new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
-        assertTrue(s.checkExists(JobKey.jobKey("testName")));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("testName")));
     }
 
     @Test
     public void testRemoveJob() throws SchedulerException {
         String jobName = "testName";
         quartzScheduler.addJob(1L, 1L, jobName, new Thread(), new HashMap<String, Serializable>(), "0 * * * * ?", true);
-        assertTrue(s.checkExists(JobKey.jobKey(jobName)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(jobName)));
         quartzScheduler.removeJob(1L, jobName);
-        assertFalse(s.checkExists(JobKey.jobKey(jobName)));
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(jobName)));
     }
 
     @Test
@@ -176,7 +173,7 @@ public class QuartzSchedulerTest {
     public void testPeriodicWithIncorrectPeriod() throws SchedulerException {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Period argument must be higher than 0");
-        quartzScheduler.addPeriodicJob(3L, 3L, "anyName", new Thread(), new HashMap(), 0L, true, true);
+        quartzScheduler.addPeriodicJob(3L, 3L, "anyName", new Thread(), null, 0L, true, true);
     }
 
     @Test
@@ -184,11 +181,11 @@ public class QuartzSchedulerTest {
         String jobName = "anyName";
         String otherJobName = "anyOtherName";
 
-        quartzScheduler.addPeriodicJob(4L, 4L, jobName, new Thread(), new HashMap(), 2L, true, true);
-        assertTrue("Job must exists", s.checkExists(JobKey.jobKey(jobName)));
+        quartzScheduler.addPeriodicJob(4L, 4L, jobName, new Thread(), null, 2L, true, true);
+        assertTrue("Job must exists", proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(jobName)));
 
-        quartzScheduler.addPeriodicJob(5L, 5L, otherJobName, new Thread(), new HashMap(), 2L, true, false);
-        assertTrue("Job must exists", s.checkExists(JobKey.jobKey(otherJobName)));
+        quartzScheduler.addPeriodicJob(5L, 5L, otherJobName, new Thread(), null, 2L, true, false);
+        assertTrue("Job must exists", proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(otherJobName)));
     }
 
     @Test
@@ -224,8 +221,8 @@ public class QuartzSchedulerTest {
         BundleEvent event = new BundleEvent(BundleEvent.STOPPED, bundle);
         quartzScheduler.bundleChanged(event);
 
-        assertTrue(s.checkExists(JobKey.jobKey(firstJob)));
-        assertFalse(s.checkExists(JobKey.jobKey(secondJob)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(firstJob)));
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(secondJob)));
     }
 
     @Test
@@ -240,8 +237,8 @@ public class QuartzSchedulerTest {
         BundleEvent event = new BundleEvent(BundleEvent.STARTED, bundle);
         quartzScheduler.bundleChanged(event);
 
-        assertTrue(s.checkExists(JobKey.jobKey(firstJob)));
-        assertTrue(s.checkExists(JobKey.jobKey(secondJob)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(firstJob)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(secondJob)));
     }
 
     @Test
@@ -259,31 +256,75 @@ public class QuartzSchedulerTest {
         BundleEvent event = new BundleEvent(BundleEvent.STOPPED, bundle);
         quartzScheduler.bundleChanged(event);
 
-        assertTrue(s.checkExists(JobKey.jobKey(firstJob)));
-        assertTrue(s.checkExists(JobKey.jobKey(secondJob)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(firstJob)));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey(secondJob)));
 
         returnInternalSchedulerBack();
     }
 
+    @Test
+    public void testThreadPools() throws SchedulerException {
+        final Date future = new Date(System.currentTimeMillis() + 1000 * 60 * 60);
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
+        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.AT(future).name("j2").threadPoolName("tp2"));
+        quartzScheduler.schedule(1L, 2L, new Thread(), quartzScheduler.AT(future).name("j3").threadPoolName("allowed"));
+
+        assertNull(proxies.get("tp1"));
+        assertNull(proxies.get("tp2"));
+        assertNotNull(proxies.get("allowed"));
+
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j2")));
+        assertTrue(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j3")));
+    }
+
+    @Test
+    public void testNameAcrossPools() throws SchedulerException {
+        final Date future = new Date(System.currentTimeMillis() + 1000 * 60 * 60);
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
+        assertNull(proxies.get("tp1"));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("allowed"));
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        assertTrue(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
+
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1"));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        assertFalse(proxies.get("allowed").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
+        assertNull(proxies.get("tp1"));
+        assertTrue(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+        quartzScheduler.unschedule(1L, "j1");
+        assertFalse(proxies.get("testName").getScheduler().checkExists(JobKey.jobKey("j1")));
+    }
+
     @After
     public void deactivateScheduler() throws NoSuchFieldException, IllegalAccessException {
-        if (quartzScheduler.getScheduler() == null) {
+        if (quartzScheduler.getSchedulers().isEmpty()) {
             returnInternalSchedulerBack();
         }
         quartzScheduler.deactivate(context);
     }
 
     private void setInternalSchedulerToNull() throws NoSuchFieldException, IllegalAccessException {
-        Field sField = QuartzScheduler.class.getDeclaredField("scheduler");
+        Field sField = QuartzScheduler.class.getDeclaredField("schedulers");
         sField.setAccessible(true);
-        sField.set(quartzScheduler, null);
+        sField.set(quartzScheduler, new HashMap<String, SchedulerProxy>());
     }
 
     private void returnInternalSchedulerBack() throws NoSuchFieldException, IllegalAccessException {
-        Field sField = QuartzScheduler.class.getDeclaredField("scheduler");
+        Field sField = QuartzScheduler.class.getDeclaredField("schedulers");
         sField.setAccessible(true);
-        if (quartzScheduler.getScheduler() == null && s != null) {
-            sField.set(quartzScheduler, s);
+        if (quartzScheduler.getSchedulers().isEmpty() && this.proxies != null) {
+            sField.set(quartzScheduler, this.proxies);
         }
     }
 }

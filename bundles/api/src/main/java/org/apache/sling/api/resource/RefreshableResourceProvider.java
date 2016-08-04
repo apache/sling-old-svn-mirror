@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 
@@ -35,7 +35,9 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
  *
  * @since 2.3 (Sling API Bundle 2.4.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
+@Deprecated
 @ConsumerType
 public interface RefreshableResourceProvider extends ResourceProvider {
 

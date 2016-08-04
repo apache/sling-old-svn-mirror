@@ -1,110 +1,215 @@
 {
-  "jcr:primaryType": "sling:Folder",
-  "image": {
     "jcr:primaryType": "nt:unstructured",
-    "description": "An image src",
-    "fqdn": "org.apache.sling.hapi.common.Image",
-    "name": "Image",
-    "sling:resourceType": "sling/hapi/components/type"
-  },
-  "date": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "a date value; format has to be described in each property of this type",
-    "fqdn": "org.apache.sling.hapi.common.Date",
-    "name": "Date",
-    "sling:resourceType": "sling/hapi/components/type"
-  },
-  "text": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "A text value",
-    "fqdn": "org.apache.sling.hapi.common.Text",
-    "name": "Text",
-    "sling:resourceType": "sling/hapi/components/type"
-  },
-  "collection": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "Generic collection type. Can be parameterized with a generic type.",
-    "fqdn": "org.apache.sling.hapi.common.collection",
-    "name": "collection",
-    "parameters": [
-      "T"
-    ],
-    "sling:resourceType": "sling/hapi/components/type",
-    "item": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "",
-      "type": "T",
-      "multiple": true
-    }
-  },
-  "boolean": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "true or false",
-    "fqdn": "org.apache.sling.hapi.common.Boolean",
-    "name": "Boolean",
-    "sling:resourceType": "sling/hapi/components/type"
-  },
-  "pair": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "The key-value pair. Usually used to indicate a Map entry.",
-    "fqdn": "org.apache.sling.hapi.common.pair",
-    "name": "pair",
-    "parameters": [
-      "K",
-      "V"
-    ],
-    "sling:resourceType": "sling/hapi/components/type",
-    "key": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "The key of the pair",
-      "type": "K",
-      "multiple": false
+    "fqdn": "org.apache.sling.hapi.common",
+    "description": "Common HApi types collection",
+    "name": "common",
+    "sling:resourceType": "sling/hapi/components/typescollection",
+    "image": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "An image src",
+        "fqdn": "org.apache.sling.hapi.common.Image",
+        "name": "Image",
+        "sling:resourceType": "sling/hapi/components/type"
     },
-    "value": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "The value of the pair",
-      "type": "V",
-      "multiple": false
-    }
-  },
-  "number": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "A number value",
-    "fqdn": "org.apache.sling.hapi.common.Number",
-    "name": "Number",
-    "sling:resourceType": "sling/hapi/components/type"
-  },
-  "demo_type": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "A demo HApi type to show a more advanced structure",
-    "demo_description": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "The description of the demo object",
-      "type": "org.apache.sling.hapi.common.Text",
-      "multiple": false
+    "date": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "a date value; format has to be described in each property of this type",
+        "fqdn": "org.apache.sling.hapi.common.Date",
+        "name": "Date",
+        "sling:resourceType": "sling/hapi/components/type"
     },
-    "fqdn": "org.apache.sling.hapi.common.collection",
-    "name": "collection",
-    "parameters": [],
-    "sling:resourceType": "sling/hapi/components/type",
-    "title": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "The title of the demo object",
-      "type": "org.apache.sling.hapi.common.Text",
-      "multiple": false
+    "text": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "A text value",
+        "fqdn": "org.apache.sling.hapi.common.Text",
+        "name": "Text",
+        "sling:resourceType": "sling/hapi/components/type"
     },
-    "entries": {
-      "jcr:primaryType": "nt:unstructured",
-      "description": "An entry of type pair in the demo object",
-      "type": "org.apache.sling.hapi.common.pair",
-      "multiple": true
-    }
-  },
-  "url": {
-    "jcr:primaryType": "nt:unstructured",
-    "description": "A URL value type",
-    "fqdn": "org.apache.sling.hapi.common.URL",
-    "name": "URL",
-    "sling:resourceType": "sling/hapi/components/type"
-  }
+    "collection": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "Generic collection type. Can be parameterized with a generic type.",
+        "fqdn": "org.apache.sling.hapi.common.collection",
+        "name": "collection",
+        "parameters": [
+            "T"
+        ],
+        "sling:resourceType": "sling/hapi/components/type",
+        "item": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "",
+            "type": "T",
+            "multiple": true
+        }
+    },
+    "boolean": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "true or false",
+        "fqdn": "org.apache.sling.hapi.common.Boolean",
+        "name": "Boolean",
+        "sling:resourceType": "sling/hapi/components/type"
+    },
+    "pair": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "The key-value pair. Usually used to indicate a Map entry.",
+        "fqdn": "org.apache.sling.hapi.common.pair",
+        "name": "pair",
+        "parameters": [
+            "K",
+            "V"
+        ],
+        "sling:resourceType": "sling/hapi/components/type",
+        "key": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The key of the pair",
+            "type": "K",
+            "multiple": false
+        },
+        "value": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The value of the pair",
+            "type": "V",
+            "multiple": false
+        }
+    },
+    "number": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "A number value",
+        "fqdn": "org.apache.sling.hapi.common.Number",
+        "name": "Number",
+        "sling:resourceType": "sling/hapi/components/type"
+    },
+    "demo_type": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "A demo HApi type to show a more advanced structure",
+        "demo_description": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The description of the demo object",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "fqdn": "org.apache.sling.hapi.common.collection",
+        "name": "collection",
+        "parameters": [],
+        "sling:resourceType": "sling/hapi/components/type",
+        "title": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The title of the demo object",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "entries": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "An entry of type pair in the demo object",
+            "type": "org.apache.sling.hapi.common.pair",
+            "multiple": true
+        }
+    },
+    "url": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "A URL value type",
+        "fqdn": "org.apache.sling.hapi.common.URL",
+        "name": "URL",
+        "sling:resourceType": "sling/hapi/components/type"
+    },
+    "hapi_type": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "The representation of the structure of the HApi type. This is used to annotate the html page describing any type",
+        "hapi_name": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The FQDN of the HApi Type",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_description": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The description of the HApi Type",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_parent": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The parent type of the HApi Type",
+            "type": "org.apache.sling.hapi.common.hapi_type",
+            "multiple": false
+        },
+        "hapi_url": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The external URL of the type",
+            "type": "org.apache.sling.hapi.common.URL",
+            "multiple": false
+        },
+        "hapi_parameter": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "A parameter of this type, inc ase it's a parameterized type",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": true
+        },
+        "hapi_property": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "A property of the HApi type",
+            "type": "org.apache.sling.hapi.common.hapi_type_property",
+            "multiple": true
+        },
+        "fqdn": "org.apache.sling.hapi.common.hapi_type",
+        "name": "hapi_type",
+        "parameters": [],
+        "sling:resourceType": "sling/hapi/components/type"
+    },
+    "hapi_type_property": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "The representation of the structure of a property for a HApi type. This is used to annotate the html page describing any type",
+        "hapi_name": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The name of the HApi Type Property",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_description": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The description of the HApi Type property",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_property_type": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "A link to the type of the property",
+            "type": "org.apache.sling.hapi.common.hapi_type",
+            "multiple": false
+        },
+        "hapi_multiple": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "Whether the property can occur multiple times in an object of the type that this property belongs to",
+            "type": "org.apache.sling.hapi.common.Boolean",
+            "multiple": false
+        },
+        "fqdn": "org.apache.sling.hapi.common.hapi_type_property",
+        "name": "hapi_type_property",
+        "parameters": [],
+        "sling:resourceType": "sling/hapi/components/type"
+    },
+    "hapi_typescollection": {
+        "jcr:primaryType": "nt:unstructured",
+        "description": "The representation of the structure of a HApi typescollection. This is used to annotate the html page describing any types collection",
+        "hapi_name": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The name of the HApi Types Collection",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_description": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "The description of the HApi Types Collection",
+            "type": "org.apache.sling.hapi.common.Text",
+            "multiple": false
+        },
+        "hapi_type": {
+            "jcr:primaryType": "nt:unstructured",
+            "description": "A type in the typescollection",
+            "type": "org.apache.sling.hapi.common.hapi_type",
+            "multiple": true
+        },
+        "fqdn": "org.apache.sling.hapi.common.hapi_typescollection",
+        "name": "hapi_typescollection",
+        "sling:resourceType": "sling/hapi/components/type"
+    },
 }

@@ -179,8 +179,8 @@ public class MapEntryTest {
     }
 
     @Test public void test_compareTo() {
-        final MapEntry a = new MapEntry("/foo", 200, false, 5, null);
-        final MapEntry b = new MapEntry("/bar", 200, false, 5, null);
+        final MapEntry a = new MapEntry("/foo", 200, false, 5, new String[0]);
+        final MapEntry b = new MapEntry("/bar", 200, false, 5, new String[0]);
 
         assertTrue(a.compareTo(b) > 0);
         assertTrue(b.compareTo(a) < 0);

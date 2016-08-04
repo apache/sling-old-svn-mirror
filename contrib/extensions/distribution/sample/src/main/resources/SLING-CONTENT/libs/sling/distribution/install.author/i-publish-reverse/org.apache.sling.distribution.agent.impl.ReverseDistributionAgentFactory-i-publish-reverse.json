@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "impersonate-publish-reverse",
+
+    "packageExporter.endpoints": [
+        "http://localhost:4503/libs/sling/distribution/services/exporters/impersonate-reverse"
+    ],
+
+    "triggers.target": "(name=impersonate-publish-reverse-scheduled)"
+}

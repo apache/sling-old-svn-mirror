@@ -21,7 +21,8 @@ jQuery(function ($) {
 
     'use strict';
 
-    var currentState = 'source';
+    var hash = window.location.hash;
+    var currentState = hash ? hash.substr(1) : 'source';
 
     // Limits the number of times the function gets called for event handlers
     function debounce(fn, delay) {
@@ -134,19 +135,28 @@ jQuery(function ($) {
         // Setup output tabs
         var allTargets = $('.output-view');
         $('a[data-toggle=tab]').each(function () {
-            var link = $(this);
-            var target = allTargets.filter(link.attr('href'));
-            var state = target.attr('id');
+            var link = $(this),
+                href = link.attr('href'),
+                target = allTargets.filter(href),
+                state = target.attr('id');
 
             link.click(function () {
                 currentState = state;
                 allTargets.addClass('hidden');
                 target.removeClass('hidden');
                 reloadOutput();
+                window.location = href;
             });
+        });
+
+        $(window).on('hashchange', function () {
+            hash = window.location.hash;
+            currentState = hash ? hash.substr(1) : 'source';
+            $('a[href=#' + currentState + ']').click();
         });
     }
 
     init();
+    $('a[href=#' + currentState + ']').click();
 
 });

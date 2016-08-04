@@ -53,6 +53,7 @@ public class CustomInjectorTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(TestModel.class, CustomAnnotationModel.class);
     }
 
     @Test

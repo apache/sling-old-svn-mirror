@@ -39,6 +39,10 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
@@ -58,124 +62,80 @@ import org.codehaus.plexus.util.DirectoryScanner;
  * <code>jspc</code> compiling JSP into the target and creating a component
  * descriptor for Declarative Services to use the JSP with the help of the
  * appropriate adapter as component.
- *
- * @goal jspc
- * @phase compile
- * @description Compile JSP Files into Servlet Classes using the same JSP
- *              Compiler as is used at runtime to compile Repository based JSP
- *              into classes.
- * @requiresDependencyResolution compile
  */
+@Mojo( name = "jspc", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class JspcMojo extends AbstractMojo implements Options {
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
     /**
      * Location of JSP source files.
-     *
-     * @parameter expression="${jspc.sourceDirectory}"
-     *            default-value="${project.build.scriptSourceDirectory}"
      */
+    @Parameter( property = "jspc.sourceDirectory", defaultValue = "${project.build.scriptSourceDirectory}")
     private File sourceDirectory;
 
     /**
      * Target folder for the compiled classes.
-     *
-     * @parameter expression="${jspc.outputDirectory}"
-     *            default-value="${project.build.outputDirectory}"
-     * @required
      */
+    @Parameter ( property = "jspc.outputDirectory", defaultValue = "${project.build.outputDirectory}")
     private String outputDirectory;
 
-    /**
-     * @parameter expression="${jspc.jasper.classdebuginfo}"
-     *            default-value="true"
-     */
+    @Parameter ( property = "jspc.jasper.classdebuginfo", defaultValue = "true")
     private boolean jasperClassDebugInfo;
 
-    /**
-     * @parameter expression="${jspc.jasper.enablePooling}" default-value="true"
-     */
+    @Parameter ( property = "jspc.jasper.enablePooling", defaultValue = "true")
     private boolean jasperEnablePooling;
 
-    /**
-     * @parameter expression="${jspc.jasper.ieClassId}"
-     *            default-value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
-     */
+    @Parameter ( property = "jspc.jasper.ieClassId", defaultValue = "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93")
     private String jasperIeClassId;
 
-    /**
-     * @parameter expression="${jspc.jasper.genStringAsCharArray}"
-     *            default-value="false"
-     */
+    @Parameter ( property = "jspc.jasper.genStringAsCharArray", defaultValue = "false")
     private boolean jasperGenStringAsCharArray;
 
-    /**
-     * @parameter expression="${jspc.jasper.keepgenerated}" default-value="true"
-     */
+    @Parameter ( property = "jspc.jasper.keepgenerated", defaultValue = "true")
     private boolean jasperKeepGenerated;
 
-    /**
-     * @parameter expression="${jspc.jasper.mappedfile}" default-value="true"
-     */
+    @Parameter ( property = "jspc.jasper.mappedfile", defaultValue = "true")
     private boolean jasperMappedFile;
 
-    /**
-     * @parameter expression="${jspc.jasper.trimSpaces}" default-value="false"
-     */
+    @Parameter ( property = "jspc.jasper.trimSpaces", defaultValue = "false")
     private boolean jasperTrimSpaces;
 
-    /**
-     * @parameter expression="${jspc.failOnError}" default-value="true"
-     */
+    @Parameter ( property = "jspc.failOnError", defaultValue = "true")
     private boolean failOnError;
 
-    /**
-     * @parameter expression="${jspc.showSuccess}" default-value="false"
-     */
+    @Parameter ( property = "jspc.showSuccess", defaultValue = "false")
     private boolean showSuccess;
 
-    /**
-     * @parameter expression="${jspc.compilerTargetVM}" default-value="1.5"
-     */
+    @Parameter ( property = "jspc.compilerTargetVM", defaultValue = "1.5")
     private String compilerTargetVM;
 
-    /**
-     * @parameter expression="${jspc.compilerSourceVM}" default-value="1.5"
-     */
+    @Parameter ( property = "jspc.compilerSourceVM", defaultValue = "1.5")
     private String compilerSourceVM;
 
     /**
      * Comma separated list of extensions of files to be compiled by the plugin.
-     *
-     * @parameter expression="${jspc.jspFileExtensions}"
-     *            default-value="jsp,jspx"
      */
+    @Parameter ( property = "jspc.jspFileExtensions", defaultValue = "jsp,jspx")
     private String jspFileExtensions;
 
-    /**
-     * @parameter expression="${jspc.servletPackage}"
-     *            default-value="org.apache.jsp"
-     */
+    @Parameter ( property = "jspc.servletPackage", defaultValue = "org.apache.jsp")
     private String servletPackage;
 
     /**
      * Included JSPs, defaults to <code>"**&#47;*.jsp"</code>
-     * @parameter
      */
+    @Parameter
     private String[] includes;
 
     /**
      * Excluded JSPs, empty by default
-     * @parameter
      */
+    @Parameter
     private String[] excludes;
 
     private Set<String> jspFileExtensionSet;

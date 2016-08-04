@@ -22,27 +22,27 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 
-class MergingResourceProvider implements ResourceProvider {
+public class MergingResourceProvider extends ResourceProvider<Void> {
 
     protected final String mergeRootPath;
 
-    protected final MergedResourcePicker picker;
+    protected final MergedResourcePicker2 picker;
 
     private final boolean readOnly;
 
     protected final boolean traverseHierarchie;
 
     MergingResourceProvider(final String mergeRootPath,
-            final MergedResourcePicker picker,
+            final MergedResourcePicker2 picker,
             final boolean readOnly,
             final boolean traverseHierarchie) {
         this.mergeRootPath = mergeRootPath;
@@ -55,8 +55,10 @@ class MergingResourceProvider implements ResourceProvider {
 
         public final String name;
         public final boolean exclude;
+        public final boolean onlyUnderlying; // if only underlying resources should be affected (and not the local ones)
 
-        public ExcludeEntry(final String value) {
+        public ExcludeEntry(final String value, boolean onlyUnderlying) {
+            this.onlyUnderlying = onlyUnderlying;
             if ( value.startsWith("!!") ) {
                 this.name = value.substring(1);
                 this.exclude = false;
@@ -78,15 +80,28 @@ class MergingResourceProvider implements ResourceProvider {
 
         private List<ExcludeEntry> entries = new ArrayList<ExcludeEntry>();
 
+        /**
+         * 
+         * @param parent the underlying resource
+         * @param traverseParent
+         */
         public ParentHidingHandler(final Resource parent, final boolean traverseParent) {
+            // evaluate the sling:hideChildren property on the current resource
             final ValueMap parentProps = parent.getValueMap();
             final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
             if (childrenToHideArray != null) {
                 for (final String value : childrenToHideArray) {
-                    final ExcludeEntry entry = new ExcludeEntry(value);
+                    final boolean onlyUnderlying;
+                    if (value.equals("*")) {
+                        onlyUnderlying = true;
+                    } else {
+                        onlyUnderlying = false;
+                    }
+                    final ExcludeEntry entry = new ExcludeEntry(value, onlyUnderlying);
                     this.entries.add(entry);
                 }
             }
+            // also check on the parent's parent whether that was hiding the parent
             if (parent != null) {
                 Resource ancestor = parent.getParent();
                 String previousAncestorName = parent.getName();
@@ -95,10 +110,10 @@ class MergingResourceProvider implements ResourceProvider {
                     final String[] ancestorChildrenToHideArray = ancestorProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
                     if (ancestorChildrenToHideArray != null) {
                         for (final String value : ancestorChildrenToHideArray) {
-                            final ExcludeEntry entry = new ExcludeEntry(value);
-                            final Boolean hides = hides(entry, previousAncestorName);
+                            final ExcludeEntry entry = new ExcludeEntry(value, false);
+                            final Boolean hides = hides(entry, previousAncestorName, true);
                             if (hides != null && hides.booleanValue() == true) {
-                                this.entries.add(new ExcludeEntry("*"));
+                                this.entries.add(new ExcludeEntry("*", false));
                                 break;
                             }
                         }
@@ -112,11 +127,17 @@ class MergingResourceProvider implements ResourceProvider {
             }
         }
 
-        public boolean isHidden(final String name) {
+        /**
+         * 
+         * @param name the name of the resource to check
+         * @param isLocalResource {@code true} if the check is on a local resource, {@code false} if the check is on an underlying/inherited resource
+         * @return {@code true} if the local/inherited resource should be hidden, otherwise {@code false}
+         */
+        public boolean isHidden(final String name, boolean isLocalResource) {
             boolean hidden = false;
             if ( this.entries != null ) {
                 for(final ExcludeEntry entry : this.entries) {
-                    Boolean result = hides(entry, name);
+                    Boolean result = hides(entry, name, isLocalResource);
                     if (result != null) {
                         hidden = result.booleanValue();
                         break;
@@ -131,10 +152,12 @@ class MergingResourceProvider implements ResourceProvider {
          *
          * @return a non-null value if the entry matches; a null value if it does not
          */
-        private Boolean hides(final ExcludeEntry entry, final String name) {
+        private Boolean hides(final ExcludeEntry entry, final String name, boolean isLocalResource) {
             Boolean result = null;
             if (entry.name.equals("*") || entry.name.equals(name)) {
-                result = Boolean.valueOf(!entry.exclude);
+                if ((isLocalResource && !entry.onlyUnderlying) || !isLocalResource) {
+                    result = Boolean.valueOf(!entry.exclude);
+                }
             }
             return result;
         }
@@ -202,16 +225,27 @@ class MergingResourceProvider implements ResourceProvider {
         return null;
     }
 
+    @Override
+    public Resource getParent(ResolveContext<Void> ctx, Resource child) {
+        final String parentPath = ResourceUtil.getParent(child.getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return this.getResource(ctx, parentPath, ResourceContext.EMPTY_CONTEXT, child);
+    }
+
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(final ResourceResolver resolver, final String path) {
+    @Override
+    public Resource getResource(final ResolveContext<Void> ctx, final String path, final ResourceContext rCtx, final Resource parent) {
         final String relativePath = getRelativePath(path);
 
         if (relativePath != null) {
             final ResourceHolder holder = new ResourceHolder(ResourceUtil.getName(path));
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
+            final ResourceResolver resolver = ctx.getResourceResolver();
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath, parent).iterator();
 
             if (!resources.hasNext()) {
                 return null;
@@ -227,9 +261,12 @@ class MergingResourceProvider implements ResourceProvider {
                     isUnderlying = false;
                 } else {
                     // check parent for hiding
-                    // SLING 3521 : if parent is not readable, nothing is hidden
-                    final Resource parent = resource.getParent();
-                    hidden = (parent == null ? false : new ParentHidingHandler(parent, this.traverseHierarchie).isHidden(holder.name));
+                    // SLING-3521 : if parent is not readable, nothing is hidden
+                    final Resource resourceParent = resource.getParent();
+                    hidden = resourceParent != null && new ParentHidingHandler(resourceParent, this.traverseHierarchie).isHidden(holder.name, true);
+
+                    // TODO Usually, the parent does not exist if the resource is a NonExistingResource. Ideally, this
+                    // common case should be optimised
                 }
                 if (hidden) {
                     holder.resources.clear();
@@ -246,15 +283,16 @@ class MergingResourceProvider implements ResourceProvider {
     /**
      * {@inheritDoc}
      */
-    public Iterator<Resource> listChildren(Resource resource) {
-        final ResourceResolver resolver = resource.getResourceResolver();
+    @Override
+    public Iterator<Resource> listChildren(final ResolveContext<Void> ctx, final Resource parent) {
+        final ResourceResolver resolver = parent.getResourceResolver();
 
-        final String relativePath = getRelativePath(resource.getPath());
+        final String relativePath = getRelativePath(parent.getPath());
 
         if (relativePath != null) {
             final List<ResourceHolder> candidates = new ArrayList<ResourceHolder>();
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath, parent).iterator();
 
             boolean isUnderlying = true;
             while (resources.hasNext()) {
@@ -262,19 +300,38 @@ class MergingResourceProvider implements ResourceProvider {
                 final ParentHidingHandler handler = !isUnderlying ? new ParentHidingHandler(parentResource, this.traverseHierarchie) : null;
                 isUnderlying = false;
 
+                // remove the hidden child resources from the underlying resource
+                if (handler != null) {
+                    final Iterator<ResourceHolder> iter = candidates.iterator();
+                    while (iter.hasNext()) {
+                        final ResourceHolder holder = iter.next();
+                        if (handler.isHidden(holder.name, false)) {
+                            iter.remove();
+                        }
+                    }
+                }
+                
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
                     ResourceHolder holder = null;
-                    for (final ResourceHolder current : candidates) {
+                    int childPositionInCandidateList = -1;
+                    // check if is this an overlaid resource (i.e. has the resource with the same name already be exposed through the underlying resource)
+                    for (int index=0; index < candidates.size(); index++) {
+                        ResourceHolder current = candidates.get(index);
                         if (current.name.equals(rsrcName)) {
                             holder = current;
+                            childPositionInCandidateList = index;
                             break;
                         }
                     }
                     if (holder == null) {
+                        // remove the hidden child resources from the local resource
+                        if (handler != null && handler.isHidden(rsrcName, true)) {
+                            continue; // skip this child
+                        }
                         holder = new ResourceHolder(rsrcName);
                         candidates.add(holder);
-                    }
+                    } 
                     holder.resources.add(child);
 
                     // Check if children need reordering
@@ -297,17 +354,15 @@ class MergingResourceProvider implements ResourceProvider {
                     if (orderBeforeIndex > -1) {
                         candidates.add(orderBeforeIndex, holder);
                         candidates.remove(candidates.size() - 1);
-                    }
-                }
-                if (handler != null) {
-                    final Iterator<ResourceHolder> iter = candidates.iterator();
-                    while (iter.hasNext()) {
-                        final ResourceHolder holder = iter.next();
-                        if (handler.isHidden(holder.name)) {
-                            iter.remove();
+                    } else {
+                        // if there was no explicit order, just assume the order given by the overlying resource
+                        if (childPositionInCandidateList != -1) {
+                            candidates.add(holder);
+                            candidates.remove(childPositionInCandidateList);
                         }
                     }
                 }
+                
             }
             final List<Resource> children = new ArrayList<Resource>();
             for (final ResourceHolder holder : candidates) {
@@ -321,14 +376,6 @@ class MergingResourceProvider implements ResourceProvider {
         }
 
         return null;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public Resource getResource(final ResourceResolver resolver, final HttpServletRequest request, final String path) {
-        return getResource(resolver, path);
     }
 
 }

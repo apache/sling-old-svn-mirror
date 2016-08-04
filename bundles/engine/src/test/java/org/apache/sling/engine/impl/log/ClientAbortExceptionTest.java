@@ -19,31 +19,25 @@ package org.apache.sling.engine.impl.log;
 import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.engine.impl.helper.ClientAbortException;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /** Verify that RequestLoggerResponse wraps IOException in ClientAbortException */
-@RunWith(JMock.class)
 public class ClientAbortExceptionTest {
 
     private Mockery context;
     private RequestLoggerResponse r;
-    
+
     @Before
     public void setup() throws IOException {
-        context = new JUnit4Mockery() {{
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }};
-        
+        context = new Mockery();
+
         final ServletOutputStream sos = new ServletOutputStream() {
             @Override
             public void write(int b) throws IOException {
@@ -59,37 +53,46 @@ public class ClientAbortExceptionTest {
             public void close() throws IOException {
                 throw new IOException("Always fails, on purpose");
             }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
+            }
         };
         final HttpServletResponse raw =  context.mock(HttpServletResponse.class);
         context.checking(new Expectations() {{
             allowing(raw).getOutputStream();
             will(returnValue(sos));
         }});
-        
+
         r = new RequestLoggerResponse(raw);
     }
-    
+
     @Test(expected=ClientAbortException.class)
     public void writeInt() throws IOException {
         r.getOutputStream().write(42);
     }
-    
+
     @Test(expected=ClientAbortException.class)
     public void writeSimpleByteArray() throws IOException {
         r.getOutputStream().write("foo".getBytes());
     }
-    
+
     @Test(expected=ClientAbortException.class)
     public void writeByteArray() throws IOException {
         final byte [] data = "bar".getBytes();
         r.getOutputStream().write(data, 0, data.length);
     }
-    
+
     @Test(expected=ClientAbortException.class)
     public void flush() throws IOException {
         r.getOutputStream().flush();
     }
-    
+
     @Test(expected=ClientAbortException.class)
     public void close() throws IOException {
         r.getOutputStream().close();

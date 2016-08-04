@@ -16,10 +16,18 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -37,6 +45,7 @@ import org.apache.sling.models.testmodels.classes.RequestOSGiModel;
 import org.apache.sling.models.testmodels.classes.SetOSGiModel;
 import org.apache.sling.models.testmodels.classes.SimpleOSGiModel;
 import org.apache.sling.models.testmodels.interfaces.ServiceInterface;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,6 +84,7 @@ public class OSGiInjectionTest {
         factory.bindInjector(injectorFactory, new ServicePropertiesMap(1, 1));
 
         bindings.setSling(helper);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimpleOSGiModel.class, ListOSGiModel.class, RequestOSGiModel.class, ArrayOSGiModel.class, SetOSGiModel.class, OptionalListOSGiModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.ListOSGiModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.SimpleOSGiModel.class, CollectionOSGiModel.class, OptionalArrayOSGiModel.class);
     }
 
     @Test
@@ -96,27 +106,6 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testRequestOSGiModelField() throws Exception {
-        ServiceInterface service = mock(ServiceInterface.class);
-
-        SlingHttpServletRequest request = mock(SlingHttpServletRequest.class);
-        when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
-
-        when(helper.getServices(ServiceInterface.class, null)).thenReturn(new ServiceInterface[] { service });
-
-        RequestOSGiModel model = factory.getAdapter(request, RequestOSGiModel.class);
-        assertNotNull(model);
-        assertNotNull(model.getService());
-        assertEquals(service, model.getService());
-
-        verify(bundleContext).registerService(eq(Runnable.class.getName()), eq(factory), any(Dictionary.class));
-        verify(bundleContext).addBundleListener(any(BundleListener.class));
-        verify(bundleContext).registerService(eq(Object.class.getName()), any(Object.class), any(Dictionary.class));
-        verify(bundleContext).getBundles();
-        verifyNoMoreInteractions(bundleContext);
-    }
-
-    @Test
     public void testListOSGiModelField() throws Exception {
         ServiceReference ref1 = mock(ServiceReference.class);
         ServiceInterface service1 = mock(ServiceInterface.class);
@@ -133,9 +122,9 @@ public class OSGiInjectionTest {
         ListOSGiModel model = factory.getAdapter(res, ListOSGiModel.class);
         assertNotNull(model);
         assertNotNull(model.getServices());
-        assertEquals(2, model.getServices().size());
-        assertEquals(service1, model.getServices().get(0));
-        assertEquals(service2, model.getServices().get(1));
+        // the order on those is non deterministic as the ServiceReference.compareTo() is always returning 0
+        // the real order is tested in the IT
+        assertThat(model.getServices(), Matchers.containsInAnyOrder(service1, service2));
 
         verifyNoMoreInteractions(res);
     }
@@ -157,9 +146,9 @@ public class OSGiInjectionTest {
         ArrayOSGiModel model = factory.getAdapter(res, ArrayOSGiModel.class);
         assertNotNull(model);
         assertNotNull(model.getServices());
-        assertEquals(2, model.getServices().length);
-        assertEquals(service1, model.getServices()[0]);
-        assertEquals(service2, model.getServices()[1]);
+        // the order on those is non deterministic as the ServiceReference.compareTo() is always returning 0
+        // the real order is tested in the IT
+        assertThat(Arrays.asList(model.getServices()), Matchers.containsInAnyOrder(service1, service2));
 
         verifyNoMoreInteractions(res);
     }
@@ -204,10 +193,9 @@ public class OSGiInjectionTest {
         CollectionOSGiModel model = factory.getAdapter(res, CollectionOSGiModel.class);
         assertNotNull(model);
         assertNotNull(model.getServices());
-        assertEquals(2, model.getServices().size());
-
-        assertTrue(model.getServices().contains(service1));
-        assertTrue(model.getServices().contains(service2));
+        // the order on those is non deterministic as the ServiceReference.compareTo() is always returning 0
+        // the real order is tested in the IT
+        assertThat(model.getServices(), Matchers.containsInAnyOrder(service1, service2));
 
         verifyNoMoreInteractions(res);
     }
@@ -273,9 +261,9 @@ public class OSGiInjectionTest {
                 = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.ListOSGiModel.class);
         assertNotNull(model);
         assertNotNull(model.getServices());
-        assertEquals(2, model.getServices().size());
-        assertEquals(service1, model.getServices().get(0));
-        assertEquals(service2, model.getServices().get(1));
+        // the order on those is non deterministic as the ServiceReference.compareTo() is always returning 0
+        // the real order is tested in the IT
+        assertThat(model.getServices(), Matchers.containsInAnyOrder(service1, service2));
 
         verifyNoMoreInteractions(res);
     }

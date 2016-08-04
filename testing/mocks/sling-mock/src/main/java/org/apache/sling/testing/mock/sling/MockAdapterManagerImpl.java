@@ -22,26 +22,34 @@ import static org.apache.sling.api.adapter.AdapterFactory.ADAPTABLE_CLASSES;
 import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.adapter.Adaption;
+import org.apache.sling.adapter.internal.AdapterFactoryDescriptor;
+import org.apache.sling.adapter.internal.AdapterFactoryDescriptorMap;
+import org.apache.sling.adapter.internal.AdaptionImpl;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -49,12 +57,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a copy of org.apache.sling.adapter.internal.AdpaterManagerImpl from Sling Adapter 2.1.0,
+ * This is a copy of org.apache.sling.adapter.internal.AdpaterManagerImpl from Sling Adapter 2.1.6,
  * with all calls to SyntheticResource.setAdapterManager/unsetAdapterManager disabled, because this would
  * break the {@link ThreadsafeMockAdapterManagerWrapper} concept.
+ * Additionally the reference to PackageAdmin is disabled.
  */
 @Component(immediate=true)
 @Service
+@Properties({
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
+    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
+
+})
 @Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
 cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class MockAdapterManagerImpl implements AdapterManager {
@@ -101,6 +115,12 @@ public class MockAdapterManagerImpl implements AdapterManager {
      */
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private volatile EventAdmin eventAdmin;
+
+    // DISABLED IN THIS COPY OF CLASS
+    /*
+    @Reference
+    private PackageAdmin packageAdmin;
+    */
 
     // ---------- AdapterManager interface -------------------------------------
 
@@ -240,6 +260,21 @@ public class MockAdapterManagerImpl implements AdapterManager {
             return;
         }
 
+        // DISABLED IN THIS COPY OF CLASS
+        /*
+        for (String clazz : adaptables) {
+            if (!checkPackage(packageAdmin, clazz)) {
+                log.warn("Adaptable class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
+            }
+        }
+
+        for (String clazz : adapters) {
+            if (!checkPackage(packageAdmin, clazz)) {
+                log.warn("Adapter class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
+            }
+        }
+        */
+
         final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
                 reference, adapters);
 
@@ -260,16 +295,51 @@ public class MockAdapterManagerImpl implements AdapterManager {
         // clear the factory cache to force rebuild on next access
         this.factoryCache.clear();
 
+        // register adaption
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
+        props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
+
+        ServiceRegistration adaptionRegistration = this.context.getBundleContext().registerService(
+                Adaption.class.getName(), AdaptionImpl.INSTANCE, props);
+        if (log.isDebugEnabled()) {
+            log.debug("Registered service {} with {} : {} and {} : {}", new Object[] { Adaption.class.getName(),
+                    SlingConstants.PROPERTY_ADAPTABLE_CLASSES, Arrays.toString(adaptables),
+                    SlingConstants.PROPERTY_ADAPTER_CLASSES, Arrays.toString(adapters) });
+        }
+        factoryDesc.setAdaption(adaptionRegistration);
+
         // send event
         final EventAdmin localEA = this.eventAdmin;
         if ( localEA != null ) {
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
-            props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
             localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_ADDED,
                     props));
         }
     }
+    
+    static String getPackageName(String clazz) {
+        final int lastDot = clazz.lastIndexOf('.');
+        return lastDot <= 0 ? "" : clazz.substring(0, lastDot);
+    }
+
+    /**
+     * Check that the package containing the class is exported or is a java.*
+     * class.
+     * 
+     * @param packageAdmin the PackageAdmin service
+     * @param clazz the class name
+     * @return true if the package is exported
+     */
+    // DISABLED IN THIS COPY OF CLASS
+    /*
+    static boolean checkPackage(PackageAdmin packageAdmin, String clazz) {
+        final String packageName = getPackageName(clazz); 
+        if (packageName.startsWith("java.")) {
+            return true;
+        }
+        return packageAdmin.getExportedPackage(packageName) != null;
+    }
+    */
 
     /**
      * Unregisters the {@link AdapterFactory} referred to by the service
@@ -289,13 +359,25 @@ public class MockAdapterManagerImpl implements AdapterManager {
 
         boolean factoriesModified = false;
         AdapterFactoryDescriptorMap adfMap = null;
+
+        AdapterFactoryDescriptor removedDescriptor = null;
         for (final String adaptable : adaptables) {
             synchronized ( this.descriptors ) {
                 adfMap = this.descriptors.get(adaptable);
             }
             if (adfMap != null) {
                 synchronized ( adfMap ) {
-                    factoriesModified |= (adfMap.remove(reference) != null);
+                    AdapterFactoryDescriptor factoryDesc = adfMap.remove(reference);
+                    if (factoryDesc != null) {
+                        factoriesModified = true;
+                        // A single ServiceReference should correspond to a single Adaption service being registered
+                        // Since the code paths above does not fully guarantee it though, let's keep this check in place
+                        if (removedDescriptor != null && removedDescriptor != factoryDesc) {
+                            log.error("When unregistering reference {} got duplicate service descriptors {} and {}. Unregistration of {} services may be incomplete.",
+                                    new Object[] { reference, removedDescriptor, factoryDesc, Adaption.class.getName()} );
+                        }
+                        removedDescriptor = factoryDesc;
+                    }
                 }
             }
         }
@@ -304,6 +386,16 @@ public class MockAdapterManagerImpl implements AdapterManager {
         // removed
         if (factoriesModified) {
             this.factoryCache.clear();
+        }
+
+        // unregister adaption
+        if (removedDescriptor != null) {
+            removedDescriptor.getAdaption().unregister();
+            if (log.isDebugEnabled()) {
+                log.debug("Unregistered service {} with {} : {} and {} : {}", new Object[] { Adaption.class.getName(),
+                        SlingConstants.PROPERTY_ADAPTABLE_CLASSES, Arrays.toString(adaptables),
+                        SlingConstants.PROPERTY_ADAPTER_CLASSES, Arrays.toString(adapters) });
+            }
         }
 
         // send event
@@ -426,64 +518,4 @@ public class MockAdapterManagerImpl implements AdapterManager {
             }
         }
     }
-
-
-    /**
-     * The <code>AdapterFactoryDescriptor</code> is an entry in the
-     * {@link AdapterFactoryDescriptorMap} conveying the list of adapter (target)
-     * types and the respective {@link AdapterFactory}.
-     */
-    private static class AdapterFactoryDescriptor {
-
-        private volatile AdapterFactory factory;
-
-        private final String[] adapters;
-
-        private final ServiceReference reference;
-
-        private final ComponentContext context;
-
-        public AdapterFactoryDescriptor(
-                final ComponentContext context,
-                final ServiceReference reference,
-                final String[] adapters) {
-            this.reference = reference;
-            this.context = context;
-            this.adapters = adapters;
-        }
-
-        public AdapterFactory getFactory() {
-            if ( factory == null ) {
-                factory = (AdapterFactory) context.locateService(
-                        "AdapterFactory", reference);
-            }
-            return factory;
-        }
-
-        public String[] getAdapters() {
-            return adapters;
-        }
-    }
-
-    /**
-     * The <code>AdapterFactoryDescriptorMap</code> is a sorted map of
-     * {@link AdapterFactoryDescriptor} instances indexed (and ordered) by their
-     * {@link ServiceReference}. This map is used to organize the
-     * registered {@link org.apache.sling.api.adapter.AdapterFactory} services for
-     * a given adaptable type.
-     * <p>
-     * Each entry in the map is a {@link AdapterFactoryDescriptor} thus enabling the
-     * registration of multiple factories for the same (adaptable, adapter) type
-     * tuple. Of course only the first entry (this is the reason for having a sorted
-     * map) for such a given tuple is actually being used. If that first instance is
-     * removed the eventual second instance may actually be used instead.
-     */
-    private static class AdapterFactoryDescriptorMap extends
-            TreeMap<ServiceReference, AdapterFactoryDescriptor> {
-
-        private static final long serialVersionUID = 2L;
-
-    }
-
-    
 }

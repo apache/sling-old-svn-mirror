@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.servlet.GenericServlet;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -63,7 +64,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
-import org.osgi.service.http.HttpService;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,11 +96,6 @@ public class SlingMainServlet extends GenericServlet {
     @Property(boolValue=DEFAULT_ALLOW_TRACE)
     public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
 
-    public static final boolean DEFAULT_FILTER_COMPAT_MODE = false;
-
-    @Property(boolValue=DEFAULT_FILTER_COMPAT_MODE)
-    public static final String PROP_FILTER_COMPAT_MODE = "sling.filter.compat.mode";
-
     @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
     private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
 
@@ -111,15 +108,12 @@ public class SlingMainServlet extends GenericServlet {
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
 
 
-    @Property(value = {"X-Content-Type-Options=nosniff"},
+    @Property(value = {"X-Content-Type-Options=nosniff", "X-Frame-Options=SAMEORIGIN"},
             label = "Additional response headers",
             description = "Provides mappings for additional response headers "
                 + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue' ",
             unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_ADDITIONAL_RESPONSE_HEADERS = "sling.additional.response.headers";
-
-    @Reference
-    private HttpService httpService;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile AdapterManager adapterManager;
@@ -132,6 +126,11 @@ public class SlingMainServlet extends GenericServlet {
      * be the root, aka "<code>/</code>" (value is "/").
      */
     private static final String SLING_ROOT = "/";
+
+    /**
+     * The name of the servlet context for Sling
+     */
+    public static final String SERVLET_CONTEXT_NAME = "org.apache.sling";
 
     /**
      * The name of the product to report in the {@link #getServerInfo()} method
@@ -175,9 +174,13 @@ public class SlingMainServlet extends GenericServlet {
 
     private final SlingRequestProcessorImpl requestProcessor = new SlingRequestProcessorImpl();
 
-    private ServiceRegistration requestProcessorRegistration;
+    private ServiceRegistration<SlingRequestProcessor> requestProcessorRegistration;
 
-    private ServiceRegistration requestProcessorMBeanRegistration;
+    private ServiceRegistration<RequestProcessorMBean> requestProcessorMBeanRegistration;
+
+    private ServiceRegistration<ServletContextHelper> contextRegistration;
+
+    private ServiceRegistration<Servlet> servletRegistration;
 
     private String configuredServerInfo;
 
@@ -379,28 +382,35 @@ public class SlingMainServlet extends GenericServlet {
             RequestData.DEFAULT_MAX_CALL_COUNTER));
         RequestData.setSlingMainServlet(this);
 
-        // configure default request parameter encoding
-        // log a message if such configuration exists ....
+        // Warn about the obsolete parameter encoding configuration
         if (componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING) != null) {
-            log.warn("Configure default request parameter encoding with 'org.apache.sling.parameters.config' configuration; the property "
+            log.warn("Please configure the default request parameter encoding using "
+                + "the 'org.apache.sling.engine.parameters' configuration PID; the property "
                 + PROP_DEFAULT_PARAMETER_ENCODING
                 + "="
                 + componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING)
-                + " is ignored");
+                + " is obsolete and ignored");
         }
 
-        // register the servlet and resources
-        try {
-            Dictionary<String, String> servletConfig = toStringConfig(configuration);
+        // register the servlet context
+        final Dictionary<String, String> contextProperties = new Hashtable<>();
+        contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, SERVLET_CONTEXT_NAME);
+        contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, SLING_ROOT);
+        contextProperties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Engine Servlet Context Helper");
+        contextProperties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-            this.httpService.registerServlet(SLING_ROOT, this, servletConfig,
-                slingHttpContext);
+        this.contextRegistration = bundleContext.registerService(ServletContextHelper.class, this.slingHttpContext, contextProperties);
 
-            log.info("{} ready to serve requests", this.getServerInfo());
+        // register the servlet
+        final Dictionary<String, String> servletConfig = toStringConfig(configuration);
+        servletConfig.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SERVLET_CONTEXT_NAME + ")");
+        servletConfig.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, SLING_ROOT);
+        servletConfig.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Engine Main Servlet");
+        servletConfig.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        this.servletRegistration = bundleContext.registerService(Servlet.class, this, servletConfig);
 
-        } catch (Exception e) {
-            log.error("Cannot register " + this.getServerInfo(), e);
-        }
+        log.info("{} ready to serve requests", this.getServerInfo());
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
@@ -410,8 +420,7 @@ public class SlingMainServlet extends GenericServlet {
         // the HttpService as filter initialization may cause the servlet
         // context to be required (see SLING-42)
         filterManager = new ServletFilterManager(bundleContext,
-            slingServletContext,
-            PropertiesUtil.toBoolean(componentConfig.get(PROP_FILTER_COMPAT_MODE), DEFAULT_FILTER_COMPAT_MODE));
+            slingServletContext);
         filterManager.open();
         requestProcessor.setFilterManager(filterManager);
 
@@ -444,7 +453,7 @@ public class SlingMainServlet extends GenericServlet {
             mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine,service=RequestProcessor");
 
             RequestProcessorMBeanImpl mbean = new RequestProcessorMBeanImpl();
-            requestProcessorMBeanRegistration = bundleContext.registerService(RequestProcessorMBean.class.getName(), mbean, mbeanProps);
+            requestProcessorMBeanRegistration = bundleContext.registerService(RequestProcessorMBean.class, mbean, mbeanProps);
             requestProcessor.setMBean(mbean);
         } catch (Throwable t) {
             log.debug("Unable to register mbean");
@@ -455,7 +464,7 @@ public class SlingMainServlet extends GenericServlet {
         srpProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         srpProps.put(Constants.SERVICE_DESCRIPTION, "Sling Request Processor");
         requestProcessorRegistration = bundleContext.registerService(
-            SlingRequestProcessor.NAME, requestProcessor, srpProps);
+            SlingRequestProcessor.class, requestProcessor, srpProps);
     }
 
     @Override
@@ -498,13 +507,21 @@ public class SlingMainServlet extends GenericServlet {
 
         // second unregister the servlet context *before* unregistering
         // and destroying the the sling main servlet
+        if ( this.contextRegistration != null ) {
+            this.contextRegistration.unregister();
+            this.contextRegistration = null;
+        }
         if (slingServletContext != null) {
             slingServletContext.dispose();
             slingServletContext = null;
         }
 
         // third unregister and destroy the sling main servlet
-        httpService.unregister(SLING_ROOT);
+        // unregister servlet
+        if ( this.servletRegistration != null ) {
+            this.servletRegistration.unregister();
+            this.servletRegistration = null;
+        }
 
         // dispose of request listener manager after unregistering the servlet
         // to prevent a potential NPE in the service method

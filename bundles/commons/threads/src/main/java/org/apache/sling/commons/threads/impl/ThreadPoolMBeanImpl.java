@@ -100,6 +100,10 @@ class ThreadPoolMBeanImpl extends StandardMBean implements ThreadPoolMBean {
         }
     }
 
+    public long getMaxThreadAge() {
+        return this.entry.getConfig().getMaxThreadAge();
+    }
+
     public long getKeepAliveTime() {
         return this.entry.getConfig().getKeepAliveTime();
     }

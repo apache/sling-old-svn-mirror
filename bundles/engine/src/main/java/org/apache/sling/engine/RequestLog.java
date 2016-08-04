@@ -18,7 +18,7 @@
  */
 package org.apache.sling.engine;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>RequestLog</code> interface defines the API to be implemented by

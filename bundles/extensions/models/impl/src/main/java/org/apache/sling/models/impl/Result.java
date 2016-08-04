@@ -83,7 +83,7 @@ public class Result<SuccessObjectType> {
      * @return {@code true} in case this object represents a success, otherwise
      *         {@code false}
      */
-    public boolean wasSuccessfull() {
+    public boolean wasSuccessful() {
         return object != null;
     }
 

@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.test-services</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.9-SNAPSHOT</version>
+    <version>2.0.11-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing Services</name>
     <description>
@@ -113,7 +113,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
-            <version>2.2.8</version>
+            <version>2.11.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -139,12 +139,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.4.2</version>
+            <version>2.11.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.1.0</version>
+            <version>2.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -188,6 +188,18 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.servlets.post</artifactId>
             <version>2.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.repoinit.parser</artifactId>
+            <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.repoinit</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

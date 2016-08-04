@@ -19,6 +19,7 @@
 package org.apache.sling.models.impl;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -61,8 +62,38 @@ final class AdapterImplementations {
     public void setStaticInjectAnnotationProcessorFactories(
             Collection<StaticInjectAnnotationProcessorFactory> factories) {
         this.sortedStaticInjectAnnotationProcessorFactories = factories.toArray(new StaticInjectAnnotationProcessorFactory[factories.size()]);
+        updateProcessorFactoriesInModelClasses();
     }
-
+    
+    /**
+     * Updates all {@link ModelClass} instances with updates list of static inject annotation processor factories.
+     */
+    private void updateProcessorFactoriesInModelClasses() {
+        Iterator<ModelClass<?>> items = modelClasses.values().iterator();
+        updateProcessorFactoriesInModelClasses(items);        
+        Iterator<ConcurrentNavigableMap<String,ModelClass<?>>> mapItems = adapterImplementations.values().iterator();
+        while (mapItems.hasNext()) {
+            ConcurrentNavigableMap<String,ModelClass<?>> mapItem = mapItems.next();
+            updateProcessorFactoriesInModelClasses(mapItem.values().iterator());
+        }
+    }
+    private void updateProcessorFactoriesInModelClasses(Iterator<ModelClass<?>> items) {
+        while (items.hasNext()) {
+            ModelClass<?> item = items.next();
+            item.updateProcessorFactories(sortedStaticInjectAnnotationProcessorFactories);
+        }
+    }
+    
+    /** Add implementation mapping for the given model class (implementation is the model class itself).
+     * Only used for testing purposes. Use {@link #add(Class, Class)} in case you want to register a different implementation.
+     * @param modelClasses the model classes to register
+     */
+    protected void addClassesAsAdapterAndImplementation(Class<?>... modelClasses) {
+        for (Class<?> modelClass : modelClasses) {
+            add(modelClass, modelClass);
+        }
+    }
+    
     /**
      * Add implementation mapping for the given adapter type.
      * @param adapterType Adapter type
@@ -162,6 +193,28 @@ final class AdapterImplementations {
         }
 
         return null;
+    }
+
+    /**
+     * @param adapterType the type to check
+     * @return {@code true} in case the given type is a model (may be with a different adapter class)
+     */
+    @SuppressWarnings("unchecked")
+    public <ModelType> boolean isModelClass(Class<ModelType> adapterType) {
+        String key = adapterType.getName();
+        
+        // lookup in cache for models without adapter classes
+        ModelClass<ModelType> modelClass = (ModelClass<ModelType>)modelClasses.get(key);
+        if (modelClass!=null) {
+            return true;
+        }
+
+        // not found? look in cache with adapter classes
+        ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
+        if (implementations==null || implementations.isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
 }

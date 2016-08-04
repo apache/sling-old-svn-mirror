@@ -21,14 +21,15 @@ package org.apache.sling.testing.mock.osgi;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -37,32 +38,41 @@ import com.google.common.collect.ImmutableList;
 /**
  * Mock {@link ServiceRegistration} implementation.
  */
-class MockServiceRegistration implements ServiceRegistration, Comparable<MockServiceRegistration> {
+class MockServiceRegistration<T> implements ServiceRegistration<T>, Comparable<MockServiceRegistration<T>> {
 
     private static volatile long serviceCounter;
 
     private final Long serviceId;
     private final Set<String> clazzes;
-    private final Object service;
+    private final T service;
     private Dictionary<String, Object> properties;
-    private final ServiceReference serviceReference;
+    private final ServiceReference<T> serviceReference;
     private final MockBundleContext bundleContext;
 
-    public MockServiceRegistration(final Bundle bundle, final String[] clazzes, final Object service,
+    @SuppressWarnings("unchecked")
+    public MockServiceRegistration(final Bundle bundle, final String[] clazzes, final T service,
             final Dictionary<String, Object> properties, MockBundleContext bundleContext) {
         this.serviceId = ++serviceCounter;
         this.clazzes = new HashSet<String>(ImmutableList.copyOf(clazzes));
-        this.service = service;
+        
+        if (service instanceof ServiceFactory) {
+            this.service = ((ServiceFactory<T>)service).getService(bundleContext.getBundle(), this);
+        }
+        else {
+            this.service = service;
+        }
+        
         this.properties = properties != null ? properties : new Hashtable<String,Object>();
         this.properties.put(Constants.SERVICE_ID, this.serviceId);
         this.properties.put(Constants.OBJECTCLASS, clazzes);
-        this.serviceReference = new MockServiceReference(bundle, this);
+        this.serviceReference = new MockServiceReference<T>(bundle, this);
         this.bundleContext = bundleContext;
+        
         readOsgiMetadata();
     }
 
     @Override
-    public ServiceReference getReference() {
+    public ServiceReference<T> getReference() {
         return this.serviceReference;
     }
 
@@ -91,7 +101,7 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
         return clazzes;
     }
 
-    Object getService() {
+    T getService() {
         return this.service;
     }
     
@@ -109,13 +119,12 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
     }
 
     @Override
-    public int compareTo(MockServiceRegistration obj) {
+    public int compareTo(MockServiceRegistration<T> obj) {
         return serviceId.compareTo(obj.serviceId);
     }
 
     /**
-     * Try to read OSGI-metadata from /OSGI-INF and read all implemented
-     * interfaces and service properties
+     * Try to read OSGI-metadata from /OSGI-INF and read all implemented interfaces
      */
     private void readOsgiMetadata() {
         Class<?> serviceClass = service.getClass();
@@ -126,12 +135,11 @@ class MockServiceRegistration implements ServiceRegistration, Comparable<MockSer
 
         // add service interfaces from OSGi metadata
         clazzes.addAll(metadata.getServiceInterfaces());
+    }
 
-        // add properties from OSGi metadata
-        Map<String, Object> props = metadata.getProperties();
-        for (Map.Entry<String, Object> entry : props.entrySet()) {
-            properties.put(entry.getKey(), entry.getValue());
-        }
+    @Override
+    public String toString() {
+        return "#" + serviceId + " [" + StringUtils.join(clazzes, ",") + "]: " + service.toString();
     }
 
 }

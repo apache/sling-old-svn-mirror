@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.bgservlets.RuntimeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +42,17 @@ import org.slf4j.LoggerFactory;
 @Service
 @SuppressWarnings("serial")
 @Property(name = "sling.servlet.paths", value = "/system/bgservlets/test")
-public class BackgroundTestServlet extends SlingSafeMethodsServlet {
+public class BackgroundTestServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @Override
+    protected void doPost(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
+        doGet(request, response);
+    }
+    
     @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
@@ -92,7 +99,7 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
             w.println("All done.");
             w.flush();
         } catch (Throwable t) {
-            log.info("Exception in doGet", t);
+            log.info("Exception in service method", t);
         }
     }
 

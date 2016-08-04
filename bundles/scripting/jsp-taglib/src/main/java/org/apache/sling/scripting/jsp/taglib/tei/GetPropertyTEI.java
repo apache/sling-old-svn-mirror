@@ -26,13 +26,13 @@ public class GetPropertyTEI extends AbstractVarTEI {
     @Override
     protected String getClassName(TagData data) {
         final Object defaultValue = data.getAttribute(ATTR_DEFAULT_VALUE);
-        final String className = data.getAttributeString(ATTR_RETURN_CLASS);
+        final String className = safeGetStringAttribute(data, ATTR_RETURN_CLASS, OBJECT_CLASS_NAME);
         if (defaultValue != null) {
             return defaultValue.getClass().getName();
         } else if (className != null){
             return className;
         } else {
-        	return Object.class.getName();
+            return OBJECT_CLASS_NAME;
         }
     }
 }

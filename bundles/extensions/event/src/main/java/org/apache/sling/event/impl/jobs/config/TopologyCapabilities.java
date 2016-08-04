@@ -28,7 +28,6 @@ import java.util.TreeMap;
 
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
-import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
@@ -173,7 +172,7 @@ public class TopologyCapabilities {
      * @return {@code true} if still active.
      */
     public boolean isActive() {
-        return this.active && this.jobManagerConfiguration.isActive(); // TODO SLING-4634 && this.view.isCurrent();
+        return this.active && this.jobManagerConfiguration.isActive() && this.view.isCurrent();
     }
 
     /**
@@ -215,7 +214,7 @@ public class TopologyCapabilities {
      * Return the potential targets (Sling IDs) sorted by ID
      * @return A list of instance descriptions. The list might be empty.
      */
-    public List<InstanceDescription> getPotentialTargets(final String jobTopic, final Map<String, Object> jobProperties) {
+    public List<InstanceDescription> getPotentialTargets(final String jobTopic) {
         // calculate potential targets
         final List<InstanceDescription> potentialTargets = new ArrayList<InstanceDescription>();
 
@@ -236,11 +235,6 @@ public class TopologyCapabilities {
                 pos = jobTopic.lastIndexOf('/', pos - 1);
             } while ( pos > 0 );
         }
-        // third: bridged consumers
-        final List<InstanceDescription> bridgedTargets = (jobProperties != null && jobProperties.containsKey(JobImpl.PROPERTY_BRIDGED_EVENT) ? this.instanceCapabilities.get("/") : null);
-        if ( bridgedTargets != null ) {
-            potentialTargets.addAll(bridgedTargets);
-        }
         Collections.sort(potentialTargets, this.instanceComparator);
 
         return potentialTargets;
@@ -251,7 +245,7 @@ public class TopologyCapabilities {
      */
     public String detectTarget(final String jobTopic, final Map<String, Object> jobProperties,
             final QueueInfo queueInfo) {
-        final List<InstanceDescription> potentialTargets = this.getPotentialTargets(jobTopic, jobProperties);
+        final List<InstanceDescription> potentialTargets = this.getPotentialTargets(jobTopic);
         logger.debug("Potential targets for {} : {}", jobTopic, potentialTargets);
         String createdOn = null;
         if ( jobProperties != null ) {

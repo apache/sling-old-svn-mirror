@@ -29,8 +29,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
-import org.eclipse.ui.IPageLayout;
-import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.ResourceUtil;
@@ -109,9 +107,7 @@ public class LinkHelper implements ILinkHelper {
 			return;
 		}
 		final IFile selectedFile = (IFile)resource;
-		final IEditorReference[] editorReferences = aPage.getEditorReferences();
-		for (int i = 0; i < editorReferences.length; i++) {
-			final IEditorReference reference = editorReferences[i];
+		for (final IEditorReference reference : aPage.getEditorReferences()) {
 			if (reference==null) {
 				continue;
 			}

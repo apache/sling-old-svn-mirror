@@ -17,8 +17,9 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -29,11 +30,11 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
-import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -49,9 +50,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.quartz.impl.DirectSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.quartz.simpl.RAMJobStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,13 +64,6 @@ import org.slf4j.LoggerFactory;
                        "times or periodically based on cron expressions.")
 @Service(value=QuartzScheduler.class)
 public class QuartzScheduler implements BundleListener {
-
-    /** Default logger. */
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private static final String PREFIX = "Apache Sling Quartz Scheduler ";
-
-    private static final String QUARTZ_SCHEDULER_NAME = "ApacheSling";
 
     /** Map key for the job object */
     static final String DATA_MAP_OBJECT = "QuartzJobScheduler.Object";
@@ -94,18 +86,31 @@ public class QuartzScheduler implements BundleListener {
     /** Map key for the bundle information (Long). */
     static final String DATA_MAP_SERVICE_ID = "QuartzJobScheduler.serviceId";
 
-    /** The quartz scheduler. */
-    private volatile org.quartz.Scheduler scheduler;
+    @Property(label="Thread Pool Name",
+            description="The name of a configured thread pool - if no name is configured " +
+                        "the default pool is used.")
+    private static final String PROPERTY_POOL_NAME = "poolName";
+
+    @Property(label="Allowed Thread Pools",
+             description="The names of thread pools that are allowed to be used by jobs. " +
+                        "If a job is using a pool not in this list, the default pool is used.",
+             unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROPERTY_ALLOWED_POOLS = "allowedPoolNames";
+
+    /** Default logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private ThreadPoolManager threadPoolManager;
 
-    private ThreadPool threadPool;
+    /** The quartz schedulers. */
+    private final Map<String, SchedulerProxy> schedulers = new HashMap<String, SchedulerProxy>();
 
-    @Property(label="Thread Pool Name",
-              description="The name of a configured thread pool - if no name is configured " +
-                          "the default pool is used.")
-    private static final String PROPERTY_POOL_NAME = "poolName";
+    private volatile String defaultPoolName;
+
+    private volatile String[] allowedPoolNames;
+
+    private volatile boolean active;
 
     /**
      * Activate this component.
@@ -113,19 +118,36 @@ public class QuartzScheduler implements BundleListener {
      * @throws Exception
      */
     @Activate
-    protected void activate(final BundleContext ctx, final Map<String, Object> props) throws Exception {
-        final Object poolNameObj = props.get(PROPERTY_POOL_NAME);
-        final String poolName;
-        if ( poolNameObj != null && poolNameObj.toString().trim().length() > 0 ) {
-            poolName = poolNameObj.toString().trim();
-        } else {
-            poolName = null;
-        }
+    protected void activate(final BundleContext ctx, final Map<String, Object> props) {
+        // SLING-2261 Prevent Quartz from checking for updates
+        System.setProperty("org.terracotta.quartz.skipUpdateCheck", Boolean.TRUE.toString());
 
+        final Object poolNameObj = props.get(PROPERTY_POOL_NAME);
+        if ( poolNameObj != null && poolNameObj.toString().trim().length() > 0 ) {
+            this.defaultPoolName = poolNameObj.toString().trim();
+        } else {
+            this.defaultPoolName = ThreadPoolManager.DEFAULT_THREADPOOL_NAME;
+        }
+        final Object value = props.get(PROPERTY_ALLOWED_POOLS);
+        if ( value instanceof String[] ) {
+            this.allowedPoolNames = (String[])value;
+        } else if ( value != null ) {
+            this.allowedPoolNames = new String[] {value.toString()};
+        }
+        if ( this.allowedPoolNames == null ) {
+            this.allowedPoolNames = new String[0];
+        } else {
+            for(int i=0;i<this.allowedPoolNames.length;i++) {
+                if ( this.allowedPoolNames[i] == null ) {
+                    this.allowedPoolNames[i] = "";
+                } else {
+                    this.allowedPoolNames[i] = this.allowedPoolNames[i].trim();
+                }
+            }
+        }
         ctx.addBundleListener(this);
 
-        // start scheduler
-        this.scheduler = this.init(poolName);
+        this.active = true;
     }
 
     /**
@@ -136,35 +158,86 @@ public class QuartzScheduler implements BundleListener {
     protected void deactivate(final BundleContext ctx) {
         ctx.removeBundleListener(this);
 
-        final org.quartz.Scheduler s = this.scheduler;
-        this.scheduler = null;
-        this.dispose(s);
+        final Map<String, SchedulerProxy> proxies;
+        synchronized ( this.schedulers ) {
+            this.active = false;
+            proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+            this.schedulers.clear();
+        }
+        for(final SchedulerProxy proxy : proxies.values()) {
+            proxy.dispose();
+        }
+    }
+
+    /**
+     * Get the thread pool name to use based on the provided/configured name
+     * @param name The configured name
+     * @return The name to use
+     */
+    private String getThreadPoolName(final String name) {
+        // no name specified
+        if ( name == null || name.trim().isEmpty() ) {
+            return this.defaultPoolName;
+        }
+        // checked allowed list
+        for(final String n : this.allowedPoolNames) {
+            if ( name.trim().equals(n) ) {
+                return n;
+            }
+        }
+        logger.warn("Scheduler job requested thread pool with name " + name + " but this thread pool is not in the list of allowed pools.");
+        return this.defaultPoolName;
+    }
+
+    private SchedulerProxy getScheduler(final String pName) throws SchedulerException {
+        final String poolName = getThreadPoolName(pName);
+        SchedulerProxy proxy = null;
+        synchronized ( this.schedulers ) {
+            if ( this.active ) {
+                proxy = this.schedulers.get(poolName);
+                if ( proxy == null ) {
+                    proxy = new SchedulerProxy(this.threadPoolManager, poolName);
+                    this.schedulers.put(poolName, proxy);
+                }
+            }
+        }
+        return proxy;
     }
 
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         if ( event.getType() == BundleEvent.STOPPED ) {
             final Long bundleId = event.getBundle().getBundleId();
 
-            final org.quartz.Scheduler s = this.scheduler;
-            if ( s != null ) {
-                synchronized ( this ) {
+            final Map<String, SchedulerProxy> proxies;
+            synchronized ( this.schedulers ) {
+                if ( this.active ) {
+                    proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+                } else {
+                    proxies = Collections.emptyMap();
+                }
+            }
+            for(final SchedulerProxy proxy : proxies.values()) {
+                synchronized ( proxy ) {
                     try {
-                        final List<String> groups = s.getJobGroupNames();
+                        final List<String> groups = proxy.getScheduler().getJobGroupNames();
                         for(final String group : groups) {
-                            final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
+                            final Set<JobKey> keys = proxy.getScheduler().getJobKeys(GroupMatcher.jobGroupEquals(group));
                             for(final JobKey key : keys) {
-                                final JobDetail detail = s.getJobDetail(key);
-                                final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
-                                final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                                final JobDetail detail = proxy.getScheduler().getJobDetail(key);
+                                if ( detail != null ) {
+                                    final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
+                                    final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
 
-                                if ( jobName != null && job != null ) {
-                                    final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
-                                    if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
-                                        s.deleteJob(key);
-                                        this.logger.debug("Unscheduling job with name {}", jobName);
+                                    if ( jobName != null && job != null ) {
+                                        final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
+                                        if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
+                                            proxy.getScheduler().deleteJob(key);
+                                            this.logger.debug("Unscheduling job with name {}", jobName);
+                                        }
                                     }
                                 }
                             }
@@ -177,74 +250,6 @@ public class QuartzScheduler implements BundleListener {
         }
 
     }
-
-    /**
-     * Initialize the quartz scheduler
-     * @return Return the new scheduler instance.
-     * @throws SchedulerException
-     */
-    private org.quartz.Scheduler init(final String poolName) throws SchedulerException {
-
-        // SLING-2261 Prevent Quartz from checking for updates
-        System.setProperty("org.terracotta.quartz.skipUpdateCheck", Boolean.TRUE.toString());
-
-        final ThreadPoolManager tpm = this.threadPoolManager;
-        // sanity null check
-        if ( tpm == null ) {
-            throw new SchedulerException("Thread pool manager missing");
-        }
-
-        // create the pool
-        this.threadPool = tpm.get(poolName);
-        final QuartzThreadPool quartzPool = new QuartzThreadPool(this.threadPool);
-
-        final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
-        // unique run id
-        final String runID = new Date().toString().replace(' ', '_');
-        factory.createScheduler(QUARTZ_SCHEDULER_NAME, runID, quartzPool, new RAMJobStore());
-        // quartz does not provide a way to get the scheduler by name AND runID, so we have to iterate!
-        final Iterator<org.quartz.Scheduler> allSchedulersIter = factory.getAllSchedulers().iterator();
-        org.quartz.Scheduler s = null;
-        while ( s == null && allSchedulersIter.hasNext() ) {
-            final org.quartz.Scheduler current = allSchedulersIter.next();
-            if ( QUARTZ_SCHEDULER_NAME.equals(current.getSchedulerName())
-                 && runID.equals(current.getSchedulerInstanceId()) ) {
-                s = current;
-            }
-        }
-        if ( s == null ) {
-            throw new SchedulerException("Unable to find new scheduler with name " + QUARTZ_SCHEDULER_NAME + " and run ID " + runID);
-        }
-
-        s.start();
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug(PREFIX + "started.");
-        }
-        return s;
-    }
-
-    /**
-     * Dispose the quartz scheduler
-     * @param s The scheduler.
-     */
-    private void dispose(final org.quartz.Scheduler s) {
-        if ( s != null ) {
-            try {
-                s.shutdown();
-            } catch (SchedulerException e) {
-                this.logger.debug("Exception during shutdown of scheduler.", e);
-            }
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug(PREFIX + "stopped.");
-            }
-        }
-        final ThreadPoolManager tpm = this.threadPoolManager;
-        if ( tpm != null && this.threadPool != null ) {
-            tpm.release(this.threadPool);
-        }
-        this.threadPool = null;
-    }
-
 
     /**
      * Initialize the data map for the job executor.
@@ -421,94 +426,38 @@ public class QuartzScheduler implements BundleListener {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#removeJob(java.lang.String)
      */
-    public void removeJob(final Long bundleId, final String name) throws NoSuchElementException {
+    public void removeJob(final Long bundleId, final String jobName) throws NoSuchElementException {
         // as this method might be called from unbind and during
         // unbind a deactivate could happen, we check the scheduler first
-        final org.quartz.Scheduler s = this.scheduler;
-        if ( s != null ) {
-            synchronized ( this ) {
+        final Map<String, SchedulerProxy> proxies;
+        synchronized ( this.schedulers ) {
+            if ( this.active ) {
+                proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+            } else {
+                proxies = Collections.emptyMap();
+            }
+        }
+        for(final SchedulerProxy proxy : proxies.values()) {
+            synchronized ( proxy ) {
                 try {
-                    s.deleteJob(JobKey.jobKey(name));
-                    this.logger.debug("Unscheduling job with name {}", name);
-                } catch (final SchedulerException se) {
-                    throw new NoSuchElementException(se.getMessage());
+                    final JobKey key = JobKey.jobKey(jobName);
+                    final JobDetail jobdetail = proxy.getScheduler().getJobDetail(key);
+                    if (jobdetail != null) {
+                        proxy.getScheduler().deleteJob(key);
+                        this.logger.debug("Unscheduling job with name {}", jobName);
+                        return;
+                    }
+                } catch (final SchedulerException ignored) {
+                    // ignore
                 }
             }
         }
-    }
-
-    /** Used by the web console plugin. */
-    org.quartz.Scheduler getScheduler() {
-        return this.scheduler;
-    }
-
-    public static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
-
-        /** Our executor thread pool */
-        private ThreadPool executor;
-
-        /**
-         * Create a new wrapper implementation for Quartz.
-         */
-        public QuartzThreadPool(final ThreadPool executor) {
-            this.executor = executor;
-        }
-
-        /**
-         * @see org.quartz.spi.QuartzThreadPool#getPoolSize()
-         */
-        public int getPoolSize() {
-            return this.executor.getConfiguration().getMaxPoolSize();
-        }
-
-        /**
-         * @see org.quartz.spi.QuartzThreadPool#initialize()
-         */
-        public void initialize() {
-            // nothing to do
-        }
-
-        /**
-         * @see org.quartz.spi.ThreadPool#setInstanceId(java.lang.String)
-         */
-        public void setInstanceId(final String id) {
-            // we ignore this
-        }
-
-        /**
-         * @see org.quartz.spi.ThreadPool#setInstanceName(java.lang.String)
-         */
-        public void setInstanceName(final String name) {
-            // we ignore this
-        }
-
-        /**
-         * @see org.quartz.spi.QuartzThreadPool#runInThread(java.lang.Runnable)
-         */
-        public boolean runInThread(final Runnable job) {
-            this.executor.execute(job);
-
-            return true;
-        }
-
-        /**
-         * @see org.quartz.spi.ThreadPool#blockForAvailableThreads()
-         */
-        public int blockForAvailableThreads() {
-            return this.executor.getConfiguration().getMaxPoolSize() - this.executor.getConfiguration().getQueueSize();
-        }
-
-        /**
-         * @see org.quartz.spi.QuartzThreadPool#shutdown(boolean)
-         */
-        public void shutdown(final boolean waitForJobsToComplete) {
-            // the pool is managed by the thread pool manager,
-            // so we can just return
-            this.executor = null;
+        if ( this.active ) {
+            throw new NoSuchElementException("No job found with name " + jobName);
         }
     }
 
-    /**
+   /**
      * @see org.apache.sling.commons.scheduler.Scheduler#NOW()
      */
     public ScheduleOptions NOW() {
@@ -607,19 +556,24 @@ public class QuartzScheduler implements BundleListener {
      * @see org.apache.sling.commons.scheduler.Scheduler#unschedule(java.lang.String)
      */
     public boolean unschedule(final Long bundleId, final String jobName) {
-        final org.quartz.Scheduler s = this.scheduler;
-        if ( jobName != null && s != null ) {
-            synchronized ( this ) {
-                try {
-                    final JobKey key = JobKey.jobKey(jobName);
-                    final JobDetail jobdetail = s.getJobDetail(key);
-                    if (jobdetail != null) {
-                        s.deleteJob(key);
-                        this.logger.debug("Unscheduling job with name {}", jobName);
-                        return true;
+        if ( jobName != null ) {
+            final Map<String, SchedulerProxy> proxies;
+            synchronized ( this.schedulers ) {
+                proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+            }
+            for(final SchedulerProxy proxy : proxies.values()) {
+                synchronized ( proxy ) {
+                    try {
+                        final JobKey key = JobKey.jobKey(jobName);
+                        final JobDetail jobdetail = proxy.getScheduler().getJobDetail(key);
+                        if (jobdetail != null) {
+                            proxy.getScheduler().deleteJob(key);
+                            this.logger.debug("Unscheduling job with name {}", jobName);
+                            return true;
+                        }
+                    } catch (final SchedulerException ignored) {
+                        // ignore
                     }
-                } catch (final SchedulerException ignored) {
-                    // ignore
                 }
             }
         }
@@ -646,25 +600,16 @@ public class QuartzScheduler implements BundleListener {
 
         // as this method might be called from unbind and during
         // unbind a deactivate could happen, we check the scheduler first
-        final org.quartz.Scheduler s = this.scheduler;
-        if ( s == null ) {
+        final SchedulerProxy proxy = this.getScheduler(opts.threadPoolName);
+        if ( proxy == null ) {
             throw new IllegalStateException("Scheduler is not available anymore.");
         }
 
-        synchronized ( this ) {
+        synchronized ( proxy ) {
             final String name;
             if ( opts.name != null ) {
                 // if there is already a job with the name, remove it first
-                try {
-                    final JobKey key = JobKey.jobKey(opts.name);
-                    final JobDetail jobdetail = s.getJobDetail(key);
-                    if (jobdetail != null) {
-                        s.deleteJob(key);
-                        this.logger.debug("Unscheduling job with name {}", opts.name);
-                    }
-                } catch (final SchedulerException ignored) {
-                    // ignore
-                }
+                this.unschedule(bundleId, opts.name);
                 name = opts.name;
             } else {
                 name = job.getClass().getName() + ':' + UUID.randomUUID();
@@ -678,7 +623,17 @@ public class QuartzScheduler implements BundleListener {
             final JobDetail detail = this.createJobDetail(name, jobDataMap, opts.canRunConcurrently);
 
             this.logger.debug("Scheduling job {} with name {} and trigger {}", new Object[] {job, name, trigger});
-            s.scheduleJob(detail, trigger);
+            proxy.getScheduler().scheduleJob(detail, trigger);
+        }
+    }
+
+    /**
+     * This is used by the web console plugin
+     * @return All current schedulers
+     */
+    Map<String, SchedulerProxy> getSchedulers() {
+        synchronized ( this.schedulers ) {
+            return new HashMap<String, SchedulerProxy>(this.schedulers);
         }
     }
 }

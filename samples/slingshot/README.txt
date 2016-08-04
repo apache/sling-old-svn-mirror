@@ -8,7 +8,7 @@ Users can leave comments and rate individual items.
 Quickstart
 ==========
 Brief quickstart guide - more detailed description below:
-Launch a Sling installation (Sling 7 or later), deploy the Slingshot bundle
+Launch a Sling installation (Sling 8 or later), deploy the Slingshot bundle
 and go to http://localhost:8080/slingshot.html. Login with slingshot1/slingshot1
 or slingshot2/slingshot2.
 
@@ -16,7 +16,7 @@ Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build
-environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
+environment. It requires a Java 7 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.5 or later. We recommend to use the latest Maven version.
 
 If you have Maven 3 installed, you can compile and

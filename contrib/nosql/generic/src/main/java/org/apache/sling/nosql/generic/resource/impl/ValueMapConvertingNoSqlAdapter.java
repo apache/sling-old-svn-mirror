@@ -30,6 +30,7 @@ import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.nosql.generic.adapter.NoSqlAdapter;
 import org.apache.sling.nosql.generic.adapter.NoSqlData;
 import org.slf4j.Logger;
@@ -163,6 +164,16 @@ class ValueMapConvertingNoSqlAdapter implements NoSqlAdapter {
         return new NoSqlData(data.getPath(), deserializedMap);
     }
     
+    @Override
+    public void checkConnection() throws LoginException {
+        delegate.checkConnection();
+    }
+
+    @Override
+    public void createIndexDefinitions() {
+        delegate.createIndexDefinitions();
+    }
+
     private static DateFormat getISO8601Format() {
         return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     }

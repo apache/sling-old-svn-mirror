@@ -35,11 +35,17 @@ public class Feature
     /** All run modes. */
     private final List<RunMode> runModes = new ArrayList<RunMode>();
 
+    /** The type of feature */
+    private volatile String type = FeatureTypes.PLAIN;
+
     /** Variables. */
     private final KeyValueMap<String> variables = new KeyValueMap<String>();
 
     /** Feature name. */
     private final String name;
+
+    /** Additional sections. */
+    private final List<Section> additionalSections = new ArrayList<Section>();
 
     /**
      * Construct a new feature.
@@ -113,6 +119,50 @@ public class Feature
         return result;
     }
 
+    /**
+     * Get the feature type.
+     * @return The feature type.
+     * @since 1.4.0
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Set the feature type.
+     * @param t The new type
+     * @since 1.4.0
+     */
+    public void setType(final String t) {
+        type = ( t == null ? FeatureTypes.PLAIN : t);
+    }
+
+    /**
+     * Get all additional sections
+     * @return The list of additional sections. It might be empty.
+     * @since 1.4.0
+     */
+    public List<Section> getAdditionalSections() {
+        return this.additionalSections;
+    }
+
+    /**
+     * Get all sections with the given name.
+     * @param name The section name.
+     * @return The list of sections. The list might be empty.
+     * @since 1.4.0
+     */
+    public List<Section> getAdditionalSections(final String name) {
+        final List<Section> result = new ArrayList<Section>();
+
+        for(final Section s : this.additionalSections) {
+            if ( name.equals(s.getName()) ) {
+                result.add(s);
+            }
+        }
+        return result;
+    }
+
     @Override
     public int compareTo(final Feature o) {
         if ( this.name == null ) {
@@ -131,8 +181,9 @@ public class Feature
     public String toString() {
         return "Feature [runModes=" + runModes + ", variables=" + variables
                 + ", name=" + name
+                + ( FeatureTypes.PLAIN.equals(this.type) ? "" : ", type=" + type )
+                + ( additionalSections.isEmpty() ? "" : ", additionalSections=" + this.additionalSections)
                 + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }
-
 }

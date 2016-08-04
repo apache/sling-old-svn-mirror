@@ -23,13 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-archetype-parent</artifactId>
+        <relativePath />
         <version>1</version>
-        <relativePath/>
     </parent>
 
-    <groupId>org.apache.sling</groupId>
     <artifactId>sling-servlet-archetype</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling Servlet Archetype</name>

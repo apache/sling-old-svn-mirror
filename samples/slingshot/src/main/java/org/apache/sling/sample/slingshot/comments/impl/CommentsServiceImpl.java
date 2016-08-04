@@ -22,8 +22,6 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -34,14 +32,14 @@ import org.apache.sling.sample.slingshot.comments.Comment;
 import org.apache.sling.sample.slingshot.comments.CommentsService;
 import org.apache.sling.sample.slingshot.comments.CommentsUtil;
 import org.apache.sling.sample.slingshot.impl.Util;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the comments service
  */
-@Component
-@Service(value=CommentsService.class)
+@Component(service = CommentsService.class)
 public class CommentsServiceImpl implements CommentsService {
 
     /** The resource type for the comments holder. */
@@ -52,6 +50,7 @@ public class CommentsServiceImpl implements CommentsService {
     /**
      * @see org.apache.sling.sample.slingshot.comments.CommentsService#getCommentsResourcePath(org.apache.sling.api.resource.Resource)
      */
+    @Override
     public String getCommentsResourcePath(final Resource resource) {
         final String contentPath = SlingshotUtil.getContentPath(resource);
         if ( contentPath != null ) {
@@ -66,6 +65,7 @@ public class CommentsServiceImpl implements CommentsService {
     /**
      * @see org.apache.sling.sample.slingshot.comments.CommentsService#addComment(org.apache.sling.api.resource.Resource, org.apache.sling.sample.slingshot.comments.Comment)
      */
+    @Override
     public void addComment(final Resource resource, final Comment c)
     throws PersistenceException {
         final String commentsPath = this.getCommentsResourcePath(resource);
@@ -77,7 +77,7 @@ public class CommentsServiceImpl implements CommentsService {
         final Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, CommentsUtil.RESOURCETYPE_COMMENT);
         properties.put(CommentsUtil.PROPERTY_TITLE, c.getTitle());
-        properties.put(CommentsUtil.PROPERTY_TEXT, c.getTitle());
+        properties.put(CommentsUtil.PROPERTY_TEXT, c.getText());
         properties.put(CommentsUtil.PROPERTY_USER, c.getCreatedBy());
 
         // we try it five times

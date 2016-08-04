@@ -18,17 +18,15 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Map;
 
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link JobHandlingUtils}
@@ -50,15 +48,5 @@ public class JobHandlingUtilsTest {
         assertNotNull(fullPropertiesFromPackage.get("distribution.item.id"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.request.type"));
-    }
-
-    @Test
-    public void testIdPropertiesFromPackageCreation() throws Exception {
-        DistributionQueueItem distributionPackage = mock(DistributionQueueItem.class);
-        when(distributionPackage.getId()).thenReturn("an-id");
-        Map<String, Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(distributionPackage.getId());
-        assertNotNull(idPropertiesFromPackage);
-        assertEquals(1, idPropertiesFromPackage.size());
-        assertNotNull(idPropertiesFromPackage.get("distribution.item.id"));
     }
 }

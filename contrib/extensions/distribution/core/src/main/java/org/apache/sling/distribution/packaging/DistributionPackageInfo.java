@@ -20,47 +20,42 @@ package org.apache.sling.distribution.packaging;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 
 /**
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.
  */
+@ProviderType
 public final class DistributionPackageInfo extends ValueMapDecorator implements ValueMap {
-
 
     /**
      * distribution package type
      */
-    public static String PROPERTY_PACKAGE_TYPE = "package.type";
+    public static final String PROPERTY_PACKAGE_TYPE = "package.type";
 
     /**
      * distribution request paths
      */
-    public static String PROPERTY_REQUEST_PATHS = "request.paths";
+    public static final String PROPERTY_REQUEST_PATHS = "request.paths";
+
+    /**
+     * distribution request deep paths
+     */
+    public static final String PROPERTY_REQUEST_DEEP_PATHS = "request.deepPaths";
+
 
     /**
      * distribution request type
      */
-    public static String PROPERTY_REQUEST_TYPE = "request.type";
-
-    /**
-     * distribution package origin uri
-     */
-    public static String PROPERTY_ORIGIN_URI = "package.origin.uri";
-
-    /**
-     * distribution package origin queue
-     */
-    public static String PROPERTY_ORIGIN_QUEUE = "origin.queue";
+    public static final String PROPERTY_REQUEST_TYPE = "request.type";
 
 
     /**
@@ -68,32 +63,24 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
      *
      * @param base wrapped object
      */
-    public DistributionPackageInfo(Map<String, Object> base) {
-        super(init(null, base));
-    }
-
-    /**
-     * Creates a new wrapper around a given map.
-     *
-     */
-    public DistributionPackageInfo(String type) {
-        super(init(type, null));
-    }
-
-
-    private static Map<String, Object> init(String type, Map<String, Object> base) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        if (base != null) {
-            type = (String) base.get(PROPERTY_PACKAGE_TYPE);
-
-            result = new HashMap<String, Object>(base);
+    public DistributionPackageInfo(String packageType, Map<String, Object> base) {
+        super(base);
+        if (packageType == null) {
+            throw new IllegalArgumentException("package type cannot be null");
         }
 
-        result.put(PROPERTY_PACKAGE_TYPE, type);
-
-        return result;
+        put(PROPERTY_PACKAGE_TYPE, packageType);
     }
+
+
+    /**
+     * Creates a new wrapper around an empty map.
+     *
+     */
+    public DistributionPackageInfo(String packageType) {
+        this(packageType, new HashMap<String, Object>());
+    }
+
 
     @Nonnull
     public String getType() {
@@ -120,28 +107,11 @@ public final class DistributionPackageInfo extends ValueMapDecorator implements 
         return get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class);
     }
 
-    /**
-     * retrieves the origin of the package holding this info
-     *
-     * @return the package origin
-     */
-    @CheckForNull
-    public URI getOrigin() {
-        return get(PROPERTY_ORIGIN_URI, URI.class);
-    }
-
-    @CheckForNull
-    public String getQueue() {
-        return get(PROPERTY_ORIGIN_QUEUE, String.class);
-    }
-
-
     @Override
     public String toString() {
         return "DistributionPackageInfo{" +
-                "origin=" + getOrigin() +
-                ", requestType=" + getRequestType() +
-                ", paths=" + Arrays.toString(getPaths()) +
+                " request.type=" + get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class) +
+                ", request.paths=" + Arrays.toString(get(PROPERTY_REQUEST_PATHS, String[].class)) +
                 '}';
     }
 }

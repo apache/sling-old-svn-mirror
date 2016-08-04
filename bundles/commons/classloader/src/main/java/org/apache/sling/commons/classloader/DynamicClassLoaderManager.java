@@ -18,6 +18,8 @@
  */
 package org.apache.sling.commons.classloader;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The dynamic class loader manager is a central
  * service managing all dynamic class loaders.
@@ -38,10 +40,12 @@ package org.apache.sling.commons.classloader;
  * discard your classloader and invalidate loaded objects
  * whenever this happens.
  */
+@ProviderType
 public interface DynamicClassLoaderManager {
 
     /**
      * The dynamic class loader.
+     * @return The dynamic class loader.
      */
     ClassLoader getDynamicClassLoader();
 }

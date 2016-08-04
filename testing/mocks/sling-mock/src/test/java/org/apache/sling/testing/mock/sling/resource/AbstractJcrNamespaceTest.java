@@ -18,22 +18,23 @@
  */
 package org.apache.sling.testing.mock.sling.resource;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.junit.Assert.assertEquals;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.loader.ContentLoader;
 import org.junit.Rule;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
 
 /**
  * Validates correct registering and mapping of JCR namespaces, esp. the sling namespace. 
@@ -46,49 +47,33 @@ public abstract class AbstractJcrNamespaceTest {
     protected abstract ResourceResolverType getResourceResolverType();
     
     @Test
-    public void testSling4362_WithSlingNamespace() throws RepositoryException {
-        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
-        
-        NamespaceRegistry namespaceRegistry = resolver.adaptTo(Session.class).getWorkspace().getNamespaceRegistry();
-        namespaceRegistry.registerNamespace("sling", "http://mock/sling");
+    public void testSling4362() throws RepositoryException {
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType(), bundleContext);
         
         ContentLoader contentLoader = new ContentLoader(resolver);
-        contentLoader.json("/json-import-samples/SLING-4362.json", "/content/foo");
+        contentLoader.json("/json-import-samples/SLING-4362.json", context.uniqueRoot().content() + "/foo");
 
-        Resource resource = resolver.getResource("/content/foo");
+        Resource resource = resolver.getResource(context.uniqueRoot().content() + "/foo");
         
         ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
+        assertEquals("fooType", props.get(SLING_RESOURCE_TYPE_PROPERTY));
         assertEquals("fooType", resource.getResourceType());
+        
+        MockOsgi.shutdown(bundleContext);
     }
 
     @Test
-    public void testSling4362_WithoutSlingNamespace() throws RepositoryException {
-        ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
-        
-        ContentLoader contentLoader = new ContentLoader(resolver);
-        contentLoader.json("/json-import-samples/SLING-4362.json", "/content/foo");
-
-        Resource resource = resolver.getResource("/content/foo");
-        
-        ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
-        
-        // since SLING-4773 sling namespace is readly registered in the MockJcrResourceResolverAdapter, so this will still work here
-        assertEquals("fooType", resource.getResourceType());
-    }
-
-    @Test
-    public void testSling4362_WithoutSlingNamespace_ViaContextRule() throws RepositoryException {
+    public void testSling4362_ViaContextRule() throws RepositoryException {
         ResourceResolver resolver = context.resourceResolver();
         
         ContentLoader contentLoader = new ContentLoader(resolver);
-        contentLoader.json("/json-import-samples/SLING-4362.json", "/content/foo");
+        contentLoader.json("/json-import-samples/SLING-4362.json", context.uniqueRoot().content() + "/foo");
 
-        Resource resource = resolver.getResource("/content/foo");
+        Resource resource = resolver.getResource(context.uniqueRoot().content() + "/foo");
         
         ValueMap props = ResourceUtil.getValueMap(resource);
-        assertEquals("fooType", props.get("sling:resourceType"));
+        assertEquals("fooType", props.get(SLING_RESOURCE_TYPE_PROPERTY));
         assertEquals("fooType", resource.getResourceType());
     }
 

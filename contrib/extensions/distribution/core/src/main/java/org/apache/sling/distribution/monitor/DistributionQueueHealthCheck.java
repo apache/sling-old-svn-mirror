@@ -38,7 +38,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
@@ -90,7 +89,7 @@ public class DistributionQueueHealthCheck implements HealthCheck {
         distributionAgents.clear();
     }
 
-    protected void bindDistributionAgent(final DistributionAgent distributionAgent) {
+    void bindDistributionAgent(final DistributionAgent distributionAgent) {
         distributionAgents.add(distributionAgent);
 
         log.debug("Registering distribution agent {} ", distributionAgent);
@@ -113,14 +112,13 @@ public class DistributionQueueHealthCheck implements HealthCheck {
 
                         DistributionQueueEntry entry = q.getHead();
                         if (entry != null) {
-                            DistributionQueueItem item = entry.getItem();
                             DistributionQueueItemStatus status = entry.getStatus();
                             if (status.getAttempts() <= numberOfRetriesAllowed) {
-                                resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), item.getId(), status.getAttempts());
+                                resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), entry.getId(), status.getAttempts());
                             } else {
                                 // the no. of attempts is higher than the configured threshold
                                 resultLog.warn("Queue: [{}], first item: [{}], number of retries: {}, expected number of retries <= {}",
-                                        q.getName(), item.getId(), status.getAttempts(), numberOfRetriesAllowed);
+                                        q.getName(), entry.getId(), status.getAttempts(), numberOfRetriesAllowed);
                                 failures.put(q.getName(), status.getAttempts());
                             }
                         } else {

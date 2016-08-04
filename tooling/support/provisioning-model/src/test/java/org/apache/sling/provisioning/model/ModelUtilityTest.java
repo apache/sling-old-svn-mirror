@@ -41,6 +41,7 @@ public class ModelUtilityTest {
         final List<Artifact> list = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(3), 1);
 
         U.assertArtifact(list.get(0), "g", "a", "2.0.0", "jar", null);
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, model.getFeature("f").getType());
     }
 
     @Test public void removeTest() throws Exception {
@@ -51,6 +52,7 @@ public class ModelUtilityTest {
         assertNotNull(model.getFeature("f").getRunMode());
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(5));
         assertNotNull(model.getFeature("f").getRunMode().getArtifactGroup(7));
+        assertEquals(FeatureTypes.PLAIN, model.getFeature("f").getType());
 
         final List<Artifact> group5 = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(5), 1);
         U.assertArtifact(group5.get(0), "g", "a", "1.0.0", "jar", null);
@@ -213,5 +215,41 @@ public class ModelUtilityTest {
         assertEquals("C", cfgC.getProperties().get("name"));
         assertEquals("bar", cfgB.getProperties().get("foo"));
         assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfgC.getProperties().get("array"));
+    }
+
+    @Test public void testRemoveFromSpecialRunmode() throws Exception {
+        final Model base = U.readTestModel("merge/remove-special-base.txt");
+        final Model merge = U.readTestModel("merge/remove-special-merge.txt");
+        final Model model = ModelUtility.getEffectiveModel(base);
+
+        MergeUtility.merge(model, merge);
+
+        final List<Artifact> group = U.assertArtifactsInGroup(model.getFeature("f").getRunMode(ModelConstants.RUN_MODE_STANDALONE).getArtifactGroup(0), 1);
+        U.assertArtifact(group.get(0), "g", "b", "1.0.0", "jar", null);
+    }
+
+    @Test public void testValidateRunModes() throws Exception {
+        final Model m = new Model();
+        final Feature f = m.getOrCreateFeature("f");
+
+        // single special run mode
+        final RunMode rm1 = f.getOrCreateRunMode(new String[] {ModelConstants.RUN_MODE_STANDALONE});
+        assertNull(ModelUtility.validate(m));
+        f.getRunModes().remove(rm1);
+
+        // two special run modes -> error
+        final RunMode rmA = f.getOrCreateRunMode(new String[] {ModelConstants.RUN_MODE_STANDALONE, ModelConstants.RUN_MODE_WEBAPP});
+        assertNotNull(ModelUtility.validate(m));
+        f.getRunModes().remove(rmA);
+
+        // two special run modes, one :remove -> ok
+        final RunMode rmB = f.getOrCreateRunMode(new String[] {ModelConstants.RUN_MODE_STANDALONE, ModelConstants.RUN_MODE_REMOVE});
+        assertNull(ModelUtility.validate(m));
+        f.getRunModes().remove(rmB);
+
+        // three special run modes, one :remove -> error
+        final RunMode rmC = f.getOrCreateRunMode(new String[] {ModelConstants.RUN_MODE_STANDALONE, ModelConstants.RUN_MODE_WEBAPP, ModelConstants.RUN_MODE_REMOVE});
+        assertNotNull(ModelUtility.validate(m));
+        f.getRunModes().remove(rmC);
     }
 }

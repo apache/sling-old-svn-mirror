@@ -19,13 +19,20 @@
 
 package org.apache.sling.distribution.resources.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.log.DistributionLog;
+import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
@@ -35,12 +42,6 @@ import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueStatus;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Extended service resource provider exposes children resources like .../agents/agentName/queues/queueName/queueItem
@@ -52,27 +53,28 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     private static final String STATUS_PATH = "status";
 
 
-    private static final int MAX_QUEUE_DEPTH = 100;
+    private static final int MAX_QUEUE_LENGTH = 5000;
+    private static final int MAX_QUEUE_CHUNK = 100;
+
 
 
     public ExtendedDistributionServiceResourceProvider(String kind,
-                                               DistributionComponentProvider componentProvider,
-                                               String resourceRoot) {
+                                                       DistributionComponentProvider componentProvider,
+                                                       String resourceRoot) {
         super(kind, componentProvider, resourceRoot);
     }
 
 
     @Override
-    protected Map<String,Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
-        DistributionComponentKind kind =  component.getKind();
+    protected Map<String, Object> getChildResourceProperties(DistributionComponent<?> component, String childResourceName) {
+        DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null && childResourceName != null) {
                 if (childResourceName.startsWith(QUEUES_PATH)) {
                     SimplePathInfo queuePathInfo = SimplePathInfo.parsePathInfo(QUEUES_PATH, childResourceName);
-                    Map<String, Object> result = getQueueProperties(agent, queuePathInfo);
-                    return result;
+                    return getQueueProperties(agent, queuePathInfo);
                 } else if (childResourceName.startsWith(LOG_PATH)) {
                     Map<String, Object> result = new HashMap<String, Object>();
                     result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.LOG_RESOURCE_TYPE);
@@ -95,9 +97,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     }
 
     @Override
-    protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+    protected Iterable<String> getChildResourceChildren(DistributionComponent<?> component, String childResourceName) {
 
-        DistributionComponentKind kind =  component.getKind();
+        DistributionComponentKind kind = component.getKind();
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
@@ -115,7 +117,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
         return null;
     }
 
-    private Map<String,Object> getQueueProperties(DistributionAgent agent, SimplePathInfo queueInfo) {
+    private Map<String, Object> getQueueProperties(DistributionAgent agent, SimplePathInfo queueInfo) {
         if (queueInfo.isRoot()) {
             Map<String, Object> result = new HashMap<String, Object>();
 
@@ -131,8 +133,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             String queueName = queueInfo.getMainResourceName();
             Map<String, Object> result = new HashMap<String, Object>();
 
-            try {
-                DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = agent.getQueue(queueName);
+
+            if (queue != null) {
                 DistributionQueueStatus queueStatus = queue.getStatus();
                 result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.AGENT_QUEUE_RESOURCE_TYPE);
 
@@ -140,21 +143,23 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 result.put("empty", queueStatus.isEmpty());
                 result.put("itemsCount", queueStatus.getItemsCount());
 
-                List<String> nameList = new ArrayList<String>();
-                Map<String, Map<String, Object>> propertiesMap = new HashMap<String, Map<String, Object>>();
-                for (DistributionQueueEntry entry : queue.getItems(0, MAX_QUEUE_DEPTH)) {
-                    nameList.add(entry.getItem().getId());
-                    propertiesMap.put(entry.getItem().getId(), getItemProperties(entry));
+                if (queueName.startsWith(ErrorQueueDispatchingStrategy.ERROR_PREFIX)) {
+                    String retryQueue = queueName.replace(ErrorQueueDispatchingStrategy.ERROR_PREFIX, "");
+                    result.put("retryQueue", retryQueue);
                 }
 
-                result.put(ITEMS, nameList.toArray(new String[0]));
-                result.put(INTERNAL_ITEMS_PROPERTIES, propertiesMap);
+                List<String> nameList = new ArrayList<String>();
+
+                DistributionQueueEntry entry = queue.getHead();
+                if (entry != null) {
+                    nameList.add(entry.getId());
+                }
+
+                result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
+                result.put(INTERNAL_ITEMS_ITERATOR, new QueueItemsIterator(queue));
                 result.put(INTERNAL_ADAPTABLE, queue);
-
-            } catch (DistributionAgentException e) {
-                // do nothing
-
             }
+
 
             return result;
 
@@ -162,17 +167,15 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             String queueName = queueInfo.getMainResourceName();
             Map<String, Object> result = new HashMap<String, Object>();
 
-            try {
-                DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = agent.getQueue(queueName);
+
+            if (queue != null) {
                 String itemId = queueInfo.getChildResourceName();
 
                 DistributionQueueEntry entry = queue.getItem(itemId);
                 result = getItemProperties(entry);
-
-            } catch (DistributionAgentException e) {
-                // do nothing
-
             }
+
             return result;
         }
 
@@ -180,7 +183,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     }
 
 
-    Map<String, Object> getItemProperties(DistributionQueueEntry entry) {
+    private Map<String, Object> getItemProperties(DistributionQueueEntry entry) {
         Map<String, Object> result = new HashMap<String, Object>();
 
 
@@ -191,10 +194,10 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             DistributionQueueItem item = entry.getItem();
             DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
-            result.put("id", item.getId());
+            result.put("id", entry.getId());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
-            result.put("type", packageInfo.getType());
+            result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));
 
             DistributionQueueItemStatus status = entry.getStatus();
             result.put("attempts", status.getAttempts());
@@ -205,6 +208,50 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
         return result;
 
+    }
+
+
+    class QueueItemsIterator implements Iterator<Map<String, Object>> {
+
+        private final DistributionQueue queue;
+        private Iterator<DistributionQueueEntry> items;
+        int fetched = 0;
+
+        QueueItemsIterator(DistributionQueue queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            if (fetched > MAX_QUEUE_LENGTH) {
+                return false;
+            }
+
+            boolean shouldFetch = items == null || !items.hasNext();
+
+            if (shouldFetch) {
+                items = queue.getItems(fetched, MAX_QUEUE_CHUNK).iterator();
+            }
+
+            return items.hasNext();
+        }
+
+        @Override
+        public Map<String, Object> next() {
+            DistributionQueueEntry queueEntry = items.next();
+            String itemName = queueEntry.getId();
+            Map<String, Object> itemProperties = getItemProperties(queueEntry);
+            itemProperties.put(INTERNAL_NAME, itemName);
+
+            fetched ++;
+            return itemProperties;
+        }
+
+        @Override
+        public void remove() {
+            items.remove();
+        }
     }
 
 }

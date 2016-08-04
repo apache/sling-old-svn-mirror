@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import javax.script.Bindings;
 
 import org.apache.felix.scr.annotations.Component;
@@ -31,12 +29,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
+import org.apache.sling.scripting.sightly.compiler.expression.MarkupContext;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
-import org.apache.sling.scripting.sightly.impl.filter.XSSFilter;
-import org.apache.sling.scripting.sightly.impl.html.MarkupUtils;
-import org.apache.sling.scripting.sightly.impl.plugin.MarkupContext;
-import org.apache.sling.scripting.sightly.impl.utils.RenderUtils;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.xss.XSSAPI;
 import org.slf4j.Logger;
@@ -48,19 +44,20 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(RuntimeExtension.class)
 @Properties(
-        @Property(name = RuntimeExtension.NAME, value = XSSFilter.FUNCTION_NAME)
+        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.XSS)
 )
 public class XSSRuntimeExtension implements RuntimeExtension {
 
     private static final Set<String> elementNameWhiteList = new HashSet<String>();
     private static final Logger LOG = LoggerFactory.getLogger(XSSRuntimeExtension.class);
     private static final Pattern VALID_ATTRIBUTE = Pattern.compile("^[a-zA-Z_:][\\-a-zA-Z0-9_:\\.]*$");
+    private static final Pattern ATTRIBUTE_BLACKLIST = Pattern.compile("^(style|(on.*))$", Pattern.CASE_INSENSITIVE);
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
         if (arguments.length < 2) {
             throw new SightlyException(
-                    String.format("Extension %s requires at least %d arguments", XSSFilter.FUNCTION_NAME, 2));
+                    String.format("Extension %s requires at least %d arguments", RuntimeFunction.XSS, 2));
         }
         Object original = arguments[0];
         Object option = arguments[1];
@@ -80,7 +77,7 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             LOG.warn("Expression context {} is invalid, expression will be replaced by the empty string", option);
             return "";
         }
-        String text = RenderUtils.toString(original);
+        String text = renderContext.getObjectModel().toString(original);
         final XSSAPI xssapi = obtainAPI(renderContext.getBindings());
         return applyXSSFilter(xssapi, text, hint, markupContext);
     }
@@ -104,7 +101,10 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             case ATTRIBUTE_NAME:
                 return escapeAttributeName(text);
             case NUMBER:
-                return xssapi.getValidLong(text, 0).toString();
+                Long result = xssapi.getValidLong(text, 0);
+                if (result != null) {
+                    return result.toString();
+                }
             case URI:
                 return xssapi.getValidHref(text);
             case SCRIPT_TOKEN:
@@ -135,9 +135,9 @@ public class XSSRuntimeExtension implements RuntimeExtension {
     }
 
     private XSSAPI obtainAPI(Bindings bindings) {
-        SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get("request");
+        SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
         if (request == null) {
-            throw new CompilerException("Cannot obtain request from bindings");
+            throw new SightlyException("Cannot obtain request from bindings");
         }
         return request.adaptTo(XSSAPI.class);
     }
@@ -154,7 +154,7 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             return null;
         }
         attributeName = attributeName.trim();
-        if (matchPattern(VALID_ATTRIBUTE, attributeName) && !MarkupUtils.isSensitiveAttribute(attributeName)) {
+        if (matchPattern(VALID_ATTRIBUTE, attributeName) && !isSensitiveAttribute(attributeName)) {
             return attributeName;
         }
         return null;
@@ -234,4 +234,7 @@ public class XSSRuntimeExtension implements RuntimeExtension {
         elementNameWhiteList.add("th");
     }
 
+    private boolean isSensitiveAttribute(String name) {
+        return ATTRIBUTE_BLACKLIST.matcher(name).matches();
+    }
 }

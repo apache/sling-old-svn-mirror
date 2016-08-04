@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -26,13 +29,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.osgi.framework.BundleContext;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Distribution Event Triggers Factory",
@@ -41,6 +41,7 @@ import java.util.Map;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class DistributionEventDistributeDistributionTriggerFactory implements DistributionTrigger {
 
     @Property(label = "Name", description = "The name of the trigger.")
@@ -50,17 +51,17 @@ public class DistributionEventDistributeDistributionTriggerFactory implements Di
      * chain distribution path property
      */
     @Property(label = "Path", description = "The path for which the distribution events will be forwarded.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
 
-    DistributionEventDistributeDistributionTrigger trigger;
+    private DistributionEventDistributeDistributionTrigger trigger;
 
 
     @Activate
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
 
-        trigger =  new DistributionEventDistributeDistributionTrigger(path, bundleContext);
+        trigger = new DistributionEventDistributeDistributionTrigger(path, bundleContext);
     }
 
     @Deactivate
@@ -68,11 +69,11 @@ public class DistributionEventDistributeDistributionTriggerFactory implements Di
         trigger.disable();
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.register(requestHandler);
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.unregister(requestHandler);
     }
 }

@@ -19,7 +19,6 @@ package org.apache.sling.ide.impl.vlt;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +47,7 @@ public class VltNodeType implements NodeType {
     private PropertyDefinition[] propertyDefinitions;
     private NodeType[] superTypes;
     
-    private Set<VltNodeType> directChildTypes = new HashSet<VltNodeType>();
+    private Set<VltNodeType> directChildTypes = new HashSet<>();
     private Set<String> allowedChildNodeTypes;
     private ResourceProxy resourceProxy;
 
@@ -69,10 +68,9 @@ public class VltNodeType implements NodeType {
     }
 
     Set<VltNodeType> getAllKnownChildTypes() {
-        Set<VltNodeType> allKnownCTs = new HashSet<VltNodeType>();
+        Set<VltNodeType> allKnownCTs = new HashSet<>();
         allKnownCTs.add(this);
-        for (Iterator<VltNodeType> it = directChildTypes.iterator(); it.hasNext();) {
-            VltNodeType simpleVltNodeType = it.next();
+        for (VltNodeType simpleVltNodeType : directChildTypes) {
             allKnownCTs.addAll(simpleVltNodeType.getAllKnownChildTypes());
         }
         return allKnownCTs;
@@ -209,7 +207,7 @@ public class VltNodeType implements NodeType {
 
     @Override
     public NodeDefinition[] getChildNodeDefinitions() {
-        List<NodeDefinition> childNodeDefs = new LinkedList<NodeDefinition>();
+        List<NodeDefinition> childNodeDefs = new LinkedList<>();
         childNodeDefs.addAll(Arrays.asList(getDeclaredChildNodeDefinitions()));
         NodeType[] supers = getSupertypes();
         if (supers!=null) {

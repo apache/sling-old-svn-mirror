@@ -40,15 +40,14 @@ public class DistributionPackageExporterImporterTemporaryFoldersTest extends Dis
     @Test
     public void testAddExportImportTemp() throws Exception {
 
-        List<String> jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/jcrpackages");
-        assertEquals(0, jcrPackages.size());
+        List<String> jcrPackages =  null;
 
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
         distribute(publish, "temp", DistributionRequestType.ADD, nodePath);
 
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/jcrpackages");
+        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
         assertEquals(1, jcrPackages.size());
 
         publishClient.delete(nodePath);
@@ -56,7 +55,7 @@ public class DistributionPackageExporterImporterTemporaryFoldersTest extends Dis
 
         String content = doExport(publish, "temp", DistributionRequestType.PULL);
 
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/jcrpackages");
+        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
         assertEquals(0, jcrPackages.size());
 
         doImport(publish, "temp", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));

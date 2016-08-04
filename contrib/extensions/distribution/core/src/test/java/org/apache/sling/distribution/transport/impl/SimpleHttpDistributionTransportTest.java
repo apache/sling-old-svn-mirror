@@ -18,11 +18,17 @@
  */
 package org.apache.sling.distribution.transport.impl;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpEntity;
@@ -37,25 +43,15 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link SimpleHttpDistributionTransport}
  */
-@Ignore
 public class SimpleHttpDistributionTransportTest {
 
     @Test
@@ -73,15 +69,17 @@ public class SimpleHttpDistributionTransportTest {
         when(executor.execute(any(Request.class))).thenReturn(response);
         DistributionEndpoint endpoint = new DistributionEndpoint("http://127.0.0.1:8080/some/resource");
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
-        int maxNoOfPackages = Integer.MAX_VALUE;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
-                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("type"));
         InputStream stream = mock(InputStream.class);
         when(distributionPackage.createInputStream()).thenReturn(stream);
-        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage);
+        DistributionTransportContext distributionContext = mock(DistributionTransportContext.class);
+        when(distributionContext.get(any(String.class), same(Executor.class))).thenReturn(executor);
+        when(distributionContext.containsKey(any(String.class))).thenReturn(true);
+        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage, distributionContext);
     }
 
     @Test
@@ -104,14 +102,12 @@ public class SimpleHttpDistributionTransportTest {
         when(executor.execute(any(Request.class))).thenReturn(response);
         DistributionEndpoint endpoint = new DistributionEndpoint("http://127.0.0.1:8080/some/resource");
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
-        int maxNoOfPackages = 1;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
-                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
-        assertNotNull(packages);
-        assertTrue(packages.isEmpty());
+        RemoteDistributionPackage retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, new DistributionTransportContext());
+        assertNull(retrievedPackage);
     }
 
     @Test
@@ -141,15 +137,15 @@ public class SimpleHttpDistributionTransportTest {
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo("type"));
         when(packageBuilder.readPackage(any(ResourceResolver.class), any(InputStream.class))).thenReturn(distributionPackage);
-        int maxNoOfPackages = 1;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
-                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
-        assertNotNull(packages);
-        assertFalse(packages.isEmpty());
-        assertEquals(1, packages.size());
-        assertNotNull(packages.get(0));
+        DistributionTransportContext distributionContext = mock(DistributionTransportContext.class);
+        when(distributionContext.get(any(String.class), same(Executor.class))).thenReturn(executor);
+        when(distributionContext.containsKey(any(String.class))).thenReturn(true);
+
+        RemoteDistributionPackage retrievedPackage = simpleHttpDistributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext);
+        assertNotNull(retrievedPackage);
     }
 }

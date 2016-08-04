@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -38,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
@@ -74,7 +78,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     }
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(null, new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
     }
 
     private Map<String, Object> initialSet() {
@@ -308,11 +312,11 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         // read with property map
         final ValueMap vm = new JcrModifiableValueMap(testNode, getHelperData());
         assertEquals(dateValue1, vm.get(PROP1, Date.class));
-        assertEquals(calendarValue1, vm.get(PROP1, Calendar.class));
+        assertEqualsCalendar(calendarValue1, vm.get(PROP1, Calendar.class));
         assertEquals(dateValue2, vm.get(PROP2, Date.class));
-        assertEquals(calendarValue2, vm.get(PROP2, Calendar.class));
+        assertEqualsCalendar(calendarValue2, vm.get(PROP2, Calendar.class));
         assertEquals(dateValue3, vm.get(PROP3, Date.class));
-        assertEquals(calendarValue3, vm.get(PROP3, Calendar.class));
+        assertEqualsCalendar(calendarValue3, vm.get(PROP3, Calendar.class));
 
         // check types
         assertTrue(vm.get(PROP1) instanceof Calendar);
@@ -320,8 +324,8 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         assertTrue(vm.get(PROP3) instanceof Calendar);
 
         // read properties
-        assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
-        assertEquals(calendarValue3, testNode.getProperty(PROP3).getDate());
+        assertEqualsCalendar(calendarValue1, testNode.getProperty(PROP1).getDate());
+        assertEqualsCalendar(calendarValue3, testNode.getProperty(PROP3).getDate());
 
     }
 

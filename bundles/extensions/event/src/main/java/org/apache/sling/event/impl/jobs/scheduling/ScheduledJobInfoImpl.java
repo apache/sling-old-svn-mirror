@@ -145,7 +145,7 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
      */
     @Override
     public void unschedule() {
-        this.jobScheduler.unscheduleJob(this);
+        this.jobScheduler.removeJob(this);
     }
 
     /**

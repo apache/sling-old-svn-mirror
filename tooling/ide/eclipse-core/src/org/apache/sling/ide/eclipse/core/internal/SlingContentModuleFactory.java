@@ -106,7 +106,7 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
         @Override
         public IModuleResource[] members() throws CoreException {
-            final List<IModuleResource> resources = new ArrayList<IModuleResource>();
+            final List<IModuleResource> resources = new ArrayList<>();
             final IFolder syncFolder = ProjectUtil.getSyncDirectory(getProject());
 
             if (syncFolder == null || !syncFolder.exists()) {

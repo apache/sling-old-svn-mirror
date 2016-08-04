@@ -16,19 +16,24 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.regex.Pattern;
+
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.quartz.SchedulerException;
-
-import java.io.*;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertTrue;
 
 public class WebConsolePrinterTest {
     private WebConsolePrinter consolePrinter;
@@ -64,6 +69,7 @@ public class WebConsolePrinterTest {
             reader.readLine();
             assertRegexp(reader.readLine(), ".*Status.*active.*");
             assertRegexp(reader.readLine(), ".*Name.*ApacheSling.*");
+            assertRegexp(reader.readLine(), ".*ThreadPool.*testName.*");
             assertRegexp(reader.readLine(), ".*Id.*");
             reader.readLine();
             assertRegexp(reader.readLine(), "^Job.*testName[123].*");
@@ -78,7 +84,7 @@ public class WebConsolePrinterTest {
             reader.close();
         }
     }
-    
+
     private void assertRegexp(String input, String regexp) {
         assertTrue("Expecting regexp match: '" + input + "' / '" + regexp + "'", Pattern.matches(regexp, input));
     }

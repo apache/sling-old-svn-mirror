@@ -37,18 +37,16 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.Features;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,20 +54,16 @@ import org.slf4j.LoggerFactory;
  * This service implements the feature handling. It keeps track of all
  * {@link Feature} services.
  */
-@Component(policy = ConfigurationPolicy.IGNORE)
-@Service
-@Reference(
-        name = "feature",
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC,
-        referenceInterface = Feature.class)
-@Properties({
-    @Property(name = "felix.webconsole.label", value = "features"),
-    @Property(name = "felix.webconsole.title", value = "Features"),
-    @Property(name = "felix.webconsole.category", value = "Sling"),
-    @Property(name = "pattern", value = "/.*"),
-    @Property(name = "service.ranking", intValue = 0x4000)
-})
+@Component(service = {Features.class, Filter.class, Servlet.class},
+           configurationPolicy = ConfigurationPolicy.IGNORE,
+           property = {
+                   HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=org.apache.sling)",
+                   HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN + "=/",
+                   "felix.webconsole.label=features",
+                   "felix.webconsole.title=Features",
+                   "felix.webconsole.category=Sling",
+                   Constants.SERVICE_RANKING + ":Integer=16384"
+           })
 public class FeatureManager implements Features, Filter, Servlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -84,15 +78,18 @@ public class FeatureManager implements Features, Filter, Servlet {
 
     //--- Features
 
+    @Override
     public Feature[] getFeatures() {
         final Map<String, Feature> activeFeatures = this.activeFeatures;
         return activeFeatures.values().toArray(new Feature[activeFeatures.size()]);
     }
 
+    @Override
     public Feature getFeature(final String name) {
         return this.activeFeatures.get(name);
     }
 
+    @Override
     public boolean isEnabled(String featureName) {
         final Feature feature = this.getFeature(featureName);
         if (feature != null) {
@@ -170,7 +167,8 @@ public class FeatureManager implements Features, Filter, Servlet {
     //--- Feature binding
 
     // bind method for Feature services
-    @SuppressWarnings("unused")
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC)
     private void bindFeature(final Feature f, final Map<String, Object> props) {
         synchronized (this.allFeatures) {
             final String name = f.getName();

@@ -102,12 +102,15 @@ public class QuartzJobExecutor implements Job {
             }
         }
 
+        final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
+        String origThreadName = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(origThreadName + "-" + name);
+
             logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
             if (job instanceof org.apache.sling.commons.scheduler.Job) {
                 @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
-                final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
 
                 final JobContext jobCtx = new JobContextImpl(name, configuration);
                 ((org.apache.sling.commons.scheduler.Job) job).execute(jobCtx);
@@ -123,6 +126,8 @@ public class QuartzJobExecutor implements Job {
             }
             // there is nothing we can do here, so we just log
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
+        } finally {
+            Thread.currentThread().setName(origThreadName);
         }
     }
 

@@ -23,36 +23,33 @@ import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
  * Attaches the bundle list as a project artifact.
- *
- * @goal attach-bundle-list
- * @phase package
- * @requiresDependencyResolution test
- * @description attach the bundle list as a project artifact
  */
+@Mojo(name = "attach-bundle-list", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
 
-    /**
-     * @parameter default-value="${project.build.directory}/bundleList.xml"
-     */
+    @Parameter(defaultValue = "${project.build.directory}/bundleList.xml")
     private File outputFile;
 
-    /**
-     * @parameter default-value="${project.build.directory}/bundleListconfig"
-     */
+    @Parameter(defaultValue = "${project.build.directory}/bundleListconfig")
     private File configOutputDir;
 
     /**
      * The zip archiver.
-     *
-     * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="zip"
      */
+    @Component(role = UnArchiver.class, hint = "zip")
     private ZipArchiver zipArchiver;
 
     private final BundleListXpp3Writer writer = new BundleListXpp3Writer();

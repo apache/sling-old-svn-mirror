@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling.ide</groupId>
         <artifactId>reactor</artifactId>
-        <version>1.0.7-SNAPSHOT</version>
+        <version>1.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>org.apache.sling.ide.eclipse-test</artifactId>
     <packaging>eclipse-test-plugin</packaging>
@@ -55,6 +55,11 @@
                             <requirement>
                                 <type>eclipse-feature</type>
                                 <id>org.apache.sling.ide.feature</id>
+                                <versionRange>0.0.0</versionRange>
+                            </requirement>
+                            <requirement>
+                                <type>eclipse-feature</type>
+                                <id>org.apache.sling.ide.sightly-feature</id>
                                 <versionRange>0.0.0</versionRange>
                             </requirement>
                         </extraRequirements>

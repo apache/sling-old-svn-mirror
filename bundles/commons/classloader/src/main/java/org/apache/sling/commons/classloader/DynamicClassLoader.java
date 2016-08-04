@@ -18,6 +18,8 @@
  */
 package org.apache.sling.commons.classloader;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A dynamic class loader is a class loader which might get
  * invalid over time.
@@ -26,10 +28,12 @@ package org.apache.sling.commons.classloader;
  *
  * @since 1.2.0
  */
+@ProviderType
 public interface DynamicClassLoader {
 
     /**
      * Is this class loader still alive/valid?
+     * @return {@code true} if still alive/valid.
      */
     boolean isLive();
 }

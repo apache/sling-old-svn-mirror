@@ -20,17 +20,20 @@ package org.apache.sling.api.resource.runtime.dto;
 
 /**
  * Represents a {@code org.apache.sling.spi.resource.provider.ResourceProvider}.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 public class ResourceProviderDTO {
 
     /**
 	 * The name of the resource provider.
-	 * Optional might be null.
+	 * Optional might be {@code null}.
 	 */
 	public String name;
 
     /**
      * The path of the resource provider.
+     * This is never {@code null}.
      */
     public String path;
 
@@ -41,6 +44,7 @@ public class ResourceProviderDTO {
 
     /**
      * The auth handling for this provider.
+     * This is never {@code null}.
      */
     public AuthType authType;
 
@@ -48,6 +52,26 @@ public class ResourceProviderDTO {
      * Whether the resource provider supports modifications.
      */
     public boolean modifiable;
+
+    /**
+     * Whether the resource provider supports adaptable.
+     */
+    public boolean adaptable;
+
+    /**
+     * Whether the resource provider supports refreshing.
+     */
+    public boolean refreshable;
+
+    /**
+     * Whether the resource provider supports attributes.
+     */
+    public boolean attributable;
+
+    /**
+     * Whether the resource provider supports query languages.
+     */
+    public boolean supportsQueryLanguage;
 
     /**
      * The service id from the service registry.

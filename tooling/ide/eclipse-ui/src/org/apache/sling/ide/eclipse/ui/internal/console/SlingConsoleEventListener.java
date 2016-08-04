@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.ui.console.SlingConsoleFactory;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
@@ -122,8 +121,7 @@ public class SlingConsoleEventListener implements EventHandler {
 
     private void logEvent(Event event, MessageConsole console) {
 
-        MessageConsoleStream messageStream = console.newMessageStream();
-        try {
+        try (MessageConsoleStream messageStream = console.newMessageStream()) {
 
             Long start = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_START);
             Long end = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_END);
@@ -148,8 +146,6 @@ public class SlingConsoleEventListener implements EventHandler {
             }
         } catch (IOException e) {
             Activator.getDefault().getPluginLogger().warn("Failed writing to the console", e);
-        } finally {
-            IOUtils.closeQuietly(messageStream);
         }
     }
 

@@ -18,11 +18,10 @@ package org.apache.sling.commons.json.test;
 
 import java.util.Iterator;
 
-import junit.framework.Assert;
-
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.junit.Assert;
 
 /**
  * Provides assertions on equality for JSON Arrays and Objects.

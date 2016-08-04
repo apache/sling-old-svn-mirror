@@ -89,6 +89,12 @@ public class RequestParameterSupportConfigurer {
             description = "The maximum size allowed for multipart/form-data requests. The default is -1, which means unlimited.")
     private static final String PROP_MAX_REQUEST_SIZE = "request.max";
 
+    @Property(
+            boolValue = false,
+            label = "Check Additional Parameters",
+            description = "Enable this if you want to include request parameters added through the container, e.g through a valve.")
+    private static final String PROP_CHECK_ADDITIONAL_PARAMETERS = "sling.default.parameter.checkForAdditionalContainerParameters";
+
     @Reference
     private SlingSettingsService settignsService;
 
@@ -105,6 +111,7 @@ public class RequestParameterSupportConfigurer {
             PropertiesUtil.toString(props.get(PROP_FILE_LOCATION), null));
         final long maxFileSize = PropertiesUtil.toLong(props.get(PROP_FILE_SIZE_MAX), -1);
         final int fileSizeThreshold = PropertiesUtil.toInteger(props.get(PROP_FILE_SIZE_THRESHOLD), -1);
+        final boolean checkAddParameters = PropertiesUtil.toBoolean(props.get(PROP_CHECK_ADDITIONAL_PARAMETERS), false);
 
         if (log.isInfoEnabled()) {
             log.info("Default Character Encoding: {}", fixEncoding);
@@ -113,11 +120,13 @@ public class RequestParameterSupportConfigurer {
             log.info("Temporary File Location: {}", fileLocation);
             log.info("Maximum File Size: {}", maxFileSize);
             log.info("Tempory File Creation Threshold: {}", fileSizeThreshold);
+            log.info("Check for additional container parameters: {}", checkAddParameters);
         }
 
         Util.setDefaultFixEncoding(fixEncoding);
         ParameterMap.setMaxParameters(maxParams);
-        ParameterSupport.configure(maxRequestSize, fileLocation, maxFileSize, fileSizeThreshold);
+        ParameterSupport.configure(maxRequestSize, fileLocation, maxFileSize,
+                fileSizeThreshold, checkAddParameters);
     }
 
     private String getFileLocation(final ComponentContext context, String fileLocation) {

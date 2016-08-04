@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
@@ -50,12 +50,14 @@
     </scm>
 
     <modules>
+        <module>compiler</module>
+        <module>java-compiler</module>
         <module>engine</module>
         <module>js-use-provider</module>
+        <module>models-use-provider</module>
         <module>repl</module>
         <module>testing-content</module>
         <module>testing</module>
-        <module>models-use-provider</module>
     </modules>
 
 </project>

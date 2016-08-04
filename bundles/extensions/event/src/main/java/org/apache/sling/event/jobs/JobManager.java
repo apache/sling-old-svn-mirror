@@ -21,14 +21,21 @@ package org.apache.sling.event.jobs;
 import java.util.Collection;
 import java.util.Map;
 
-import org.osgi.service.event.Event;
-
 import aQute.bnd.annotation.ProviderType;
 
 
 /**
- * The job manager is the heart of the job event handling.
- * It can be used to manage and monitor the queues.
+ * The job manager is the heart of the job processing.
+ * <p>
+ * The job manager allows to create new jobs, search for
+ * jobs and get statistics about the current state.
+ * <p>
+ * The terminology used in the job manager is slightly
+ * different from common terminology:
+ * Each job has a topic and a topic is associated with
+ * a queue. Queues can be created through configuration
+ * and each queue can process one or more topics.
+ *
  * @since 3.0
  */
 @ProviderType
@@ -36,11 +43,13 @@ public interface JobManager {
 
     /**
      * Return statistics information about all queues.
+     * @return The statistics.
      */
     Statistics getStatistics();
 
     /**
      * Return statistics information about job topics.
+     * @return The statistics for all topics.
      */
     Iterable<TopicStatistics> getTopicStatistics();
 
@@ -53,6 +62,7 @@ public interface JobManager {
 
     /**
      * Return an iterator for all available queues.
+     * @return An iterator for all queues.
      */
     Iterable<Queue> getQueues();
 
@@ -122,9 +132,9 @@ public interface JobManager {
     boolean removeJobById(String jobId);
 
     /**
-     * Find a job - either scheduled or active.
+     * Find a job - either queued or active.
      *
-     * This method searches for an event with the given topic and filter properties. If more than one
+     * This method searches for a job with the given topic and filter properties. If more than one
      * job matches, the first one found is returned which could be any of the matching jobs.
      *
      * The returned job object is a snapshot of the job state taken at the time of the call. Updates
@@ -168,6 +178,7 @@ public interface JobManager {
      * When a job is stopped and the job consumer supports stopping the job processing, it is up
      * to the job consumer how the stopping is handled. The job can be marked as finished successful,
      * permanently failed or being retried.
+     * @param jobId The job id
      * @since 1.3
      */
     void stopJobById(String jobId);
@@ -192,6 +203,7 @@ public interface JobManager {
 
     /**
      * Return all available job schedules.
+     * @return A collection of scheduled job infos
      * @since 1.3
      */
     Collection<ScheduledJobInfo> getScheduledJobs();
@@ -204,134 +216,8 @@ public interface JobManager {
      * @param templates A list of filter property maps. Each map acts like a template. The searched job
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
+     * @return All matching scheduled job infos.
      * @since 1.4
      */
     Collection<ScheduledJobInfo> getScheduledJobs(String topic, long limit, Map<String, Object>... templates);
-
-    /**
-     * Restart the job manager.
-     * This method restarts the job manager and all queues - currently processed jobs will be finished.
-     * The job manager should only be restarted if really necessary!
-     * @deprecated This method does nothing
-     */
-    @Deprecated
-    void restart();
-
-    /**
-     * Add a new job
-     *
-     * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
-     * If properties are provided, all of them must be serializable. If there are non serializable
-     * objects in the properties, no job is created and <code>null</code> is returned.
-     * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
-     * allowed characters are letters, numbers and the underscore.
-     *
-     * This method allows to specify a job name which should uniquely identify this job. If a job with
-     * the same name is started on different instances, the job is still processed only once. However,
-     * the topology api in combination with the leader selection provides a better way for
-     * dealing with this situation and as jobs with name come with a heavy processing overhead
-     * these should be avoided.
-     *
-     * The returned job object is a snapshot of the job state taken at the time of creation. Updates
-     * to the job state are not reflected and the client needs to get a new job object using the job id.
-     *
-     * If the queue for processing this job is configured to drop the job, <code>null</code> is returned
-     * as well.
-     *
-     * @param topic The required job topic.
-     * @param name  Optional unique job name
-     * @param properties Optional job properties. The properties must be serializable.
-     * @return The new job - or <code>null</code> if the job could not be created.
-     * @since 1.2
-     * @deprecated
-     */
-    @Deprecated
-    Job addJob(String topic, String name, Map<String, Object> properties);
-
-    /**
-     * Return a job based on the unique job name.
-     *
-     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
-     * to the job state are not reflected and the client needs to get a new job object using the job id.
-     *
-     * @return A job or <code>null</code>
-     * @since 1.2
-     * @deprecated
-     */
-    @Deprecated
-    Job getJobByName(String name);
-
-    /**
-     * Return all jobs either running or scheduled.
-     *
-     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
-     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param templates A list of filter property maps. Each map acts like a template. The searched job
-     *                    must match the template (AND query). By providing several maps, different filters
-     *                    are possible (OR query).
-     * @return A non null collection.
-     * @deprecated Use {@link #findJobs(QueryType, String, long, Map...)}
-     */
-    @Deprecated
-    JobsIterator queryJobs(QueryType type, String topic, Map<String, Object>... templates);
-
-    /**
-     * Return all jobs either running or scheduled.
-     *
-     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
-     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param limit A positive number indicating the maximum number of jobs returned by the iterator.
-     * @param templates A list of filter property maps. Each map acts like a template. The searched job
-     *                    must match the template (AND query). By providing several maps, different filters
-     *                    are possible (OR query).
-     * @return A non null collection.
-     * @since 1.1
-     * @deprecated Use {@link #findJobs(QueryType, String, long, Map...)}
-     */
-    @Deprecated
-    JobsIterator queryJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
-
-    /**
-     * Find a job - either scheduled or active.
-     * This method searches for an event with the given topic and filter properties. If more than one
-     * job matches, the first one found is returned which could be any of the matching jobs.
-     *
-     * @param topic Topic is required.
-     * @param template The map acts like a template. The searched job
-     *                    must match the template (AND query).
-     * @return An event or <code>null</code>
-     * @deprecated Use {@link #getJob(String, Map)}
-     */
-    @Deprecated
-    Event findJob(String topic, Map<String, Object> template);
-
-    /**
-     * Cancel this job.
-     * Canceling a job might fail if the job is currently in processing.
-     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
-     * @return <code>true</code> if the job could be cancelled or does not exist anymore.
-     *         <code>false</code> otherwise.
-     * @deprecated Use {@link #removeJobById(String)}
-     */
-    @Deprecated
-    boolean removeJob(String jobId);
-
-    /**
-     * Cancel this job.
-     * This method acts like {@link #removeJob(String)} with the exception that it waits
-     * for a job to finish. The job will be removed when this method returns - however
-     * this method blocks until the job is finished!
-     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
-     * @deprecated Use {@link #removeJobById(String)}
-     */
-    @Deprecated
-    void forceRemoveJob(String jobId);
-
-    /**
-     * Is job processing enabled?
-     * It is possible to completely turn off job processing.
-     * @deprecated This method always returns true
-     */
-    @Deprecated
-    boolean isJobProcessingEnabled();
 }

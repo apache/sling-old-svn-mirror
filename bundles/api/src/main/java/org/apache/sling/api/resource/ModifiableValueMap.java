@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ModifiableValueMap</code> is an extension
@@ -34,7 +34,7 @@ import aQute.bnd.annotation.ConsumerType;
  * The modifiable value map is only changeable through
  * one of these methods
  * <ul>
- *  <li>{@link #put(String, Object)}</li>
+ *  <li>{@link #put(Object, Object)}</li>
  *  <li>{@link #putAll(java.util.Map)}</li>
  *  <li>{@link #remove(Object)}</li>
  * </ul>

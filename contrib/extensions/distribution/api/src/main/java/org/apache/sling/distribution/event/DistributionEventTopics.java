@@ -18,11 +18,13 @@
  */
 package org.apache.sling.distribution.event;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * an interface containing of the possible topics of events related to distribution
  */
+@ProviderType
 public interface DistributionEventTopics {
-
 
     public static final String EVENT_BASE = "org/apache/sling/distribution";
 

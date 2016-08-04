@@ -23,28 +23,32 @@ import java.security.Principal;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.junit.Assert;
- 
+import org.mockito.Mockito;
+
 public class JcrResourceProviderTest extends RepositoryTestBase {
-    
+
     JcrResourceProvider jcrResourceProvider;
     Session session;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         // create the session
         session = getSession();
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+
     public void testAdaptTo_Principal() {
-        jcrResourceProvider = new JcrResourceProvider(session, null, null, null);
-        Assert.assertNotNull(jcrResourceProvider.adaptTo(Principal.class));
+        jcrResourceProvider = new JcrResourceProvider();
+        ResolveContext ctx = Mockito.mock(ResolveContext.class);
+        Mockito.when(ctx.getProviderState()).thenReturn(new JcrProviderState(session, null, false));
+        Assert.assertNotNull(jcrResourceProvider.adaptTo(ctx, Principal.class));
     }
 }
 

@@ -41,6 +41,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.osgi.SourceReference;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,7 +66,6 @@ public class HttpOsgiClient implements OsgiClient {
 
         GetMethod method = new GetMethod(repositoryInfo.appendPath("system/console/bundles.json"));
         HttpClient client = getHttpClient();
-        InputStream input = null;
 
         try {
             int result = client.executeMethod(method);
@@ -73,30 +73,26 @@ public class HttpOsgiClient implements OsgiClient {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
 
-            input = method.getResponseBodyAsStream();
+            try ( InputStream input = method.getResponseBodyAsStream() ) {
 
-            JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
-
-            JSONArray bundleData = object.getJSONArray("data");
-            for (int i = 0; i < bundleData.length(); i++) {
-                JSONObject bundle = bundleData.getJSONObject(i);
-                String remotebundleSymbolicName = bundle.getString("symbolicName");
-                Version bundleVersion = new Version(bundle.getString("version"));
-
-                if (bundleSymbolicName.equals(remotebundleSymbolicName)) {
-                    return bundleVersion;
+                JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
+    
+                JSONArray bundleData = object.getJSONArray("data");
+                for (int i = 0; i < bundleData.length(); i++) {
+                    JSONObject bundle = bundleData.getJSONObject(i);
+                    String remotebundleSymbolicName = bundle.getString("symbolicName");
+                    Version bundleVersion = new Version(bundle.getString("version"));
+    
+                    if (bundleSymbolicName.equals(remotebundleSymbolicName)) {
+                        return bundleVersion;
+                    }
                 }
+    
+                return null;
             }
-
-            return null;
-        } catch (HttpException e) {
-            throw new OsgiClientException(e);
-        } catch (IOException e) {
-            throw new OsgiClientException(e);
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new OsgiClientException(e);
         } finally {
-            IOUtils.closeQuietly(input);
             method.releaseConnection();
         }
     }
@@ -132,7 +128,7 @@ public class HttpOsgiClient implements OsgiClient {
             // set referrer
             filePost.setRequestHeader("referer", "about:blank");
 
-            List<Part> partList = new ArrayList<Part>();
+            List<Part> partList = new ArrayList<>();
             partList.add(new StringPart("action", "install"));
             partList.add(new StringPart("_noredir_", "_noredir_"));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -189,6 +185,45 @@ public class HttpOsgiClient implements OsgiClient {
                 method.setRequestEntity(new MultipartRequestEntity(parts, method.getParams()));
             }
         }.installBundle();        
+    }
+    
+    @Override
+    public List<SourceReference> findSourceReferences() throws OsgiClientException {
+        GetMethod method = new GetMethod(repositoryInfo.appendPath("system/sling/tooling/sourceReferences.json"));
+        HttpClient client = getHttpClient();
+
+        try {
+            int result = client.executeMethod(method);
+            if (result != HttpStatus.SC_OK) {
+                throw new HttpException("Got status code " + result + " for call to " + method.getURI());
+            }
+
+            List<SourceReference> refs = new ArrayList<>();
+            try ( InputStream input = method.getResponseBodyAsStream() ) {
+
+                JSONArray bundles = new JSONArray(new JSONTokener(new InputStreamReader(input)));
+                for ( int i = 0 ; i < bundles.length(); i++) {
+                    JSONObject bundle = bundles.getJSONObject(i);
+                    JSONArray references = bundle.getJSONArray("sourceReferences");
+                    for ( int j = 0 ; j < references.length(); j++ ) {
+                        JSONObject reference = references.getJSONObject(j);
+                        if ( !"maven".equals(reference.get("__type__")) ) {
+                            // unknown type, skipping
+                            continue;
+                        }
+                        
+                        refs.add(new MavenSourceReferenceImpl(reference.getString("groupId"), reference.getString("artifactId"), reference.getString("version")));
+                    }
+                }
+    
+    
+                return refs;
+            }
+        } catch (IOException | JSONException e) {
+            throw new OsgiClientException(e);
+        } finally {
+            method.releaseConnection();
+        }        
     }
 
     static abstract class LocalBundleInstaller {

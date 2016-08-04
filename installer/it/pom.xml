@@ -21,12 +21,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>26</version>
         <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.installer.it</artifactId>
-    <version>3.6.7-SNAPSHOT</version>
+    <version>3.6.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Installer Integration Tests</name>
@@ -34,7 +34,7 @@
 
     <properties>
         <exam.version>3.0.3</exam.version>
-        <url.version>1.5.2</url.version>
+        <url.version>2.4.7</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
         <installer.configuration.version>1.1.3-SNAPSHOT</installer.configuration.version>
 
@@ -478,6 +478,12 @@
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <version>${url.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.ide.jcr.RepositoryUtils;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
@@ -85,9 +86,9 @@ public class VltRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resource,
+    public Command<Void> newAddOrUpdateNodeCommand(CommandContext context, FileInfo fileInfo, ResourceProxy resource,
             CommandExecutionFlag... flags) {
-        return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, fileInfo, resource, logger, flags),
+        return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, context, fileInfo, resource, logger, flags),
                 eventAdmin);
     }
 

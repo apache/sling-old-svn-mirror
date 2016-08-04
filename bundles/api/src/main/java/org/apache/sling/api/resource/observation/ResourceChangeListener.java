@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Listener for resource change events.
@@ -44,30 +44,48 @@ import aQute.bnd.annotation.ConsumerType;
  * By default a resource listener gets only local events which means events
  * caused by changes persisted on the same instance as this listener is registered.
  * If the resource listener is interested in external events, the implementation
- * should implement the {@link ExternalResourceListener} interface, but still register
+ * should implement the {@link ExternalResourceChangeListener} interface, but still register
  * the service as a {@code ResourceChangeListener} service.
+ *
+ * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ConsumerType
 public interface ResourceChangeListener {
 
     /**
-     * Array of paths - required.
-     * A path is either absolute or relative. If it's a relative path, the relative path
-     * will be appended to all search paths of the resource resolver. If the whole tree
-     * of all search paths should be observed, the special value {@code .} should be used.
-     * If one of the paths is a sub resource of another specified path,
-     * the sub path is ignored.
+     * <p>Array of paths or glob patterns - required.</p>
+     *
+     * <p>A path is either absolute or relative. If it's a relative path, the relative path will be appended to all search paths of the
+     * resource resolver.</p>
+     *
+     * <p>If the whole tree of all search paths should be observed, the special value {@code .} should be used.</p>
+     *
+     * <p>A glob pattern must start with the {@code glob:} prefix (e.g. <code>glob:**&#47;*.html</code>). The following rules are used
+     * to interpret glob patterns:</p>
+     * <ul>
+     *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
+     *     <li>The {@code **} characters match zero or more characters crossing directory boundaries.</li>
+     * </ul>
+     *
+     * <p>If one of the paths is a sub resource of another specified path, the sub path is ignored.</p>
+     *
+     * <p>If this property is missing or invalid, the listener is ignored. The type of the property must either be String, or a String
+     * array.</p>
      */
     String PATHS = "resource.paths";
 
     /**
      * Array of change types - optional.
-     * If this property is missing, added, removed and changed events are reported.
+     * If this property is missing, added, removed and changed events for resources
+     * and added, and removed events for resource providers are reported.
+     * If this property is invalid, the listener is ignored. The type of the property
+     * must either be String, or a String array. Valid values are the constants from
+     * {@link ResourceChange.ChangeType}.
      */
     String CHANGES = "resource.change.types";
 
     /**
-     * Report a resource change based on the filter properties of this listener.
+     * Report resource changes based on the filter properties of this listener.
      * @param changes The changes.
      */
     void onChange(@Nonnull List<ResourceChange> changes);

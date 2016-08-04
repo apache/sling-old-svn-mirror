@@ -26,7 +26,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
  * The <code>SlingHttpServletResponseWrapper</code> class is a default wrapper
  * class around a {@link SlingHttpServletResponse} which may be extended to
  * amend the functionality of the original response object.
- * 
+ *
  * There's nothing interesting to wrap currently, as the SlingHttpServletResponse
  * interface is empty.
  * So this exists only for symmetry with {@link SlingHttpServletRequestWrapper}
@@ -34,7 +34,10 @@ import org.apache.sling.api.SlingHttpServletResponse;
 public class SlingHttpServletResponseWrapper extends HttpServletResponseWrapper
         implements SlingHttpServletResponse {
 
-    /** Create a wrapper for the supplied wrappedRequest */
+    /**
+     * Create a wrapper for the supplied wrappedRequest
+     * @param wrappedResponse The response
+     */
     public SlingHttpServletResponseWrapper(SlingHttpServletResponse wrappedResponse) {
         super(wrappedResponse);
     }
@@ -42,11 +45,13 @@ public class SlingHttpServletResponseWrapper extends HttpServletResponseWrapper
     /**
      * Return the original {@link SlingHttpServletResponse} object wrapped by
      * this.
+     * @return The wrapped response.
      */
     public SlingHttpServletResponse getSlingResponse() {
         return (SlingHttpServletResponse) getResponse();
     }
 
+    @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return getSlingResponse().adaptTo(type);
     }

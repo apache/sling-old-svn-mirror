@@ -20,58 +20,72 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.CheckForNull;
 
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.event.jobs.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class JobHandlingUtils {
+class JobHandlingUtils {
+    private final static Logger log = LoggerFactory.getLogger(JobHandlingUtils.class);
+
+    private static final String ID_START = "dstrpck-";
 
     private static final String DISTRIBUTION_PACKAGE_PREFIX = "distribution.";
-    private static final String ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
+    private static final String DISTRIBUTION_PACKAGE_ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
 
     public static DistributionQueueItem getItem(final Job job) {
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        for (String key: job.getPropertyNames()) {
-            if (key.startsWith(DISTRIBUTION_PACKAGE_PREFIX)) {
-                String infoKey = key.substring(DISTRIBUTION_PACKAGE_PREFIX.length());
-                properties.put(infoKey, job.getProperty(key));
+
+        String packageId = (String) job.getProperty(DISTRIBUTION_PACKAGE_ID);
+
+        try {
+            Set<String> propertyNames = job.getPropertyNames();
+            for (String key : propertyNames) {
+                if (key.startsWith(DISTRIBUTION_PACKAGE_PREFIX)) {
+                    String infoKey = key.substring(DISTRIBUTION_PACKAGE_PREFIX.length());
+                    properties.put(infoKey, job.getProperty(key));
+                }
             }
+        } catch (Throwable t) {
+            log.error("Cannot read job {} properties", job.getId(), t);
         }
 
-        String id = (String) job.getProperty(ID);
-
-        return new DistributionQueueItem(id, properties);
+        return new DistributionQueueItem(packageId, properties);
     }
 
     public static Map<String, Object> createFullProperties(DistributionQueueItem queueItem) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
         for (String key : queueItem.keySet()) {
-           properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            Object value = queueItem.get(key);
+            if (value != null) {
+                properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            }
         }
 
-        properties.put(ID, queueItem.getId());
+        properties.put(DISTRIBUTION_PACKAGE_ID, queueItem.getPackageId());
 
         return properties;
     }
 
-    public static Map<String, Object> createIdProperties(String itemId) {
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ID, itemId);
-        return properties;
-    }
-
+    @CheckForNull
     public static String getQueueName(Job job) {
 
         String topic = job.getTopic();
         if (topic == null || !topic.startsWith(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC)) return null;
 
         String queue = topic.substring(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC.length() + 1);
-        int idx = queue.indexOf("/");
+
+
+        int idx = queue.lastIndexOf("/");
 
         if (idx < 0) return "";
 
@@ -82,22 +96,40 @@ public class JobHandlingUtils {
         String queueName = getQueueName(job);
         int attempts = job.getRetryCount();
 
-        DistributionQueueItemStatus status = new DistributionQueueItemStatus(job.getCreated(),
-                attempts > 0 ? DistributionQueueItemState.ERROR: DistributionQueueItemState.QUEUED,
+        return new DistributionQueueItemStatus(job.getCreated(),
+                attempts > 0 ? DistributionQueueItemState.ERROR : DistributionQueueItemState.QUEUED,
                 attempts, queueName);
-
-        return status;
     }
 
+    @CheckForNull
     public static DistributionQueueEntry getEntry(final Job job) {
         DistributionQueueItem item = getItem(job);
         DistributionQueueItemStatus itemStatus = getStatus(job);
 
         if (item != null && itemStatus != null) {
-            return new DistributionQueueEntry(item, itemStatus);
+            return new DistributionQueueEntry(escapeId(job.getId()), item, itemStatus);
         }
 
         return null;
+    }
+
+    public static String escapeId(String jobId) {
+        //return id;
+        if (jobId == null) {
+            return null;
+        }
+        return ID_START + jobId.replace("/", "--");
+    }
+
+    public static String unescapeId(String itemId) {
+        if (itemId == null) {
+            return null;
+        }
+        if (!itemId.startsWith(ID_START)) {
+            return null;
+        }
+
+        return itemId.replace(ID_START, "").replace("--","/");
     }
 
 

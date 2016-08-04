@@ -18,7 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.resource;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -28,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.junit.After;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -39,23 +39,23 @@ import com.google.common.collect.ImmutableMap;
 public abstract class AbstractMultipleResourceResolverTest {
 
     private final BundleContext bundleContext = MockOsgi.newBundleContext();
+    
     protected abstract ResourceResolverType getResourceResolverType();
-
+    
     protected ResourceResolverFactory newResourceResolerFactory() {
         return MockSling.newResourceResolverFactory(getResourceResolverType(), bundleContext);
+    }
+    
+    @After
+    public void tearDown() {
+        MockOsgi.shutdown(bundleContext);
     }
     
     @Test
     public void testMultipleResourceResolver() throws Exception {
         ResourceResolverFactory factory = newResourceResolerFactory();
-        ResourceResolver resolver1 = factory.getResourceResolver(ImmutableMap.<String, Object>of(
-                ResourceResolverFactory.USER, "user1"));
-        ResourceResolver resolver2 = factory.getResourceResolver(ImmutableMap.<String, Object>of(
-                ResourceResolverFactory.USER, "user2"));
-        
-        // validate user names
-        assertEquals("user1", resolver1.getAttribute(ResourceResolverFactory.USER));
-        assertEquals("user2", resolver2.getAttribute(ResourceResolverFactory.USER));
+        ResourceResolver resolver1 = factory.getAdministrativeResourceResolver(null);
+        ResourceResolver resolver2 = factory.getAdministrativeResourceResolver(null);
         
         // add a resource in resolver 1
         Resource root = resolver1.getResource("/");

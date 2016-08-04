@@ -19,23 +19,24 @@
 
 package org.apache.sling.distribution.queue.impl;
 
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
-import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -43,20 +44,21 @@ import java.util.TreeSet;
  * where the queueName is the name of the original queue the package was in.
  */
 public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final static String ERROR_PREFIX = "error-";
+
+    public final static String ERROR_PREFIX = "error-";
     private final Set<String> queueNames = new TreeSet<String>();
 
     public ErrorQueueDispatchingStrategy(String[] queueNames) {
-
         this.queueNames.addAll(Arrays.asList(queueNames));
     }
 
     @Override
-    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionException {
 
         List<DistributionQueueItemStatus> result = new ArrayList<DistributionQueueItemStatus>();
-        String originQueue = distributionPackage.getInfo().getQueue();
+        String originQueue = DistributionPackageUtils.getQueueName(distributionPackage.getInfo());
 
         if (!queueNames.contains(originQueue)) {
             return result;
@@ -69,12 +71,14 @@ public class ErrorQueueDispatchingStrategy implements DistributionQueueDispatchi
         DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, errorQueueName);
 
         DistributionQueueItem queueItem = DistributionPackageUtils.toQueueItem(distributionPackage);
+        DistributionPackageUtils.acquire(distributionPackage, errorQueueName);
+        DistributionQueueEntry queueEntry = errorQueue.add(queueItem);
 
-        if (errorQueue.add(queueItem)) {
-            DistributionPackageUtils.acquire(distributionPackage, errorQueueName);
-
-            DistributionQueueEntry entry = errorQueue.getItem(queueItem.getId());
-            status = entry.getStatus();
+        if (queueEntry != null) {
+            status = queueEntry.getStatus();
+        } else {
+            DistributionPackageUtils.releaseOrDelete(distributionPackage, errorQueueName);
+            log.error("cannot add package {} to queue {}", distributionPackage.getId(), errorQueueName);
         }
 
         result.add(status);

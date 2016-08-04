@@ -2,9 +2,5 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "reverse-pubsync",
 
-    "serviceName" : "distributionService",
-
-    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
-
-    "packageBuilder.target" : "(name=vlt)"
+    "serviceName" : "distributionService"
 }

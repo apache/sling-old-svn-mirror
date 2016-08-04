@@ -25,7 +25,6 @@ import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -40,9 +39,9 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
-    private ServiceTracker<Object, Object> tracer;
+    private ServiceTracker<Logger, Logger> tracer;
 
-    private ServiceRegistration<?> tracerRegistration;
+    private ServiceRegistration<Logger> tracerRegistration;
 
     public static Activator getDefault() {
 
@@ -55,27 +54,24 @@ public class Activator extends AbstractUIPlugin {
 
         tracerRegistration = PluginLoggerRegistrar.register(this);
 
-        serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
-                SerializationManager.class, null);
+        serializationManager = new ServiceTracker<>(context, SerializationManager.class, null);
         serializationManager.open();
 
-        filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
+        filterLocator = new ServiceTracker<>(context, FilterLocator.class, null);
         filterLocator.open();
 
-        eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class, null);
+        eventAdmin = new ServiceTracker<>(context, EventAdmin.class, null);
         eventAdmin.open();
 
-        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context,
+        artifactLocator = new ServiceTracker<>(context,
                 EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
-        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
+        osgiClientFactory = new ServiceTracker<>(context, OsgiClientFactory.class,
                 null);
         osgiClientFactory.open();
 
-        // ugh
-        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
-        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer = new ServiceTracker<>(context, tracerRegistration.getReference(), null);
         tracer.open();
 
         INSTANCE = this;

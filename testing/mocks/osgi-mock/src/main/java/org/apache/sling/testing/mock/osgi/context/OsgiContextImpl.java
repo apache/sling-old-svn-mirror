@@ -53,7 +53,12 @@ public class OsgiContextImpl {
      * Teardown actions after test method execution
      */
     protected void tearDown() {
-        // can be overridden by subclasses
+        if (componentContext != null) {
+            // deactivate all services
+            MockOsgi.shutdown(componentContext.getBundleContext());
+        }
+
+        this.componentContext = null;
     }
 
     /**

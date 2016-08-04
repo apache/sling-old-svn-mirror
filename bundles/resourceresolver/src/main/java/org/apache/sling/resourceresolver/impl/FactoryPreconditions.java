@@ -19,141 +19,127 @@
 package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper class which checks whether all conditions for registering
+ * the resource resolver factory are fulfilled.
+ */
 public class FactoryPreconditions {
 
     private static final class RequiredProvider {
+        public String name;
         public String pid;
         public Filter filter;
-        public final List<Map<String, Object>> matchingServices = new ArrayList<Map<String,Object>>();
     };
 
-    private final List<Map<String, Object>> earlyPropertiesList = new ArrayList<Map<String, Object>>();
+    private volatile ResourceProviderTracker tracker;
 
     private volatile List<RequiredProvider> requiredProviders;
 
-    private Boolean cachedResult = Boolean.FALSE;
+    public void activate(final BundleContext bc,
+            final String[] legycyConfiguration,
+            final String[] namesConfiguration,
+            final ResourceProviderTracker tracker) {
+        synchronized ( this ) {
+            this.tracker = tracker;
 
-    public void activate(final BundleContext bc, final String[] configuration) {
-        final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
-        if ( configuration != null ) {
-            final Logger logger = LoggerFactory.getLogger(getClass());
-            for(final String r : configuration) {
-                if ( r != null && r.trim().length() > 0 ) {
-                    final String value = r.trim();
-                    RequiredProvider rp = new RequiredProvider();
-                    if ( value.startsWith("(") ) {
-                        try {
-                            rp.filter = bc.createFilter(value);
-                        } catch (final InvalidSyntaxException e) {
-                            logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
-                            rp = null;
+            final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
+            if ( legycyConfiguration != null ) {
+                final Logger logger = LoggerFactory.getLogger(getClass());
+                for(final String r : legycyConfiguration) {
+                    if ( r != null && r.trim().length() > 0 ) {
+                        final String value = r.trim();
+                        RequiredProvider rp = new RequiredProvider();
+                        if ( value.startsWith("(") ) {
+                            try {
+                                rp.filter = bc.createFilter(value);
+                            } catch (final InvalidSyntaxException e) {
+                                logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
+                                rp = null;
+                            }
+                        } else {
+                            rp.pid = value;
                         }
-                    } else {
-                        rp.pid = value;
-                    }
-                    if ( rp != null ) {
-                        rps.add(rp);
+                        if ( rp != null ) {
+                            rps.add(rp);
+                        }
                     }
                 }
             }
-        }
-        synchronized ( this ) {
-            this.requiredProviders = rps;
-            this.cachedResult = null;
-            for(final Map<String,Object> props : this.earlyPropertiesList) {
-                this.bindProvider(props);
+            if ( namesConfiguration != null ) {
+                for(final String r : namesConfiguration) {
+                    if( r != null ) {
+                        final String value = r.trim();
+                        if ( !value.isEmpty() ) {
+                            final RequiredProvider rp = new RequiredProvider();
+                            rp.name = value;
+                            rps.add(rp);
+                        }
+                    }
+                }
             }
-            this.earlyPropertiesList.clear();
+            this.requiredProviders = rps;
         }
     }
 
     public void deactivate() {
-        this.requiredProviders = null;
+        synchronized ( this ) {
+            this.requiredProviders = null;
+            this.tracker = null;
+        }
     }
 
-    public boolean checkPreconditions() {
+    public boolean checkPreconditions(final String unavailableName, final String unavailableServicePid) {
         synchronized ( this ) {
-            if ( cachedResult != null ) {
-                return cachedResult;
-            }
-            boolean canRegister = false;
-            if ( this.requiredProviders != null) {
-                canRegister = true;
-                for(final RequiredProvider rp : this.requiredProviders) {
-                    if ( rp.matchingServices.size() == 0 ) {
-                        canRegister = false;
+            final List<RequiredProvider> localRequiredProviders = this.requiredProviders;
+            final ResourceProviderTracker localTracker = this.tracker;
+            boolean canRegister = localTracker != null;
+            if (localRequiredProviders != null && localTracker != null ) {
+                for (final RequiredProvider rp : localRequiredProviders) {
+                    canRegister = false;
+                    for (final ResourceProviderHandler h : localTracker.getResourceProviderStorage().getAllHandlers()) {
+                        final ServiceReference ref = h.getInfo().getServiceReference();
+                        final Object servicePid = ref.getProperty(Constants.SERVICE_PID);
+                        if ( unavailableServicePid != null && unavailableServicePid.equals(servicePid) ) {
+                            // ignore this service
+                            continue;
+                        }
+                        if ( unavailableName != null && unavailableName.equals(h.getInfo().getName()) ) {
+                            // ignore this service
+                            continue;
+                        }
+                        if ( rp.name != null && rp.name.equals(h.getInfo().getName()) ) {
+                            canRegister = true;
+                            break;
+                        } else if (rp.filter != null && rp.filter.match(ref)) {
+                            canRegister = true;
+                            break;
+                        } else if (rp.pid != null && rp.pid.equals(servicePid)){
+                            canRegister = true;
+                            break;
+                        } else if (rp.pid != null && rp.pid.equals(ref.getProperty(LegacyResourceProviderWhiteboard.ORIGINAL_SERVICE_PID))) {
+                            canRegister = true;
+                            break;
+                        }
+                    }
+                    if ( !canRegister ) {
                         break;
                     }
                 }
             }
-            this.cachedResult = canRegister;
             return canRegister;
-        }
-    }
-
-    public void bindProvider(final Map<String, Object> props) {
-        synchronized ( this ) {
-            if ( this.requiredProviders == null ) {
-                this.earlyPropertiesList.add(props);
-                return;
-            }
-            Dictionary<String, Object> dict = null;
-            for(final RequiredProvider rp : this.requiredProviders) {
-                if ( rp.pid != null ) {
-                    if ( rp.pid.equals(props.get(Constants.SERVICE_PID)) ) {
-                        rp.matchingServices.add(props);
-                        this.cachedResult = null;
-                    }
-                } else {
-                    if ( dict == null ) {
-                        dict = new Hashtable<String, Object>(props);
-                    }
-                    if ( rp.filter.match(dict) ) {
-                        rp.matchingServices.add(props);
-                        this.cachedResult = null;
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean removeFromList(final List<Map<String, Object>> list, final Map<String, Object> props) {
-        final Long id = (Long) props.get(Constants.SERVICE_ID);
-        int index = 0;
-        while ( index < list.size() ) {
-            final Long currentId = (Long ) list.get(index).get(Constants.SERVICE_ID);
-            if ( currentId == id ) {
-                list.remove(index);
-                return true;
-            }
-            index++;
-        }
-        return false;
-    }
-
-    public void unbindProvider(final Map<String, Object> props) {
-        synchronized ( this ) {
-            if ( this.requiredProviders == null ) {
-                this.removeFromList(this.earlyPropertiesList, props);
-                return;
-            }
-            for(final RequiredProvider rp : this.requiredProviders) {
-                if ( this.removeFromList(rp.matchingServices, props) ) {
-                    this.cachedResult = null;
-                }
-            }
         }
     }
 }

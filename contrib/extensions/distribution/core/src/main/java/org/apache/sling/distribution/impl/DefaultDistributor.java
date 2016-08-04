@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -28,12 +30,10 @@ import org.apache.sling.distribution.DistributionRequestState;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
+import org.apache.sling.distribution.common.DistributionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 
 /**
  * Default implementation of Distributor interface that dispatches the request to available agents.
@@ -46,6 +46,7 @@ public class DefaultDistributor implements Distributor {
 
 
     @Reference
+    private
     DistributionComponentProvider componentProvider;
 
     @Nonnull
@@ -53,14 +54,14 @@ public class DefaultDistributor implements Distributor {
         DistributionAgent agent = componentProvider.getService(DistributionAgent.class, agentName);
 
         if (agent == null) {
-            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Agent is not available");
+            return new SimpleDistributionResponse(DistributionRequestState.NOT_EXECUTED, "Agent is not available");
         }
 
         try {
             return agent.execute(resourceResolver, distributionRequest);
-        } catch (DistributionAgentException e) {
+        } catch (DistributionException e) {
             log.error("cannot execute", e);
-            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request");
+            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request " + e.getMessage());
         }
     }
 }

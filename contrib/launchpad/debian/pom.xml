@@ -25,12 +25,12 @@ under the License.
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
+        <version>26</version>
         <relativePath/>
     </parent>
     <artifactId>sling-server</artifactId>
     <packaging>jar</packaging>
-    <version>8-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
     <name>Apache Sling Launchpad Debian Package Builder</name>
     <description>
         Simple packaged installation for sling launchpad standalone jar
@@ -46,7 +46,7 @@ under the License.
             jdeb plugin version for debian package
         -->
         <jdeb.version>1.4</jdeb.version>
-        <launchpad.version>8-SNAPSHOT</launchpad.version>
+        <launchpad.version>8</launchpad.version>
         <slingInstallDir>/opt/sling</slingInstallDir>
         <slingConfigDir>/etc/sling</slingConfigDir>
     </properties>

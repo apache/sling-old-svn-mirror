@@ -116,11 +116,10 @@ public class HealthCheckExecutorServletTest {
     public void testDoGetJson() throws ServletException, IOException {
 
         String testTag = "testTag";
-        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
         doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
         doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
-        doReturn("/result.json").when(request).getPathInfo();
+        doReturn("/" + testTag + ".json").when(request).getPathInfo();
         List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
         options.setCombineTagsWithOr(true);
@@ -141,10 +140,10 @@ public class HealthCheckExecutorServletTest {
 
         String testTag = "testTag";
         doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn("txt").when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
         doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
         doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
-        doReturn("/result.txt").when(request).getPathInfo();
         List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
         options.setCombineTagsWithOr(true);

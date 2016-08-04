@@ -34,9 +34,9 @@ import org.apache.sling.ide.transport.RepositoryException;
  */
 public class SerializationKindManager {
 
-    private final Set<String> fullMetadataNodeTypes = new HashSet<String>();
-    private final Set<String> fileNodeTypes = new HashSet<String>();
-    private final Set<String> folderNodeTypes = new HashSet<String>();
+    private final Set<String> fullMetadataNodeTypes = new HashSet<>();
+    private final Set<String> fileNodeTypes = new HashSet<>();
+    private final Set<String> folderNodeTypes = new HashSet<>();
 
     public void init(Repository repository) throws RepositoryException {
 

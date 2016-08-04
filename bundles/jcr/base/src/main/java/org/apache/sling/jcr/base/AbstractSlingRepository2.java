@@ -121,26 +121,6 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     }
 
     /**
-     * Wraps the given session with support for name spaces defined by bundles
-     * deployed in the OSGi framework. See {@link NamespaceMappingSupport} for
-     * details about namespace support in Sling.
-     * <p>
-     * To fully support namespaces, this method must be called from each
-     * implementation of any of the {@code login} methods implemented by this
-     * class or its extensions.
-     *
-     * @param session The {@code Session} to wrap. This must not be {@code null}
-     * @return The wrapped session
-     * @throws RepositoryException If an error occurrs wrapping the session
-     * @throws NullPointerException If {@code session} is {@code null}
-     * @deprecated as of API version 2.4 (bundle version 2.3)
-     */
-    @Deprecated
-    protected final Session getNamespaceAwareSession(Session session) throws RepositoryException {
-        return this.getSlingRepositoryManager().getNamespaceAwareSession(session);
-    }
-
-    /**
      * Creates an administrative session to access the indicated workspace.
      * <p>
      * This method is called by the {@link #loginAdministrative(String)} and

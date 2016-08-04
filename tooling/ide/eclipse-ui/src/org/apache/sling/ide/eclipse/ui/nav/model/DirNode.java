@@ -17,7 +17,6 @@
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
@@ -122,9 +121,8 @@ public class DirNode extends JcrNode {
 			final DirNode dirNodeParent = (DirNode)nonDirNodeParent;
 			final String decodedParentName = dirNodeParent.getDecodedName();
 
-			final Set<JcrNode> c = new HashSet<JcrNode>(nonDirNodeParent.parent.children);
-			for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
-				final JcrNode node = it.next();
+			final Set<JcrNode> c = new HashSet<>(nonDirNodeParent.parent.children);
+			for (JcrNode node : c) {
 				if (node.getName().equals(decodedParentName)) {
 					nonDirNodeParent = node;
 					continue outerloop;

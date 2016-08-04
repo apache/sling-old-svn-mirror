@@ -25,7 +25,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.JobConsole;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -76,6 +77,7 @@ public class JobConsolePlugin {
         private ServiceRegistration serviceRegistration;
         private final JobConsole jobConsole;
         private ServiceTracker repositoryTracker;
+        private ServiceTracker resourceResolverFactoryTracker;
 
         public Plugin(JobConsole console) {
             jobConsole = console;
@@ -86,6 +88,9 @@ public class JobConsolePlugin {
 
             repositoryTracker = new ServiceTracker(ctx, SlingRepository.class.getName(), null);
             repositoryTracker.open();
+            
+            resourceResolverFactoryTracker = new ServiceTracker(ctx, ResourceResolverFactory.class.getName(), null);
+            resourceResolverFactoryTracker.open();
 
             Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(Constants.SERVICE_DESCRIPTION,
@@ -107,6 +112,10 @@ public class JobConsolePlugin {
                 repositoryTracker.close();
                 repositoryTracker = null;
             }
+            if (resourceResolverFactoryTracker != null) {
+                resourceResolverFactoryTracker.close();
+                resourceResolverFactoryTracker = null;
+            }
             super.deactivate();
         }
 
@@ -118,6 +127,30 @@ public class JobConsolePlugin {
         @Override
         public String getTitle() {
             return TITLE;
+        }
+        
+        /** Return the JCR session of the current request's user */
+        private Session getRequestSession() throws ServletException {
+            Session result = null;
+            final ResourceResolverFactory f = (ResourceResolverFactory)resourceResolverFactoryTracker.getService();
+            if(f == null) {
+                throw new ServletException("Unable to acquire ResourceResolverFactory service");
+            }
+        
+            final ResourceResolver r = f.getThreadResourceResolver();
+            if(r == null) {
+                throw new ServletException(
+                        "Unable to acquire ResourceResolver from ResourceResolverFactory service. "
+                        + "This usually happens if the webconsole does not use the Sling Security Provider."
+                );
+            }
+            
+            result = r.adaptTo(Session.class);
+        
+            if(result == null) {
+                throw new ServletException("ResourceResolver does not adapt to Session");
+            }
+            return result;
         }
 
         @Override
@@ -131,25 +164,23 @@ public class JobConsolePlugin {
                 pw.println("No SlingRepository service found");
                 return;
             }
-            Session s = null;
-            try {
-                s = repository.loginAdministrative(repository.getDefaultWorkspace());
-                processCommands(req, pw, s, jobConsole);
-                renderJobs(req, pw, s, jobConsole);
-            } catch(RepositoryException re) {
-                throw new ServletException("RepositoryExceptio in renderContent()", re);
-            } finally {
-                if(s != null) {
-                    s.logout();
-                }
-            }
+            renderJobs(req, pw, getRequestSession(), jobConsole);
         }
-        
-        private void processCommands(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
-            // TODO should use POST
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            final PrintWriter pw = resp.getWriter();
+
+            // Access required services
+            final SlingRepository repository = (SlingRepository)repositoryTracker.getService();
+            if(repository == null) {
+                pw.println("No SlingRepository service found");
+                return;
+            }
+            final Session s = getRequestSession();
             final String jobPath = req.getParameter("jobPath");
             if (jobPath != null) {
-                final JobStatus job = console.getJobStatus(s, jobPath);
+                final JobStatus job = jobConsole.getJobStatus(s, jobPath);
                 if (job != null) {
                     final String action = req.getParameter("action");
                     if ("suspend".equals(action)) {
@@ -161,6 +192,8 @@ public class JobConsolePlugin {
                     }
                 }
             }
+
+            resp.sendRedirect(req.getServletPath() + req.getPathInfo());
         }
         
         private void renderJobs(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
@@ -199,7 +232,7 @@ public class JobConsolePlugin {
 
         private void renderJobStatus(HttpServletRequest request, PrintWriter pw, JobConsole console, JobStatus job) {
             pw.println("<tr class='content'>");
-            pw.println("<td><form action='./" + LABEL + "' method='GET'>");
+            pw.println("<td><form action='./" + LABEL + "' method='POST'>");
             final String[] actions = { "suspend", "resume", "stop" };
             for (String action : actions) {
                 pw.println("<input type='submit' name='action' value='"

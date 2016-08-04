@@ -29,7 +29,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 
@@ -40,9 +39,6 @@ public class JobImpl implements Job, Comparable<JobImpl> {
 
     /** Internal job property containing the resource path. */
     public static final String PROPERTY_RESOURCE_PATH = "slingevent:path";
-
-    /** Internal job property if this is an bridged event (event admin). */
-    public static final String PROPERTY_BRIDGED_EVENT = "slingevent:eventadmin";
 
     /** Internal job property containing optional delay override. */
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
@@ -65,11 +61,7 @@ public class JobImpl implements Job, Comparable<JobImpl> {
 
     private final String path;
 
-    private final String name;
-
     private final String jobId;
-
-    private final boolean isBridgedEvent;
 
     private final List<Exception> readErrorList;
 
@@ -85,14 +77,11 @@ public class JobImpl implements Job, Comparable<JobImpl> {
      */
     @SuppressWarnings("unchecked")
     public JobImpl(final String topic,
-                   final String name,
                    final String jobId,
                    final Map<String, Object> properties) {
         this.topic = topic;
-        this.name = name;
         this.jobId = jobId;
         this.path = (String)properties.remove(PROPERTY_RESOURCE_PATH);
-        this.isBridgedEvent = properties.get(PROPERTY_BRIDGED_EVENT) != null;
         this.readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
 
         this.properties = new ValueMapDecorator(properties);
@@ -109,17 +98,26 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     }
 
     /**
-     * Is this a bridged event?
-     */
-    public boolean isBridgedEvent() {
-        return this.isBridgedEvent;
-    }
-
-    /**
      * Did we have read errors?
      */
     public boolean hasReadErrors() {
         return this.readErrorList != null;
+    }
+
+    /**
+     * Is the error recoverable?
+     */
+    public boolean isReadErrorRecoverable() {
+        boolean result = true;
+        if ( this.readErrorList != null ) {
+            for(final Exception e : this.readErrorList) {
+                if ( e instanceof RuntimeException ) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -144,14 +142,6 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     @Override
     public String getTopic() {
         return this.topic;
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.Job#getName()
-     */
-    @Override
-    public String getName() {
-        return this.name;
     }
 
     /**
@@ -192,11 +182,6 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     @Override
     public Set<String> getPropertyNames() {
         return this.properties.keySet();
-    }
-
-    @Override
-    public JobPriority getJobPriority() {
-        return JobPriority.NORM;
     }
 
     @Override
@@ -421,7 +406,6 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     @Override
     public String toString() {
         return "JobImpl [properties=" + properties + ", topic=" + topic
-                + ", path=" + path + ", name=" + name + ", jobId=" + jobId
-                + ", isBridgedEvent=" + isBridgedEvent + "]";
+                + ", path=" + path + ", jobId=" + jobId + "]";
     }
 }

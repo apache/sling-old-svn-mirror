@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "impersonate-publish",
+
+    "packageImporter.endpoints": [
+        "http://localhost:4503/libs/sling/distribution/services/importers/default"
+    ]
+}

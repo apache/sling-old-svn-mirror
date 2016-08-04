@@ -63,7 +63,9 @@ import org.osgi.service.event.EventAdmin;
 @Properties({
     @Property(name="service.description", value="Sling Filesystem Resource Provider"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name=ResourceProvider.ROOTS)
+    @Property(name=ResourceProvider.ROOTS),
+    @Property(name = "webconsole.configurationFactory.nameHint", 
+        value = "Root paths: {" + ResourceProvider.ROOTS + "}")
 })
 public class FsResourceProvider implements ResourceProvider {
 

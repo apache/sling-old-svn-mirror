@@ -118,10 +118,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     + " . Please see the error log for details.");
             Activator.getDefault().getPluginLogger().error("Repository import failed", cause);
             return false;
-        } catch (OperationCanceledException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        } catch (InterruptedException e) {
+        } catch (OperationCanceledException | InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         }

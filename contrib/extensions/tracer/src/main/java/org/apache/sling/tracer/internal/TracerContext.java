@@ -24,10 +24,11 @@ import java.util.Arrays;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.core.helpers.CyclicBuffer;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 class TracerContext {
-    private static final String QUERY_LOGGER = "org.apache.jackrabbit.oak.query.QueryEngineImpl";
+    static final String QUERY_LOGGER = "org.apache.jackrabbit.oak.query.QueryEngineImpl";
 
     /**
      * Following queries are internal to Oak and are fired for login/access control
@@ -54,9 +55,11 @@ class TracerContext {
     private RequestProgressTracker progressTracker;
     private int queryCount;
     private final TracerConfig[] tracers;
+    private final Recording recording;
 
-    public TracerContext(TracerConfig[] tracers) {
+    public TracerContext(TracerConfig[] tracers, Recording recording) {
         this.tracers = tracers;
+        this.recording = recording;
 
         //Say if the list is like com.foo;level=trace,com.foo.bar;level=info.
         // Then first config would result in a match and later config would
@@ -66,24 +69,38 @@ class TracerContext {
         Arrays.sort(tracers);
     }
 
-    public boolean shouldLog(String logger, Level level) {
+    /**
+     * Finds and returns the matching TracerConfig for given logger and level
+     * If non null it indicates that logging should proceed
+     */
+    public TracerConfig findMatchingConfig(String logger, Level level) {
         for (TracerConfig tc : tracers) {
             TracerConfig.MatchResult mr = tc.match(logger, level);
             if (mr == TracerConfig.MatchResult.MATCH_LOG) {
-                return true;
+                return tc;
             } else if (mr == TracerConfig.MatchResult.MATCH_NO_LOG) {
-                return false;
+                return null;
             }
         }
-        return false;
+        return null;
     }
 
-    public boolean log(String logger, String format, Object[] params) {
+    public boolean log(TracerConfig tc, Level level, String logger, String format, Object[] params) {
+        FormattingTuple tuple = null;
         if (QUERY_LOGGER.equals(logger)
                 && params != null && params.length == 2) {
-            return logQuery((String) params[1]);
+            if (logQuery((String) params[1])){
+                //Get original log message
+                tuple = logWithLoggerName(logger, format, params);
+            }
+        } else {
+            tuple = logWithLoggerName(logger, format, params);
         }
-        return logWithLoggerName(logger, format, params);
+
+        if (tuple != null) {
+            recording.log(tc, level, logger, tuple);
+        }
+        return tuple != null;
     }
 
     public void done() {
@@ -106,8 +123,9 @@ class TracerContext {
         }
     }
 
-    private boolean logWithLoggerName(String loggerName, String format, Object... params) {
-        String msg = MessageFormatter.arrayFormat(format, params).getMessage();
+    private FormattingTuple logWithLoggerName(String loggerName, String format, Object... params) {
+        FormattingTuple tuple = MessageFormatter.arrayFormat(format, params);
+        String msg = tuple.getMessage();
         msg = "[" + loggerName + "] " + msg;
         if (progressTracker == null) {
             if (buffer == null) {
@@ -117,7 +135,7 @@ class TracerContext {
         } else {
             progressTracker.log(msg);
         }
-        return true;
+        return tuple;
     }
 
     private boolean logQuery(String query) {
@@ -125,7 +143,6 @@ class TracerContext {
             return false;
         }
         queryCount++;
-        logWithLoggerName("JCR", " Query {}", query);
         return true;
     }
 

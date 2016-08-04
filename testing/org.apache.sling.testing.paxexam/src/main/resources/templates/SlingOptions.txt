@@ -1,0 +1,139 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.testing.paxexam;
+
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
+
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+
+/**
+ * NOTE: This file is generated from Sling's Karaf Features
+ */
+public class SlingOptions {
+
+    public static VersionResolver versionResolver = new SlingVersionResolver();
+
+    public static Option config() {
+        return mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version(versionResolver);
+    }
+
+    public static Option eventadmin() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option http() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option httpWhiteboard() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.whiteboard").version(versionResolver),
+            http()
+        );
+    }
+
+    public static Option management() {
+        return composite(
+            mavenBundle().groupId("org.apache.aries").artifactId("org.apache.aries.util").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.api").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.core").version(versionResolver),
+            mavenBundle().groupId("org.apache.aries.jmx").artifactId("org.apache.aries.jmx.whiteboard").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option scr() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.metatype").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option webconsole() {
+        return composite(
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole").version(versionResolver),
+            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.inventory").version(versionResolver),
+            mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version(versionResolver),
+            mavenBundle().groupId("commons-io").artifactId("commons-io").version(versionResolver),
+            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver),
+            http()
+        );
+    }
+
+    public static Option paxUrl() {
+        return composite(
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-commons").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-lang").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-util-property").version(versionResolver),
+            mavenBundle().groupId("org.ops4j.pax.swissbox").artifactId("pax-swissbox-property").version(versionResolver),
+            config()
+        );
+    }
+
+    public static Option paxUrlClasspath() {
+        return composite(
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-classpath").version(versionResolver),
+            paxUrl()
+        );
+    }
+[# th:each="feature : ${features}"]
+    public static Option [(${feature.javaName})]() {
+        return composite([# th:each="fc,fcsStatus : ${feature.getFeatures()}"]
+            [(${fc})]()[# th:unless="${fcsStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getFeatures())}"][# th:if="${not #lists.isEmpty(feature.getBundles())}"],[/][/][# th:each="bundle,bundlesStatus : ${feature.getBundles()}"]
+            mavenBundle().groupId("[(${bundle.groupId})]").artifactId("[(${bundle.artifactId})]").version(versionResolver)[# th:unless="${bundlesStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getConfigurations())}"],[/][# th:each="configuration,configurationsStatus : ${feature.getConfigurations()}"]
+            [# th:if="${configuration.isFactory()}"]factoryConfiguration[/][# th:unless="${configuration.isFactory()}"]newConfiguration[/]("[(${configuration.pid})]")    [# th:each="entry,entriesStatus : ${configuration.getEntries()}"]
+                .put("[(${entry.key})]", "[(${entry.value})]")[/]
+                .asOption()[# th:unless="${configurationsStatus.last}"],[/][/]
+        );
+    }
+
+[/]    public static Option slingLaunchpadOakTar(final String workingDirectory, final int httpPort) {
+        final String slingHome = String.format("%s/sling", workingDirectory);
+        final String repositoryHome = String.format("%s/repository", slingHome);
+        final String localIndexDir = String.format("%s/index", repositoryHome);
+        return composite(
+            slingJcrOak(),
+            slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
+            newConfiguration("org.apache.felix.http")
+                .put("org.osgi.service.http.port", httpPort)
+                .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
+                .put("repository.home", repositoryHome)
+                .put("name", "Default NodeStore")
+                .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", localIndexDir)
+                .asOption()
+        );
+    }
+
+}

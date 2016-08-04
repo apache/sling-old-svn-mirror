@@ -30,10 +30,8 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -65,10 +63,13 @@ import org.slf4j.LoggerFactory;
               label="Type",
               description="The queue type."),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
-              intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL,
+              doubleValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL,
               label="Maximum Parallel Jobs",
               description="The maximum number of parallel jobs started for this queue. "
-                        + "A value of -1 is substituted with the number of available processors."),
+                        + "A value of -1 is substituted with the number of available processors. "
+                        + "Positive integer values specify number of processors to use.  Can be greater than number of processors. "
+                        + "A decimal number between 0.0 and 1.0 is treated as a fraction of available processors. "
+                        + "For example 0.5 means half of the available processors."),
     @Property(name=ConfigurationConstants.PROP_RETRIES,
               intValue=ConfigurationConstants.DEFAULT_RETRIES,
               label="Maximum Retries",
@@ -195,8 +196,30 @@ public class InternalQueueConfiguration
         }
         this.retries = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
         this.retryDelay = PropertiesUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
-        final int maxParallel = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_MAX_PARALLEL), ConfigurationConstants.DEFAULT_MAX_PARALLEL);
-        this.maxParallelProcesses = (maxParallel == -1 ? ConfigurationConstants.NUMBER_OF_PROCESSORS : maxParallel);
+
+        // Float values are treated as percentage.  int values are treated as number of cores, -1 == all available
+        // Note: the value is based on the core count at startup.  It will not change dynamically if core count changes.
+        int cores = ConfigurationConstants.NUMBER_OF_PROCESSORS;
+        final double inMaxParallel = PropertiesUtil.toDouble(params.get(ConfigurationConstants.PROP_MAX_PARALLEL),
+                ConfigurationConstants.DEFAULT_MAX_PARALLEL);
+        logger.debug("Max parallel for queue {} is {}", this.name, inMaxParallel);
+        if ((inMaxParallel == Math.floor(inMaxParallel)) && !Double.isInfinite(inMaxParallel)) {
+            // integral type
+            if ((int) inMaxParallel == 0) {
+                logger.warn("Max threads property for {} set to zero.", this.name);
+            }
+            this.maxParallelProcesses = (inMaxParallel <= -1 ? cores : (int) inMaxParallel);
+        } else {
+            // percentage (rounded)
+            if ((inMaxParallel > 0.0) && (inMaxParallel < 1.0)) {
+                this.maxParallelProcesses = (int) Math.round(cores * inMaxParallel);
+            } else {
+                logger.warn("Invalid queue max parallel value for queue {}. Using {}", this.name, cores);
+                this.maxParallelProcesses =  cores;
+            }
+        }
+        logger.debug("Thread pool size for {} was set to {}", this.name, this.maxParallelProcesses);
+
         // ignore parallel setting for ordered queues
         if ( this.type == Type.ORDERED ) {
             this.maxParallelProcesses = 1;
@@ -221,10 +244,6 @@ public class InternalQueueConfiguration
      * If it is invalid, it is ignored.
      */
     private boolean checkIsValid() {
-        if ( type == Type.IGNORE || type == Type.DROP ) {
-            Utility.logDeprecated(logger, "Queue is using deprecated queue type. Ignoring queue " + name + " with type " + type);
-            return false;
-        }
         if ( type == null ) {
             return false;
         }
@@ -307,25 +326,11 @@ public class InternalQueueConfiguration
     }
 
     /**
-     * @see org.apache.sling.event.jobs.QueueConfiguration#getPriority()
-     */
-    @Override
-    public JobUtil.JobPriority getPriority() {
-        return JobUtil.JobPriority.valueOf(this.priority.name());
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getMaxParallel()
      */
     @Override
     public int getMaxParallel() {
         return this.maxParallelProcesses;
-    }
-
-    @Override
-    @Deprecated
-    public boolean isLocalQueue() {
-        return false;
     }
 
     /**
@@ -346,12 +351,6 @@ public class InternalQueueConfiguration
 
     public String getPid() {
         return this.pid;
-    }
-
-    @Override
-    @Deprecated
-    public String[] getApplicationIds() {
-        return null;
     }
 
     @Override

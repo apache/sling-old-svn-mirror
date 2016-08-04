@@ -16,6 +16,8 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +34,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
@@ -66,10 +67,12 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         this.node = (Node) res;
     }
 
+    @Override
     public String getClassName() {
         return CLASSNAME;
     }
 
+    @Override
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
@@ -364,10 +367,41 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             javaObject = node.getSession().getNodeByUUID(nodeUuid);
 
         } else {
-            javaObject = JcrResourceUtil.toJavaObject(value);
+            javaObject = toJavaObject(value);
         }
 
         return ScriptRuntime.toObject(this, javaObject);
+    }
+
+    /**
+     * Converts a JCR Value to a corresponding Java Object
+     *
+     * @param value the JCR Value to convert
+     * @return the Java Object
+     * @throws RepositoryException if the value cannot be converted
+     */
+    private static Object toJavaObject(Value value) throws RepositoryException {
+        switch (value.getType()) {
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
+            case PropertyType.BINARY:
+                return new LazyInputStream(value);
+            case PropertyType.BOOLEAN:
+                return value.getBoolean();
+            case PropertyType.DATE:
+                return value.getDate();
+            case PropertyType.DOUBLE:
+                return value.getDouble();
+            case PropertyType.LONG:
+                return value.getLong();
+            case PropertyType.NAME: // fall through
+            case PropertyType.PATH: // fall through
+            case PropertyType.REFERENCE: // fall through
+            case PropertyType.STRING: // fall through
+            case PropertyType.UNDEFINED: // not actually expected
+            default: // not actually expected
+                return value.getString();
+        }
     }
 
     @Override
@@ -430,6 +464,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     // ---------- Wrapper interface --------------------------------------------
 
     // returns the wrapped node
+    @Override
     public Object unwrap() {
         return node;
     }
@@ -440,5 +475,94 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         Object[] args = (iter != null) ? new Object[] { iter } : null;
         return ScriptRuntime.newObject(Context.getCurrentContext(), this,
             ScriptableItemMap.CLASSNAME, args);
+    }
+
+    /**
+     * Lazily acquired InputStream which only accesses the JCR Value InputStream if
+     * data is to be read from the stream.
+     */
+    private static class LazyInputStream extends InputStream {
+
+        /** The JCR Value from which the input stream is requested on demand */
+        private final Value value;
+
+        /** The inputstream created on demand, null if not used */
+        private InputStream delegatee;
+
+        public LazyInputStream(Value value) {
+            this.value = value;
+        }
+
+        /**
+         * Closes the input stream if acquired otherwise does nothing.
+         */
+        @Override
+        public void close() throws IOException {
+            if (delegatee != null) {
+                delegatee.close();
+            }
+        }
+
+        @Override
+        public int available() throws IOException {
+            return getStream().available();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return getStream().read();
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return getStream().read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return getStream().read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return getStream().skip(n);
+        }
+
+        @Override
+        public boolean markSupported() {
+            try {
+                return getStream().markSupported();
+            } catch (IOException ioe) {
+                // ignore
+            }
+            return false;
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            try {
+                getStream().mark(readlimit);
+            } catch (IOException ioe) {
+                // ignore
+            }
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            getStream().reset();
+        }
+
+        /** Actually retrieves the input stream from the underlying JCR Value */
+        private InputStream getStream() throws IOException {
+            if (delegatee == null) {
+                try {
+                    delegatee = value.getStream();
+                } catch (RepositoryException re) {
+                    throw (IOException) new IOException(re.getMessage()).initCause(re);
+                }
+            }
+            return delegatee;
+        }
+
     }
 }

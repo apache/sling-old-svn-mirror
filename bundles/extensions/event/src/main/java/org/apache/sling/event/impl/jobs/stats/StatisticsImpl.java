@@ -176,7 +176,6 @@ public class StatisticsImpl implements Statistics {
     public synchronized void failedJob() {
         this.failedJobs++;
         this.activeJobs--;
-        this.queuedJobs++;
     }
 
     /**

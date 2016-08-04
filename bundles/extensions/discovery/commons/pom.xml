@@ -23,24 +23,29 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.discovery.commons</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.13-SNAPSHOT</version>
 
-    <name>Apache Sling Discovery Commons Bundle</name>
-    <description>
-        Commons services related to Sling Discovery.
-    </description>
-
+    <name>Apache Sling Discovery Commons</name>
+    <description>Common services related to Sling Discovery</description>
+    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/commons</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/discovery/commons</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/discovery/commons</url>
     </scm>
+
+    <properties>
+      <jackrabbit.version>2.12.2</jackrabbit.version>
+      <oak.version>1.4.4</oak.version>
+        <!-- by default Slow tests are excluded - use -PincludeSlowTests to include them -->
+    	<sling.excluded.surefire.groups>org.apache.sling.commons.testing.junit.categories.Slow</sling.excluded.surefire.groups>
+    </properties>
 
     <build>
         <plugins>
@@ -49,12 +54,61 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+			<!-- discovery.commons exports a few test classes for reuse.
+                 In order for others to use these, the test-jar must be built/installed too.
+                 Note that 'mvn -Dmaven.test.skip=true' does NOT build the test-jar,
+                 however 'mvn -DskipTests' does. -->
+             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <argLine>-Xmx2048m</argLine>
+                    <excludedGroups>${sling.excluded.surefire.groups}</excludedGroups>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <!-- when -PincludeSlowTests is set, the Slow tests should also be executed, 
+                hence unsetting the category excludes 'sling.excluded.surefire.groups' to 
+                achieve that. -->
+            <id>includeSlowTests</id>
+            <properties>
+                <sling.excluded.surefire.groups></sling.excluded.surefire.groups>
+            </properties>
+        </profile>
+    </profiles>
     <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.commons.scheduler</artifactId>
+        	<version>2.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -62,6 +116,74 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.api</artifactId>
+			<version>2.4.0</version>
+            <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.commons.json</artifactId>
+			<version>2.0.6</version>
+            <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+			<version>2.0</version>
+			<scope>provided</scope>
+		</dependency>
+        <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.commons.testing</artifactId>
+        	<version>2.0.26</version>
+        	<scope>test</scope>
+            <exclusions>
+                <!-- slf4j simple implementation logs INFO + higher to stdout (we don't want that behaviour) -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+                <!--  also excluding jcl-over-slf4j as we need a newer vesion of this which is compatible with slf4j 1.6 -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+        	<!--  needed to get the nodetypes for testing properly with sling: prefix -->
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.jcr.resource</artifactId>
+        	<version>2.3.8</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-core</artifactId>
+            <version>${oak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-jcr</artifactId>
+            <version>${oak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+        	<scope>test</scope>
+		</dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
@@ -82,6 +204,44 @@
             <artifactId>mockito-all</artifactId>
             <version>1.9.5</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.slf4j</groupId>
+        	<artifactId>slf4j-log4j12</artifactId>
+        	<version>1.7.5</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.13</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.jackrabbit</groupId>
+        	<artifactId>jackrabbit-jcr-commons</artifactId>
+        	<version>${jackrabbit.version}</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.jackrabbit</groupId>
+        	<artifactId>jackrabbit-api</artifactId>
+        	<version>${jackrabbit.version}</version>
+        	<scope>test</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.settings</artifactId>
+			<version>1.2.2</version>
+            <scope>provided</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <!-- with 2.5.1 jmock-junit4, which has a dependency on junit 4.4 
+                you get the following: NoSuchMethodError: org.junit.runner.Request.classes(Lorg/junit/runner/Computer;[Ljava/lang/Class;)Lorg/junit/runner/Request; 
+                hence this explicit newer dependency. -->
+            <version>2.8.2</version>
         </dependency>
     </dependencies>
 </project>

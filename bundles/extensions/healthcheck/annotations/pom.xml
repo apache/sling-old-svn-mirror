@@ -24,14 +24,14 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
-        <relativePath/>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.annotations</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Health Check Annotations</name>
     <inceptionYear>2013</inceptionYear>

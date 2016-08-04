@@ -18,6 +18,10 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 
@@ -38,6 +42,30 @@ public class ExtensionUtils {
         if (arguments.length != count) {
             throw new SightlyException(String.format("Extension %s requires %d arguments", extensionName, count));
         }
+    }
+
+    /**
+     * Helper method for setting specific attributes in a {@link SlingHttpServletRequest} scope
+     *
+     * @param request              the {@link SlingHttpServletRequest}
+     * @param newRequestAttributes the {@link Map} of attributes to set
+     * @return A {@link Map} of original attributes values for substituted keys
+     */
+    public static Map<String, Object> setRequestAttributes(SlingHttpServletRequest request, Map<String, Object> newRequestAttributes) {
+        Map<String, Object> originalRequestAttributes = new LinkedHashMap<String, Object>();
+        if (newRequestAttributes != null && request != null) {
+            for (Map.Entry<String, Object> attr : newRequestAttributes.entrySet()) {
+                String key = attr.getKey();
+                Object value = attr.getValue();
+                originalRequestAttributes.put(key, request.getAttribute(key));
+                if (value == null) {
+                    request.removeAttribute(key);
+                } else {
+                    request.setAttribute(key, value);
+                }
+            }
+        }
+        return originalRequestAttributes;
     }
 
 }

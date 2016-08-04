@@ -18,10 +18,17 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -31,58 +38,45 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * An abstract OSGi service factory for registering {@link org.apache.sling.distribution.agent.impl.SimpleDistributionAgent}s
  */
-public abstract class AbstractDistributionAgentFactory {
+abstract class AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = DistributionComponentConstants.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     private static final String ENABLED = "enabled";
 
-    protected static final String DEFAULT_TRIGGER_TARGET = "(name=)";
+    static final String DEFAULT_TRIGGER_TARGET = "(name=)";
 
     private static final String TRIGGERS_TARGET = "triggers.target";
 
-    protected static final String LOG_LEVEL = "log.level";
-
+    static final String LOG_LEVEL = "log.level";
 
 
     private ServiceRegistration componentReg;
-    private BundleContext savedContext;
-    private Map<String, Object> savedConfig;
     private String agentName;
-    private List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+    private final List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
     private boolean triggersEnabled = false;
 
     private SimpleDistributionAgent agent;
 
-    protected void activate(BundleContext context, Map<String, Object> config) {
+    void activate(BundleContext context, Map<String, Object> config) {
         log.info("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
-
-
-        savedContext = context;
-        savedConfig = config;
 
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
-        String triggersTarget = PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null);
-        triggersEnabled = triggersTarget != null || triggersTarget.trim().length() > 0;
+        String triggersTarget = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null));
+        triggersEnabled = triggersTarget != null && triggersTarget.trim().length() > 0;
         agentName = PropertiesUtil.toString(config.get(NAME), null);
 
 
         if (enabled && agentName != null) {
 
-            for (Map.Entry<String, Object> entry: config.entrySet()) {
+            for (Map.Entry<String, Object> entry : config.entrySet()) {
                 // skip service and component related properties
                 if (entry.getKey().startsWith("service.") || entry.getKey().startsWith("component.")) {
                     continue;
@@ -94,6 +88,7 @@ public abstract class AbstractDistributionAgentFactory {
 
             if (componentReg == null) {
 
+                DefaultDistributionLog distributionLog = null;
                 try {
 
                     String logLevel = PropertiesUtil.toString(config.get(LOG_LEVEL), DefaultDistributionLog.LogLevel.INFO.name());
@@ -103,12 +98,14 @@ public abstract class AbstractDistributionAgentFactory {
                     }
 
 
-                    DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
+                    distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
 
                     agent = createAgent(agentName, context, config, distributionLog);
-                }
-                catch (IllegalArgumentException e) {
-                    log.warn("cannot create agent", e);
+                } catch (Throwable t) {
+                    if (distributionLog != null) {
+                        distributionLog.error("Cannot create agent", t);
+                    }
+                    log.error("Cannot create agent {}", OsgiUtils.osgiPropertyMapToString(config), t);
                 }
 
 
@@ -132,15 +129,15 @@ public abstract class AbstractDistributionAgentFactory {
         }
     }
 
-    protected void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.add(distributionTrigger);
-        if (agent != null  && triggersEnabled) {
+        if (agent != null && triggersEnabled) {
             agent.enableTrigger(distributionTrigger);
         }
 
     }
 
-    protected void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.remove(distributionTrigger);
 
         if (agent != null) {
@@ -149,7 +146,7 @@ public abstract class AbstractDistributionAgentFactory {
     }
 
 
-    protected void deactivate(BundleContext context) {
+    void deactivate(BundleContext context) {
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);

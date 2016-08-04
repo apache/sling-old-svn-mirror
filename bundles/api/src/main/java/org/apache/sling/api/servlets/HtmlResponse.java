@@ -122,6 +122,7 @@ public class HtmlResponse {
 
     /**
      * Returns the referer as from the 'referer' request header.
+     * @return The referrer
      */
     public String getReferer() {
         return getProperty(PN_REFERER, String.class);
@@ -129,6 +130,7 @@ public class HtmlResponse {
 
     /**
      * Sets the referer property
+     * @param referer The referrer to set
      */
     public void setReferer(String referer) {
         setProperty(PN_REFERER, referer);
@@ -139,6 +141,7 @@ public class HtmlResponse {
      * <p>
      * If the {@link #setPath(String)} method has not been called yet, this
      * method returns <code>null</code>.
+     * @return The path or {@code null}.
      */
     public String getPath() {
         return getProperty(PN_PATH, String.class);
@@ -146,6 +149,7 @@ public class HtmlResponse {
 
     /**
      * Sets the absolute path of the item upon which the request operated.
+     * @param path The path
      */
     public void setPath(String path) {
         setProperty(PN_PATH, path);
@@ -156,6 +160,7 @@ public class HtmlResponse {
      * <p>
      * Before calling the {@link #setCreateRequest(boolean)} method, this method
      * always returns <code>false</code>.
+     * @return {@code true} if this is a create request
      */
     public boolean isCreateRequest() {
         return getProperty(PN_IS_CREATED, Boolean.class);
@@ -163,6 +168,7 @@ public class HtmlResponse {
 
     /**
      * Sets whether the request was a create request or not.
+     * @param isCreateRequest flag for the create request
      */
     public void setCreateRequest(boolean isCreateRequest) {
         setProperty(PN_IS_CREATED, isCreateRequest);
@@ -178,6 +184,10 @@ public class HtmlResponse {
         return getProperty(PN_LOCATION, String.class);
     }
 
+    /**
+     * Set the location
+     * @param location The location
+     */
     public void setLocation(String location) {
         setProperty(PN_LOCATION, location);
     }
@@ -192,6 +202,10 @@ public class HtmlResponse {
         return getProperty(PN_PARENT_LOCATION, String.class);
     }
 
+    /**
+     * Set the parent location
+     * @param parentLocation The parent location
+     */
     public void setParentLocation(String parentLocation) {
         setProperty(PN_PARENT_LOCATION, parentLocation);
     }
@@ -222,6 +236,7 @@ public class HtmlResponse {
      * status code is determined by checking if there was an error.  If there
      * was an error, the response is assumed to be unsuccessful and 500 is returned.
      * If there is no error, the response is assumed to be successful and 200 is returned.
+     * @return The status code
      */
     public int getStatusCode() {
         Integer status = getProperty(PN_STATUS_CODE, Integer.class);
@@ -236,6 +251,10 @@ public class HtmlResponse {
         return status;
     }
 
+    /**
+     * Get the status message
+     * @return The status message
+     */
     public String getStatusMessage() {
         return getProperty(PN_STATUS_MESSAGE, String.class);
     }
@@ -249,6 +268,10 @@ public class HtmlResponse {
         return getProperty(PN_ERROR, Throwable.class);
     }
 
+    /**
+     * Set the error
+     * @param error The error
+     */
     public void setError(Throwable error) {
         setProperty(PN_ERROR, error);
     }
@@ -256,6 +279,7 @@ public class HtmlResponse {
     /**
      * Returns <code>true</code> if no {@link #getError() error} is set and if
      * the {@link #getStatusCode() status code} is one of the 2xx codes.
+     * @return {@code true} if successful
      */
     public boolean isSuccessful() {
         return getError() == null && (getStatusCode() / 100) == 2;
@@ -293,7 +317,9 @@ public class HtmlResponse {
     }
 
     /**
-     * Records a 'moved' change. <p/> Note: the moved change only records the
+     * Records a 'moved' change.
+     * <p>
+     * Note: the moved change only records the
      * basic move command. the implied changes on the moved properties and sub
      * nodes are not recorded.
      *
@@ -305,7 +331,9 @@ public class HtmlResponse {
     }
 
     /**
-     * Records a 'copied' change. <p/> Note: the copy change only records the
+     * Records a 'copied' change.
+     * <p>
+     * Note: the copy change only records the
      * basic copy command. the implied changes on the copied properties and sub
      * nodes are not recorded.
      *
@@ -400,6 +428,11 @@ public class HtmlResponse {
      * Returns the generic response property with the given name and type or
      * <code>null</code> if no such property exists or the property is not of
      * the requested type.
+     *
+     * @param name The property name
+     * @param <Type> The type to get
+     * @param type The type to get
+     * @return The property value or {@code null}.
      */
     @SuppressWarnings("unchecked")
     public <Type> Type getProperty(String name, Class<Type> type) {
@@ -414,6 +447,8 @@ public class HtmlResponse {
     /**
      * Returns the generic response property with the given name and type or
      * <code>null</code> if no such property exists.
+     * @param name The property name
+     * @return The property value or {@code null}.
      */
     public Object getProperty(String name) {
         return properties.get(name);

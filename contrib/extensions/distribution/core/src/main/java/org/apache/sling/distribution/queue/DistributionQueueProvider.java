@@ -21,6 +21,7 @@ package org.apache.sling.distribution.queue;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
  * A provider for {@link DistributionQueue}s
@@ -29,26 +30,32 @@ import aQute.bnd.annotation.ProviderType;
 public interface DistributionQueueProvider {
 
     /**
-     * provide a named queue for the given agent
+     * provide an {@link DistributionQueueType#ORDERED} queue with the given name
      *
      * @param queueName the name of the queue to retrieve
      * @return a {@link DistributionQueue}
-     * @throws DistributionQueueException if any error happens
      */
     @Nonnull
-    DistributionQueue getQueue(@Nonnull String queueName) throws DistributionQueueException;
+    DistributionQueue getQueue(@Nonnull String queueName) throws DistributionException;
+
+    /**
+     * provde a queue of the given type with the given name
+     * @param queueName the name of the queue
+     * @param type the type of the queue
+     * @return a {@link DistributionQueue}
+     */
+    DistributionQueue getQueue(@Nonnull String queueName, @Nonnull DistributionQueueType type);
 
     /**
      * enables queue processing
      *
      * @param queueProcessor the queue processor to be used
      */
-    void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionQueueException;
-
+    void enableQueueProcessing(@Nonnull DistributionQueueProcessor queueProcessor, String... queueNames) throws DistributionException;
 
     /**
      * disables queue processing
      *
      */
-    void disableQueueProcessing() throws DistributionQueueException;
+    void disableQueueProcessing() throws DistributionException;
 }

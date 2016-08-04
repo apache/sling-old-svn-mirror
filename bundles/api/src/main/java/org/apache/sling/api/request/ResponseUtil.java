@@ -90,7 +90,11 @@ public class ResponseUtil {
         }
     }
 
-    /** Escape xml text */
+    /**
+     * Escape XML text
+     * @param input The input text
+     * @return The escaped text
+     */
     public static String escapeXml(final String input) {
         if (input == null) {
             return null;
@@ -116,7 +120,10 @@ public class ResponseUtil {
         return b.toString();
     }
 
-    /** Return a Writer that writes escaped XML text to target
+    /**
+     * Return a Writer that writes escaped XML text to target
+     * @param target writer
+     * @return Wrapped writer escaping XML
      */
     public static @Nonnull Writer getXmlEscapingWriter(@Nonnull Writer target) {
         return new XmlEscapingWriter(target);

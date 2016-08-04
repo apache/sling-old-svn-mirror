@@ -16,7 +16,10 @@
  */
 package org.apache.sling.commons.threads;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is a modifiable thread pool configuration that can be instantiated
@@ -28,12 +31,13 @@ import java.util.concurrent.ThreadFactory;
  * - queue size: -1
  * - keep alive time: 60000
  * - block policy: RUN
- * - shutdown graceful: false
+ * - shutdown graceful: true
  * - shutdown wait time: -1
  * - priority: NORM
  * - daemon: false
  * - factory: null (= default jvm thread factory)
  */
+@ProviderType
 public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
 
     /** Configuration property for the min pool size. */
@@ -42,6 +46,8 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     public static final String PROPERTY_MAX_POOL_SIZE = "maxPoolSize";
     /** Configuration property for the queue size. */
     public static final String PROPERTY_QUEUE_SIZE = "queueSize";
+    /** Configuration property for the max thread age. */
+    public static final String PROPERTY_MAX_THREAD_AGE = "maxThreadAge";
     /** Configuration property for the keep alive time. */
     public static final String PROPERTY_KEEP_ALIVE_TIME = "keepAliveTime";
     /** Configuration property for the block policy. */
@@ -66,6 +72,9 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     /** The queue size */
     private int queueSize = -1;
 
+    /** Max age of a thread in milliseconds */
+    private long maxThreadAge = TimeUnit.MINUTES.toMillis(5);
+
     /** The keep alive time. */
     private long  keepAliveTime = 60000L;
 
@@ -73,7 +82,7 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     private ThreadPoolPolicy blockPolicy = ThreadPoolPolicy.RUN;
 
     /** Try to shutdown gracefully? */
-    private  boolean shutdownGraceful = false;
+    private  boolean shutdownGraceful = true;
 
     /** Wait time during shutdown. */
     private  int shutdownWaitTimeMs = -1;
@@ -82,7 +91,7 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     private  ThreadFactory factory;
 
     /** Thread priority. */
-    private  ThreadPriority   priority = ThreadPriority.NORM;
+    private  ThreadPriority priority = ThreadPriority.NORM;
 
     /** Create daemon threads? */
     private  boolean isDaemon = false;
@@ -103,6 +112,7 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
             this.minPoolSize = copy.getMinPoolSize();
             this.maxPoolSize = copy.getMaxPoolSize();
             this.queueSize = copy.getQueueSize();
+            this.maxThreadAge = copy.getMaxThreadAge();
             this.keepAliveTime = copy.getKeepAliveTime();
             this.blockPolicy = copy.getBlockPolicy();
             this.shutdownGraceful = copy.isShutdownGraceful();
@@ -156,6 +166,22 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
      */
     public void setQueueSize(final int queueSize) {
         this.queueSize = queueSize;
+    }
+
+
+    /**
+     * @see org.apache.sling.commons.threads.ThreadPoolConfig#getMaxThreadAge()
+     */
+    public long getMaxThreadAge() {
+        return maxThreadAge;
+    }
+
+    /**
+     * Set the max thread age.
+     * @param maxThreadAge New max thread age in milliseconds.
+     */
+    public void setMaxThreadAge(final long maxThreadAge) {
+        this.maxThreadAge = maxThreadAge;
     }
 
     /**
@@ -279,6 +305,7 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
             return this.minPoolSize == o.minPoolSize
                 && this.maxPoolSize == o.maxPoolSize
                 && this.queueSize == o.queueSize
+                && this.maxThreadAge == o.maxThreadAge
                 && this.keepAliveTime == o.keepAliveTime
                 && this.blockPolicy.equals(o.blockPolicy)
                 && this.shutdownGraceful == o.shutdownGraceful

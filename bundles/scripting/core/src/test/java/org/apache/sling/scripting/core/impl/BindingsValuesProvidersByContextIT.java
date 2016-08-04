@@ -86,20 +86,20 @@ public class BindingsValuesProvidersByContextIT {
                 ),
                 provision(
                         bundle(bundleFile.toURI().toString()),
-                        mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
-                        mavenBundle(maven().groupId(FELIX_GID).artifactId("org.apache.felix.webconsole").versionAsInProject()),
+                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.scr").versionAsInProject(),
+                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.eventadmin").versionAsInProject(),
+                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.webconsole").versionAsInProject(),
 
-                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.scripting.api").versionAsInProject()),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.scripting.api").versionAsInProject(),
 
-                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.threads").versionAsInProject()),
-                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.api").versionAsInProject()),
-                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.mime").versionAsInProject()),
-                        mavenBundle(maven().groupId(SLING_GID).artifactId("org.apache.sling.commons.osgi").versionAsInProject()),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.threads").versionAsInProject(),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.api").versionAsInProject(),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.mime").versionAsInProject(),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.osgi").versionAsInProject(),
 
-                        mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14"),
-                        mavenBundle(maven().groupId("commons-io").artifactId("commons-io").versionAsInProject()),
-                        mavenBundle(maven().groupId("commons-lang").artifactId("commons-lang").versionAsInProject())
+                        mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
+                        mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
+                        mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject()
                 ),
                 junitBundles()
         );

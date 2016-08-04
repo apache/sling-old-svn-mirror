@@ -205,8 +205,8 @@ public final class InstancesDiff {
      * @param retainFromNewCollection {@code true} in order to retain the instances from the new collection ;
      *                                {@code false} in order to retain the instances from the old collection.
      * @param propertyChanged {@code true} in order to keep only the instances which
-     *                        properties have not changed between the old and new collections ;
-     *                        {@code false} in order to keep only the instances which properties have changed.
+     *                        properties have changed between the old and new collections ;
+     *                        {@code false} in order to keep only the instances which properties have not changed.
      * @return the {@code InstanceCollection} collection containing the {@code InstanceDescription} instances
      *         contained in both views.
      */

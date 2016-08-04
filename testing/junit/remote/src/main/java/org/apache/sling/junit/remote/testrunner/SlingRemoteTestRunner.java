@@ -26,12 +26,17 @@ import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.junit.After;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.EachTestNotifier;
+import org.junit.internal.runners.model.MultipleFailureException;
+import org.junit.internal.runners.statements.RunAfters;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
+import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,5 +167,28 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         } finally {
             eachNotifier.fireTestFinished();
         }
+    }
+
+    /**
+     * Similar to {@link ParentRunner#classBlock} but will call the methods annotated with @After in addition.
+     */
+    @Override
+    protected Statement classBlock(RunNotifier notifier) {
+        Statement statement = childrenInvoker(notifier);
+        statement = withBeforeClasses(statement);
+        // call @After class in addition
+        statement = withAfter(statement);
+        statement = withAfterClasses(statement);
+        return statement;
+    }
+    
+    /**
+     * Returns a {@link Statement}: run all non-overridden {@code @After} methods on this class and superclasses after
+     * executing {@code statement}; all After methods are always executed: exceptions thrown by previous steps are
+     * combined, if necessary, with exceptions from After methods into a {@link MultipleFailureException}.
+     */
+    private Statement withAfter(Statement statement) {
+        List<FrameworkMethod> afters = getTestClass().getAnnotatedMethods(After.class);
+        return afters.isEmpty() ? statement : new RunAfters(statement, afters, testParameters);
     }
 }

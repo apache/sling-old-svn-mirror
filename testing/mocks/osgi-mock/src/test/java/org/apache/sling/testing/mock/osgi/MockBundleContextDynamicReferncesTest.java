@@ -73,7 +73,7 @@ public class MockBundleContextDynamicReferncesTest {
         
         service = new Service3();
         MockOsgi.injectServices(service, bundleContext);
-        MockOsgi.activate(service);
+        MockOsgi.activate(service, bundleContext);
         bundleContext.registerService(Service3.class.getName(), service, null);
         
         assertDependency1(dependency1a);

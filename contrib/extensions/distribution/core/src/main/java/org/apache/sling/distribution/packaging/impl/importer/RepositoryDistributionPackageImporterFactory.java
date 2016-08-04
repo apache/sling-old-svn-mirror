@@ -18,9 +18,9 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
-import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -31,8 +31,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Factory for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}s
+ * OSGi configuration factory for {@link RepositoryDistributionPackageImporter}s.
  */
 @Component(label = "Apache Sling Distribution Importer - Repository Package Importer Factory",
         metatype = true,
@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(DistributionPackageImporter.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Importer name: {name}")
 public class RepositoryDistributionPackageImporterFactory implements DistributionPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -77,16 +78,17 @@ public class RepositoryDistributionPackageImporterFactory implements Distributio
 
         importer = new RepositoryDistributionPackageImporter(repository,
                 PropertiesUtil.toString(config.get(SERVICE_NAME), "admin"),
-                PropertiesUtil.toString(config.get(PATH), "/var/distribution/import"),
+                PropertiesUtil.toString(config.get(PATH), "/var/sling/distribution/import"),
                 PropertiesUtil.toString(config.get(PRIVILEGE_NAME), "jcr:read"));
     }
 
-    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         importer.importPackage(resourceResolver, distributionPackage);
 
     }
 
-    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
+    @Nonnull
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         return importer.importStream(resourceResolver, stream);
     }
 }

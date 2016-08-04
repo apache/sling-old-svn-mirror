@@ -19,7 +19,7 @@
 -->
 <!-- This file follows the old SCR convention using a fixed name "serviceComponents.xml" -->
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
-  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata" activate="activate">
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata">
     <implementation class="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
     <service servicefactory="false">
       <provide interface="org.apache.sling.models.spi.Injector"/>
@@ -28,7 +28,7 @@
     </service>
     <property name="service.ranking" type="Integer" value="5000"/>
     <property name="service.vendor" value="The Apache Software Foundation"/>
-    <property name="service.pid" value="org.apache.sling.models.impl.injectors.OSGiServiceInjector"/>
+    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
     <property name="adaptables">
        org.apache.sling.api.resource.Resource
        org.apache.sling.api.resource.ResourceResolver

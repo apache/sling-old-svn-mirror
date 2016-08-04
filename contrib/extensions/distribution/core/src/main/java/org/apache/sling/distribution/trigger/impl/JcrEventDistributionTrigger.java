@@ -21,6 +21,7 @@ package org.apache.sling.distribution.trigger.impl;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -39,8 +40,8 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final String[] ignoredPathsPatterns;
 
-    public JcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, String path, String serviceName, String[] ignoredPathsPatterns) {
-        super(repository, scheduler, path, serviceName);
+    public JcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory, String path, String serviceName, String[] ignoredPathsPatterns) {
+        super(repository, scheduler, resolverFactory, path, serviceName);
         this.ignoredPathsPatterns = ignoredPathsPatterns;
     }
 
@@ -77,7 +78,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
     }
 
 
-    boolean isIgnoredPath(String path) {
+    private boolean isIgnoredPath(String path) {
         if (path == null) {
             return true;
         }

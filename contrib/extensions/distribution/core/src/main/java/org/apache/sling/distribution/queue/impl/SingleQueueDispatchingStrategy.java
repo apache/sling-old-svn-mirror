@@ -25,7 +25,7 @@ package org.apache.sling.distribution.queue.impl;
 public class SingleQueueDispatchingStrategy extends MultipleQueueDispatchingStrategy {
 
     public SingleQueueDispatchingStrategy() {
-        super(new String[] { DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME });
+        super(new String[]{DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME});
     }
 
 }

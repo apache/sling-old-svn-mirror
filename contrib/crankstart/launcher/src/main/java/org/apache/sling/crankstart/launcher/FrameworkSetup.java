@@ -50,6 +50,7 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
     
     public Object call() throws Exception {
         final Model model = require(Launcher.MODEL_KEY, Model.class);
+        final LauncherListener listener = (LauncherListener) get(Launcher.LISTENER_KEY);
         
         log.info("Setting OSGi framework properties");
         final Map<String, String> fprops = new FrameworkProperties(model).getProperties(null);
@@ -98,8 +99,14 @@ public class FrameworkSetup extends HashMap<String, Object> implements Callable<
         }
         
         log.info("OSGi setup done, waiting for framework to stop");
+        if ( listener != null) {
+            listener.onStartup(started, failed, bundles.length);
+        }
         framework.waitForStop(0);
-        
+        if ( listener != null) {
+            listener.onShutdown();
+        }
+
         return null;
     }
     

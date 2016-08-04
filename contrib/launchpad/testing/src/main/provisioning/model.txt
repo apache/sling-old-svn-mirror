@@ -19,12 +19,13 @@
 [feature name=launchpad-testing]
 # Dependencies
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/8-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
 
+# SLING-2760 Do not include auth/selector in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
 # Auth 
-  org.apache.sling/org.apache.sling.auth.selector/1.0.7-SNAPSHOT
-  org.apache.sling/org.apache.sling.auth.openid/1.0.5-SNAPSHOT
+#  org.apache.sling/org.apache.sling.auth.selector/1.0.7-SNAPSHOT
+#  org.apache.sling/org.apache.sling.auth.openid/1.0.5-SNAPSHOT
 
 # Scala
   org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/2.8.1_1
@@ -48,5 +49,7 @@
   org.apache.sling.samples/org.apache.sling.samples.path-based.rtp/2.0.5-SNAPSHOT
 
 # groovy
-  org.codehaus.groovy/groovy-all/1.8.2
+  org.codehaus.groovy/groovy-all/2.4.5
+  org.codehaus.groovy/groovy-json/2.4.5
+  org.codehaus.groovy/groovy-templates/2.4.5
   org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT

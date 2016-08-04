@@ -88,7 +88,7 @@ Principal userPrincipal = ((HttpServletRequest)pageContext.getRequest()).getUser
 <c:set var="userPrincipal" value='<%=userPrincipal %>'/>
 
 <script type="text/javascript">
-var ntManager = new de.sandroboehme.NodeTypeManager();
+var ntManager = new org.apache.sling.jcr.js.nodetypes.NodeTypeManager();
 
 var mainControllerSettings = {
 		contextPath: "<%= request.getContextPath() %>",
@@ -207,6 +207,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 						  			<li>the <kbd>shift</kbd> key for multi selecting a list of nodes.</li>
 						  			<li>the <kbd>del</kbd> key for deleting the selected nodes.</li>
 						  			<li>the <kbd>c</kbd> key on a node when the tree has the focus for opening the dialog to add a child node.</li>
+						  			<li><kbd><kbd>ctrl</kbd>+<kbd>c</kbd></kbd> and <kbd><kbd>ctrl</kbd>+<kbd>v</kbd></kbd> can be used to copy and paste a node.</li>
 						  			<li>a double click to rename a node. Special JCR characters like ':' are not allowed as node names.</li>
 						  		</ul>
 							</div>

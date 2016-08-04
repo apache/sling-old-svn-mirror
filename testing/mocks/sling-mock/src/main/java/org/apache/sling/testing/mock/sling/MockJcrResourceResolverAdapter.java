@@ -18,14 +18,8 @@
  */
 package org.apache.sling.testing.mock.sling;
 
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
 
 /**
@@ -40,19 +34,7 @@ class MockJcrResourceResolverAdapter implements ResourceResolverTypeAdapter {
 
     @Override
     public SlingRepository newSlingRepository() {
-        Repository repository = MockJcr.newRepository();
-        
-        try {
-            Session session = repository.login();
-            NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
-            namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
-            session.logout();
-        }
-        catch (RepositoryException ex) {
-            throw new RuntimeException("Unable to register namespaces in JCR Mock repository.", ex);
-        }
-        
-        return new MockSlingRepository(repository);
+        return new MockJcrSlingRepository();
     }
 
 }

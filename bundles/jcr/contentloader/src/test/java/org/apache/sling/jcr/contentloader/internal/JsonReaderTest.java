@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -38,16 +39,20 @@ import org.junit.runner.RunWith;
 @RunWith(JMock.class)
 public class JsonReaderTest {
 
-    JsonReader jsonReader;
+    protected JsonReader jsonReader;
 
-    Mockery mockery = new JUnit4Mockery();
+    protected Mockery mockery = new JUnit4Mockery();
 
-    ContentCreator creator;
+    protected ContentCreator creator;
 
-    Sequence mySequence;
+    protected Sequence mySequence;
+
+    protected void setReader() {
+        this.jsonReader = new JsonReader();
+    }
 
     @org.junit.Before public void setUp() throws Exception {
-        this.jsonReader = new JsonReader();
+        setReader();
         this.creator = this.mockery.mock(ContentCreator.class);
         this.mySequence = this.mockery.sequence("my-sequence");
     }
@@ -261,6 +266,49 @@ public class JsonReaderTest {
         this.parse(json);
     }
 
+    @org.junit.Test public void testCreateOnePrincipal() throws Exception {
+        String json = "{\"security:principals\":{ " +
+                "    \"name\" : \"username2\"," +
+                "    \"password\" : \"pwd2\"" +
+                "  }}";
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("foo","bar");
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null);
+            allowing(creator).createUser("username2", "pwd2",new LinkedHashMap<String, Object>());
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
+    @org.junit.Test public void testCreatePrincipals() throws Exception {
+        String json = "{\"security:principals\":[ " +
+                "  { " +
+                "    \"name\" : \"username1\"," +
+                "    \"password\" : \"pwd1\"," +
+                "    \"foo\" : \"bar\"" +
+                "  }," +
+                "  { " +
+                "    \"name\" : \"username2\"," +
+                "    \"password\" : \"pwd2\"" +
+                "  }," +
+                "  { " +
+                "    \"name\" : \"group1\"," +
+                "    \"isgroup\" : true," +
+                "    \"members\" : [\"username1\",\"username2\"]" +
+                "  }]}";
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("foo","bar");
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null);
+            allowing(creator).createUser("username1", "pwd1", map);
+            allowing(creator).createUser("username2", "pwd2",new LinkedHashMap<String, Object>());
+            allowing(creator).createGroup("group1", new String[]{"username1","username2"}, new LinkedHashMap<String, Object>());
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
 
     @org.junit.Test public void testCreateAcl() throws Exception {
     	String json = " { " +
@@ -295,14 +343,14 @@ public class JsonReaderTest {
 
     //---------- internal helper ----------------------------------------------
 
-    private void parse(String json) throws IOException, RepositoryException {
+    protected void parse(String json) throws IOException, RepositoryException {
         String charSet = "ISO-8859-1";
         json = "#" + charSet + "\r\n" + json;
         InputStream ins = new ByteArrayInputStream(json.getBytes(charSet));
         this.jsonReader.parse(ins, this.creator);
     }
 
-    private JSONArray toJsonArray(String[] array) throws JSONException {
+    protected JSONArray toJsonArray(String[] array) throws JSONException {
         return new JSONArray(Arrays.asList(array));
     }
 }

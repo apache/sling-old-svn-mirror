@@ -20,9 +20,7 @@ package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
@@ -35,7 +33,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.threads.ThreadPool;
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EventingThreadPool;
 import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobHandler;
@@ -43,19 +40,14 @@ import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
-import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifierImpl;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Job.JobState;
-import org.apache.sling.event.jobs.JobProcessor;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.apache.sling.event.jobs.Statistics;
-import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +60,6 @@ public class JobQueueImpl
 
     /** Default timeout for suspend. */
     private static final long MAX_SUSPEND_TIME = 1000 * 60 * 60; // 60 mins
-
-    /** Default number of milliseconds to wait for an ack. */
-    private static final long DEFAULT_WAIT_FOR_ACK_IN_MS = 60 * 1000; // by default we wait 60 secs
 
     /** The logger. */
     private final Logger logger;
@@ -267,159 +256,71 @@ public class JobQueueImpl
                 final JobImpl job = handler.getJob();
                 handler.started = System.currentTimeMillis();
 
-                if ( handler.getConsumer() != null ) {
-                    this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
-                    // sanity check for the queued property
-                    Calendar queued = job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class);
-                    if ( queued == null ) {
-                        // we simply use a date of ten seconds ago
-                        queued = Calendar.getInstance();
-                        queued.setTimeInMillis(System.currentTimeMillis() - 10000);
+                this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
+                // sanity check for the queued property
+                Calendar queued = job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class);
+                if ( queued == null ) {
+                    // we simply use a date of ten seconds ago
+                    queued = Calendar.getInstance();
+                    queued.setTimeInMillis(System.currentTimeMillis() - 10000);
+                }
+                final long queueTime = handler.started - queued.getTimeInMillis();
+                // update statistics
+                this.services.statisticsManager.jobStarted(this.queueName, job.getTopic(), queueTime);
+                // send notification
+                NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
+
+                synchronized ( this.processingJobsLists ) {
+                    this.processingJobsLists.put(job.getId(), handler);
+                }
+
+                JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
+                Job.JobState resultState = Job.JobState.ERROR;
+                final JobExecutionContextImpl ctx = new JobExecutionContextImpl(handler, new JobExecutionContextImpl.ASyncHandler() {
+
+                    @Override
+                    public void finished(final JobState state) {
+                        services.jobConsumerManager.unregisterListener(job.getId());
+                        finishedJob(job.getId(), state, true);
+                        asyncCounter.decrementAndGet();
                     }
-                    final long queueTime = handler.started - queued.getTimeInMillis();
-                    // update statistics
-                    this.services.statisticsManager.jobStarted(this.queueName, job.getTopic(), queueTime);
-                    // send notification
-                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
+                });
 
-                    synchronized ( this.processingJobsLists ) {
-                        this.processingJobsLists.put(job.getId(), handler);
-                    }
-
-                    JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
-                    Job.JobState resultState = Job.JobState.ERROR;
-                    final JobExecutionContextImpl ctx = new JobExecutionContextImpl(handler, new JobExecutionContextImpl.ASyncHandler() {
-
-                        @Override
-                        public void finished(final JobState state) {
-                            services.jobConsumerManager.unregisterListener(job.getId());
-                            finishedJob(job.getId(), state, true);
-                            asyncCounter.decrementAndGet();
-                        }
-                    });
-
-                    try {
-                        synchronized ( ctx ) {
-                            result = (JobExecutionResultImpl)handler.getConsumer().process(job, ctx);
-                            if ( result == null ) { // ASYNC processing
-                                services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
-                                asyncCounter.incrementAndGet();
-                                ctx.markAsync();
-                            } else {
-                                if ( result.succeeded() ) {
-                                    resultState = Job.JobState.SUCCEEDED;
-                                } else if ( result.failed() ) {
-                                    resultState = Job.JobState.QUEUED;
-                                } else if ( result.cancelled() ) {
-                                    if ( handler.isStopped() ) {
-                                        resultState = Job.JobState.STOPPED;
-                                    } else {
-                                        resultState = Job.JobState.ERROR;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (final Throwable t) { //NOSONAR
-                        logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
-                        // we don't reschedule if an exception occurs
-                        result = JobExecutionResultImpl.CANCELLED;
-                        resultState = Job.JobState.ERROR;
-                    } finally {
-                        if ( result != null ) {
-                            if ( result.getRetryDelayInMs() != null ) {
-                                job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
-                            }
-                            if ( result.getMessage() != null ) {
-                               job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
-                            }
-                            this.finishedJob(job.getId(), resultState, false);
-                        }
-                    }
-
-                } else {
-                    final Event jobEvent = this.getJobEvent(handler);
-                    final JobStatusNotifierImpl notifier = (JobStatusNotifierImpl) jobEvent.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-                    // we need async delivery, otherwise we might create a deadlock
-                    // as this method runs inside a synchronized block and the finishedJob
-                    // method as well!
-                    final long endOfAck = System.currentTimeMillis() + DEFAULT_WAIT_FOR_ACK_IN_MS;
-                    this.services.eventAdmin.postEvent(jobEvent);
-
-                    // wait for the ack
-                    synchronized ( notifier ) {
-                        while ( System.currentTimeMillis() < endOfAck && !notifier.isCalled() ) {
-                            try {
-                                notifier.wait(endOfAck - System.currentTimeMillis());
-                            } catch ( final InterruptedException ie) {
-                                Thread.currentThread().interrupt();
-                                ignoreException(ie);
-                            }
-                        }
-                        if ( !notifier.isCalled() ) {
-                            notifier.markDone();
-                        }
-                    }
-                    if ( !notifier.isCalled() ) {
-                        if ( handler.reschedule() ) {
-                            this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
-                            handler.getJob().retry();
-                            this.requeue(handler);
-                        }
-                    } else {
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug("Received ack for job {}", Utility.toString(job));
-                        }
-                        this.services.configuration.getAuditLogger().debug("START OK : {}", job.getId());
-                        // sanity check for the queued property
-                        Calendar queued = job.getProperty(JobImpl.PROPERTY_JOB_QUEUED, Calendar.class);
-                        if ( queued == null ) {
-                            // we simply use a date of ten seconds ago
-                            queued = Calendar.getInstance();
-                            queued.setTimeInMillis(System.currentTimeMillis() - 10000);
-                        }
-                        final long queueTime = handler.started - queued.getTimeInMillis();
-                        // update statistics
-                        this.services.statisticsManager.jobStarted(this.queueName, job.getTopic(), queueTime);
-                        // send notification
-                        NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
-
-                        synchronized ( this.processingJobsLists ) {
-                            this.processingJobsLists.put(job.getId(), handler);
-                        }
-
-                        // check for processor
-                        final JobProcessor processor = notifier.getProcessor();
-                        if ( processor != null ) {
-                            boolean result = false;
-                            try {
-                                result = processor.process(jobEvent);
-                            } catch (Throwable t) { //NOSONAR
-                                LoggerFactory.getLogger(JobUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
-                                // we don't reschedule if an exception occurs
-                                result = true;
-                            }
-                            if ( result ) {
-                                this.finishedJob(job.getId(), Job.JobState.SUCCEEDED, false);
-                            } else {
-                                this.finishedJob(job.getId(), Job.JobState.QUEUED, false);
-                            }
-                        } else {
-                            // async processing
-                            final JobExecutionContextImpl ctx = new JobExecutionContextImpl(handler, new JobExecutionContextImpl.ASyncHandler() {
-
-                                @Override
-                                public void finished(final JobState state) {
-                                    services.jobConsumerManager.unregisterListener(job.getId());
-                                    finishedJob(job.getId(), state, true);
-                                    asyncCounter.decrementAndGet();
-                                }
-                            });
+                try {
+                    synchronized ( ctx ) {
+                        result = (JobExecutionResultImpl)handler.getConsumer().process(job, ctx);
+                        if ( result == null ) { // ASYNC processing
                             services.jobConsumerManager.registerListener(job.getId(), handler.getConsumer(), ctx);
                             asyncCounter.incrementAndGet();
                             ctx.markAsync();
-
-                            notifier.setJobExecutionContext(ctx);
+                        } else {
+                            if ( result.succeeded() ) {
+                                resultState = Job.JobState.SUCCEEDED;
+                            } else if ( result.failed() ) {
+                                resultState = Job.JobState.QUEUED;
+                            } else if ( result.cancelled() ) {
+                                if ( handler.isStopped() ) {
+                                    resultState = Job.JobState.STOPPED;
+                                } else {
+                                    resultState = Job.JobState.ERROR;
+                                }
+                            }
                         }
+                    }
+                } catch (final Throwable t) { //NOSONAR
+                    logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
+                    // we don't reschedule if an exception occurs
+                    result = JobExecutionResultImpl.CANCELLED;
+                    resultState = Job.JobState.ERROR;
+                } finally {
+                    if ( result != null ) {
+                        if ( result.getRetryDelayInMs() != null ) {
+                            job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
+                        }
+                        if ( result.getMessage() != null ) {
+                           job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
+                        }
+                        this.finishedJob(job.getId(), resultState, false);
                     }
                 }
             } catch (final Exception re) {
@@ -628,30 +529,6 @@ public class JobQueueImpl
     }
 
     /**
-     * Create the real job event.
-     * This generates a new event object with the same properties, but with the
-     * {@link EventUtil#PROPERTY_JOB_TOPIC} topic.
-     * @param info The job event.
-     * @return The real job event.
-     */
-    private Event getJobEvent(final JobHandler info) {
-        final String eventTopic = info.getJob().getTopic();
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        for(final String name : info.getJob().getPropertyNames()) {
-            properties.put(name, info.getJob().getProperty(name));
-        }
-
-        // put properties for finished job callback
-        properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME, new JobStatusNotifierImpl());
-
-        // remove app id and distributable flag
-        properties.remove(EventUtil.PROPERTY_DISTRIBUTE);
-        properties.remove(EventUtil.PROPERTY_APPLICATION);
-
-        return new Event(eventTopic, properties);
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.Queue#resume()
      */
     @Override
@@ -734,14 +611,6 @@ public class JobQueueImpl
     }
 
     /**
-     * @see org.apache.sling.event.jobs.Queue#clear()
-     */
-    @Override
-    public void clear() {
-        // this is a noop
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.Queue#getState(java.lang.String)
      */
     @Override
@@ -780,16 +649,6 @@ public class JobQueueImpl
             delay = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY, Long.class);
         }
         return delay;
-    }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
-        }
     }
 
     public boolean stopJob(final JobImpl job) {

@@ -21,8 +21,7 @@ package org.apache.sling.featureflags;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.ResourceResolver;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code ExecutionContext} interface provides access to the context for

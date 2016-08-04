@@ -85,10 +85,7 @@ public class JsUseProvider implements UseProvider {
         try {
             environment = new JsEnvironment(jsEngine);
             environment.initialize();
-            String callerPath = scriptHelper.getScript().getScriptResource().getPath();
-            ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
-            Resource caller = adminResolver.getResource(callerPath);
-            Resource scriptResource = Utils.getScriptResource(caller, identifier, globalBindings);
+            Resource scriptResource = Utils.getScriptResource(scriptHelper.getScript().getScriptResource(), identifier, globalBindings);
             globalBindings.put(ScriptEngine.FILENAME, scriptResource.getPath());
             proxyAsyncScriptableFactory.registerProxies(globalBindings);
             AsyncContainer asyncContainer = environment.runResource(scriptResource, globalBindings, arguments);

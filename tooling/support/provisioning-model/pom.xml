@@ -17,12 +17,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>24</version>
+        <version>26</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.provisioning.model</artifactId>
-    <version>1.3.1-SNAPSHOT</version>
+    <version>1.4.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Provisioning Model</name>

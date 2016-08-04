@@ -32,8 +32,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Transport Credentials - User Credentials based DistributionTransportSecretProvider",
@@ -41,6 +39,7 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionTransportSecretProvider.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Secret provider name: {name}")
 public class UserCredentialsDistributionTransportSecretProvider implements
         DistributionTransportSecretProvider {
 
@@ -51,12 +50,10 @@ public class UserCredentialsDistributionTransportSecretProvider implements
     public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(label = "User Name", description = "The name of the user used to perform remote actions.")
-    public final static String USERNAME = "username";
+    private final static String USERNAME = "username";
 
     @Property(label = "Password", description = "The clear text password to perform authentication. Warning: storing clear text passwords is not safe.")
-    public final static String PASSWORD = "password";
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static String PASSWORD = "password";
 
     private String username;
     private String password;
@@ -69,10 +66,6 @@ public class UserCredentialsDistributionTransportSecretProvider implements
 
     public DistributionTransportSecret getSecret(URI uri) {
         return new DistributionTransportSecret() {
-            public String asToken() {
-                return null;
-            }
-
             public Map<String, String> asCredentialsMap() {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put(USERNAME, username);

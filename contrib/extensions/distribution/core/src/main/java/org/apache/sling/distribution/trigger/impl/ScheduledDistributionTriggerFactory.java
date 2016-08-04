@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -25,18 +28,16 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Scheduled Triggers Factory",
@@ -45,6 +46,7 @@ import java.util.Map;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name}")
 public class ScheduledDistributionTriggerFactory implements DistributionTrigger {
 
 
@@ -55,25 +57,27 @@ public class ScheduledDistributionTriggerFactory implements DistributionTrigger 
      * scheduled trigger action property
      */
     @Property(label = "Distribution Type", description = "The type of the distribution request produced by this trigger.")
-    public static final String ACTION = "action";
+    private static final String ACTION = "action";
 
     /**
      * scheduled trigger path property
      */
     @Property(label = "Distributed Path", description = "The path to be distributed periodically.")
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
     /**
      * scheduled trigger seconds property
      */
     @Property(label = "Interval in Seconds", description = "The number of seconds between executions")
-    public static final String SECONDS = "seconds";
+    private static final String SECONDS = "seconds";
 
+    @Property(label = "Service Name", description = "The name of the service used to trigger the distribution requests.")
+    private static final String SERVICE_NAME = "serviceName";
 
-    ScheduledDistributionTrigger trigger;
+    private ScheduledDistributionTrigger trigger;
 
     @Reference
-    private SlingRepository repository;
+    private ResourceResolverFactory resolverFactory;
 
     @Reference
     private Scheduler scheduler;
@@ -84,20 +88,21 @@ public class ScheduledDistributionTriggerFactory implements DistributionTrigger 
         String action = PropertiesUtil.toString(config.get(ACTION), DistributionRequestType.PULL.name());
         String path = PropertiesUtil.toString(config.get(PATH), null);
         int interval = PropertiesUtil.toInteger(config.get(SECONDS), 30);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
 
-        trigger =  new ScheduledDistributionTrigger(action, path, interval, scheduler);
+        trigger = new ScheduledDistributionTrigger(action, path, interval, serviceName, scheduler, resolverFactory);
     }
 
     @Deactivate
     public void deactivate() {
-       trigger.disable();
+        trigger.disable();
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.register(requestHandler);
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.unregister(requestHandler);
     }
 }

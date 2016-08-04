@@ -40,7 +40,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
@@ -58,8 +57,6 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
-import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -165,24 +162,6 @@ public class JobManagerImpl
     }
 
     /**
-     * @see org.apache.sling.event.jobs.JobManager#restart()
-     */
-    @Override
-    public void restart() {
-        // nothing to do as this is deprecated, let's log a warning
-        Utility.logDeprecated(logger, "Deprecated JobManager.restart() is called.");
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.JobManager#isJobProcessingEnabled()
-     */
-    @Override
-    public boolean isJobProcessingEnabled() {
-        Utility.logDeprecated(logger, "Deprecated JobManager.isJobProcessingEnabled() is called.");
-        return true;
-    }
-
-    /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
     @Override
@@ -222,84 +201,6 @@ public class JobManagerImpl
     @Override
     public Iterable<Queue> getQueues() {
         return qManager.getQueues();
-    }
-
-    @Override
-    public JobsIterator queryJobs(final QueryType type, final String topic, final Map<String, Object>... templates) {
-        return this.queryJobs(type, topic, -1, templates);
-    }
-
-    @Override
-    public JobsIterator queryJobs(final QueryType type, final String topic,
-            final long limit,
-            final Map<String, Object>... templates) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.queryJobs(...) is called.");
-        final Collection<Job> list = this.findJobs(type, topic, limit, templates);
-        final Iterator<Job> iter = list.iterator();
-        return new JobsIterator() {
-
-            private int index;
-
-            @Override
-            public Iterator<Event> iterator() {
-                return this;
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Event next() {
-                index++;
-                final Job job = iter.next();
-                return Utility.toEvent(job);
-            }
-
-            @Override
-            public boolean hasNext() {
-                return iter.hasNext();
-            }
-
-            @Override
-            public void skip(final long skipNum) {
-                long m = skipNum;
-                while ( m > 0 && this.hasNext() ) {
-                    this.next();
-                    m--;
-                }
-            }
-
-            @Override
-            public long getSize() {
-                return list.size();
-            }
-
-            @Override
-            public long getPosition() {
-                return index;
-            }
-        };
-    }
-
-    @Override
-    public Event findJob(final String topic, final Map<String, Object> template) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.findJob(...) is called.");
-        final Job job = this.getJob(topic, template);
-        if ( job != null ) {
-            return Utility.toEvent(job);
-        }
-        return null;
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.JobManager#removeJob(java.lang.String)
-     */
-    @Override
-    public boolean removeJob(final String jobId) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.removeJob(...) is called.");
-        return this.internalRemoveJobById(jobId, false);
     }
 
     /**
@@ -359,67 +260,11 @@ public class JobManagerImpl
     }
 
     /**
-     * @see org.apache.sling.event.jobs.JobManager#forceRemoveJob(java.lang.String)
-     */
-    @Override
-    public void forceRemoveJob(final String jobId) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.forceRemoveJob(...) is called.");
-        this.internalRemoveJobById(jobId, true);
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.JobManager#addJob(java.lang.String, java.util.Map)
      */
     @Override
     public Job addJob(String topic, Map<String, Object> properties) {
-        return this.addJob(topic, null, properties, null);
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.JobManager#addJob(java.lang.String, java.lang.String, java.util.Map)
-     */
-    @Override
-    public Job addJob(final String topic, final String name, final Map<String, Object> properties) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.add(String, String, Map) is called.");
-        return this.addJob(topic, name, properties, null);
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.JobManager#getJobByName(java.lang.String)
-     */
-    @Override
-    public Job getJobByName(final String name) {
-        Utility.logDeprecated(logger, "Deprecated JobManager.getJobByName(String) is called.");
-        final StringBuilder buf = new StringBuilder(64);
-
-        final ResourceResolver resolver = this.configuration.createResourceResolver();
-        try {
-
-            buf.append("//element(*,");
-            buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
-            buf.append(")[@");
-            buf.append(ISO9075.encode(JobUtil.PROPERTY_JOB_NAME));
-            buf.append(" = '");
-            buf.append(name);
-            buf.append("']");
-            final Iterator<Resource> result = resolver.findResources(buf.toString(), "xpath");
-
-            while ( result.hasNext() ) {
-                final Resource jobResource = result.next();
-                // sanity check for the path
-                if ( this.configuration.isJob(jobResource.getPath()) ) {
-                    final JobImpl job = Utility.readJob(logger, jobResource);
-                    if ( job != null ) {
-                        return job;
-                    }
-                }
-            }
-        } catch (final QuerySyntaxException qse) {
-            logger.warn("Query syntax wrong " + buf.toString(), qse);
-        } finally {
-            resolver.close();
-        }
-        return null;
+        return this.addJob(topic, properties, null);
     }
 
     /**
@@ -432,7 +277,9 @@ public class JobManagerImpl
         final StringBuilder buf = new StringBuilder(64);
         try {
 
-            buf.append("//element(*,");
+            buf.append("/jcr:root");
+            buf.append(this.configuration.getJobsBasePathWithSlash());
+            buf.append("/element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ResourceHelper.PROPERTY_JOB_ID);
@@ -521,7 +368,9 @@ public class JobManagerImpl
         final StringBuilder buf = new StringBuilder(64);
         try {
 
-            buf.append("//element(*,");
+            buf.append("/jcr:root");
+            buf.append(this.configuration.getJobsBasePathWithSlash());
+            buf.append("/element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
             buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_TOPIC));
@@ -675,68 +524,6 @@ public class JobManagerImpl
         return result;
     }
 
-
-
-    /**
-     * Try to get a "lock" for a resource
-     */
-    private boolean lock(final String jobTopic, final String id) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Trying to get lock for {}", id);
-        }
-        boolean hasLock = false;
-        final ResourceResolver resolver = this.configuration.createResourceResolver();
-        try {
-            final String lockName = ResourceHelper.filterName(id);
-            final StringBuilder sb = new StringBuilder(this.configuration.getLocksPath());
-            sb.append('/');
-            sb.append(jobTopic.replace('/', '.'));
-            sb.append('/');
-            sb.append(lockName);
-            final String path = sb.toString();
-
-            Resource lockResource = resolver.getResource(path);
-            if ( lockResource == null ) {
-                resolver.refresh();
-                try {
-                    final Map<String, Object> props = new HashMap<String, Object>();
-                    props.put(Utility.PROPERTY_LOCK_CREATED, Calendar.getInstance());
-                    props.put(Utility.PROPERTY_LOCK_CREATED_APP, Environment.APPLICATION_ID);
-                    props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, Utility.RESOURCE_TYPE_LOCK);
-
-                    lockResource = ResourceHelper.getOrCreateResource(resolver,
-                            path,
-                            props);
-
-                    // check if lock resource has correct name (SNS)
-                    if ( !lockResource.getName().equals(lockName) ) {
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug("Created SNS lock resource on instance {} - discarding", Environment.APPLICATION_ID);
-                        }
-                        resolver.delete(lockResource);
-                        resolver.commit();
-                    } else {
-                        final ValueMap vm = lockResource.adaptTo(ValueMap.class);
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug("Got lock resource on instance {} with {}", Environment.APPLICATION_ID, vm.get(Utility.PROPERTY_LOCK_CREATED_APP));
-                        }
-                        if ( vm.get(Utility.PROPERTY_LOCK_CREATED_APP).equals(Environment.APPLICATION_ID) ) {
-                            hasLock = true;
-                        }
-                    }
-                } catch (final PersistenceException ignore) {
-                    // ignore
-                }
-            }
-        } finally {
-            resolver.close();
-        }
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Lock for {} = {}", id, hasLock);
-        }
-        return hasLock;
-    }
-
     /**
      * Persist the job in the resource tree
      * @param jobTopic The required job topic
@@ -744,51 +531,45 @@ public class JobManagerImpl
      * @param passedJobProperties The optional job properties
      * @return The persisted job or <code>null</code>.
      */
-    private Job addJobInteral(final String jobTopic,
-            final String jobName,
+    private Job addJobInternal(final String jobTopic,
             final Map<String, Object> jobProperties,
             final List<String> errors) {
         final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(jobTopic);
-        // check for unique jobs
-        if ( jobName != null && !this.lock(jobTopic, jobName) ) {
-            logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
-            return null;
-        } else {
-            final TopologyCapabilities caps = this.configuration.getTopologyCapabilities();
-            info.targetId = (caps == null ? null : caps.detectTarget(jobTopic, jobProperties, info));
 
-            if ( logger.isDebugEnabled() ) {
-                if ( info.targetId != null ) {
-                    logger.debug("Persisting job {} into queue {}, target={}", new Object[] {Utility.toString(jobTopic, jobName, jobProperties), info.queueName, info.targetId});
-                } else {
-                    logger.debug("Persisting job {} into queue {}", Utility.toString(jobTopic, jobName, jobProperties), info.queueName);
-                }
-            }
-            final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final JobImpl job = this.writeJob(resolver,
-                        jobTopic,
-                        jobName,
-                        jobProperties,
-                        info);
-                if ( info.targetId != null ) {
-                    this.configuration.getAuditLogger().debug("ASSIGN OK {} : {}",
-                            info.targetId, job.getId());
-                } else {
-                    this.configuration.getAuditLogger().debug("UNASSIGN OK : {}",
-                            job.getId());
-                }
-                return job;
-            } catch (final PersistenceException re ) {
-                // something went wrong, so let's log it
-                this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", re);
-            } finally {
-                resolver.close();
-            }
-            if ( errors != null ) {
-                errors.add("Unable to persist new job.");
+        final TopologyCapabilities caps = this.configuration.getTopologyCapabilities();
+        info.targetId = (caps == null ? null : caps.detectTarget(jobTopic, jobProperties, info));
+
+        if ( logger.isDebugEnabled() ) {
+            if ( info.targetId != null ) {
+                logger.debug("Persisting job {} into queue {}, target={}", new Object[] {Utility.toString(jobTopic, jobProperties), info.queueName, info.targetId});
+            } else {
+                logger.debug("Persisting job {} into queue {}", Utility.toString(jobTopic, jobProperties), info.queueName);
             }
         }
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
+        try {
+            final JobImpl job = this.writeJob(resolver,
+                    jobTopic,
+                    jobProperties,
+                    info);
+            if ( info.targetId != null ) {
+                this.configuration.getAuditLogger().debug("ASSIGN OK {} : {}",
+                        info.targetId, job.getId());
+            } else {
+                this.configuration.getAuditLogger().debug("UNASSIGN OK : {}",
+                        job.getId());
+            }
+            return job;
+        } catch (final PersistenceException re ) {
+            // something went wrong, so let's log it
+            this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobProperties) + "'", re);
+        } finally {
+            resolver.close();
+        }
+        if ( errors != null ) {
+            errors.add("Unable to persist new job.");
+        }
+
         return null;
     }
 
@@ -801,7 +582,6 @@ public class JobManagerImpl
      */
     private JobImpl writeJob(final ResourceResolver resolver,
             final String jobTopic,
-            final String jobName,
             final Map<String, Object> jobProperties,
             final QueueInfo info)
     throws PersistenceException {
@@ -822,9 +602,6 @@ public class JobManagerImpl
 
         properties.put(ResourceHelper.PROPERTY_JOB_ID, jobId);
         properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
-        if ( jobName != null ) {
-            properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
-        }
         properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueConfiguration.getName());
         properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);
         properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
@@ -841,7 +618,7 @@ public class JobManagerImpl
         // create path and resource
         properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_JOB);
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Storing new job {} at {}", Utility.toString(jobTopic, jobName, properties), path);
+            logger.debug("Storing new job {} at {}", Utility.toString(jobTopic, properties), path);
         }
         ResourceHelper.getOrCreateResource(resolver,
                 path,
@@ -849,7 +626,7 @@ public class JobManagerImpl
 
         // update property types - priority, add path and create job
         properties.put(JobImpl.PROPERTY_RESOURCE_PATH, path);
-        return new JobImpl(jobTopic, jobName, jobId, properties);
+        return new JobImpl(jobTopic, jobId, properties);
     }
 
     /**
@@ -908,7 +685,7 @@ public class JobManagerImpl
     /**
      * Internal method to add a job
      */
-    public Job addJob(final String topic, final String name,
+    public Job addJob(final String topic,
             final Map<String, Object> properties,
             final List<String> errors) {
         final String errorMessage = Utility.checkJob(topic, properties);
@@ -917,46 +694,25 @@ public class JobManagerImpl
             if ( errors != null ) {
                 errors.add(errorMessage);
             }
-            this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
+            this.configuration.getAuditLogger().debug("ADD FAILED topic={}, properties={} : {}",
                     new Object[] {topic,
-                                  name == null ? "" : ",name=",
-                                  name == null ? "" : name,
                                   properties,
                                   errorMessage});
             return null;
         }
-        if ( name != null ) {
-            Utility.logDeprecated(logger, "Job is using deprecated name feature: " + Utility.toString(topic, name, properties));
-        }
         final List<String> errorList = new ArrayList<String>();
-        Job result = this.addJobInteral(topic, name, properties, errorList);
+        Job result = this.addJobInternal(topic, properties, errorList);
         if ( errors != null ) {
             errors.addAll(errorList);
         }
         if ( result == null ) {
-            if ( name != null ) {
-                result = this.getJobByName(name);
-            }
-            if ( result == null ) {
-                this.configuration.getAuditLogger().debug("ADD FAILED topic={}{}{}, properties={} : {}",
-                        new Object[] {topic,
-                                      name == null ? "" : ",name=",
-                                      name == null ? "" : name,
-                                      properties,
-                                      errorList});
-            } else {
-                this.configuration.getAuditLogger().debug("ADD DUP topic={}{}{}, properties={} : {}",
-                        new Object[] {topic,
-                                      name == null ? "" : ",name=",
-                                      name == null ? "" : name,
-                                      properties,
-                                      result.getId()});
-            }
-        } else {
-            this.configuration.getAuditLogger().debug("ADD OK topic={}{}{}, properties={} : {}",
+            this.configuration.getAuditLogger().debug("ADD FAILED topic={}, properties={} : {}",
                     new Object[] {topic,
-                                  name == null ? "" : ",name=",
-                                  name == null ? "" : name,
+                                  properties,
+                                  errorList});
+        } else {
+            this.configuration.getAuditLogger().debug("ADD OK topic={}, properties={} : {}",
+                    new Object[] {topic,
                                   properties,
                                   result.getId()});
         }
@@ -972,7 +728,7 @@ public class JobManagerImpl
         final JobImpl job = (JobImpl)this.getJobById(jobId);
         if ( job != null && this.configuration.isStoragePath(job.getResourcePath()) ) {
             this.internalRemoveJobById(jobId, true);
-            return this.addJob(job.getTopic(), job.getName(), job.getProperties());
+            return this.addJob(job.getTopic(), job.getProperties());
         }
         return null;
     }

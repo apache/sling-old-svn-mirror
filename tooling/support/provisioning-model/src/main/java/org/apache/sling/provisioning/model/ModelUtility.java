@@ -16,18 +16,16 @@
  */
 package org.apache.sling.provisioning.model;
 
-import static org.apache.sling.provisioning.model.ModelResolveUtility.getProcessedConfiguration;
 import static org.apache.sling.provisioning.model.ModelResolveUtility.resolveArtifactVersion;
 
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+
+import org.apache.sling.provisioning.model.MergeUtility.MergeOptions;
 
 /**
- * Merge two models
+ * Model utility
  */
 public abstract class ModelUtility {
 
@@ -35,9 +33,11 @@ public abstract class ModelUtility {
      * Merge the additional model into the base model.
      * @param base The base model.
      * @param additional The additional model.
+     * @deprecated Use {link {@link MergeUtility#merge(Model, Model)}
      */
+    @Deprecated
     public static void merge(final Model base, final Model additional) {
-        merge(base, additional, true);
+        MergeUtility.merge(base, additional);
     }
 
     /**
@@ -46,201 +46,14 @@ public abstract class ModelUtility {
      * @param additional The additional model.
      * @param handleRemove Handle special remove run mode
      * @since 1.2
+     * @deprecated Use {link {@link MergeUtility#merge(Model, Model, org.apache.sling.provisioning.model.MergeUtility.MergeOptions)}
      */
+    @Deprecated
     public static void merge(final Model base, final Model additional, final boolean handleRemove) {
-        // features
-        for(final Feature feature : additional.getFeatures()) {
-            final Feature baseFeature = base.getOrCreateFeature(feature.getName());
+        final MergeOptions opts = new MergeOptions();
+        opts.setHandleRemoveRunMode(handleRemove);
+        MergeUtility.merge(base, additional, opts);
 
-            // variables
-            baseFeature.getVariables().putAll(feature.getVariables());
-
-            // run modes
-            for(final RunMode runMode : feature.getRunModes()) {
-                // check for special remove run mode
-                String names[] = runMode.getNames();
-                if ( handleRemove ) {
-                    if ( names != null ) {
-                        int removeIndex = -1;
-                        int index = 0;
-                        for(final String name : names) {
-                            if ( name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
-                                removeIndex = index;
-                                break;
-                            }
-                            index++;
-                        }
-                        if ( removeIndex != -1 ) {
-                            String[] newNames = null;
-                            if ( names.length > 1 ) {
-                                newNames = new String[names.length - 1];
-                                index = 0;
-                                for(final String name : names) {
-                                    if ( !name.equals(ModelConstants.RUN_MODE_REMOVE) ) {
-                                        newNames[index++] = name;
-                                    }
-                                }
-                            }
-                            names = newNames;
-                            final RunMode baseRunMode = baseFeature.getRunMode(names);
-                            if ( baseRunMode != null ) {
-
-                                // artifact groups
-                                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                                    for(final Artifact artifact : group) {
-                                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
-                                            final Artifact found = searchGroup.search(artifact);
-                                            if ( found != null ) {
-                                                searchGroup.remove(found);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // configurations
-                                for(final Configuration config : runMode.getConfigurations()) {
-                                    final Configuration found = baseRunMode.getConfiguration(config.getPid(), config.getFactoryPid());
-                                    if ( found != null ) {
-                                        baseRunMode.getConfigurations().remove(found);
-                                    }
-                                }
-
-                                // settings
-                                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                                    baseRunMode.getSettings().remove(entry.getKey());
-                                }
-                            }
-                            continue;
-                        }
-                    }
-                }
-                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(names);
-
-                // artifact groups
-                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                    final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
-
-                    for(final Artifact artifact : group) {
-                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
-                            final Artifact found = searchGroup.search(artifact);
-                            if ( found != null ) {
-                                searchGroup.remove(found);
-                            }
-                        }
-                        baseGroup.add(artifact);
-                    }
-                }
-
-                // configurations
-                for(final Configuration config : runMode.getConfigurations()) {
-                    final Configuration found = baseRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
-
-                    mergeConfiguration(found, config);
-                }
-
-                // settings
-                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                    baseRunMode.getSettings().put(entry.getKey(), entry.getValue());
-                }
-            }
-
-        }
-    }
-
-    /**
-     * Merge two configurations
-     * @param baseConfig The base configuration.
-     * @param mergeConfig The merge configuration.
-     */
-    private static void mergeConfiguration(final Configuration baseConfig, final Configuration mergeConfig) {
-        // check for merge mode
-        final boolean isNew = baseConfig.getProperties().isEmpty();
-        if ( isNew ) {
-            copyConfigurationProperties(baseConfig, mergeConfig);
-            final Object mode = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
-            if ( mode != null ) {
-                baseConfig.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, mode);
-            }
-        } else {
-            final boolean baseIsRaw = baseConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
-            final boolean mergeIsRaw = mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED) != null;
-            // simplest case, both are raw
-            if ( baseIsRaw && mergeIsRaw ) {
-                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
-                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
-                    copyConfigurationProperties(baseConfig, mergeConfig);
-                } else {
-                    final Configuration newConfig = new Configuration(baseConfig.getPid(), baseConfig.getFactoryPid());
-                    getProcessedConfiguration(null, newConfig, baseConfig, false, null);
-                    clearConfiguration(baseConfig);
-                    copyConfigurationProperties(baseConfig, newConfig);
-
-                    clearConfiguration(newConfig);
-                    getProcessedConfiguration(null, newConfig, mergeConfig, false, null);
-
-                    if ( baseConfig.isSpecial() ) {
-                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
-                        final String mergeValue = newConfig.getProperties().get(baseConfig.getPid()).toString();
-                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
-                    } else {
-                        copyConfigurationProperties(baseConfig, newConfig);
-                    }
-                }
-
-            // another simple case, both are not raw
-            } else if ( !baseIsRaw && !mergeIsRaw ) {
-                // merge mode is always overwrite
-                clearConfiguration(baseConfig);
-                copyConfigurationProperties(baseConfig, mergeConfig);
-
-            // base is not raw but merge is
-            } else if ( !baseIsRaw && mergeIsRaw ) {
-                final String cfgMode = (String)mergeConfig.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
-                if ( cfgMode == null || ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode) ) {
-                    clearConfiguration(baseConfig);
-                    copyConfigurationProperties(baseConfig, mergeConfig);
-                } else {
-                    final Configuration newMergeConfig = new Configuration(mergeConfig.getPid(), mergeConfig.getFactoryPid());
-                    getProcessedConfiguration(null, newMergeConfig, mergeConfig, false, null);
-
-                    if ( baseConfig.isSpecial() ) {
-                        final String baseValue = baseConfig.getProperties().get(baseConfig.getPid()).toString();
-                        final String mergeValue = newMergeConfig.getProperties().get(baseConfig.getPid()).toString();
-                        baseConfig.getProperties().put(baseConfig.getPid(), baseValue + "\n" + mergeValue);
-                    } else {
-                        copyConfigurationProperties(baseConfig, newMergeConfig);
-                    }
-                }
-
-                // base is raw, but merge is not raw
-            } else {
-                // merge mode is always overwrite
-                clearConfiguration(baseConfig);
-                copyConfigurationProperties(baseConfig, mergeConfig);
-            }
-        }
-    }
-
-    private static void clearConfiguration(final Configuration cfg) {
-        final Set<String> keys = new HashSet<String>();
-        final Enumeration<String> e = cfg.getProperties().keys();
-        while ( e.hasMoreElements() ) {
-            keys.add(e.nextElement());
-        }
-
-        for(final String key : keys) {
-            cfg.getProperties().remove(key);
-        }
-    }
-
-    private static void copyConfigurationProperties(final Configuration baseConfig, final Configuration mergeConfig) {
-        final Enumeration<String> e = mergeConfig.getProperties().keys();
-        while ( e.hasMoreElements() ) {
-            final String key = e.nextElement();
-            if ( !key.equals(ModelConstants.CFG_UNPROCESSED_MODE) ) {
-                baseConfig.getProperties().put(key, mergeConfig.getProperties().get(key));
-            }
-        }
     }
 
     /**
@@ -276,33 +89,33 @@ public abstract class ModelUtility {
          */
         String resolve(final Artifact artifact);
     }
-    
+
     /**
      * Parameter builder class for {@link ModelUtility#getEffectiveModel(Model, ResolverOptions)} method.
      */
     public static final class ResolverOptions {
-        
+
         private VariableResolver variableResolver;
         private ArtifactVersionResolver artifactVersionResolver;
-        
+
         public VariableResolver getVariableResolver() {
             return variableResolver;
         }
-        
+
         public ResolverOptions variableResolver(VariableResolver variableResolver) {
             this.variableResolver = variableResolver;
             return this;
         }
-        
+
         public ArtifactVersionResolver getArtifactVersionResolver() {
             return artifactVersionResolver;
         }
-        
+
         public ResolverOptions artifactVersionResolver(ArtifactVersionResolver dependencyVersionResolver) {
             this.artifactVersionResolver = dependencyVersionResolver;
             return this;
         }
-        
+
     }
 
     /**
@@ -317,7 +130,7 @@ public abstract class ModelUtility {
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
         return getEffectiveModel(model, new ResolverOptions().variableResolver(resolver));
     }
-    
+
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
@@ -328,7 +141,7 @@ public abstract class ModelUtility {
     public static Model getEffectiveModel(final Model model) {
         return getEffectiveModel(model, new ResolverOptions());
     }
-    
+
     /**
      * Replace all variables in the model and return a new model with the replaced values.
      * @param model The base model.
@@ -358,14 +171,32 @@ public abstract class ModelUtility {
             for(final RunMode runMode : feature.getRunModes()) {
                 final String[] rm = runMode.getNames();
                 if ( rm != null ) {
-                    boolean hasSpecial = false;
+                    int hasSpecial = 0;
+                    boolean hasRemove = false;
                     for(final String m : rm) {
                         if ( m.startsWith(":") ) {
-                            if ( hasSpecial ) {
-                                errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
-                                break;
+                            if ( hasSpecial > 0 ) {
+                                if ( hasSpecial == 1 ) {
+                                    if ( ModelConstants.RUN_MODE_REMOVE.equals(m) && !hasRemove) {
+                                        hasRemove = true;
+                                        hasSpecial = 2;
+                                    } else if ( hasRemove && !ModelConstants.RUN_MODE_REMOVE.equals(m) ) {
+                                        hasSpecial = 2;
+                                    } else {
+                                        hasSpecial = 2;
+                                        errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                        break;
+                                    }
+                                } else {
+                                    hasSpecial++;
+                                    errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                    break;
+                                }
+
+                            } else {
+                                hasSpecial = 1;
+                                hasRemove = ModelConstants.RUN_MODE_REMOVE.equals(m);
                             }
-                            hasSpecial = true;
                         }
                     }
                 }
@@ -416,7 +247,7 @@ public abstract class ModelUtility {
         }
         return errors;
     }
-    
+
     /**
      * Applies a set of variables to the given model.
      * All variables that are referenced anywhere within the model are detected and passed to the given variable resolver.
@@ -429,7 +260,7 @@ public abstract class ModelUtility {
      * @since 1.3
      */
     public static Model applyVariables(final Model model, final VariableResolver resolver) {
-        
+
         // define delegating resolver that collects all variable names and value per feature
         final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
         VariableResolver variableCollector = new VariableResolver() {
@@ -447,10 +278,10 @@ public abstract class ModelUtility {
                 return value;
             }
         };
-        
+
         // use effective model processor to collect variables, but drop the resulting model
         new EffectiveModelProcessor(new ResolverOptions().variableResolver(variableCollector)).process(model);
-        
+
         // define a processor that updates the "variables" sections in the features
         ModelProcessor variablesUpdater = new ModelProcessor() {
             @Override
@@ -465,7 +296,7 @@ public abstract class ModelUtility {
                 return newVariables;
             }
         };
-        
+
         // return model with replaced "variables" sections
         return variablesUpdater.process(model);
     }
@@ -481,7 +312,7 @@ public abstract class ModelUtility {
      * @since 1.3
      */
     public static Model applyArtifactVersions(final Model model, final ArtifactVersionResolver resolver) {
-        
+
         // define a processor that updates the versions of artifacts
         ModelProcessor versionUpdater = new ModelProcessor() {
             @Override
@@ -497,10 +328,11 @@ public abstract class ModelUtility {
                         artifact.getArtifactId(),
                         newVersion,
                         artifact.getClassifier(),
-                        artifact.getType());
+                        artifact.getType(),
+                        artifact.getMetadata());
             }
         };
-        
+
         // return model with updated version artifacts
         return versionUpdater.process(model);
     }

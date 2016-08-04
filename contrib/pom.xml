@@ -83,11 +83,14 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-          <module>auth/openid</module>
           <module>auth/org.apache.sling.auth.xing.api</module>
           <module>auth/org.apache.sling.auth.xing.login</module>
           <module>auth/org.apache.sling.auth.xing.oauth</module>
+
+          <!-- SLING-2760 Do not include in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
+          <module>auth/openid</module>
           <module>auth/selector</module>
+          -->
 
           <module>commons/html</module>
 
@@ -106,6 +109,7 @@
           <module>extensions/obr</module>
           <module>extensions/distribution/api</module>
           <module>extensions/distribution/core</module>
+          <module>extensions/distribution/extensions</module>
           <module>extensions/distribution/sample</module>
           <module>extensions/distribution/it</module>
           <module>extensions/logtail</module>
@@ -117,9 +121,13 @@
           <module>extensions/security</module>
           <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
+          <module>extensions/sling-oak-restrictions</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
+          <module>extensions/tracer</module>
           <module>extensions/urlrewriter</module>
+          <module>extensions/hapi</module>
+          <module>extensions/sling-dynamic-include</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
@@ -129,7 +137,6 @@
 
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
-          <module>scripting/freemarker</module>
           <module>scripting/groovy</module>
           <module>scripting/java</module>
           <module>scripting/jst</module>
@@ -139,18 +146,24 @@
           <module>scripting/scala/config</module>
           <module>scripting/scala/samples/hello-world</module>
           <module>scripting/scala/samples/forum</module>
-          <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
 
-          <module>nosql/generic</module>
-          <module>nosql/couchbase-client</module>
-          <module>nosql/couchbase-resourceprovider</module>
+          <module>nosql</module>
 
           <module>launchpad/testing</module>
-          <module>launchpad/karaf</module>
     </modules>
     <profiles>
+      <profile>
+        <id>java8</id>
+        <activation>
+          <jdk>[1.8,)</jdk>
+        </activation>
+        <modules>
+          <module>scripting/freemarker</module>
+          <module>scripting/org.apache.sling.scripting.thymeleaf</module>
+        </modules>
+      </profile>
         <profile>
             <!--
               Allow the debian package to be excluded, as it might be slow/stopping

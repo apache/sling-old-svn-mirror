@@ -28,8 +28,7 @@ import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
  * A Command that uninstalls a bundle, see
@@ -72,19 +71,26 @@ class UninstallBundleCommand implements Command {
      * Gets the bundle's Fragment-Host header.
      */
     private static String getFragmentHostHeader(final Bundle b) {
-        return (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
+        return b.getHeaders().get( Constants.FRAGMENT_HOST );
     }
 
-    private boolean isSystemBundleFragment(final Bundle installedBundle) {
-        final String fragmentHeader = (String) installedBundle.getHeaders().get(
-            Constants.FRAGMENT_HOST);
-        return fragmentHeader != null
-            && fragmentHeader.indexOf(Constants.EXTENSION_DIRECTIVE) > 0;
+    /**
+     * Check whether this is a system bundle fragment.
+     * In this case the symbolic name alias "system.bundle" is used.
+     * @param fragmentHeader The fragment header
+     * @return {@code true} if system bundle fragment.
+     */
+    private boolean isSystemBundleFragment(final String fragmentHeader) {
+        final int pos = fragmentHeader.indexOf(";");
+        final String symbolicName = (pos == -1 ? fragmentHeader : fragmentHeader.substring(0, pos));
+
+        return "system.bundle".equals(symbolicName.trim());
     }
 
     /**
      * @see org.apache.sling.launchpad.base.impl.bootstrapcommands.Command#execute(org.apache.felix.framework.Logger, org.osgi.framework.BundleContext)
      */
+    @Override
     public boolean execute(final Logger logger, final BundleContext ctx) throws Exception {
         final Set<String> refreshBundles = new HashSet<String>();
         // Uninstall all instances of our bundle within our version range
@@ -96,7 +102,7 @@ class UninstallBundleCommand implements Command {
                             this + ": uninstalling bundle version " + b.getVersion());
                     final String fragmentHostHeader = getFragmentHostHeader(b);
                     if (fragmentHostHeader != null) {
-                        if ( isSystemBundleFragment(b) ) {
+                        if ( isSystemBundleFragment(fragmentHostHeader) ) {
                             logger.log(Logger.LOG_INFO, this + ": Need to do a system bundle refresh");
                             refreshSystemBundle = true;
                         } else {
@@ -121,22 +127,14 @@ class UninstallBundleCommand implements Command {
                 }
             }
             if ( bundles.size() > 0 ) {
-                final ServiceReference paRef = ctx.getServiceReference(PackageAdmin.class.getName());
-                if ( paRef != null ) {
-                    try {
-                        final PackageAdmin pa = (PackageAdmin)ctx.getService(paRef);
-                        if ( pa != null ) {
-                            pa.refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
-                        }
-                    } finally {
-                        ctx.ungetService(paRef);
-                    }
-                }
+                final FrameworkWiring fw = ctx.getBundle().adapt(FrameworkWiring.class);
+                fw.refreshBundles(bundles);
             }
         }
         return refreshSystemBundle;
     }
 
+    @Override
     public Command parse(String commandLine) throws ParseException {
         if(commandLine.startsWith(CMD_PREFIX)) {
             final String [] s = commandLine.split(" ");

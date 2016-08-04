@@ -24,66 +24,59 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
+import org.apache.sling.distribution.transport.impl.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
  */
 public class RemoteDistributionPackageImporter implements DistributionPackageImporter {
 
-
-    private DistributionTransport transportHandler;
-    private final DefaultDistributionLog log;
-    private DistributionTransportSecretProvider distributionTransportSecretProvider;
-
+    private final Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
+    private final DistributionTransportContext distributionContext = new DistributionTransportContext();
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
-                                             Map<String, String> endpointsMap,
-                                             TransportEndpointStrategyType transportEndpointStrategyType) {
-        this.log = log;
-        this.distributionTransportSecretProvider = distributionTransportSecretProvider;
-
+                                             Map<String, String> endpointsMap) {
         if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
-
-
-        Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
 
         for (Map.Entry<String, String> entry : endpointsMap.entrySet()) {
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
-                transportEndpointStrategyType);
-
     }
 
-    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
-        try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage);
-        } catch (Exception e) {
-            throw new DistributionPackageImportException("failed in importing package " + distributionPackage, e);
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
+        DistributionPackageInfo info = distributionPackage.getInfo();
+        String queueName = DistributionPackageUtils.getQueueName(info);
+
+        DistributionTransport distributionTransport = transportHandlers.get(queueName);
+
+        if (distributionTransport != null) {
+            distributionTransport.deliverPackage(resourceResolver, distributionPackage, distributionContext);
+        } else {
+            for(DistributionTransport transportHandler: transportHandlers.values()) {
+                transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionContext);
+            }
         }
     }
 
-    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
-        throw new DistributionPackageImportException("not supported");
+    @Nonnull
+    public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
+        throw new DistributionException("not supported");
     }
 
 }

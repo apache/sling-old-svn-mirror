@@ -28,6 +28,9 @@ import org.apache.sling.commons.osgi.ManifestHeader;
 
 class TracerSet {
     public static final String LEVEL = "level";
+    public static final String CALLER = "caller";
+    public static final String CALLER_PREFIX_FILTER = "caller-exclude-filter";
+
     private final String name;
     private final List<TracerConfig> configs;
 
@@ -72,8 +75,35 @@ class TracerSet {
 
             //Defaults to Debug
             Level level = Level.valueOf(e.getAttributeValue(LEVEL));
-            result.add(new TracerConfig(category, level));
+            CallerStackReporter reporter = createReporter(e);
+            result.add(new TracerConfig(category, level, reporter));
         }
         return Collections.unmodifiableList(result);
+    }
+
+    static CallerStackReporter createReporter(ManifestHeader.Entry e) {
+        String caller = e.getAttributeValue(CALLER);
+        if (caller == null){
+            return null;
+        }
+
+        if ("true".equals(caller)){
+            return new CallerStackReporter(0, Integer.MAX_VALUE, CallerFilter.ALL);
+        }
+
+        CallerFilter filter = CallerFilter.ALL;
+        int depth;
+        try{
+            depth = Integer.parseInt(caller);
+        } catch (NumberFormatException ignore){
+            return null;
+        }
+
+        String filterValue = e.getAttributeValue(CALLER_PREFIX_FILTER);
+        if (filterValue != null){
+            filter = PrefixExcludeFilter.from(filterValue);
+        }
+
+        return new CallerStackReporter(0, depth, filter);
     }
 }

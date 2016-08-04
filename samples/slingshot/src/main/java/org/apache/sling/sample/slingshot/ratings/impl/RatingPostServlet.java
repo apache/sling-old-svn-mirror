@@ -19,27 +19,34 @@ package org.apache.sling.sample.slingshot.ratings.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.apache.sling.sample.slingshot.model.StreamEntry;
 import org.apache.sling.sample.slingshot.ratings.RatingsService;
 import org.apache.sling.sample.slingshot.ratings.RatingsUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The ratings post servlet is registered for a POST to an item with
+ * The ratings post servlet is registered for a POST to an entry with
  * the selector "rating".
  */
-@SlingServlet(methods="POST", extensions="ratings", resourceTypes=SlingshotConstants.RESOURCETYPE_ITEM)
+@Component(service = Servlet.class,
+property={
+        "sling.servlet.methods=POST",
+        "sling.servlet.extensions=ratings",
+        "sling.servlet.resourceTypes=" + StreamEntry.RESOURCETYPE
+})
 public class RatingPostServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
@@ -66,7 +73,10 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
         try {
             resolver = factory.getServiceResourceResolver(null);
 
-            ratingsService.setRating(request.getResource(), userId, Integer.valueOf(rating));
+            final Resource reqResource = resolver.getResource(request.getResource().getPath());
+
+            ratingsService.setRating(reqResource, userId, Integer.valueOf(rating));
+
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {
@@ -83,7 +93,7 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
         pw.print("{ ");
         pw.print(" \"rating\" : ");
         pw.print(String.valueOf(ratingsService.getRating(request.getResource())));
-        pw.println("}");
+        pw.print("}");
     }
 
 }

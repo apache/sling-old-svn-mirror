@@ -70,6 +70,7 @@ $(document).ready(function() {
 		    "check_callback" : true,
 		    multiple: true,
 			animation: 600,
+			'dblclick_toggle': false,
 			'data' : {
 				'url' : function (liJson) {
 					// initial call for the root element
@@ -158,6 +159,7 @@ $(document).ready(function() {
     }).on('keydown.jstree', 'a.jstree-anchor', function (e) {
     	treeController.configureKeyListeners(e);
     }).on('select_node.jstree', function (e, data) {
+    	//noop
     	;
     }).on('after_open.jstree', function(e, data){
     	treeController.afterOpen(data.node);
