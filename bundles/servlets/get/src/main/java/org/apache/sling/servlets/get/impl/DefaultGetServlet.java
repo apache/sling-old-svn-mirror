@@ -42,6 +42,7 @@ import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.PlainTextRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.StreamRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.XMLRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.HeadServletResponse;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true),
     
     // Generic handler for all get requests
-    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true)
+    @Property(name="sling.servlet.methods", value={"GET", "HEAD"}, propertyPrivate=true)
 })
 public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
@@ -250,6 +251,15 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             "Using " + rendererServlet.getClass().getName()
                 + " to render for extension=" + ext);
         rendererServlet.service(request, response);
+    }
+
+    @Override
+    protected void doHead(SlingHttpServletRequest request,
+                          SlingHttpServletResponse response) throws ServletException,
+            IOException {
+
+        response = new HeadServletResponse(response);
+        doGet(request, response);
     }
 
     @Override
