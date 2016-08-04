@@ -19,6 +19,7 @@
 package org.apache.sling.contextaware.config.impl;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.apache.sling.api.resource.Resource;
@@ -26,6 +27,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
@@ -83,38 +85,42 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T as(final Class<T> clazz) {
+        Resource configResource = null;
         final String name = getConfigurationName(clazz.getName());
-        // TODO - what to return on null?
-        if ( name == null ) {
-            return null;
+        if ( name != null && this.contentResource != null ) {
+            configResource = this.configurationResourceResolver.getResource(this.contentResource, name);
         }
-        final Resource configResource = this.configurationResourceResolver.getResource(this.contentResource, name);
-        final ValueMap props = configResource.getValueMap();
+        final ValueMap props = ResourceUtil.getValueMap(configResource);
         if (clazz == ValueMap.class) {
             return (T)props;
         }
-        // TODO - handle conversion exception
-        return converter.convert(props).to(clazz);
+        try {
+            return converter.convert(props).to(clazz);
+        } catch ( final ConversionException ce) {
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> Collection<T> asCollection(Class<T> clazz) {
         final String name = getConfigurationName(clazz.getName());
-        // TODO - what to return on null?
-        if ( name == null ) {
-            return null;
-        }
-        Collection<Resource> configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, name);
-        Collection<ValueMap> propsList = configResources.stream()
+        if ( name != null && this.contentResource != null ) {
+            Collection<Resource> configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, name);
+            Collection<ValueMap> propsList = configResources.stream()
                 .map(res -> ResourceUtil.getValueMap(res))
                 .collect(Collectors.toList());
-        if (clazz == ValueMap.class) {
-            return (Collection<T>)propsList;
+            if (clazz == ValueMap.class) {
+                return (Collection<T>)propsList;
+            }
+            try {
+                return propsList.stream()
+                    .map(props -> converter.convert(props).to(clazz))
+                    .collect(Collectors.toList());
+            } catch ( final ConversionException ce) {
+                // ignore
+            }
         }
-        // TODO - handle conversion exception
-        return propsList.stream()
-            .map(props -> converter.convert(props).to(clazz))
-            .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 }

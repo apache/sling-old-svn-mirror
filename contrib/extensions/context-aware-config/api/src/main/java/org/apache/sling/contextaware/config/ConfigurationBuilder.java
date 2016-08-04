@@ -34,9 +34,6 @@ public interface ConfigurationBuilder {
      * Define configuration name. This parameter is optional, it defaults to the class
      * name of the argument provided either to {@link #as(Class)} or {@link #asCollection(Class)}.
      *
-     * TODO - what happens if an invalid name is provided? I assume the same as if no
-     * configuration resource exists.
-     *
      * @param configName Relative path
      * @return Configuration builder
      */
@@ -45,14 +42,16 @@ public interface ConfigurationBuilder {
     /**
      * Get configuration as singleton and its properties mapped to the given annotation class.
      * @param clazz Annotation class or {@link org.apache.sling.api.resource.ValueMap}
-     * @return Configuration object
+     * @return Configuration object or {@code null} if the conversion failed or the provided name
+     *         is invalid.
      */
     @Nonnull <T> T as(@Nonnull Class<T> clazz);
 
     /**
-     * Get list of configuration instances with its properties mapped to the given annotation class.
+     * Get collection of configuration instances with its properties mapped to the given annotation class.
      * @param clazz Annotation class or {@link org.apache.sling.api.resource.ValueMap}
-     * @return List of configuration objects
+     * @return Collection of configuration objects, might be empty if conversion failed or the
+     *         provided name is invalid.
      */
     @Nonnull <T> Collection<T> asCollection(@Nonnull Class<T> clazz);
 

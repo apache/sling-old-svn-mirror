@@ -91,6 +91,12 @@ public class ConfigurationResolverImplTest {
                 .build());
 
         // content resources
+        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
+                .put("sling:config", "/config/content/site1")
+                .build());
+        context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
+                .put("sling:config", "/config/content/site2")
+                .build());
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
     }
