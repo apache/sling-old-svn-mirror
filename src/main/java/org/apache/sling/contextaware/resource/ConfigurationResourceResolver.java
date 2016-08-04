@@ -20,6 +20,7 @@ package org.apache.sling.contextaware.resource;
 
 import java.util.Collection;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
@@ -37,18 +38,17 @@ public interface ConfigurationResourceResolver {
     /**
      * Get a context-specific singleton configuration resource defined by the given configuration name.
      *
-     * TODO - can we always ensure to return a resource?
      * @param resource Context resource to fetch configuration for
      * @param configName Configuration name or relative path.
-     * @return Configuration resource
+     * @return Configuration resource or {@code null}.
      */
-    @Nonnull Resource getResource(@Nonnull Resource resource, @Nonnull String configName);
+    @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull String configName);
 
     /**
      * Get a collection of context-specific configuration resources defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
      * @param configName Configuration name or relative path.
-     * @return Collection of configuration resources
+     * @return Collection of configuration resources, the collection might be empty.
      */
     @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String configName);
 
