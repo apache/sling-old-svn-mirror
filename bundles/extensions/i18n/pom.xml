@@ -67,6 +67,9 @@
                             SLING-INF/nodetypes/jcrlanguage.cnd,
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
+                        <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html, 
+                             to make this bundle compatible with older versions of Sling -->
+                        <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*|org/apache/jackrabbit/commons/json/Json*"
                         </Embed-Dependency>
