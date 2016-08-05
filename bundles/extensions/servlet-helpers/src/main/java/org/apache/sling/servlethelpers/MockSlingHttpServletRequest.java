@@ -388,7 +388,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     *
      * @param name  Header name
      * @param value Header value
      */
@@ -398,7 +397,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     *
      * @param name  Header name
      * @param value Header value
      */
@@ -408,7 +406,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     *
      * @param name Header name
      * @param date Header value
      */
@@ -418,7 +415,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     *
      * @param name  Header name
      * @param value Header value
      */
@@ -428,7 +424,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     *
      * @param name  Header name
      * @param value Header value
      */
@@ -438,7 +433,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     *
      * @param name Header name
      * @param date Header value
      */
@@ -458,7 +452,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set cookie
-     *
      * @param cookie Cookie
      */
     public void addCookie(Cookie cookie) {
