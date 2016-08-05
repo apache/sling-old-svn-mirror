@@ -53,7 +53,6 @@ import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.RequestLocaleResolver;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.Constants;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,9 +63,7 @@ import org.slf4j.LoggerFactory;
 @SlingFilter(generateService = true,
              order = 700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
 @Properties({
-    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/"),
-    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-              value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=org.apache.sling)"),
+    @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class I18NFilter implements Filter {
@@ -259,7 +256,7 @@ public class I18NFilter implements Filter {
         }
 
         @Override
-        public Enumeration<Locale> getLocales() {
+        public Enumeration<?> getLocales() {
             return Collections.enumeration(getLocaleList());
         }
 
@@ -360,7 +357,7 @@ public class I18NFilter implements Filter {
         }
 
         @Override
-        public Enumeration<Locale> getLocales() {
+        public Enumeration<?> getLocales() {
             return Collections.enumeration(getLocaleList());
         }
 

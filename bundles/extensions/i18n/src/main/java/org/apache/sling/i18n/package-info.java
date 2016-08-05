@@ -17,7 +17,8 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("2.2.0")
+@Version("2.2.0")
 package org.apache.sling.i18n;
 
+import aQute.bnd.annotation.Version;
 
