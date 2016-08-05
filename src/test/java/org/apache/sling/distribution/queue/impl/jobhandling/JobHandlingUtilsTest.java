@@ -43,9 +43,10 @@ public class JobHandlingUtilsTest {
 
         Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(queueItem);
         assertNotNull(fullPropertiesFromPackage);
-        assertEquals(4, fullPropertiesFromPackage.size());
+        assertEquals(5, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("distribution.request.paths"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.item.id"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.package.size"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.request.type"));
     }

@@ -18,11 +18,10 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import javax.annotation.CheckForNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.CheckForNull;
 
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -39,12 +38,20 @@ class JobHandlingUtils {
 
     private static final String DISTRIBUTION_PACKAGE_PREFIX = "distribution.";
     private static final String DISTRIBUTION_PACKAGE_ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
+    private static final String DISTRIBUTION_PACKAGE_SIZE = DISTRIBUTION_PACKAGE_PREFIX + "package.size";
 
     public static DistributionQueueItem getItem(final Job job) {
 
         Map<String, Object> properties = new HashMap<String, Object>();
 
         String packageId = (String) job.getProperty(DISTRIBUTION_PACKAGE_ID);
+        Object sizeProperty = job.getProperty(DISTRIBUTION_PACKAGE_SIZE);
+        long size;
+        if (sizeProperty != null) {
+            size = Long.valueOf(sizeProperty.toString());
+        } else {
+            size = -1;
+        }
 
         try {
             Set<String> propertyNames = job.getPropertyNames();
@@ -58,7 +65,7 @@ class JobHandlingUtils {
             log.error("Cannot read job {} properties", job.getId(), t);
         }
 
-        return new DistributionQueueItem(packageId, properties);
+        return new DistributionQueueItem(packageId, size, properties);
     }
 
     public static Map<String, Object> createFullProperties(DistributionQueueItem queueItem) {
@@ -72,6 +79,7 @@ class JobHandlingUtils {
         }
 
         properties.put(DISTRIBUTION_PACKAGE_ID, queueItem.getPackageId());
+        properties.put(DISTRIBUTION_PACKAGE_SIZE, queueItem.getSize());
 
         return properties;
     }
@@ -129,7 +137,7 @@ class JobHandlingUtils {
             return null;
         }
 
-        return itemId.replace(ID_START, "").replace("--","/");
+        return itemId.replace(ID_START, "").replace("--", "/");
     }
 
 
