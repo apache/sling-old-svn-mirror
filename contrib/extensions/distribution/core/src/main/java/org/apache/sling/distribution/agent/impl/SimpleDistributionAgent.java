@@ -328,11 +328,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
             DistributionQueue queue = getQueue(queueName);
 
             DistributionQueueState state = queue.getStatus().getState();
-            if (DistributionQueueState.BLOCKED.equals(state)) {
+            if (DistributionQueueState.BLOCKED == state) {
                 return DistributionAgentState.BLOCKED;
             }
 
-            if (DistributionQueueState.RUNNING.equals(state)) {
+            if (DistributionQueueState.RUNNING == state) {
                 agentState = DistributionAgentState.RUNNING;
             }
         }
@@ -520,7 +520,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 DistributionUtils.safelyLogout(resourceResolver);
             }
         }
-
     }
 
     private void generatePackageEvent(String topic, DistributionPackage... distributionPackages) {
