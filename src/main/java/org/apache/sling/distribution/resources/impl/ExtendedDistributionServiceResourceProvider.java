@@ -68,7 +68,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     @Override
     protected Map<String, Object> getChildResourceProperties(DistributionComponent<?> component, String childResourceName) {
         DistributionComponentKind kind = component.getKind();
-        if (kind.equals(DistributionComponentKind.AGENT)) {
+        if (DistributionComponentKind.AGENT == kind) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null && childResourceName != null) {
@@ -100,7 +100,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     protected Iterable<String> getChildResourceChildren(DistributionComponent<?> component, String childResourceName) {
 
         DistributionComponentKind kind = component.getKind();
-        if (kind.equals(DistributionComponentKind.AGENT)) {
+        if (DistributionComponentKind.AGENT == kind) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null) {

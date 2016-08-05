@@ -18,6 +18,15 @@
  */
 package org.apache.sling.distribution.component.impl;
 
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.AGENT_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.EXPORTER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.EXPORTER_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.IMPORTER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.IMPORTER_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.TRIGGER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.TRIGGER_RESOURCE_TYPE;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +68,7 @@ import org.apache.sling.distribution.trigger.impl.ScheduledDistributionTriggerFa
 @SuppressWarnings( "serial" )
 public enum DistributionComponentKind {
 
-    AGENT("agent", DistributionAgent.class, new HashMap<String, Class<?>>() {
+    AGENT("agent", AGENT_RESOURCE_TYPE, AGENT_LIST_RESOURCE_TYPE, DistributionAgent.class, new HashMap<String, Class<?>>() {
         {
             put("simple", SimpleDistributionAgentFactory.class);
             put("sync", SyncDistributionAgentFactory.class);
@@ -69,14 +78,14 @@ public enum DistributionComponentKind {
         }
     }),
 
-    IMPORTER("importer", DistributionPackageImporter.class, new HashMap<String, Class<?>>() {
+    IMPORTER("importer", IMPORTER_RESOURCE_TYPE, IMPORTER_LIST_RESOURCE_TYPE, DistributionPackageImporter.class, new HashMap<String, Class<?>>() {
         {
             put("local", LocalDistributionPackageImporterFactory.class);
             put("remote", RemoteDistributionPackageImporterFactory.class);
         }
     }),
 
-    EXPORTER("exporter", DistributionPackageExporter.class, new HashMap<String, Class<?>>() {
+    EXPORTER("exporter", EXPORTER_RESOURCE_TYPE, EXPORTER_LIST_RESOURCE_TYPE, DistributionPackageExporter.class, new HashMap<String, Class<?>>() {
         {
             put("local", LocalDistributionPackageExporterFactory.class);
             put("remote", RemoteDistributionPackageExporterFactory.class);
@@ -84,7 +93,7 @@ public enum DistributionComponentKind {
         }
     }),
 
-    QUEUE_PROVIDER("queueProvider", DistributionQueueProvider.class, new HashMap<String, Class<?>>() {
+    QUEUE_PROVIDER("queueProvider", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionQueueProvider.class, new HashMap<String, Class<?>>() {
         {
             put("simple", SimpleDistributionAgentFactory.class);
             put("sync", SyncDistributionAgentFactory.class);
@@ -94,7 +103,7 @@ public enum DistributionComponentKind {
         }
     }),
 
-    QUEUE_STRATEGY("queueStrategy", DistributionQueueDispatchingStrategy.class, new HashMap<String, Class<?>>() {
+    QUEUE_STRATEGY("queueStrategy", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionQueueDispatchingStrategy.class, new HashMap<String, Class<?>>() {
         {
             put("simple", SimpleDistributionAgentFactory.class);
             put("sync", SyncDistributionAgentFactory.class);
@@ -104,26 +113,26 @@ public enum DistributionComponentKind {
         }
     }),
 
-    TRANSPORT_SECRET_PROVIDER("transportSecretProvider", DistributionTransportSecretProvider.class, new HashMap<String, Class<?>>() {
+    TRANSPORT_SECRET_PROVIDER("transportSecretProvider", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionTransportSecretProvider.class, new HashMap<String, Class<?>>() {
         {
             put("user", UserCredentialsDistributionTransportSecretProvider.class);
         }
     }),
 
-    PACKAGE_BUILDER("packageBuilder", DistributionPackageBuilder.class, new HashMap<String, Class<?>>() {
+    PACKAGE_BUILDER("packageBuilder", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionPackageBuilder.class, new HashMap<String, Class<?>>() {
         {
             put("filevlt", VaultDistributionPackageBuilderFactory.class);
             put("jcrvlt", VaultDistributionPackageBuilderFactory.class);
         }
     }),
 
-    REQUEST_AUTHORIZATION("requestAuthorization", DistributionRequestAuthorizationStrategy.class, new HashMap<String, Class<?>>() {
+    REQUEST_AUTHORIZATION("requestAuthorization", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionRequestAuthorizationStrategy.class, new HashMap<String, Class<?>>() {
         {
             put("privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
         }
     }),
 
-    TRIGGER("trigger", DistributionTrigger.class, new HashMap<String, Class<?>>() {
+    TRIGGER("trigger", TRIGGER_RESOURCE_TYPE, TRIGGER_LIST_RESOURCE_TYPE, DistributionTrigger.class, new HashMap<String, Class<?>>() {
         {
             put("resourceEvent", ResourceEventDistributionTriggerFactory.class);
             put("scheduledEvent", ScheduledDistributionTriggerFactory.class);
@@ -135,12 +144,22 @@ public enum DistributionComponentKind {
 
     private final String name;
 
+    private final String resourceType;
+
+    private final String rootResourceType;
+
     private final Class<?> type;
 
     private final Map<String, Class<?>> factoryMap;
 
-    DistributionComponentKind(String name, Class<?> type, Map<String, Class<?>> factoryMap) {
+    DistributionComponentKind(String name,
+                              String resourceType,
+                              String rootResourceType,
+                              Class<?> type,
+                              Map<String, Class<?>> factoryMap) {
         this.name = name;
+        this.resourceType = resourceType;
+        this.rootResourceType = rootResourceType;
         this.type = type;
         this.factoryMap = factoryMap;
     }
@@ -174,6 +193,14 @@ public enum DistributionComponentKind {
 
     public String getName() {
         return name;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public String getRootResourceType() {
+        return rootResourceType;
     }
 
     public String getFactory(String type) {
