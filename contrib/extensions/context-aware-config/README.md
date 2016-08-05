@@ -50,10 +50,50 @@ Collection<SocialMediaConfig> configs = builder.name("socialmedia").asCollection
 2. Default Implementation
 =========================
 
-2.1 Content Model
+The above API is completely agnostic to the way context aware resources / configurations are searched and stored in the resource tree.
+The following is how the default implementation in Apache Sling works:
+
+2.1 Context Resolving
+=====================
+
+The first step is to find out to which context (e.g. site or tenant) a resource belongs. The mechanism starts at the given content resource
+and looks for a property named "sling:config". It traverses up the resource hierarchy until either root os reached or such a property is found.
+If no property is found, there are the following fallbacks which will be searched in the given order : "/config/global", "/apps", and "/libs".
+These fallbacks are also used if a configuration resource is requested which does not exist in the given context.
+
+For example with this content structure
+
+    /content/
+        mysite/
+          @sling:config = /config/tenants/piedpiper
+            page1
+            page2
+            sub/
+              @sling:config = /config/tenants/piedpiper/sub
+                pageA
+                pageB
+                
+The context for "/content/mysite/page1" is "/config/tenants/piedpiper" while for "/content/mysite/sub/pageA" it is "/config/tenants/piedpiper/sub"
+
+For "/content/mysite/page1" the implementation searches at these paths for a configuration resource named "socialmedia/facebook":
+    /config/tenants/piedpiper/sling:configs/socialmedia/facebook
+    /config/global/sling:configs/socialmedia/facebook
+    /apps/sling:configs/socialmedia/facebook
+    /libs/sling:configs/socialmedia/facebook
+
+The first resource found at these locations is used, if none is found, no context aware resource will be returned.
+
+For "/content/mysite/sub/pageA" the implementation searches at these paths for a configuration resource named "socialmedia/facebook"
+
+    /config/tenants/piedpiper/sub/sling:configs/socialmedia/facebook
+    /config/global/sling:configs/socialmedia/facebook
+    /apps/sling:configs/socialmedia/facebook
+    /libs/sling:configs/socialmedia/facebook
+
+2.2 Content Model
 =================
 
-The default configuration stores the configs under /config:
+Configurations are stored under /config
 
     /config/
           global/
@@ -71,16 +111,4 @@ The default configuration stores the configs under /config:
                                                       @url = https://facebook.com <-  "url" is a property of the facebook resource, denoted by the @ prefix
 
 
-2.2 Context Rules
-=================
-
-Context is defined by the content resource. If a context aware resource is searched for a content resource, the resource hierarchy is traversed from the content resource up to the root. Once a "sling:config" property with an absolute resource path is found, the context aware resource is searched at that path.
-If no such property is found on the content resource or any of its parents, the global configuration at /config/global is used.
-
-The Resource /content/hooli defines a confuration context of /config/tentants/piedpiper by setting the property sling:conf to reference that configuration. Configuration defined in that location will overlay the configuration tree in /config/global
-
-    /content/hooli/@sling:conf = "/config/tentants/piedpiper"
-
-If now a named configuration "socialmedia/facebook" is searched, the resolver will first look for a resource at /config/tenants/piedpiper/sling:configs/socialmedia/facebook,
-followed by /config/global/sling:configs/socialmedia/facebook, /apps/sling:configs/socialmedia/facebook, and /libs/sling:configs/socialmedia/facebook. The first resource found at these locations is used.
 
