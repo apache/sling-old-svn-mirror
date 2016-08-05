@@ -10,17 +10,42 @@ These bundles provide a service API that can be used to get context aware config
 
 To get and use configurations, the Java API must be used. Any using code must not make any assumptions on how the context aware configurations are searched or stored!
 
-TODO - Explain API
-
 1.1 Context Aware Resources
 ===========================
 
 The base concept are context aware resources: for a given content resource, a named configuration resource can be get.
+The service for getting the configuration resources is called the ConfigurationResourceResolver. This service has two methods:
+- getting a named configuration resource
+- getting all child resources of a named configuration resource.
+
+For example to get a configuration resource for a content resource at /content/mysite/page1, you would write:
+
+Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
+
+Resource configResource = configurationResourceResolver.getResource(pageResource, "site-configuration");
+
+Or if you have several configuration resources of the same type and you need all of them:
+
+Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "socialmedia");
 
 1.2 Context Aware Configurations
 ================================
 
-Context aware configurations build on top of context aware resources. The process for getting a context aware configuration is to get the named context aware resource and adapt it to the application specific configuration object.
+While context aware resources give you pure resources and your application code can decide what to do with it,
+the most common use case is some configuration. A configuration is usually described by a DTO like class, interface
+or annotation (like Declarative Services does for component configurations). These are typed configuration objects
+and the context aware configuration support automatically converts resources into the wanted configuration type.
+
+Context aware configurations are built on top of context aware resources. The same concept is used: configurations are
+named and the service to get them is the ConfigurationResolver. It has a single method to get a ConfigurationBuilder
+and this builder can then be used to get configurations:
+
+Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
+
+ConfigurationBuilder builder = configurationResolver.get(pageResource);
+
+SiteConfiguration siteConfig = builder.as(SiteConfiguration.class);
+Collection<SocialMediaConfig> configs = builder.name("socialmedia").asCollection(SocialMediaConfig.class);
 
 2. Default Implementation
 =========================
