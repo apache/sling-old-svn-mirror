@@ -81,11 +81,13 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private Map<String, String[]> parameterMap = new LinkedHashMap<String, String[]>();
     private HttpSession session;
     private Resource resource;
+    private String authType;
     private String contextPath;
     private String queryString;
     private String scheme = "http";
     private String serverName = "localhost";
     private int serverPort = 80;
+    private String servletPath = StringUtils.EMPTY;
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
@@ -632,7 +634,89 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         this.remotePort = remotePort;
     }
 
-    
+    @Override
+    public String getServletPath() {
+        return this.servletPath;
+    }
+
+    public void setServletPath(String servletPath) {
+        this.servletPath = servletPath;
+    }
+
+    @Override
+    public String getPathInfo() {
+        RequestPathInfo requestPathInfo = this.getRequestPathInfo();
+
+        if (StringUtils.isEmpty(requestPathInfo.getResourcePath())) {
+            return null;
+        }
+
+        StringBuilder pathInfo = new StringBuilder();
+
+        pathInfo.append(requestPathInfo.getResourcePath());
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getSelectorString())) {
+            pathInfo.append('.');
+            pathInfo.append(requestPathInfo.getSelectorString());
+        }
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getExtension())) {
+            pathInfo.append('.');
+            pathInfo.append(requestPathInfo.getExtension());
+        }
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getSuffix())) {
+            pathInfo.append(requestPathInfo.getSuffix());
+        }
+
+        return pathInfo.toString();
+    }
+
+    @Override
+    public String getRequestURI() {
+        StringBuilder requestUri = new StringBuilder();
+
+        if (StringUtils.isNotEmpty(this.getServletPath())) {
+            requestUri.append(this.getServletPath());
+        }
+
+        if (StringUtils.isNotEmpty(this.getPathInfo())) {
+            requestUri.append(this.getPathInfo());
+        }
+
+        if (StringUtils.isEmpty(requestUri)) {
+            return "/";
+        } else {
+            return requestUri.toString();
+        }
+    }
+
+    @Override
+    public StringBuffer getRequestURL() {
+        StringBuffer requestUrl = new StringBuffer();
+
+        requestUrl.append(this.getScheme());
+        requestUrl.append("://");
+        requestUrl.append(getServerName());
+        if ((StringUtils.equals(this.getScheme(), "http") && this.getServerPort() != 80) ||
+                (StringUtils.equals(this.getScheme(), "https") && this.getServerPort() != 443)) {
+            requestUrl.append(':');
+            requestUrl.append(getServerPort());
+        }
+        requestUrl.append(getRequestURI());
+
+        return requestUrl;
+    }
+
+    @Override
+    public String getAuthType() {
+        return this.authType;
+    }
+
+    public void setAuthType(String authType) {
+        this.authType = authType;
+    }
+
     // --- unsupported operations ---
 
     @Override
@@ -651,37 +735,12 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     }
 
     @Override
-    public String getAuthType() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getPathInfo() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getPathTranslated() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getRequestURI() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public StringBuffer getRequestURL() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getRequestedSessionId() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getServletPath() {
         throw new UnsupportedOperationException();
     }
 
