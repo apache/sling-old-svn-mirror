@@ -36,6 +36,8 @@ import java.nio.ByteBuffer;
  */
 public class FileBackedMemoryOutputStream extends OutputStream {
 
+    private int memorySize = -1;
+
     public enum MemoryUnit {
 
         BYTES(1),
@@ -117,7 +119,7 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     public long size() {
-        long size = memory.position();
+        long size = memorySize > 0 ? memorySize : memory.position();
         if (file != null) {
             size += file.length();
         }
@@ -133,6 +135,7 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     public InputStream openWrittenDataInputStream() throws IOException {
+        memorySize = memory.position(); // save the memory position for size calculation as after flip() position's always 0
         memory.flip();
         return new ByteBufferBackedInputStream(memory, file);
     }

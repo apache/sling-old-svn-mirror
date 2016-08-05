@@ -195,6 +195,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
             result.put("id", entry.getId());
+            result.put("size", item.getSize());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
             result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));
