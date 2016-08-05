@@ -81,11 +81,13 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private Map<String, String[]> parameterMap = new LinkedHashMap<String, String[]>();
     private HttpSession session;
     private Resource resource;
+    private String authType;
     private String contextPath;
     private String queryString;
     private String scheme = "http";
     private String serverName = "localhost";
     private int serverPort = 80;
+    private String servletPath = StringUtils.EMPTY;
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
@@ -99,7 +101,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private Locale locale = Locale.US;
 
     private MockRequestDispatcherFactory requestDispatcherFactory;
-    
+
     protected static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
         @Override
         protected Object[][] getContents() {
@@ -140,7 +142,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return this.session;
     }
-    
+
     @Override
     public RequestPathInfo getRequestPathInfo() {
         return this.requestPathInfo;
@@ -262,13 +264,13 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     public Locale getLocale() {
         return locale;
     }
-    
+
     /**
      * @param loc Request locale
      */
     public void setLocale(Locale loc) {
         this.locale = loc;
-    }    
+    }
 
     @Override
     public String getContextPath() {
@@ -386,7 +388,8 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     * @param name Header name
+     *
+     * @param name  Header name
      * @param value Header value
      */
     public void addHeader(String name, String value) {
@@ -395,7 +398,8 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     * @param name Header name
+     *
+     * @param name  Header name
      * @param value Header value
      */
     public void addIntHeader(String name, int value) {
@@ -404,6 +408,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
+     *
      * @param name Header name
      * @param date Header value
      */
@@ -413,7 +418,8 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     * @param name Header name
+     *
+     * @param name  Header name
      * @param value Header value
      */
     public void setHeader(String name, String value) {
@@ -422,7 +428,8 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     * @param name Header name
+     *
+     * @param name  Header name
      * @param value Header value
      */
     public void setIntHeader(String name, int value) {
@@ -431,6 +438,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
+     *
      * @param name Header name
      * @param date Header value
      */
@@ -450,6 +458,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set cookie
+     *
      * @param cookie Cookie
      */
     public void addCookie(Cookie cookie) {
@@ -478,7 +487,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     @Override
     public RequestParameterMap getRequestParameterMap() {
         MockRequestParameterMap map = new MockRequestParameterMap();
-        for (Map.Entry<String,String[]> entry : getParameterMap().entrySet()) {
+        for (Map.Entry<String, String[]> entry : getParameterMap().entrySet()) {
             map.put(entry.getKey(), getRequestParameters(entry.getKey()));
         }
         return map;
@@ -525,7 +534,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
                     + (StringUtils.isNotBlank(characterEncoding) ? CHARSET_SEPARATOR + characterEncoding : "");
         }
     }
-    
+
     public void setContentType(String type) {
         this.contentType = type;
         if (StringUtils.contains(this.contentType, CHARSET_SEPARATOR)) {
@@ -541,11 +550,12 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return new ServletInputStream() {
             private final InputStream is = new ByteArrayInputStream(content);
+
             @Override
             public int read() throws IOException {
                 return is.read();
             }
-        };  
+        };
     }
 
     @Override
@@ -555,7 +565,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return content.length;
     }
-    
+
     public void setContent(byte[] content) {
         this.content = content;
     }
@@ -565,7 +575,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         if (requestDispatcherFactory == null) {
             throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
         }
-        return requestDispatcherFactory.getRequestDispatcher(path,  null);
+        return requestDispatcherFactory.getRequestDispatcher(path, null);
     }
 
     @Override
@@ -573,7 +583,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         if (requestDispatcherFactory == null) {
             throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
         }
-        return requestDispatcherFactory.getRequestDispatcher(path,  options);
+        return requestDispatcherFactory.getRequestDispatcher(path, options);
     }
 
     @Override
@@ -591,7 +601,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return requestDispatcherFactory.getRequestDispatcher(resource, options);
     }
-    
+
     public void setRequestDispatcherFactory(MockRequestDispatcherFactory requestDispatcherFactory) {
         this.requestDispatcherFactory = requestDispatcherFactory;
     }
@@ -632,7 +642,87 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         this.remotePort = remotePort;
     }
 
-    
+    @Override
+    public String getServletPath() {
+        return this.servletPath;
+    }
+
+    public void setServletPath(String servletPath) {
+        this.servletPath = servletPath;
+    }
+
+    @Override
+    public String getPathInfo() {
+        RequestPathInfo requestPathInfo = this.getRequestPathInfo();
+
+        if (StringUtils.isEmpty(requestPathInfo.getResourcePath())) {
+            return null;
+        }
+
+        StringBuilder pathInfo = new StringBuilder();
+
+        pathInfo.append(requestPathInfo.getResourcePath());
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getSelectorString())) {
+            pathInfo.append('.');
+            pathInfo.append(requestPathInfo.getSelectorString());
+        }
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getExtension())) {
+            pathInfo.append('.');
+            pathInfo.append(requestPathInfo.getExtension());
+        }
+
+        if (StringUtils.isNotEmpty(requestPathInfo.getSuffix())) {
+            pathInfo.append(requestPathInfo.getSuffix());
+        }
+
+        return pathInfo.toString();
+    }
+
+    @Override
+    public String getRequestURI() {
+        StringBuilder requestUri = new StringBuilder();
+
+        if (StringUtils.isNotEmpty(this.getServletPath())) {
+            requestUri.append(this.getServletPath());
+        }
+
+        if (StringUtils.isNotEmpty(this.getPathInfo())) {
+            requestUri.append(this.getPathInfo());
+        }
+
+        if (StringUtils.isEmpty(requestUri)) {
+            return "/";
+        } else {
+            return requestUri.toString();
+        }
+    }
+
+    @Override
+    public StringBuffer getRequestURL() {
+        StringBuffer requestUrl = new StringBuffer();
+
+        requestUrl.append(this.getScheme());
+        requestUrl.append("://");
+        requestUrl.append(getServerName());
+        requestUrl.append(':');
+        requestUrl.append(getServerPort());
+        requestUrl.append(getRequestURI());
+
+        return requestUrl;
+    }
+
+
+    @Override
+    public String getAuthType() {
+        return this.authType;
+    }
+
+    public void setAuthType(String authType) {
+        this.authType = authType;
+    }
+
     // --- unsupported operations ---
 
     @Override
@@ -651,37 +741,12 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     }
 
     @Override
-    public String getAuthType() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getPathInfo() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getPathTranslated() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getRequestURI() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public StringBuffer getRequestURL() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getRequestedSessionId() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getServletPath() {
         throw new UnsupportedOperationException();
     }
 

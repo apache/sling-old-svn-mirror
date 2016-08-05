@@ -88,6 +88,44 @@ public class MockSlingHttpServletRequestTest {
     }
 
     @Test
+    public void testPathInfo() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+        requestPathInfo.setSelectorString("a1.a2");
+        requestPathInfo.setSuffix("/content/another/resource.html");
+
+        assertEquals("/content/resource.a1.a2.html/content/another/resource.html", request.getPathInfo());
+
+        requestPathInfo.setSelectorString(null);
+
+        assertEquals("/content/resource.html/content/another/resource.html", request.getPathInfo());
+
+        requestPathInfo.setSuffix(null);
+
+        assertEquals("/content/resource.html", request.getPathInfo());
+
+        requestPathInfo.setResourcePath(null);
+
+        assertNull(request.getPathInfo());
+    }
+
+    @Test
+    public void testRequestUri() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+        requestPathInfo.setSelectorString("a1.a2");
+        requestPathInfo.setSuffix("/content/another/resource.html");
+
+        assertEquals("/content/resource.a1.a2.html/content/another/resource.html", request.getRequestURI());
+
+        request.setServletPath("/my");
+
+        assertEquals("/my/content/resource.a1.a2.html/content/another/resource.html", request.getRequestURI());
+    }
+
+    @Test
     public void testRequestPathInfo() {
         assertNotNull(request.getRequestPathInfo());
     }
