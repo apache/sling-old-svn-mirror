@@ -21,6 +21,7 @@ package org.apache.sling.i18n.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 import java.io.File;
 import java.util.Locale;
@@ -77,7 +78,8 @@ public class ResourceBundleProviderIT {
         final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
         return new DefaultCompositeOption(
                 SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
-                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
+                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString())),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.4.0")
                 ).getOptions();
     }
 
@@ -142,6 +144,7 @@ public class ResourceBundleProviderIT {
 
     private void assertMessages(final String key, final String deMessage, final String deDeMessage, final String frMessage) {
         new Retry(RETRY_TIMEOUT_MSEC) {
+            @Override
             protected void exec() {
                 {
                     final ResourceBundle deDE = resourceBundleProvider.getResourceBundle(Locale.GERMANY); // this is the resource bundle for de_DE
@@ -186,7 +189,7 @@ public class ResourceBundleProviderIT {
         session.save();
         // since "en" is the fallback for all other resource bundle, the value from "en" must be exposed
         assertMessages(MSG_KEY2, "EN_message", "EN_message", "EN_message");
-        
+
         new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
         new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
         session.save();
@@ -196,13 +199,13 @@ public class ResourceBundleProviderIT {
         new Message("", MSG_KEY1, "FR_changed", false).add(frRoot);
         session.save();
         assertMessages(MSG_KEY1, "DE_changed", "DE_changed", "FR_changed");
-        
+
         new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
         new Message("", MSG_KEY1, "DE_DE_message", false).add(deDeRoot);
         new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
         session.save();
         assertMessages(MSG_KEY1, "DE_message", "DE_DE_message", "FR_message");
-        
+
         // now change a key which is only available in the "en" dictionary
         new Message("", MSG_KEY2, "EN_changed", false).add(enRoot);
         session.save();
