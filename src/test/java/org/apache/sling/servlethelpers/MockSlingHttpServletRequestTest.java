@@ -88,6 +88,66 @@ public class MockSlingHttpServletRequestTest {
     }
 
     @Test
+    public void testPathInfo() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+        requestPathInfo.setSelectorString("a1.a2");
+        requestPathInfo.setSuffix("/content/another/resource.html");
+
+        assertEquals("/content/resource.a1.a2.html/content/another/resource.html", request.getPathInfo());
+
+        requestPathInfo.setSelectorString(null);
+
+        assertEquals("/content/resource.html/content/another/resource.html", request.getPathInfo());
+
+        requestPathInfo.setSuffix(null);
+
+        assertEquals("/content/resource.html", request.getPathInfo());
+
+        requestPathInfo.setResourcePath(null);
+
+        assertNull(request.getPathInfo());
+    }
+
+    @Test
+    public void testRequestUri() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+        requestPathInfo.setSelectorString("a1.a2");
+        requestPathInfo.setSuffix("/content/another/resource.html");
+
+        assertEquals("/content/resource.a1.a2.html/content/another/resource.html", request.getRequestURI());
+
+        request.setServletPath("/my");
+
+        assertEquals("/my/content/resource.a1.a2.html/content/another/resource.html", request.getRequestURI());
+    }
+
+    @Test
+    public void testRequestUrl() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+
+        assertEquals("http://localhost/content/resource.html", request.getRequestURL().toString());
+
+        request.setServerPort(8080);
+
+        assertEquals("http://localhost:8080/content/resource.html", request.getRequestURL().toString());
+
+        request.setScheme("https");
+        request.setServerPort(443);
+
+        assertEquals("https://localhost/content/resource.html", request.getRequestURL().toString());
+
+        request.setServerPort(8443);
+
+        assertEquals("https://localhost:8443/content/resource.html", request.getRequestURL().toString());
+    }
+
+    @Test
     public void testRequestPathInfo() {
         assertNotNull(request.getRequestPathInfo());
     }
