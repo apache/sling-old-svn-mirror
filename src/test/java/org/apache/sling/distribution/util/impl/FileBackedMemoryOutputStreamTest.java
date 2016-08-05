@@ -18,14 +18,18 @@
  */
 package org.apache.sling.distribution.util.impl;
 
+import static org.apache.commons.io.IOUtils.copy;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -49,11 +53,13 @@ public class FileBackedMemoryOutputStreamTest {
 
         assertEquals(2, output.size());
         assertNull(output.getFile());
+
+        verifyWrittenData(data, output);
     }
 
     @Test
     public void backedToFile() throws IOException {
-        FileBackedMemoryOutputStream output = new FileBackedMemoryOutputStream(2,
+        FileBackedMemoryOutputStream output = new FileBackedMemoryOutputStream(10,
                                                                                MemoryUnit.BYTES,
                                                                                false,
                                                                                new File("/tmp"),
@@ -67,6 +73,9 @@ public class FileBackedMemoryOutputStreamTest {
         assertEquals(100, output.size());
         assertNotNull(output.getFile());
         assertTrue(output.getFile().exists());
+        assertEquals(90, output.getFile().length());
+
+        verifyWrittenData(data, output);
 
         output.clean();
         assertFalse(output.getFile().exists());
@@ -77,6 +86,14 @@ public class FileBackedMemoryOutputStreamTest {
         byte b = (byte) (new Random().nextInt() & 0xff);
         Arrays.fill(data, b);
         return data;
+    }
+
+    private void verifyWrittenData(byte[] expecteds, FileBackedMemoryOutputStream writtenData) throws IOException {
+        InputStream input = writtenData.openWrittenDataInputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        copy(input, output);
+        byte[] actuals = output.toByteArray();
+        assertArrayEquals(expecteds, actuals);
     }
 
 }

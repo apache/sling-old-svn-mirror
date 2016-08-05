@@ -92,7 +92,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             try {
                 inputStream = outputStream.openWrittenDataInputStream();
 
-                packageResource = uploadStream(packagesRoot, inputStream, outputStream.size());
+                packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, outputStream.size());
             } finally {
                 IOUtils.closeQuietly(inputStream);
             }
@@ -114,7 +114,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         try {
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
 
-            Resource packageResource = uploadStream(packagesRoot, inputStream, -1);
+            Resource packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, -1);
             return new ResourceDistributionPackage(packageResource, getType(), resourceResolver);
         } catch (PersistenceException e) {
             throw new DistributionException(e);
@@ -143,7 +143,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
 
-    Resource uploadStream(Resource parent, InputStream stream, long size) throws PersistenceException {
+    Resource uploadStream(ResourceResolver resourceResolver, Resource parent, InputStream stream, long size) throws PersistenceException {
 
         String name;
         log.debug("uploading stream");
@@ -151,17 +151,17 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             // stable id
             Map<String, Object> info = new HashMap<String, Object>();
             DistributionPackageUtils.readInfo(stream, info);
-            log.info("read header {}", info);
+            log.debug("read header {}", info);
             Object remoteId = info.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
             if (remoteId != null) {
                 name = remoteId.toString();
                 if (name.contains("/")) {
                     name = name.substring(name.lastIndexOf('/') + 1);
                 }
-                log.info("preserving remote id {}", name);
+                log.debug("preserving remote id {}", name);
             } else {
                 name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
-                log.info("generating a new id {}", name);
+                log.debug("generating a new id {}", name);
             }
         } else {
             name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
@@ -175,8 +175,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             props.put("size", size);
         }
 
-        ResourceResolver resourceResolver = parent.getResourceResolver();
-
         Resource r = resourceResolver.getResource(parent, name);
         if (r != null) {
             resourceResolver.delete(r);
@@ -187,7 +185,6 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             DistributionPackageUtils.uploadStream(resource, stream);
         } catch (RepositoryException e) {
             throw new PersistenceException("cannot upload stream", e);
-
         }
 
         resourceResolver.commit();

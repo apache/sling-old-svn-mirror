@@ -18,13 +18,12 @@
  */
 package org.apache.sling.distribution.util.impl;
 
-import static java.lang.Math.pow;
 import static java.io.File.createTempFile;
+import static java.lang.Math.pow;
 import static java.nio.ByteBuffer.allocate;
 import static java.nio.ByteBuffer.allocateDirect;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,8 +91,6 @@ public class FileBackedMemoryOutputStream extends OutputStream {
             if (out == null) {
                 file = createTempFile(fileName, fileExtension, tempDirectory);
                 out = new FileOutputStream(file);
-                memory.flip();
-                out.getChannel().write(memory);
             }
 
             out.write(b);
@@ -120,10 +117,11 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     public long size() {
+        long size = memory.position();
         if (file != null) {
-            return file.length();
+            size += file.length();
         }
-        return memory.position();
+        return size;
     }
 
     public void clean() {
@@ -135,11 +133,8 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     public InputStream openWrittenDataInputStream() throws IOException {
-        if (file != null) {
-            return new FileInputStream(file);
-        }
         memory.flip();
-        return new ByteBufferBackedInputStream(memory);
+        return new ByteBufferBackedInputStream(memory, file);
     }
 
 }
