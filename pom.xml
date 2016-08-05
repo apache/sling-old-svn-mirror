@@ -46,9 +46,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.i18n-2.4.8</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.i18n-2.4.8</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.i18n-2.4.8</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/i18n</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/i18n</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/i18n</url>
     </scm>
 
     <build>
@@ -68,8 +68,7 @@
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*|org/apache/jackrabbit/commons/json/Json*",
-                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ServiceUtil*|org/apache/sling/commons/osgi/PropertiesUtil*"
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*|org/apache/jackrabbit/commons/json/Json*"
                         </Embed-Dependency>
 
                     </instructions>
