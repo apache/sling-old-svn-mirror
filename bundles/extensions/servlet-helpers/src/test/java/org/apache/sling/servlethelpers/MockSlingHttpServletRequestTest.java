@@ -126,6 +126,28 @@ public class MockSlingHttpServletRequestTest {
     }
 
     @Test
+    public void testRequestUrl() {
+        MockRequestPathInfo requestPathInfo = (MockRequestPathInfo) request.getRequestPathInfo();
+        requestPathInfo.setResourcePath("/content/resource");
+        requestPathInfo.setExtension("html");
+
+        assertEquals("http://localhost/content/resource.html", request.getRequestURL().toString());
+
+        request.setServerPort(8080);
+
+        assertEquals("http://localhost:8080/content/resource.html", request.getRequestURL().toString());
+
+        request.setScheme("https");
+        request.setServerPort(443);
+
+        assertEquals("https://localhost/content/resource.html", request.getRequestURL().toString());
+
+        request.setServerPort(8443);
+
+        assertEquals("https://localhost:8443/content/resource.html", request.getRequestURL().toString());
+    }
+
+    @Test
     public void testRequestPathInfo() {
         assertNotNull(request.getRequestPathInfo());
     }

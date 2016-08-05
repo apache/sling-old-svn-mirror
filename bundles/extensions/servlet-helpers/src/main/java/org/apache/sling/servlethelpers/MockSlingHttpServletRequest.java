@@ -698,13 +698,15 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         requestUrl.append(this.getScheme());
         requestUrl.append("://");
         requestUrl.append(getServerName());
-        requestUrl.append(':');
-        requestUrl.append(getServerPort());
+        if ((StringUtils.equals(this.getScheme(), "http") && this.getServerPort() != 80) ||
+                (StringUtils.equals(this.getScheme(), "https") && this.getServerPort() != 443)) {
+            requestUrl.append(':');
+            requestUrl.append(getServerPort());
+        }
         requestUrl.append(getRequestURI());
 
         return requestUrl;
     }
-
 
     @Override
     public String getAuthType() {
