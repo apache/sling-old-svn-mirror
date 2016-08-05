@@ -275,7 +275,9 @@ public class DistributionPackageUtils {
         }
 
         synchronized (repolock) {
-            resourceResolver.refresh();
+            if (resourceResolver.hasChanges()) {
+                resourceResolver.refresh();
+            }
             packagesRoot = ResourceUtil.getOrCreateResource(resourceResolver, packagesRootPath, "sling:Folder", "sling:Folder", true);
         }
 
