@@ -41,8 +41,6 @@ import java.util.concurrent.Semaphore;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -56,7 +54,6 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
@@ -119,7 +116,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     private ResourceResolver resourceResolver;
 
     /**
-     * Map of cached resource bundles indexed by a key combined of the base name 
+     * Map of cached resource bundles indexed by a key combined of the base name
      * and <code>Locale</code> used to load and identify the <code>ResourceBundle</code>.
      */
     private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<Key, JcrResourceBundle>();
@@ -142,7 +139,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     /**
      * Each ResourceBundle is registered as a service. Each registration is stored in this map with the locale & base name used as a key.
      */
-    private Map<Key, ServiceRegistration> bundleServiceRegistrations;
+    private Map<Key, ServiceRegistration<ResourceBundle>> bundleServiceRegistrations;
 
     private boolean preloadBundles;
 
@@ -228,7 +225,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
 
     private boolean isDictionaryResource(final String path, final org.osgi.service.event.Event event) {
         // language node changes happen quite frequently (https://issues.apache.org/jira/browse/SLING-2881)
-        // therefore only consider changes either for sling:MessageEntry's 
+        // therefore only consider changes either for sling:MessageEntry's
         // or for JSON dictionaries
         String resourceType = (String) event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
         if (resourceType == null) {
@@ -307,7 +304,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         String baseName = bundle.getBaseName();
         Locale locale = bundle.getLocale();
         final Key key = new Key(baseName, locale);
-        
+
         // defer this job
         ScheduleOptions options = scheduler.AT(new Date(System.currentTimeMillis() + invalidationDelay));
         final String jobName = "JcrResourceBundleProvider: reload bundle with key " + key.toString();
@@ -327,7 +324,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         resourceBundleCache.remove(key);
         log.info("Reloading resource bundle for {}", key);
         // unregister bundle
-        ServiceRegistration serviceRegistration = null;
+        ServiceRegistration<ResourceBundle> serviceRegistration = null;
         synchronized (this) {
             serviceRegistration = bundleServiceRegistrations.remove(key);
         }
@@ -364,11 +361,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     /**
      * Activates and configures this component with the repository access
      * details and the default locale to use
-     * @throws LoginException 
+     * @throws LoginException
      */
-    protected void activate(ComponentContext context) throws LoginException {
-        Dictionary<?, ?> props = context.getProperties();
-
+    protected void activate(BundleContext context, Map<String, Object> props) throws LoginException {
         Map<String, Object> repoCredentials;
         String user = PropertiesUtil.toString(props.get(PROP_USER), null);
         if (user == null || user.length() == 0) {
@@ -386,8 +381,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         this.defaultLocale = toLocale(localeString);
         this.preloadBundles = PropertiesUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
 
-        this.bundleContext = context.getBundleContext();
-        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration>();
+        this.bundleContext = context;
+        this.bundleServiceRegistrations = new HashMap<Key, ServiceRegistration<ResourceBundle>>();
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
             if (repoCredentials == null) {
@@ -448,12 +443,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     }
 
     private void registerResourceBundle(Key key, JcrResourceBundle resourceBundle) {
-        Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
+        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
         if (key.baseName != null) {
             serviceProps.put("baseName", key.baseName);
         }
         serviceProps.put("locale", key.locale.toString());
-        ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
+        ServiceRegistration<ResourceBundle> serviceReg = bundleContext.registerService(ResourceBundle.class,
                 resourceBundle, serviceProps);
         synchronized (this) {
             bundleServiceRegistrations.put(key, serviceReg);
@@ -537,7 +532,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
         languageRootPaths.clear();
 
         synchronized (this) {
-            for (ServiceRegistration serviceReg : bundleServiceRegistrations.values()) {
+            for (ServiceRegistration<ResourceBundle> serviceReg : bundleServiceRegistrations.values()) {
                 serviceReg.unregister();
             }
             bundleServiceRegistrations.clear();
