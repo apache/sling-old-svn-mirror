@@ -388,7 +388,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     * @param name  Header name
+     * @param name Header name
      * @param value Header value
      */
     public void addHeader(String name, String value) {
@@ -397,7 +397,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Add header, keep existing ones with same name.
-     * @param name  Header name
+     * @param name Header name
      * @param value Header value
      */
     public void addIntHeader(String name, int value) {
@@ -415,7 +415,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     * @param name  Header name
+     * @param name Header name
      * @param value Header value
      */
     public void setHeader(String name, String value) {
@@ -424,7 +424,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * Set header, overwrite existing ones with same name.
-     * @param name  Header name
+     * @param name Header name
      * @param value Header value
      */
     public void setIntHeader(String name, int value) {
@@ -480,7 +480,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     @Override
     public RequestParameterMap getRequestParameterMap() {
         MockRequestParameterMap map = new MockRequestParameterMap();
-        for (Map.Entry<String, String[]> entry : getParameterMap().entrySet()) {
+        for (Map.Entry<String,String[]> entry : getParameterMap().entrySet()) {
             map.put(entry.getKey(), getRequestParameters(entry.getKey()));
         }
         return map;
@@ -543,7 +543,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return new ServletInputStream() {
             private final InputStream is = new ByteArrayInputStream(content);
-
             @Override
             public int read() throws IOException {
                 return is.read();
@@ -568,7 +567,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         if (requestDispatcherFactory == null) {
             throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
         }
-        return requestDispatcherFactory.getRequestDispatcher(path, null);
+        return requestDispatcherFactory.getRequestDispatcher(path,  null);
     }
 
     @Override
@@ -576,7 +575,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         if (requestDispatcherFactory == null) {
             throw new IllegalStateException("Please provdide a MockRequestDispatcherFactory (setRequestDispatcherFactory).");
         }
-        return requestDispatcherFactory.getRequestDispatcher(path, options);
+        return requestDispatcherFactory.getRequestDispatcher(path,  options);
     }
 
     @Override
