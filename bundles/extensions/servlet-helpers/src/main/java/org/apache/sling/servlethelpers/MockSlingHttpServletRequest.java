@@ -101,7 +101,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private Locale locale = Locale.US;
 
     private MockRequestDispatcherFactory requestDispatcherFactory;
-    
+
     protected static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
         @Override
         protected Object[][] getContents() {
@@ -142,7 +142,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return this.session;
     }
-    
+
     @Override
     public RequestPathInfo getRequestPathInfo() {
         return this.requestPathInfo;
@@ -264,13 +264,13 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     public Locale getLocale() {
         return locale;
     }
-    
+
     /**
      * @param loc Request locale
      */
     public void setLocale(Locale loc) {
         this.locale = loc;
-    }    
+    }
 
     @Override
     public String getContextPath() {
@@ -527,7 +527,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
                     + (StringUtils.isNotBlank(characterEncoding) ? CHARSET_SEPARATOR + characterEncoding : "");
         }
     }
-    
+
     public void setContentType(String type) {
         this.contentType = type;
         if (StringUtils.contains(this.contentType, CHARSET_SEPARATOR)) {
@@ -547,7 +547,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
             public int read() throws IOException {
                 return is.read();
             }
-        };  
+        };
     }
 
     @Override
@@ -557,7 +557,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return content.length;
     }
-    
+
     public void setContent(byte[] content) {
         this.content = content;
     }
@@ -593,7 +593,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
         return requestDispatcherFactory.getRequestDispatcher(resource, options);
     }
-    
+
     public void setRequestDispatcherFactory(MockRequestDispatcherFactory requestDispatcherFactory) {
         this.requestDispatcherFactory = requestDispatcherFactory;
     }
