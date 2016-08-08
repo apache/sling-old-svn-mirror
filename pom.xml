@@ -48,7 +48,7 @@
     </scm>
 
     <properties>
-        <sling.java.version>7</sling.java.version>
+        <sling.java.version>8</sling.java.version>
     </properties>
 
     <build>
