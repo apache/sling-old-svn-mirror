@@ -38,6 +38,7 @@ public class AuthenticationRequirementTest extends TestCase {
 
     private final SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
     private final ServiceReference ref = new MockServiceReference();
+    private final String id = ref.getProperty(Constants.SERVICE_ID).toString();
 
     private Predicate<AuthenticationRequirementHolder> providerFilter = new Predicate<AuthenticationRequirementHolder>() {
         @Override
@@ -56,7 +57,7 @@ public class AuthenticationRequirementTest extends TestCase {
         initialRequirements.put("/b", true);
         initialRequirements.put("/b/c", false);
         initialRequirements.put("/c", false);
-        slingAuthenticator.setRequirements(ref, initialRequirements);
+        slingAuthenticator.setRequirements(id, initialRequirements);
     }
 
     private Iterable<AuthenticationRequirementHolder> filterRequirements() {
@@ -79,7 +80,7 @@ public class AuthenticationRequirementTest extends TestCase {
 
     public void test_SetRequirements() throws Exception {
         Map<String, Boolean> toReplace =  ImmutableMap.of("/a", false, "/d", true);
-        slingAuthenticator.setRequirements(ref, toReplace);
+        slingAuthenticator.setRequirements(id, toReplace);
 
         // it's expected that all existing values have been replaced
         assertRequirements(toReplace, filterRequirements());
@@ -87,7 +88,7 @@ public class AuthenticationRequirementTest extends TestCase {
 
     public void test_AppendRequirements() throws Exception {
         Map<String, Boolean> toAppend =  ImmutableMap.of("/d", true, "/e/f", false);
-        slingAuthenticator.appendRequirements(ref, toAppend);
+        slingAuthenticator.appendRequirements(id, toAppend);
 
         // the expected result is the combination of the entries to append plus
         // the initial values.
@@ -98,7 +99,7 @@ public class AuthenticationRequirementTest extends TestCase {
 
     public void test_AppendRequirementsWithConflict() throws Exception {
         Map<String, Boolean> toAppend =  ImmutableMap.of("/a", false, "/d", true, "/e/f", false);
-        slingAuthenticator.appendRequirements(ref, toAppend);
+        slingAuthenticator.appendRequirements(id, toAppend);
 
         // the expected result is the combination of the entries to append plus
         // the initial values; conflicting values (same path again) wont'be replaced
@@ -110,7 +111,7 @@ public class AuthenticationRequirementTest extends TestCase {
 
     public void test_RemoveRequirements() throws Exception {
         Map<String, Boolean> toRemove =  ImmutableMap.of("/a", true, "/b", true);
-        slingAuthenticator.removeRequirements(ref, toRemove);
+        slingAuthenticator.removeRequirements(id, toRemove);
 
         // the expected result is initial set without the entries to be removed.
         Map<String, Boolean> expected = new HashMap<String, Boolean>(initialRequirements);
@@ -123,7 +124,7 @@ public class AuthenticationRequirementTest extends TestCase {
     public void test_RemoveRequirements2() throws Exception {
         // paths to remove are contained but have a different value
         Map<String, Boolean> toRemove =  ImmutableMap.of("/a", false, "/b", false);
-        slingAuthenticator.removeRequirements(ref, toRemove);
+        slingAuthenticator.removeRequirements(id, toRemove);
 
         // the expected result is the initial set without the entries to be removed.
         Map<String, Boolean> expected = new HashMap<String, Boolean>(initialRequirements);
@@ -136,14 +137,14 @@ public class AuthenticationRequirementTest extends TestCase {
     public void test_RemoveNonExistingRequirements() throws Exception {
         // paths to remove are contained but have a different value
         Map<String, Boolean> toRemove =  ImmutableMap.of("/nonExisting", true);
-        slingAuthenticator.removeRequirements(ref, toRemove);
+        slingAuthenticator.removeRequirements(id, toRemove);
 
         // the expected result is the initial set
         assertRequirements(initialRequirements, filterRequirements());
     }
 
     public void test_ClearRequirements() throws Exception {
-        slingAuthenticator.clearRequirements(ref);
+        slingAuthenticator.clearRequirements(id);
 
         assertRequirements(ImmutableMap.<String, Boolean>of(), filterRequirements());
 
@@ -152,13 +153,10 @@ public class AuthenticationRequirementTest extends TestCase {
     private static final class MockServiceReference implements ServiceReference {
 
         private static final String ID = "id";
-        private static final String DESC = "testingServiceDescription";
 
         @Override
         public Object getProperty(String s) {
-            if (Constants.SERVICE_DESCRIPTION.equals(s)) {
-                return DESC;
-            } else if (Constants.SERVICE_ID.equals(s)) {
+            if (Constants.SERVICE_ID.equals(s)) {
                 return ID;
             }
             return null;

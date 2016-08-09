@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,6 +49,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.auth.core.AuthenticationRequirement;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -91,6 +93,8 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
 
     private ServiceRegistration registration;
 
+    private String id;
+
     private String[] supportedPaths;
 
     private Map<String, String> loginPathMapping = new TreeMap<String, String>(Collections.reverseOrder());
@@ -102,7 +106,8 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
         supportedPaths = Utils.getValidPaths(PropertiesUtil.toStringArray(properties.get(PARAM_SUPPORTED_PATHS), new String[0]));
 
         registration = bundleContext.registerService(RequirementHandler.class.getName(), this, new Hashtable(properties));
-        updateRequirements(registration.getReference());
+        id = getID(registration);
+        updateRequirements();
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -114,16 +119,15 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
             registration.setProperties(new Hashtable(properties));
 
             supportedPaths = newSupportedPaths;
-            ServiceReference serviceReference = registration.getReference();
-            clearRequirements(serviceReference);
-            updateRequirements(serviceReference);
+            clearRequirements();
+            updateRequirements();
         }
     }
 
     @SuppressWarnings("UnusedDeclaration")
     @Deactivate
     protected void deactivate(ComponentContext componentContext) throws Exception {
-        clearRequirements(registration.getReference());
+        clearRequirements();
         registration.unregister();
     }
 
@@ -151,6 +155,10 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
         }
     }
 
+    private static String getID(@Nonnull ServiceRegistration registration) {
+        return OsgiUtil.toString(registration.getReference().getProperty(org.osgi.framework.Constants.SERVICE_ID), UUID.randomUUID().toString());
+    }
+
     //-------------------------------------------------< RequirementHandler >---
 
     public void requirementAdded(@Nonnull String path, @Nullable String loginPath) {
@@ -161,7 +169,7 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
                 if (loginPath != null) {
                     loginPathMapping.put(path, loginPath);
                 }
-                authenticationRequirement.appendRequirements(registration.getReference(), buildRequirement(path, loginPath, resourceResolver));
+                authenticationRequirement.appendRequirements(id, buildRequirement(path, loginPath, resourceResolver));
             } catch (LoginException e) {
                 log.error("Unable to add authentication requirements: failed to get service resolver.", e.getMessage());
             } finally {
@@ -179,7 +187,7 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
             try {
                 resourceResolver = getServiceResolver();
                 loginPathMapping.remove(path);
-                authenticationRequirement.removeRequirements(registration.getReference(), buildRequirement(path, loginPath, resourceResolver));
+                authenticationRequirement.removeRequirements(id, buildRequirement(path, loginPath, resourceResolver));
             } catch (LoginException e) {
                 log.error("Unable to remove authentication requirements: failed to get service resolver.", e.getMessage());
             } finally {
@@ -197,7 +205,7 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
             try {
                 resourceResolver = getServiceResolver();
                 loginPathMapping.put(path, loginPath);
-                authenticationRequirement.appendRequirements(registration.getReference(), buildLoginPathRequirement(loginPath, resourceResolver));
+                authenticationRequirement.appendRequirements(id, buildLoginPathRequirement(loginPath, resourceResolver));
             } catch (LoginException e) {
                 log.error("Unable to add login path to requirements: failed to get service resolver.", e.getMessage());
             } finally {
@@ -217,8 +225,8 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
                 loginPathMapping.put(path, loginPathAfter);
 
                 ServiceReference reference = registration.getReference();
-                authenticationRequirement.removeRequirements(reference, buildLoginPathRequirement(loginPathBefore, resourceResolver));
-                authenticationRequirement.appendRequirements(reference, buildLoginPathRequirement(loginPathAfter, resourceResolver));
+                authenticationRequirement.removeRequirements(id, buildLoginPathRequirement(loginPathBefore, resourceResolver));
+                authenticationRequirement.appendRequirements(id, buildLoginPathRequirement(loginPathAfter, resourceResolver));
             } catch (LoginException e) {
                 log.error("Unable to update login path in authentication requirements: failed to get service resolver.", e.getMessage());
             } finally {
@@ -235,7 +243,7 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
             try {
                 resourceResolver = getServiceResolver();
                 loginPathMapping.remove(path);
-                authenticationRequirement.removeRequirements(registration.getReference(), buildLoginPathRequirement(loginPath, resourceResolver));
+                authenticationRequirement.removeRequirements(id, buildLoginPathRequirement(loginPath, resourceResolver));
             } catch (LoginException e) {
                 log.error("Unable to remove login path from authentication requirements: failed to get service resolver.", e.getMessage());
             } finally {
@@ -271,11 +279,11 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
         return resourceResolverFactory.getServiceResourceResolver(null);
     }
 
-    private void updateRequirements(@Nonnull ServiceReference ref) throws LoginException, RepositoryException {
+    private void updateRequirements() throws LoginException, RepositoryException {
         if (supportedPaths.length > 0) {
             Map<String, Boolean> requirements = new HashMap<String, Boolean>();
             loadAll(loginPathMapping, requirements, Utils.getCommonAncestor(supportedPaths));
-            authenticationRequirement.setRequirements(ref, requirements);
+            authenticationRequirement.setRequirements(id, requirements);
         }
     }
 
@@ -308,9 +316,9 @@ public class DefaultRequirementHandler implements RequirementHandler, Constants 
         }
     }
 
-    private void clearRequirements(@Nonnull ServiceReference ref) {
+    private void clearRequirements() {
         loginPathMapping.clear();
-        authenticationRequirement.clearRequirements(ref);
+        authenticationRequirement.clearRequirements(id);
     }
 
     private static Map<String, Boolean> buildRequirement(@Nonnull String path, @Nullable String loginPath,

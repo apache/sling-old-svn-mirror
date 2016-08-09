@@ -75,6 +75,7 @@ import org.apache.sling.auth.core.spi.AuthenticationInfoPostProcessor;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.AllServiceListener;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -1528,29 +1529,30 @@ public class SlingAuthenticator implements Authenticator,
 
     //------------------------------------------< AuthenticationRequirement >---
     @Override
-    public void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
-        externalAuthenticationRequirements.setRequirements(serviceReference, createHolders(serviceReference, requirements));
+    public void setRequirements(@Nonnull String id, @Nonnull Map<String,Boolean> requirements) {
+        externalAuthenticationRequirements.setRequirements(id, createHolders(id, requirements));
     }
 
     @Override
-    public void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
-        externalAuthenticationRequirements.appendRequirements(serviceReference, createHolders(serviceReference, requirements));
+    public void appendRequirements(@Nonnull String id, @Nonnull Map<String,Boolean> requirements) {
+        externalAuthenticationRequirements.appendRequirements(id, createHolders(id, requirements));
     }
 
     @Override
-    public void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements) {
-        externalAuthenticationRequirements.removeRequirements(serviceReference, createHolders(serviceReference, requirements));
+    public void removeRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
+        externalAuthenticationRequirements.removeRequirements(id, createHolders(id, requirements));
     }
 
     @Override
-    public void clearRequirements(@Nonnull ServiceReference serviceReference) {
-        externalAuthenticationRequirements.clearRequirements(serviceReference);
+    public void clearRequirements(@Nonnull String id) {
+        externalAuthenticationRequirements.clearRequirements(id);
     }
 
-    private static Set<AuthenticationRequirementHolder> createHolders(@Nonnull ServiceReference serviceReference, @Nonnull Map<String,Boolean> requirements) {
+    private static Set<AuthenticationRequirementHolder> createHolders(@Nonnull String id, @Nonnull Map<String,Boolean> requirements) {
+        ServiceReference ref = new FakeServiceReference(id);
         Set<AuthenticationRequirementHolder> holders = new HashSet<AuthenticationRequirementHolder>(requirements.size());
         for (Map.Entry<String, Boolean> entry : requirements.entrySet()) {
-            holders.add(new AuthenticationRequirementHolder(entry.getKey(), entry.getValue(), serviceReference));
+            holders.add(new AuthenticationRequirementHolder(entry.getKey(), entry.getValue(), ref));
         }
         return holders;
     }
@@ -1577,28 +1579,28 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
-        private void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
+        private void setRequirements(@Nonnull String key, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
             // remove existing entries
-            clearRequirements(serviceReference);
+            clearRequirements(key);
 
             // register the new entries
             register(reqHolders);
-            props.put(getKey(serviceReference), newConcurrentSet(reqHolders));
+            props.put(key, newConcurrentSet(reqHolders));
         }
 
-        private void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
+        private void appendRequirements(@Nonnull String key, @Nonnull Collection<AuthenticationRequirementHolder> reqHolders) {
             register(reqHolders);
 
-            Set<AuthenticationRequirementHolder> existing = props.get(getKey(serviceReference));
+            Set<AuthenticationRequirementHolder> existing = props.get(key);
             if (existing == null) {
-                props.put(getKey(serviceReference), newConcurrentSet(reqHolders));
+                props.put(key, newConcurrentSet(reqHolders));
             } else {
                 existing.addAll(reqHolders);
             }
         }
 
-        private void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull  Collection<AuthenticationRequirementHolder> reqHolders) {
-            Set<AuthenticationRequirementHolder> existing = props.get(getKey(serviceReference));
+        private void removeRequirements(@Nonnull String key, @Nonnull  Collection<AuthenticationRequirementHolder> reqHolders) {
+            Set<AuthenticationRequirementHolder> existing = props.get(key);
             if (existing != null) {
                 existing.removeAll(reqHolders);
             }
@@ -1608,19 +1610,14 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
-        private void clearRequirements(@Nonnull ServiceReference serviceReference) {
-            Set<AuthenticationRequirementHolder> authReqs = props.remove(getKey(serviceReference));
+        private void clearRequirements(@Nonnull String key) {
+            Set<AuthenticationRequirementHolder> authReqs = props.remove(key);
 
             if (authReqs != null) {
                 for (AuthenticationRequirementHolder authReq : authReqs) {
                     authRequiredCache.removeHolder(authReq);
                 }
             }
-        }
-
-        @Nonnull
-        private static String getKey(@Nonnull ServiceReference serviceReference) {
-            return PathBasedHolder.buildDescription(serviceReference);
         }
 
         private static Set<AuthenticationRequirementHolder> newConcurrentSet(@Nonnull Collection<AuthenticationRequirementHolder> requirementHolders) {
@@ -1689,11 +1686,11 @@ public class SlingAuthenticator implements Authenticator,
                             authReq, ref));
                 }
             }
-            authenticationRequirements.setRequirements(ref, authReqList);
+            authenticationRequirements.setRequirements(ref.getProperty(Constants.SERVICE_ID).toString(), authReqList);
         }
 
         private void removeService(@Nonnull final ServiceReference ref) {
-            authenticationRequirements.clearRequirements(ref);
+            authenticationRequirements.clearRequirements(ref.getProperty(Constants.SERVICE_ID).toString());
         }
     }
 
@@ -1807,6 +1804,67 @@ public class SlingAuthenticator implements Authenticator,
             return new EngineAuthenticationHandlerHolder(path,
                 (org.apache.sling.engine.auth.AuthenticationHandler) handler,
                 serviceReference);
+        }
+    }
+
+    private static final class FakeServiceReference implements ServiceReference {
+
+        private final String id;
+
+        private FakeServiceReference(@Nonnull String id) {
+            this.id = id;
+        }
+
+        @Override
+        public Object getProperty(String s) {
+            if (s.equals(Constants.SERVICE_ID)) {
+               return id;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public String[] getPropertyKeys() {
+            return new String[0];
+        }
+
+        @Override
+        public Bundle getBundle() {
+            return null;
+        }
+
+        @Override
+        public Bundle[] getUsingBundles() {
+            return new Bundle[0];
+        }
+
+        @Override
+        public boolean isAssignableTo(Bundle bundle, String s) {
+            return false;
+        }
+
+        @Override
+        public int compareTo(Object o) {
+            return 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return id.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+
+            if (o instanceof FakeServiceReference) {
+                return id.equals(((FakeServiceReference) o).id);
+            } else {
+                return false;
+            }
         }
     }
 

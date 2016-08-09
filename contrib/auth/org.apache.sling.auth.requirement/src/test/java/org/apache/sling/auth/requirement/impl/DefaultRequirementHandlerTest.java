@@ -44,7 +44,6 @@ import org.apache.sling.testing.resourceresolver.MockResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -338,23 +337,23 @@ public class DefaultRequirementHandlerTest extends RequirementBaseTest {
         private List<AuthReq> calls = new ArrayList<AuthReq>();
 
         @Override
-        public void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements) {
+        public void setRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("setRequirements", requirements));
 
         }
 
         @Override
-        public void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements) {
+        public void appendRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("appendRequirements", requirements));
         }
 
         @Override
-        public void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements) {
+        public void removeRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("removeRequirements", requirements));
         }
 
         @Override
-        public void clearRequirements(@Nonnull ServiceReference serviceReference) {
+        public void clearRequirements(@Nonnull String id) {
             calls.add(new AuthReq("clearRequirements", ImmutableMap.<String, Boolean>of()));
         }
     }

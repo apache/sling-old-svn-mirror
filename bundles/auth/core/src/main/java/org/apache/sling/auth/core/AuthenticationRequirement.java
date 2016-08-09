@@ -21,54 +21,51 @@ package org.apache.sling.auth.core;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-import org.osgi.framework.ServiceReference;
-
 /**
  * Interface to define and manage external authentication requirements defined
- * by individual service references.
+ * by individual clients identified by a unique identifier.
  *
  * In contrast to the service listener present with {@link org.apache.sling.auth.core.impl.SlingAuthenticator}
  * which always retrieves and processes the complete list of authentication
  * requirement mappings stored in the {@link AuthConstants#AUTH_REQUIREMENTS}
  * property, this interface allows for subsequent updates to append or remove
- * more requirements as they get detected by a given service.
+ * more requirements as they get detected by a given client.
  */
 public interface AuthenticationRequirement {
     /**
-     * Set the given {@code requirements} for the specified {@code serviceReference}.
+     * Set the given {@code requirements} for the specified {@code id}.
      * If no collection exists it will be created otherwise it will be replaced.
      *
-     * @param serviceReference The service reference, which registered the given requirements.
+     * @param id The identifier of the client registering the requirements.
      * @param requirements The requirements to be set (including replacing any existing entries).
-     * @see {@link #appendRequirements(ServiceReference, Map)} for a call that doesn't replace existing entries.
+     * @see {@link #appendRequirements(String, Map)} for a call that doesn't replace existing entries.
      */
-    void setRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements);
+    void setRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements);
 
     /**
      * Append the given {@code requirements} to the collection of requirements defined
-     * for the specified {@code serviceReference}. A new collection will be created
+     * for the specified {@code id}. A new collection will be created
      * if it doesn't exist yet.
      * If the given {@code requirements} contain keys that have been set before,
      * those entries will be ignored.
      *
-     * @param serviceReference The service reference, which registered the given requirements.
+     * @param id The identifier of the client registering the requirements.
      * @param requirements The requirements to be appended.
-     * @see {@link #setRequirements(ServiceReference, Map)} for a call that replaces all existing entries.
+     * @see {@link #setRequirements(String, Map)} for a call that replaces all existing entries.
      */
-    void appendRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements);
+    void appendRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements);
 
     /**
-     * Remove the specified {@code requirements} as defined by given {@code serviceReference}.
-     *
-     * @param serviceReference The service reference, which registered the given requirements.
+     * Remove the specified {@code requirements} as defined by given {@code id}.
+     *  @param id The identifier of the client registering the requirements.
      * @param requirements The requirements to be removed.
      */
-    void removeRequirements(@Nonnull ServiceReference serviceReference, @Nonnull Map<String, Boolean> requirements);
+    void removeRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements);
 
     /**
-     * Clear all authentication requirements registered by the given {@code serviceReference}.
+     * Clear all authentication requirements registered by the given {@code key}.
      *
-     * @param serviceReference
+     * @param id A unique key identifying the client that registers the requirements.
      */
-    void clearRequirements(@Nonnull ServiceReference serviceReference);
+    void clearRequirements(@Nonnull String id);
 }
