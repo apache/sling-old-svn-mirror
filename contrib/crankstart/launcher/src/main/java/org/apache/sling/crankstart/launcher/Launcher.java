@@ -213,7 +213,7 @@ public class Launcher {
         if(args.length < 1) {
             System.err.println("Usage: " + Launcher.class.getSimpleName() + " provisioning-model [provisioning-model ...]"); 
             System.err.println("Where provisioning-model is either a Sling provisioning model file");
-            System.err.println("or a folder that contains oseveral of those.");
+            System.err.println("or a folder that contains several of those.");
             System.exit(0);
         }
         
