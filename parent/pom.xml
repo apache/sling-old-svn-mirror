@@ -82,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.2</version>
+                <version>2.10.4</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -329,6 +329,11 @@
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-jcrocm-plugin</artifactId>
                     <version>2.0.4-incubator</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
