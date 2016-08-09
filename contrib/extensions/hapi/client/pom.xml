@@ -28,7 +28,8 @@
     </parent>
 
     <artifactId>org.apache.sling.hapi.client</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
     <name>HApi - Sling Hypermedia API client-side tools</name>
     <description>Sling client-side tools for HApi</description>
@@ -43,6 +44,30 @@
         <sling.java.version>6</sling.java.version>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-sling-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Category>sling</Bundle-Category>
+                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Embed-Dependency>groupId=org.jsoup</Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
@@ -68,12 +93,12 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.8.3</version>
+            <version>1.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.12</version>
+            <version>1.7.21</version>
         </dependency>
         <!-- test scope -->
         <dependency>
@@ -86,7 +111,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.12</version>
+            <version>1.7.21</version>
             <scope>test</scope>
         </dependency>
         <dependency>
