@@ -17,7 +17,7 @@
  * under the License.
  ******************************************************************************/
 
-package org.apache.sling.hapi.client.microdata;
+package org.apache.sling.hapi.client.impl.microdata;
 
 import org.apache.http.NameValuePair;
 import org.apache.sling.hapi.client.*;

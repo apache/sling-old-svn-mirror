@@ -35,7 +35,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.sling.hapi.client.ClientException;
 import org.apache.sling.hapi.client.Document;
-import org.apache.sling.hapi.client.microdata.MicrodataHtmlClient;
+import org.apache.sling.hapi.client.impl.microdata.MicrodataHtmlClient;
 import org.apache.sling.hapi.client.test.util.HttpServerRule;
 import org.hamcrest.core.StringContains;
 import org.junit.Assert;
