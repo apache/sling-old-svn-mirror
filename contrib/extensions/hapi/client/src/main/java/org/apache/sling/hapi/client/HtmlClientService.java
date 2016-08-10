@@ -18,6 +18,32 @@
  ******************************************************************************/
 package org.apache.sling.hapi.client;
 
+import org.apache.http.impl.client.CloseableHttpClient;
+
 public interface HtmlClientService {
 
+    /**
+     * Get an HtmlClient that internally uses a CloseableHttpClient
+     * @param client the inner {@link CloseableHttpClient}. The client should take care of any timeouts, authentication, pre/post
+     *               processing, etc.
+     * @param baseUrl The address prefix to all the http requests (e.g. http://localhost:8080/myapp/)
+     * @return
+     */
+    HtmlClient getClient(CloseableHttpClient client, String baseUrl);
+
+    /**
+     * Get an HtmlClient.
+     * @param baseUrl The address prefix to all the http requests (e.g. http://localhost:8080/myapp/)
+     * @return
+     */
+    HtmlClient getClient(String baseUrl);
+
+    /**
+     * Get an HtmlClient that uses BasicAuth for all requests
+     * @param baseUrl The address prefix to all the http requests (e.g. http://localhost:8080/myapp/)
+     * @param user The username for BasicAuth
+     * @param password The password for BasicAuth
+     * @return
+     */
+    HtmlClient getClient(String baseUrl, String user, String password);
 }

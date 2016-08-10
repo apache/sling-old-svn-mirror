@@ -19,11 +19,39 @@
 package org.apache.sling.hapi.client;
 
 /**
- * An HTML document representation
+ * A hapi representation of an HTML document, backed by HTML markup.
+ * The Document provides a structure, accessible through the {@link #item(String)} and {@link #items()} methods
+ * and a way to use the hypermedia controls through the {@link #link(String)} and {@link #form(String)} methods
  */
 public interface Document {
+    /**
+     * Get all the {@link Document}'s link items. These Items should normally be backed by HTML <i>anchors</i> and <i>links</i>.
+     * @param rel An identifier that groups all the <i>link</i> Items for this Document
+     * @return all the link Items for this Document, that have the given relation
+     * @throws ClientException
+     */
     Items link(String rel) throws ClientException;
+
+    /**
+     * Get all the {@link Document}'s form items. These Items should normally be backed by the HTML <i>form</i> element
+     * @param rel An identifier that groups all the <i>form</i> Items for this Document
+     * @return all the form Items for this Document, that have the given relation
+     * @throws ClientException
+     */
     Items form(String rel) throws ClientException;
+
+    /**
+     * Get all the {@link Document}'s items. These Items are backed by any HTML element
+     * @param rel An identifier that groups all the Items for this Document
+     * @return all the Items for this Document, that have the given relation
+     * @throws ClientException
+     */
     Items item(String rel) throws ClientException;
+
+    /**
+     * Get all the {@link Document}'s items. These Items are backed by any HTML element
+     * @return all the Items for this Document
+     * @throws ClientException
+     */
     Items items() throws ClientException;
 }

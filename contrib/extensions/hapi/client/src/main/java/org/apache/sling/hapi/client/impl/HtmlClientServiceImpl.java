@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 @Component(metatype = false)
 @Service(value = HtmlClientService.class)
 public class HtmlClientServiceImpl implements HtmlClientService {
-
     private final Logger LOG = LoggerFactory.getLogger(HtmlClientService.class);
 
     /**
@@ -41,6 +40,7 @@ public class HtmlClientServiceImpl implements HtmlClientService {
      * @param baseUrl the base URL as String
      * @return the HtmlClient or null if there was an error
      */
+    @Override
     public HtmlClient getClient(CloseableHttpClient client, String baseUrl) {
         try {
             return new MicrodataHtmlClient(client, baseUrl);
@@ -55,6 +55,7 @@ public class HtmlClientServiceImpl implements HtmlClientService {
      * @param baseUrl the base URL as String
      * @return the HtmlClient or null if there was an error
      */
+    @Override
     public HtmlClient getClient(String baseUrl) {
         try {
             return new MicrodataHtmlClient(baseUrl);
@@ -71,6 +72,7 @@ public class HtmlClientServiceImpl implements HtmlClientService {
      * @param password the password to be used for basic auth
      * @return the HtmlClient or null if there was an error
      */
+    @Override
     public HtmlClient getClient(String baseUrl, String user, String password) {
         try {
             return new MicrodataHtmlClient(baseUrl, user, password);
