@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.hapi.client.forms;
+package org.apache.sling.hapi.client.forms.internal;
 
 import org.apache.http.NameValuePair;
 
