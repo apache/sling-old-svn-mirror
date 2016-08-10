@@ -673,6 +673,10 @@ public class XSSAPIImplTest {
                 {
                         "<t><w>xyz</t></w>",
                         RUBBISH_XML
+                },
+                {
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>",
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>"
                 }
         };
         for (String[] aTestData : testData) {
