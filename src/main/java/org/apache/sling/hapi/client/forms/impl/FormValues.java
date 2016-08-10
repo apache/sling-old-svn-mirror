@@ -17,7 +17,7 @@
  * under the License.
  ******************************************************************************/
 
-package org.apache.sling.hapi.client.forms;
+package org.apache.sling.hapi.client.forms.impl;
 
 import java.io.UnsupportedEncodingException;
 

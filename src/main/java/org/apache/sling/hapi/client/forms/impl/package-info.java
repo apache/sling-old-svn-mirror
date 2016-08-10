@@ -18,6 +18,6 @@
  ******************************************************************************/
 
 @Version("1.0.0")
-package org.apache.sling.hapi.client.forms;
+package org.apache.sling.hapi.client.forms.impl;
 
 import aQute.bnd.annotation.Version;

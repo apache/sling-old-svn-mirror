@@ -61,7 +61,6 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
-                        <Private-Package>org.apache.sling.hapi.client.forms</Private-Package>
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
                         <Embed-Dependency>groupId=org.jsoup</Embed-Dependency>
                     </instructions>
