@@ -17,7 +17,8 @@
     under the License.
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.sample.slingshot.SlingshotConstants" %><%
-%><script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-2.2.0.min.js"></script>
+%><script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-3.1.0.min.js"></script>
 <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/bootstrap.min.js"></script>
 <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/ie10-viewport-bug-workaround.js"></script>
+<script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/star-rating.min.js"></script>
 <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/slingshot.js"></script>

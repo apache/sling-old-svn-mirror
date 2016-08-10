@@ -59,16 +59,16 @@ public class RatingsServiceImpl implements RatingsService {
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#getRating(org.apache.sling.api.resource.Resource)
      */
     @Override
-    public int getRating(final Resource resource) {
+    public double getRating(final Resource resource) {
         final String fullPath = getRatingsResourcePath(resource);
-        int rating = 0;
+        float rating = 0;
         if ( fullPath != null ) {
             final Resource ratingsResource = resource.getChild(fullPath);
             if ( ratingsResource != null ) {
                 int count = 0;
                 for(final Resource r : ratingsResource.getChildren()) {
                     final ValueMap vm = r.getValueMap();
-                    final int current = vm.get(RatingsUtil.PROPERTY_RATING, 0);
+                    final double current = vm.get(RatingsUtil.PROPERTY_RATING, 0.0);
                     rating += current;
                     count++;
                 }
@@ -84,14 +84,14 @@ public class RatingsServiceImpl implements RatingsService {
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#getRating(org.apache.sling.api.resource.Resource, java.lang.String)
      */
     @Override
-    public int getRating(final Resource resource, final String userId) {
+    public double getRating(final Resource resource, final String userId) {
         final String fullPath = getRatingsResourcePath(resource);
-        int rating = 0;
+        double rating = 0;
 
         final Resource r = resource.getResourceResolver().getResource(fullPath + "/" + userId);
         if ( r != null ) {
             final ValueMap vm = r.getValueMap();
-            rating = vm.get(RatingsUtil.PROPERTY_RATING, 0);
+            rating = vm.get(RatingsUtil.PROPERTY_RATING, 0.0);
         }
         return rating;
     }
@@ -100,7 +100,7 @@ public class RatingsServiceImpl implements RatingsService {
      * @see org.apache.sling.sample.slingshot.ratings.RatingsService#setRating(org.apache.sling.api.resource.Resource, java.lang.String, int)
      */
     @Override
-    public void setRating(final Resource resource, final String userId, final int rating)
+    public void setRating(final Resource resource, final String userId, final double rating)
     throws PersistenceException {
         final String ratingsPath = getRatingsResourcePath(resource) ;
 
@@ -113,12 +113,12 @@ public class RatingsServiceImpl implements RatingsService {
         if ( ratingRsrc == null ) {
             props.clear();
             props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, RatingsUtil.RESOURCETYPE_RATING);
-            props.put(RatingsUtil.PROPERTY_RATING, rating);
+            props.put(RatingsUtil.PROPERTY_RATING, String.valueOf(rating));
 
             resource.getResourceResolver().create(ratingsResource, userId, props);
         } else {
             final ModifiableValueMap mvm = ratingRsrc.adaptTo(ModifiableValueMap.class);
-            mvm.put(RatingsUtil.PROPERTY_RATING, rating);
+            mvm.put(RatingsUtil.PROPERTY_RATING, String.valueOf(rating));
         }
         resource.getResourceResolver().commit();
     }

@@ -22,4 +22,5 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/bootstrap.min.css" rel="stylesheet">
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/star-rating.min.css" rel="stylesheet">
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/slingshot.css" rel="stylesheet">
