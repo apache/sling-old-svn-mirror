@@ -75,7 +75,7 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
 
             final Resource reqResource = resolver.getResource(request.getResource().getPath());
 
-            ratingsService.setRating(reqResource, userId, Integer.valueOf(rating));
+            ratingsService.setRating(reqResource, userId, Double.valueOf(rating));
 
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
