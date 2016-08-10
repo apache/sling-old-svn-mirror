@@ -18,17 +18,17 @@
  ******************************************************************************/
 package org.apache.sling.testing.clients.html;
 
+import java.net.URI;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.sling.hapi.client.HtmlClient;
-import org.apache.sling.hapi.client.microdata.MicrodataDocument;
+import org.apache.sling.hapi.client.impl.microdata.MicrodataDocument;
 import org.apache.sling.testing.clients.ClientException;
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
 
 public class MicrodataClient extends SlingClient implements HtmlClient {
     protected static final Logger LOG = LoggerFactory.getLogger(MicrodataClient.class);
