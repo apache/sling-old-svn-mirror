@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.hapi.client</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>HApi - Sling Hypermedia API client-side tools</name>
     <description>Sling client-side tools for HApi</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hapi.client-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hapi.client-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hapi.client-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/hapi/client</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/hapi/client</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/hapi/client</url>
     </scm>
 
     <properties>
