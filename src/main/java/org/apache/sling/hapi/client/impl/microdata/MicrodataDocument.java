@@ -21,7 +21,7 @@ package org.apache.sling.hapi.client.impl.microdata;
 
 import org.apache.http.NameValuePair;
 import org.apache.sling.hapi.client.*;
-import org.apache.sling.hapi.client.forms.impl.FormValues;
+import org.apache.sling.hapi.client.forms.internal.FormValues;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
