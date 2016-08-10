@@ -20,11 +20,12 @@
                   org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.api.resource.ValueMap,
                   org.apache.sling.api.request.ResponseUtil,
+                  org.apache.sling.sample.slingshot.model.StreamEntry,                  
+                  org.apache.sling.sample.slingshot.SlingshotUtil,                  
                   org.apache.sling.sample.slingshot.SlingshotConstants"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-    final ValueMap attributes = resource.getValueMap();
-    final String title = ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_TITLE, resource.getName()));
+    final StreamEntry entry = new StreamEntry(resource);
 
     String imagePath = null;
     final Resource imagesResource = resource.getResourceResolver().getResource(resource, "images");
@@ -36,20 +37,45 @@
     }
 %><html>
   <head>
-    <title><%= title %></title>
+    <title><%= ResponseUtil.escapeXml(entry.getTitle()) %></title>
     <sling:include resource="<%= resource %>" replaceSelectors="head"/>
   </head>
-  <body class="ui-slingshot-main">
+  <body>
     <sling:include resource="<%= resource %>" replaceSelectors="menu"/>
-    <h1><%= title %></h1>
-    <img src="<%= request.getContextPath() %><%= imagePath %>"/>
-    <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>">
-      <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
-      <p>Title: <input name="<%= SlingshotConstants.PROPERTY_TITLE %>" value="<%= title %>"/></p>
-      <p>Description: <input name="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>" value="<%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_DESCRIPTION, ""))%>"/></p>
-      <p>Location: <input name="<%= SlingshotConstants.PROPERTY_LOCATION %>" value="<%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_LOCATION, ""))%>"/></p>
-      <button class="ui-button ui-form-button" type="submit">Save</button>
-      <p><a href="<%= request.getContextPath() %><%=resource.getPath() %>.html">Cancel</a></p>
-    </form>
+    <div class="jumbotron">
+      <div class="container">
+        <h1><%= ResponseUtil.escapeXml(entry.getStream().getInfo().getTitle()) %></h1>
+        <p><%= ResponseUtil.escapeXml(entry.getStream().getInfo().getDescription()) %></p>
+      </div>
+    </div>
+    <div class="container">
+      <h1><%= ResponseUtil.escapeXml(entry.getTitle()) %></h1>
+      <div class="row">
+        <div class="col-xs-12 col-md-8">
+          <img class="img-responsive center-block" src="<%= request.getContextPath() %><%= imagePath %>"/>
+          <div class="well">
+            <div class="row">
+            <form class="navbar-form navbar-left" role="comment" method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>">
+              <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
+              <div class="form-group">
+                <label for="<%= SlingshotConstants.PROPERTY_TITLE %>">Title</label>
+                <input type="text" class="form-control" placeholder="Title" name="<%= SlingshotConstants.PROPERTY_TITLE %>" value="<%=ResponseUtil.escapeXml(entry.getTitle())%>"/>
+              </div>
+              <div class="form-group">
+                <label for="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>">Description</label>
+                <input type="text" class="form-control" placeholder="Description" name="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>" value="<%=ResponseUtil.escapeXml(entry.getDescription())%>"/>
+              </div>
+              <div class="form-group">
+                <label for="<%= SlingshotConstants.PROPERTY_LOCATION %>">Location</label>
+                <input type="text" class="form-control" placeholder="Location" name="<%= SlingshotConstants.PROPERTY_LOCATION %>" value="<%=ResponseUtil.escapeXml(entry.getLocation())%>"/>
+              </div>
+              <button type="submit" class="ui-button ui-form-button">Update</button>
+            </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <sling:include resource="<%= resource %>" replaceSelectors="bottom"/>
   </body>
 </html>

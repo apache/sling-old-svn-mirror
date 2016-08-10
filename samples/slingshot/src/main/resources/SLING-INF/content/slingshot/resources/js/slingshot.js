@@ -15,6 +15,10 @@
  * limitations under the License.
  */
 $( document ).ready(function() {
+	$(".ui-slingshot-clickable").click(function() { 
+	    var $input = $( this );
+	    window.location.href=$input.attr("data-link");
+    });
 	$(".form-signin").submit(function(event) {
         event.preventDefault();
         var form = this;

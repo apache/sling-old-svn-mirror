@@ -57,7 +57,7 @@
         <div class="col-xs-12 col-md-8">
           <img class="img-responsive center-block" src="<%= request.getContextPath() %><%= imagePath %>"/>
           <div class="well">
-            <% if ( entry.getLocation() != null ) { %>
+            <% if ( entry.getLocation().length() > 0 ) { %>
               <p>Location: <%=ResponseUtil.escapeXml(entry.getLocation())%></p>
             <% } %>
             <p><%=ResponseUtil.escapeXml(entry.getDescription())%></p>

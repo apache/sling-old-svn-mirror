@@ -72,6 +72,6 @@ public class StreamEntry extends PropertiesSupport {
     }
 
     public String getLocation() {
-        return this.getProperties().get(PROPERTY_LOCATION, String.class);
+        return this.getProperties().get(PROPERTY_LOCATION, "");
     }
 }
