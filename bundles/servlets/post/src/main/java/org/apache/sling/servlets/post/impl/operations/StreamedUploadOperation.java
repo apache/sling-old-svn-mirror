@@ -58,14 +58,16 @@ import java.util.Map;
 public class StreamedUploadOperation extends AbstractPostOperation {
     private static final Logger LOG = LoggerFactory.getLogger(StreamedUploadOperation.class);
     public static final String NT_FILE = "nt:file";
+    public static final String NT_RESOURCE = "nt:resource";
     public static final String JCR_LASTMODIFIED = "jcr:lastModified";
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     public static final String JCR_DATA = "jcr:data";
     private static final String MT_APP_OCTET = "application/octet-stream";
+    private static final String JCR_CONTENT = "jcr:content";
     private ServletContext servletContext;
 
     public void setServletContext(final ServletContext servletContext) {
-        this.setServletContext(servletContext);
+        this.servletContext = servletContext;
     }
 
 
@@ -132,30 +134,40 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         if ( !resourceExists(parentResource)) {
             throw new IllegalArgumentException("Parent resource must already exist to be able to stream upload content. Please create first ");
         }
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling:resourceType", NT_FILE);
-        // TODO: Should all the formFields be added to the prop map ?
-        props.put(JCR_LASTMODIFIED, Calendar.getInstance());
-        props.put(JCR_MIMETYPE, getContentType(part));
-        try {
-            props.put(JCR_DATA, part.getInputStream());
-        } catch (final IOException e) {
-            throw new PersistenceException("Error while retrieving inputstream from request part.", e);
+        String name = getUploadName(part);
+        Resource fileResource = parentResource.getChild(name);
+        Map<String, Object> fileProps = new HashMap<String, Object>();
+        if (fileResource == null) {
+            fileProps.put("jcr:primaryType", NT_FILE);
+            fileResource = parentResource.getResourceResolver().create(parentResource, name, fileProps);
         }
 
-        String name = getUploadName(part);
-        // get or create resource
-        Resource result = parentResource.getChild(name);
+
+
+        Map<String, Object> resourceProps = new HashMap<String, Object>();
+        resourceProps.put("jcr:primaryType", NT_RESOURCE);
+        resourceProps.put(JCR_LASTMODIFIED, Calendar.getInstance());
+        // TODO: Should all the formFields be added to the prop map ?
+        resourceProps.put(JCR_MIMETYPE, getContentType(part));
+        try {
+            resourceProps.put(JCR_DATA, part.getInputStream());
+        } catch (IOException e) {
+            throw new PersistenceException("Error while retrieving inputstream from request part.", e);
+        }
+        Resource result = fileResource.getChild(JCR_CONTENT);
         if ( result != null ) {
             final ModifiableValueMap vm = result.adaptTo(ModifiableValueMap.class);
             if ( vm == null ) {
-                throw new PersistenceException("Resource at " + parentResource.getPath() + '/' + name + " is not modifiable.");
+                throw new PersistenceException("Resource at " + fileResource.getPath() + '/' + JCR_CONTENT + " is not modifiable.");
             }
-            vm.putAll(props);
+            vm.putAll(resourceProps);
         } else {
-            result = parentResource.getResourceResolver().create(parentResource, name, props);
+            result = parentResource.getResourceResolver().create(fileResource, JCR_CONTENT, resourceProps);
         }
-        for(final String key : props.keySet()) {
+        // Commit must be called to perform to cause streaming so the next part can be found.
+        result.getResourceResolver().commit();
+
+        for( String key : resourceProps.keySet()) {
             changes.add(Modification.onModified(result.getPath() + '/' + key));
         }
     }
