@@ -55,7 +55,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>!*</Export-Package>
                         <Import-Package>
                           org.apache.jackrabbit.test;resolution:=optional,
                           com.mongodb;resolution:=optional,

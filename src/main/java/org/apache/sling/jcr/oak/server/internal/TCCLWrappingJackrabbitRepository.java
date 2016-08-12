@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.oak.server;
+package org.apache.sling.jcr.oak.server.internal;
 
 import java.util.Map;
 
