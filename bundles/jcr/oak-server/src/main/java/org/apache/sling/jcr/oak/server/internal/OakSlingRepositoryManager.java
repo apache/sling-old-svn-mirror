@@ -63,6 +63,7 @@ import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -85,7 +86,11 @@ import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefi
  * implementation from the Jackrabbit Oak project.
  */
 @Component(
-    immediate = true
+    immediate = true,
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=Apache Sling JCR Oak Repository Manager",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 @Designate(
     ocd = OakSlingRepositoryManagerConfiguration.class
