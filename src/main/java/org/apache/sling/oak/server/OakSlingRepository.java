@@ -17,8 +17,6 @@
  */
 package org.apache.sling.oak.server;
 
-import static java.util.Collections.singleton;
-
 import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -39,19 +37,19 @@ import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.osgi.framework.Bundle;
 
+import static java.util.Collections.singleton;
+
 /**
  * A Sling repository implementation that wraps the Oak OSGi repository
  * implementation from the Oak project.
  */
 public class OakSlingRepository extends AbstractSlingRepository2 {
 
-    private final String adminName;
+    private final String adminId;
 
-    protected OakSlingRepository(final AbstractSlingRepositoryManager manager, final Bundle usingBundle,
-            final String adminName) {
+    protected OakSlingRepository(final AbstractSlingRepositoryManager manager, final Bundle usingBundle, final String adminId) {
         super(manager, usingBundle);
-
-        this.adminName = adminName;
+        this.adminId = adminId;
     }
 
     @Override
@@ -60,10 +58,10 @@ public class OakSlingRepository extends AbstractSlingRepository2 {
         Set<? extends Principal> principals = singleton(new AdminPrincipal() {
             @Override
             public String getName() {
-                return OakSlingRepository.this.adminName;
+                return OakSlingRepository.this.adminId;
             }
         });
-        AuthInfo authInfo = new AuthInfoImpl(this.adminName, Collections.<String, Object> emptyMap(), principals);
+        AuthInfo authInfo = new AuthInfoImpl(this.adminId, Collections.<String, Object> emptyMap(), principals);
         Subject subject = new Subject(true, principals, singleton(authInfo), Collections.<Object> emptySet());
         Session adminSession;
         try {
