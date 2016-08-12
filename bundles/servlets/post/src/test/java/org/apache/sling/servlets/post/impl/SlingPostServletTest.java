@@ -27,12 +27,13 @@ import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
 import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
+import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Request;
+import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Response;
 
 public class SlingPostServletTest extends TestCase {
     
@@ -72,7 +73,7 @@ public class SlingPostServletTest extends TestCase {
     }
 
     public void testGetJsonResponse() {
-        MockSlingHttpServletRequest req = new MockSlingHttpServletRequest(null, null, null, null, null) {
+        MockSlingHttpServletRequest req = new MockSlingHttpServlet3Request(null, null, null, null, null) {
             @Override
             public String getHeader(String name) {
                 return name.equals(MediaRangeList.HEADER_ACCEPT) ? "application/json" : super.getHeader(name);
@@ -114,7 +115,7 @@ public class SlingPostServletTest extends TestCase {
     /**
      *
      */
-    private final class RedirectServletRequest extends MockSlingHttpServletRequest {
+    private final class RedirectServletRequest extends MockSlingHttpServlet3Request {
 
         private String requestPath;
         private String redirect;
@@ -135,7 +136,7 @@ public class SlingPostServletTest extends TestCase {
         }
     }
 
-    private final class RedirectServletResponse extends MockSlingHttpServletResponse {
+    private final class RedirectServletResponse extends MockSlingHttpServlet3Response {
 
         private String redirectLocation;
 
@@ -166,7 +167,7 @@ public class SlingPostServletTest extends TestCase {
     }
 
     private static class StatusParamSlingHttpServletRequest extends
-            MockSlingHttpServletRequest {
+            MockSlingHttpServlet3Request {
 
         private String statusParam;
 
