@@ -19,7 +19,12 @@ package org.apache.sling.servlets.post.impl;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +62,16 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
-import org.apache.sling.servlets.post.impl.operations.*;
+import org.apache.sling.servlets.post.impl.operations.CheckinOperation;
+import org.apache.sling.servlets.post.impl.operations.CheckoutOperation;
+import org.apache.sling.servlets.post.impl.operations.CopyOperation;
+import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
+import org.apache.sling.servlets.post.impl.operations.ImportOperation;
+import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
+import org.apache.sling.servlets.post.impl.operations.MoveOperation;
+import org.apache.sling.servlets.post.impl.operations.NopOperation;
+import org.apache.sling.servlets.post.impl.operations.RestoreOperation;
+import org.apache.sling.servlets.post.impl.operations.StreamedUploadOperation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -423,7 +437,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         properties.put(Constants.SERVICE_VENDOR,
             context.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
         return context.registerService(PostOperation.SERVICE_NAME, operation,
-                properties);
+            properties);
     }
 
     @Override
