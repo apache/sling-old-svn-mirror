@@ -60,13 +60,13 @@ import org.xml.sax.SAXException;
  * Custom <tt>JackrabbitSession</tt> that ensures that the correct <tt>TCCL</tt> is set in OSGi environments
  *
  *
- * @see #TCCLWrappingJackrabbitSession(JackrabbitSession)
+ * @see #TcclWrappingJackrabbitSession(JackrabbitSession)
  */
-public class TCCLWrappingJackrabbitSession implements JackrabbitSession {
+public class TcclWrappingJackrabbitSession implements JackrabbitSession {
 
     private final JackrabbitSession wrapped;
 
-    public TCCLWrappingJackrabbitSession(JackrabbitSession wrapped) {
+    public TcclWrappingJackrabbitSession(JackrabbitSession wrapped) {
         this.wrapped = wrapped;
     }
 
@@ -82,7 +82,7 @@ public class TCCLWrappingJackrabbitSession implements JackrabbitSession {
 
         try {
             Session session = wrapped.impersonate(credentials);
-            return new TCCLWrappingJackrabbitSession((JackrabbitSession) session);
+            return new TcclWrappingJackrabbitSession((JackrabbitSession) session);
         } finally {
             thread.setContextClassLoader(oldClassLoader);
         }
