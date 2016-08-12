@@ -81,6 +81,11 @@ public class RequestPartsIterator implements Iterator<Part> {
         return null;
     }
 
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("Remove is not supported on a request stream.");
+    }
+
     /**
      * Internal implementation of the Part API from Servlet 3 wrapping the Commons File Upload FIleItemStream object.
      */
