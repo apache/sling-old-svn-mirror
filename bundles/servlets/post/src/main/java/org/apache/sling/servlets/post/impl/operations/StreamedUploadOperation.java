@@ -71,6 +71,13 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
 
+    /**
+     * Check the request and return true if there is a parts iterator attribute present. This attribute
+     * will have been put there by the Sling Engine ParameterSupport class. If its not present, the request
+     * is not streamed and cant be processed by this class. Check this first before using this class.
+     * @param request the request.
+     * @return true if the request can be streamed.
+     */
     public boolean isRequestStreamed(SlingHttpServletRequest request) {
         return request.getAttribute("request-parts-iterator") != null;
     }
@@ -108,6 +115,12 @@ public class StreamedUploadOperation extends AbstractPostOperation {
 
     }
 
+    /**
+     * Add a field to the store of formFields.
+     * @param formFields the formFileds
+     * @param name the name of the field.
+     * @param part the part.
+     */
     private void addField(Map<String, List<String>> formFields, String name, Part part) {
         List<String> values = formFields.get(name);
         if ( values == null ) {
@@ -122,6 +135,17 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
 
+    /**
+     * Write content to the resource API creating a standard JCR structure of nt:file - nt:resource - jcr:data.
+     * This method will commit to the repository to force the repository to read from the input stream and write
+     * to the target. How efficient that is depends on the repository implementation.
+     * @param resolver the resource resolver.
+     * @param part the part containing the file body.
+     * @param formFields form fields collected so far.
+     * @param response the response object, updated by the operation.
+     * @param changes changes made to the repo.
+     * @throws PersistenceException
+     */
     private void writeContent(final ResourceResolver resolver,
                               final Part part,
                               final Map<String, List<String>> formFields,
@@ -172,10 +196,20 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         }
     }
 
+    /**
+     * Is the part a form field ?
+     * @param part
+     * @return
+     */
     private boolean isFormField(Part part) {
         return (part.getSubmittedFileName() == null);
     }
 
+    /**
+     * Get the upload file name from the part.
+     * @param part
+     * @return
+     */
     private String getUploadName(Part part) {
         String name = part.getSubmittedFileName();
         // strip of possible path (some browsers include the entire path)
@@ -184,12 +218,21 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         return Text.escapeIllegalJcrChars(name);
     }
 
+    /**
+     * Does the resource exist ?
+     * @param resource
+     * @return
+     */
     private boolean resourceExists(final Resource resource) {
         return  (resource != null && !ResourceUtil.isSyntheticResource(resource));
     }
 
 
-
+    /**
+     * Get the content type of the part.
+     * @param part
+     * @return
+     */
     private String getContentType(final Part part) {
         String contentType = part.getContentType();
         if (contentType != null) {
