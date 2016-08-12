@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.oak.server;
+package org.apache.sling.jcr.oak.server;
 
 import java.util.Map;
 
@@ -33,19 +33,19 @@ import org.apache.jackrabbit.oak.Oak;
 
 /**
  * Custom <tt>JackrabbitRepository</tt> that ensures that the correct <tt>TCCL</tt> is set in OSGi environments
- * 
+ *
  * <p>Oak still requires that for {@link JackrabbitRepository#login()} and
  * {@link JackrabbitSession#impersonate(Credentials)} calls a custom thread context class loader is set. This wrapper
  * simply ensures that the TCCL is set for all calls.</p>
  */
 public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
-    
+
     private final JackrabbitRepository wrapped;
-    
+
     public TCCLWrappingJackrabbitRepository(JackrabbitRepository wrapped) {
         this.wrapped = wrapped;
     }
-    
+
     // calls setting the TCCL
 
     @Override
@@ -72,7 +72,7 @@ public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
     @Override
     public Session login(Credentials credentials, String workspaceName, Map<String, Object> attributes)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        
+
         Thread thread = Thread.currentThread();
 
         ClassLoader oldClassLoader = thread.getContextClassLoader();
@@ -83,9 +83,9 @@ public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
             return new TCCLWrappingJackrabbitSession((JackrabbitSession) session);
         } finally {
             thread.setContextClassLoader(oldClassLoader);
-        }        
+        }
     }
-    
+
     // only pure delegate methods below
 
     @Override
@@ -121,7 +121,7 @@ public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
     @Override
     public void shutdown() {
         wrapped.shutdown();
-        
+
     }
 
 }
