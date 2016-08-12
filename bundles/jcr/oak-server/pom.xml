@@ -43,6 +43,7 @@
   </scm>
 
   <properties>
+    <jackrabbit.version>2.12.2</jackrabbit.version>
     <oak.version>1.5.5</oak.version>
     <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
   </properties>
@@ -124,6 +125,18 @@
       <scope>test</scope>
     </dependency>
     <!-- Apache Jackrabbit -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-api</artifactId>
+      <version>${jackrabbit.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>${jackrabbit.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>oak-core</artifactId>
