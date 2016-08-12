@@ -22,9 +22,6 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 
 import java.util.HashMap;
 
-/**
- * Created by ieb on 10/08/2016.
- */
 public class MockValueMap extends HashMap<String, Object> implements ModifiableValueMap {
     public MockValueMap() {
     }
