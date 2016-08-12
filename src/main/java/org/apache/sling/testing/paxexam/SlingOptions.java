@@ -167,24 +167,6 @@ public class SlingOptions {
         );
     }
 
-    public static Option slingCommonsMessaging() {
-        return composite(
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.messaging").version(versionResolver)
-        );
-    }
-
-    public static Option slingCommonsMessagingMail() {
-        return composite(
-            scr(),
-            slingCommonsMessaging(),
-            slingCommonsThreads(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.messaging.mail").version(versionResolver),
-            mavenBundle().groupId("com.sun.mail").artifactId("javax.mail").version(versionResolver),
-            mavenBundle().groupId("javax.mail").artifactId("javax.mail-api").version(versionResolver),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-email").version(versionResolver)
-        );
-    }
-
     public static Option slingCommonsMetrics() {
         return composite(
             scr(),
@@ -327,14 +309,6 @@ public class SlingOptions {
         );
     }
 
-    public static Option slingExtensionValidation() {
-        return composite(
-            sling(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.api").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.core").version(versionResolver)
-        );
-    }
-
     public static Option slingExtensionXss() {
         return composite(
             sling(),
@@ -420,17 +394,6 @@ public class SlingOptions {
         );
     }
 
-    public static Option slingJcrRepoinit() {
-        return composite(
-            sling(),
-            slingJcr(),
-            slingJcrJackrabbitSecurity(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version(versionResolver)
-        );
-    }
-
     public static Option slingLaunchpadContent() {
         return composite(
             sling(),
@@ -446,14 +409,12 @@ public class SlingOptions {
             sling(),
             slingServlets(),
             slingInstaller(),
-            slingJcrRepoinit(),
             slingExtensionAdapter(),
             slingExtensionBundleresource(),
             slingExtensionDiscoveryOak(),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.prefs").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.memoryusage").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.packageadmin").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.karaf-repoinit").version(versionResolver),
             newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
                 .put("model.section.name", "")
                 .put("text.url", "classpath://org.apache.sling.karaf-repoinit/repoinit.txt")
@@ -749,14 +710,6 @@ public class SlingOptions {
         );
     }
 
-    public static Option slingScriptingFreemarker() {
-        return composite(
-            sling(),
-            slingScripting(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.freemarker").version(versionResolver)
-        );
-    }
-
     public static Option slingScriptingGroovy() {
         return composite(
             sling(),
@@ -784,31 +737,6 @@ public class SlingOptions {
             slingExtensionI18n(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.thymeleaf").version(versionResolver),
             mavenBundle().groupId("org.javassist").artifactId("javassist").version(versionResolver)
-        );
-    }
-
-    public static Option slingSamplesFling() {
-        return composite(
-            sling(),
-            slingScriptingThymeleaf(),
-            slingCommonsMessaging(),
-            slingCommonsMessagingMail(),
-            slingExtensionModels(),
-            slingExtensionQuery(),
-            slingExtensionValidation(),
-            slingAuthForm(),
-            mavenBundle().groupId("org.apache.sling.samples").artifactId("org.apache.sling.samples.fling").version(versionResolver),
-            newConfiguration("org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder")
-                .put("from", "fling@sling.apache.org")
-                .put("smtpUsername", "sling")
-                .put("smtpPort", "8025")
-                .put("subject", "message from fling")
-                .put("smtpPassword", "fling")
-                .put("smtpHostname", "localhost")
-                .asOption(),
-            newConfiguration("org.apache.sling.samples.fling.internal.WiserSmtpService")
-                .put("smtpPort", "8025")
-                .asOption()
         );
     }
 
