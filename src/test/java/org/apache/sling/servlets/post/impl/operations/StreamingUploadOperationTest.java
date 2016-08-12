@@ -53,9 +53,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ieb on 10/08/2016.
- */
 
 public class StreamingUploadOperationTest {
 
