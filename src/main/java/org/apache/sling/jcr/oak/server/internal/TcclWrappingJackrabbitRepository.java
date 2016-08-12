@@ -38,11 +38,11 @@ import org.apache.jackrabbit.oak.Oak;
  * {@link JackrabbitSession#impersonate(Credentials)} calls a custom thread context class loader is set. This wrapper
  * simply ensures that the TCCL is set for all calls.</p>
  */
-public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
+public class TcclWrappingJackrabbitRepository implements JackrabbitRepository {
 
     private final JackrabbitRepository wrapped;
 
-    public TCCLWrappingJackrabbitRepository(JackrabbitRepository wrapped) {
+    public TcclWrappingJackrabbitRepository(JackrabbitRepository wrapped) {
         this.wrapped = wrapped;
     }
 
@@ -80,7 +80,7 @@ public class TCCLWrappingJackrabbitRepository implements JackrabbitRepository {
 
         try {
             Session session = wrapped.login(credentials, workspaceName,attributes);
-            return new TCCLWrappingJackrabbitSession((JackrabbitSession) session);
+            return new TcclWrappingJackrabbitSession((JackrabbitSession) session);
         } finally {
             thread.setContextClassLoader(oldClassLoader);
         }

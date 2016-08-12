@@ -178,7 +178,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
         jcr.createContentRepository();
 
-        return new TCCLWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
+        return new TcclWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
     }
 
     private void setup(final SlingRepository repository) {
