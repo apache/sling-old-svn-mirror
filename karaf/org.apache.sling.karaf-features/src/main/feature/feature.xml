@@ -258,7 +258,7 @@
     <feature version="${feature.version}">sling-servlets</feature>
   </feature>
   <feature name="sling-jcr-oak" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.0-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">sling-jcr</feature>
@@ -500,7 +500,7 @@
   </feature>
   <feature name="sling-extension-healthcheck" version="${feature.version}">
     <!-- SLING-5624 Health Check Core 1.2.4 fails on Launchpad Karaf -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.5-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.jmx/1.0.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.support/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.webconsole/1.1.2</bundle>
