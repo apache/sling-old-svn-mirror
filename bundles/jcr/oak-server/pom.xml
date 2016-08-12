@@ -43,11 +43,8 @@
     </scm>
 
     <properties>
-        <!--
-            WARNING make sure oak.version and sling.oak.server.version
-            are in sync with bundles/jcr/it-jackrabbit-oak
-        -->
         <oak.version>1.5.5</oak.version>
+        <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
     </properties>
 
     <build>
@@ -71,16 +68,68 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>bundle.filename</name>
+                            <value>${basedir}/target/${project.build.finalName}.jar</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.servicemix.tooling</groupId>
+                <artifactId>depends-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-depends-file</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
+        <!-- javax -->
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <!-- Apache Felix -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Apache Jackrabbit -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-jcr</artifactId>
@@ -99,7 +148,7 @@
             <version>${oak.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <!-- Apache Sling -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
@@ -119,11 +168,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
             <version>1.0.0</version>
@@ -134,6 +178,12 @@
             <artifactId>org.apache.sling.commons.threads</artifactId>
             <version>3.2.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.paxexam</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
         <!-- OSGi -->
         <dependency>
@@ -166,6 +216,48 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.metatype.annotations</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <!-- testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.hamcrest</artifactId>
+            <version>1.3_1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-cm</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
