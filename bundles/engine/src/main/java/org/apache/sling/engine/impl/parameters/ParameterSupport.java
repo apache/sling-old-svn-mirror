@@ -281,10 +281,27 @@ public class ParameterSupport {
 
                 // Multipart POST
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
-                    this.parseMultiPartPost(parameters);
-                    this.requestDataUsed = true;
-                    addContainerParameters = checkForAdditionalParameters;
-                    useFallback = false;
+                    if (isStreamed(parameters, this.getServletRequest())) {
+                        // special case, the request is Mutipart and streamed processing has been requested
+                        try {
+                            this.getServletRequest().setAttribute("request-parts-iterator", new RequestPartsIterator(this.getServletRequest()));
+                            this.log.debug("getRequestParameterMapInternal: Iterator<javax.servlet.http.Part> available as request attribute  named request-parts-iterator");
+                        } catch (IOException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed requesttipart streamed request", e);
+                        } catch (FileUploadException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed request", e);
+                        }
+                        // The request data has been passed to the RequestPartsIterator, hence from a RequestParameter pov its been used, and must not be used again.
+                        this.requestDataUsed = true;
+                        // must not try and get anything from the request at this point so avoid jumping through the stream.
+                        addContainerParameters = false;
+                        useFallback = false;
+                    } else {
+                        this.parseMultiPartPost(parameters);
+                        this.requestDataUsed = true;
+                        addContainerParameters = checkForAdditionalParameters;
+                        useFallback = false;
+                    }
                 }
             }
             if ( useFallback ) {
@@ -298,6 +315,22 @@ public class ParameterSupport {
             this.postParameterMap = parameters;
         }
         return this.postParameterMap;
+    }
+
+
+    /**
+     * Checks to see if there is an upload mode header or uploadmode parameter indicating the request is
+     * to be streamed from the client to the server.
+     * @param parameters parameters processed from the query string only.
+     * @param servletRequest the servlet request, where the body has not been processed.
+     * @return true if the request was made with streaming in mind.
+     */
+    private boolean isStreamed(ParameterMap parameters, HttpServletRequest servletRequest) {
+        if ( "stream".equals(servletRequest.getHeader("X-uploadmode") ) ) {
+            return true;
+        }
+        RequestParameter[] rp = parameters.get("uploadmode");
+        return ( rp != null && rp.length == 1 && "stream".equals(rp[0].getString()));
     }
 
     private void getContainerParameters(final ParameterMap parameters, final String encoding, final boolean alwaysAdd) {
@@ -367,5 +400,7 @@ public class ParameterSupport {
             }
         }
     }
+
+
 
 }
