@@ -121,6 +121,7 @@ public class SlingOptions {
         return composite(
             slingJcrOak(),
             slingLaunchpadOak(),
+            paxUrlClasspath(), // for reading repoinit from bundle
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
