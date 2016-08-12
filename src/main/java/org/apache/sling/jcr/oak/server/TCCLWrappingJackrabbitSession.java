@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.oak.server;
+package org.apache.sling.jcr.oak.server;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,22 +59,22 @@ import org.xml.sax.SAXException;
 /**
  * Custom <tt>JackrabbitSession</tt> that ensures that the correct <tt>TCCL</tt> is set in OSGi environments
  *
- * 
+ *
  * @see #TCCLWrappingJackrabbitSession(JackrabbitSession)
  */
 public class TCCLWrappingJackrabbitSession implements JackrabbitSession {
-    
+
     private final JackrabbitSession wrapped;
-    
+
     public TCCLWrappingJackrabbitSession(JackrabbitSession wrapped) {
         this.wrapped = wrapped;
     }
-    
+
     // calls setting the TCCL
-    
+
     @Override
     public Session impersonate(Credentials credentials) throws LoginException, RepositoryException {
-        
+
         Thread thread = Thread.currentThread();
 
         ClassLoader oldClassLoader = thread.getContextClassLoader();
@@ -85,7 +85,7 @@ public class TCCLWrappingJackrabbitSession implements JackrabbitSession {
             return new TCCLWrappingJackrabbitSession((JackrabbitSession) session);
         } finally {
             thread.setContextClassLoader(oldClassLoader);
-        }        
+        }
     }
 
     // only pure delegate methods below
