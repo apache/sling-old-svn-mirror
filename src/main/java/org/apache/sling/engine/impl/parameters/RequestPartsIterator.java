@@ -36,10 +36,22 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Contains a Lazy iterator of Parts from the request stream loaded as the request is streamed using the Commons FileUpload API.
+ */
 public class RequestPartsIterator implements Iterator<Part> {
     private static final Logger LOG = LoggerFactory.getLogger(RequestPartsIterator.class);
+
+    /** The CommonsFile Upload streaming API iterator */
     private final FileItemIterator itemIterator;
 
+    /**
+     * Create and initialse the iterator using the request. The request must be fresh. Headers can have been read but the stream
+     * must not have been parsed.
+     * @param servletRequest the request
+     * @throws IOException when there is a problem reading the request.
+     * @throws FileUploadException when there is a problem parsing the request.
+     */
     public RequestPartsIterator(HttpServletRequest servletRequest) throws IOException, FileUploadException {
         ServletFileUpload upload = new ServletFileUpload();
         itemIterator = upload.getItemIterator(servletRequest);
@@ -69,6 +81,9 @@ public class RequestPartsIterator implements Iterator<Part> {
         return null;
     }
 
+    /**
+     * Internal implementation of the Part API from Servlet 3 wrapping the Commons File Upload FIleItemStream object.
+     */
     private static class StreamedRequestPart implements Part {
         private final FileItemStream fileItem;
         private final InputStream inputStream;
