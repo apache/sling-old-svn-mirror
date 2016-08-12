@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/", propertyPrivate=true),
     @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-              value="(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=org.apache.sling)", propertyPrivate=true)
+              value="(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)", propertyPrivate=true)
 })
 @Service(value=Filter.class)
 public class ReferrerFilter implements Filter {
