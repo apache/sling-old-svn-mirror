@@ -30,7 +30,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 public class RequestPartsIterator implements Iterator<Part> {
     private static final Logger LOG = LoggerFactory.getLogger(RequestPartsIterator.class);
