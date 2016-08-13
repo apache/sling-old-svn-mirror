@@ -364,7 +364,7 @@
       clientId=sling-resourceprovider-couchbase
       couchbaseHosts=localhost:8091
       bucketName=sling
-      enabled=B"true"
+      enabled=true
     </config>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-nosql-couchbase</feature>
@@ -386,14 +386,13 @@
       model.section.name=
     </config>
     <config name="org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge">
-      resource.change.types=["ADDED", "CHANGED", "REMOVED"]
-      resource.paths=/
+      enabled=true
     </config>
     <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
     <config name="org.apache.felix.jaas.Configuration.factory-GuestLoginModule">
       jaas.controlFlag=optional
       jaas.classname=org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule
-      jaas.ranking=I"300"
+      jaas.ranking=300
     </config>
     <config name="org.apache.felix.jaas.Configuration.factory-LoginModuleImpl">
       jaas.controlFlag=required
@@ -402,7 +401,7 @@
     <config name="org.apache.felix.jaas.Configuration.factory-TokenLoginModule">
       jaas.controlFlag=sufficient
       jaas.classname=org.apache.jackrabbit.oak.security.authentication.token.TokenLoginModule
-      jaas.ranking=I"200"
+      jaas.ranking=200
     </config>
     <config name="org.apache.felix.jaas.ConfigurationSpi">
       jaas.defaultRealmName=jackrabbit.oak
