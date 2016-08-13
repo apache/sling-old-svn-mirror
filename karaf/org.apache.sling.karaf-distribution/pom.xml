@@ -111,10 +111,13 @@
             <feature>sling</feature>
             <!-- Apache Sling Auth -->
             <feature>sling-auth-form</feature>
+            <feature>sling-auth-openid</feature>
+            <feature>sling-auth-selector</feature>
             <!-- Apache Sling Commons -->
             <feature>sling-commons-compiler</feature>
             <feature>sling-commons-classloader</feature>
             <feature>sling-commons-fsclassloader</feature>
+            <feature>sling-commons-html</feature>
             <feature>sling-commons-messaging</feature>
             <feature>sling-commons-messaging-mail</feature>
             <feature>sling-commons-metrics</feature>
@@ -127,15 +130,22 @@
             <feature>sling-extension-discovery-impl</feature>
             <feature>sling-extension-discovery-oak</feature>
             <feature>sling-extension-discovery-standalone</feature>
+            <feature>sling-extension-distribution</feature>
             <feature>sling-extension-event</feature>
             <feature>sling-extension-explorer</feature>
             <feature>sling-extension-featureflags</feature>
             <feature>sling-extension-fsresource</feature>
+            <feature>sling-extension-healthcheck</feature>
             <feature>sling-extension-i18n</feature>
             <feature>sling-extension-jmx-provider</feature>
             <feature>sling-extension-models</feature>
+            <feature>sling-extension-query</feature>
             <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-resourcemerger</feature>
+            <feature>sling-extension-rewriter</feature>
+            <feature>sling-extension-security</feature>
             <feature>sling-extension-threaddump</feature>
+            <feature>sling-extension-urlrewriter</feature>
             <feature>sling-extension-validation</feature>
             <feature>sling-extension-xss</feature>
             <!-- Apache Sling Installer -->
@@ -150,45 +160,30 @@
             <feature>sling-jcr-repoinit</feature>
             <!-- Apache Sling Launchpad -->
             <feature>sling-launchpad-content</feature>
+            <feature>sling-launchpad-nosql-couchbase</feature>
+            <feature>sling-launchpad-nosql-mongodb</feature>
             <feature>sling-launchpad-oak</feature>
-            <feature>sling-launchpad-oak-tar</feature>
             <feature>sling-launchpad-oak-mongo</feature>
+            <feature>sling-launchpad-oak-tar</feature>
+            <!-- Apache Sling NoSQL -->
+            <feature>sling-nosql-couchbase</feature>
+            <feature>sling-nosql-generic</feature>
+            <feature>sling-nosql-mongodb</feature>
             <!-- Apache Sling Scripting -->
             <feature>sling-scripting</feature>
+            <feature>sling-scripting-freemarker</feature>
+            <feature>sling-scripting-groovy</feature>
+            <feature>sling-scripting-java</feature>
             <feature>sling-scripting-javascript</feature>
             <feature>sling-scripting-jsp</feature>
             <feature>sling-scripting-sightly</feature>
+            <feature>sling-scripting-thymeleaf</feature>
             <!-- Apache Sling Servlets -->
             <feature>sling-servlets</feature>
             <!-- Apache Jackrabbit -->
             <feature>jackrabbit-sling</feature>
             <!-- Apache Tika -->
             <feature>tika-sling</feature>
-            <!-- Apache Sling Auth (contrib) -->
-            <feature>sling-auth-openid</feature>
-            <feature>sling-auth-selector</feature>
-            <!-- Apache Sling Commons (contrib) -->
-            <feature>sling-commons-html</feature>
-            <!-- Apache Sling Extensions (contrib) -->
-            <feature>sling-extension-distribution</feature>
-            <feature>sling-extension-healthcheck</feature>
-            <feature>sling-extension-query</feature>
-            <feature>sling-extension-resourcemerger</feature>
-            <feature>sling-extension-rewriter</feature>
-            <feature>sling-extension-security</feature>
-            <feature>sling-extension-urlrewriter</feature>
-            <!-- Apache Sling Launchpad (contrib) -->
-            <feature>sling-launchpad-nosql-couchbase</feature>
-            <feature>sling-launchpad-nosql-mongodb</feature>
-            <!-- Apache Sling NoSQL (contrib) -->
-            <feature>sling-nosql-generic</feature>
-            <feature>sling-nosql-couchbase</feature>
-            <feature>sling-nosql-mongodb</feature>
-            <!-- Apache Sling Scripting (contrib) -->
-            <feature>sling-scripting-freemarker</feature>
-            <feature>sling-scripting-groovy</feature>
-            <feature>sling-scripting-java</feature>
-            <feature>sling-scripting-thymeleaf</feature>
             <!-- Apache Sling Samples -->
             <feature>sling-samples-fling</feature>
             <!-- Composum -->
