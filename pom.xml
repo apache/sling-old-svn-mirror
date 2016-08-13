@@ -25,11 +25,11 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>28</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.testing.paxexam</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Testing PaxExam</name>
@@ -43,9 +43,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/org.apache.sling.testing.paxexam</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/org.apache.sling.testing.paxexam</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/testing/org.apache.sling.testing.paxexam</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.paxexam-0.0.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.paxexam-0.0.2</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.paxexam-0.0.2</url>
   </scm>
 
   <build>
