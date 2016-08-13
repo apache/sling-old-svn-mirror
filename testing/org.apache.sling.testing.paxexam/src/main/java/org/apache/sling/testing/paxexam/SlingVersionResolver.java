@@ -45,7 +45,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.whiteboard", "1.1.5");
         versions.put("org.apache.felix:org.apache.felix.inventory", "1.0.4");
         versions.put("org.apache.felix:org.apache.felix.metatype", "1.1.2");
-        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.4");
+        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.6");
         versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");
         versions.put("org.ops4j.base:ops4j-base-lang", "1.5.0");
         versions.put("org.ops4j.base:ops4j-base-util-property", "1.5.0");
