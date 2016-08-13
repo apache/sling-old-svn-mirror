@@ -29,17 +29,17 @@
   </parent>
 
   <artifactId>org.apache.sling.jcr.oak.server</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling JCR Oak Repository Server</name>
   <description>This bundle provides a SlingRepository based on Apache Jackrabbit Oak.</description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.oak.server-1.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.oak.server-1.1.0
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.jcr.oak.server-1.1.0</url>
+    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/oak-server</url>
   </scm>
 
   <properties>
@@ -189,7 +189,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.paxexam</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <!-- OSGi -->
