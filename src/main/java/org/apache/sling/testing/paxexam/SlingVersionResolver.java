@@ -124,7 +124,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.distribution.api", "0.3.0");
         versions.put("org.apache.sling:org.apache.sling.distribution.core", "0.1.18");
         versions.put("org.apache.sling:org.apache.sling.engine", "2.4.6");
-        versions.put("org.apache.sling:org.apache.sling.event", "4.0.2");
+        versions.put("org.apache.sling:org.apache.sling.event", "4.1.0");
         versions.put("org.apache.sling:org.apache.sling.event.dea", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.extensions.explorer", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.extensions.threaddump", "0.2.2");
@@ -134,7 +134,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.hc.jmx", "1.0.6");
         versions.put("org.apache.sling:org.apache.sling.hc.support", "1.0.4");
         versions.put("org.apache.sling:org.apache.sling.hc.webconsole", "1.1.2");
-        versions.put("org.apache.sling:org.apache.sling.i18n", "2.4.6");
+        versions.put("org.apache.sling:org.apache.sling.i18n", "2.4.10");
         versions.put("org.apache.sling:org.apache.sling.installer.console", "1.0.0");
         versions.put("org.apache.sling:org.apache.sling.installer.core", "3.6.8");
         versions.put("org.apache.sling:org.apache.sling.installer.factory.configuration", "1.1.2");
@@ -190,7 +190,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.codehaus.groovy:groovy-json", "2.4.7");
         versions.put("org.codehaus.groovy:groovy-templates", "2.4.7");
         versions.put("org.javassist:javassist", "3.20.0-GA");
-        versions.put("org.mongodb:mongo-java-driver", "2.14.2");
+        versions.put("org.mongodb:mongo-java-driver", "2.14.3");
     }
 
     private String key(final String groupId, final String artifactId) {
