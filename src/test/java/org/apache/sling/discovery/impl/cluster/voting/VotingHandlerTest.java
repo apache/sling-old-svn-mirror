@@ -535,7 +535,11 @@ public class VotingHandlerTest {
 //            if (expected>0) {
 //                assertEquals(expected, (int)noVotes);
 //            }
-            totalPromotion += totalDetails.get(k).get(VotingDetail.PROMOTED);
+            final Map<VotingDetail, Integer> map = totalDetails.get(k);
+            final Integer i = map.get(VotingDetail.PROMOTED);
+            if (i != null) {
+                totalPromotion += i;
+            }
         }
         assertEquals((int)votingsLoopCnt, totalPromotion);
     }
