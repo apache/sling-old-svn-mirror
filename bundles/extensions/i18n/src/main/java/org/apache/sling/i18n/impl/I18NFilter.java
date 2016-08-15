@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/"),
     @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-              value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=org.apache.sling)"),
+              value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class I18NFilter implements Filter {
