@@ -21,12 +21,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Service interface which allows bundles to modify the AuthenticationInfo object
  * after authentication has been performed.
  *
  */
+@ConsumerType
 public interface AuthenticationInfoPostProcessor {
 
     /**
@@ -41,14 +43,14 @@ public interface AuthenticationInfoPostProcessor {
      * @param info
      * @param request
      * @param response
-     * @throws LoginException if SlingAuthenticator should handle the exception (eg. 
+     * @throws LoginException if SlingAuthenticator should handle the exception (eg.
      *         set the correct status in the response)
      *         SlingException will not be caught by SlingAuthenticator, in this case
      *         the method has to set the accurate status in the response
-     * @throws SlingException may be thrown to convey any problem while handling the 
-     * 		   credentials 
+     * @throws SlingException may be thrown to convey any problem while handling the
+     * 		   credentials
      */
-    void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response) 
+    void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response)
     	throws LoginException;
 
 }

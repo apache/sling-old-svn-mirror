@@ -28,8 +28,7 @@
  *
  * @version 1.2.0
  */
-@Version("1.2.0")
+@org.osgi.annotation.versioning.Version("1.2.2")
 package org.apache.sling.auth.core.spi;
 
-import aQute.bnd.annotation.Version;
 
