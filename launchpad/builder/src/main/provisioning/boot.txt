@@ -44,7 +44,7 @@
     org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
     org.apache.sling/org.apache.sling.installer.factory.subsystems/1.0.0
     org.apache.sling/org.apache.sling.installer.factory.subsystems-base/1.0.0-SNAPSHOT
-    org.apache.felix/org.apache.felix.configadmin/1.8.8
+    org.apache.felix/org.apache.felix.configadmin/1.8.10
     org.apache.felix/org.apache.felix.eventadmin/1.4.8
     org.apache.aries/org.apache.aries.util/1.1.1
     org.apache.felix/org.apache.felix.coordinator/1.0.2
