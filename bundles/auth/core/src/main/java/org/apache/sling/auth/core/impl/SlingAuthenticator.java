@@ -529,7 +529,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // select path used for authentication handler selection
         final Collection<AbstractAuthenticationHandlerHolder>[] holdersArray = this.authHandlerCache
-                .findApplicableHolder(request);
+                .findApplicableHolders(request);
         final String path = getHandlerSelectionPath(request);
         boolean done = false;
         for (int m = 0; !done && m < holdersArray.length; m++) {
@@ -592,7 +592,7 @@ public class SlingAuthenticator implements Authenticator,
 
         final String path = getHandlerSelectionPath(request);
         final Collection<AbstractAuthenticationHandlerHolder>[] holdersArray = this.authHandlerCache
-                .findApplicableHolder(request);
+                .findApplicableHolders(request);
         for (int m = 0; m < holdersArray.length; m++) {
             final Collection<AbstractAuthenticationHandlerHolder> holderSet = holdersArray[m];
             if (holderSet != null) {
@@ -711,7 +711,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         final Collection<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache
-                .findApplicableHolder(request);
+                .findApplicableHolders(request);
         for (int m = 0; m < localArray.length; m++) {
             final Collection<AbstractAuthenticationHandlerHolder> local = localArray[m];
             if (local != null) {
@@ -905,7 +905,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         final Collection<AuthenticationRequirementHolder>[] holderSetArray = authRequiredCache
-                .findApplicableHolder(request);
+                .findApplicableHolders(request);
         for (int m = 0; m < holderSetArray.length; m++) {
             final Collection<AuthenticationRequirementHolder> holders = holderSetArray[m];
             if (holders != null) {
