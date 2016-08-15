@@ -493,6 +493,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         //             instance's registry - and the repository must not
         //             contain any additional announcements
         ResourceResolver resourceResolver = null;
+        boolean requiresCommit = false;
         try {
             resourceResolver = resourceResolverFactory
                     .getAdministrativeResourceResolver(null);
@@ -519,8 +520,11 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             	//  (SLING-4139)
             	ResourceHelper.deleteResource(resourceResolver, 
             			res.getPath());
+            	requiresCommit = true;
             }
-            resourceResolver.commit();
+            if (requiresCommit) {
+                resourceResolver.commit();
+            }
             resourceResolver.close();
             resourceResolver = null;
         } catch (LoginException e) {
