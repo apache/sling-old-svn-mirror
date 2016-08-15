@@ -18,7 +18,7 @@
  */
 package org.apache.sling.auth.core.impl;
 
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -67,7 +67,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * instance to be created. This may be <code>null</code> if the entry has
      * been created by the {@link SlingAuthenticator} itself.
      */
-    private final ServiceReference serviceReference;
+    private final ServiceReference<?> serviceReference;
 
     /**
      * Sets up this instance with the given configuration URL provided by the
@@ -84,7 +84,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      *            configuration for this instance.
      */
     protected PathBasedHolder(final String url,
-            final ServiceReference serviceReference) {
+            final ServiceReference<?> serviceReference) {
 
         String path = url;
         String host = "";
@@ -135,14 +135,14 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
             return SlingAuthenticator.DESCRIPTION;
         }
 
-        final String descr = OsgiUtil.toString(
+        final String descr = PropertiesUtil.toString(
             serviceReference.getProperty(Constants.SERVICE_DESCRIPTION), null);
         if (descr != null) {
             return descr;
         }
 
         return "Service "
-            + OsgiUtil.toString(
+            + PropertiesUtil.toString(
                 serviceReference.getProperty(Constants.SERVICE_ID), "unknown");
     }
 
@@ -164,6 +164,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * returned; if the <code>other</code> service reference is
      * <code>null</code>, <code>+1</code> is returned.
      */
+    @Override
     public final int compareTo(PathBasedHolder other) {
 
         // compare the path first, and return if not equal
