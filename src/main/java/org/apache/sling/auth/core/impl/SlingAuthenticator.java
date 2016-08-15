@@ -68,6 +68,7 @@ import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.AuthenticationInfoPostProcessor;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -340,10 +341,10 @@ public class SlingAuthenticator implements Authenticator,
 
         authRequiredCache.clear();
 
-        final boolean anonAllowed = OsgiUtil.toBoolean(properties.get(PAR_ANONYMOUS_ALLOWED), DEFAULT_ANONYMOUS_ALLOWED);
+        final boolean anonAllowed = PropertiesUtil.toBoolean(properties.get(PAR_ANONYMOUS_ALLOWED), DEFAULT_ANONYMOUS_ALLOWED);
         authRequiredCache.addHolder(new AuthenticationRequirementHolder("/", !anonAllowed, null));
 
-        String[] authReqs = OsgiUtil.toStringArray(properties.get(PAR_AUTH_REQ));
+        String[] authReqs = PropertiesUtil.toStringArray(properties.get(PAR_AUTH_REQ));
         if (authReqs != null) {
             for (String authReq : authReqs) {
                 if (authReq != null && authReq.length() > 0) {
@@ -353,16 +354,16 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
-        final String anonUser = OsgiUtil.toString(properties.get(PAR_ANONYMOUS_USER), "");
+        final String anonUser = PropertiesUtil.toString(properties.get(PAR_ANONYMOUS_USER), "");
         if (anonUser.length() > 0) {
             this.anonUser = anonUser;
-            this.anonPassword = OsgiUtil.toString(properties.get(PAR_ANONYMOUS_PASSWORD), "").toCharArray();
+            this.anonPassword = PropertiesUtil.toString(properties.get(PAR_ANONYMOUS_PASSWORD), "").toCharArray();
         } else {
             this.anonUser = null;
             this.anonPassword = null;
         }
 
-        authUriSuffices = OsgiUtil.toStringArray(properties.get(PAR_AUTH_URI_SUFFIX),
+        authUriSuffices = PropertiesUtil.toStringArray(properties.get(PAR_AUTH_URI_SUFFIX),
             new String[] { DEFAULT_AUTH_URI_SUFFIX });
 
         // don't require authentication for login/logout servlets
@@ -378,7 +379,7 @@ public class SlingAuthenticator implements Authenticator,
 
         final String http;
         if (anonAllowed) {
-            http = OsgiUtil.toString(properties.get(PAR_HTTP_AUTH), HTTP_AUTH_PREEMPTIVE);
+            http = PropertiesUtil.toString(properties.get(PAR_HTTP_AUTH), HTTP_AUTH_PREEMPTIVE);
         } else {
             http = HTTP_AUTH_ENABLED;
             log.debug("modified: Anonymous Access is denied thus HTTP Basic Authentication is fully enabled");
@@ -387,7 +388,7 @@ public class SlingAuthenticator implements Authenticator,
         if (HTTP_AUTH_DISABLED.equals(http)) {
             httpBasicHandler = null;
         } else {
-            final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME), DEFAULT_REALM);
+            final String realm = PropertiesUtil.toString(properties.get(PAR_REALM_NAME), DEFAULT_REALM);
             httpBasicHandler = new HttpBasicAuthenticationHandler(realm, HTTP_AUTH_ENABLED.equals(http));
         }
     }
@@ -395,6 +396,7 @@ public class SlingAuthenticator implements Authenticator,
     @SuppressWarnings("unused")
     @Deactivate
     private void deactivate(final BundleContext bundleContext) {
+        this.authRequiredCache.clear();
         if (engineAuthHandlerTracker != null) {
             engineAuthHandlerTracker.close();
             engineAuthHandlerTracker = null;
@@ -1463,7 +1465,7 @@ public class SlingAuthenticator implements Authenticator,
      *
      * @param value The cookie value to quote
      * @return The quoted cookie value
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      * @throws IllegalArgumentException If the cookie value is <code>null</code>
      *             or cannot be quoted, primarily because it contains a quote
      *             sign.
