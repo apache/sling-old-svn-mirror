@@ -26,12 +26,11 @@ import java.util.Map;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-
-import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Defines OSGi context objects and helper methods. Should not be used directly
