@@ -22,12 +22,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -37,38 +39,38 @@ import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.impl.DeepNodeCreator;
 import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Default JobStorage implementation */
 @Component(
-        metatype=true, 
-        label="%JobStorage.label", 
+        metatype=true,
+        label="%JobStorage.label",
         description="%JobStorage.description")
 @Service
 public class JobStorageImpl implements JobStorage {
 
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /** Configurable base path for storing job data */
     @Property(value="/var/bg/jobs")
     public static final String PROP_JOB_STORAGE_PATH = "job.storage.path";
-    
+
     /** Need Sling Settings to get the instance ID */
     @Reference
     private SlingSettingsService slingSettings;
-    
+
     public static final String PATH_FORMAT = "/yyyy/MM/dd/HH/mm";
     public static final String JOB_NODETYPE = "nt:unstructured";
-    
+
     private String jobStoragePath;
 	private AtomicInteger counter = new AtomicInteger();
 	private static final DateFormat pathFormat = new SimpleDateFormat(PATH_FORMAT);
 	private String slingInstanceId;
-	
-    protected void activate(ComponentContext ctx) {
-        jobStoragePath = (String)ctx.getProperties().get(PROP_JOB_STORAGE_PATH);
+
+	@Activate
+    protected void activate(Map<String, Object> props) {
+        jobStoragePath = (String)props.get(PROP_JOB_STORAGE_PATH);
         if(jobStoragePath == null || jobStoragePath.length() == 0) {
             throw new IllegalStateException("Missing " + PROP_JOB_STORAGE_PATH + " in ComponentContext");
         }
@@ -81,8 +83,9 @@ public class JobStorageImpl implements JobStorage {
         slingInstanceId = slingSettings.getSlingId();
         log.info("Jobs will be stored under {}/{}", jobStoragePath, slingInstanceId);
     }
-    
-	public JobData createJobData(Session s) {
+
+	@Override
+    public JobData createJobData(Session s) {
         try {
             return getJobData(createNewJobNode(s));
         } catch(Exception e) {
@@ -90,14 +93,15 @@ public class JobStorageImpl implements JobStorage {
         }
 	}
 
-	public JobData getJobData(Node n) {
+	@Override
+    public JobData getJobData(Node n) {
         try {
             return new JobDataImpl(n);
         } catch(Exception e) {
             throw new JobStorageException("Unable to create JobDataImpl", e);
         }
 	}
-	
+
 	String getNextPath() {
 	    final StringBuilder sb = new StringBuilder();
 	    sb.append(jobStoragePath);

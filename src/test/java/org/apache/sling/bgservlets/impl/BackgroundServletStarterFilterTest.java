@@ -19,8 +19,8 @@
 package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -31,7 +31,6 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.component.ComponentContext;
 
 public class BackgroundServletStarterFilterTest {
     private BackgroundServletStarterFilter filter;
@@ -39,11 +38,11 @@ public class BackgroundServletStarterFilterTest {
     private SlingHttpServletRequest request;
     private HttpServletResponse response;
     private FilterChain chain;
-    
+
     @SuppressWarnings("serial")
     static class BackgroundJobIsStarting extends RuntimeException {
     }
-    
+
     @Before
     public void setup() {
         mockery = new Mockery();
@@ -51,27 +50,24 @@ public class BackgroundServletStarterFilterTest {
         response = mockery.mock(HttpServletResponse.class);
         chain = mockery.mock(FilterChain.class);
 
-        final ComponentContext ctx = mockery.mock(ComponentContext.class);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>(); 
-        
+        final Map<String, Object> props = new HashMap<String, Object>();
+
         filter = new BackgroundServletStarterFilter();
-        
+
         mockery.checking(new Expectations() {{
             allowing(request).getParameter("sling:bg");
             will(returnValue("true"));
-            
+
             // If this method is called it means the BackgroundHttpServletRequest
             // is being created to start a background job, that's all we need to know
             allowing(request).getContextPath();
             will(throwException(new BackgroundJobIsStarting()));
-            
-            allowing(ctx).getProperties();
-            will(returnValue(props));
+
         }});
-        
-        filter.activate(ctx);
+
+        filter.activate(props);
     }
-    
+
     private void testWithMethod(final String method) throws IOException, ServletException {
         mockery.checking(new Expectations() {{
             allowing(request).getMethod();
@@ -79,12 +75,12 @@ public class BackgroundServletStarterFilterTest {
         }});
         filter.doFilter(request, response, chain);
     }
-    
+
     @Test(expected=ServletException.class)
     public void testGetRequest() throws IOException, ServletException {
         testWithMethod("GET");
     }
-    
+
     @Test(expected=BackgroundJobIsStarting.class)
     public void testPostRequest() throws IOException, ServletException {
         testWithMethod("POST");

@@ -21,6 +21,7 @@ package org.apache.sling.bgservlets.impl;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.Filter;
@@ -32,6 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -42,7 +44,6 @@ import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +57,8 @@ import org.slf4j.LoggerFactory;
         description="%BackgroundServletStarterFilter.description")
 @Service
 @Properties( {
-        @Property(name = "filter.scope", value = "request", propertyPrivate=true),
-        @Property(name = "filter.order", intValue = -1000000000, propertyPrivate=true )})
+        @Property(name = "sling.filter.scope", value = "request", propertyPrivate=true),
+        @Property(name = "service.ranking", intValue = 1000000000, propertyPrivate=true )})
 public class BackgroundServletStarterFilter implements Filter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -73,7 +74,7 @@ public class BackgroundServletStarterFilter implements Filter {
 
     /** Default value of the "put in background" parameter */
     public static final String DEFAULT_BG_PARAM = "sling:bg";
-    
+
     /** Name of the property that defines the request parameter name to
      *  use to start a servlet in the background.
      */
@@ -82,13 +83,13 @@ public class BackgroundServletStarterFilter implements Filter {
 
     /** Default list of HTTP method names that can trigger background requests */
     public static final String [] DEFAULT_ALLOWED_METHODS = {"POST", "PUT", "DELETE"};
-    
+
     /** Name of the property that defines the list of allowed HTTP methods
      *  to trigger background jobs
      */
     @Property()
     public static final String PROP_ALLOWED_METHODS = "allowed.http.methods";
-    
+
     private Set<String> allowedHttpMethods;
 
     /**
@@ -96,23 +97,24 @@ public class BackgroundServletStarterFilter implements Filter {
      */
     private String bgParamName;
 
-    protected void activate(ComponentContext ctx) {
-        bgParamName = PropertiesUtil.toString(ctx.getProperties().get(PROP_BG_PARAM), DEFAULT_BG_PARAM);
-        
-        final String [] cfgMethods = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_ALLOWED_METHODS), DEFAULT_ALLOWED_METHODS);
+    @Activate
+    protected void activate(Map<String, Object> props) {
+        bgParamName = PropertiesUtil.toString(props.get(PROP_BG_PARAM), DEFAULT_BG_PARAM);
+
+        final String [] cfgMethods = PropertiesUtil.toStringArray(props.get(PROP_ALLOWED_METHODS), DEFAULT_ALLOWED_METHODS);
         allowedHttpMethods = new HashSet<String>();
         allowedHttpMethods.addAll(Arrays.asList(cfgMethods));
-        
+
         if(allowedHttpMethods.isEmpty()) {
             log.error("{} defines no allowed HTTP methods, background servlets cannot be started", PROP_ALLOWED_METHODS);
         }
-        
+
         log.info(
-                "Request parameter {} will run servlets in the background for HTTP methods {}", 
+                "Request parameter {} will run servlets in the background for HTTP methods {}",
                     bgParamName,
                     allowedHttpMethods);
     }
-    
+
     private boolean startBackgroundRequest(HttpServletRequest req) throws ServletException {
         boolean result = Boolean.valueOf(req.getParameter(bgParamName));
         if(result && ! allowedHttpMethods.contains(req.getMethod())) {
@@ -120,7 +122,8 @@ public class BackgroundServletStarterFilter implements Filter {
         }
         return result;
     }
- 
+
+    @Override
     public void doFilter(final ServletRequest sreq,
             final ServletResponse sresp, final FilterChain chain)
             throws IOException, ServletException {
@@ -170,9 +173,11 @@ public class BackgroundServletStarterFilter implements Filter {
         }
     }
 
+    @Override
     public void destroy() {
     }
 
+    @Override
     public void init(FilterConfig cfg) throws ServletException {
     }
 }

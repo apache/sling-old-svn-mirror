@@ -19,6 +19,7 @@
 package org.apache.sling.bgservlets.impl;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -40,7 +41,7 @@ import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.impl.storage.JobStorageException;
 import org.apache.sling.bgservlets.impl.storage.NodeJobStatusFactory;
 import org.apache.sling.bgservlets.impl.webconsole.JobConsolePlugin;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,18 +54,19 @@ import org.slf4j.LoggerFactory;
 public class JobConsoleImpl implements JobConsole {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public static final String JOB_QUERY = "select * from sling:bgJobData order by jcr:created desc";
 
     @Reference
     private ExecutionEngine executionEngine;
-    
+
     @Reference
     private NodeJobStatusFactory jobStatusFactory;
-    
+
     @Property(boolValue=true)
     private final static String PROP_CONSOLE_PLUGIN_ACTIVE = "console.plugin.active";
-    
+
+    @Override
     public Iterator<JobStatus> getJobStatus(Session session, boolean activeOnly) {
         if(activeOnly) {
             log.debug("activeOnly is set, getting jobs from ExecutionEngine");
@@ -78,23 +80,24 @@ public class JobConsoleImpl implements JobConsole {
             }
         }
     }
-    
+
     @Activate
-    protected void activate(ComponentContext ctx) {
-        final Object obj = ctx.getProperties().get(PROP_CONSOLE_PLUGIN_ACTIVE);
+    protected void activate(BundleContext ctx, Map<String, Object> props) {
+        final Object obj = props.get(PROP_CONSOLE_PLUGIN_ACTIVE);
         final boolean pluginActive = (obj instanceof Boolean ? (Boolean)obj : true);
         if(pluginActive) {
-            JobConsolePlugin.initPlugin(ctx.getBundleContext(), this);
+            JobConsolePlugin.initPlugin(ctx, this);
         } else {
             log.info("{} is false, not activating JobConsolePlugin", PROP_CONSOLE_PLUGIN_ACTIVE);
         }
     }
-    
+
     @Deactivate
-    protected void deactivate(ComponentContext ctx) {
+    protected void deactivate() {
         JobConsolePlugin.destroyPlugin();
     }
-    
+
+    @Override
     public JobStatus getJobStatus(Session session, String path) {
         // Try ExecutionEngine first, persistent storage if not found
         JobStatus result = executionEngine.getJobStatus(path);
@@ -116,16 +119,18 @@ public class JobConsoleImpl implements JobConsole {
     private Iterator<JobStatus> getEngineJobs() {
         return executionEngine.getMatchingJobStatus(null);
     }
-    
+
     private Iterator<JobStatus> getStoredJobs(Session s) throws RepositoryException {
         final Query q = s.getWorkspace().getQueryManager().createQuery(JOB_QUERY, Query.SQL);
         final NodeIterator it = q.execute().getNodes();
         return new Iterator<JobStatus>() {
 
+            @Override
             public boolean hasNext() {
                 return it.hasNext();
             }
 
+            @Override
             public JobStatus next() {
                 try {
                     return jobStatusFactory.getJobStatus(it.nextNode());
@@ -134,20 +139,23 @@ public class JobConsoleImpl implements JobConsole {
                 }
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-            
+
         };
     }
-    
+
+    @Override
     public String getJobStatusPagePath(HttpServletRequest request, JobStatus jobStatus, String extension) {
         if(!extension.startsWith(".")) {
             extension = "." + extension;
         }
         return request.getContextPath() + jobStatus.getPath() + extension;
     }
-    
+
+    @Override
     public String getJobStreamPath(HttpServletRequest request, JobStatus jobStatus) {
         return request.getContextPath() + jobStatus.getStreamPath();
     }

@@ -18,18 +18,18 @@ package org.apache.sling.bgservlets.impl.storage;
 
 import static org.junit.Assert.fail;
 
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
-import junitx.util.PrivateAccessor;
 
 import org.apache.sling.settings.SlingSettingsService;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.component.ComponentContext;
+
+import junitx.util.PrivateAccessor;
 
 public class JobStorageImplTest {
     private JobStorageImpl storage;
@@ -39,32 +39,26 @@ public class JobStorageImplTest {
     @Before
     public void setup() throws NoSuchFieldException {
         storage = new JobStorageImpl();
-        
-        final Hashtable<String, Object> props = new Hashtable<String, Object>();
+
+        final Map<String, Object> props = new HashMap<String, Object>();
         props.put("job.storage.path", "/var/test");
-        
-        final ComponentContext ctx = mockery.mock(ComponentContext.class);
-        mockery.checking(new Expectations() {{
-            allowing(ctx).getProperties();
-            will(returnValue(props));
-        }});
-        
+
         final SlingSettingsService sss = mockery.mock(SlingSettingsService.class);
         mockery.checking(new Expectations() {{
             allowing(sss).getSlingId();
             will(returnValue(instanceId));
         }});
-        
+
         PrivateAccessor.setField(storage, "slingSettings", sss);
-        storage.activate(ctx);
+        storage.activate(props);
     }
-    
+
     private void assertPath(String regex, String actual) {
         if(!Pattern.compile(regex).matcher(actual).matches()) {
             fail("Path " + actual + " does not match expected regex " + regex);
         }
     }
-    
+
     @Test
     public void testNextPath() {
         for(int i=1 ; i<10; i++) {
