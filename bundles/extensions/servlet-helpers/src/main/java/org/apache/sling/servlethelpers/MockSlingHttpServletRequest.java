@@ -42,6 +42,7 @@ import java.util.ResourceBundle;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
+import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -51,6 +52,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -547,6 +549,18 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
             public int read() throws IOException {
                 return is.read();
             }
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+            @Override
+            public boolean isFinished() {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public void setReadListener(ReadListener readListener) {
+                throw new UnsupportedOperationException();
+            }
         };  
     }
 
@@ -866,6 +880,21 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public DispatcherType getDispatcherType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String changeSessionId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getContentLengthLong() {
         throw new UnsupportedOperationException();
     }
 
