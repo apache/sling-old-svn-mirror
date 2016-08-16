@@ -56,7 +56,6 @@ abstract class AbstractDistributionAgentFactory {
 
 
     private ServiceRegistration componentReg;
-    private Map<String, Object> savedConfig;
     private String agentName;
     private final List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
     private boolean triggersEnabled = false;

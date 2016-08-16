@@ -18,10 +18,11 @@
  */
 package org.apache.sling.distribution.serialization.impl;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -38,10 +39,11 @@ import org.apache.sling.distribution.component.impl.DistributionComponentConstan
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 
 /**
  * A factory for package builders
@@ -88,6 +90,40 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
+    // 1M
+    private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1;
+
+    @Property(
+        label="File threshold",
+        description = "Once the data reaches the configurable size value, buffering to memory switches to file buffering.",
+        intValue = DEFAULT_FILE_THRESHOLD_VALUE
+    )
+    public static final String FILE_THRESHOLD = "fileThreshold";
+
+    @Property(
+        label = "The memory unit for the file threshold",
+        description = "The memory unit for the file threshold, Megabytes by default",
+        value = "MEGA_BYTES",
+        options = {
+            @PropertyOption(name = "BYTES", value = "Bytes"),
+            @PropertyOption(name = "KILO_BYTES", value = "Kilobytes"),
+            @PropertyOption(name = "MEGA_BYTES", value = "Megabytes"),
+            @PropertyOption(name = "GIGA_BYTES", value = "Gigabytes")
+        }
+    )
+    private static final String MEMORY_UNIT = "memoryUnit";
+
+    private static final String DEFAULT_MEMORY_UNIT = "MEGA_BYTES";
+
+    private static final boolean DEFAULT_USE_OFF_HEAP_MEMORY = false;
+
+    @Property(
+        label="Flag to enable/disable the off-heap memory",
+        description = "Flag to enable/disable the off-heap memory, false by default",
+        boolValue = DEFAULT_USE_OFF_HEAP_MEMORY
+    )
+    public static final String USE_OFF_HEAP_MEMORY = "useOffHeapMemory";
+
     private DistributionPackageBuilder packageBuilder;
 
     @Activate
@@ -100,7 +136,11 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
         if ("file".equals(persistenceType)) {
             packageBuilder = new FileDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
         } else {
-            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
+            final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
+            String memoryUnitName = PropertiesUtil.toString(config.get(MEMORY_UNIT), DEFAULT_MEMORY_UNIT);
+            final MemoryUnit memoryUnit = MemoryUnit.valueOf(memoryUnitName);
+            final boolean useOffHeapMemory = PropertiesUtil.toBoolean(config.get(USE_OFF_HEAP_MEMORY), DEFAULT_USE_OFF_HEAP_MEMORY);
+            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory);
         }
 
 

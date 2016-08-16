@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 public class FileDistributionPackage extends AbstractDistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
     private final File file;
 
     public FileDistributionPackage(@Nonnull File file, @Nonnull String type) {
@@ -46,7 +45,6 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
-
 
     @Nonnull
     public InputStream createInputStream() throws IOException {
@@ -72,7 +70,7 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void acquire(@Nonnull String[] holderNames) {
+    public void acquire(@Nonnull String... holderNames) {
         try {
             DistributionPackageUtils.acquire(getStatusFile(), holderNames);
         } catch (IOException e) {
@@ -81,7 +79,7 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     }
 
     @Override
-    public void release(@Nonnull String[] holderNames) {
+    public void release(@Nonnull String... holderNames) {
         try {
             boolean doDelete = DistributionPackageUtils.release(getStatusFile(), holderNames);
 

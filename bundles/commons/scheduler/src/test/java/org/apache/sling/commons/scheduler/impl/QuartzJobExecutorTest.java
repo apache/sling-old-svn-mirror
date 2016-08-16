@@ -46,7 +46,7 @@ public class QuartzJobExecutorTest {
     private BundleContext context;
     private QuartzJobExecutor jobExecutor;
     private QuartzScheduler quartzScheduler;
-    private boolean isRunnablePseudoJobCompleted;
+    private volatile boolean isRunnablePseudoJobCompleted;
 
     @Mock
     private JobExecutionContext executionContext;

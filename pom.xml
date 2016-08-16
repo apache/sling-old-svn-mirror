@@ -232,7 +232,8 @@
             -->
             <id>integrationTests</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <!-- activeByDefault is no useful if java8 profile becomes active -->
+                <jdk>[1.6,)</jdk>
             </activation>
             <modules>
                 <module>launchpad/test-services</module>

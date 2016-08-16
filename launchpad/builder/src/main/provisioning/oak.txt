@@ -20,7 +20,7 @@
 [feature name=oak]
 
 [variables]
-    oak.version=1.5.5
+    oak.version=1.5.7
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10]
@@ -42,7 +42,7 @@
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
 [artifacts startLevel=16]
-    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.jcr.oak.server/1.1.0-SNAPSHOT
 
 [configurations]
   org.apache.felix.jaas.Configuration.factory-GuestLoginModule
@@ -62,7 +62,7 @@
   org.apache.felix.jaas.ConfigurationSpi
     jaas.defaultRealmName="jackrabbit.oak"
     jaas.configProviderName="FelixJaasProvider"
-  
+
   org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl
     org.apache.jackrabbit.oak.authentication.configSpiName="FelixJaasProvider"
 
@@ -70,7 +70,10 @@
     groupsPath="/home/groups"
     usersPath="/home/users"
     defaultDepth="1"
-    importBehavior="besteffort"  
+    importBehavior="besteffort"
+
+  org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName
+    length=I"21"
 
   org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider
     enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]

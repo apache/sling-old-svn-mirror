@@ -38,9 +38,10 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.common.RecoverableDistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
-import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.util.RequestUtils;
@@ -76,10 +77,12 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
         this.contextKeyExecutor = EXECUTOR_CONTEXT_KEY_PREFIX + "_" + getHostAndPort(distributionEndpoint.getUri()) + "_" + UUID.randomUUID();
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage, @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
+                               @Nonnull DistributionTransportContext distributionContext) throws DistributionException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
-        URI packageOrigin = distributionPackage.getInfo().get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
+        DistributionPackageInfo info = distributionPackage.getInfo();
+        URI packageOrigin = info.get(PACKAGE_INFO_PROPERTY_ORIGIN_URI, URI.class);
 
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.debug("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);

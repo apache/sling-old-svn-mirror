@@ -24,15 +24,28 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.operations.Operation;
+import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 
 /** Apply Operations produced by the repoinit parser to a JCR Repository */
 @Component
 @Service(JcrRepoInitOpsProcessor.class)
 public class JcrRepoInitOpsProcessorImpl implements JcrRepoInitOpsProcessor {
+    
+    /** Apply the supplied operations: first the namespaces and nodetypes
+     *  registrations, then the service users, paths and ACLs.
+     */
     public void apply(Session session, List<Operation> ops) {
-        final JcrRepoInitOperationVisitor v = new JcrRepoInitOperationVisitor(session);
-        for(Operation op : ops) {
-            op.accept(v);
+        
+        final OperationVisitor [] visitors = {
+                new NamespacesVisitor(session),
+                new NodetypesVisitor(session),
+                new ServiceAndAclVisitor(session)
+        };
+        
+        for(OperationVisitor v : visitors) {
+            for(Operation op : ops) {
+                op.accept(v);
+            }
         }
     }
 }

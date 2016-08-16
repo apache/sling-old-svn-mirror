@@ -66,9 +66,9 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
 
     @Override
-    protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
+    protected Map<String, Object> getChildResourceProperties(DistributionComponent<?> component, String childResourceName) {
         DistributionComponentKind kind = component.getKind();
-        if (kind.equals(DistributionComponentKind.AGENT)) {
+        if (DistributionComponentKind.AGENT == kind) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null && childResourceName != null) {
@@ -97,10 +97,10 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
     }
 
     @Override
-    protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+    protected Iterable<String> getChildResourceChildren(DistributionComponent<?> component, String childResourceName) {
 
         DistributionComponentKind kind = component.getKind();
-        if (kind.equals(DistributionComponentKind.AGENT)) {
+        if (DistributionComponentKind.AGENT == kind) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
             if (agent != null) {
@@ -195,6 +195,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
             DistributionPackageInfo packageInfo = DistributionPackageUtils.fromQueueItem(item);
 
             result.put("id", entry.getId());
+            result.put("size", item.getSize());
             result.put("paths", packageInfo.getPaths());
             result.put("action", packageInfo.getRequestType());
             result.put("userid", packageInfo.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class));
@@ -234,8 +235,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 items = queue.getItems(fetched, MAX_QUEUE_CHUNK).iterator();
             }
 
-            boolean hasNext = items.hasNext();
-            return hasNext;
+            return items.hasNext();
         }
 
         @Override

@@ -16,12 +16,11 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
-import org.junit.Assert;
-
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
 import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -53,10 +52,10 @@ public class ClassLoadingTest {
         this.context.checking(new Expectations() {{
             allowing(bundleContext).createFilter(with(any(String.class)));
             will(returnValue(null));
+            allowing(bundleContext).getServiceReferences(with(any(String.class)), with((String)null));
+            will(returnValue(null));
             allowing(bundleContext).addServiceListener(with(any(ServiceListener.class)), with(any(String.class)));
             allowing(bundleContext).removeServiceListener(with(any(ServiceListener.class)));
-            allowing(bundleContext).getServiceReferences(with(any(String.class)), with(any(String.class)));
-            will(returnValue(null));
             allowing(packageAdmin).getExportedPackage("org.apache.sling.test");
             will(returnValue(ep));
             allowing(ep).getExportingBundle();

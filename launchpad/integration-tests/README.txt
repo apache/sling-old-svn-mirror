@@ -29,17 +29,18 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
 To run the tests against the same instance that is used in the full build,
 start an instance by running
 
-   mvn slingstart:start -Dlaunchpad.keep.running=true -Dhttp.port=8080
+   mvn clean install -Dlaunchpad.keep.running=true -Dhttp.port=8080 -Ddebug=true
 
-in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
-use Oak instead of Jackrabbit. Since that instance is using an arbitrary
-http port you have to give exactly that port as parameter if you execute the test.
+in the launchpad/testing folder (-Ddebug is optional). 
+
+And use the same -Dhttp.port option to run tests here.
 
 The standard -Dmaven.surefire.debug option can be used to debug the tests
 themselves. Have a look at the README.txt in the launchpad.testing module on how
 to debug the server-side Sling code.
 
-Note that, for all tests to pass, the Sling instance under test needs the 
-org.apache.sling.launchpad.test-services bundle, and the war file of the
-launchpad/test-services-war project which should be copied to the
+If using a Sling instance that's not setup by the launchpad/testing module,
+note that for all tests to pass that instance needs the
+org.apache.sling.launchpad.test-services bundle to be active and the war 
+file of the launchpad/test-services-war project to be be copied to the
 sling/startup/0 folder before starting Sling.

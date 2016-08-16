@@ -41,6 +41,23 @@
     <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks</url>
   </scm>
 
+
+  <build>
+      <pluginManagement>
+          <plugins>
+              <plugin>
+                  <groupId>org.apache.rat</groupId>
+                  <artifactId>apache-rat-plugin</artifactId>
+                  <configuration>
+                      <excludes combine.children="append">
+                          <exclude>**/README.*</exclude>
+                      </excludes>
+                  </configuration>
+              </plugin>
+          </plugins>
+      </pluginManagement>
+  </build>
+
   <modules>
     <module>logging-mock</module>
     <module>resourceresolver-mock</module>

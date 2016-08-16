@@ -24,26 +24,34 @@ import java.util.Map;
 import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
 
 /**
- * NOTE: This file is generated from Sling's Launchpad Karaf Features
+ * NOTE: This file is generated from Sling's Karaf Features
  */
 public class SlingVersionResolver implements VersionResolver {
 
     private final Map<String, String> versions = new HashMap<>();
 
+    public static final String SLING_GROUP_ID = "org.apache.sling";
+
     public SlingVersionResolver() {
         versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.10");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.6");
-        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.2.0");
+        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.2.2");
         versions.put("org.apache.felix:org.apache.felix.http.servlet-api", "1.1.2");
         versions.put("org.apache.felix:org.apache.felix.http.whiteboard", "3.0.0");
+        versions.put("org.apache.felix:org.apache.felix.webconsole.plugins.ds", "2.0.2");
         versions.put("org.apache.aries:org.apache.aries.util", "1.1.1");
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.api", "1.1.5");
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.core", "1.1.6");
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.whiteboard", "1.1.5");
         versions.put("org.apache.felix:org.apache.felix.inventory", "1.0.4");
         versions.put("org.apache.felix:org.apache.felix.metatype", "1.1.2");
-        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.4");
-        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");[# th:each="bundle : ${bundles}"]
+        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.6");
+        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.2.16");
+        versions.put("org.ops4j.base:ops4j-base-lang", "1.5.0");
+        versions.put("org.ops4j.base:ops4j-base-util-property", "1.5.0");
+        versions.put("org.ops4j.pax.swissbox:pax-swissbox-property", "1.8.2");
+        versions.put("org.ops4j.pax.url:pax-url-classpath", "2.4.7");
+        versions.put("org.ops4j.pax.url:pax-url-commons", "2.4.7");[# th:each="bundle : ${bundles}"]
         versions.put("[(${bundle.groupId})]:[(${bundle.artifactId})]", "[(${bundle.version})]");
 [/]    }
 

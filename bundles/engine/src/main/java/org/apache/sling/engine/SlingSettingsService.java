@@ -18,7 +18,7 @@
  */
 package org.apache.sling.engine;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.

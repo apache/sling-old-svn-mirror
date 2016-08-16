@@ -400,10 +400,13 @@ public class XSSAPIImplTest {
                 {null, null},
                 {"simple", "simple"},
 
-                {"break\"out", "break\\\"out"},
-                {"break'out", "break\\'out"},
-                {"'alert(document.cookie)", "\\'alert(document.cookie)"},
-                {"2014-04-22T10:11:24.002+01:00", "2014-04-22T10:11:24.002+01:00"}
+                {"break\"out", "break\\x22out"},
+                {"break'out", "break\\x27out"},
+
+                {"</script>", "<\\/script>"},
+
+                {"'alert(document.cookie)", "\\x27alert(document.cookie)"},
+                {"2014-04-22T10:11:24.002+01:00", "2014\\u002D04\\u002D22T10:11:24.002+01:00"}
         };
 
         for (String[] aTestData : testData) {
@@ -430,7 +433,7 @@ public class XSSAPIImplTest {
                 {"\"literal string\"", "\"literal string\""},
                 {"'literal string'", "'literal string'"},
                 {"\"bad literal'", RUBBISH},
-                {"'literal'); junk'", "'literal\\'); junk'"},
+                {"'literal'); junk'", "'literal\\x27); junk'"},
 
                 {"1200", "1200"},
                 {"3.14", "3.14"},
@@ -670,6 +673,10 @@ public class XSSAPIImplTest {
                 {
                         "<t><w>xyz</t></w>",
                         RUBBISH_XML
+                },
+                {
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>",
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>"
                 }
         };
         for (String[] aTestData : testData) {

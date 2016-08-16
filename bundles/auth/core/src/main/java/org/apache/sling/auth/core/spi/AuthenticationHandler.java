@@ -23,11 +23,14 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * The <code>AuthenticationHandler</code> interface defines the service API used
  * by the authentication implementation to support plugin various ways of
  * extracting credentials from the request.
  */
+@ConsumerType
 public interface AuthenticationHandler {
 
     /**

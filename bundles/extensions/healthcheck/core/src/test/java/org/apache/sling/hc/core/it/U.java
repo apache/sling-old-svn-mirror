@@ -118,7 +118,7 @@ public class U {
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
                     mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
-                    mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject()
+                    mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject()
             )
         );
     }

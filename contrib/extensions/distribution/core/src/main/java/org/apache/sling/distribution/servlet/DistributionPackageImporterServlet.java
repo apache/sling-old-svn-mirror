@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle reception of distribution content.
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.IMPORTER_RESOURCE_TYPE, methods = "POST")
 public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
 
@@ -59,7 +60,7 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
             if (request.getParameter("forceError") != null) {
                 throw new Exception("manually forced error");
             }
-            
+
             DistributionPackageInfo distributionPackageInfo = distributionPackageImporter.importStream(resourceResolver, stream);
 
             long end = System.currentTimeMillis();

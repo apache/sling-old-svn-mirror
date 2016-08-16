@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>27-SNAPSHOT</version>
+    <version>29-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -37,6 +37,11 @@
     <url>http://sling.apache.org</url>
 
     <prerequisites>
+        <!-- This defines only the minimum version for plugins, but not for the build
+             See http://maven.apache.org/ref/3.3.9/maven-model/maven.html#class_prerequisites.
+             Therefore the enforcer plugin needs to verify the maven version. See configuration
+             of the plugin further below
+        -->
         <maven>3.3.9</maven>
     </prerequisites>
 
@@ -77,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.2</version>
+                <version>2.10.4</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -136,6 +141,9 @@
                                     </message>
                                     <version>1.7.0</version>
                                 </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>3.3.9</version>
+                                </requireMavenVersion>
                             </rules>
                         </configuration>
                     </execution>
@@ -321,6 +329,11 @@
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-jcrocm-plugin</artifactId>
                     <version>2.0.4-incubator</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

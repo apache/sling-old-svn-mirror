@@ -1,3 +1,2 @@
 RegisterNamespace (foo) uri:some-uri/V/1.0
-RegisterNamespace () uri:without-prefix
 RegisterNamespace (prefix_with-other.things) andSimpleURI

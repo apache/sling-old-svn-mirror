@@ -24,6 +24,7 @@ import org.apache.sling.testing.junit.rules.category.SlowRunningTest;
 import org.apache.sling.testing.junit.rules.util.IgnoreTestsConfig;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -93,6 +94,7 @@ public class FilterRuleExcludeCategoryIgnoreIfTest {
      */
     @Test
     @Category(Issue.class)
+    @Ignore("SLING-5803")
     public void testExcludedCategoryExists() {
         Assume.assumeTrue(System.getProperty(FilterRule.CATEGORY_PROPERTY).equals("Issue,SlowRunningTest"));
         Assert.fail("Test should be Ignored");

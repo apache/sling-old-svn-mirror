@@ -17,4 +17,4 @@
 @Version("3.4.0")
 package org.apache.sling.commons.threads;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;

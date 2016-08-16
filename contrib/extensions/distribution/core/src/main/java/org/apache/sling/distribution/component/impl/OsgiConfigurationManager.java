@@ -19,6 +19,17 @@
 
 package org.apache.sling.distribution.component.impl;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
@@ -28,24 +39,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * Created by mpetria on 5/31/16.
+ * Manager implementation which represents the distribution configurations as OSGI configuration.
  */
 public class OsgiConfigurationManager implements DistributionConfigurationManager {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-
     final ConfigurationAdmin configurationAdmin;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public OsgiConfigurationManager(ConfigurationAdmin configurationAdmin) {
 
@@ -57,13 +56,14 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
         List<Configuration> configurations = getOsgiConfigurations(kind, null);
 
         List<DistributionConfiguration> result = new ArrayList<DistributionConfiguration>();
-        if (configurations == null || configurations.size() == 0) {
+        if (configurations == null || configurations.isEmpty()) {
             return result;
         }
 
 
         for (Configuration configuration : configurations) {
-            Dictionary propertiesDict = configuration.getProperties();
+            @SuppressWarnings( "unchecked" )
+            Dictionary<String, Object> propertiesDict = configuration.getProperties();
             Map<String, Object> properties = OsgiUtils.fromDictionary(propertiesDict);
 
             properties = filterBeforeRead(properties);
@@ -78,14 +78,20 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
     public DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
         List<Configuration> configurations = getOsgiConfigurations(kind, name);
 
-        if (configurations == null || configurations.size() == 0) {
+        if (configurations == null || configurations.isEmpty()) {
             return null;
+        }
+
+        if (configurations.size() > 1) {
+            log.warn("Found more than one configuration of kind: {} and with name: {}",
+                    new String[]{kind.getName(), name});
         }
 
         Configuration configuration = configurations.get(0);
 
         if (configuration != null) {
-            Dictionary properties = configuration.getProperties();
+            @SuppressWarnings( "unchecked" )
+            Dictionary<String, Object> properties = configuration.getProperties();
             Map<String, Object> result = OsgiUtils.fromDictionary(properties);
 
             String factoryPid = PropertiesUtil.toString(result.get(ConfigurationAdmin.SERVICE_FACTORYPID), null);
@@ -111,8 +117,20 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
 
         String factoryPid = componentKind.getFactory(componentType);
         if (factoryPid != null) {
+
+            // SLING-5872 - Management of agent configurations must identify configurations by name
+            // Remove the agents with the same name wich are not bind to the same factory.
+            List<Configuration> configs = getOsgiConfigurations(componentKind, componentName);
+            for (Iterator<Configuration> iter = configs.iterator() ; iter.hasNext() ; ) {
+                Configuration conf = iter.next();
+                if (factoryPid.equals(conf.getFactoryPid())) {
+                    iter.remove();
+                }
+            }
+            deleteOsgiConfigs(configs);
+
             properties.put(DistributionComponentConstants.PN_NAME, componentName);
-            Configuration configuration = saveOsgiConfig(factoryPid, componentName, properties);
+            saveOsgiConfig(factoryPid, componentName, properties);
         }
 
     }
@@ -157,7 +175,7 @@ public class OsgiConfigurationManager implements DistributionConfigurationManage
         try {
             List<Configuration> configurations = getOsgiConfigurationsFromFactory(factoryPid, componentName);
             Configuration configuration = null;
-            if (configurations == null || configurations.size() == 0) {
+            if (configurations == null || configurations.isEmpty()) {
                 configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
             } else {
                 configuration = configurations.get(0);

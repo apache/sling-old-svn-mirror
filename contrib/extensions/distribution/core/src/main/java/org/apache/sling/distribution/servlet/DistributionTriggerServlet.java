@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Triggers Server Sent Events servlet
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.TRIGGER_RESOURCE_TYPE, extensions = "event", methods = "GET")
 public class DistributionTriggerServlet extends SlingAllMethodsServlet {
 

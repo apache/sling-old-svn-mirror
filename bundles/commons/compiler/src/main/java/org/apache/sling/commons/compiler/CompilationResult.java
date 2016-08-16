@@ -18,12 +18,15 @@ package org.apache.sling.commons.compiler;
 
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The compilation result allows clients of the java compiler
  * to check for error messages, warnings (if not disabled by
  * the options) and allows to access the compiled classes.
  * @since 2.0
  */
+@ProviderType
 public interface CompilationResult {
 
     /**

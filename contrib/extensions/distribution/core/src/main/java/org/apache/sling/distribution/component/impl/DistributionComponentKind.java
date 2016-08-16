@@ -18,11 +18,21 @@
  */
 package org.apache.sling.distribution.component.impl;
 
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.AGENT_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.EXPORTER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.EXPORTER_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.IMPORTER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.IMPORTER_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.TRIGGER_LIST_RESOURCE_TYPE;
+import static org.apache.sling.distribution.resources.DistributionResourceTypes.TRIGGER_RESOURCE_TYPE;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
@@ -32,6 +42,7 @@ import org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.AgentDistributionPackageExporterFactory;
@@ -41,7 +52,6 @@ import org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPa
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporterFactory;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.impl.vlt.VaultDistributionPackageBuilderFactory;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.UserCredentialsDistributionTransportSecretProvider;
@@ -55,77 +65,112 @@ import org.apache.sling.distribution.trigger.impl.ScheduledDistributionTriggerFa
 /**
  * Enum that represents the main distribution component kinds that can be configured for distribution.
  */
+@SuppressWarnings( "serial" )
 public enum DistributionComponentKind {
 
-    AGENT("agent"),
-    IMPORTER("importer"),
-    EXPORTER("exporter"),
-    QUEUE_PROVIDER("queueProvider"),
-    QUEUE_STRATEGY("queueStrategy"),
-    TRANSPORT_SECRET_PROVIDER("transportSecretProvider"),
-    PACKAGE_BUILDER("packageBuilder"),
-    REQUEST_AUTHORIZATION("requestAuthorization"),
-    TRIGGER("trigger");
+    AGENT("agent", AGENT_RESOURCE_TYPE, AGENT_LIST_RESOURCE_TYPE, DistributionAgent.class, new HashMap<String, Class<?>>() {
+        {
+            put("simple", SimpleDistributionAgentFactory.class);
+            put("sync", SyncDistributionAgentFactory.class);
+            put("forward", ForwardDistributionAgentFactory.class);
+            put("reverse", ReverseDistributionAgentFactory.class);
+            put("queue", QueueDistributionAgentFactory.class);
+        }
+    }),
 
+    IMPORTER("importer", IMPORTER_RESOURCE_TYPE, IMPORTER_LIST_RESOURCE_TYPE, DistributionPackageImporter.class, new HashMap<String, Class<?>>() {
+        {
+            put("local", LocalDistributionPackageImporterFactory.class);
+            put("remote", RemoteDistributionPackageImporterFactory.class);
+        }
+    }),
 
-    private static final Map<DistributionComponentKind, Class> classMap = new HashMap<DistributionComponentKind, Class>();
-    private static final Map<DistributionComponentKind, Map<String, Class>> factoryMap = new HashMap<DistributionComponentKind, Map<String, Class>>();
+    EXPORTER("exporter", EXPORTER_RESOURCE_TYPE, EXPORTER_LIST_RESOURCE_TYPE, DistributionPackageExporter.class, new HashMap<String, Class<?>>() {
+        {
+            put("local", LocalDistributionPackageExporterFactory.class);
+            put("remote", RemoteDistributionPackageExporterFactory.class);
+            put("agent", AgentDistributionPackageExporterFactory.class);
+        }
+    }),
 
-    static {
-        registerKind(AGENT, DistributionAgent.class);
-        registerKind(IMPORTER, DistributionPackageImporter.class);
-        registerKind(EXPORTER, DistributionPackageExporter.class);
-        registerKind(QUEUE_PROVIDER, DistributionQueueProvider.class);
-        registerKind(QUEUE_STRATEGY, DistributionQueueDispatchingStrategy.class);
-        registerKind(TRANSPORT_SECRET_PROVIDER, DistributionTransportSecretProvider.class);
-        registerKind(REQUEST_AUTHORIZATION, DistributionRequestAuthorizationStrategy.class);
-        registerKind(PACKAGE_BUILDER, DistributionPackageBuilder.class);
-        registerKind(TRIGGER, DistributionTrigger.class);
+    QUEUE_PROVIDER("queueProvider", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionQueueProvider.class, new HashMap<String, Class<?>>() {
+        {
+            put("simple", SimpleDistributionAgentFactory.class);
+            put("sync", SyncDistributionAgentFactory.class);
+            put("forward", ForwardDistributionAgentFactory.class);
+            put("reverse", ReverseDistributionAgentFactory.class);
+            put("queue", QueueDistributionAgentFactory.class);
+        }
+    }),
 
+    QUEUE_STRATEGY("queueStrategy", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionQueueDispatchingStrategy.class, new HashMap<String, Class<?>>() {
+        {
+            put("simple", SimpleDistributionAgentFactory.class);
+            put("sync", SyncDistributionAgentFactory.class);
+            put("forward", ForwardDistributionAgentFactory.class);
+            put("reverse", ReverseDistributionAgentFactory.class);
+            put("queue", QueueDistributionAgentFactory.class);
+        }
+    }),
 
-        // register "core" factories kind, type -> ComponentFactoryClass
-        registerFactory(DistributionComponentKind.AGENT, "simple", SimpleDistributionAgentFactory.class);
-        registerFactory(DistributionComponentKind.AGENT, "sync", SyncDistributionAgentFactory.class);
-        registerFactory(DistributionComponentKind.AGENT, "forward", ForwardDistributionAgentFactory.class);
-        registerFactory(DistributionComponentKind.AGENT, "reverse", ReverseDistributionAgentFactory.class);
-        registerFactory(DistributionComponentKind.AGENT, "queue", QueueDistributionAgentFactory.class);
+    TRANSPORT_SECRET_PROVIDER("transportSecretProvider", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionTransportSecretProvider.class, new HashMap<String, Class<?>>() {
+        {
+            put("user", UserCredentialsDistributionTransportSecretProvider.class);
+        }
+    }),
 
-        registerFactory(DistributionComponentKind.EXPORTER, "local", LocalDistributionPackageExporterFactory.class);
-        registerFactory(DistributionComponentKind.EXPORTER, "remote", RemoteDistributionPackageExporterFactory.class);
-        registerFactory(DistributionComponentKind.EXPORTER, "agent", AgentDistributionPackageExporterFactory.class);
+    PACKAGE_BUILDER("packageBuilder", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionPackageBuilder.class, new HashMap<String, Class<?>>() {
+        {
+            put("filevlt", VaultDistributionPackageBuilderFactory.class);
+            put("jcrvlt", VaultDistributionPackageBuilderFactory.class);
+        }
+    }),
 
-        registerFactory(DistributionComponentKind.IMPORTER, "local", LocalDistributionPackageImporterFactory.class);
-        registerFactory(DistributionComponentKind.IMPORTER, "remote", RemoteDistributionPackageImporterFactory.class);
+    REQUEST_AUTHORIZATION("requestAuthorization", DEFAULT_SERVICE_RESOURCE_TYPE, DEFAULT_SERVICE_RESOURCE_TYPE, DistributionRequestAuthorizationStrategy.class, new HashMap<String, Class<?>>() {
+        {
+            put("privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
+        }
+    }),
 
-        registerFactory(DistributionComponentKind.PACKAGE_BUILDER, "filevlt", VaultDistributionPackageBuilderFactory.class);
-        registerFactory(DistributionComponentKind.PACKAGE_BUILDER, "jcrvlt", VaultDistributionPackageBuilderFactory.class);
-
-        registerFactory(DistributionComponentKind.REQUEST_AUTHORIZATION, "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
-
-        registerFactory(DistributionComponentKind.TRANSPORT_SECRET_PROVIDER, "user", UserCredentialsDistributionTransportSecretProvider.class);
-
-        registerFactory(DistributionComponentKind.TRIGGER, "resourceEvent", ResourceEventDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "scheduledEvent", ScheduledDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "distributionEvent", DistributionEventDistributeDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "persistedJcrEvent", PersistedJcrEventDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "jcrEvent", JcrEventDistributionTriggerFactory.class);
-
-
-    }
+    TRIGGER("trigger", TRIGGER_RESOURCE_TYPE, TRIGGER_LIST_RESOURCE_TYPE, DistributionTrigger.class, new HashMap<String, Class<?>>() {
+        {
+            put("resourceEvent", ResourceEventDistributionTriggerFactory.class);
+            put("scheduledEvent", ScheduledDistributionTriggerFactory.class);
+            put("distributionEvent", DistributionEventDistributeDistributionTriggerFactory.class);
+            put("persistedJcrEvent", PersistedJcrEventDistributionTriggerFactory.class);
+            put("jcrEvent", JcrEventDistributionTriggerFactory.class);
+        }
+    });
 
     private final String name;
 
-    DistributionComponentKind(String name) {
+    private final String resourceType;
+
+    private final String rootResourceType;
+
+    private final Class<?> type;
+
+    private final Map<String, Class<?>> factoryMap;
+
+    DistributionComponentKind(String name,
+                              String resourceType,
+                              String rootResourceType,
+                              Class<?> type,
+                              Map<String, Class<?>> factoryMap) {
         this.name = name;
+        this.resourceType = resourceType;
+        this.rootResourceType = rootResourceType;
+        this.type = type;
+        this.factoryMap = factoryMap;
     }
 
-    public Class asClass() {
-        return classMap.get(this);
+    public Class<?> asClass() {
+        return type;
     }
 
-    public static DistributionComponentKind fromClass(Class type) {
-        for (DistributionComponentKind kind : classMap.keySet()) {
-            Class kindClass = classMap.get(kind);
+    public static DistributionComponentKind fromClass(Class<?> type) {
+        for (DistributionComponentKind kind : values()) {
+            Class<?> kindClass = kind.asClass();
 
             if (kindClass.equals(type)) {
                 return kind;
@@ -136,7 +181,7 @@ public enum DistributionComponentKind {
     }
 
     public static DistributionComponentKind fromName(String name) {
-        for (DistributionComponentKind kind : classMap.keySet()) {
+        for (DistributionComponentKind kind : values()) {
 
             if (kind.getName().equals(name)) {
                 return kind;
@@ -150,48 +195,40 @@ public enum DistributionComponentKind {
         return name;
     }
 
-    private static void registerKind(DistributionComponentKind kind, Class kindClass) {
-        classMap.put(kind, kindClass);
+    public String getResourceType() {
+        return resourceType;
     }
 
-    private static void registerFactory(DistributionComponentKind kind, String type, Class factoryClass) {
-
-        if (!factoryMap.containsKey(kind)) {
-            factoryMap.put(kind, new HashMap<String, Class>());
-        }
-
-        Map<String, Class> kindMap = factoryMap.get(kind);
-
-        kindMap.put(type, factoryClass);
+    public String getRootResourceType() {
+        return rootResourceType;
     }
 
     public String getFactory(String type) {
-        Class factory = factoryMap.get(this).get(type);
-        return factory.getName();
+        Class<?> factory = factoryMap.get(type);
+        if (factory != null) {
+            return factory.getName();
+        }
+        return null;
     }
 
     public List<String> getFactories() {
         List<String> result = new ArrayList<String>();
-        for (Class factory : factoryMap.get(this).values()) {
+        for (Class<?> factory : factoryMap.values()) {
             result.add(factory.getName());
         }
-
         return result;
-
     }
 
     public String getType(String factory) {
-        for (String type : factoryMap.get(this).keySet()) {
-            Class factoryClass = factoryMap.get(this).get(type);
+        for (Entry<String, Class<?>> factoryEntry : factoryMap.entrySet()) {
+            String type = factoryEntry.getKey();
+            Class<?> factoryClass = factoryEntry.getValue();
 
             if (factoryClass.getName().equals(factory)) {
                 return type;
             }
         }
-
         return null;
-
     }
-
 
 }

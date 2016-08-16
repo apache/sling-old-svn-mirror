@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to retrieve a {@link org.apache.sling.distribution.queue.DistributionQueue} status.
  */
+@SuppressWarnings("serial")
 @SlingServlet(resourceTypes = DistributionResourceTypes.AGENT_QUEUE_RESOURCE_TYPE, methods = {"POST"})
 public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
@@ -56,7 +57,6 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
-        @SuppressWarnings("unchecked")
         String operation = request.getParameter("operation");
 
         DistributionQueue queue = request.getResource().adaptTo(DistributionQueue.class);

@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.path.PathSet;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A observer configuration describes active configurations from registered listeners.

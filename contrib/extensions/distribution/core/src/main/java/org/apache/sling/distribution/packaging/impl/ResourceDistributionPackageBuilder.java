@@ -19,66 +19,70 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
-import org.apache.commons.io.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
-
-import javax.annotation.Nonnull;
-import javax.jcr.RepositoryException;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ResourceDistributionPackageBuilder extends AbstractDistributionPackageBuilder {
     private static final String PREFIX_PATH = "/var/sling/distribution/packages/";
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final String packagesPath;
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
+    private final int fileThreshold;
+    private final MemoryUnit memoryUnit;
+    private final boolean useOffHeapMemory;
 
-    public ResourceDistributionPackageBuilder(String type, DistributionContentSerializer distributionContentSerializer, String tempFilesFolder) {
+    public ResourceDistributionPackageBuilder(String type,
+                                              DistributionContentSerializer distributionContentSerializer,
+                                              String tempFilesFolder,
+                                              int fileThreshold,
+                                              MemoryUnit memoryUnit,
+                                              boolean useOffHeapMemory) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.packagesPath = PREFIX_PATH + type + "/data";
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
-
+        this.fileThreshold = fileThreshold;
+        this.memoryUnit = memoryUnit;
+        this.useOffHeapMemory = useOffHeapMemory;
     }
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
-        // TODO : write to file if size > threshold
 
-        File file = null;
+        FileBackedMemoryOutputStream outputStream = null;
         try {
-            file = File.createTempFile("distrpck-create-" + System.nanoTime(),  "." + getType(), tempDirectory);
-
-            OutputStream outputStream = null;
-
             try {
-                outputStream = new BufferedOutputStream(new FileOutputStream(file));
+                outputStream = new FileBackedMemoryOutputStream(fileThreshold, memoryUnit, useOffHeapMemory, tempDirectory, "distrpck-create-", "." + getType());
                 distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
                 outputStream.flush();
             } finally {
                 IOUtils.closeQuietly(outputStream);
             }
-
 
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
 
@@ -86,9 +90,9 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             Resource packageResource = null;
 
             try {
-                inputStream = new BufferedInputStream(new FileInputStream(file));
+                inputStream = outputStream.openWrittenDataInputStream();
 
-                packageResource = uploadStream(packagesRoot, inputStream, file.length());
+                packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, outputStream.size());
             } finally {
                 IOUtils.closeQuietly(inputStream);
             }
@@ -97,7 +101,9 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         } catch (IOException e) {
             throw new DistributionException(e);
         } finally {
-            FileUtils.deleteQuietly(file);
+            if (outputStream != null) {
+                outputStream.clean();
+            }
         }
         return distributionPackage;
     }
@@ -108,7 +114,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         try {
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
 
-            Resource packageResource = uploadStream(packagesRoot, inputStream, -1);
+            Resource packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, -1);
             return new ResourceDistributionPackage(packageResource, getType(), resourceResolver);
         } catch (PersistenceException e) {
             throw new DistributionException(e);
@@ -116,11 +122,10 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     @Override
-    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream  inputStream)
+    protected boolean installPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream inputStream)
             throws DistributionException {
         try {
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
-
             return true;
         } finally {
             IOUtils.closeQuietly(inputStream);
@@ -129,12 +134,39 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
 
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        return new ResourceDistributionPackage(resourceResolver.getResource(id), getType(), resourceResolver);
+        Resource resource = resourceResolver.getResource(id);
+        if (resource != null) {
+            return new ResourceDistributionPackage(resource, getType(), resourceResolver);
+        } else {
+            return null;
+        }
     }
 
 
-    Resource uploadStream(Resource parent, InputStream stream, long size) throws PersistenceException {
-        String name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+    Resource uploadStream(ResourceResolver resourceResolver, Resource parent, InputStream stream, long size) throws PersistenceException {
+
+        String name;
+        log.debug("uploading stream");
+        if (size == -1) {
+            // stable id
+            Map<String, Object> info = new HashMap<String, Object>();
+            DistributionPackageUtils.readInfo(stream, info);
+            log.debug("read header {}", info);
+            Object remoteId = info.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
+            if (remoteId != null) {
+                name = remoteId.toString();
+                if (name.contains("/")) {
+                    name = name.substring(name.lastIndexOf('/') + 1);
+                }
+                log.debug("preserving remote id {}", name);
+            } else {
+                name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+                log.debug("generating a new id {}", name);
+            }
+        } else {
+            name = "dstrpck-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString();
+        }
+
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, "sling:Folder");
         props.put("type", getType());
@@ -143,15 +175,19 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             props.put("size", size);
         }
 
-        Resource resource = parent.getResourceResolver().create(parent, name, props);
+        Resource r = resourceResolver.getResource(parent, name);
+        if (r != null) {
+            resourceResolver.delete(r);
+        }
+
+        Resource resource = resourceResolver.create(parent, name, props);
         try {
             DistributionPackageUtils.uploadStream(resource, stream);
         } catch (RepositoryException e) {
             throw new PersistenceException("cannot upload stream", e);
-
         }
 
-        parent.getResourceResolver().commit();
+        resourceResolver.commit();
 
         return resource;
     }

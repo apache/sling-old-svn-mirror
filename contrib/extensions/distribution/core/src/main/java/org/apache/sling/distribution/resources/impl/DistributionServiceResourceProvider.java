@@ -19,7 +19,6 @@
 
 package org.apache.sling.distribution.resources.impl;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
-import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
 
@@ -44,8 +42,6 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
     private final DistributionComponentKind kind;
     private final DistributionComponentProvider componentProvider;
-
-    private static final String SERVICES_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
 
     DistributionServiceResourceProvider(String kind,
                                         DistributionComponentProvider componentProvider,
@@ -62,7 +58,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         } else if (pathInfo.isMain()) {
             return getResourceProperties(resolver, pathInfo.getMainResourceName());
         } else if (pathInfo.isChild()) {
-            DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
+            DistributionComponent<?> component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
 
             if (component != null) {
                 return getChildResourceProperties(component, pathInfo.getChildResourceName());
@@ -76,7 +72,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
     @Override
     protected Iterable<String> getInternalResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
         if (pathInfo.isMain()) {
-            DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
+            DistributionComponent<?> component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
 
             if (component != null) {
                 return getChildResourceChildren(component, pathInfo.getChildResourceName());
@@ -88,7 +84,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
     private Map<String, Object> getResourceProperties(ResourceResolver resolver, String resourceName) {
 
-        DistributionComponent component = componentProvider.getComponent(kind, resourceName);
+        DistributionComponent<?> component = componentProvider.getComponent(kind, resourceName);
 
         if (component != null) {
             Map<String, Object> properties = new HashMap<String, Object>();
@@ -96,7 +92,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
             properties.put(DistributionComponentConstants.PN_NAME, resourceName);
             properties.put(INTERNAL_ADAPTABLE, component.getService());
 
-            String resourceType = getResourceType(kind);
+            String resourceType = kind.getResourceType();
             properties.put(SLING_RESOURCE_TYPE, resourceType);
             return properties;
         }
@@ -106,56 +102,27 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
     private Map<String, Object> getResourceRootProperties() {
 
-        List<DistributionComponent> componentList = componentProvider.getComponents(kind);
+        List<DistributionComponent<?>> componentList = componentProvider.getComponents(kind);
 
         List<String> nameList = new ArrayList<String>();
-        for (DistributionComponent component : componentList) {
+        for (DistributionComponent<?> component : componentList) {
             nameList.add(component.getName());
         }
 
         Map<String, Object> result = new HashMap<String, Object>();
         result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
 
-        String resourceType = getRootResourceType(kind);
+        String resourceType = kind.getRootResourceType();
         result.put(SLING_RESOURCE_TYPE, resourceType);
 
         return result;
     }
 
-
-    private String getResourceType(DistributionComponentKind kind) {
-        if (DistributionComponentKind.AGENT.equals(kind)) {
-            return DistributionResourceTypes.AGENT_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
-            return DistributionResourceTypes.IMPORTER_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.EXPORTER.equals(kind)) {
-            return DistributionResourceTypes.EXPORTER_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.TRIGGER.equals(kind)) {
-            return DistributionResourceTypes.TRIGGER_RESOURCE_TYPE;
-        }
-
-        return SERVICES_RESOURCE_TYPE;
-    }
-
-    private String getRootResourceType(DistributionComponentKind kind) {
-        if (DistributionComponentKind.AGENT.equals(kind)) {
-            return DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
-            return DistributionResourceTypes.IMPORTER_LIST_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.EXPORTER.equals(kind)) {
-            return DistributionResourceTypes.EXPORTER_LIST_RESOURCE_TYPE;
-        } else if (DistributionComponentKind.TRIGGER.equals(kind)) {
-            return DistributionResourceTypes.TRIGGER_LIST_RESOURCE_TYPE;
-        }
-
-        return SERVICES_RESOURCE_TYPE;
-    }
-
-    Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
+    Map<String, Object> getChildResourceProperties(DistributionComponent<?> component, String childResourceName) {
         return null;
     }
 
-    Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+    Iterable<String> getChildResourceChildren(DistributionComponent<?> component, String childResourceName) {
         return null;
     }
 }

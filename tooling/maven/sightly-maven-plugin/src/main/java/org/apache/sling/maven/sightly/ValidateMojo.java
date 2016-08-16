@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.Map;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -38,8 +39,9 @@ import org.apache.sling.scripting.sightly.compiler.CompilationResult;
 import org.apache.sling.scripting.sightly.compiler.CompilationUnit;
 import org.apache.sling.scripting.sightly.compiler.CompilerMessage;
 import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
-import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.Scanner;
 import org.codehaus.plexus.util.StringUtils;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * This goal validates Sightly scripts syntax.
@@ -53,6 +55,9 @@ public class ValidateMojo extends AbstractMojo {
 
     private static final String DEFAULT_INCLUDES = "**/*.html";
     private static final String DEFAULT_EXCLUDES = "";
+    
+    @Component
+    private BuildContext buildContext;
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
@@ -92,6 +97,9 @@ public class ValidateMojo extends AbstractMojo {
     private int sourceDirectoryLength = 0;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+        
+        long start = System.currentTimeMillis();
+        
         if (!sourceDirectory.isAbsolute()) {
             sourceDirectory = new File(project.getBasedir(), sourceDirectory.getPath());
         }
@@ -103,38 +111,62 @@ public class ValidateMojo extends AbstractMojo {
             throw new MojoExecutionException(
                     String.format("Configured sourceDirectory={%s} is not a directory.", sourceDirectory.getAbsolutePath()));
         }
+        
+        if ( !buildContext.hasDelta(sourceDirectory )) {
+            getLog().info("No files found to validate, skipping");
+            return;
+        }
+
+        // don't fail execution in Eclipse as it generates an error marker in the POM file, which is not desired
+        boolean mayFailExecution = !buildContext.getClass().getName().startsWith("org.eclipse.m2e");
+
         sourceDirectoryLength = sourceDirectory.getAbsolutePath().length();
         processedIncludes = processIncludes();
         processedExcludes = processExcludes();
         try {
             SightlyCompiler compiler = new SightlyCompiler();
-            processedFiles = FileUtils.getFiles(sourceDirectory, processedIncludes, processedExcludes);
-            Map<String, CompilationResult> compilationResults = new HashMap<>();
-            for (File script : processedFiles) {
-                compilationResults.put(script.getAbsolutePath(), compiler.compile(getCompilationUnit(script)));
+            
+            Scanner scanner = buildContext.newScanner(sourceDirectory);
+            scanner.setExcludes(new String[] { processedExcludes } );
+            scanner.setIncludes(new String[] { processedIncludes } );
+            scanner.scan();
+            
+            String[] includedFiles = scanner.getIncludedFiles();
+            
+            processedFiles = new ArrayList<>(includedFiles.length);
+            for ( String includedFile : includedFiles ) {
+                processedFiles.add(new File(sourceDirectory, includedFile));
             }
-            Log log = getLog();
-            for (Map.Entry<String, CompilationResult> entry : compilationResults.entrySet()) {
-                String script = entry.getKey();
+            Map<File, CompilationResult> compilationResults = new HashMap<>();
+            for (File script : processedFiles) {
+                compilationResults.put(script, compiler.compile(getCompilationUnit(script)));
+            }
+            for (Map.Entry<File, CompilationResult> entry : compilationResults.entrySet()) {
+                File script = entry.getKey();
                 CompilationResult result = entry.getValue();
+                buildContext.removeMessages(script);
+                
                 if (result.getWarnings().size() > 0) {
                     for (CompilerMessage message : result.getWarnings()) {
-                        log.warn(String.format("%s:[%d,%d] %s", script, message.getLine(), message.getColumn(), message.getMessage()));
+                        buildContext.addMessage(script, message.getLine(), message.getColumn(), message.getMessage(), BuildContext.SEVERITY_WARNING, null);
                     }
                     hasWarnings = true;
                 }
                 if (result.getErrors().size() > 0) {
                     for (CompilerMessage message : result.getErrors()) {
                         String messageString = message.getMessage().replaceAll(System.lineSeparator(), "");
-                        log.error(String.format("%s:[%d,%d] %s", script, message.getLine(), message.getColumn(), messageString));
+                        buildContext.addMessage(script, message.getLine(), message.getColumn(), messageString, BuildContext.SEVERITY_ERROR, null);
                     }
                     hasErrors = true;
                 }
             }
-            if (hasWarnings && failOnWarnings) {
+            
+            getLog().info("Processed " + processedFiles.size() + " files in " + ( System.currentTimeMillis() - start ) + " milliseconds");
+            
+            if (mayFailExecution && hasWarnings && failOnWarnings) {
                 throw new MojoFailureException("Compilation warnings were configured to fail the build.");
             }
-            if (hasErrors) {
+            if (mayFailExecution && hasErrors) {
                 throw new MojoFailureException("Please check the reported syntax errors.");
             }
         } catch (IOException e) {
@@ -208,5 +240,11 @@ public class ValidateMojo extends AbstractMojo {
                 return reader;
             }
         };
+    }
+
+    // visible for testing only
+    void setBuildContext(BuildContext buildContext) {
+        
+        this.buildContext = buildContext;
     }
 }

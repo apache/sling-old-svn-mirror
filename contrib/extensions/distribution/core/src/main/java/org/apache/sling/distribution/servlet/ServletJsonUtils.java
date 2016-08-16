@@ -58,6 +58,9 @@ class ServletJsonUtils {
             case ACCEPTED:
                 response.setStatus(202);
                 break;
+            default:
+                // TODO
+                break;
         }
         response.getWriter().append(json.toString());
     }

@@ -16,12 +16,12 @@
  */
 package org.apache.sling.sample.slingshot.impl;
 
-import static org.apache.sling.hamcrest.ResourceMatchers.hasChildren;
-import static org.apache.sling.hamcrest.ResourceMatchers.resourceOfType;
 import static org.apache.sling.sample.slingshot.impl.InternalConstants.RESOURCETYPE_HOME;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,7 +45,7 @@ public class SetupServiceTest {
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
 
-//    @Test
+ //   @Test
     public void setup() throws Exception{
 
         // create expected content structure
@@ -69,10 +69,12 @@ public class SetupServiceTest {
         // validate content structure
         Resource resource = context.resourceResolver().getResource(SlingshotConstants.APP_ROOT_PATH);
 
-        assertThat(resource, resourceOfType(RESOURCETYPE_HOME));
+        assertTrue(resource.isResourceType(RESOURCETYPE_HOME));
         assertThat(resource.getChild("users"), notNullValue());
-        assertThat(resource.getChild("users/slingshot1"), resourceOfType(User.RESOURCETYPE));
-        assertThat(resource.getChild("users/slingshot1"), hasChildren("info", "settings", "ugc"));
+        assertTrue(resource.getChild("users/slingshot1").isResourceType(User.RESOURCETYPE));
+        assertNotNull(resource.getChild("users/slingshot1").getChild("info"));
+        assertNotNull(resource.getChild("users/slingshot1").getChild("settings"));
+        assertNotNull(resource.getChild("users/slingshot1").getChild("ugc"));
 
         // validate access control entries
 

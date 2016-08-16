@@ -34,10 +34,17 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 public class DistributionQueueItem extends ValueMapDecorator implements ValueMap {
 
     private final String packageId;
+    private final long size;
 
     public DistributionQueueItem(@Nonnull String packageId, Map<String, Object> base) {
+        this(packageId, -1, base);
+    }
+
+    public DistributionQueueItem(String id, long size, Map<String, Object> base) {
         super(base);
-        this.packageId = packageId;
+        this.packageId = id;
+        this.size = size;
+
     }
 
     @Nonnull
@@ -45,6 +52,13 @@ public class DistributionQueueItem extends ValueMapDecorator implements ValueMap
         return packageId;
     }
 
+    /**
+     * retrieve the size of the package referenced by this queue item.
+     * @return the size of the underlying package or {@code -1} if not available.
+     */
+    public long getSize() {
+        return size;
+    }
 
     @Override
     public String toString() {

@@ -26,21 +26,26 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link DistributionPackageBuilder} based on files.
  */
 public class FileDistributionPackageBuilder extends AbstractDistributionPackageBuilder {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final File tempDirectory;
     private final DistributionContentSerializer distributionContentSerializer;
 
@@ -79,7 +84,19 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
 
         OutputStream outputStream = null;
         try {
-            File file = File.createTempFile("distrpck-read-" + System.nanoTime(), "." + getType(), tempDirectory);
+            String name;
+            // stable id
+            Map<String, Object> info = new HashMap<String, Object>();
+            DistributionPackageUtils.readInfo(stream, info);
+            Object remoteId = info.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
+            if (remoteId != null) {
+                name = remoteId.toString();
+                log.debug("preserving remote id {}", name);
+            } else {
+                name = "distrpck-read-" + System.nanoTime();
+                log.debug("generating a new id {}", name);
+            }
+            File file = File.createTempFile(name, "." + getType(), tempDirectory);
             outputStream = new BufferedOutputStream(new FileOutputStream(file));
 
             IOUtils.copy(stream, outputStream);

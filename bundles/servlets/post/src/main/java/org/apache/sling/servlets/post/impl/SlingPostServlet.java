@@ -21,10 +21,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +71,7 @@ import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
 import org.apache.sling.servlets.post.impl.operations.NopOperation;
 import org.apache.sling.servlets.post.impl.operations.RestoreOperation;
+import org.apache.sling.servlets.post.impl.operations.StreamedUploadOperation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -143,6 +144,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private static final String PROP_IGNORED_PARAMETER_NAME_PATTERN = "servlet.post.ignorePattern";
 
     private final ModifyOperation modifyOperation = new ModifyOperation();
+
+    private final StreamedUploadOperation streamedUploadOperation = new StreamedUploadOperation();
 
     private ServiceRegistration[] internalOperations;
 
@@ -227,7 +230,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * Redirects the HttpServletResponse, if redirectURL is not empty
      * @param htmlResponse
      * @param request
-     * @param redirectURL The computed redirect URL
      * @param response The HttpServletResponse to use for redirection
      * @return Whether a redirect was requested
      * @throws IOException
@@ -286,6 +288,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private PostOperation getSlingPostOperation(
             final SlingHttpServletRequest request) {
+        if (streamedUploadOperation.isRequestStreamed(request)) {
+            return streamedUploadOperation;
+        }
         final String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
         if (operation == null || operation.length() == 0) {
             // standard create/modify operation;
@@ -425,7 +430,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private ServiceRegistration registerOperation(final BundleContext context,
             final String opCode, final PostOperation operation) {
-        final Properties properties = new Properties();
+        final Hashtable<String, Object> properties = new Hashtable<String, Object>();
         properties.put(PostOperation.PROP_OPERATION_NAME, opCode);
         properties.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling POST Servlet Operation " + opCode);
@@ -438,6 +443,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Override
     public void init() throws ServletException {
         modifyOperation.setServletContext(getServletContext());
+        streamedUploadOperation.setServletContext(getServletContext());
     }
 
     @Modified
@@ -472,11 +478,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         this.importOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
         this.modifyOperation.setIgnoredParameterNamePattern(paramMatchPattern);
         this.importOperation.setIgnoredParameterNamePattern(paramMatchPattern);
+
     }
 
     @Override
     public void destroy() {
         modifyOperation.setServletContext(null);
+        streamedUploadOperation.setServletContext(null);
     }
 
     @Deactivate

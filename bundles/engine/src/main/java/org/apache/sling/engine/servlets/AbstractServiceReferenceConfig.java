@@ -30,9 +30,9 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.ServiceReference;
 
-import aQute.bnd.annotation.ConsumerType;
 
 /**
  * The <code>AbstractServiceReferenceConfig</code> may be used as a base class

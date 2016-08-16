@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.packaging.impl;
 
 import org.apache.commons.io.FileUtils;
@@ -70,14 +69,10 @@ public class DistributionPackageUtils {
 
     private final static String META_START = "DSTRPACKMETA";
 
-    private static Object repolock = new Object();
-    private static Object filelock = new Object();
-
+    private static final Object repolock = new Object();
+    private static final Object filelock = new Object();
 
     public final static String PROPERTY_REMOTE_PACKAGE_ID = "remote.package.id";
-
-
-
 
     /**
      * distribution package origin queue
@@ -93,9 +88,6 @@ public class DistributionPackageUtils {
 
     public static final String PACKAGE_INFO_PROPERTY_REQUEST_START_TIME = "internal.request.startTime";
 
-
-
-
     /**
      * Acquires the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#acquire(String[])}
      * @param distributionPackage a distribution package
@@ -106,7 +98,6 @@ public class DistributionPackageUtils {
             ((SharedDistributionPackage) distributionPackage).acquire(queueNames);
         }
     }
-
 
     /**
      * Releases the package if it's a {@link SharedDistributionPackage}, via {@link SharedDistributionPackage#release(String[])}
@@ -175,7 +166,7 @@ public class DistributionPackageUtils {
      * @return a distribution queue item
      */
     public static DistributionQueueItem toQueueItem(DistributionPackage distributionPackage) {
-        return new DistributionQueueItem(distributionPackage.getId(), distributionPackage.getInfo());
+        return new DistributionQueueItem(distributionPackage.getId(), distributionPackage.getSize(), distributionPackage.getInfo());
     }
 
     /**
@@ -223,13 +214,16 @@ public class DistributionPackageUtils {
         headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, packageInfo.getRequestType());
         headerInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, packageInfo.getPaths());
         headerInfo.put(PROPERTY_REMOTE_PACKAGE_ID, distributionPackage.getId());
+        if (packageInfo.containsKey("reference-required")) {
+            headerInfo.put("reference-required", packageInfo.get("reference-required"));
+            log.info("setting reference-required to {}", packageInfo.get("reference-required"));
+        }
         writeInfo(outputStream, headerInfo);
 
         InputStream headerStream = new ByteArrayInputStream(outputStream.toByteArray());
         InputStream bodyStream = distributionPackage.createInputStream();
         return new SequenceInputStream(headerStream, bodyStream);
     }
-
 
     public static void readInfo(InputStream inputStream, Map<String, Object> info) {
 
@@ -273,7 +267,6 @@ public class DistributionPackageUtils {
         }
     }
 
-
     public static Resource getPackagesRoot(ResourceResolver resourceResolver, String packagesRootPath) throws PersistenceException {
         Resource packagesRoot = resourceResolver.getResource(packagesRootPath);
 
@@ -282,7 +275,9 @@ public class DistributionPackageUtils {
         }
 
         synchronized (repolock) {
-            resourceResolver.refresh();
+            if (resourceResolver.hasChanges()) {
+                resourceResolver.refresh();
+            }
             packagesRoot = ResourceUtil.getOrCreateResource(resourceResolver, packagesRootPath, "sling:Folder", "sling:Folder", true);
         }
 
@@ -291,8 +286,7 @@ public class DistributionPackageUtils {
 
     public static InputStream getStream(Resource resource) throws RepositoryException {
         Node parent = resource.adaptTo(Node.class);
-        InputStream in = parent.getProperty("bin/jcr:content/jcr:data").getBinary().getStream();
-        return in;
+        return parent.getProperty("bin/jcr:content/jcr:data").getBinary().getStream();
     }
 
     public static void uploadStream(Resource resource, InputStream stream) throws RepositoryException {
@@ -321,7 +315,6 @@ public class DistributionPackageUtils {
         }
     }
 
-
     public static boolean release(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
         if (holderNames.length == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
@@ -345,7 +338,6 @@ public class DistributionPackageUtils {
 
         return false;
     }
-
 
     public static void acquire(File file, @Nonnull String[] holderNames) throws IOException {
 
@@ -376,7 +368,6 @@ public class DistributionPackageUtils {
 
 
     }
-
 
     public static boolean release(File file, @Nonnull String[] holderNames) throws IOException {
         if (holderNames.length == 0) {
@@ -412,12 +403,14 @@ public class DistributionPackageUtils {
         return false;
     }
 
-
     private static ObjectInputStream getSafeObjectInputStream(InputStream inputStream) throws IOException {
 
         final Class[] acceptedClasses = new Class[] {
                 HashMap.class, HashSet.class,
                 String.class, String[].class,
+                Long.class,
+                Number.class,
+                Boolean.class,
                 Enum.class,
                 DistributionRequestType.class
         };

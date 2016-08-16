@@ -33,4 +33,13 @@ end
 
 register namespace ( NSprefix ) uri:someURI/v1.42
 
+register nodetypes
+<<===
+    <slingevent='http://sling.apache.org/jcr/event/1.0'>
+    
+<<  [slingevent:Event] > nt:unstructured, nt:hierarchyNode
+      - slingevent:topic (string)
+      - slingevent:properties (binary)
+===>>
+
 create service user the-last-one

@@ -21,6 +21,8 @@ package org.apache.sling.auth.core;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The <code>AuthenticationSupport</code> provides the service API used to
  * implement the <code>HttpContext.handleSecurity</code> method as defined in
@@ -63,6 +65,7 @@ import javax.servlet.http.HttpServletResponse;
  * This interface is implemented by this bundle and is not intended to be
  * implemented by client bundles.
  */
+@ProviderType
 public interface AuthenticationSupport {
 
     /**

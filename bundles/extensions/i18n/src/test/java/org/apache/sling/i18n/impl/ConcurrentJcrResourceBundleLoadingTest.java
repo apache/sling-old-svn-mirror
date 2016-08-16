@@ -26,9 +26,9 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.verifyPrivate;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +40,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -55,15 +54,15 @@ public class ConcurrentJcrResourceBundleLoadingTest {
 
     @Mock JcrResourceBundle english;
     @Mock JcrResourceBundle german;
-    
+
     private JcrResourceBundleProvider provider;
-    
+
     @Before
     public void setup() throws Exception {
         provider = spy(new JcrResourceBundleProvider());
-        Hashtable<String, Object> properties = new Hashtable<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
         properties.put("locale.default", "en");
-        provider.activate(createComponentContext(properties));
+        provider.activate(PowerMockito.mock(BundleContext.class), properties);
         doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
         doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
         Mockito.when(german.getLocale()).thenReturn(Locale.GERMAN);
@@ -100,12 +99,12 @@ public class ConcurrentJcrResourceBundleLoadingTest {
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
     }
-    
+
     @Test
     public void newBundleUsedAfterReload() throws Exception {
         provider.getResourceBundle(Locale.ENGLISH);
         provider.getResourceBundle(Locale.GERMAN);
-        
+
         // reloading german should not reload any other bundle
         provider.reloadBundle(new Key(null, Locale.GERMAN));
         provider.getResourceBundle(Locale.ENGLISH);
@@ -118,12 +117,12 @@ public class ConcurrentJcrResourceBundleLoadingTest {
         verifyPrivate(provider, times(1)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
         verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
     }
-    
+
     @Test
     public void newBundleUsedAsParentAfterReload() throws Exception {
         provider.getResourceBundle(Locale.ENGLISH);
         provider.getResourceBundle(Locale.GERMAN);
-        
+
         // reloading english should also reload german (because it has english as a parent)
         provider.reloadBundle(new Key(null, Locale.ENGLISH));
         provider.getResourceBundle(Locale.ENGLISH);
@@ -135,12 +134,5 @@ public class ConcurrentJcrResourceBundleLoadingTest {
 
         verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.ENGLISH));
         verifyPrivate(provider, times(2)).invoke("createResourceBundle", eq(null), eq(Locale.GERMAN));
-    }
-
-    private ComponentContext createComponentContext(Hashtable<String, Object> config) {
-        final ComponentContext componentContext = PowerMockito.mock(ComponentContext.class);
-        Mockito.when(componentContext.getBundleContext()).thenReturn(PowerMockito.mock(BundleContext.class));
-        Mockito.when(componentContext.getProperties()).thenReturn(config);
-        return componentContext;
     }
 }

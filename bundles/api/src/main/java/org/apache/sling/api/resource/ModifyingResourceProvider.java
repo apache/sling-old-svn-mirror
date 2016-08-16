@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A modifying resource provider is an extension of a resource provider which

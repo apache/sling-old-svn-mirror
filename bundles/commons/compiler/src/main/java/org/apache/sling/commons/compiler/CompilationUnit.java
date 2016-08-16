@@ -19,10 +19,13 @@ package org.apache.sling.commons.compiler;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * This interface describes a compilation unit - usually a java class.
  * @since 2.0
  */
+@ConsumerType
 public interface CompilationUnit {
 
     /**

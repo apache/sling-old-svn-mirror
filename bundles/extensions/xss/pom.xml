@@ -32,7 +32,7 @@
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.xss</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.9-SNAPSHOT</version>
+    <version>1.0.13-SNAPSHOT</version>
 
     <name>Apache Sling XSS Protection Bundle</name>
     <description>

@@ -21,7 +21,7 @@ package org.apache.sling.api.adapter;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>AdapterManager</code> defines the service interface for a manager

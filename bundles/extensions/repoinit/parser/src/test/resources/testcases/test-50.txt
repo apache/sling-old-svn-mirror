@@ -1,0 +1,37 @@
+# Test parsing embedded CNDs
+
+register nodetypes
+<<===
+    <slingevent='http://sling.apache.org/jcr/event/1.0'>
+    <nt='http://www.jcp.org/jcr/nt/1.0'>
+    <mix='http://www.jcp.org/jcr/mix/1.0'>
+    
+    [slingevent:Event] > nt:unstructured, nt:hierarchyNode
+      - slingevent:topic (string)
+      - slingevent:application (string)
+      - slingevent:created (date)
+      - slingevent:properties (binary)
+      
+    [slingevent:Job] > slingevent:Event, mix:lockable
+      - slingevent:processor (string)
+      - slingevent:id (string)
+      - slingevent:finished (date)
+     
+    [slingevent:TimedEvent] > slingevent:Event, mix:lockable
+      - slingevent:processor (string)
+      - slingevent:id (string)
+      - slingevent:expression (string)
+      - slingevent:date (date)
+      - slingevent:period (long)
+===>>
+
+register nodetypes
+<<===
+Just one line, not indented
+===>>
+
+register nodetypes
+<<===
+<< Using line prefixes
+<< to avoid conflicts with Sling provisioning model parser
+===>>

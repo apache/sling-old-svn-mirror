@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>26</version>
+    <version>27</version>
     <relativePath />
   </parent>
 
@@ -63,38 +63,33 @@
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.annotation</artifactId>
-      <version>6.0.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.cmpn</artifactId>
-      <version>6.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
-      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.service.component.annotations</artifactId>
-      <version>1.3.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.service.metatype.annotations</artifactId>
-      <version>1.3.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- Apache Commons -->
@@ -202,7 +197,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.21</version>
       <scope>provided</scope>
     </dependency>
     <!-- testing -->
@@ -252,11 +246,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
-      </plugin>
-      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
@@ -278,8 +267,6 @@
             </DynamicImport-Package>
             <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
             <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
-            <_dsannotations>*</_dsannotations>
-            <_metatypeannotations>*</_metatypeannotations>
             <_removeheaders>
               Embed-Dependency,
               Private-Package,

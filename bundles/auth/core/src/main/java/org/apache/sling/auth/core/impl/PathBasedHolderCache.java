@@ -21,12 +21,13 @@ package org.apache.sling.auth.core.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.annotation.Nonnull;
+
 import javax.servlet.http.HttpServletRequest;
 
 public class PathBasedHolderCache<Type extends PathBasedHolder> {
@@ -45,7 +46,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public void addHolder(@Nonnull final Type holder) {
+    public void addHolder(final Type holder) {
         this.rwLock.writeLock().lock();
         try {
 
@@ -73,7 +74,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public void removeHolder(@Nonnull final Type holder) {
+    public void removeHolder(final Type holder) {
         this.rwLock.writeLock().lock();
         try {
             final Map<String, SortedSet<Type>> byHostMap = cache.get(holder.protocol);
@@ -99,8 +100,35 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    @Nonnull
-    public Collection<Type>[] findApplicableHolder(@Nonnull final HttpServletRequest request) {
+    /**
+     * Remove all holders which "equal" the provided holder
+     * @param holder Template holder
+     */
+    public void removeAllMatchingHolders(final Type holder) {
+        this.rwLock.writeLock().lock();
+        try {
+            for(final Map.Entry<String,  Map<String, SortedSet<Type>>> entry : this.cache.entrySet()) {
+                final Iterator<Map.Entry<String, SortedSet<Type>>> innerIter = entry.getValue().entrySet().iterator();
+                while ( innerIter.hasNext() ) {
+                    final Map.Entry<String, SortedSet<Type>> innerEntry = innerIter.next();
+                    final Iterator<Type> iter = innerEntry.getValue().iterator();
+                    while ( iter.hasNext() ) {
+                        final Type current = iter.next();
+                        if ( holder.equals(current) ) {
+                            iter.remove();
+                        }
+                    }
+                    if ( innerEntry.getValue().isEmpty() ) {
+                        innerIter.remove();
+                    }
+                }
+            }
+        } finally {
+            this.rwLock.writeLock().unlock();
+        }
+    }
+
+    public Collection<Type>[] findApplicableHolders(final HttpServletRequest request) {
         this.rwLock.readLock().lock();
         try {
             final String hostname = request.getServerName()
@@ -127,7 +155,6 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    @Nonnull
     public List<Type> getHolders() {
         this.rwLock.readLock().lock();
         try {

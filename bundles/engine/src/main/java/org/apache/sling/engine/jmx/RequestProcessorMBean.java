@@ -16,7 +16,7 @@
  */
 package org.apache.sling.engine.jmx;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This is the management interface for the SlingRequestProcessor.
@@ -65,7 +65,7 @@ public interface RequestProcessorMBean {
      * statistics. If zero or one requests have been collected only, this method
      * returns zero.
      *
-     * @return Standard deviation 
+     * @return Standard deviation
      * @see #resetStatistics()
      */
     double getStandardDeviationDurationMsec();

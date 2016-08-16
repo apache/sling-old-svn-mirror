@@ -110,6 +110,7 @@ public class SettingsUtils {
         return result;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static Map<String, Object> collapseMap(Map<String, Object> valueMap) {
 
         Map<String, Object> result = new HashMap<String, Object>();

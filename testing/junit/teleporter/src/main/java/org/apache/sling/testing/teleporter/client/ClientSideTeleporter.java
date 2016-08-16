@@ -46,7 +46,7 @@ public class ClientSideTeleporter extends TeleporterRule {
 
     public static final String DEFAULT_TEST_SERVLET_PATH = "system/sling/junit";
     private DependencyAnalyzer dependencyAnalyzer;
-    private int testReadyTimeoutSeconds = 5;
+    private int testReadyTimeoutSeconds = 20;
     private int webConsoleReadyTimeoutSeconds = 30;
     private String baseUrl;
     private String serverCredentials;

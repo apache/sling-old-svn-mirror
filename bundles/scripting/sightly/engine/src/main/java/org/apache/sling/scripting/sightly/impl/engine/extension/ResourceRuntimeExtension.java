@@ -257,7 +257,11 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
             }
             RequestDispatcher dispatcher = request.getRequestDispatcher(includeRes, opts);
             try {
-                dispatcher.include(request, customResponse);
+                if (dispatcher != null) {
+                    dispatcher.include(request, customResponse);
+                } else {
+                    throw new SightlyException("Failed to include resource " + includeRes.getPath());
+                }
             } catch (Exception e) {
                 throw new SightlyException("Failed to include resource " + includeRes.getPath(), e);
             }

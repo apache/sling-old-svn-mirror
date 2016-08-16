@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>27</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>org.apache.sling.karaf-features</artifactId>
+  <version>0.1.1-SNAPSHOT</version>
+  <packaging>feature</packaging>
+
+  <name>Apache Sling - Karaf Features</name>
+  <description>Apache Sling Features for provisioning with Apache Karaf</description>
+
+  <properties>
+    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <org.apache.jackrabbit.version>2.13.1</org.apache.jackrabbit.version>
+    <org.apache.jackrabbit.oak.version>1.5.7</org.apache.jackrabbit.oak.version>
+    <org.apache.tika.version>1.13</org.apache.tika.version>
+    <feature.version>0.1.1.SNAPSHOT</feature.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <version>${org.apache.karaf.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>generate-features-file</id>
+            <goals>
+              <goal>features-generate-descriptor</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>features-create-kar</id>
+            <goals>
+              <goal>kar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>ianal-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>verify-legal-files</goal>
+            </goals>
+            <configuration>
+              <strict>false</strict>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

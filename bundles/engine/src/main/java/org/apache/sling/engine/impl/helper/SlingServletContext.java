@@ -90,7 +90,7 @@ public class SlingServletContext implements ServletContext {
      * @see #SlingServletContext(SlingMainServlet)
      * @see #dispose()
      */
-    private final ServiceRegistration registration;
+    private final ServiceRegistration<ServletContext> registration;
 
     /**
      * Creates an instance of this class delegating some methods to the given
@@ -107,12 +107,11 @@ public class SlingServletContext implements ServletContext {
         this.slingMainServlet = slingMainServlet;
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_PID, getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling ServletContext");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put("name", "org.apache.sling"); // property to identify this context
+        props.put("name", SlingMainServlet.class); // property to identify this context
         registration = bundleContext.registerService(
-            ServletContext.class.getName(), this, props);
+            ServletContext.class, this, props);
     }
 
     /**
@@ -663,5 +662,10 @@ public class SlingServletContext implements ServletContext {
 
     protected ServletContext wrapServletContext(ServletContext context) {
         return new ExternalServletContextWrapper(context);
+    }
+
+    @Override
+    public String getVirtualServerName() {
+        return getServletContext().getVirtualServerName();
     }
 }

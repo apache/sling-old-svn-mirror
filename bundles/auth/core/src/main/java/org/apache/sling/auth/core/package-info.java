@@ -22,12 +22,9 @@
  * of utility functions in the {@link org.apache.sling.auth.core.AuthUtil}
  * class.
  *
- * @version 1.2
+ * @version 1.2.2
  */
-@Version("1.3")
-@Export(optional = "provide:=true")
+@org.osgi.annotation.versioning.Version("1.2.2")
 package org.apache.sling.auth.core;
 
-import aQute.bnd.annotation.Export;
-import aQute.bnd.annotation.Version;
 

@@ -80,11 +80,13 @@ public class FactoryPreconditions {
             }
             if ( namesConfiguration != null ) {
                 for(final String r : namesConfiguration) {
-                    final String value = r.trim();
-                    if ( !value.isEmpty() ) {
-                        final RequiredProvider rp = new RequiredProvider();
-                        rp.name = value;
-                        rps.add(rp);
+                    if( r != null ) {
+                        final String value = r.trim();
+                        if ( !value.isEmpty() ) {
+                            final RequiredProvider rp = new RequiredProvider();
+                            rp.name = value;
+                            rps.add(rp);
+                        }
                     }
                 }
             }

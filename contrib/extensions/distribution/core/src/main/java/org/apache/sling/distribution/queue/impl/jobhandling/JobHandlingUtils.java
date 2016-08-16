@@ -38,12 +38,20 @@ class JobHandlingUtils {
 
     private static final String DISTRIBUTION_PACKAGE_PREFIX = "distribution.";
     private static final String DISTRIBUTION_PACKAGE_ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
+    private static final String DISTRIBUTION_PACKAGE_SIZE = DISTRIBUTION_PACKAGE_PREFIX + "package.size";
 
     public static DistributionQueueItem getItem(final Job job) {
 
         Map<String, Object> properties = new HashMap<String, Object>();
 
         String packageId = (String) job.getProperty(DISTRIBUTION_PACKAGE_ID);
+        Object sizeProperty = job.getProperty(DISTRIBUTION_PACKAGE_SIZE);
+        long size;
+        if (sizeProperty != null) {
+            size = Long.valueOf(sizeProperty.toString());
+        } else {
+            size = -1;
+        }
 
         try {
             Set<String> propertyNames = job.getPropertyNames();
@@ -57,7 +65,7 @@ class JobHandlingUtils {
             log.error("Cannot read job {} properties", job.getId(), t);
         }
 
-        return new DistributionQueueItem(packageId, properties);
+        return new DistributionQueueItem(packageId, size, properties);
     }
 
     public static Map<String, Object> createFullProperties(DistributionQueueItem queueItem) {
@@ -71,6 +79,7 @@ class JobHandlingUtils {
         }
 
         properties.put(DISTRIBUTION_PACKAGE_ID, queueItem.getPackageId());
+        properties.put(DISTRIBUTION_PACKAGE_SIZE, queueItem.getSize());
 
         return properties;
     }
@@ -82,7 +91,9 @@ class JobHandlingUtils {
         if (topic == null || !topic.startsWith(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC)) return null;
 
         String queue = topic.substring(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC.length() + 1);
-        int idx = queue.indexOf("/");
+
+
+        int idx = queue.lastIndexOf("/");
 
         if (idx < 0) return "";
 
@@ -115,8 +126,7 @@ class JobHandlingUtils {
         if (jobId == null) {
             return null;
         }
-        String itemId = ID_START + jobId.replace("/", "--");
-        return itemId;
+        return ID_START + jobId.replace("/", "--");
     }
 
     public static String unescapeId(String itemId) {
@@ -127,9 +137,7 @@ class JobHandlingUtils {
             return null;
         }
 
-        String jobId = itemId.replace(ID_START, "").replace("--","/");
-
-        return jobId;
+        return itemId.replace(ID_START, "").replace("--", "/");
     }
 
 

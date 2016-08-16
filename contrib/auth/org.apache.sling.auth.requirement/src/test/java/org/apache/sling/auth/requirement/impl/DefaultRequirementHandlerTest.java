@@ -38,7 +38,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.auth.core.AuthenticationRequirement;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.resourceresolver.MockResource;
 import org.junit.Before;

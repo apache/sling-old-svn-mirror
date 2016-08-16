@@ -26,9 +26,10 @@ import java.util.List;
  * A provider that allows access to registered distribution services.
  */
 public interface DistributionComponentProvider {
-    DistributionComponent getComponent(DistributionComponentKind kind, String componentName);
 
-    List<DistributionComponent> getComponents(DistributionComponentKind kind);
+    DistributionComponent<?> getComponent(DistributionComponentKind kind, String componentName);
+
+    List<DistributionComponent<?>> getComponents(DistributionComponentKind kind);
 
     <ComponentType> ComponentType getService(Class<ComponentType> type, String componentName);
 

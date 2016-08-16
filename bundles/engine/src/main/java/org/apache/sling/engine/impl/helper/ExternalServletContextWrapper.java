@@ -241,107 +241,138 @@ class ExternalServletContextWrapper implements ServletContext {
 
     }
 
+    @Override
     public int getEffectiveMajorVersion() {
         return getServletContext().getEffectiveMajorVersion();
     }
 
+    @Override
     public int getEffectiveMinorVersion() {
         return getServletContext().getEffectiveMinorVersion();
     }
 
+    @Override
     public boolean setInitParameter(String name, String value) {
         return getServletContext().setInitParameter(name, value);
     }
 
+    @Override
     public Dynamic addServlet(String servletName, String className) {
         return getServletContext().addServlet(servletName, className);
     }
 
+    @Override
     public Dynamic addServlet(String servletName, Servlet servlet) {
         return getServletContext().addServlet(servletName, servlet);
     }
 
+    @Override
     public Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
         return getServletContext().addServlet(servletName, servletClass);
     }
 
+    @Override
     public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
         return getServletContext().createServlet(clazz);
     }
 
+    @Override
     public ServletRegistration getServletRegistration(String servletName) {
         return getServletContext().getServletRegistration(servletName);
     }
 
+    @Override
     public Map<String, ? extends ServletRegistration> getServletRegistrations() {
         return getServletContext().getServletRegistrations();
     }
 
+    @Override
     public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) {
         return getServletContext().addFilter(filterName, className);
     }
 
+    @Override
     public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
         return getServletContext().addFilter(filterName, filter);
     }
 
+    @Override
     public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
         return getServletContext().addFilter(filterName, filterClass);
     }
 
+    @Override
     public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
         return getServletContext().createFilter(clazz);
     }
 
+    @Override
     public FilterRegistration getFilterRegistration(String filterName) {
         return getServletContext().getFilterRegistration(filterName);
     }
 
+    @Override
     public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
         return getServletContext().getFilterRegistrations();
     }
 
+    @Override
     public SessionCookieConfig getSessionCookieConfig() {
         return getServletContext().getSessionCookieConfig();
     }
 
+    @Override
     public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
         getServletContext().setSessionTrackingModes(sessionTrackingModes);
     }
 
+    @Override
     public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
         return getServletContext().getDefaultSessionTrackingModes();
     }
 
+    @Override
     public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
         return getServletContext().getEffectiveSessionTrackingModes();
     }
 
+    @Override
     public void addListener(String className) {
         getServletContext().addListener(className);
     }
 
+    @Override
     public <T extends EventListener> void addListener(T t) {
         getServletContext().addListener(t);
     }
 
+    @Override
     public void addListener(Class<? extends EventListener> listenerClass) {
         getServletContext().addListener(listenerClass);
     }
 
+    @Override
     public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
         return getServletContext().createListener(clazz);
     }
 
+    @Override
     public JspConfigDescriptor getJspConfigDescriptor() {
         return getServletContext().getJspConfigDescriptor();
     }
 
+    @Override
     public ClassLoader getClassLoader() {
         return getServletContext().getClassLoader();
     }
 
+    @Override
     public void declareRoles(String... roleNames) {
         getServletContext().declareRoles(roleNames);
+    }
+
+    @Override
+    public String getVirtualServerName() {
+        return getServletContext().getVirtualServerName();
     }
 }

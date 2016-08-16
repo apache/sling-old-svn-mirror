@@ -22,6 +22,7 @@ package org.apache.sling.distribution.common;
 /**
  * Recoverable checked exception for distribution
  */
+@SuppressWarnings("serial")
 public class RecoverableDistributionException extends DistributionException {
     public RecoverableDistributionException(Throwable e) {
         super(e);

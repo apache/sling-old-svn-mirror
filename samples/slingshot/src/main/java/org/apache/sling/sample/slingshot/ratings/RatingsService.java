@@ -31,7 +31,7 @@ public interface RatingsService {
      *         the passed in content resource is not part of
      *         Slingshot.
      */
-    String getRatingsResourcePath(final Resource resource);
+    String getRatingsResourcePath(Resource resource);
 
 
     /**
@@ -41,7 +41,7 @@ public interface RatingsService {
      *         the passed in content resource is not part of
      *         Slingshot.
      */
-    int getRating(final Resource resource);
+    double getRating(Resource resource);
 
     /**
      * Get the rating of a user for a resource.
@@ -51,7 +51,7 @@ public interface RatingsService {
      *         the passed in content resource is not part of
      *         Slingshot.
      */
-    int getRating(final Resource resource, final String userId);
+    double getRating(Resource resource, String userId);
 
     /**
      * Set the rating of a user for a resource.
@@ -61,6 +61,6 @@ public interface RatingsService {
      *         the passed in content resource is not part of
      *         Slingshot.
      */
-    void setRating(final Resource resource, final String userId, final int rating)
+    void setRating(Resource resource, String userId, double rating)
     throws PersistenceException;
 }

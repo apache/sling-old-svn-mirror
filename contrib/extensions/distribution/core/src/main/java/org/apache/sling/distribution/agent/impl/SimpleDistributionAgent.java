@@ -328,11 +328,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
             DistributionQueue queue = getQueue(queueName);
 
             DistributionQueueState state = queue.getStatus().getState();
-            if (DistributionQueueState.BLOCKED.equals(state)) {
+            if (DistributionQueueState.BLOCKED == state) {
                 return DistributionAgentState.BLOCKED;
             }
 
-            if (DistributionQueueState.RUNNING.equals(state)) {
+            if (DistributionQueueState.RUNNING == state) {
                 agentState = DistributionAgentState.RUNNING;
             }
         }
@@ -412,7 +412,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             String callingUser = queueItem.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_USER, String.class);
             String requestId = queueItem.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_ID, String.class);
-            long globalStartTime = queueItem.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_START_TIME, Long.class);
+            Long globalStartTime = queueItem.get(DistributionPackageUtils.PACKAGE_INFO_PROPERTY_REQUEST_START_TIME, Long.class);
 
             agentResourceResolver = getAgentResourceResolver(callingUser);
 
@@ -520,7 +520,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 DistributionUtils.safelyLogout(resourceResolver);
             }
         }
-
     }
 
     private void generatePackageEvent(String topic, DistributionPackage... distributionPackages) {

@@ -70,6 +70,15 @@ public class ParameterSupport {
     /** Content type signaling parameters in request body */
     private static final String WWW_FORM_URL_ENC = "application/x-www-form-urlencoded";
 
+    /** name of the header used to identify an upload mode */
+    public static final String SLING_UPLOADMODE_HEADER = "Sling-uploadmode";
+    /** name of the parameter used to identify upload mode */
+    public static final String UPLOADMODE_PARAM = "uploadmode";
+    /** request attribute that stores the parts iterator when streaming */
+    public static final String REQUEST_PARTS_ITERATOR_ATTRIBUTE = "request-parts-iterator";
+    /** value of upload mode header/parameter indicating streaming is requested */
+    public static final String STREAM_UPLOAD = "stream";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -281,10 +290,27 @@ public class ParameterSupport {
 
                 // Multipart POST
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
-                    this.parseMultiPartPost(parameters);
-                    this.requestDataUsed = true;
-                    addContainerParameters = checkForAdditionalParameters;
-                    useFallback = false;
+                    if (isStreamed(parameters, this.getServletRequest())) {
+                        // special case, the request is Mutipart and streamed processing has been requested
+                        try {
+                            this.getServletRequest().setAttribute(REQUEST_PARTS_ITERATOR_ATTRIBUTE, new RequestPartsIterator(this.getServletRequest()));
+                            this.log.debug("getRequestParameterMapInternal: Iterator<javax.servlet.http.Part> available as request attribute  named request-parts-iterator");
+                        } catch (IOException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed requesttipart streamed request", e);
+                        } catch (FileUploadException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed request", e);
+                        }
+                        // The request data has been passed to the RequestPartsIterator, hence from a RequestParameter pov its been used, and must not be used again.
+                        this.requestDataUsed = true;
+                        // must not try and get anything from the request at this point so avoid jumping through the stream.
+                        addContainerParameters = false;
+                        useFallback = false;
+                    } else {
+                        this.parseMultiPartPost(parameters);
+                        this.requestDataUsed = true;
+                        addContainerParameters = checkForAdditionalParameters;
+                        useFallback = false;
+                    }
                 }
             }
             if ( useFallback ) {
@@ -298,6 +324,22 @@ public class ParameterSupport {
             this.postParameterMap = parameters;
         }
         return this.postParameterMap;
+    }
+
+
+    /**
+     * Checks to see if there is an upload mode header or uploadmode parameter indicating the request is
+     * to be streamed from the client to the server.
+     * @param parameters parameters processed from the query string only.
+     * @param servletRequest the servlet request, where the body has not been processed.
+     * @return true if the request was made with streaming in mind.
+     */
+    private boolean isStreamed(ParameterMap parameters, HttpServletRequest servletRequest) {
+        if ( STREAM_UPLOAD.equals(servletRequest.getHeader(SLING_UPLOADMODE_HEADER)) ) {
+            return true;
+        }
+        RequestParameter[] rp = parameters.get(UPLOADMODE_PARAM);
+        return ( rp != null && rp.length == 1 && STREAM_UPLOAD.equals(rp[0].getString()));
     }
 
     private void getContainerParameters(final ParameterMap parameters, final String encoding, final boolean alwaysAdd) {

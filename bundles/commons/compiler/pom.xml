@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>27</version>
         <relativePath />
     </parent>
 
@@ -33,7 +33,7 @@
 
     <name>Apache Sling Commons Java Compiler</name>
     <description>
-        The Sling Commons Java Compiler bundle provides platform independant Java Compilation 
+        The Sling Commons Java Compiler bundle provides platform independent Java Compilation
         support using the Eclipse Java Compiler (org.eclipse.jdt).
     </description>
 
@@ -63,12 +63,6 @@
                             !org.eclipse.*,
                             !org.apache.tools.*,*
                         </Import-Package>
-                        <Export-Package>
-                            org.apache.sling.commons.compiler;version=2.1.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.compiler.impl
-                        </Private-Package>
                         <Embed-Dependency>
                             ecj
                         </Embed-Dependency>
@@ -90,7 +84,7 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

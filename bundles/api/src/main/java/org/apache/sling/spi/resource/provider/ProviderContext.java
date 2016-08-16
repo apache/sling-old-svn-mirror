@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.path.PathSet;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The provider context...

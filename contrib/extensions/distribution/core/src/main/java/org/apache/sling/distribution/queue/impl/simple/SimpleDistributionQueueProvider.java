@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,6 +41,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +98,11 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
             log.debug("queue created {}", queue);
         }
         return queue;
+    }
+
+    @Override
+    public DistributionQueue getQueue(@Nonnull String queueName, @Nonnull DistributionQueueType type) {
+        return getQueue(queueName);
     }
 
     Collection<SimpleDistributionQueue> getQueues() {

@@ -32,8 +32,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Transport Credentials - User Credentials based DistributionTransportSecretProvider",
@@ -57,8 +55,6 @@ public class UserCredentialsDistributionTransportSecretProvider implements
     @Property(label = "Password", description = "The clear text password to perform authentication. Warning: storing clear text passwords is not safe.")
     private final static String PASSWORD = "password";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private String username;
     private String password;
 
@@ -70,10 +66,6 @@ public class UserCredentialsDistributionTransportSecretProvider implements
 
     public DistributionTransportSecret getSecret(URI uri) {
         return new DistributionTransportSecret() {
-            public String asToken() {
-                return null;
-            }
-
             public Map<String, String> asCredentialsMap() {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put(USERNAME, username);

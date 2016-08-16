@@ -18,10 +18,7 @@
  */
 package org.apache.sling.auth.core.impl;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -70,7 +67,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * instance to be created. This may be <code>null</code> if the entry has
      * been created by the {@link SlingAuthenticator} itself.
      */
-    private final ServiceReference serviceReference;
+    private final ServiceReference<?> serviceReference;
 
     /**
      * Sets up this instance with the given configuration URL provided by the
@@ -86,8 +83,8 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * @param serviceReference The reference to the service providing the
      *            configuration for this instance.
      */
-    protected PathBasedHolder(@Nonnull final String url,
-            @Nullable final ServiceReference serviceReference) {
+    protected PathBasedHolder(final String url,
+            final ServiceReference<?> serviceReference) {
 
         String path = url;
         String host = "";
@@ -125,19 +122,6 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
         this.serviceReference = serviceReference;
     }
 
-    @Nonnull
-    static String buildDescription(@Nonnull ServiceReference ref) {
-        final String descr = OsgiUtil.toString(
-                ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
-        if (descr != null) {
-            return descr;
-        }
-
-        return "Service "
-                + OsgiUtil.toString(
-                ref.getProperty(Constants.SERVICE_ID), "unknown");
-    }
-
     /**
      * Returns a descriptive string of the provider of this instance. The string
      * is derived from the service reference with which this instance has been
@@ -145,13 +129,21 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * is ordered the service description of the {@link SlingAuthenticator} is
      * returned.
      */
-    @Nonnull
-    final String getProvider() {
+    String getProvider() {
         // assume the commons/auth SlingAuthenticator provides the entry
         if (serviceReference == null) {
             return SlingAuthenticator.DESCRIPTION;
         }
-        return buildDescription(serviceReference);
+
+        final String descr = PropertiesUtil.toString(
+            serviceReference.getProperty(Constants.SERVICE_DESCRIPTION), null);
+        if (descr != null) {
+            return descr;
+        }
+
+        return "Service "
+            + PropertiesUtil.toString(
+                serviceReference.getProperty(Constants.SERVICE_ID), "unknown");
     }
 
     /**
@@ -172,7 +164,8 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * returned; if the <code>other</code> service reference is
      * <code>null</code>, <code>+1</code> is returned.
      */
-    public final int compareTo(@Nonnull PathBasedHolder other) {
+    @Override
+    public int compareTo(PathBasedHolder other) {
 
         // compare the path first, and return if not equal
         final int pathResult = other.path.compareTo(path);
@@ -183,12 +176,19 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
         // now compare the service references giving priority to
         // to the higher priority service
         if (serviceReference == null) {
+            if ( other.serviceReference == null ) {
+                return this.getClass().getName().compareTo(other.getClass().getName());
+            }
             return -1;
         } else if (other.serviceReference == null) {
             return 1;
         }
 
-        return other.serviceReference.compareTo(serviceReference);
+        final int serviceResult = other.serviceReference.compareTo(serviceReference);
+        if ( serviceResult != 0 ) {
+            return serviceResult;
+        }
+        return this.getClass().getName().compareTo(other.getClass().getName());
     }
 
     /**

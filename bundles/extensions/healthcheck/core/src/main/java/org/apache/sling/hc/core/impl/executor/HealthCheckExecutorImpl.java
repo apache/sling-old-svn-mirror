@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -90,11 +90,11 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             description = "Threshold in ms until a check is marked as 'exceedingly' timed out and will marked CRITICAL instead of WARN only",
             longValue = LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS)
 
-    private static final long RESULT_CACHE_TTLL_DEFAULT_MS = 1000 * 2;
+    private static final long RESULT_CACHE_TTL_DEFAULT_MS = 1000 * 2;
     public static final String PROP_RESULT_CACHE_TTL_MS = "resultCacheTtlInMs";
     @Property(name = PROP_RESULT_CACHE_TTL_MS, label = "Results Cache TTL in Ms",
             description = "Result Cache time to live - results will be cached for the given time",
-            longValue = RESULT_CACHE_TTLL_DEFAULT_MS)
+            longValue = RESULT_CACHE_TTL_DEFAULT_MS)
 
 
     private long timeoutInMs;
@@ -149,9 +149,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             this.longRunningFutureThresholdForRedMs = LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS;
         }
 
-        this.resultCacheTtlInMs = PropertiesUtil.toLong(properties.get(PROP_RESULT_CACHE_TTL_MS), RESULT_CACHE_TTLL_DEFAULT_MS);
+        this.resultCacheTtlInMs = PropertiesUtil.toLong(properties.get(PROP_RESULT_CACHE_TTL_MS), RESULT_CACHE_TTL_DEFAULT_MS);
         if (this.resultCacheTtlInMs <= 0L) {
-            this.resultCacheTtlInMs = RESULT_CACHE_TTLL_DEFAULT_MS;
+            this.resultCacheTtlInMs = RESULT_CACHE_TTL_DEFAULT_MS;
         }
     }
 

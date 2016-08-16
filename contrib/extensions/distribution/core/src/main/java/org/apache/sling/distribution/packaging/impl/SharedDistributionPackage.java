@@ -33,12 +33,12 @@ public interface SharedDistributionPackage extends DistributionPackage {
     /**
      * acquire a reference to this package and increase the reference count.
      */
-    void acquire(@Nonnull String[] holderNames);
+    void acquire(@Nonnull String... holderNames);
 
     /**
      * release a reference to this package and decrease the reference count.
      * when no more references are hold the package {@code DistributionPackage#delete} method is called.
      */
-    void release(@Nonnull String[] holderNames);
+    void release(@Nonnull String... holderNames);
 
 }

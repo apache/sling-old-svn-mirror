@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>27</version>
         <relativePath/>
     </parent>
 
@@ -47,6 +47,18 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <executions>
+                    <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+                    <execution>
+                        <id>scr-metadata</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                        <configuration>
+                            <supportIncrementalBuild>true</supportIncrementalBuild>
+                        </configuration>
+                    </execution>
+                </executions>
                 <configuration>
                     <instructions>
                         <!-- initial content to be loaded on bundle installation -->
@@ -55,6 +67,8 @@
                             SLING-INF/content/libs/slingshot;overwrite:=true;path:=/libs/slingshot;maven:mount:=true
                         </Sling-Initial-Content>
                     </instructions>
+                    <!-- Export SCR metadata to classpath to have them available in unit tests -->
+                    <exportScr>true</exportScr>
                 </configuration>
             </plugin>
             <plugin>
@@ -128,32 +142,7 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.annotation</artifactId>
-            <version>6.0.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.component.annotations</artifactId>
-            <version>1.3.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Put sling-mock-oak dependency to top to get latest jcr-resource dependencies for running it -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
-            <version>1.0.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -176,13 +165,12 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <version>2.12.1</version>
+            <version>2.13.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
         	<groupId>javax.jcr</groupId>
         	<artifactId>jcr</artifactId>
-        	<version>2.0</version>
         </dependency>
         <dependency>
         	<groupId>org.slf4j</groupId>
@@ -208,26 +196,25 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
+            <version>2.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.6.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.hamcrest</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
+            <version>2.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-simple</artifactId>
-          <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

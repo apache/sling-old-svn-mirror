@@ -33,8 +33,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
@@ -44,8 +42,6 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(DistributionConfigurationManager.class)
 public class DefaultDistributionConfigurationManager implements DistributionConfigurationManager {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Resource Config Enabled", description = "If storing config in resource tree is enabled.", boolValue = false)
     public static final String CONFIG_ENABLED = "resource.config.enabled";
@@ -69,7 +65,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     DistributionConfigurationManager resourceManager;
 
     static String resourcePrefix;
-    static String OSGI_PREFIX = "";
+    static final String OSGI_PREFIX = "";
 
 
 
@@ -100,8 +96,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public List<DistributionConfiguration> getConfigs(ResourceResolver resolver, DistributionComponentKind kind) {
-        List<DistributionConfiguration> osgiConfigs = osgiManager.getConfigs(resolver, kind);
-        List<DistributionConfiguration> result = osgiConfigs;
+        List<DistributionConfiguration> result = osgiManager.getConfigs(resolver, kind);
 
         if (resourceManager != null) {
             List<DistributionConfiguration> resourceConfigs = resourceManager.getConfigs(resolver, kind);
@@ -113,9 +108,8 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
-        DistributionConfiguration osgiConfig = osgiManager.getConfig(resolver, kind, name);
 
-        DistributionConfiguration resultConfig = osgiConfig;
+        DistributionConfiguration resultConfig = osgiManager.getConfig(resolver, kind, name);
 
         if (resourceManager != null) {
             DistributionConfiguration resourceConfig = resourceManager.getConfig(resolver, kind, name);

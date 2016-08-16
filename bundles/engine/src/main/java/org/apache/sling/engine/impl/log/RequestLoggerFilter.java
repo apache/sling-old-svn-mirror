@@ -29,30 +29,25 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.engine.impl.SlingMainServlet;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.LoggerFactory;
 
-@Component(immediate = true, policy = ConfigurationPolicy.IGNORE)
-@Service(value = Filter.class)
-@Reference(
-        name = "RequestLoggerService",
-        referenceInterface = RequestLoggerService.class,
-        cardinality = ReferenceCardinality.MANDATORY_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC)
-@Properties({
-    @Property(name = "pattern", value = "/.*"),
-    @Property(name = Constants.SERVICE_RANKING, intValue = 0x8000),
-    @Property(name = "service.description", value = "Request Logger Filter"),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation")
-})
+@Component(configurationPolicy = ConfigurationPolicy.IGNORE,
+           service = Filter.class,
+           property = {
+                   HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT+ "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SlingMainServlet.SERVLET_CONTEXT_NAME + ")",
+                   HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=/",
+                   Constants.SERVICE_RANKING + ":Integer=32768",
+                   Constants.SERVICE_DESCRIPTION + "=Request Logger Filter",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public final class RequestLoggerFilter implements Filter {
 
     private static final RequestLoggerService[] NONE = new RequestLoggerService[0];
@@ -61,9 +56,11 @@ public final class RequestLoggerFilter implements Filter {
 
     private RequestLoggerService[] requestExit = NONE;
 
+    @Override
     public void init(FilterConfig filterConfig) {
     }
 
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
             ServletException {
 
@@ -79,13 +76,14 @@ public final class RequestLoggerFilter implements Filter {
         }
     }
 
+    @Override
     public void destroy() {
         FileRequestLog.dispose();
     }
 
     // ---------- SCR Integration ----------------------------------------------
 
-    @SuppressWarnings("unused")
+    @Reference(cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC)
     private void bindRequestLoggerService(RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
             this.requestEntry = this.addService(this.requestEntry, requestLoggerService);

@@ -27,6 +27,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueType;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
@@ -58,7 +59,7 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
-        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
+        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true, DistributionQueueType.ORDERED);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
@@ -80,7 +81,7 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.getJobById(anyString())).thenReturn(job);
         when(builder.properties(any(Map.class))).thenReturn(builder);
-        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true);
+        DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager, true, DistributionQueueType.ORDERED);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo("type");
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
         packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);

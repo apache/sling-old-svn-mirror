@@ -19,14 +19,23 @@
 package org.apache.sling.distribution.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.event.DistributionEventTopics;
+import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
+import org.apache.sling.distribution.packaging.impl.ReferencePackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,13 +49,27 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
 
     private final DistributionPackageBuilder packageBuilder;
 
-    public LocalDistributionPackageImporter(DistributionPackageBuilder packageBuilder) {
+    private final DistributionEventFactory eventFactory;
+
+    private final String name;
+
+    public LocalDistributionPackageImporter(String name, DistributionEventFactory eventFactory, DistributionPackageBuilder packageBuilder) {
 
         if (packageBuilder == null) {
             throw new IllegalArgumentException("A package builder is required");
         }
 
+        if (eventFactory == null) {
+            throw new IllegalArgumentException("EventFactory is required");
+        }
+
+        if (name == null) {
+            throw new IllegalArgumentException("An importer name is required");
+        }
+
         this.packageBuilder = packageBuilder;
+        this.eventFactory = eventFactory;
+        this.name = name;
     }
 
     @Override
@@ -56,12 +79,72 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
         if (!success) {
             log.warn("could not install distribution package {}", distributionPackage.getId());
         }
+
+        eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackage.getInfo());
     }
 
     @Override
     @Nonnull
     public DistributionPackageInfo importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
-        return packageBuilder.installPackage(resourceResolver, stream);
+        if (!stream.markSupported()) {
+            stream = new BufferedInputStream(stream);
+        }
+        Map<String, Object> headerInfo = new HashMap<String, Object>();
+        DistributionPackageUtils.readInfo(stream, headerInfo);
+        log.debug("header info: {}", headerInfo);
+
+        Object o = headerInfo.get(DistributionPackageUtils.PROPERTY_REMOTE_PACKAGE_ID);
+        String reference = o != null ? String.valueOf(o) : null;
+
+        if (reference != null) {
+            if (ReferencePackage.isReference(reference)) {
+                String actualPackageId = ReferencePackage.idFromReference(reference);
+                if (actualPackageId != null) {
+                    log.info("installing from reference {}", actualPackageId);
+                    DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, actualPackageId);
+                    if (distributionPackage != null) {
+                        if (packageBuilder.installPackage(resourceResolver, distributionPackage)) {
+                            DistributionPackageInfo info = distributionPackage.getInfo();
+                            log.info("package installed {}", info);
+                            eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, info);
+                            return info;
+                        } else {
+                            throw new DistributionException("could not install package {}" + distributionPackage);
+                        }
+                    } else {
+                        throw new DistributionException("could not install package from reference " + actualPackageId);
+                    }
+                } else {
+                    throw new DistributionException("could not install package from invalid reference " + reference);
+                }
+            } else {
+                try {
+                    stream.reset();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                DistributionPackageInfo packageInfo;
+                Object rr = headerInfo.get("reference-required");
+                boolean store = rr != null && Boolean.valueOf(rr.toString());
+                if (store) {
+                    log.debug("storing actual package");
+                    DistributionPackage distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
+                    packageInfo = distributionPackage.getInfo();
+                    log.info("package stored {}", packageInfo);
+                } else {
+                    packageInfo = packageBuilder.installPackage(resourceResolver, stream);
+                    log.info("package installed {}", packageInfo);
+                }
+                eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, packageInfo);
+                return packageInfo;
+            }
+        } else {
+            DistributionPackageInfo packageInfo = packageBuilder.installPackage(resourceResolver, stream);
+            log.info("package installed");
+            eventFactory.generatePackageEvent(DistributionEventTopics.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, packageInfo);
+            return packageInfo;
+        }
+
     }
 
 }

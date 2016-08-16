@@ -18,20 +18,17 @@
  */
 package org.apache.sling.auth.core.impl;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.osgi.framework.ServiceReference;
 
 class AuthenticationRequirementHolder extends PathBasedHolder {
 
     private final boolean requiresAuthentication;
 
-    @Nonnull
-    static AuthenticationRequirementHolder fromConfig(@Nonnull final String config,
-                                                      @Nullable final ServiceReference serviceReference) {
+    static AuthenticationRequirementHolder fromConfig(final String config,
+            final ServiceReference<?> serviceReference) {
         if (config == null || config.length() == 0) {
-            throw new IllegalArgumentException("Configuration must not be null or empty");
+            throw new IllegalArgumentException(
+                "Configuration must not be null or empty");
         }
 
         final boolean required;
@@ -51,9 +48,9 @@ class AuthenticationRequirementHolder extends PathBasedHolder {
             serviceReference);
     }
 
-    AuthenticationRequirementHolder(@Nonnull final String fullPath,
-                                    final boolean requiresAuthentication,
-                                    @Nullable final ServiceReference serviceReference) {
+    AuthenticationRequirementHolder(final String fullPath,
+            final boolean requiresAuthentication,
+            final ServiceReference<?> serviceReference) {
         super(fullPath, serviceReference);
         this.requiresAuthentication = requiresAuthentication;
     }

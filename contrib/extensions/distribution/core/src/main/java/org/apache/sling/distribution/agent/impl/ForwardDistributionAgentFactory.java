@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.agent.impl;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -42,26 +43,26 @@ import org.apache.sling.distribution.component.impl.DistributionComponentConstan
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.AsyncDeliveryDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
@@ -78,7 +79,6 @@ import org.slf4j.LoggerFactory;
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name = "webconsole.configurationFactory.nameHint", value = "Agent name: {name}")
 public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory {
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -92,7 +92,6 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
-
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     private static final String SERVICE_NAME = "serviceName";
@@ -172,6 +171,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     )
     public static final String QUEUE_PROVIDER = "queue.provider";
 
+    @Property(boolValue = false, label = "Async delivery", description = "Whether or not to use a separate delivery queue to maximize transport throughput when queue has more than 100 items")
+    public static final String ASYNC_DELIVERY = "async.delivery";
+
     @Reference
     private Packaging packaging;
 
@@ -193,6 +195,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private Scheduler scheduler;
 
+    @Reference
+    private ConfigurationAdmin configAdmin;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -231,7 +235,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionQueueProvider queueProvider;
         String queueProviderName = PropertiesUtil.toString(config.get(QUEUE_PROVIDER), JobHandlingDistributionQueueProvider.TYPE);
         if (JobHandlingDistributionQueueProvider.TYPE.equals(queueProviderName)) {
-            queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+            queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context, configAdmin);
         } else if (SimpleDistributionQueueProvider.TYPE.equals(queueProviderName)) {
             queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, false);
         } else {
@@ -241,14 +245,18 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy errorQueueStrategy = null;
 
-        DistributionPackageImporter packageImporter = null;
+        DistributionPackageImporter packageImporter;
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
         Set<String> processingQueues = new HashSet<String>();
 
-        Set<String> queuesMap = new TreeSet<String>();
-        queuesMap.addAll(importerEndpointsMap.keySet());
-        queuesMap.addAll(Arrays.asList(passiveQueues));
-        String[] queueNames = queuesMap.toArray(new String[queuesMap.size()]);
+        Set<String> endpointNames = importerEndpointsMap.keySet();
+
+        Set<String> endpointsAndPassiveQueues = new TreeSet<String>();
+        endpointsAndPassiveQueues.addAll(endpointNames);
+        endpointsAndPassiveQueues.addAll(Arrays.asList(passiveQueues));
+
+        // names of all the queues
+        String[] queueNames = endpointsAndPassiveQueues.toArray(new String[endpointsAndPassiveQueues.size()]);
 
         if (priorityQueues != null) {
             PriorityQueueDispatchingStrategy dispatchingStrategy = new PriorityQueueDispatchingStrategy(priorityQueues, queueNames);
@@ -256,10 +264,22 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             importerEndpointsMap = SettingsUtils.expandUriMap(importerEndpointsMap, queueAliases);
             exportQueueStrategy = dispatchingStrategy;
         } else {
-            exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
+            boolean asyncDelivery = PropertiesUtil.toBoolean(config.get(ASYNC_DELIVERY), false);
+            if (asyncDelivery) {
+                // delivery queues' names
+                Map<String, String> deliveryQueues = new HashMap<String, String>();
+                for (String e : endpointNames) {
+                    deliveryQueues.put(e, "delivery-" + e);
+                }
+
+                processingQueues.addAll(deliveryQueues.values());
+                exportQueueStrategy = new AsyncDeliveryDispatchingStrategy(deliveryQueues);
+            } else {
+                exportQueueStrategy = new MultipleQueueDispatchingStrategy(endpointNames.toArray(new String[endpointNames.size()]));
+            }
         }
 
-        processingQueues.addAll(importerEndpointsMap.keySet());
+        processingQueues.addAll(endpointNames);
         processingQueues.removeAll(Arrays.asList(passiveQueues));
 
         packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
