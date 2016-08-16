@@ -19,5 +19,5 @@
 /**
  * Helpers for importing test content into the mocked repositories / resource hierarchies.
  */
-@aQute.bnd.annotation.Version("1.0")
+@org.osgi.annotation.versioning.Version("1.0")
 package org.apache.sling.testing.mock.sling.loader;
