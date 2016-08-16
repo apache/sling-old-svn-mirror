@@ -30,6 +30,10 @@
 [settings]
   org.apache.sling.commons.log.julenabled=true
 
+[configurations]
+  org.apache.sling.jcr.repoinit.impl.RepositoryInitializer
+    references=["model:context:/resources/provisioning/model.txt","model@repoinitTwo:context:/resources/provisioning/model.txt"]
+
 [:repoinit]
 # Test the RepositoryInitializer which reads such sections  
 create path /repoinit/fromProvisioningModel
@@ -48,3 +52,7 @@ register nodetypes
 << <slingtest='http://sling.apache.org/ns/test/repoinit-it/v1.0'>
 << [slingtest:unstructured] > nt:unstructured
 ===>>
+
+# second section to test multiple configured URLs
+[:repoinitTwo]
+create service user secondUserFromProvisioningModel
