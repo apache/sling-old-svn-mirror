@@ -165,7 +165,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * <code>null</code>, <code>+1</code> is returned.
      */
     @Override
-    public final int compareTo(PathBasedHolder other) {
+    public int compareTo(PathBasedHolder other) {
 
         // compare the path first, and return if not equal
         final int pathResult = other.path.compareTo(path);
@@ -177,14 +177,18 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
         // to the higher priority service
         if (serviceReference == null) {
             if ( other.serviceReference == null ) {
-                return 0;
+                return this.getClass().getName().compareTo(other.getClass().getName());
             }
             return -1;
         } else if (other.serviceReference == null) {
             return 1;
         }
 
-        return other.serviceReference.compareTo(serviceReference);
+        final int serviceResult = other.serviceReference.compareTo(serviceReference);
+        if ( serviceResult != 0 ) {
+            return serviceResult;
+        }
+        return this.getClass().getName().compareTo(other.getClass().getName());
     }
 
     /**

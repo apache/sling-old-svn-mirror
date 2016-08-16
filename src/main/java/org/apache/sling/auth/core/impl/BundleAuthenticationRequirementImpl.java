@@ -143,5 +143,23 @@ public class BundleAuthenticationRequirementImpl implements BundleAuthentication
         long getBundleId() {
             return bundleId;
         }
+
+        @Override
+        public int compareTo(final PathBasedHolder o) {
+            int result = super.compareTo(o);
+            if ( result == 0 ) {
+                result = (int) (bundleId - ((BundleAuthenticationRequirementHolder)o).getBundleId());
+            }
+            return result;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            boolean result = super.equals(obj);
+            if ( result && bundleId != ((BundleAuthenticationRequirementHolder)obj).getBundleId() ) {
+                result = false;
+            }
+            return result;
+        }
     }
 }
