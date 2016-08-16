@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import javax.servlet.ServletContext;
 
-import org.apache.sling.servlethelpers.MockServletContext;
 import org.junit.Before;
 import org.junit.Test;
 
