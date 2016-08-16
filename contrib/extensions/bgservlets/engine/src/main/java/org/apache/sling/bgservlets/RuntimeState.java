@@ -20,15 +20,18 @@ package org.apache.sling.bgservlets;
 
 import java.util.Date;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /** Interface used by a running job to exchange state
  *  information with the execution engine.
  */
+@ProviderType
 public interface RuntimeState {
     /** Set the progress message that is returned
      *  by {@link JobProgressInfo}
      */
     void setProgressMessage(String str);
-    
+
     /** Set the ETA that is returned
      *  by {@link JobProgressInfo}
      */
