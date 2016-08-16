@@ -281,4 +281,9 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void setContentLengthLong(long len) {
+        throw new UnsupportedOperationException();
+    }
+
 }
