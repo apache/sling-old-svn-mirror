@@ -23,29 +23,32 @@ import java.util.Iterator;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
-/** Back-end for management consoles that 
+import org.osgi.annotation.versioning.ProviderType;
+
+/** Back-end for management consoles that
  *  give access to background jobs.
  */
+@ProviderType
 public interface JobConsole {
-    /** Return Iterator on JobStatus, in descending order of 
+    /** Return Iterator on JobStatus, in descending order of
      *  creation date.
-     * 
+     *
      *  @param session not used if activeOnly = true
      *  @param activeOnly if true, only jobs that are currently
-     *  active in the ExecutionEngine are returned. 
+     *  active in the ExecutionEngine are returned.
      */
     Iterator<JobStatus> getJobStatus(Session session, boolean activeOnly);
-    
+
     /** Return a single JobStatus, null if not found.
-     * 
+     *
      *  @param session Session to use if reading from persistent storage
-     *  @param path the job path 
+     *  @param path the job path
      */
     JobStatus getJobStatus(Session session, String path);
-    
+
     /** Return the full path, including extension, to the job's status page. */
     String getJobStatusPagePath(HttpServletRequest request, JobStatus jobStatus, String extension);
-    
+
     /** Return the full path, including extension, to the job's stream */
     String getJobStreamPath(HttpServletRequest request, JobStatus jobStatus);
 }
