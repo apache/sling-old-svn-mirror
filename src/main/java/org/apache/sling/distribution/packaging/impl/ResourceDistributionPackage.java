@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jcr.RepositoryException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -44,8 +45,12 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
     private final Resource resource;
     private final ResourceResolver resourceResolver;
 
-    ResourceDistributionPackage(Resource resource, String type, ResourceResolver resourceResolver) {
-        super(resource.getPath(), type);
+    ResourceDistributionPackage(Resource resource,
+                                String type,
+                                ResourceResolver resourceResolver,
+                                @Nullable String digestAlgorithm,
+                                @Nullable String digestMessage) {
+        super(resource.getPath(), type, digestAlgorithm, digestMessage);
         this.resourceResolver = resourceResolver;
         ValueMap valueMap = resource.getValueMap();
         assert type.equals(valueMap.get("type")) : "wrong resource type";

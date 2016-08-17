@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
@@ -32,10 +33,14 @@ public abstract class AbstractDistributionPackage implements SharedDistributionP
 
     private final DistributionPackageInfo info;
     private final String id;
+    private final String digestAlgorithm;
+    private final String digestMessage;
 
-    protected AbstractDistributionPackage(String id, String type) {
+    protected AbstractDistributionPackage(String id, String type, String digestAlgorithm, String digestMessage) {
         this.id = id;
         this.info = new DistributionPackageInfo(type);
+        this.digestAlgorithm = digestAlgorithm;
+        this.digestMessage = digestMessage;
     }
 
     @Nonnull
@@ -51,6 +56,16 @@ public abstract class AbstractDistributionPackage implements SharedDistributionP
     @Nonnull
     public String getType() {
         return info.getType();
+    }
+
+    @Nullable
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    @Nullable
+    public String getDigestMessage() {
+        return digestMessage;
     }
 
 }

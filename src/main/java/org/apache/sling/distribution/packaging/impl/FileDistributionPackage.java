@@ -19,6 +19,8 @@
 package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +41,11 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
 
     private final File file;
 
-    public FileDistributionPackage(@Nonnull File file, @Nonnull String type) {
-        super(file.getAbsolutePath(), type);
+    public FileDistributionPackage(@Nonnull File file,
+                                   @Nonnull String type,
+                                   @Nullable String digestAlgorithm,
+                                   @Nullable String digestMessage) {
+        super(file.getAbsolutePath(), type, digestAlgorithm, digestMessage);
         this.file = file;
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);

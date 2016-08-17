@@ -19,15 +19,19 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
-import javax.annotation.Nonnull;
-import java.io.BufferedOutputStream;
+import static org.apache.sling.distribution.util.impl.DigestUtils.openDigestOutputStream;
+import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMessage;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.DigestOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -47,27 +51,42 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final File tempDirectory;
+    private final String digestAlgorithm;
     private final DistributionContentSerializer distributionContentSerializer;
 
-    public FileDistributionPackageBuilder(String type, DistributionContentSerializer distributionContentSerializer, String tempFilesFolder) {
+    public FileDistributionPackageBuilder(String type,
+                                          DistributionContentSerializer distributionContentSerializer,
+                                          String tempFilesFolder,
+                                          String digestAlgorithm) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
+        this.digestAlgorithm = digestAlgorithm;
     }
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
         OutputStream outputStream = null;
+        String digestMessage = null;
+
+        final File file;
 
         try {
-            File file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
-            outputStream = new BufferedOutputStream(new FileOutputStream(file));
+            file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
+            if (digestAlgorithm != null) {
+                outputStream = openDigestOutputStream(new FileOutputStream(file), digestAlgorithm);
+            } else {
+                outputStream = new FileOutputStream(file);
+            }
 
             distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
             outputStream.flush();
 
-            distributionPackage = new FileDistributionPackage(file, getType());
+            if (digestAlgorithm != null) {
+                digestMessage = readDigestMessage((DigestOutputStream) outputStream);
+            }
+            distributionPackage = new FileDistributionPackage(file, getType(), digestAlgorithm, digestMessage);
         } catch (IOException e) {
             throw new DistributionException(e);
         } finally {
@@ -81,8 +100,8 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
     protected DistributionPackage readPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream)
             throws DistributionException {
         DistributionPackage distributionPackage;
-
-        OutputStream outputStream = null;
+        final File file;
+        DigestOutputStream outputStream = null;
         try {
             String name;
             // stable id
@@ -96,13 +115,14 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
                 name = "distrpck-read-" + System.nanoTime();
                 log.debug("generating a new id {}", name);
             }
-            File file = File.createTempFile(name, "." + getType(), tempDirectory);
-            outputStream = new BufferedOutputStream(new FileOutputStream(file));
+            file = File.createTempFile(name, "." + getType(), tempDirectory);
+            outputStream = openDigestOutputStream(new FileOutputStream(file), digestAlgorithm);
 
             IOUtils.copy(stream, outputStream);
             outputStream.flush();
 
-            distributionPackage = new FileDistributionPackage(file, getType());
+            String digestMessage = readDigestMessage(outputStream);
+            distributionPackage = new FileDistributionPackage(file, getType(), digestAlgorithm, digestMessage);
         } catch (Exception e) {
             throw new DistributionException(e);
         } finally {
@@ -126,6 +146,6 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
 
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        return new FileDistributionPackage(new File(id), getType());
+        return new FileDistributionPackage(new File(id), getType(), null, null);
     }
 }
