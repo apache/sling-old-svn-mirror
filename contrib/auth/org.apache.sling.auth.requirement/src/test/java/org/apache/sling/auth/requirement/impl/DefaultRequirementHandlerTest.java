@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.spi.BundleAuthenticationRequirement;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.resourceresolver.MockResource;
 import org.junit.Before;
@@ -65,7 +66,7 @@ public class DefaultRequirementHandlerTest extends RequirementBaseTest {
     public void before() throws Exception {
         super.before();
 
-        context.registerService(AuthenticationRequirement.class, authenticationRequirement);
+        context.registerService(BundleAuthenticationRequirement.class, authenticationRequirement);
         context.registerService(ResourceResolverFactory.class, resourceResolverFactory);
 
         Map<String, Object> properties = ImmutableMap.<String, Object>of(DefaultRequirementHandler.PARAM_SUPPORTED_PATHS, SUPPORTED_PATHS);
@@ -331,28 +332,28 @@ public class DefaultRequirementHandlerTest extends RequirementBaseTest {
         assertAuthReq(new AuthReq("clearRequirements", ImmutableMap.<String, Boolean>of()));
     }
 
-    private static final class TestAuthRequirement implements AuthenticationRequirement {
+    private static final class TestAuthRequirement implements BundleAuthenticationRequirement {
 
         private List<AuthReq> calls = new ArrayList<AuthReq>();
 
         @Override
-        public void setRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
+        public void setRequirements(@Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("setRequirements", requirements));
 
         }
 
         @Override
-        public void appendRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
+        public void appendRequirements(@Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("appendRequirements", requirements));
         }
 
         @Override
-        public void removeRequirements(@Nonnull String id, @Nonnull Map<String, Boolean> requirements) {
+        public void removeRequirements(@Nonnull Map<String, Boolean> requirements) {
             calls.add(new AuthReq("removeRequirements", requirements));
         }
 
         @Override
-        public void clearRequirements(@Nonnull String id) {
+        public void clearRequirements() {
             calls.add(new AuthReq("clearRequirements", ImmutableMap.<String, Boolean>of()));
         }
     }
