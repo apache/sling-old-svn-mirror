@@ -324,7 +324,7 @@
     <feature version="${feature.version}">sling-servlets</feature>
   </feature>
   <feature name="sling-jcr-oak" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.0-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.0</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">sling-jcr</feature>
