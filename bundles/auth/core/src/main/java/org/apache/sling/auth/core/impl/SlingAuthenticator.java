@@ -67,7 +67,6 @@ import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.AuthenticationInfoPostProcessor;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
-import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
@@ -1591,7 +1590,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         private void addService(final ServiceReference ref) {
-            final String[] authReqPaths = OsgiUtil.toStringArray(ref.getProperty(PAR_AUTH_REQ));
+            final String[] authReqPaths = PropertiesUtil.toStringArray(ref.getProperty(PAR_AUTH_REQ));
 
             ArrayList<AuthenticationRequirementHolder> authReqList = new ArrayList<AuthenticationRequirementHolder>();
             for (String authReq : authReqPaths) {
@@ -1670,7 +1669,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         private void bindAuthHandler(final Object handler, final ServiceReference ref) {
-            final String paths[] = OsgiUtil.toStringArray(ref.getProperty(AuthenticationHandler.PATH_PROPERTY));
+            final String paths[] = PropertiesUtil.toStringArray(ref.getProperty(AuthenticationHandler.PATH_PROPERTY));
             if (paths != null && paths.length > 0) {
 
                 // generate the holders
