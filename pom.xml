@@ -75,7 +75,7 @@
                             org.apache.sling.auth.core.impl.*
                         </Private-Package>
                         <Embed-Dependency>
-                            org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/OsgiUtil.class,
+                            org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/PropertiesUtil.class,
                             commons-codec;inline="org/apache/commons/codec/binary/Base64.*
                                 |org/apache/commons/codec/binary/StringUtils*
                                 |org/apache/commons/codec/BinaryEncoder*
