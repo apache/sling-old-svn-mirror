@@ -203,6 +203,7 @@
         <module>installer/factories/deploymentpck</module>
         <module>installer/factories/subsystem_base</module>
         <module>installer/factories/subsystems</module>
+        <module>installer/hc</module>
         <module>installer/it</module>
 
         <!-- Launchpad -->
