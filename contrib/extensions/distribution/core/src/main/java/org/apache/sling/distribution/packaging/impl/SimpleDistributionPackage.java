@@ -45,7 +45,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     private final long size;
 
     public SimpleDistributionPackage(DistributionRequest request, String type) {
-        super(toIdString(request, type), type);
+        super(toIdString(request, type), type, null, null);
         String[] paths = request.getPaths();
         DistributionRequestType requestType = request.getRequestType();
 

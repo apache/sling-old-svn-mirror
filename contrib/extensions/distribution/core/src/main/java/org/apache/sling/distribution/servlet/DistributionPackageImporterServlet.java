@@ -18,9 +18,19 @@
  */
 package org.apache.sling.distribution.servlet;
 
-import javax.servlet.ServletException;
+import static javax.servlet.http.HttpServletResponse.*;
+import static org.apache.sling.distribution.util.impl.DigestUtils.openDigestInputStream;
+import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMessage;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletException;
 
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -42,6 +52,14 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    /**
+     * The <code>Digest</code> header, see <a href="https://tools.ietf.org/html/rfc3230#section-4.3.2">section-4.3.2</a>
+     * of Instance Digests in HTTP (RFC3230)
+     */
+    private static final String DIGEST_HEADER = "Digest";
+
+    private final Pattern digestHeaderRegex = Pattern.compile("(MD[25]|SHA-(?:1|256|384|512))=([a-fA-F0-9]+)");
+
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
@@ -50,11 +68,32 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
                 .getResource()
                 .adaptTo(DistributionPackageImporter.class);
 
+        String digestAlgorithm = null;
+        String digestMessage = null;
+        String digestHeader = request.getHeader(DIGEST_HEADER);
+        if (isNotEmpty(digestHeader)) {
+            log.debug("Found Digest header {}, extracting algorithm and message...", digestHeader);
+
+            Matcher matcher = digestHeaderRegex.matcher(digestHeader);
+            if (matcher.matches()) {
+                digestAlgorithm = matcher.group(1);
+                digestMessage = matcher.group(2);
+            } else {
+                log.debug("Digest header {} not supported, it doesn't match with expected pattern {}",
+                          new Object[]{ digestHeader, digestHeaderRegex.pattern() });
+            }
+        }
+
         final long start = System.currentTimeMillis();
         response.setContentType("application/json");
 
+        InputStream stream;
+        if (isNotEmpty(digestAlgorithm) && isNotEmpty(digestMessage)) {
+            stream = openDigestInputStream(request.getInputStream(), digestAlgorithm);
+        } else {
+            stream = request.getInputStream();
+        }
 
-        InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
             if (request.getParameter("forceError") != null) {
@@ -65,16 +104,34 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
 
             long end = System.currentTimeMillis();
 
+            if (isNotEmpty(digestAlgorithm) && isNotEmpty(digestMessage)) {
+                String receivedDigestMessage = readDigestMessage((DigestInputStream) stream);
+                if (!digestMessage.equalsIgnoreCase(receivedDigestMessage)) {
+                    log.error("Error during distribution import: received distribution package is corrupted, expected [{}] but received [{}]",
+                              new Object[]{ digestMessage, receivedDigestMessage });
+                    Map<String, String> kv = new HashMap<String, String>();
+                    kv.put("digestAlgorithm", digestAlgorithm);
+                    kv.put("expected", digestMessage);
+                    kv.put("received", receivedDigestMessage);
+                    ServletJsonUtils.writeJson(response, SC_BAD_REQUEST, "Received distribution package is corrupted", kv);
+                    return;
+                }
+            }
+
             log.info("Package {} imported successfully in {}ms", distributionPackageInfo, end - start);
-            ServletJsonUtils.writeJson(response, 200, "package imported successfully", null);
+            ServletJsonUtils.writeJson(response, SC_OK, "package imported successfully", null);
 
         } catch (final Throwable e) {
-            ServletJsonUtils.writeJson(response, 500, "an unexpected error has occurred during distribution import", null);
+            ServletJsonUtils.writeJson(response, SC_INTERNAL_SERVER_ERROR, "an unexpected error has occurred during distribution import", null);
             log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();
             log.debug("Processed package import request in {} ms", end - start);
         }
+    }
+
+    private static boolean isNotEmpty(String s) {
+        return s != null && !s.isEmpty();
     }
 
 }

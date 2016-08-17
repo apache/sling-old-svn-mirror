@@ -19,9 +19,13 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
+import static org.apache.sling.distribution.util.impl.DigestUtils.openDigestOutputStream;
+import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMessage;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,13 +58,15 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     private final int fileThreshold;
     private final MemoryUnit memoryUnit;
     private final boolean useOffHeapMemory;
+    private final String digestAlgorithm;
 
     public ResourceDistributionPackageBuilder(String type,
                                               DistributionContentSerializer distributionContentSerializer,
                                               String tempFilesFolder,
                                               int fileThreshold,
                                               MemoryUnit memoryUnit,
-                                              boolean useOffHeapMemory) {
+                                              boolean useOffHeapMemory,
+                                              String digestAlgorithm) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
         this.packagesPath = PREFIX_PATH + type + "/data";
@@ -68,20 +74,34 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         this.fileThreshold = fileThreshold;
         this.memoryUnit = memoryUnit;
         this.useOffHeapMemory = useOffHeapMemory;
+        this.digestAlgorithm = digestAlgorithm;
     }
 
     @Override
     protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
 
-        FileBackedMemoryOutputStream outputStream = null;
         try {
+            FileBackedMemoryOutputStream outputStream = null;
+            DigestOutputStream digestStream = null;
+            String digestMessage = null;
+
             try {
                 outputStream = new FileBackedMemoryOutputStream(fileThreshold, memoryUnit, useOffHeapMemory, tempDirectory, "distrpck-create-", "." + getType());
-                distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
+                if (digestAlgorithm != null) {
+                    digestStream = openDigestOutputStream(outputStream, digestAlgorithm);
+                    distributionContentSerializer.exportToStream(resourceResolver, request, digestStream);
+                } else {
+                    distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
+                }
                 outputStream.flush();
+
+                if (digestAlgorithm != null) {
+                    digestMessage = readDigestMessage(digestStream);
+                }
             } finally {
                 IOUtils.closeQuietly(outputStream);
+                IOUtils.closeQuietly(digestStream);
             }
 
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
@@ -97,14 +117,11 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
                 IOUtils.closeQuietly(inputStream);
             }
 
-            distributionPackage = new ResourceDistributionPackage(packageResource, getType(), resourceResolver);
+            distributionPackage = new ResourceDistributionPackage(packageResource, getType(), resourceResolver, digestAlgorithm, digestMessage);
         } catch (IOException e) {
             throw new DistributionException(e);
-        } finally {
-            if (outputStream != null) {
-                outputStream.clean();
-            }
         }
+
         return distributionPackage;
     }
 
@@ -115,7 +132,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
 
             Resource packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, -1);
-            return new ResourceDistributionPackage(packageResource, getType(), resourceResolver);
+            return new ResourceDistributionPackage(packageResource, getType(), resourceResolver, null, null);
         } catch (PersistenceException e) {
             throw new DistributionException(e);
         }
@@ -136,7 +153,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         Resource resource = resourceResolver.getResource(id);
         if (resource != null) {
-            return new ResourceDistributionPackage(resource, getType(), resourceResolver);
+            return new ResourceDistributionPackage(resource, getType(), resourceResolver, null, null);
         } else {
             return null;
         }

@@ -41,6 +41,7 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.AbstractDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -54,6 +55,12 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
     private static final String EXECUTOR_CONTEXT_KEY_PREFIX = "ExecutorContextKey";
+
+    /**
+     * The <code>Digest</code> header, see <a href="https://tools.ietf.org/html/rfc3230#section-4.3.2">section-4.3.2</a>
+     * of Instance Digests in HTTP (RFC3230)
+     */
+    private static final String DIGEST_HEADER = "Digest";
 
     /**
      * distribution package origin uri
@@ -92,6 +99,14 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 Executor executor = getExecutor(distributionContext);
 
                 Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
+
+                // add the message body digest, see https://tools.ietf.org/html/rfc3230#section-4.3.2
+                if (distributionPackage instanceof AbstractDistributionPackage) {
+                    AbstractDistributionPackage adb = (AbstractDistributionPackage) distributionPackage;
+                    if (adb.getDigestAlgorithm() != null && adb.getDigestMessage() != null) {
+                        req.addHeader(DIGEST_HEADER, String.format("%s=%s", adb.getDigestAlgorithm(), adb.getDigestMessage()));
+                    }
+                }
 
                 InputStream inputStream = null;
                 try {
