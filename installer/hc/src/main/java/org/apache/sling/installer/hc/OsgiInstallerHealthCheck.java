@@ -95,7 +95,7 @@ public class OsgiInstallerHealthCheck implements HealthCheck {
         }
         hcLog.info("Checked {} OSGi bundles and {} configurations.", numCheckedBundles, numCheckedConfigurations);
         if (hcLog.getAggregateStatus().ordinal() >= Result.Status.WARN.ordinal()) {
-            hcLog.info("Refer to the OSGI installers documentation page at {} for further details on how to fix those issues.", DOCUMENTATION_URL);
+            hcLog.info("Refer to the OSGI installer's documentation page at {} for further details on how to fix those issues.", DOCUMENTATION_URL);
         }
         return new Result(hcLog);
     }
