@@ -220,6 +220,8 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Href                                        Expected Result
                 //
+                {"/etc/commerce/collections/中文", "/etc/commerce/collections/中文"},
+                {"/etc/commerce/collections/⺁〡〢☉⊕〒", "/etc/commerce/collections/⺁〡〢☉⊕〒"},
                 {null, ""},
                 {"", ""},
                 {"simple", "simple"},
