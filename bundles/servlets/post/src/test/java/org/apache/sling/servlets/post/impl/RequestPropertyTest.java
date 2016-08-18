@@ -129,6 +129,19 @@ public class RequestPropertyTest {
     }
 
     @Test
+    public void testMultiValueModern() throws Throwable {
+        Map<String, RequestProperty> props = collectContent(p("./param[]", "true", "false"));
+
+        assertEquals(1, props.size());
+        RequestProperty prop = props.get("/test/path/param");
+        assertTrue(prop.hasValues());
+        assertTrue(prop.providesValue());
+        assertEquals(2, prop.getStringValues().length);
+        assertEquals("true", prop.getStringValues()[0]);
+        assertEquals("false", prop.getStringValues()[1]);
+    }
+
+    @Test
     public void testMultiValueWithBlank() throws Throwable {
         Map<String, RequestProperty> props = collectContent(p("./param", "true", ""));
 

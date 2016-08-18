@@ -415,6 +415,18 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 continue;
             }
 
+            // SLING-5975
+            // Modern multi-value property example:
+            // <input name="./Text[]" type="hidden" value="apple" />
+            // <input name="./Text[]" type="hidden" value="banana" />
+            if (propPath.endsWith("[]")) {
+                final RequestProperty prop = getOrCreateRequestProperty(
+                        reqProperties, propPath, 
+                        "[]");
+                prop.setValues(e.getValue());
+                continue;
+            }
+
             // plain property, create from values
             final RequestProperty prop = getOrCreateRequestProperty(reqProperties,
                 propPath, null);
