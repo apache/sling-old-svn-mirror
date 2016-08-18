@@ -20,12 +20,18 @@
 package org.apache.sling.distribution.util.impl;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +59,46 @@ public class DistributionUtils {
             }
         } catch (Throwable t) {
             log.error("cannot safely close resource resolver {}", resourceResolver);
+        }
+    }
+
+    public static void ungetResourceResolver(ResourceResolver resourceResolver) {
+
+        if (resourceResolver != null) {
+            try {
+                if (resourceResolver.hasChanges()) {
+                    resourceResolver.commit();
+                }
+            } catch (PersistenceException e) {
+                log.error("cannot commit changes to resource resolver", e);
+            } finally {
+                safelyLogout(resourceResolver);
+            }
+        }
+    }
+
+    public static ResourceResolver getResourceResolver(String user, String service, SlingRepository slingRepository,
+                                                       String subServiceName, ResourceResolverFactory resourceResolverFactory)
+            throws DistributionException {
+        ResourceResolver resourceResolver;
+
+        try {
+            Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+
+            if (subServiceName == null && user != null) {
+                Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
+                authenticationInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+                resourceResolver = resourceResolverFactory.getResourceResolver(authenticationInfo);
+            } else {
+                authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+                resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+            }
+
+            return resourceResolver;
+        } catch (LoginException le) {
+            throw new DistributionException(le);
+        } catch (RepositoryException re) {
+            throw new DistributionException(re);
         }
     }
 }

@@ -36,6 +36,9 @@ import java.util.Random;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 import org.junit.Test;
 
+/**
+ * Tests for {@link org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream}
+ */
 public class FileBackedMemoryOutputStreamTest {
 
     @Test
