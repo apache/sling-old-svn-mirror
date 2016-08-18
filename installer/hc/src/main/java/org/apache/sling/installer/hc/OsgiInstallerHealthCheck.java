@@ -155,15 +155,18 @@ public class OsgiInstallerHealthCheck implements HealthCheck {
         if (invalidResource != null) {
             if (resourceType.equals(InstallableResource.TYPE_CONFIG)) {
                 hcLog.critical(
-                        "The installer state of the OSGi configuration resource '{}' is {}, probably because a later version of that bundle is already installed!",
+                        "The installer state of the OSGi configuration resource '{}' is {}, config might have been manually overwritten!",
                         invalidResource, invalidResource.getState());
             } else {
                 hcLog.critical(
-                        "The installer state of the OSGi bundle resource '{}' is {}, config might have been manually overwritten!",
+                        "The installer state of the OSGi bundle resource '{}' is {}, probably because a later or the same version of that bundle is already installed!",
                         invalidResource, invalidResource.getState());
             }
+            return resourceType;
+        } else {
+            return ""; // do not count this group, as only non-considered resources have been in there
         }
-        return resourceType;
+        
     }
 
 }
