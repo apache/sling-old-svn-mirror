@@ -64,21 +64,19 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private final AccessControlHandling aclHandling;
     private final String[] packageRoots;
     private final int autosaveThreshold;
-    private final TreeMap<String, List<String>> nodeFilters;
-    private final TreeMap<String, List<String>> propertyFilters;
+    private final TreeMap<String, List<String>> filters;
     private final boolean useBinaryReferences;
     private final String name;
 
     public FileVaultContentSerializer(String name, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots,
-                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold) {
+                                      String[] filters, boolean useBinaryReferences, int autosaveThreshold) {
         this.name = name;
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
         this.autosaveThreshold = autosaveThreshold;
-        this.nodeFilters = VltUtils.parseFilters(nodeFilters);
-        this.propertyFilters = VltUtils.parseFilters(propertyFilters);
+        this.filters = VltUtils.parseFilters(filters);
         this.useBinaryReferences = useBinaryReferences;
     }
 
@@ -90,7 +88,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
             String packageGroup = PACKAGE_GROUP;
             String packageName = TYPE + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(request, nodeFilters, propertyFilters);
+            WorkspaceFilter filter = VltUtils.createFilter(request, filters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());

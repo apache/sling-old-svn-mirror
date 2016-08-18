@@ -28,7 +28,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
@@ -102,17 +101,11 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     private static final String PACKAGE_ROOTS = "package.roots";
 
     /**
-     * Package node filters
+     * Package filters
      */
-    @Property(label = "Package Node Filters", description = "The package node path filters. Filter format: path|+include|-exclude", cardinality = 100)
+    @Property(label = "Package Filters", description = "The package path filters. Filter format: path|+include|-exclude", cardinality = 100)
     private static final String PACKAGE_FILTERS = "package.filters";
 
-    /**
-     * Package property filters
-     */
-    @Property(label = "Package Property Filters", description = "The package property path filters. Filter format: path|+include|-exclude",
-            unbounded = PropertyUnbounded.ARRAY, value = {})
-    private static final String PROPERTY_FILTERS = "property.filters";
 
     /**
      * Temp file folder
@@ -193,8 +186,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String aclHandlingString = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(ACL_HANDLING), null));
 
         String[] packageRoots = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null));
-        String[] packageNodeFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
-        String[] packagePropertyFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PROPERTY_FILTERS), null));
+        String[] packageFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
         boolean useBinaryReferences = PropertiesUtil.toBoolean(config.get(USE_BINARY_REFERENCES), false);
@@ -216,7 +208,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         }
 
         DistributionContentSerializer contentSerializer = new FileVaultContentSerializer(name, packaging, importMode, aclHandling,
-                packageRoots, packageNodeFilters, packagePropertyFilters, useBinaryReferences, autosaveThreshold);
+                packageRoots, packageFilters, useBinaryReferences, autosaveThreshold);
 
         if ("filevlt".equals(type)) {
             packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder, digestAlgorithm);
