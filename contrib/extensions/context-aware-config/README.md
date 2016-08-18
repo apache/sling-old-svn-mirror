@@ -20,13 +20,13 @@ The service for getting the configuration resources is called the ConfigurationR
 
 For example to get a configuration resource for a content resource at /content/mysite/page1, you would write:
 
-Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
+    Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
 
-Resource configResource = configurationResourceResolver.getResource(pageResource, "site-configuration");
+    Resource configResource = configurationResourceResolver.getResource(pageResource, "site-configuration");
 
 Or if you have several configuration resources of the same type and you need all of them:
 
-Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "socialmedia");
+    Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "socialmedia");
 
 1.2 Context Aware Configurations
 ================================
@@ -40,12 +40,12 @@ Context aware configurations are built on top of context aware resources. The sa
 named and the service to get them is the ConfigurationResolver. It has a single method to get a ConfigurationBuilder
 and this builder can then be used to get configurations:
 
-Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
+    Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
 
-ConfigurationBuilder builder = configurationResolver.get(pageResource);
+    ConfigurationBuilder builder = configurationResolver.get(pageResource);
 
-SiteConfiguration siteConfig = builder.as(SiteConfiguration.class);
-Collection<SocialMediaConfig> configs = builder.name("socialmedia").asCollection(SocialMediaConfig.class);
+    SiteConfiguration siteConfig = builder.as(SiteConfiguration.class);
+    Collection<SocialMediaConfig> configs = builder.name("socialmedia").asCollection(SocialMediaConfig.class);
 
 2. Default Implementation
 =========================
@@ -63,19 +63,20 @@ These fallbacks are also used if a configuration resource is requested which doe
 
 For example with this content structure
 
-    /content/
-        mysite/
-          @sling:config = /config/tenants/piedpiper
-            page1
-            page2
-            sub/
-              @sling:config = /config/tenants/piedpiper/sub
-                pageA
-                pageB
+    /content
+      /mysite
+        @sling:config = /config/tenants/piedpiper
+          /page1
+          /page2
+          /sub
+            @sling:config = /config/tenants/piedpiper/sub
+              /pageA
+              /pageB
                 
 The context for "/content/mysite/page1" is "/config/tenants/piedpiper" while for "/content/mysite/sub/pageA" it is "/config/tenants/piedpiper/sub"
 
 For "/content/mysite/page1" the implementation searches at these paths for a configuration resource named "socialmedia/facebook":
+
     /config/tenants/piedpiper/sling:configs/socialmedia/facebook
     /config/global/sling:configs/socialmedia/facebook
     /apps/sling:configs/socialmedia/facebook
@@ -95,20 +96,17 @@ For "/content/mysite/sub/pageA" the implementation searches at these paths for a
 
 Configurations are stored under /config
 
-    /config/
-          global/
-                 sling:configs/
-                          socialmedia/
-                                      youtube
-                                             @enabled = false  <-  "enabled" is a property of the youtube resource, denoted by the @ prefix
-                                             @url = https://youtube.com <-  "url" is a property of the youtube resource, denoted by the @ prefix
-          tenants/   
-                  piedpiper/
-                            sling:configs/
-                                     socialmedia/
-                                                 facebook 
-                                                      @enabled = true  <-  "enabled" is a property of the facebook resource, denoted by the @ prefix
-                                                      @url = https://facebook.com <-  "url" is a property of the facebook resource, denoted by the @ prefix
-
-
-
+    /config
+        /global
+            /sling:configs
+                /socialmedia
+                    /youtube
+                      @enabled = false  <-  "enabled" is a property of the youtube resource, denoted by the @ prefix
+                      @url = https://youtube.com <-  "url" is a property of the youtube resource, denoted by the @ prefix
+        /tenants
+            /piedpiper
+                /sling:configs
+                    /socialmedia
+                        /facebook 
+                          @enabled = true  <-  "enabled" is a property of the facebook resource, denoted by the @ prefix
+                          @url = https://facebook.com <-  "url" is a property of the facebook resource, denoted by the @ prefix
