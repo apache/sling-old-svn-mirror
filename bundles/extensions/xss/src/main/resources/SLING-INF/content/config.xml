@@ -67,9 +67,8 @@ http://www.w3.org/TR/html401/struct/global.html
         <regexp name="htmlClass" value="[a-zA-Z0-9\s,\-_]+"/>
 
         <!-- Allow empty URL attributes with a '*'-quantifier instead of '+' for the first part of the regexp -->
-        <regexp name="onsiteURL" value="([\p{L}\p{N}\\\.\#@\$%\+&amp;;\-_~,\?=/!\*\(\)]*|\#(\w)+)"/>
-        <regexp name="offsiteURL"
-                value="(\s)*((ht|f)tp(s?)://|mailto:)[\p{L}\p{N}]+[\p{L}\p{N}\p{Zs}\.\#@\$%\+&amp;;:\-_~,\?=/!\*\(\)]*(\s)*"/>
+        <regexp name="onsiteURL" value="(?!.*javascript:)(([^?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?(\s)*"/>
+        <regexp name="offsiteURL" value="(\s)*((ht|f)tp(s?)://|mailto:)(([^?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?(\s)*"/>
 
         <regexp name="boolean" value="(true|false)"/>
         <regexp name="singlePrintable" value="[a-zA-Z0-9]{1}"/>

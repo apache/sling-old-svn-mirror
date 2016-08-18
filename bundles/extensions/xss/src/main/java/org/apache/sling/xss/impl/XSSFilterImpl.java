@@ -58,8 +58,8 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
     static final Attribute DEFAULT_HREF_ATTRIBUTE = new Attribute(
             "href",
             Arrays.asList(
-                    Pattern.compile("([\\p{L}\\p{N}\\\\\\.\\#@\\$%\\+&;\\-_~,\\?=/!\\*\\(\\)]*|\\#(\\w)+)"),
-                    Pattern.compile("(\\s)*((ht|f)tp(s?)://|mailto:)[\\p{L}\\p{N}]+[\\p{L}\\p{N}\\p{Zs}\\.\\#@\\$%\\+&;:\\-_~,\\?=/!\\*\\(\\)]*(\\s)*")
+                    Pattern.compile("(?!.*javascript:)(([^?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?(\\s)*"),
+                    Pattern.compile("(\\s)*((ht|f)tp(s?)://|mailto:)(([^?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?(\\s)*")
             ),
             Collections.<String>emptyList(),
             "removeAttribute", ""
