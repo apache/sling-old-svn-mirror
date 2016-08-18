@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +51,6 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SimpleAgentDistributionQueue;
-import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.util.impl.DistributionUtils;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -72,7 +70,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final DefaultDistributionLog log;
     private final DistributionEventFactory distributionEventFactory;
     private final DistributionQueueProcessor queueProcessor;
-    private AgentBasedRequestHandler agentBasedRequestHandler;
+    private TriggerAgentRequestHandler agentBasedRequestHandler;
 
     private final String name;
     private final boolean queueProcessingEnabled;
@@ -292,7 +290,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         log.info("enabling agent");
 
         // register triggers if any
-        agentBasedRequestHandler = new AgentBasedRequestHandler(this);
+        agentBasedRequestHandler = new TriggerAgentRequestHandler(this, agentAuthenticationInfo, log, active);
 
         if (!isPassive()) {
             try {
@@ -410,45 +408,5 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         return true;
     }
-
-    public class AgentBasedRequestHandler implements DistributionRequestHandler {
-        private final DistributionAgent agent;
-
-        public AgentBasedRequestHandler(DistributionAgent agent) {
-            this.agent = agent;
-        }
-
-        public void handle(@Nullable ResourceResolver resourceResolver, @Nonnull DistributionRequest request) {
-
-            if (!active) {
-                log.warn("skipping agent handler as agent is disabled");
-                return;
-            }
-
-            if (resourceResolver != null) {
-                try {
-                    agent.execute(resourceResolver, request);
-                } catch (Throwable t) {
-                    log.error("Error executing handler {}", request, t);
-                }
-            } else {
-                ResourceResolver agentResourceResolver = null;
-
-                try {
-                    agentResourceResolver = DistributionUtils.getResourceResolver(null, agentAuthenticationInfo.getAgentService(),
-                            agentAuthenticationInfo.getSlingRepository(), agentAuthenticationInfo.getSubServiceName(),
-                            agentAuthenticationInfo.getResourceResolverFactory());
-
-                    agent.execute(agentResourceResolver, request);
-                } catch (Throwable e) {
-                    log.error("Error executing handler {}", request, e);
-                } finally {
-                    DistributionUtils.ungetResourceResolver(agentResourceResolver);
-                }
-            }
-
-        }
-    }
-
 
 }
