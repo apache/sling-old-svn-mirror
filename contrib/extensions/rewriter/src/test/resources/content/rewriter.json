@@ -6,6 +6,6 @@
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "esp/page/emoji",
     "title": "emoji test",
-    "content" : "☂😃 🍀 🍀 🍀 😁 🍀\ud83c\udf40"
+    "content" : "\u2602\uD83D\uDE03 \uD83C\uDF40 \uD83C\uDF40 \uD83C\uDF40 \uD83D\uDE01 \uD83C\uDF40\uD83C\uDF40"
   }
 }
