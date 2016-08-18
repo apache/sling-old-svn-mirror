@@ -1,0 +1,11 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "sling:resourceType": "sling/servlet/default",
+  "title": "Apache Sling Rewriter",
+  "emoji": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "esp/page/emoji",
+    "title": "emoji test",
+    "content" : "☂😃 🍀 🍀 🍀 😁 🍀\ud83c\udf40"
+  }
+}
