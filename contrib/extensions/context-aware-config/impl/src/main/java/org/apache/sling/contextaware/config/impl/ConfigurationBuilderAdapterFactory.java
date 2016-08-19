@@ -27,9 +27,11 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 @Component(service=AdapterFactory.class,
-           property={"adapters=org.apache.sling.contextaware.config.ConfigurationBuilder",
-                     "adaptables=org.apache.sling.api.resource.Resource"})
-public class PreferencesAdapterFactory implements AdapterFactory {
+        property={
+            AdapterFactory.ADAPTER_CLASSES + "=org.apache.sling.contextaware.config.ConfigurationBuilder",
+            AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.Resource"
+        })
+public class ConfigurationBuilderAdapterFactory implements AdapterFactory {
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ConfigurationResolver resolver;
@@ -42,4 +44,5 @@ public class PreferencesAdapterFactory implements AdapterFactory {
         }
         return null;
     }
+
 }
