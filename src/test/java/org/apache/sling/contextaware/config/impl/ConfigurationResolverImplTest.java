@@ -33,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -47,6 +48,7 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.util.ConverterFactory;
 
@@ -223,6 +225,12 @@ public class ConfigurationResolverImplTest {
         assertEquals("configValue3", cfg.stringParam());
 
         // FIXME: nested configurations do not work currently
+    }
+
+    @Test(expected=ConversionException.class)
+    public void testInvalidClassConversion() {
+        // osgi converter cannot convert map to Rectangle2D class
+        underTest.get(site2Page1).as(Rectangle2D.class);
     }
 
 }

@@ -90,15 +90,10 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if ( name != null && this.contentResource != null ) {
             configResource = this.configurationResourceResolver.getResource(this.contentResource, name);
         }
-        final ValueMap props = ResourceUtil.getValueMap(configResource);
         if (clazz == ValueMap.class) {
-            return (T)props;
+            return (T)ResourceUtil.getValueMap(configResource);
         }
-        try {
-            return converter.convert(props).to(clazz);
-        } catch ( final ConversionException ce) {
-            return null;
-        }
+        return convertPropsToClass(configResource, clazz);
     }
 
     @SuppressWarnings("unchecked")
@@ -107,20 +102,32 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         final String name = getConfigurationName(clazz.getName());
         if ( name != null && this.contentResource != null ) {
             Collection<Resource> configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, name);
-            Collection<ValueMap> propsList = configResources.stream()
-                .map(res -> ResourceUtil.getValueMap(res))
-                .collect(Collectors.toList());
             if (clazz == ValueMap.class) {
-                return (Collection<T>)propsList;
+                return (Collection<T>)configResources.stream()
+                        .map(res -> ResourceUtil.getValueMap(res))
+                        .collect(Collectors.toList());
             }
-            try {
-                return propsList.stream()
-                    .map(props -> converter.convert(props).to(clazz))
-                    .collect(Collectors.toList());
-            } catch ( final ConversionException ce) {
-                // ignore
-            }
+            return configResources.stream()
+                .map(resource -> convertPropsToClass(resource, clazz))
+                .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
+    
+    private <T> T convertPropsToClass(Resource resource, Class<T> clazz) {
+        /*
+         * do not add special handling for ConversionException (it's already a runtime exception).
+         * when using annotation classes it's unlikely that conversion exceptions are thrown when converting the class,
+         * they will be thrown when accessing one of this properties. so it's not possible possible to
+         * protected the upstream code completely from ConverstionExceptions, no need to do it here then. 
+         */
+        ValueMap props = ResourceUtil.getValueMap(resource);
+        T result = converter.convert(props).to(clazz);
+        if (result == null) {
+            String path = resource != null ? resource.getPath() : "<unknown>";
+            throw new ConversionException("Unable to convert config properties from " + path + " to " + clazz.getName() + " - result is null.");
+        }
+        return result;
+    }
+    
 }
