@@ -42,16 +42,14 @@ public interface ConfigurationBuilder {
     /**
      * Get configuration as singleton and its properties mapped to the given annotation class.
      * @param clazz Annotation class or {@link org.apache.sling.api.resource.ValueMap}
-     * @return Configuration object or {@code null} if the conversion failed or the provided name
-     *         is invalid.
+     * @return Configuration object. Contains only the default values if the conversion fails or the provided name is invalid.
      */
     @Nonnull <T> T as(@Nonnull Class<T> clazz);
 
     /**
      * Get collection of configuration instances with its properties mapped to the given annotation class.
      * @param clazz Annotation class or {@link org.apache.sling.api.resource.ValueMap}
-     * @return Collection of configuration objects, might be empty if conversion failed or the
-     *         provided name is invalid.
+     * @return Collection of configuration objects. Might be empty if the provided name is invalid.
      */
     @Nonnull <T> Collection<T> asCollection(@Nonnull Class<T> clazz);
 
