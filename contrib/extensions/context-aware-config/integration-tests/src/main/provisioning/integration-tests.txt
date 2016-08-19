@@ -32,6 +32,6 @@
     
 [configurations]
   org.apache.sling.commons.log.LogManager.factory.config-slingconfig.log
-    org.apache.sling.commons.log.names=["org.apache.sling.config"]
-    org.apache.sling.commons.log.file="logs/sling-config.log"
+    org.apache.sling.commons.log.names=["org.apache.sling.contextaware.config"]
+    org.apache.sling.commons.log.file="logs/sling-contextaware-config.log"
     org.apache.sling.commons.log.level="debug"
