@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.contextaware.config.api</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware-Config API</name>
-    <description>Apache Sling Context-Aware-Config API</description>
+    <name>Apache Sling Context-Aware Configuration API</name>
+    <description>Apache Sling Context-Aware Configuration API</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/api</connection>

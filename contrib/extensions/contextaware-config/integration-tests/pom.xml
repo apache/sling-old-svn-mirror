@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.contextaware.config.integration-tests</artifactId>
     <packaging>slingstart</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Config Integration Tests</name>
-    <description>Integration tests for the Apache Sling Context Aware Config Implementation</description>
+    <name>Apache Sling Context-Aware Configuration Integration Tests</name>
+    <description>Integration tests for the Apache Sling Context-Aware Configuration Implementation</description>
 
     <properties>
         <!-- Java 8 as minimum requirement -->

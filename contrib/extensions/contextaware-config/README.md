@@ -1,19 +1,19 @@
-Apache Sling Context Aware Configuration
+Apache Sling Context-Aware Configuration
 ========================================
 
-Apache Sling Context Aware Configuration is work-in-progress.
+Apache Sling Context-Aware Configuration is work-in-progress.
 
-These bundles provide a service API that can be used to get context aware configurations. Context aware configurations are configurations that are related to a content resource or a resource tree, e.g. a web site or a tenant site.
+These bundles provide a service API that can be used to get context-aware configurations. Context-aware configurations are configurations that are related to a content resource or a resource tree, e.g. a web site or a tenant site.
 
 1. Java API
 ===========
 
-To get and use configurations, the Java API must be used. Any using code must not make any assumptions on how the context aware configurations are searched or stored!
+To get and use configurations, the Java API must be used. Any using code must not make any assumptions on how the context-aware configurations are searched or stored!
 
-1.1 Context Aware Resources
+1.1 Context-Aware Resources
 ===========================
 
-The base concept are context aware resources: for a given content resource, a named configuration resource can be get.
+The base concept are context-aware resources: for a given content resource, a named configuration resource can be get.
 The service for getting the configuration resources is called the ConfigurationResourceResolver. This service has two methods:
 - getting a named configuration resource
 - getting all child resources of a named configuration resource.
@@ -28,15 +28,15 @@ Or if you have several configuration resources of the same type and you need all
 
     Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "socialmedia");
 
-1.2 Context Aware Configurations
+1.2 Context-Aware Configurations
 ================================
 
-While context aware resources give you pure resources and your application code can decide what to do with it,
+While context-aware resources give you pure resources and your application code can decide what to do with it,
 the most common use case is some configuration. A configuration is usually described by a DTO like class, interface
 or annotation (like Declarative Services does for component configurations). These are typed configuration objects
-and the context aware configuration support automatically converts resources into the wanted configuration type.
+and the context-aware configuration support automatically converts resources into the wanted configuration type.
 
-Context aware configurations are built on top of context aware resources. The same concept is used: configurations are
+Context-aware configurations are built on top of context-aware resources. The same concept is used: configurations are
 named and the service to get them is the ConfigurationResolver. It has a single method to get a ConfigurationBuilder
 and this builder can then be used to get configurations:
 
@@ -50,7 +50,7 @@ and this builder can then be used to get configurations:
 2. Default Implementation
 =========================
 
-The above API is completely agnostic to the way context aware resources / configurations are searched and stored in the resource tree.
+The above API is completely agnostic to the way context-aware resources / configurations are searched and stored in the resource tree.
 The following is how the default implementation in Apache Sling works:
 
 2.1 Context Resolving
@@ -82,7 +82,7 @@ For "/content/mysite/page1" the implementation searches at these paths for a con
     /apps/sling:configs/socialmedia/facebook
     /libs/sling:configs/socialmedia/facebook
 
-The first resource found at these locations is used, if none is found, no context aware resource will be returned.
+The first resource found at these locations is used, if none is found, no context-aware resource will be returned.
 
 For "/content/mysite/sub/pageA" the implementation searches at these paths for a configuration resource named "socialmedia/facebook"
 

@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.contextaware-config.reactor</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware-Configuration Reactor</name>
-    <description>Sling context-aware configuration handling</description>
+    <name>Apache Sling Context-Aware Configuration Reactor</name>
+    <description>Sling Context-Aware Configuration handling</description>
   
     <scm>
         <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</connection>
