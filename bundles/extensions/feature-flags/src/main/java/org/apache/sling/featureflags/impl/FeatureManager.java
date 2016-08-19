@@ -62,7 +62,8 @@ import org.slf4j.LoggerFactory;
                    "felix.webconsole.label=features",
                    "felix.webconsole.title=Features",
                    "felix.webconsole.category=Sling",
-                   Constants.SERVICE_RANKING + ":Integer=16384"
+                   Constants.SERVICE_RANKING + ":Integer=16384",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
 public class FeatureManager implements Features, Filter, Servlet {
 
@@ -90,7 +91,7 @@ public class FeatureManager implements Features, Filter, Servlet {
     }
 
     @Override
-    public boolean isEnabled(String featureName) {
+    public boolean isEnabled(final String featureName) {
         final Feature feature = this.getFeature(featureName);
         if (feature != null) {
             return getCurrentExecutionContext().isEnabled(feature);
@@ -101,15 +102,17 @@ public class FeatureManager implements Features, Filter, Servlet {
     //--- Filter
 
     @Override
-    public void init(FilterConfig filterConfig) {
-        // nothing todo do
+    public void init(final FilterConfig filterConfig) {
+        // nothing to do
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
-            ServletException {
+    public void doFilter(final ServletRequest request,
+            final ServletResponse response,
+            final FilterChain chain)
+    throws IOException, ServletException {
+        this.pushContext((HttpServletRequest) request);
         try {
-            this.pushContext((HttpServletRequest) request);
             chain.doFilter(request, response);
         } finally {
             this.popContext();
@@ -125,7 +128,7 @@ public class FeatureManager implements Features, Filter, Servlet {
     //--- Servlet
 
     @Override
-    public void init(ServletConfig config) {
+    public void init(final ServletConfig config) {
         this.servletConfig = config;
     }
 
@@ -221,7 +224,7 @@ public class FeatureManager implements Features, Filter, Servlet {
     //--- Client Context management and access
 
     void pushContext(final HttpServletRequest request) {
-        this.perThreadClientContext.set(new ExecutionContextImpl(request));
+        this.perThreadClientContext.set(new ExecutionContextImpl(this, request));
     }
 
     void popContext() {
@@ -230,7 +233,7 @@ public class FeatureManager implements Features, Filter, Servlet {
 
     ExecutionContextImpl getCurrentExecutionContext() {
         ExecutionContextImpl ctx = this.perThreadClientContext.get();
-        return (ctx != null) ? ctx : new ExecutionContextImpl(null);
+        return (ctx != null) ? ctx : new ExecutionContextImpl(this, null);
     }
 
     /**
