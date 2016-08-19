@@ -21,7 +21,7 @@ package org.apache.sling.contextaware.config.impl;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
-import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;

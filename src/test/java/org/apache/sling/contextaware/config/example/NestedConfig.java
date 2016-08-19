@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.example;
+package org.apache.sling.contextaware.config.example;
 
-public @interface ListConfig {
+public @interface NestedConfig {
 
     String stringParam();
+    
+    SimpleConfig subConfig();
+    
+    ListConfig[] subListConfig();
     
 }

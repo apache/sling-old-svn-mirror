@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
