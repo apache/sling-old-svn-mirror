@@ -21,4 +21,4 @@
  * This is a low-level API.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.resource;
+package org.apache.sling.contextaware.config.resource;
