@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -17,7 +17,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
   
     <parent>
@@ -27,16 +27,16 @@
         <relativePath/>
     </parent>
   
-    <artifactId>org.apache.sling.context-aware-config.reactor</artifactId>
+    <artifactId>org.apache.sling.contextaware-config.reactor</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>Apache Sling Context-Aware-Configuration Reactor</name>
     <description>Sling context-aware configuration handling</description>
   
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/context-aware-config</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/context-aware-config</developerConnection>
-        <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/context-aware-config</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</developerConnection>
+        <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</url>
     </scm>
     
     <modules>
