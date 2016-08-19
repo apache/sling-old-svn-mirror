@@ -18,6 +18,17 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.BOOL_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.BOOL_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.DOUBLE_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.DOUBLE_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.INT_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.INT_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.LONG_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.LONG_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT_2;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -69,6 +80,11 @@ public class ConfigurationResolverImplTest {
                 .put("longParam", 3456L)
                 .put("doubleParam", 0.123d)
                 .put("boolParam", true)
+                .put("stringArrayParam", new String[] {STRING_DEFAULT_2,STRING_DEFAULT})
+                .put("intArrayParam", new int[] {INT_DEFAULT_2})
+                .put("longArrayParam", new long[] {LONG_DEFAULT_2,LONG_DEFAULT})
+                .put("doubleArrayParam", new double[] {DOUBLE_DEFAULT_2})
+                .put("boolArrayParam", new boolean[] {BOOL_DEFAULT_2,BOOL_DEFAULT})
                 .build());
 
         context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig", ImmutableMap.<String, Object>builder()
@@ -115,26 +131,26 @@ public class ConfigurationResolverImplTest {
         AllTypesConfig cfg = underTest.get(site1Page1).as(AllTypesConfig.class);
 
         assertNull(cfg.stringParam());
-        //FIXME: assertEquals(STRING_DEFAULT, cfg.stringArrayParamWithDefault());
+        assertEquals(STRING_DEFAULT, cfg.stringParamWithDefault());
         assertEquals(0, cfg.intParam());
-        //FIXME: assertEquals(INT_DEFAULT, cfg.intParamWithDefault());
+        assertEquals(INT_DEFAULT, cfg.intParamWithDefault());
         assertEquals(0L, cfg.longParam());
-        //FIXME: assertEquals(LONG_DEFAULT, cfg.longParamWithDefault());
+        assertEquals(LONG_DEFAULT, cfg.longParamWithDefault());
         assertEquals(0d, cfg.doubleParam(), 0.001d);
-        //FIXME: assertEquals(DOUBLE_DEFAULT, cfg.doubleParamWithDefault(), 0.001d);
+        assertEquals(DOUBLE_DEFAULT, cfg.doubleParamWithDefault(), 0.001d);
         assertEquals(false, cfg.boolParam());
-        //FIXME: assertEquals(BOOL_DEFAULT, cfg.boolParamWithDefault());
+        assertEquals(BOOL_DEFAULT, cfg.boolParamWithDefault());
 
         assertNull(cfg.stringArrayParam());
-        //FIXME: assertArrayEquals(new String[] { STRING_DEFAULT, STRING_DEFAULT_2 }, cfg.stringArrayParamWithDefault());
+        assertArrayEquals(new String[] { STRING_DEFAULT, STRING_DEFAULT_2 }, cfg.stringArrayParamWithDefault());
         assertNull(cfg.intArrayParam());
-        //FIXME: assertArrayEquals(new int[] { INT_DEFAULT, INT_DEFAULT_2 }, cfg.intArrayParamWithDefault());
+        assertArrayEquals(new int[] { INT_DEFAULT, INT_DEFAULT_2 }, cfg.intArrayParamWithDefault());
         assertNull(cfg.longArrayParam());
-        //FIXME: assertArrayEquals(new long[] { LONG_DEFAULT, LONG_DEFAULT_2 }, cfg.longArrayParamWithDefault());
+        assertArrayEquals(new long[] { LONG_DEFAULT, LONG_DEFAULT_2 }, cfg.longArrayParamWithDefault());
         assertNull(cfg.doubleArrayParam());
-        //FIXME: assertArrayEquals(new double[] { DOUBLE_DEFAULT, DOUBLE_DEFAULT_2 }, cfg.doubleArrayParamWithDefault(), 0.001d);
+        assertArrayEquals(new double[] { DOUBLE_DEFAULT, DOUBLE_DEFAULT_2 }, cfg.doubleArrayParamWithDefault(), 0.001d);
         assertNull(cfg.boolArrayParam());
-        //FIXME: assertArrayEquals(new boolean[] { BOOL_DEFAULT, BOOL_DEFAULT_2 }, cfg.boolArrayParamWithDefault());
+        assertArrayEquals(new boolean[] { BOOL_DEFAULT, BOOL_DEFAULT_2 }, cfg.boolArrayParamWithDefault());
     }
 
     @Test
@@ -149,7 +165,7 @@ public class ConfigurationResolverImplTest {
 
         assertNull(cfg.stringParam());
         assertNull(cfg.subConfig());
-        // FIXME - Converter currently returns null: assertEquals(0, cfg.subListConfig().length);
+        assertNull(cfg.subListConfig());
     }
 
 
@@ -167,26 +183,26 @@ public class ConfigurationResolverImplTest {
         AllTypesConfig cfg = underTest.get(site2Page1).as(AllTypesConfig.class);
 
         assertEquals("configValue2", cfg.stringParam());
-        //FIXME: assertEquals(STRING_DEFAULT, cfg.stringArrayParamWithDefault());
+        assertEquals(STRING_DEFAULT, cfg.stringParamWithDefault());
         assertEquals(222, cfg.intParam());
-        //FIXME: assertEquals(INT_DEFAULT, cfg.intParamWithDefault());
+        assertEquals(INT_DEFAULT, cfg.intParamWithDefault());
         assertEquals(3456L, cfg.longParam());
-        //FIXME: assertEquals(LONG_DEFAULT, cfg.longParamWithDefault());
+        assertEquals(LONG_DEFAULT, cfg.longParamWithDefault());
         assertEquals(0.123d, cfg.doubleParam(), 0.001d);
-        //FIXME: assertEquals(DOUBLE_DEFAULT, cfg.doubleParamWithDefault(), 0.001d);
+        assertEquals(DOUBLE_DEFAULT, cfg.doubleParamWithDefault(), 0.001d);
         assertEquals(true, cfg.boolParam());
-        //FIXME: assertEquals(BOOL_DEFAULT, cfg.boolParamWithDefault());
+        assertEquals(BOOL_DEFAULT, cfg.boolParamWithDefault());
 
-        //FIXME: assertArrayEquals(new String[0], cfg.stringArrayParam());
-        //FIXME: assertArrayEquals(new String[] { STRING_DEFAULT, STRING_DEFAULT_2 }, cfg.stringArrayParamWithDefault());
-        //FIXME: assertArrayEquals(new int[0], cfg.intArrayParam());
-        //FIXME: assertArrayEquals(new int[] { INT_DEFAULT, INT_DEFAULT_2 }, cfg.intArrayParamWithDefault());
-        //FIXME: assertArrayEquals(new long[0], cfg.longArrayParam());
-        //FIXME: assertArrayEquals(new long[] { LONG_DEFAULT, LONG_DEFAULT_2 }, cfg.longArrayParamWithDefault());
-        //FIXME: assertArrayEquals(new double[0], cfg.doubleArrayParam(), 0.001d);
-        //FIXME: assertArrayEquals(new double[] { DOUBLE_DEFAULT, DOUBLE_DEFAULT_2 }, cfg.doubleArrayParamWithDefault(), 0.001d);
-        //FIXME: assertArrayEquals(new boolean[0], cfg.boolArrayParam());
-        //FIXME: assertArrayEquals(new boolean[] { BOOL_DEFAULT, BOOL_DEFAULT_2 }, cfg.boolArrayParamWithDefault());
+        assertArrayEquals(new String[] {STRING_DEFAULT_2,STRING_DEFAULT}, cfg.stringArrayParam());
+        assertArrayEquals(new String[] { STRING_DEFAULT, STRING_DEFAULT_2 }, cfg.stringArrayParamWithDefault());
+        assertArrayEquals(new int[] {INT_DEFAULT_2}, cfg.intArrayParam());
+        assertArrayEquals(new int[] { INT_DEFAULT, INT_DEFAULT_2 }, cfg.intArrayParamWithDefault());
+        assertArrayEquals(new long[] {LONG_DEFAULT_2,LONG_DEFAULT}, cfg.longArrayParam());
+        assertArrayEquals(new long[] { LONG_DEFAULT, LONG_DEFAULT_2 }, cfg.longArrayParamWithDefault());
+        assertArrayEquals(new double[] {DOUBLE_DEFAULT_2}, cfg.doubleArrayParam(), 0.001d);
+        assertArrayEquals(new double[] { DOUBLE_DEFAULT, DOUBLE_DEFAULT_2 }, cfg.doubleArrayParamWithDefault(), 0.001d);
+        assertArrayEquals(new boolean[] {BOOL_DEFAULT_2,BOOL_DEFAULT}, cfg.boolArrayParam());
+        assertArrayEquals(new boolean[] { BOOL_DEFAULT, BOOL_DEFAULT_2 }, cfg.boolArrayParamWithDefault());
     }
 
     @Test
