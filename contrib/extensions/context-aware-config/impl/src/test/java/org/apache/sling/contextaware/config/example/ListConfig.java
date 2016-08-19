@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * API for accessing context-specific configuration resources.
- * This is a low-level API.
- */
-@org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.resource;
+package org.apache.sling.contextaware.config.example;
+
+public @interface ListConfig {
+
+    String stringParam();
+    
+}

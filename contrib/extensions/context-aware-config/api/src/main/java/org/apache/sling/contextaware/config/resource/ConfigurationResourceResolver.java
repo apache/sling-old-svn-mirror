@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.resource;
+package org.apache.sling.contextaware.config.resource;
 
 import java.util.Collection;
 
@@ -24,13 +24,13 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Getting context-specific configuration resources for a given resource context.
  * This is a low-level interface for supporting advanced use cases. If you just want to fetch
- * some configuration parameters {@link ConfigurationResolver} is the right place.
+ * some configuration parameters {@link org.apache.sling.contextaware.config.ConfigurationResolver}
+ * is the right place.
  */
 @ProviderType
 public interface ConfigurationResourceResolver {

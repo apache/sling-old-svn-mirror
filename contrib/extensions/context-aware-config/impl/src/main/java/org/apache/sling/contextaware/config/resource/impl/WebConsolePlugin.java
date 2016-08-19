@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,7 +34,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

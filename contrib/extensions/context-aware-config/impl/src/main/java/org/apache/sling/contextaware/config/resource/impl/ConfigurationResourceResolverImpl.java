@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;

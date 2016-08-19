@@ -26,7 +26,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
-import org.apache.sling.contextaware.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 

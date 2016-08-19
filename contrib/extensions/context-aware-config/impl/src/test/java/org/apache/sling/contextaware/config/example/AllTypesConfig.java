@@ -16,18 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.example;
+package org.apache.sling.contextaware.config.example;
 
-import static org.apache.sling.config.example.AllTypesDefaults.BOOL_DEFAULT;
-import static org.apache.sling.config.example.AllTypesDefaults.BOOL_DEFAULT_2;
-import static org.apache.sling.config.example.AllTypesDefaults.DOUBLE_DEFAULT;
-import static org.apache.sling.config.example.AllTypesDefaults.DOUBLE_DEFAULT_2;
-import static org.apache.sling.config.example.AllTypesDefaults.INT_DEFAULT;
-import static org.apache.sling.config.example.AllTypesDefaults.INT_DEFAULT_2;
-import static org.apache.sling.config.example.AllTypesDefaults.LONG_DEFAULT;
-import static org.apache.sling.config.example.AllTypesDefaults.LONG_DEFAULT_2;
-import static org.apache.sling.config.example.AllTypesDefaults.STRING_DEFAULT;
-import static org.apache.sling.config.example.AllTypesDefaults.STRING_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.BOOL_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.BOOL_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.DOUBLE_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.DOUBLE_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.INT_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.INT_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.LONG_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.LONG_DEFAULT_2;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT;
+import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT_2;
 
 public @interface AllTypesConfig {
 

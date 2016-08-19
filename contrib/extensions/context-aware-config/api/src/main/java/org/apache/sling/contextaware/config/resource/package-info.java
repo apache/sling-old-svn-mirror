@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.config.example;
-
-public @interface SimpleConfig {
-
-    String stringParam();
-    
-    int intParam();
-    
-    boolean boolParam();
-    
-}
+/**
+ * API for accessing context-specific configuration resources.
+ * This is a low-level API.
+ */
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.contextaware.config.resource;
