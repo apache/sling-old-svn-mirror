@@ -148,6 +148,10 @@ public class MockedResourceResolverImplTest {
         Mockito.when(componentContext.getBundleContext()).thenReturn(
             bundleContext);
 
+        // system bundle access
+        final Bundle systemBundle = Mockito.mock(Bundle.class);
+        Mockito.when(systemBundle.getState()).thenReturn(Bundle.ACTIVE);
+        Mockito.when(bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).thenReturn(systemBundle);
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         activator.resourceProviderTracker = resourceProviderTracker;
         activator.changeListenerWhiteboard = resourceChangeListenerWhiteboard;
