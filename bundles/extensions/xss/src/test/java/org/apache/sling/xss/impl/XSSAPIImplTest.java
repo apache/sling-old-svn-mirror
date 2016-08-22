@@ -204,7 +204,9 @@ public class XSSAPIImplTest {
                 {"<strike>strike</strike>", "<strike>strike</strike>"},
                 {"<s>s</s>", "<s>s</s>"},
 
-                {"<a href=\"\">empty href</a>", "<a href=\"\">empty href</a>"}
+                {"<a href=\"\">empty href</a>", "<a href=\"\">empty href</a>"},
+                {"<a href=\" javascript:alert(23)\">space</a>","<a>space</a>"},
+                {"<table background=\"http://www.google.com\"></table>", "<table></table>"},
         };
 
         for (String[] aTestData : testData) {
@@ -221,7 +223,7 @@ public class XSSAPIImplTest {
                 //         Href                                        Expected Result
                 //
                 {"/etc/commerce/collections/中文", "/etc/commerce/collections/中文"},
-                {"/etc/commerce/collections/⺁〡〢☉⊕〒", "/etc/commerce/collections/⺁〡〢☉⊕〒"},
+                {"/etc/commerce/collections/\u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be\u09ae\u09c2\u09b2\u0995", "/etc/commerce/collections/\u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be\u09ae\u09c2\u09b2\u0995"},
                 {null, ""},
                 {"", ""},
                 {"simple", "simple"},
