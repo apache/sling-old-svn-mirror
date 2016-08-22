@@ -711,16 +711,20 @@ public class ResourceResolverFactoryActivator {
         if ( localContext != null ) {
             final boolean result = this.preconds.checkPreconditions(unavailableName, unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
-                boolean create = true;
-                synchronized ( this ) {
-                    if ( this.factoryRegistration == null ) {
-                        this.factoryRegistration = new FactoryRegistration();
-                    } else {
-                        create = false;
+                // check system bundle state - if stopping, don't register new factory
+                final Bundle systemBundle = localContext.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+                if ( systemBundle != null && systemBundle.getState() != Bundle.STOPPING ) {
+                    boolean create = true;
+                    synchronized ( this ) {
+                        if ( this.factoryRegistration == null ) {
+                            this.factoryRegistration = new FactoryRegistration();
+                        } else {
+                            create = false;
+                        }
                     }
-                }
-                if ( create ) {
-                    this.registerFactory(localContext);
+                    if ( create ) {
+                        this.registerFactory(localContext);
+                    }
                 }
             } else if ( !result && this.factoryRegistration != null ) {
                 this.unregisterFactory();
