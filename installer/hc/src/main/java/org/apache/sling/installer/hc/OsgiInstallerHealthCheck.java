@@ -118,13 +118,13 @@ public class OsgiInstallerHealthCheck implements HealthCheck {
             switch (resourceType) {
             case InstallableResource.TYPE_CONFIG:
                 if (!checkConfigurations) {
-                    LOG.debug("Skip resource '{}' as it is a configuration", resource.getEntityId());
+                    LOG.debug("Skip resource '{}', configuration checks are disabled", resource.getEntityId());
                     return "";
                 }
                 break;
             case InstallableResource.TYPE_BUNDLE:
                 if (!checkBundles) {
-                    LOG.debug("Skip resource '{}' as it is a bundle", resource.getEntityId());
+                    LOG.debug("Skip resource '{}', bundle checks are disabled", resource.getEntityId());
                     return "";
                 }
                 break;
