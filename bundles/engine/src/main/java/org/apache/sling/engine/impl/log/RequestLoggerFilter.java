@@ -83,7 +83,7 @@ public final class RequestLoggerFilter implements Filter {
 
     // ---------- SCR Integration ----------------------------------------------
 
-    @Reference(cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.AT_LEAST_ONE, policy = ReferencePolicy.DYNAMIC)
     private void bindRequestLoggerService(RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
             this.requestEntry = this.addService(this.requestEntry, requestLoggerService);
