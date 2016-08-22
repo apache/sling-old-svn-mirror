@@ -29,7 +29,7 @@
 
   <artifactId>org.apache.sling.jcr.repoinit</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2</version>
   <name>Apache Sling RepoInit JCR module</name>
   <description>
 	  Initializes a JCR repository based on the output
@@ -41,9 +41,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/repoinit</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.repoinit-1.0.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.repoinit-1.0.2</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.repoinit-1.0.2</url>
   </scm>
   
   <build>
