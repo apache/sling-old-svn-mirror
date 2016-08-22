@@ -29,14 +29,14 @@
 
   <artifactId>org.apache.sling.repoinit.parser</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.4</version>
+  <version>1.0.5-SNAPSHOT</version>
   <name>Apache Sling RepoInit Parser</name>
   <description>Parser for the Repository Initialization language used in Sling</description>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.4</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.4</developerConnection>
-    <url>https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.repoinit.parser-1.0.4</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</developerConnection>
+    <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/repoinit/parser</url>
   </scm>
   
   <build>
