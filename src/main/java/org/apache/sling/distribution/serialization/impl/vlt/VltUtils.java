@@ -73,17 +73,19 @@ public class VltUtils {
         for (String path : distributionRequest.getPaths()) {
 
             // Set node path filters
-            Set<String> patterns = new HashSet<String>();
+            List<String> patterns = new ArrayList<String>();
             patterns.addAll(Arrays.asList(distributionRequest.getFilters(path)));
-            PathFilterSet nodeFilterSet = createFilterSet(path, nodeFilters, patterns);
             boolean deep = distributionRequest.isDeep(path);
+            PathFilterSet nodeFilterSet = new PathFilterSet(path);
             if (!deep) {
                 nodeFilterSet.addInclude(new DefaultPathFilter(path));
             }
+            initFilterSet(nodeFilterSet, nodeFilters, patterns);
             filter.add(nodeFilterSet);
 
             // Set property path filters
-            PathFilterSet propertyFilterSet = createFilterSet(path, propertyFilters, new HashSet<String>());
+            PathFilterSet propertyFilterSet = new PathFilterSet("/");
+            initFilterSet(propertyFilterSet, propertyFilters, new ArrayList<String>());
             filter.addPropertyFilterSet(propertyFilterSet);
         }
 
@@ -108,13 +110,12 @@ public class VltUtils {
         return paths;
     }
 
-    private static PathFilterSet createFilterSet(String path, NavigableMap<String, List<String>> globalFilters, Set<String> patterns) {
-
-        PathFilterSet filterSet = new PathFilterSet(path);
+    private static void initFilterSet(PathFilterSet filterSet, NavigableMap<String, List<String>> globalFilters, List<String> patterns) {
 
         // add the most specific filter rules
+        String root = filterSet.getRoot();
         for (String key : globalFilters.descendingKeySet()) {
-            if (path.startsWith(key)) {
+            if (root.startsWith(key)) {
                 patterns.addAll(globalFilters.get(key));
                 break;
             }
@@ -129,8 +130,6 @@ public class VltUtils {
                 filterSet.addExclude(entry.getFilter());
             }
         }
-
-        return filterSet;
     }
 
 
