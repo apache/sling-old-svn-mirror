@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
@@ -82,6 +83,23 @@ public class FileBackedMemoryOutputStreamTest {
 
         output.clean();
         assertFalse(output.getFile().exists());
+    }
+
+    @Test
+    public void multiBackedToFileTest() throws IOException {
+
+        List<byte[]> datum = Arrays.asList(newDataArray(0), newDataArray(1), newDataArray(9),
+                newDataArray(10), newDataArray(11), newDataArray(100), newDataArray(1000));
+
+        for (byte[] data : datum) {
+            FileBackedMemoryOutputStream output = new FileBackedMemoryOutputStream(10,
+                    MemoryUnit.BYTES,false, new File("/tmp"),
+                    "FileBackedMemoryOutputStreamTest.multiTest-" + data.length, ".tmp");
+            output.write(data);
+            output.close();
+            assertEquals(data.length, output.size());
+            verifyWrittenData(data, output);
+        }
     }
 
     private byte[] newDataArray(int size) {
