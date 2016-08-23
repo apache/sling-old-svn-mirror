@@ -100,6 +100,22 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     @Override
+    public void write(byte b[], int off, int len) throws IOException {
+        if (out == null) {
+            int memLen = Math.min(memory.remaining(), len);
+            memory.put(b, off, memLen);
+            if (len > memLen) {
+                file = createTempFile(fileName, fileExtension, tempDirectory);
+                out = new FileOutputStream(file);
+                out.write(b, off + memLen, len - memLen);
+            }
+        } else {
+
+            out.write(b, off, len);
+        }
+    }
+
+    @Override
     public void flush() throws IOException {
         if (out != null) {
             out.flush();
