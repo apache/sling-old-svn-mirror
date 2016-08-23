@@ -289,6 +289,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
     public void enable() {
         log.info("enabling agent");
 
+        active = true;
+
         // register triggers if any
         agentBasedRequestHandler = new TriggerAgentRequestHandler(this, agentAuthenticationInfo, log, active);
 
@@ -299,8 +301,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("cannot enable queue processing", e);
             }
         }
-
-        active = true;
     }
 
     public void enableTrigger(DistributionTrigger trigger) {

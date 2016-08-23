@@ -35,7 +35,6 @@ class TriggerAgentRequestHandler implements DistributionRequestHandler {
     private final SimpleDistributionAgentAuthenticationInfo authenticationInfo;
     private final DefaultDistributionLog log;
     private final boolean active;
-    private SimpleDistributionAgent simpleDistributionAgent;
     private final DistributionAgent agent;
 
     public TriggerAgentRequestHandler(@Nonnull DistributionAgent agent,
@@ -45,7 +44,6 @@ class TriggerAgentRequestHandler implements DistributionRequestHandler {
         this.authenticationInfo = authenticationInfo;
         this.log = log;
         this.active = active;
-        this.simpleDistributionAgent = simpleDistributionAgent;
         this.agent = agent;
     }
 
