@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.commons.testing</artifactId>
     <packaging>jar</packaging>
-    <version>2.1.0</version>
+    <version>2.1.1-SNAPSHOT</version>
 
     <name>Apache Sling Testing Utilities</name>
     <description>
@@ -42,13 +42,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.testing-2.1.0
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/testing
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.testing-2.1.0
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/testing
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.testing-2.1.0
+            http://svn.apache.org/viewvc/sling/trunk/bundles/commons/testing
         </url>
     </scm>
 
