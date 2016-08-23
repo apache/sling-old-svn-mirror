@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.DistributionRequest;
@@ -29,6 +31,7 @@ import org.apache.sling.distribution.DistributionRequestState;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
@@ -42,6 +45,8 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueue;
+import org.apache.sling.distribution.trigger.DistributionRequestHandler;
+import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -61,6 +66,31 @@ import static org.mockito.Mockito.when;
  * Testcase for {@link SimpleDistributionAgent}
  */
 public class SimpleDistributionAgentTest {
+
+    @Test
+    public void testDistributionEnable() throws Exception {
+        String name = "sample-agent";
+        DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
+        DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);
+        DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
+        DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
+        DistributionQueueDispatchingStrategy distributionHandler = mock(DistributionQueueDispatchingStrategy.class);
+        Iterable<DistributionQueueItemStatus> states = Collections.singletonList(new DistributionQueueItemStatus(DistributionQueueItemState.ERROR, DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
+        when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
+        DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
+
+        SimpleDistributionAgent agent = new SimpleDistributionAgent(name,
+                false, null, "serviceName", packageImporter,
+                packageExporter, packageExporterStrategy,
+                queueProvider, distributionHandler, null,
+                distributionEventFactory, resolverFactory, mock(SlingRepository.class),  mock(DefaultDistributionLog.class), null, null, 0);
+
+        TestDistributionTrigger trigger = new TestDistributionTrigger();
+        agent.enable();
+        agent.enableTrigger(trigger);
+        assertTrue(trigger.isRegistered());
+    }
 
     @Test
     public void testDistributionWithFailingDistributionStrategy() throws Exception {
@@ -320,5 +350,26 @@ public class SimpleDistributionAgentTest {
         DistributionResponse response = agent.execute(resourceResolver, request);
 
         assertFalse(response.isSuccessful());
+    }
+
+    private class TestDistributionTrigger implements DistributionTrigger {
+
+        volatile boolean registered;
+
+        @Override
+        public void register(@Nonnull DistributionRequestHandler requestHandler)
+                throws DistributionException {
+            registered = true;
+        }
+
+        @Override
+        public void unregister(@Nonnull DistributionRequestHandler requestHandler)
+                throws DistributionException {
+            registered = false;
+        }
+
+        boolean isRegistered() {
+            return registered;
+        }
     }
 }
