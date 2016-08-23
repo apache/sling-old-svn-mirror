@@ -18,29 +18,21 @@
  */
 package org.apache.sling.contextaware.config;
 
-import javax.annotation.Nonnull;
-
-import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * Getting context-specific configurations for a given resource context.
- * Context-specific configuration may be different for different parts of the resource
- * hierarchy, and configuration parameter inheritance may take place.
- *
- * This service builds on top of the {@link org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver}
- * and uses that service to resolve configuration resources. These resources
- * can then be converted into application specific configuration objects
- * using the {@link ConfigurationBuilder}.
+ * Is thrown when configuration cannot be resolved.
  */
 @ProviderType
-public interface ConfigurationResolver {
+public final class ConfigurationResolveException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * Get configuration for given resource.
-     * @param resource Context resource
-     * @return Configuration builder
-     */
-    @Nonnull ConfigurationBuilder get(@Nonnull Resource resource);
+    public ConfigurationResolveException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConfigurationResolveException(String message) {
+        super(message);
+    }
 
 }

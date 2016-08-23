@@ -30,6 +30,7 @@ import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRI
 import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT_2;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,6 +39,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.example.AllTypesConfig;
 import org.apache.sling.contextaware.config.example.ListConfig;
@@ -48,7 +50,6 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.util.ConverterFactory;
 
@@ -96,6 +97,15 @@ public class ConfigurationResolverImplTest {
                 .put("stringParam", "configValue4")
                 .put("intParam", 444)
                 .put("boolParam", true)
+                .build());
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/1", ImmutableMap.<String, Object>builder()
+                .put("stringParam", "configValue2.1")
+                .build());
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/2", ImmutableMap.<String, Object>builder()
+                .put("stringParam", "configValue2.2")
+                .build());
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/3", ImmutableMap.<String, Object>builder()
+                .put("stringParam", "configValue2.3")
                 .build());
 
         context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig/1", ImmutableMap.<String, Object>builder()
@@ -166,8 +176,8 @@ public class ConfigurationResolverImplTest {
         NestedConfig cfg = underTest.get(site1Page1).as(NestedConfig.class);
 
         assertNull(cfg.stringParam());
-        assertNull(cfg.subConfig());
-        assertNull(cfg.subListConfig());
+        assertNotNull(cfg.subConfig());
+        assertNotNull(cfg.subListConfig());
     }
 
 
@@ -223,13 +233,22 @@ public class ConfigurationResolverImplTest {
         NestedConfig cfg = underTest.get(site2Page1).as(NestedConfig.class);
 
         assertEquals("configValue3", cfg.stringParam());
-
-        // FIXME: nested configurations do not work currently
+        
+        SimpleConfig subConfig = cfg.subConfig();
+        assertEquals("configValue4", subConfig.stringParam());
+        assertEquals(444, subConfig.intParam());
+        assertEquals(true, subConfig.boolParam());
+        
+        ListConfig[] listConfig = cfg.subListConfig();
+        assertEquals(3, listConfig.length);
+        assertEquals("configValue2.1", listConfig[0].stringParam());
+        assertEquals("configValue2.2", listConfig[1].stringParam());
+        assertEquals("configValue2.3", listConfig[2].stringParam());
     }
 
-    @Test(expected=ConversionException.class)
+    @Test(expected=ConfigurationResolveException.class)
     public void testInvalidClassConversion() {
-        // osgi converter cannot convert map to Rectangle2D class
+        // test with class not supported for configuration mapping
         underTest.get(site2Page1).as(Rectangle2D.class);
     }
 

@@ -25,7 +25,6 @@ import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolv
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.converter.Converter;
 
 @Component(service=ConfigurationResolver.class)
 public class ConfigurationResolverImpl implements ConfigurationResolver {
@@ -33,13 +32,9 @@ public class ConfigurationResolverImpl implements ConfigurationResolver {
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ConfigurationResourceResolver configurationResourceResolver;
 
-    @Reference(policyOption = ReferencePolicyOption.GREEDY)
-    private Converter converter;
-
     @Override
     public ConfigurationBuilder get(Resource resource) {
-        return new ConfigurationBuilderImpl(resource,
-                configurationResourceResolver, converter);
+        return new ConfigurationBuilderImpl(resource, configurationResourceResolver);
     }
 
 }
