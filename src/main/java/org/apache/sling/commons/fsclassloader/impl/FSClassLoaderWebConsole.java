@@ -70,7 +70,7 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSClassLoaderWebConsole.class);
 
-    @Reference(target = "(service.pid=org.apache.sling.commons.fsclassloader.impl.FSClassLoaderProvider)")
+    @Reference(target = "(component.name=org.apache.sling.commons.fsclassloader.impl.FSClassLoaderProvider)")
     private ClassLoaderWriter classLoaderWriter;
 
     /**
