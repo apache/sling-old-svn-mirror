@@ -61,6 +61,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_REQUEST_ATTRIBUTES_INCLUDE = "/sightly/requestattributes.include.html";
     private static final String SLING_RESOURCE_USE = "/sightly/use.resource.html";
     private static final String SLING_I18N = "/sightly/i18n";
+    private static final String TCK_XSS = "/sightlytck/exprlang/xss.html";
 
     @BeforeClass
     public static void init() {
@@ -285,6 +286,13 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("die Bank", HTMLExtractor.innerHTML(url, pageContent, "#i18n-basename-finance"));
         assertEquals("das Ufer", HTMLExtractor.innerHTML(url, pageContent, "#i18n-nobasename"));
+    }
+
+    @Test
+    public void testXSSAttributeEscaping() {
+        String url = launchpadURL + TCK_XSS;
+        String pageContent = client.getStringContent(url, 200);
+        assertTrue(pageContent.contains("<p id=\"req-context-8\" onclick=\"console.log('red')\">Paragraph</p>"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {
