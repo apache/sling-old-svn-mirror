@@ -67,7 +67,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
      * instance to be created. This may be <code>null</code> if the entry has
      * been created by the {@link SlingAuthenticator} itself.
      */
-    private final ServiceReference<?> serviceReference;
+    final ServiceReference<?> serviceReference;
 
     /**
      * Sets up this instance with the given configuration URL provided by the
