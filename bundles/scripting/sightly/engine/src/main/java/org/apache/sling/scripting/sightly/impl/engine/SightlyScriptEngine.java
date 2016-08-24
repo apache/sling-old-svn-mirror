@@ -44,11 +44,15 @@ import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.java.compiler.GlobalShadowCheckBackendCompiler;
 import org.apache.sling.scripting.sightly.java.compiler.JavaClassBackendCompiler;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Sightly Script engine
  */
 public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Compilable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SightlyScriptEngine.class);
 
     public static final String NO_SCRIPT = "NO_SCRIPT";
 
@@ -130,6 +134,12 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
             }
             CompilationResult result = shadowCheckBackendCompiler == null ? sightlyCompiler.compile(compilationUnit,
                     javaClassBackendCompiler) : sightlyCompiler.compile(compilationUnit, shadowCheckBackendCompiler);
+            if (result.getWarnings().size() > 0) {
+                for (CompilerMessage warning : result.getWarnings()) {
+                    LOGGER.warn("Script {} {}:{}: {}", new Object[] {warning.getScriptName(), warning.getLine(), warning.getColumn(),
+                            warning.getMessage()});
+                }
+            }
             if (result.getErrors().size() > 0) {
                 CompilerMessage error = result.getErrors().get(0);
                 throw new ScriptException(error.getMessage(), error.getScriptName(), error.getLine(), error.getColumn());
