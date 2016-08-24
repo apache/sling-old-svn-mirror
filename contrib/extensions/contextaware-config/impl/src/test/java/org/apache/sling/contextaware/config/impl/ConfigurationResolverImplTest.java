@@ -50,8 +50,6 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.util.ConverterFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -68,7 +66,6 @@ public class ConfigurationResolverImplTest {
     @Before
     public void setUp() {
         context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
-        context.registerService(Converter.class, ConverterFactory.standardConverter());
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
