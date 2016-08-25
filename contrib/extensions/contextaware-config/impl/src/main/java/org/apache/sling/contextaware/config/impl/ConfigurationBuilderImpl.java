@@ -18,21 +18,14 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
-import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
@@ -94,7 +87,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (clazz == ValueMap.class) {
             return (T)ResourceUtil.getValueMap(configResource);
         }
-        return convertPropsToClass(configResource, clazz);
+        return ConfigurationProxy.get(configResource, clazz);
     }
 
     @SuppressWarnings("unchecked")
@@ -109,77 +102,10 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
                         .collect(Collectors.toList());
             }
             return configResources.stream()
-                .map(resource -> convertPropsToClass(resource, clazz))
+                .map(resource -> ConfigurationProxy.get(resource, clazz))
                 .collect(Collectors.toList());
         }
         return Collections.emptyList();
-    }
-    
-    @SuppressWarnings("unchecked")
-    private <T> T convertPropsToClass(Resource resource, Class<T> clazz) {
-        
-        // only annotation interface classes are supported
-        if (!(clazz.isInterface() && clazz.isAnnotation())) {
-            throw new ConfigurationResolveException("Annotation interface class expected: " + clazz.getName());
-        }
-
-        // create dynamic proxy for annotation class accessing underlying resource properties
-        return (T)Proxy.newProxyInstance(clazz.getClassLoader(), new Class[] { clazz },
-            new InvocationHandler() {
-                @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String propName = getInterfacePropertyName(method);
-                    if (propName == null) {
-                        return null;
-                    }
-
-                    // check for nested configuration classes
-                    Class<?> targetType = method.getReturnType();
-                    Class<?> componentType = method.getReturnType();
-                    boolean isArray = targetType.isArray();
-                    if (isArray) {
-                        componentType = targetType.getComponentType();
-                    }
-                    if (componentType.isInterface() && componentType.isAnnotation()) {
-                        Resource childResource = resource != null ? resource.getChild(propName) : null;
-                        if (isArray) {
-                            Iterable<Resource> listItemResources = childResource != null ? childResource.getChildren() : new ArrayList<>();
-                            List<Object> listItems = new ArrayList<Object>();
-                            for (Resource listItemResource : listItemResources) {
-                                listItems.add(convertPropsToClass(listItemResource, componentType));
-                            }
-                            return listItems.toArray((Object[])Array.newInstance(componentType, listItems.size()));
-                        }
-                        else {
-                            return convertPropsToClass(childResource, componentType);
-                        }
-                    }
-                    
-                    // detect default value
-                    Object defaultValue = method.getDefaultValue();
-                    if (defaultValue == null && targetType.isPrimitive() && !targetType.isArray()) {
-                        // get default value for primitive data type (use hack via array)
-                        defaultValue = Array.get(Array.newInstance(targetType, 1), 0);
-                    }
-                    
-                    // get value from valuemap with given type/default value
-                    ValueMap props = ResourceUtil.getValueMap(resource);
-                    Object value;
-                    if (defaultValue != null) {
-                        value = props.get(propName, defaultValue);
-                    }
-                    else {
-                        value = props.get(propName, targetType);
-                    }
-                    return value;
-                    
-                }
-            });
-    }
-
-    private static String getInterfacePropertyName(Method md) {
-        // TODO: support all the escaping mechanisms.
-        return md.getName().replace('_', '.');
     }
     
 }
