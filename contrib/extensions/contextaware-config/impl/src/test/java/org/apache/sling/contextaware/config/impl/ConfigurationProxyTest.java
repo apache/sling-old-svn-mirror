@@ -31,7 +31,6 @@ import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRI
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.awt.geom.Rectangle2D;
@@ -70,15 +69,15 @@ public class ConfigurationProxyTest {
         assertEquals(false, cfg.boolParam());
         assertEquals(BOOL_DEFAULT, cfg.boolParamWithDefault());
 
-        assertNull(cfg.stringArrayParam());
+        assertArrayEquals(new String[0], cfg.stringArrayParam());
         assertArrayEquals(new String[] {STRING_DEFAULT,STRING_DEFAULT_2}, cfg.stringArrayParamWithDefault());
-        assertNull(cfg.intArrayParam());
+        assertArrayEquals(new int[0], cfg.intArrayParam());
         assertArrayEquals(new int[] {INT_DEFAULT,INT_DEFAULT_2}, cfg.intArrayParamWithDefault());
-        assertNull(cfg.longArrayParam());
+        assertArrayEquals(new long[0], cfg.longArrayParam());
         assertArrayEquals(new long[] {LONG_DEFAULT,LONG_DEFAULT_2}, cfg.longArrayParamWithDefault());
-        assertNull(cfg.doubleArrayParam());
+        assertArrayEquals(new double[0],cfg.doubleArrayParam(), 0.001d);
         assertArrayEquals(new double[] {DOUBLE_DEFAULT,DOUBLE_DEFAULT_2}, cfg.doubleArrayParamWithDefault(), 0.001d);
-        assertNull(cfg.boolArrayParam());
+        assertArrayEquals(new boolean[0], cfg.boolArrayParam());
         assertArrayEquals(new boolean[] {BOOL_DEFAULT,BOOL_DEFAULT_2}, cfg.boolArrayParamWithDefault());
     }
 
@@ -89,14 +88,11 @@ public class ConfigurationProxyTest {
         assertNull(cfg.stringParam());
         
         SimpleConfig subConfig = cfg.subConfig();
-        assertNotNull(subConfig);
         assertNull(subConfig.stringParam());
         assertEquals(5, subConfig.intParam());
         assertFalse(subConfig.boolParam());
         
-        ListConfig[] subListConfig = cfg.subListConfig();
-        assertNotNull(subListConfig);
-        assertEquals(0, subListConfig.length);
+        assertArrayEquals(new ListConfig[0], cfg.subListConfig());
     }
 
     @Test
