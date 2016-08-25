@@ -18,12 +18,12 @@
  */
 package org.apache.sling.contextaware.config.example;
 
-public @interface SimpleConfig {
+public @interface SpecialNamesConfig {
 
-    String stringParam();
+    String $stringParam();
     
-    int intParam() default 5;
+    int int__Param() default 5;
     
-    boolean boolParam();
+    boolean bool_Param();
     
 }

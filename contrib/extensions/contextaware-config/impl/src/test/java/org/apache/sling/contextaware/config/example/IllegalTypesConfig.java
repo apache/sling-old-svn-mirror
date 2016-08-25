@@ -18,12 +18,24 @@
  */
 package org.apache.sling.contextaware.config.example;
 
-public @interface SimpleConfig {
+public @interface IllegalTypesConfig {
 
-    String stringParam();
+    Class clazz();
     
-    int intParam() default 5;
+    byte byteSingle();
     
-    boolean boolParam();
+    byte[] byteArray();
+    
+    short shortSingle();
+    
+    short[] shortArray();
+    
+    float floatSingle();
+    
+    float[] floatArray();
+    
+    char charSingle();
+    
+    char[] charArray();
     
 }
