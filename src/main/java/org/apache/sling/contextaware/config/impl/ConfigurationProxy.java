@@ -117,9 +117,14 @@ final class ConfigurationProxy {
             
             // detect default value
             Object defaultValue = method.getDefaultValue();
-            if (defaultValue == null && targetType.isPrimitive()) {
-                // get default value for primitive data type (use hack via array)
-                defaultValue = Array.get(Array.newInstance(targetType, 1), 0);
+            if (defaultValue == null) {
+                if (isArray) {
+                    defaultValue = Array.newInstance(componentType, 0);
+                }
+                else if (targetType.isPrimitive()) {
+                    // get default value for primitive data type (use hack via array)
+                    defaultValue = Array.get(Array.newInstance(targetType, 1), 0);
+                }
             }
             
             // get value from valuemap with given type/default value
