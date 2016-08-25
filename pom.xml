@@ -116,9 +116,6 @@
                         <Sling-Initial-Content>
                             SLING-INF/content;path:=/libs/sling/xss;overwrite:=true;ignoreImportProviders:=xml
                         </Sling-Initial-Content>
-                        <Include-Resource>
-                            META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE
-                        </Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
