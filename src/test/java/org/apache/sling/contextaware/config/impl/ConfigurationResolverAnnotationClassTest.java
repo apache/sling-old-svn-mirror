@@ -41,7 +41,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-public class ConfigurationResolverImplTest {
+public class ConfigurationResolverAnnotationClassTest {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -57,6 +57,12 @@ public class ConfigurationResolverImplTest {
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
+        context.create().resource("/config/content/site2/sampleName", ImmutableMap.<String, Object>builder()
+                .put("stringParam", "configValue1")
+                .put("intParam", 111)
+                .put("boolParam", true)
+                .build());
+
         context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1")
                 .put("intParam", 111)
@@ -169,6 +175,21 @@ public class ConfigurationResolverImplTest {
     public void testInvalidClassConversion() {
         // test with class not supported for configuration mapping
         underTest.get(site2Page1).as(Rectangle2D.class);
+    }
+
+    @Test
+    public void testNonExistingContentResource_Simple() {
+        SimpleConfig cfg = underTest.get(null).as(SimpleConfig.class);
+
+        assertNull(cfg.stringParam());
+        assertEquals(5, cfg.intParam());
+        assertEquals(false, cfg.boolParam());
+    }
+
+    @Test
+    public void testNonExistingContentResource_List() {
+        Collection<ListConfig> cfgList = underTest.get(null).asCollection(ListConfig.class);
+        assertTrue(cfgList.isEmpty());
     }
 
 }

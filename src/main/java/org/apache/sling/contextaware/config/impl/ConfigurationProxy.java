@@ -105,7 +105,7 @@ final class ConfigurationProxy {
                     return listItems.toArray((Object[])Array.newInstance(componentType, listItems.size()));
                 }
                 else {
-                    return get(childResource, componentType);
+                    return ConfigurationProxy.get(childResource, componentType);
                 }
             }
             
