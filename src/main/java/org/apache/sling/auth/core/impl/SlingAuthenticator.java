@@ -45,6 +45,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -74,7 +75,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,9 +93,16 @@ import org.slf4j.LoggerFactory;
  * Currently this class does not support multiple handlers for any one request
  * URL.
  */
-@Component(name = "org.apache.sling.engine.impl.auth.SlingAuthenticator", label = "%auth.name", description = "%auth.description", metatype = true)
+@Component(name = "org.apache.sling.engine.impl.auth.SlingAuthenticator",
+           label = "%auth.name",
+           description = "%auth.description", metatype = true)
 @Service(value = { Authenticator.class, AuthenticationSupport.class, ServletRequestListener.class })
-@Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
+@Properties({
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)"),
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, value = "true"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
+
+})
 public class SlingAuthenticator implements Authenticator,
         AuthenticationSupport, ServletRequestListener {
 
@@ -1173,8 +1182,8 @@ public class SlingAuthenticator implements Authenticator,
             final HttpServletRequest request) {
 
         // HttpService API required attributes
-        request.setAttribute(HttpContext.REMOTE_USER, resolver.getUserID());
-        request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
+        request.setAttribute(ServletContextHelper.REMOTE_USER, resolver.getUserID());
+        request.setAttribute(ServletContextHelper.AUTHENTICATION_TYPE, authType);
 
         // resource resolver for down-stream use
         request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
