@@ -78,7 +78,7 @@
     org.apache.sling/org.apache.sling.servlets.get/2.1.18
     org.apache.sling/org.apache.sling.servlets.post/2.3.13-SNAPSHOT
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.4
-    org.apache.sling/org.apache.sling.xss/1.0.8
+    org.apache.sling/org.apache.sling.xss/1.0.15-SNAPSHOT
     javax.mail/mail/1.4.7
     org.apache.geronimo.bundles/jstl/1.2_1
     org.apache.felix/org.apache.felix.http.whiteboard/3.0.0
