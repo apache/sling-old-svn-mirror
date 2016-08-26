@@ -18,7 +18,7 @@
  ******************************************************************************/
 lexer grammar SightlyLexer;
 
-ESC_EXPR: '\${'.*? '}';
+ESC_EXPR: '\\${'.*? '}';
 
 EXPR_START: '${' -> pushMode(ExpressionMode);
 
