@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
                         + "A value of -1 is substituted with the number of available processors. "
                         + "Positive integer values specify number of processors to use.  Can be greater than number of processors. "
                         + "A decimal number between 0.0 and 1.0 is treated as a fraction of available processors. "
-                        + "For example 0.5 means half of the available processors."),
+                        + "For example 0.5 means half of the available processors. For ordered queue types this value is ignored (always enforced to be 1)."),
     @Property(name=ConfigurationConstants.PROP_RETRIES,
               intValue=ConfigurationConstants.DEFAULT_RETRIES,
               label="Maximum Retries",
