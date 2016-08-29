@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.impl.compiler.debug;
 
 import java.util.Stack;
 
+import org.apache.sling.scripting.sightly.compiler.SightlyCompilerException;
 import org.apache.sling.scripting.sightly.compiler.commands.AbstractCommandVisitor;
 import org.apache.sling.scripting.sightly.compiler.commands.Command;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandHandler;
@@ -55,7 +56,7 @@ public final class SanityChecker extends AbstractCommandVisitor implements Comma
 
     @Override
     public void onError(String errorMessage) {
-        throw new RuntimeException(errorMessage);
+        throw new SightlyCompilerException(errorMessage);
     }
 
     @Override

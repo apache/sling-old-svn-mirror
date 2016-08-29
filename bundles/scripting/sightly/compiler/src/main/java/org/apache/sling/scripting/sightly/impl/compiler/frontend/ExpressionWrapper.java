@@ -61,7 +61,7 @@ public class ExpressionWrapper {
             //context must not be calculated by merging
             options.remove(Syntax.CONTEXT_OPTION);
         }
-        return new Expression(root, options);
+        return new Expression(root, options, interpolation.getContent());
     }
 
     private Expression applyFilters(Expression expression, ExpressionContext expressionContext) {
