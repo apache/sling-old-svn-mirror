@@ -84,7 +84,7 @@ public class TemplatePlugin extends AbstractPlugin {
             private String decodeName() {
                 String[] arguments = callInfo.getArguments();
                 if (arguments.length == 0) {
-                    throw new SightlyCompilerException("Template name was not provided");
+                    throw new SightlyCompilerException("Template name was not provided.", "data-sly-template=");
                 }
                 return arguments[0];
             }

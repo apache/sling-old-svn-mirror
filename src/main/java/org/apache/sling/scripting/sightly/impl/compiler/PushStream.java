@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.compiler;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.sling.scripting.sightly.compiler.SightlyCompilerException;
 import org.apache.sling.scripting.sightly.compiler.commands.Command;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandHandler;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
@@ -34,7 +35,7 @@ public final class PushStream implements CommandStream {
     private BroadcastHandler handler = new BroadcastHandler();
     private boolean closed;
     private List<Command> commands = new LinkedList<>();
-    private List<Warning> warnings = new LinkedList<>();
+    private List<StreamMessage> warnings = new LinkedList<>();
 
     @Override
     public void addHandler(CommandHandler handler) {
@@ -46,7 +47,7 @@ public final class PushStream implements CommandStream {
         return commands;
     }
 
-    public List<Warning> getWarnings() {
+    public List<StreamMessage> getWarnings() {
         return warnings;
     }
 
@@ -85,15 +86,15 @@ public final class PushStream implements CommandStream {
         this.handler.onDone();
     }
 
-    public void write(Warning warning) {
+    public void warn(StreamMessage warning) {
         warnings.add(warning);
     }
 
-    public static class Warning {
+    public static class StreamMessage {
         private String message;
         private String code;
 
-        public Warning(String message, String code) {
+        public StreamMessage(String message, String code) {
             this.message = message;
             this.code = code;
         }

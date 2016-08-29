@@ -25,6 +25,7 @@ import java.util.Stack;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
+import org.apache.sling.scripting.sightly.compiler.SightlyCompilerException;
 import org.apache.sling.scripting.sightly.compiler.commands.Conditional;
 import org.apache.sling.scripting.sightly.compiler.commands.OutText;
 import org.apache.sling.scripting.sightly.compiler.commands.OutputVariable;
@@ -363,7 +364,7 @@ public class MarkupHandler {
                     String currentTag = currentElementTag();
                     String warningMessage = String.format("Element %s requires that all expressions have an explicit context specified. " +
                             "The expression will be replaced with an empty string.", currentTag);
-                    stream.write(new PushStream.Warning(warningMessage, fragment.getExpression().getRawText()));
+                    stream.warn(new PushStream.StreamMessage(warningMessage, fragment.getExpression().getRawText()));
                     addedFragment = new Fragment.Expr(new Expression(StringConstant.EMPTY));
                 }
             }
@@ -384,7 +385,7 @@ public class MarkupHandler {
                 if (!expression.containsOption(Syntax.CONTEXT_OPTION)) {
                     String warningMessage = String.format("Expressions within the value of attribute %s need to have an explicit context " +
                             "option. The expression will be replaced with an empty string.", attributeName);
-                    stream.write(new PushStream.Warning(warningMessage, expression.getRawText()));
+                    stream.warn(new PushStream.StreamMessage(warningMessage, expression.getRawText()));
                     addedFragment = new Fragment.Text("");
                 }
             }
@@ -433,7 +434,8 @@ public class MarkupHandler {
     private Plugin obtainPlugin(String name) {
         Plugin plugin = pluginRegistry.get(name);
         if (plugin == null) {
-            throw new UnsupportedOperationException(String.format("Plugin %s does not exist", name));
+            throw new SightlyCompilerException(String.format("None of the registered plugins can handle the data-sly-%s block element.",
+                    name), "data-sly-" + name);
         }
         return plugin;
     }

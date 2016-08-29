@@ -145,7 +145,7 @@ public final class SightlyCompiler {
                 backendCompiler.handle(optimizedStream);
             }
             frontend.compile(stream, scriptSource);
-            for (PushStream.Warning w : stream.getWarnings()) {
+            for (PushStream.StreamMessage w : stream.getWarnings()) {
                 ScriptError warning = getScriptError(scriptSource, w.getCode(), 0, 0, w.getMessage());
                 compilationResult.getWarnings().add(new CompilerMessageImpl(scriptName, warning.errorMessage, warning.lineNumber, warning
                         .column));
