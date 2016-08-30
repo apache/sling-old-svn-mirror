@@ -26,13 +26,13 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.example.SimpleSlingModel;
 import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Test {@link ConfigurationResolver} with custom adaptions (in this case: Sling Models) for reading the config.
  */
-public class ConfigurationResolverSlingModelTest {
+public class ConfigurationResolverAdaptableTest {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -87,27 +87,26 @@ public class ConfigurationResolverSlingModelTest {
     }
 
     @Test
-    @Ignore  // FIXME: this test does currently not work as expected
     public void testNonExistingConfig() {
-        SimpleSlingModel model = underTest.get(site1Page1).name("sampleName").as(SimpleSlingModel.class);
+        SimpleSlingModel model = underTest.get(site1Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
         assertNull(model);
     }
 
     @Test
     public void testNonExistingConfigCollection() {
-        Collection<SimpleSlingModel> propsList = underTest.get(site1Page1).name("sampleList").asCollection(SimpleSlingModel.class);
+        Collection<SimpleSlingModel> propsList = underTest.get(site1Page1).name("sampleList").asAdaptableCollection(SimpleSlingModel.class);
         assertTrue(propsList.isEmpty());
     }
 
     @Test
     public void testConfig() {
-        SimpleSlingModel model = underTest.get(site2Page1).name("sampleName").as(SimpleSlingModel.class);
+        SimpleSlingModel model = underTest.get(site2Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
         assertEquals("configValue1", model.getStringParam());
     }
 
     @Test
     public void testConfig_ValueMapCollection() {
-        Collection<SimpleSlingModel> propsList = underTest.get(site2Page1).name("sampleList").asCollection(SimpleSlingModel.class);
+        Collection<SimpleSlingModel> propsList = underTest.get(site2Page1).name("sampleList").asAdaptableCollection(SimpleSlingModel.class);
 
         Iterator<SimpleSlingModel> propsIterator = propsList.iterator();
         assertEquals("configValue1.1", propsIterator.next().getStringParam());
@@ -116,31 +115,37 @@ public class ConfigurationResolverSlingModelTest {
     }
 
     @Test
-    @Ignore  // FIXME: this test does currently not work as expected
     public void testNonExistingContentResource() {
-        SimpleSlingModel model = underTest.get(null).name("sampleName").as(SimpleSlingModel.class);
+        SimpleSlingModel model = underTest.get(null).name("sampleName").asAdaptable(SimpleSlingModel.class);
         assertNull(model);
     }
 
     @Test
     public void testNonExistingContentResourceCollection() {
-        Collection<SimpleSlingModel> propsList = underTest.get(null).name("sampleList").asCollection(SimpleSlingModel.class);
+        Collection<SimpleSlingModel> propsList = underTest.get(null).name("sampleList").asAdaptableCollection(SimpleSlingModel.class);
         assertTrue(propsList.isEmpty());
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testNullConfigName() {
-        underTest.get(site2Page1).name(null).as(SimpleSlingModel.class);
+        underTest.get(site2Page1).name(null).asAdaptable(SimpleSlingModel.class);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConfigName() {
-        underTest.get(site2Page1).name("/a/b/c").as(SimpleSlingModel.class);
+        underTest.get(site2Page1).name("/a/b/c").asAdaptable(SimpleSlingModel.class);
     }
 
     @Test(expected=ConfigurationResolveException.class)
     public void testWithoutConfigName() {
-        underTest.get(site2Page1).as(SimpleSlingModel.class);
+        underTest.get(site2Page1).asAdaptable(SimpleSlingModel.class);
+    }
+
+    @Test
+    public void testAdaptToConfigurationBuilder() {
+        // make sure not endless loop occurs
+        ConfigurationBuilder model = underTest.get(site2Page1).name("sampleName").asAdaptable(ConfigurationBuilder.class);
+        assertNull(model);
     }
 
 }

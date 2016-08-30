@@ -85,7 +85,7 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testNonExistingConfigMap() {
-        ValueMap props = underTest.get(site1Page1).name("sampleName").as(ValueMap.class);
+        ValueMap props = underTest.get(site1Page1).name("sampleName").asValueMap();
 
         assertNull(props.get("stringParam", String.class));
         assertEquals(0, (int)props.get("intParam", 0));
@@ -94,13 +94,13 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testNonExistingConfigCollection() {
-        Collection<ValueMap> propsList = underTest.get(site1Page1).name("sampleList").asCollection(ValueMap.class);
+        Collection<ValueMap> propsList = underTest.get(site1Page1).name("sampleList").asValueMapCollection();
         assertTrue(propsList.isEmpty());
     }
 
     @Test
     public void testConfig() {
-        ValueMap props = underTest.get(site2Page1).name("sampleName").as(ValueMap.class);
+        ValueMap props = underTest.get(site2Page1).name("sampleName").asValueMap();
 
         assertEquals("configValue1", props.get("stringParam", String.class));
         assertEquals(111, (int)props.get("intParam", 0));
@@ -109,7 +109,7 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testConfigCollection() {
-        Collection<ValueMap> propsList = underTest.get(site2Page1).name("sampleList").asCollection(ValueMap.class);
+        Collection<ValueMap> propsList = underTest.get(site2Page1).name("sampleList").asValueMapCollection();
 
         Iterator<ValueMap> propsIterator = propsList.iterator();
         assertEquals("configValue1.1", propsIterator.next().get("stringParam", String.class));
@@ -119,7 +119,7 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testNonExistingContentResource() {
-        ValueMap props = underTest.get(null).name("sampleName").as(ValueMap.class);
+        ValueMap props = underTest.get(null).name("sampleName").asValueMap();
 
         assertNull(props.get("stringParam", String.class));
         assertEquals(0, (int)props.get("intParam", 0));
@@ -128,23 +128,28 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testNonExistingContentResourceCollection() {
-        Collection<ValueMap> propsList = underTest.get(null).name("sampleList").asCollection(ValueMap.class);
+        Collection<ValueMap> propsList = underTest.get(null).name("sampleList").asValueMapCollection();
         assertTrue(propsList.isEmpty());
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testNullConfigName() {
-        underTest.get(site2Page1).name(null).as(ValueMap.class);
+        underTest.get(site2Page1).name(null).asValueMap();
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConfigName() {
-        underTest.get(site2Page1).name("/a/b/c").as(ValueMap.class);
+        underTest.get(site2Page1).name("/a/b/c").asValueMap();
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidConfigName2() {
+        underTest.get(site2Page1).name("../a/b/c").asValueMap();
     }
 
     @Test(expected=ConfigurationResolveException.class)
     public void testWithoutConfigName() {
-        underTest.get(site2Page1).as(ValueMap.class);
+        underTest.get(site2Page1).asValueMap();
     }
 
 }
