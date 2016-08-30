@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -76,20 +78,20 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
 
     public List<String> getResolvePaths(final Resource contentResource) {
-        final List<String> refs = new ArrayList<String>();
+        final List<String> refs = new ArrayList<>();
 
         // find property reference
-        String ref = this.findConfigRef(contentResource);
+        ConfigReference ref = this.findConfigRef(contentResource);
 
         if (ref == null) {
             // nothing found so far, check if we are in a configured tree itself
             if (isAllowedConfigPath(contentResource.getPath())) {
-                ref = contentResource.getPath();
+                ref = new ConfigReference(contentResource, contentResource.getPath());
             }
         }
 
         if ( ref != null ) {
-            refs.add(ref);
+            refs.add(ref.getConfigReference());
         }
 
         // finally add the global fallbacks
@@ -117,7 +119,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     }
 
 
-   private String findConfigRef(final Resource startResource) {
+   private ConfigReference findConfigRef(final Resource startResource) {
         // start at resource, go up
         Resource resource = startResource;
         while (resource != null) {
@@ -139,7 +141,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
                     }
 
                     if (ref != null) {
-                        return ref;
+                        return new ConfigReference(resource, ref);
                     }
 
                 } else {
@@ -152,6 +154,16 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
         // if hit root and nothing found, return null
         return null;
+    }
+   
+    private Stream<ConfigReference> findAllConfigRefs(final Resource startResource) {
+        ConfigReference ref = findConfigRef(startResource);
+        if (ref == null) {
+            return Stream.of();
+        }
+        else {
+            return Stream.concat(Stream.of(ref), findAllConfigRefs(ref.getContentResource().getParent()));
+        }
     }
 
     private String getReference(final Resource resource) {
@@ -221,8 +233,8 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
             logger.trace("- searching for list '{}'", name);
         }
 
-        final Set<String> names = new HashSet<String>();
-        final List<Resource> result = new ArrayList<Resource>();
+        final Set<String> names = new HashSet<>();
+        final List<Resource> result = new ArrayList<>();
         int idx = 1;
         for (String path : this.getResolvePaths(contentResource)) {
             Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
@@ -255,17 +267,36 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public String getContextPath(Resource resource) {
-        // TODO: this is only a dummy implementation
-        String[] pathParts = resource.getPath().split("/");
-        return "/" + pathParts[1] + "/" + pathParts[2];
+        ConfigReference ref = findConfigRef(resource);
+        if (ref != null) {
+            return ref.getContentResource().getPath();
+        }
+        else {
+            return null;
+        }
     }
 
     @Override
-    public List<String> getAllContextPaths(Resource resource) {
-        // TODO: this is only a dummy implementation
-        List<String> items = new ArrayList<String>();
-        items.add(getContextPath(resource));
-        return items;
+    public Collection<String> getAllContextPaths(Resource resource) {
+        return findAllConfigRefs(resource)
+                .map(ref -> ref.getContentResource().getPath())
+                .collect(Collectors.toList());
+    }
+    
+    private static class ConfigReference {
+        private final Resource contentResource;
+        private final String configReference;
+        
+        public ConfigReference(Resource contentResource, String configReference) {
+            this.contentResource = contentResource;
+            this.configReference = configReference;
+        }
+        public Resource getContentResource() {
+            return contentResource;
+        }
+        public String getConfigReference() {
+            return configReference;
+        }
     }
 
 }
