@@ -110,7 +110,7 @@ public class RequestPartsIterator implements Iterator<Part> {
 
         @Override
         public String getName() {
-            return fileItem.getName();
+            return fileItem.getFieldName();
         }
 
         @Override
@@ -146,7 +146,17 @@ public class RequestPartsIterator implements Iterator<Part> {
 
         @Override
         public String getSubmittedFileName() {
-            return fileItem.getFieldName();
+            // only return non null if the submitted file name is non null.
+            // the Sling API states that if the field name is '*' then the submitting file name is used,
+            // otherwise the field name is used.
+            String fieldName = fileItem.getFieldName();
+            String fileName = fileItem.getName();
+            if ( fileName == null ) {
+                return null;
+            } else if ("*".equals(fieldName)) {
+                return fileName;
+            }
+            return fieldName;
         }
 
         private <T> Collection<T> toCollection(Iterator<T> i) {
