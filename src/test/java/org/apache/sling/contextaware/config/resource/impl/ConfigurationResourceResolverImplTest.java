@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class ConfigurationResourceResolverImplTest {
@@ -49,12 +50,14 @@ public class ConfigurationResourceResolverImplTest {
         underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
 
         // content resources
-        site1Page1 = context.create().resource("/content/site1/page1", ImmutableMap.<String, Object>builder()
+        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
                 .put("sling:config", "/config/site1")
                 .build());
-        site2Page1 = context.create().resource("/content/site2/page1", ImmutableMap.<String, Object>builder()
+        site1Page1 = context.create().resource("/content/site1/page1");
+        site2Page1 = context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
                 .put("sling:config", "/config/site2")
                 .build());
+        site2Page1 = context.create().resource("/content/site2/page1");
 
         // configuration
         context.create().resource("/libs/test");
@@ -64,12 +67,6 @@ public class ConfigurationResourceResolverImplTest {
         context.create().resource("/config/site1/feature/c");
         context.create().resource("/config/site2/feature/c");
         context.create().resource("/config/site2/feature/d");
-    }
-
-    @Test
-    public void testGetValueMapContextPath() {
-        assertEquals("/content/site1", underTest.getContextPath(site1Page1));
-        assertEquals("/content/site2", underTest.getContextPath(site2Page1));
     }
 
     @Test
@@ -102,4 +99,17 @@ public class ConfigurationResourceResolverImplTest {
             assertTrue(expectedPaths.remove(rsrc.getPath()));
         }
     }
+
+    @Test
+    public void testGetContextPath() {
+        assertEquals("/content/site1", underTest.getContextPath(site1Page1));
+        assertEquals("/content/site2", underTest.getContextPath(site2Page1));
+    }
+
+    @Test
+    public void testGetAllContextPaths() {
+        assertEquals(ImmutableList.of("/content/site1"), underTest.getAllContextPaths(site1Page1));
+        assertEquals(ImmutableList.of("/content/site2"), underTest.getAllContextPaths(site2Page1));
+    }
+
 }
