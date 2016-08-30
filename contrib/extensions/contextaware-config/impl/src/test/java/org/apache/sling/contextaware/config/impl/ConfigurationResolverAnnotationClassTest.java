@@ -41,6 +41,9 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * Test {@link ConfigurationResolver} with annotation classes for reading the config.
+ */
 public class ConfigurationResolverAnnotationClassTest {
 
     @Rule

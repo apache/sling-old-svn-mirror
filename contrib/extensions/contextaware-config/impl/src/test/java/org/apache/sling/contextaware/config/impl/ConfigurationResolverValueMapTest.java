@@ -37,6 +37,9 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * Test {@link ConfigurationResolver} with ValueMap for reading the config.
+ */
 public class ConfigurationResolverValueMapTest {
 
     @Rule
@@ -81,7 +84,7 @@ public class ConfigurationResolverValueMapTest {
     }
 
     @Test
-    public void testNonExistingConfig_ValueMap() {
+    public void testNonExistingConfigMap() {
         ValueMap props = underTest.get(site1Page1).name("sampleName").as(ValueMap.class);
 
         assertNull(props.get("stringParam", String.class));
@@ -90,13 +93,13 @@ public class ConfigurationResolverValueMapTest {
     }
 
     @Test
-    public void testNonExistingConfig_ValueMapCollection() {
+    public void testNonExistingConfigCollection() {
         Collection<ValueMap> propsList = underTest.get(site1Page1).name("sampleList").asCollection(ValueMap.class);
         assertTrue(propsList.isEmpty());
     }
 
     @Test
-    public void testConfig_ValueMap() {
+    public void testConfig() {
         ValueMap props = underTest.get(site2Page1).name("sampleName").as(ValueMap.class);
 
         assertEquals("configValue1", props.get("stringParam", String.class));
@@ -105,7 +108,7 @@ public class ConfigurationResolverValueMapTest {
     }
 
     @Test
-    public void testConfig_ValueMapCollection() {
+    public void testConfigCollection() {
         Collection<ValueMap> propsList = underTest.get(site2Page1).name("sampleList").asCollection(ValueMap.class);
 
         Iterator<ValueMap> propsIterator = propsList.iterator();
@@ -115,7 +118,7 @@ public class ConfigurationResolverValueMapTest {
     }
 
     @Test
-    public void testNonExistingContentResource_ValueMap() {
+    public void testNonExistingContentResource() {
         ValueMap props = underTest.get(null).name("sampleName").as(ValueMap.class);
 
         assertNull(props.get("stringParam", String.class));
@@ -124,7 +127,7 @@ public class ConfigurationResolverValueMapTest {
     }
 
     @Test
-    public void testNonExistingContentResource_ValueMapCollection() {
+    public void testNonExistingContentResourceCollection() {
         Collection<ValueMap> propsList = underTest.get(null).name("sampleList").asCollection(ValueMap.class);
         assertTrue(propsList.isEmpty());
     }
