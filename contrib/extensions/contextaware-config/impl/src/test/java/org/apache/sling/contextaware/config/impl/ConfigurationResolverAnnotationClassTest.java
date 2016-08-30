@@ -60,15 +60,15 @@ public class ConfigurationResolverAnnotationClassTest {
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
-        context.create().resource("/config/content/site2/sampleName", ImmutableMap.<String, Object>builder()
+        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1")
                 .put("intParam", 111)
                 .put("boolParam", true)
                 .build());
 
-        context.create().resource("/config/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1")
-                .put("intParam", 111)
+        context.create().resource("/config/content/site2/sling:configs/sampleName", ImmutableMap.<String, Object>builder()
+                .put("stringParam", "configValue1.1")
+                .put("intParam", 1111)
                 .put("boolParam", true)
                 .build());
 
@@ -142,6 +142,15 @@ public class ConfigurationResolverAnnotationClassTest {
 
         assertEquals("configValue1", cfg.stringParam());
         assertEquals(111, cfg.intParam());
+        assertEquals(true, cfg.boolParam());
+    }
+
+    @Test
+    public void testConfig_SimpleWithName() {
+        SimpleConfig cfg = underTest.get(site2Page1).name("sampleName").as(SimpleConfig.class);
+
+        assertEquals("configValue1.1", cfg.stringParam());
+        assertEquals(1111, cfg.intParam());
         assertEquals(true, cfg.boolParam());
     }
 

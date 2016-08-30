@@ -58,7 +58,7 @@ public class ConfigurationResolverValueMapIT {
         Resource resourcePage1 = resourceResolver.getResource("/content/page1");
         
         ConfigurationResolver configResolver = teleporter.getService(ConfigurationResolver.class);
-        ValueMap props = configResolver.get(resourcePage1).name("test").as(ValueMap.class);
+        ValueMap props = configResolver.get(resourcePage1).name("test").asValueMap();
         assertNotNull(props);
 
         assertNull(props.get("stringParam", String.class));
@@ -79,7 +79,7 @@ public class ConfigurationResolverValueMapIT {
         Resource resourcePage1 = resourceResolver.getResource("/content/page1");
         
         ConfigurationResolver configResolver = teleporter.getService(ConfigurationResolver.class);
-        ValueMap props = configResolver.get(resourcePage1).name("test").as(ValueMap.class);
+        ValueMap props = configResolver.get(resourcePage1).name("test").asValueMap();
         assertNotNull(props);
         
         assertEquals("value1", props.get("stringParam", String.class));
