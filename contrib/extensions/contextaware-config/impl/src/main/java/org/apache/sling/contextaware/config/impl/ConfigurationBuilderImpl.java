@@ -61,8 +61,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @return {@code true} if it is valid
      */
     private boolean isNameValid(final String name) {
-        return !StringUtils.isBlank(name) 
-                && !StringUtils.startsWith(name, "/") 
+        return !StringUtils.isBlank(name)
+                && !StringUtils.startsWith(name, "/")
                 && !StringUtils.contains(name, "../");
     }
 
@@ -71,16 +71,30 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             throw new ConfigurationResolveException("Configuration name is required when getting configuration properties as ValueMap.");
         }
         String name = configName;
-        
+
         // derive configuration name from annotation class if no name specified
         if (name == null) {
             name = clazz.getName();
         }
-        
+
         return CONFIGS_PARENT_NAME + '/' + name;
     }
 
     @SuppressWarnings("unchecked")
+    private <T> T convert(final Resource resource, Class<T> clazz) {
+        if (clazz == ValueMap.class) {
+            return (T)ResourceUtil.getValueMap(resource);
+        }
+        // try adapting resource, avoid endless loop
+        if ( resource != null && clazz != ConfigurationBuilder.class ) {
+            final T adaptedObject = resource.adaptTo(clazz);
+            if ( adaptedObject != null ) {
+                return adaptedObject;
+            }
+        }
+        return ConfigurationProxy.get(resource, clazz);
+    }
+
     @Override
     public <T> T as(final Class<T> clazz) {
         Resource configResource = null;
@@ -88,28 +102,19 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             final String name = getConfigurationName(clazz);
             configResource = this.configurationResourceResolver.getResource(this.contentResource, name);
         }
-        if (clazz == ValueMap.class) {
-            return (T)ResourceUtil.getValueMap(configResource);
-        }
-        return ConfigurationProxy.get(configResource, clazz);
+        return convert(configResource, clazz);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> Collection<T> asCollection(Class<T> clazz) {
         if (this.contentResource != null) {
             final String name = getConfigurationName(clazz);
             Collection<Resource> configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, name);
-            if (clazz == ValueMap.class) {
-                return (Collection<T>)configResources.stream()
-                        .map(res -> ResourceUtil.getValueMap(res))
-                        .collect(Collectors.toList());
-            }
             return configResources.stream()
-                .map(resource -> ConfigurationProxy.get(resource, clazz))
+                .map(resource -> convert(resource, clazz))
                 .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
-    
+
 }
