@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -47,7 +48,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,42 +61,43 @@ import org.slf4j.LoggerFactory;
 public class StartupFilterImpl implements StartupFilter, Filter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private ServiceRegistration filterServiceRegistration;
+    private ServiceRegistration<Filter> filterServiceRegistration;
     private BundleContext bundleContext;
-    private ServiceTracker providersTracker;
+    private ServiceTracker<StartupInfoProvider, StartupInfoProvider> providersTracker;
     private int providersTrackerCount = -1;
-    
+
     private final List<StartupInfoProvider> providers = new ArrayList<StartupInfoProvider>();
-    
+
     @Property(boolValue=true)
     public static final String ACTIVE_BY_DEFAULT_PROP = "active.by.default";
     private boolean defaultFilterActive;
-    
+
     public static final String DEFAULT_MESSAGE = "Startup in progress";
-    
+
     @Property(value=DEFAULT_MESSAGE)
     public static final String DEFAULT_MESSAGE_PROP = "default.message";
     private String defaultMessage;
 
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private StartupFilterDisabler startupFilterDisabler;
+    private volatile StartupFilterDisabler startupFilterDisabler;
 
     private static final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root";
     static final String DEFAULT_MANAGER_ROOT = "/system/console";
     private String managerRoot;
-    
+
     /** @inheritDoc */
+    @Override
     public void doFilter(ServletRequest request, ServletResponse sr, FilterChain chain) throws IOException, ServletException {
-        
+
         // Disable if a StartupFilterDisabler is present
         if(startupFilterDisabler!= null) {
-            log.info("StartupFilterDisabler service present, disabling StartupFilter ({})", 
+            log.info("StartupFilterDisabler service present, disabling StartupFilter ({})",
                     startupFilterDisabler.getReason());
             disable();
             chain.doFilter(request, sr);
             return;
         }
-        
+
         // Bypass for the managerRoot path
         if(request instanceof HttpServletRequest) {
             final String pathInfo = ((HttpServletRequest)request).getPathInfo();
@@ -105,9 +107,9 @@ public class StartupFilterImpl implements StartupFilter, Filter {
                 return;
             }
         }
-        
+
         updateProviders();
-        
+
         final StringBuilder sb = new StringBuilder();
         sb.append(defaultMessage);
         for(StartupInfoProvider p : providers) {
@@ -124,30 +126,32 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         response.getWriter().write(sb.toString());
         response.getWriter().flush();
     }
-    
+
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": " + (isEnabled() ? "enabled" : "disabled"); 
+        return getClass().getSimpleName() + ": " + (isEnabled() ? "enabled" : "disabled");
     }
 
     /** @inheritDoc */
+    @Override
     public void destroy() {
     }
 
     /** @inheritDoc */
+    @Override
     public void init(FilterConfig cfg) throws ServletException {
     }
-    
+
     /** If needed, update our list of providers */
     private void updateProviders() {
         if(providersTracker.getTrackingCount() != providersTrackerCount) {
             synchronized(this) {
                 if(providersTracker.getTrackingCount() != providersTrackerCount) {
                     providers.clear();
-                    final ServiceReference [] refs = providersTracker.getServiceReferences();
+                    final ServiceReference<StartupInfoProvider> [] refs = providersTracker.getServiceReferences();
                     if(refs != null) {
-                        for(ServiceReference ref : refs) {
-                            providers.add((StartupInfoProvider)bundleContext.getService(ref));
+                        for(ServiceReference<StartupInfoProvider> ref : refs) {
+                            providers.add(bundleContext.getService(ref));
                         }
                     }
                 }
@@ -158,16 +162,16 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     }
 
     @Activate
-    protected void activate(ComponentContext ctx) throws InterruptedException {
-        bundleContext = ctx.getBundleContext();
-        
-        providersTracker = new ServiceTracker(bundleContext, StartupInfoProvider.class.getName(), null);
+    protected void activate(final BundleContext ctx, final Map<String, Object> properties) throws InterruptedException {
+        bundleContext = ctx;
+
+        providersTracker = new ServiceTracker(bundleContext, StartupInfoProvider.class, null);
         providersTracker.open();
-        
-        Object prop = ctx.getProperties().get(DEFAULT_MESSAGE_PROP);
+
+        Object prop = properties.get(DEFAULT_MESSAGE_PROP);
         defaultMessage = prop == null ? DEFAULT_MESSAGE : prop.toString();
-                
-        prop = ctx.getProperties().get(ACTIVE_BY_DEFAULT_PROP);
+
+        prop = properties.get(ACTIVE_BY_DEFAULT_PROP);
         defaultFilterActive = (prop instanceof Boolean ? (Boolean)prop : false);
 
         prop = bundleContext.getProperty(FRAMEWORK_PROP_MANAGER_ROOT);
@@ -178,36 +182,41 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         }
         log.info("Activated, enabled={}, managerRoot={}", isEnabled(), managerRoot);
     }
-    
+
     @Deactivate
-    protected void deactivate(ComponentContext ctx) throws InterruptedException {
+    protected void deactivate() throws InterruptedException {
         disable();
         providersTracker.close();
         providersTracker = null;
         bundleContext = null;
     }
-    
-    
+
+
+    @Override
     public synchronized void enable() {
-        if(filterServiceRegistration == null) {
+        if (filterServiceRegistration == null) {
             final String pattern = "/";
             final Hashtable<String, Object> params = new Hashtable<String, Object>();
             params.put(Constants.SERVICE_RANKING, 0x9000); // run before RequestLoggerFilter (0x8000)
-            params.put("filter.scope", "REQUEST");
-            params.put("pattern", pattern);
-            filterServiceRegistration = bundleContext.registerService(Filter.class.getName(), this, params);
-            log.info("Registered {} as a Filter service with pattern {}", this, pattern);
+            params.put("sling.filter.scope", "REQUEST");
+            params.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                    "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
+            params.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, pattern);
+            filterServiceRegistration = bundleContext.registerService(Filter.class, this, params);
+            log.info("Registered {} as a servlet filter service with pattern {}", this, pattern);
         }
     }
-    
+
+    @Override
     public synchronized void disable() {
-        if(filterServiceRegistration != null) {
+        if (filterServiceRegistration != null) {
             filterServiceRegistration.unregister();
             filterServiceRegistration = null;
             log.info("Filter service disabled");
         }
     }
-    
+
+    @Override
     public synchronized boolean isEnabled() {
         return filterServiceRegistration != null;
     }

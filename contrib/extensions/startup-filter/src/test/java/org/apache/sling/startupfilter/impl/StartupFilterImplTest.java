@@ -23,7 +23,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.Filter;
@@ -47,63 +48,71 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 
 /** Test the StartupFilterImpl */
 public class StartupFilterImplTest {
     static private class TestProvider implements StartupInfoProvider, ServiceReference {
         private final String info;
-        
+
         TestProvider(String s) {
             info = s;
         }
-        
+
+        @Override
         public String getProgressInfo() {
             return info;
         }
 
+        @Override
         public Object getProperty(String key) {
             return null;
         }
 
+        @Override
         public String[] getPropertyKeys() {
             return null;
         }
 
+        @Override
         public Bundle getBundle() {
             return null;
         }
 
+        @Override
         public Bundle[] getUsingBundles() {
             return null;
         }
 
+        @Override
         public boolean isAssignableTo(Bundle bundle, String className) {
             return false;
         }
 
+        @Override
         public int compareTo(Object reference) {
             return 0;
         }
     }
     static private class TestFilterImpl extends StartupFilterImpl {
-        void setup(ComponentContext ctx) throws Exception {
-            activate(ctx);
+        void setup(BundleContext ctx, Map<String, Object> props) throws Exception {
+            activate(ctx, props);
         }
     };
-    
+
     static private class ChangeInteger implements Action {
         private final boolean increment;
         private final AtomicInteger value;
-        
+
         ChangeInteger(AtomicInteger value, boolean increment) {
             this.increment = increment;
             this.value = value;
         }
+        @Override
         public void describeTo(Description d) {
             d.appendText(increment ? "increment" : "decrement");
             d.appendText(" an integer");
         }
+        @Override
         public Object invoke(Invocation invocation) throws Throwable {
             if(increment) {
                 value.incrementAndGet();
@@ -116,7 +125,7 @@ public class StartupFilterImplTest {
 
     private TestFilterImpl filter;
     private Mockery mockery;
-    private HttpServletRequest request; 
+    private HttpServletRequest request;
     private HttpServletResponse response;
     private FilterChain chain;
     private int lastReturnedStatus;
@@ -130,23 +139,24 @@ public class StartupFilterImplTest {
     public void setup() {
         activeFilterCount = new AtomicInteger();
         mockery = new Mockery();
-        request = mockery.mock(HttpServletRequest.class); 
+        request = mockery.mock(HttpServletRequest.class);
         response = mockery.mock(HttpServletResponse.class);
         chain = mockery.mock(FilterChain.class);
         serviceRegistration = mockery.mock(ServiceRegistration.class);
         filter = new TestFilterImpl();
         requestPath = "/NO_PATH_YET";
     }
-    
+
     private void setProvider(final TestProvider provider) throws Exception {
-        final BundleContext bundleContext = mockery.mock(BundleContext.class); 
-        final ComponentContext componentContext = mockery.mock(ComponentContext.class); 
-        
+        final BundleContext bundleContext = mockery.mock(BundleContext.class);
+
         final Action storeStatus = new Action() {
+            @Override
             public void describeTo(Description d) {
                 d.appendText("Store HTTP response values");
             }
 
+            @Override
             public Object invoke(Invocation invocation) throws Throwable {
                 lastReturnedStatus = (Integer)invocation.getParameter(0);
                 return null;
@@ -154,76 +164,70 @@ public class StartupFilterImplTest {
         };
 
         messageWriter = new StringWriter();
-        final PrintWriter responseWriter = new PrintWriter(messageWriter); 
-        
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final PrintWriter responseWriter = new PrintWriter(messageWriter);
+
+        final Map<String, Object> props = new HashMap<String, Object>();
         props.put(StartupFilterImpl.ACTIVE_BY_DEFAULT_PROP, Boolean.TRUE);
-        
+
         final ServiceReference [] providerRefs = provider == null ? null : new ServiceReference[] { provider };
         mockery.checking(new Expectations() {{
-            allowing(componentContext).getBundleContext();
-            will(returnValue(bundleContext));
-            
-            allowing(componentContext).getProperties();
-            will(returnValue(props));
-            
             allowing(bundleContext).createFilter(with(any(String.class)));
             allowing(bundleContext).addServiceListener(with(any(ServiceListener.class)));
             allowing(bundleContext).addServiceListener(with(any(ServiceListener.class)), with(any(String.class)));
-            
+
             allowing(bundleContext).getServiceReferences(StartupInfoProvider.class.getName(), null);
             will(returnValue(providerRefs));
             allowing(bundleContext).getService(with(any(ServiceReference.class)));
             will(returnValue(provider));
-            
+
             allowing(bundleContext).getProperty(with("felix.webconsole.manager.root"));
             will(returnValue(CONSOLE_ROOT));
 
-            allowing(bundleContext).registerService(with(Filter.class.getName()), with(any(Object.class)), with(any(Dictionary.class)));
+            allowing(bundleContext).registerService(with(equal(Filter.class)), with(any(Filter.class)), with(any(Dictionary.class)));
             will(new DoAllAction(
                     new ChangeInteger(activeFilterCount, true),
                     returnValue(serviceRegistration)
                     ));
-            
+
             allowing(response).setStatus((with(any(Integer.class))));
             will(storeStatus);
-            
+
             allowing(response).setContentType("text/plain");
-            
+
             allowing(response).getWriter();
             will(returnValue(responseWriter));
             allowing(response).setCharacterEncoding(with(any(String.class)));
-            
+
             allowing(serviceRegistration).unregister();
             will(new ChangeInteger(activeFilterCount, false));
-            
+
             allowing(request).getPathInfo();
             will(returnValue(getRequestPath()));
-            
+
             allowing(chain).doFilter(with(any(ServletRequest.class)), with(any(ServletResponse.class)));
         }});
-        
-        filter.setup(componentContext);
+
+        filter.setup(bundleContext, props);
     }
-    
+
     private String getRequestPath() {
         return requestPath;
     }
-    
+
     private void assertRequest(final int expectedStatus, final String expectedMessage) throws Exception {
         lastReturnedStatus = -1;
-        
+
         filter.doFilter(request, response, chain);
-        
+
         final String responseText = messageWriter.toString();
-        
+
         // status 0 means we expect the request to go through
-        assertEquals("Expecting status to match", 
+        assertEquals("Expecting status to match",
                 expectedStatus, lastReturnedStatus);
-        assertEquals("Expecting message to match", 
+        assertEquals("Expecting message to match",
                 expectedMessage, responseText);
     }
-    
+
     @Test
     public void testInitialState() throws Exception {
         setProvider(null);
@@ -256,10 +260,10 @@ public class StartupFilterImplTest {
     @Test
     public void testProviders() throws Exception {
         final TestProvider p = new TestProvider("TEST");
-        
+
         setProvider(p);
         assertEquals("Initially expecting one filter service", 1, activeFilterCount.get());
-        
+
         final String expectedMessage = StartupFilterImpl.DEFAULT_MESSAGE + "\nTEST";
         assertRequest(503, expectedMessage);
 
