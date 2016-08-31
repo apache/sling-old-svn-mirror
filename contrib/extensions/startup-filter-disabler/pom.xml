@@ -17,58 +17,59 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>28</version>
-    <relativePath/>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>28</version>
+        <relativePath/>
+    </parent>
 
-  <artifactId>org.apache.sling.startupfilter.disabler</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>bundle</packaging>
+    <artifactId>org.apache.sling.startupfilter.disabler</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
-  <name>Apache Sling Startup Filter Disabler</name>
-  <description> 
-    Registers a StartupFilterDisabler to disable the Sling Startup Filter.
-    Configure this bundle with a high enough run level to remove the
-    startup filter once the system is ready. 
-  </description>
+    <name>Apache Sling Startup Filter Disabler</name>
+    <description> 
+      Registers a StartupFilterDisabler to disable the Sling Startup Filter.
+      Configure this bundle with a high enough run level to remove the
+      startup filter once the system is ready. 
+    </description>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</connection>
-    <developerConnection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</developerConnection>
-    <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</url>
-  </scm>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</connection>
+        <developerConnection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/startup-filter-disabler</url>
+    </scm>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-scr-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-      </plugin>
-    </plugins>
-  </build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
+    </build>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi.core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.startupfilter</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.startupfilter</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>
