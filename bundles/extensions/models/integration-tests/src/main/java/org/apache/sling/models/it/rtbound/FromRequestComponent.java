@@ -14,7 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.factory;
+package org.apache.sling.models.it.rtbound;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables = { SlingHttpServletRequest.class }, resourceType = "sling/rt/fromRequest")
+public class FromRequestComponent {
+}

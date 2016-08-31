@@ -14,7 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.factory;
+package org.apache.sling.models.it.rtbound;
 
-import aQute.bnd.annotation.Version;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables = { Resource.class }, resourceType = "sling/rt/extended")
+public class ExtendedComponent extends BaseComponent {
+
+    private final Date d = new Date();
+
+    public ExtendedComponent(Resource resource) {
+        super(resource);
+    }
+
+    public Calendar getDateByCalendar() {
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(d);
+        return cal;
+    }
+
+    public Date getDate() {
+        return d;
+    }
+}

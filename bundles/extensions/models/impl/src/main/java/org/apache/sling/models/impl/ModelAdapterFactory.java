@@ -54,8 +54,10 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.models.annotations.Model;
@@ -1026,6 +1028,42 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Nonnull ImplementationPicker[] getImplementationPickers() {
         return adapterImplementations.getImplementationPickers();
+    }
+
+    @Override
+    public boolean isModelAvailableForRequest(@Nonnull SlingHttpServletRequest request) {
+        return adapterImplementations.getModelClassForRequest(request) != null;
+    }
+
+    @Override
+    public boolean isModelAvailableForResource(@Nonnull Resource resource) {
+        return adapterImplementations.getModelClassForResource(resource) != null;
+    }
+
+    @Override
+    public Object getModelFromResource(Resource resource) {
+        Class<?> clazz = this.adapterImplementations.getModelClassForResource(resource);
+        if (clazz == null) {
+            throw new ModelClassException("Could find model registered for resource type: " + resource.getResourceType());
+        }
+        return handleBoundModelResult(internalCreateModel(resource, clazz));
+    }
+
+    @Override
+    public Object getModelFromRequest(SlingHttpServletRequest request) {
+        Class<?> clazz = this.adapterImplementations.getModelClassForRequest(request);
+        if (clazz == null) {
+            throw new ModelClassException("Could find model registered for request path: " + request.getServletPath());
+        }
+        return handleBoundModelResult(internalCreateModel(request, clazz));
+    }
+
+    private Object handleBoundModelResult(Result<?> result) {
+        if (!result.wasSuccessful()) {
+            throw result.getThrowable();
+        } else {
+            return result.getValue();
+        }
     }
 
 }

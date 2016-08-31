@@ -14,7 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.factory;
+package org.apache.sling.models.it.rtbound;
 
-import aQute.bnd.annotation.Version;
+import javax.inject.Inject;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables = { Resource.class }, resourceType = "sling/rt/base")
+public class BaseComponent {
+
+    private final Resource resource;
+
+    @Inject
+    private String sampleValue;
+
+    public BaseComponent(Resource resource) {
+        this.resource = resource;
+    }
+
+    public String getId() {
+        return this.resource.getPath();
+    }
+
+    public String getSampleValue() {
+        return sampleValue;
+    }
+
+    public String getSampleValueToUpperCase() {
+        return sampleValue.toUpperCase();
+    }
+}

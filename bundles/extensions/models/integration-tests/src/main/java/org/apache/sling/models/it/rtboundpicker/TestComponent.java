@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.factory;
+package org.apache.sling.models.it.rtboundpicker;
 
-import aQute.bnd.annotation.Version;
+public interface TestComponent {
+
+    String getSampleValue();
+
+}

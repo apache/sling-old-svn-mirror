@@ -20,14 +20,21 @@ package org.apache.sling.models.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.spi.ImplementationPicker;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.BundleContext;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AdapterImplementationsTest {
@@ -36,6 +43,18 @@ public class AdapterImplementationsTest {
     private static final Object SAMPLE_ADAPTABLE = new Object();    
 
     private AdapterImplementations underTest;
+
+    @Mock
+    private Resource resource;
+
+    @Mock
+    private Resource childResource;
+
+    @Mock
+    private SlingHttpServletRequest request;
+
+    @Mock
+    private ResourceResolver resourceResolver;
     
     @Before
     public void setUp() {
@@ -113,6 +132,116 @@ public class AdapterImplementationsTest {
         underTest.add(SAMPLE_ADAPTER, SAMPLE_ADAPTER);
         
         assertEquals(SAMPLE_ADAPTER, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
+    }
+
+    @Test
+    public void testResourceTypeRegistrationForResource() {
+        when(resource.getResourceType()).thenReturn("sling/rt/one");
+        when(resource.getResourceResolver()).thenReturn(resourceResolver);
+        when(childResource.getResourceType()).thenReturn("sling/rt/child");
+        when(childResource.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getParentResourceType(resource)).thenReturn(null);
+        when(resourceResolver.getParentResourceType(childResource)).thenReturn("sling/rt/one");
+        when(resourceResolver.getSearchPath()).thenReturn(new String[] { "/apps/", "/libs/" });
+
+        // ensure we don't have any registrations for 'sling/rt/one'
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+
+        // now add a mapping for Resource -> String
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(bundleContext.getBundle(), "sling/rt/one", Resource.class, String.class);
+        assertEquals(String.class, underTest.getModelClassForResource(resource));
+        assertEquals(String.class, underTest.getModelClassForResource(childResource));
+
+        // ensure that trying to reregister the resource type is a no-op
+        BundleContext secondBundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(secondBundleContext.getBundle(), "sling/rt/one", Resource.class, Integer.class);
+        assertEquals(String.class, underTest.getModelClassForResource(resource));
+        assertEquals(String.class, underTest.getModelClassForResource(childResource));
+
+        underTest.removeResourceTypeBindings(bundleContext.getBundle());
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+    }
+
+    @Test
+    public void testResourceTypeRegistrationForAbsolutePath() {
+        when(resource.getResourceType()).thenReturn("sling/rt/one");
+        when(resource.getResourceResolver()).thenReturn(resourceResolver);
+        when(childResource.getResourceType()).thenReturn("sling/rt/child");
+        when(childResource.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getParentResourceType(resource)).thenReturn(null);
+        when(resourceResolver.getParentResourceType(childResource)).thenReturn("sling/rt/one");
+        when(resourceResolver.getSearchPath()).thenReturn(new String[] { "/apps/", "/libs/" });
+
+        // ensure we don't have any registrations for 'sling/rt/one'
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+
+        // now add a mapping for Resource -> String
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(bundleContext.getBundle(), "/apps/sling/rt/one", Resource.class, String.class);
+        assertEquals(String.class, underTest.getModelClassForResource(resource));
+        assertEquals(String.class, underTest.getModelClassForResource(childResource));
+
+        underTest.removeResourceTypeBindings(bundleContext.getBundle());
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+    }
+
+    @Test
+    public void testResourceTypeRegistrationForResourceHavingAbsolutePath() {
+        when(resource.getResourceType()).thenReturn("/apps/sling/rt/one");
+        when(resource.getResourceResolver()).thenReturn(resourceResolver);
+        when(childResource.getResourceType()).thenReturn("/apps/sling/rt/child");
+        when(childResource.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getParentResourceType(resource)).thenReturn(null);
+        when(resourceResolver.getParentResourceType(childResource)).thenReturn("/apps/sling/rt/one");
+        when(resourceResolver.getSearchPath()).thenReturn(new String[] { "/apps/", "/libs/" });
+
+        // ensure we don't have any registrations for 'sling/rt/one'
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+
+        // now add a mapping for Resource -> String
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(bundleContext.getBundle(), "sling/rt/one", Resource.class, String.class);
+        assertEquals(String.class, underTest.getModelClassForResource(resource));
+        assertEquals(String.class, underTest.getModelClassForResource(childResource));
+
+        underTest.removeResourceTypeBindings(bundleContext.getBundle());
+        assertNull(underTest.getModelClassForResource(resource));
+        assertNull(underTest.getModelClassForResource(childResource));
+    }
+
+    @Test
+    public void testResourceTypeRegistrationForRequest() {
+        when(resource.getResourceType()).thenReturn("sling/rt/one");
+        when(resource.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getParentResourceType(resource)).thenReturn(null);
+        when(resourceResolver.getSearchPath()).thenReturn(new String[] { "/apps/", "/libs/" });
+        when(request.getResource()).thenReturn(resource);
+
+        // ensure we don't have any registrations for 'sling/rt/one'
+        assertNull(underTest.getModelClassForRequest(request));
+        assertNull(underTest.getModelClassForResource(resource));
+
+        // now add a mapping for SlingHttpServletRequest -> String
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(bundleContext.getBundle(), "sling/rt/one", SlingHttpServletRequest.class, String.class);
+        underTest.registerModelToResourceType(bundleContext.getBundle(), "sling/rt/one", Resource.class, Integer.class);
+        assertEquals(String.class, underTest.getModelClassForRequest(request));
+        assertEquals(Integer.class, underTest.getModelClassForResource(resource));
+
+        // ensure that trying to reregister the resource type is a no-op
+        BundleContext secondBundleContext = MockOsgi.newBundleContext();
+        underTest.registerModelToResourceType(secondBundleContext.getBundle(), "sling/rt/one", SlingHttpServletRequest.class, Integer.class);
+        assertEquals(String.class, underTest.getModelClassForRequest(request));
+
+        underTest.removeResourceTypeBindings(bundleContext.getBundle());
+        assertNull(underTest.getModelClassForRequest(request));
+        assertNull(underTest.getModelClassForResource(resource));
     }
     
     static final class NoneImplementationPicker implements ImplementationPicker {

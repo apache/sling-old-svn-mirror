@@ -14,7 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.factory;
+package org.apache.sling.models.it.rtboundpicker;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables = Resource.class, adapters = TestComponent.class, resourceType = "sling/rtpicker/base")
+public class BaseComponent implements TestComponent {
+
+    @Override
+    public String getSampleValue() {
+        return "base";
+    }
+}
