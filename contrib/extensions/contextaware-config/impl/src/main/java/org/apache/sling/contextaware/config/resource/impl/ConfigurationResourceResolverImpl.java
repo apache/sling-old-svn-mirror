@@ -54,7 +54,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         String[] fallbackPaths() default {"/config/global", "/apps", "/libs"};
     }
 
-    public static final String PROPERTY_CONFIG = "sling:config";
+    private static final String PROPERTY_CONFIG = "sling:config";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
