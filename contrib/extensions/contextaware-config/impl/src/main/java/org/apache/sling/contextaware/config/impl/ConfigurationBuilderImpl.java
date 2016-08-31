@@ -18,10 +18,9 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Collections;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -66,7 +65,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
                 && !StringUtils.startsWith(name, "/")
                 && !StringUtils.contains(name, "../");
     }
-    
+
     /**
      * Configurations are stored below a "sling:configs" child node in the config resource.
      * @param name Configuration name or relative path
@@ -79,6 +78,34 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return CONFIGS_PARENT_NAME + "/" + name;
     }
 
+    public interface Converter<T> {
+        T convert(Resource resource, Class<T> clazz);
+    }
+
+    public static class AnnotationConverter<T> implements Converter<T> {
+        @Override
+        public T convert(Resource resource, Class<T> clazz) {
+            return ConfigurationProxy.get(resource, clazz);
+        }
+    }
+
+    public static class AdaptableConverter<T> implements Converter<T> {
+        @Override
+        public T convert(Resource resource, Class<T> clazz) {
+            if (resource == null || clazz == ConfigurationBuilder.class) {
+                return null;
+            }
+            return resource.adaptTo(clazz);
+        }
+    }
+
+    public static class ValueMapConverter implements Converter<ValueMap> {
+        @Override
+        public ValueMap convert(Resource resource, Class<ValueMap> clazz) {
+            return ResourceUtil.getValueMap(resource);
+        }
+    }
+
     /**
      * Get singleton configuration resource and convert it to the desired target class.
      * @param name Configuration name
@@ -86,13 +113,13 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @param converter Conversion method
      * @return Converted singleton configuration
      */
-    private <T> T getConfigResource(String name, Class<T> clazz, BiFunction<Resource,Class<T>,T> converter) {
+    private <T> T getConfigResource(String name, Class<T> clazz, Converter<T> converter) {
         Resource configResource = null;
         if (this.contentResource != null) {
             String path = getConfigRelativePath(name);
             configResource = this.configurationResourceResolver.getResource(this.contentResource, path);
         }
-        return converter.apply(configResource, clazz);
+        return converter.convert(configResource, clazz);
     }
 
     /**
@@ -102,33 +129,34 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @param converter Conversion method
      * @return Converted configuration collection
      */
-    private <T> Collection<T> getConfigResourceCollection(String name, Class<T> clazz, BiFunction<Resource,Class<T>,T> converter) {
-        Stream<Resource> configResources;
+    private <T> Collection<T> getConfigResourceCollection(String name, Class<T> clazz, Converter<T> converter) {
         if (this.contentResource != null) {
-            String path = getConfigRelativePath(name);
-            configResources = this.configurationResourceResolver.getResourceCollection(this.contentResource, path).stream();
+           String path = getConfigRelativePath(name);
+           final Collection<T> result = new ArrayList<>();
+           for(final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, path)) {
+               final T obj = converter.convert(rsrc, clazz);
+               if ( obj != null ) {
+                   result.add(obj);
+               }
+           }
+           return result;
+        } else {
+            return Collections.emptyList();
         }
-        else {
-            configResources = Stream.of();
-        }
-        return configResources
-                .map(resource -> converter.apply(resource, clazz))
-                .filter(item -> item != null)
-                .collect(Collectors.toList());
     }
-    
+
     // --- Annotation class support ---
-    
+
     @Override
     public <T> T as(final Class<T> clazz) {
         final String name = getConfigurationNameForAnnotationClass(clazz);
-        return getConfigResource(name, clazz, this::convertToAnnotationClass);
+        return getConfigResource(name, clazz, new AnnotationConverter<T>());
     }
 
     @Override
     public <T> Collection<T> asCollection(Class<T> clazz) {
         final String name = getConfigurationNameForAnnotationClass(clazz);
-        return getConfigResourceCollection(name, clazz, this::convertToAnnotationClass);
+        return getConfigResourceCollection(name, clazz, new AnnotationConverter<T>());
     }
 
     private String getConfigurationNameForAnnotationClass(Class<?> clazz) {
@@ -140,44 +168,28 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             return clazz.getName();
         }
     }
-    
-    private <T> T convertToAnnotationClass(Resource resource, Class<T> clazz) {
-        return ConfigurationProxy.get(resource, clazz);
-    }
-    
+
     // --- ValueMap support ---
-    
+
     @Override
     public ValueMap asValueMap() {
-        return getConfigResource(this.configName, ValueMap.class, this::convertToValueMap);
+        return getConfigResource(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
     @Override
     public Collection<ValueMap> asValueMapCollection() {
-        return getConfigResourceCollection(this.configName, ValueMap.class, this::convertToValueMap);
+        return getConfigResourceCollection(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
-    private ValueMap convertToValueMap(Resource resource, Class<ValueMap> clazz) {
-        return ResourceUtil.getValueMap(resource);
-    }
-    
     // --- Adaptable support ---
-    
+
     @Override
     public <T> T asAdaptable(Class<T> clazz) {
-        return getConfigResource(this.configName, clazz, this::convertToAdaptable);
+        return getConfigResource(this.configName, clazz, new AdaptableConverter<T>());
     }
 
     @Override
     public <T> Collection<T> asAdaptableCollection(Class<T> clazz) {
-        return getConfigResourceCollection(this.configName, clazz, this::convertToAdaptable);
+        return getConfigResourceCollection(this.configName, clazz, new AdaptableConverter<T>());
     }
-
-    private <T> T convertToAdaptable(Resource resource, Class<T> clazz) {
-        if (resource == null || clazz == ConfigurationBuilder.class) {
-            return null;
-        }
-        return resource.adaptTo(clazz);
-    }
-    
 }

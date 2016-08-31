@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -155,14 +153,12 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         // if hit root and nothing found, return null
         return null;
     }
-   
-    private Stream<ConfigReference> findAllConfigRefs(final Resource startResource) {
+
+    private void findAllConfigRefs(final List<String> refs, final Resource startResource) {
         ConfigReference ref = findConfigRef(startResource);
-        if (ref == null) {
-            return Stream.of();
-        }
-        else {
-            return Stream.concat(Stream.of(ref), findAllConfigRefs(ref.getContentResource().getParent()));
+        if (ref != null) {
+            refs.add(ref.getContentResource().getPath());
+            findAllConfigRefs(refs, ref.getContentResource().getParent());
         }
     }
 
@@ -278,15 +274,15 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public Collection<String> getAllContextPaths(Resource resource) {
-        return findAllConfigRefs(resource)
-                .map(ref -> ref.getContentResource().getPath())
-                .collect(Collectors.toList());
+        final List<String> refs = new ArrayList<>();
+        findAllConfigRefs(refs, resource);
+        return refs;
     }
-    
+
     private static class ConfigReference {
         private final Resource contentResource;
         private final String configReference;
-        
+
         public ConfigReference(Resource contentResource, String configReference) {
             this.contentResource = contentResource;
             this.configReference = configReference;

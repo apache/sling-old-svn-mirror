@@ -39,11 +39,6 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/impl</url>
     </scm>
 
-    <properties>
-        <!-- Java 8 as minimum requirement -->
-        <sling.java.version>8</sling.java.version>
-    </properties>
-    
     <build>
         <plugins>
             <plugin>

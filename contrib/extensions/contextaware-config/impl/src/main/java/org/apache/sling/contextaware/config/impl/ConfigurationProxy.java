@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,13 +43,13 @@ import org.apache.sling.contextaware.config.ConfigurationResolveException;
  * Nested configurations with annotation classes referencing other annotation classes are also supported.
  */
 final class ConfigurationProxy {
-    
+
     private static final Pattern METHOD_NAME_MAPPING = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
-    
+
     private ConfigurationProxy() {
         // static methods only
     }
-    
+
     /**
      * Get dynamic proxy for given resources's properties mapped to given annotation class.
      * @param resource Resource
@@ -59,7 +58,7 @@ final class ConfigurationProxy {
      */
     @SuppressWarnings("unchecked")
     public @Nonnull static <T> T get(@Nullable Resource resource, @Nonnull Class<T> clazz) {
-        
+
         // only annotation interface classes are supported
         if (!(clazz.isInterface() && clazz.isAnnotation())) {
             throw new ConfigurationResolveException("Annotation interface class expected: " + clazz.getName());
@@ -76,13 +75,13 @@ final class ConfigurationProxy {
      * Maps resource properties to annotation class proxy, and support nested configurations.
      */
     static class DynamicProxyInvocationHandler implements InvocationHandler {
-        
+
         private final Resource resource;
-        
+
         private DynamicProxyInvocationHandler(Resource resource) {
             this.resource = resource;
         }
-        
+
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) {
             String propName = getPropertyName(method.getName());
@@ -97,10 +96,12 @@ final class ConfigurationProxy {
             if (componentType.isInterface() && componentType.isAnnotation()) {
                 Resource childResource = resource != null ? resource.getChild(propName) : null;
                 if (isArray) {
-                    Iterable<Resource> listItemResources = childResource != null ? childResource.getChildren() : Collections.emptyList();
                     List<Object> listItems = new ArrayList<Object>();
-                    for (Resource listItemResource : listItemResources) {
-                        listItems.add(get(listItemResource, componentType));
+                    if ( childResource != null ) {
+                        Iterable<Resource> listItemResources = childResource.getChildren();
+                        for (Resource listItemResource : listItemResources) {
+                            listItems.add(get(listItemResource, componentType));
+                        }
                     }
                     return listItems.toArray((Object[])Array.newInstance(componentType, listItems.size()));
                 }
@@ -108,13 +109,13 @@ final class ConfigurationProxy {
                     return ConfigurationProxy.get(childResource, componentType);
                 }
             }
-            
+
             // validate type
             if (!isValidType(componentType)) {
                 throw new ConfigurationResolveException("Unsupported type " + componentType.getName()
                   + " in " + method.getDeclaringClass() + "#" + method.getName());
             }
-            
+
             // detect default value
             Object defaultValue = method.getDefaultValue();
             if (defaultValue == null) {
@@ -126,7 +127,7 @@ final class ConfigurationProxy {
                     defaultValue = Array.get(Array.newInstance(targetType, 1), 0);
                 }
             }
-            
+
             // get value from valuemap with given type/default value
             ValueMap props = ResourceUtil.getValueMap(resource);
             Object value;
@@ -137,14 +138,14 @@ final class ConfigurationProxy {
                 value = props.get(propName, targetType);
             }
             return value;
-            
+
         }
-        
+
     }
-    
+
     /**
      * Implements the method name mapping as defined in OSGi R6 Compendium specification,
-     * Chapter 112. Declarative Services Specification, Chapter 112.8.2.1. Component Property Mapping. 
+     * Chapter 112. Declarative Services Specification, Chapter 112.8.2.1. Component Property Mapping.
      * @param Method
      * @return Mapped property name
      */
@@ -156,7 +157,7 @@ final class ConfigurationProxy {
             if (matcher.group(1) != null) {
                 replacement = "\\$";
             }
-            if (matcher.group(2) != null) { 
+            if (matcher.group(2) != null) {
                 replacement = "";
             }
             if (matcher.group(3) != null) {
@@ -170,7 +171,7 @@ final class ConfigurationProxy {
         matcher.appendTail(mappedName);
         return mappedName.toString();
     }
-    
+
     /**
      * Ensures the given type is support for reading configuration parameters.
      * @param type Type
@@ -183,21 +184,22 @@ final class ConfigurationProxy {
                 || type == double.class
                 || type == boolean.class;
     }
-    
+
     /**
      * Invocation handler that caches all results for each method name, and returns
      * the result from cache on next invocation.
      */
     static class CachingInvocationHandler implements InvocationHandler {
-        
+
         private final InvocationHandler delegate;
         private final Map<String, Object> results = new HashMap<>();
         private static final Object NULL_OBJECT = new Object();
-        
+
         public CachingInvocationHandler(InvocationHandler delegate) {
             this.delegate = delegate;
         }
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             String key = method.getName();
             Object result = results.get(key);
@@ -215,7 +217,7 @@ final class ConfigurationProxy {
                 return result;
             }
         }
-        
+
     }
-    
+
 }
