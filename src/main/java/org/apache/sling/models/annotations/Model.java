@@ -60,4 +60,10 @@ public @interface Model {
      */
     public ValidationStrategy validation() default ValidationStrategy.DISABLED;
 
+    /**
+     *
+     * @return the associated resource type for this model class
+     */
+    public String[] resourceType() default {};
+
 }
