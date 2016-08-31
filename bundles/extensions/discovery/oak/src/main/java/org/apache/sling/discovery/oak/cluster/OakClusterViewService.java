@@ -120,7 +120,11 @@ public class OakClusterViewService implements ClusterViewService {
             logger.info("getLocalClusterView: undefined clusterView: "+e.getReason()+" - "+e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("getLocalClusterView: repository exception: "+e, e);
+            if (e.getMessage() != null && e.getMessage().contains("No Descriptor value available")) {
+                logger.warn("getLocalClusterView: repository exception: "+e);
+            } else {
+                logger.error("getLocalClusterView: repository exception: "+e, e);
+            }
             throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION, "Exception while processing descriptor: "+e);
         } finally {
             logger.trace("getLocalClusterView: end");
