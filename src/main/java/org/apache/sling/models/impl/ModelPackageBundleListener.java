@@ -57,12 +57,12 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     private final BundleTracker bundleTracker;
 
-    private final AdapterFactory factory;
+    private final ModelAdapterFactory factory;
     
     private final AdapterImplementations adapterImplementations;
     
     public ModelPackageBundleListener(BundleContext bundleContext,
-            AdapterFactory factory,
+            ModelAdapterFactory factory,
             AdapterImplementations adapterImplementations) {
         this.bundleContext = bundleContext;
         this.factory = factory;
@@ -112,6 +112,15 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                                 regs.add(reg);
                             }
+                            String[] resourceTypes = annotation.resourceType();
+                            for (String resourceType : resourceTypes) {
+                                if (StringUtils.isNotEmpty(resourceType)) {
+                                    for (Class<?> adaptable : annotation.adaptables()) {
+                                        adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
+                                    }
+                                }
+                            }
+
                         }
                     } catch (ClassNotFoundException e) {
                         log.warn("Unable to load class", e);
@@ -140,6 +149,8 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 reg.unregister();
             }
         }
+        adapterImplementations.removeResourceTypeBindings(bundle);
+
     }
 
     public synchronized void unregisterAll() {
