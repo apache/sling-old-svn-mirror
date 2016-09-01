@@ -96,7 +96,7 @@ final class ConfigurationProxy {
             if (componentType.isInterface() && componentType.isAnnotation()) {
                 Resource childResource = resource != null ? resource.getChild(propName) : null;
                 if (isArray) {
-                    List<Object> listItems = new ArrayList<Object>();
+                    List<Object> listItems = new ArrayList<>();
                     if ( childResource != null ) {
                         Iterable<Resource> listItemResources = childResource.getChildren();
                         for (Resource listItemResource : listItemResources) {

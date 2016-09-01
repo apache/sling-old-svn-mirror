@@ -78,32 +78,12 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return CONFIGS_PARENT_NAME + "/" + name;
     }
 
-    public interface Converter<T> {
+    /**
+     * Converts configuration resource into given class.
+     * @param <T> Target class
+     */
+    private interface Converter<T> {
         T convert(Resource resource, Class<T> clazz);
-    }
-
-    public static class AnnotationConverter<T> implements Converter<T> {
-        @Override
-        public T convert(Resource resource, Class<T> clazz) {
-            return ConfigurationProxy.get(resource, clazz);
-        }
-    }
-
-    public static class AdaptableConverter<T> implements Converter<T> {
-        @Override
-        public T convert(Resource resource, Class<T> clazz) {
-            if (resource == null || clazz == ConfigurationBuilder.class) {
-                return null;
-            }
-            return resource.adaptTo(clazz);
-        }
-    }
-
-    public static class ValueMapConverter implements Converter<ValueMap> {
-        @Override
-        public ValueMap convert(Resource resource, Class<ValueMap> clazz) {
-            return ResourceUtil.getValueMap(resource);
-        }
     }
 
     /**
@@ -169,6 +149,13 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         }
     }
 
+    private static class AnnotationConverter<T> implements Converter<T> {
+        @Override
+        public T convert(Resource resource, Class<T> clazz) {
+            return ConfigurationProxy.get(resource, clazz);
+        }
+    }
+    
     // --- ValueMap support ---
 
     @Override
@@ -181,6 +168,13 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return getConfigResourceCollection(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
+    private static class ValueMapConverter implements Converter<ValueMap> {
+        @Override
+        public ValueMap convert(Resource resource, Class<ValueMap> clazz) {
+            return ResourceUtil.getValueMap(resource);
+        }
+    }
+    
     // --- Adaptable support ---
 
     @Override
@@ -192,4 +186,15 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     public <T> Collection<T> asAdaptableCollection(Class<T> clazz) {
         return getConfigResourceCollection(this.configName, clazz, new AdaptableConverter<T>());
     }
+
+    private static class AdaptableConverter<T> implements Converter<T> {
+        @Override
+        public T convert(Resource resource, Class<T> clazz) {
+            if (resource == null || clazz == ConfigurationBuilder.class) {
+                return null;
+            }
+            return resource.adaptTo(clazz);
+        }
+    }
+
 }
