@@ -46,9 +46,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.cfg", "enabled", "true"),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
-                "sling-extension-discovery-standalone",
-                "sling-extension-event",
-                "sling-extension-healthcheck",
                 "sling-launchpad-content",
                 "sling-auth-form",
                 "sling-auth-openid",
