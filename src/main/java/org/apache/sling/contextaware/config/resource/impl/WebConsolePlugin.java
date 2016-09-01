@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -140,7 +141,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
             tableStart(pw, "Test Configuration Resolution", 2);
             pw.println("<td style='width:20%'>Content Path</td>");
             pw.print("<td><input name='path' value='");
-            pw.print(xssAPI.encodeForHTMLAttr(path));
+            pw.print(xssAPI.encodeForHTMLAttr(StringUtils.defaultString(path)));
             pw.println("' style='width:100%'/>");
             if (resolver != null && content == null) {
                 pw.println("<div>");
@@ -159,7 +160,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
             pw.println("<td>User</td>");
             pw.println("<td><input name='user' value='");
-            pw.print(xssAPI.encodeForHTMLAttr(user));
+            pw.print(xssAPI.encodeForHTMLAttr(StringUtils.defaultString(user)));
             pw.println("' style='width:50%'/>");
             if (path != null && resolver == null) {
                 pw.println("<div>");
@@ -180,7 +181,8 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
             if (content != null) {
 
-                final Resource confRsrc = configResolver.getResource(content, item);
+                // TODO: use sensible bucket name or make it configurable
+                final Resource confRsrc = configResolver.getResource(content, "sling:configs", item);
 
                 tableStart(pw, "Resolved", 2);
                 pw.println("<td style='width:20%'>Code</td>");

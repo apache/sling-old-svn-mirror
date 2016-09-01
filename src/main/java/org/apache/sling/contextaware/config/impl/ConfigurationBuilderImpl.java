@@ -67,15 +67,13 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     }
 
     /**
-     * Configurations are stored below a "sling:configs" child node in the config resource.
+     * Validate the configuration name.
      * @param name Configuration name or relative path
-     * @return Full relative path under configuration resource
      */
-    private String getConfigRelativePath(String name) {
+    private void validateConfigurationName(String name) {
         if (name == null) {
             throw new ConfigurationResolveException("Configuration name is required.");
         }
-        return CONFIGS_PARENT_NAME + "/" + name;
     }
 
     /**
@@ -96,8 +94,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     private <T> T getConfigResource(String name, Class<T> clazz, Converter<T> converter) {
         Resource configResource = null;
         if (this.contentResource != null) {
-            String path = getConfigRelativePath(name);
-            configResource = this.configurationResourceResolver.getResource(this.contentResource, path);
+            validateConfigurationName(name);
+            configResource = this.configurationResourceResolver.getResource(this.contentResource, CONFIGS_PARENT_NAME, name);
         }
         return converter.convert(configResource, clazz);
     }
@@ -111,9 +109,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      */
     private <T> Collection<T> getConfigResourceCollection(String name, Class<T> clazz, Converter<T> converter) {
         if (this.contentResource != null) {
-           String path = getConfigRelativePath(name);
+           validateConfigurationName(name);
            final Collection<T> result = new ArrayList<>();
-           for(final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, path)) {
+           for(final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, CONFIGS_PARENT_NAME, name)) {
                final T obj = converter.convert(rsrc, clazz);
                if ( obj != null ) {
                    result.add(obj);

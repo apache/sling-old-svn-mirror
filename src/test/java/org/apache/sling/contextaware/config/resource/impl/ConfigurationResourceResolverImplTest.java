@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class ConfigurationResourceResolverImplTest {
+    
+    private static final String BUCKET = "sling:test";
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -59,28 +61,37 @@ public class ConfigurationResourceResolverImplTest {
         site2Page1 = context.create().resource("/content/site2/page1");
 
         // configuration
-        context.create().resource("/libs/test");
-        context.create().resource("/config/site1/test");
-        context.create().resource("/apps/feature/a");
-        context.create().resource("/libs/feature/b");
-        context.create().resource("/config/site1/feature/c");
-        context.create().resource("/config/site2/feature/c");
-        context.create().resource("/config/site2/feature/d");
+        context.create().resource("/libs/sling:test/test");
+        context.create().resource("/config/site1/sling:test/test");
+        context.create().resource("/apps/sling:test/feature/a");
+        context.create().resource("/libs/sling:test/feature/b");
+        context.create().resource("/config/site1/sling:test/feature/c");
+        context.create().resource("/config/site2/sling:test/feature/c");
+        context.create().resource("/config/site2/sling:test/feature/d");
     }
 
     @Test
     public void testGetResource() {
-        assertEquals("/config/site1/test", underTest.getResource(site1Page1, "test").getPath());
-        assertEquals("/libs/test", underTest.getResource(site2Page1, "test").getPath());
+        assertEquals("/config/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
+        assertEquals("/libs/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
     @Test
     public void testGetResourceCollection() {
-        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, "feature");
-        assetResourcePaths(new String[] { "/config/site1/feature/c", "/apps/feature/a", "/libs/feature/b" }, col1);
+        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
+        assetResourcePaths(new String[] {
+                "/config/site1/sling:test/feature/c",
+                "/apps/sling:test/feature/a", 
+                "/libs/sling:test/feature/b" },
+                col1);
 
-        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, "feature");
-        assetResourcePaths(new String[] { "/config/site2/feature/c", "/config/site2/feature/d", "/apps/feature/a", "/libs/feature/b" }, col2);
+        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, BUCKET, "feature");
+        assetResourcePaths(new String[] {
+                "/config/site2/sling:test/feature/c",
+                "/config/site2/sling:test/feature/d",
+                "/apps/sling:test/feature/a",
+                "/libs/sling:test/feature/b" },
+                col2);
     }
 
     @Test
