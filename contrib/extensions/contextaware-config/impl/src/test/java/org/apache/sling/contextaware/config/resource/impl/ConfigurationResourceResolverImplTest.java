@@ -18,12 +18,11 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
@@ -77,27 +76,11 @@ public class ConfigurationResourceResolverImplTest {
 
     @Test
     public void testGetResourceCollection() {
-        final Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, "feature");
-        assertEquals(3, col1.size());
-        final Set<String> expectedPaths = new HashSet<>();
-        expectedPaths.add("/config/site1/feature/c");
-        expectedPaths.add("/apps/feature/a");
-        expectedPaths.add("/libs/feature/b");
+        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, "feature");
+        assetResourcePaths(new String[] { "/config/site1/feature/c", "/apps/feature/a", "/libs/feature/b" }, col1);
 
-        for(final Resource rsrc : col1) {
-            assertTrue(expectedPaths.remove(rsrc.getPath()));
-        }
-
-        final Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, "feature");
-        assertEquals(4, col2.size());
-        expectedPaths.add("/config/site2/feature/d");
-        expectedPaths.add("/config/site2/feature/c");
-        expectedPaths.add("/apps/feature/a");
-        expectedPaths.add("/libs/feature/b");
-
-        for(final Resource rsrc : col2) {
-            assertTrue(expectedPaths.remove(rsrc.getPath()));
-        }
+        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, "feature");
+        assetResourcePaths(new String[] { "/config/site2/feature/c", "/config/site2/feature/d", "/apps/feature/a", "/libs/feature/b" }, col2);
     }
 
     @Test
@@ -110,6 +93,15 @@ public class ConfigurationResourceResolverImplTest {
     public void testGetAllContextPaths() {
         assertEquals(ImmutableList.of("/content/site1"), underTest.getAllContextPaths(site1Page1));
         assertEquals(ImmutableList.of("/content/site2"), underTest.getAllContextPaths(site2Page1));
+    }
+    
+    private void assetResourcePaths(String[] expectedPaths, Collection<Resource> actualResources) {
+        String[] actualPaths = new String[actualResources.size()];
+        int i = 0;
+        for (Iterator<Resource> it=actualResources.iterator(); it.hasNext(); i++) {
+            actualPaths[i] = it.next().getPath();
+        }
+        assertArrayEquals(expectedPaths, actualPaths);
     }
 
 }
