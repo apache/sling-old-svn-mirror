@@ -20,6 +20,6 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/context-aware-config/api
+    svn checkout https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/api
 
 See the Subversion documentation for other source control features.
