@@ -293,10 +293,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
                 <!-- TODO JspForwardTest.testWithJspForward:152 Content includes JSP marker -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
-                <!-- TODO RepoinitPathTest.pathExists:42 null -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/RepoinitPathTest.*</exclude>
-                <!-- TODO SystemUsersTest.provisioningModelUser:62->assertSystemUser:45 Impersonation as provisioningModelUser failed: javax.jcr.LoginException: Login Failure: all modules ignored -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/SystemUsersTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>

@@ -18,19 +18,36 @@
  */
 package org.apache.sling.karaf.tests.configuration;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import org.apache.sling.karaf.testing.KarafTestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
+import org.ops4j.pax.tinybundles.core.TinyBundles;
+import org.osgi.framework.Constants;
 
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
+    private Option testBundle() throws Exception {
+        final InputStream repoinit = new FileInputStream("src/test/resources/repoinit.txt");
+        return streamBundle(
+            TinyBundles.bundle()
+                .add("repoinit.txt", repoinit)
+                .set(Constants.BUNDLE_MANIFESTVERSION, "2")
+                .set(Constants.BUNDLE_SYMBOLICNAME, "repoinit")
+                .build()
+        ).start();
+    }
+
     @Configuration
-    public Option[] configuration() {
+    public Option[] configuration() throws Exception {
         final int httpPort = Integer.getInteger("http.port");
         return OptionUtils.combine(baseConfiguration(),
             cleanCaches(true),
@@ -44,6 +61,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             // TODO PAXWEB-935 editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.cfg", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.cfg", "alias", "/server"),
             editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.cfg", "enabled", "true"),
+            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.cfg", "references", "raw:classpath://repoinit/repoinit.txt"),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
                 "sling-launchpad-content",
@@ -57,8 +75,16 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-jcr-jackrabbit-security",
                 "sling-jcr-repoinit"
             ),
+            // bundle for test (contains repoinit.txt)
+            testBundle(),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
+            // Pax Url TODO: feature?
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-commons").version("2.4.7"),
+            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-classpath").version("2.4.7"),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-lang").version("1.5.0"),
+            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-util-property").version("1.5.0"),
+            mavenBundle().groupId("org.ops4j.pax.swissbox").artifactId("pax-swissbox-property").version("1.8.2"),
             // test support
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").versionAsInProject(),
