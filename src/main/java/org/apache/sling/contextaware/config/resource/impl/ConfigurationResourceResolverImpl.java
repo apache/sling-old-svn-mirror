@@ -47,14 +47,14 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
         @AttributeDefinition(name="Allowed paths",
                              description = "Whitelist of paths where configurations can reside in.")
-        String[] allowedPaths() default {"/config", "/apps", "/libs"};
+        String[] allowedPaths() default {"/conf", "/apps", "/libs"};
 
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
-        String[] fallbackPaths() default {"/config/global", "/apps", "/libs"};
+        String[] fallbackPaths() default {"/conf/global", "/apps", "/libs"};
     }
 
-    private static final String PROPERTY_CONFIG = "sling:config";
+    private static final String PROPERTY_CONFIG = "sling:config-ref";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 

@@ -103,7 +103,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
         pw.println("<tr>");
         pw.println("<td></td>");
         pw.println("<td>");
-        pw.print("<form method='get' action='${appRoot}/configMgr/");
+        pw.print("<form method='get' action='${appRoot}/confMgr/");
         pw.print(ConfigurationResourceResolverImpl.class.getName());
         pw.println("'>");
         pw.println("<input type='submit' value='Configure'/>");
