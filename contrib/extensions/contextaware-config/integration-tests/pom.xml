@@ -34,9 +34,6 @@
     <description>Integration tests for the Apache Sling Context-Aware Configuration Implementation</description>
 
     <properties>
-        <!-- Java 8 as minimum requirement -->
-        <sling.java.version>8</sling.java.version>
-
         <!-- Timeout when checking for Sling readyness before starting tests -->
         <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
   
