@@ -340,12 +340,12 @@
     <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
   </feature>
   <feature name="sling-jcr-repoinit" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.2</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
-    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.3-SNAPSHOT</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.4</bundle>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.4.4</bundle>
   </feature>
   <!-- Apache Sling Launchpad -->
@@ -381,10 +381,6 @@
   </feature>
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
-    <config name="org.apache.sling.jcr.repoinit.impl.RepositoryInitializer">
-      text.url=classpath://org.apache.sling.karaf-repoinit/repoinit.txt
-      model.section.name=
-    </config>
     <config name="org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge">
       enabled=true
     </config>
@@ -430,7 +426,6 @@
     <feature version="${feature.version}">sling-servlets</feature>
     <!-- ... -->
     <feature version="${feature.version}">sling-installer</feature>
-    <feature version="${feature.version}">sling-jcr-repoinit</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
     <feature version="${feature.version}">sling-extension-discovery-oak</feature>
