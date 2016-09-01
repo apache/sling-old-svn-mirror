@@ -45,7 +45,7 @@ public class ConfigurationBuilderAdapterFactoryTest {
         context.registerInjectActivateService(new ConfigurationBuilderAdapterFactory());
 
         // config resource
-        context.create().resource("/config/content/site1/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
+        context.create().resource("/conf/content/site1/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
                 .put("stringParam", "configValue1")
                 .put("intParam", 111)
                 .put("boolParam", true)
@@ -53,7 +53,7 @@ public class ConfigurationBuilderAdapterFactoryTest {
 
         // content resources
         context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config", "/config/content/site1")
+                .put("sling:config-ref", "/conf/content/site1")
                 .build());
         site1Page1 = context.create().resource("/content/site1/page1");
     }

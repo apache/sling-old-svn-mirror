@@ -68,13 +68,13 @@ public class ConfigurationResolverConfigClassIT {
     
     @Test
     public void testExistingConfig() throws Exception {
-        resourceBuilder.resource("config/content/page1/sling:configs/test",
+        resourceBuilder.resource("conf/content/page1/sling:configs/test",
                 "stringParam", "value1",
                 "intParam", 123,
                 "boolParam", true)
             .atParent()
             .resource("content/page1",
-                    "sling:config", "/config/content/page1");
+                    "sling:config-ref", "/conf/content/page1");
         
         Resource resourcePage1 = resourceResolver.getResource("/content/page1");
         
