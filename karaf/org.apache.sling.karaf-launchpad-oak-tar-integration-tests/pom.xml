@@ -38,6 +38,7 @@
   <properties>
     <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
+    <repoinit.filename>${project.basedir}/src/test/resources/repoinit.txt</repoinit.filename>
   </properties>
 
   <dependencies>
@@ -228,7 +229,10 @@
             <artifactId>exam-maven-plugin</artifactId>
             <configuration>
               <configClass>org.apache.sling.karaf.tests.configuration.SlingLaunchpadOakTarConfiguration</configClass>
-              <propagatedProperties>http.port</propagatedProperties>
+              <propagatedProperties>
+                repoinit.filename,
+                http.port
+              </propagatedProperties>
             </configuration>
             <executions>
               <execution>
