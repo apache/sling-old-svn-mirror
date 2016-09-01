@@ -196,10 +196,11 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     }
 
     @Override
-    public Resource getResource(final Resource contentResource, final String name) {
-        if (contentResource == null || !checkName(name)) {
+    public Resource getResource(final Resource contentResource, final String bucketName, final String configName) {
+        if (contentResource == null || !checkName(bucketName) || !checkName(configName)) {
             return null;
         }
+        String name = bucketName + "/" + configName;
         logger.debug("Searching {} for resource {}", name, contentResource.getPath());
 
         // strategy: find first item among all configured paths
@@ -221,10 +222,11 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     }
 
     @Override
-    public Collection<Resource> getResourceCollection(final Resource contentResource, final String name) {
-        if (contentResource == null || !checkName(name)) {
+    public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
+        if (contentResource == null || !checkName(bucketName) || !checkName(configName)) {
             return Collections.emptyList();
         }
+        String name = bucketName + "/" + configName;
         if (logger.isTraceEnabled()) {
             logger.trace("- searching for list '{}'", name);
         }

@@ -39,18 +39,24 @@ public interface ConfigurationResourceResolver {
      * Get a context-specific singleton configuration resource defined by the given configuration name.
      *
      * @param resource Context resource to fetch configuration for
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     *     it's configuration data grouped in a child resource of the configuration resource. This is what
+     *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
      * @return Configuration resource or {@code null}.
      */
-    @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull String configName);
+    @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
 
     /**
      * Get a collection of context-specific configuration resources defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     *     it's configuration data grouped in a child resource of the configuration resource. This is what
+     *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
      * @return Collection of configuration resources, the collection might be empty.
      */
-    @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String configName);
+    @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
 
     /**
      * Get the inner-most context path (deepest path) returned by {@link #getAllContextPaths(Resource)}.
