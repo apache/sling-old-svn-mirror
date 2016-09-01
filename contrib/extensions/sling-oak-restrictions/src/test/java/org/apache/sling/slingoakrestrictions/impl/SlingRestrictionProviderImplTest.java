@@ -83,7 +83,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromTreeResourceTypesWithDescendants() {
         
-        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DECENDANTS);
+        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DESCENDANTS);
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
@@ -116,7 +116,7 @@ public class SlingRestrictionProviderImplTest {
     @Test
     public void testGetPatternFromRestrictionsResourceTypesWithDescendants() {
         
-        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DECENDANTS).when(definition).getName();
+        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DESCENDANTS).when(definition).getName();
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
