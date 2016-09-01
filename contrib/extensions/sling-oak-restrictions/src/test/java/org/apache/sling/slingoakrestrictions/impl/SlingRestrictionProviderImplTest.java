@@ -19,7 +19,6 @@ package org.apache.sling.slingoakrestrictions.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -82,9 +81,9 @@ public class SlingRestrictionProviderImplTest {
     }
 
     @Test
-    public void testGetPatternFromTreeResourceTypesWithChildren() {
+    public void testGetPatternFromTreeResourceTypesWithDescendants() {
         
-        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_CHILDREN);
+        doReturn(restrictionProperty).when(restrictionNodeTree).getProperty(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DECENDANTS);
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
@@ -115,9 +114,9 @@ public class SlingRestrictionProviderImplTest {
     }
 
     @Test
-    public void testGetPatternFromRestrictionsResourceTypesWithChildren() {
+    public void testGetPatternFromRestrictionsResourceTypesWithDescendants() {
         
-        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_CHILDREN).when(definition).getName();
+        doReturn(SlingRestrictionProviderImpl.SLING_RESOURCE_TYPES_WITH_DECENDANTS).when(definition).getName();
         doReturn(Arrays.asList(RESOURCE_TYPE1, RESOURCE_TYPE2)).when(restrictionProperty).getValue(Type.STRINGS);
         
         slingRestrictionProviderImpl = new SlingRestrictionProviderImpl();
