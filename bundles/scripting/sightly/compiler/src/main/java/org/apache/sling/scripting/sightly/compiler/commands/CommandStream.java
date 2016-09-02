@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.compiler.commands;
 
 import java.util.List;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * <p>

@@ -20,7 +20,7 @@ import javax.script.Bindings;
 
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code RenderContext} defines the context for executing HTL scripts.

@@ -18,7 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.compiler.commands;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code CommandHandler} is the mechanism through which a {@link CommandStream} can be processed synchronously, as the stream is

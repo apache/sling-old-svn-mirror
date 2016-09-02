@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.compiler;
 
 import java.io.Reader;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This class describes a compilation unit that the {@link SightlyCompiler} will process during the call of the {@code compile} methods.

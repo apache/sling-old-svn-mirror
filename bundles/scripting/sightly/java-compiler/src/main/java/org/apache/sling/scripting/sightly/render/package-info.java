@@ -17,4 +17,4 @@
 @Version("2.0.0")
 package org.apache.sling.scripting.sightly.render;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;

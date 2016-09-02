@@ -18,4 +18,4 @@
 @Version("1.1.0")
 package org.apache.sling.scripting.sightly.testing.models;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;

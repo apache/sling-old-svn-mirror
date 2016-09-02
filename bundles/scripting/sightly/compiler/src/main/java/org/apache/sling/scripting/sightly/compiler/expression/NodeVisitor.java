@@ -31,7 +31,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConsta
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.TernaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperation;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A {@code NodeVisitor} represents the mechanism through which {@link ExpressionNode} entities are processed.
