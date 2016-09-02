@@ -46,7 +46,7 @@ public class DocumentParser {
             TreeTraverser tree = new TreeTraverser(handler);
             tree.traverse(template);
         } catch (IOException e) {
-            LOGGER.error("Failed to parse Sightly template", e);
+            LOGGER.error("Failed to parse HTL template", e);
         }
     }
 }

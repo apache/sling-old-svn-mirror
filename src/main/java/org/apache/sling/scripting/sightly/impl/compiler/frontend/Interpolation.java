@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 
 /**
- * A sequence with alternating string fragments and Sightly expressions. These result from parsing HTML attributes or string nodes. For
+ * A sequence with alternating string fragments and HTL expressions. These result from parsing HTML attributes or string nodes. For
  * instance "Hello ${World}!" would result in 3 fragments: "Hello ", ${World} and "!"
  */
 public class Interpolation {

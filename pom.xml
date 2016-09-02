@@ -36,10 +36,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Compiler</name>
+    <name>Apache Sling Scripting HTL Compiler</name>
 
     <description>
-        The Apache Sling Scripting Sightly Compiler provides support for compiling Sightly scripts into an Abstract
+        The Apache Sling Scripting HTL Compiler provides support for compiling HTML Template Language scripts into an Abstract
         Syntax Tree.
     </description>
 
@@ -156,14 +156,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <groups>
-                        <group>
-                            <title>Sightly Template Engine Compiler</title>
-                            <packages>org.apache.sling.scripting.sightly</packages>
-                        </group>
-                    </groups>
-                    <doctitle>${project.name} Documentation (Version: ${project.version})</doctitle>
-                    <windowtitle>${project.name} Documentation (Version: ${project.version})</windowtitle>
+                    <stylesheet>maven</stylesheet>
+                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>

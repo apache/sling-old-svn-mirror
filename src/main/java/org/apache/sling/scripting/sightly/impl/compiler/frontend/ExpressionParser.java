@@ -30,7 +30,7 @@ public class ExpressionParser {
     /**
      * Parses the expression string.
      *
-     * @param expressionString as defined by the Sightly spec (https://github.com/Adobe-Marketing-Cloud/sightly-spec/blob/master/SPECIFICATION.md)
+     * @param expressionString as defined by the HTL spec (https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/master/SPECIFICATION.md)
      * @return Parsed Expression object
      * @throws NullPointerException     is the given exprString is null
      * @throws SightlyCompilerException if an error occurs while parsing the expression

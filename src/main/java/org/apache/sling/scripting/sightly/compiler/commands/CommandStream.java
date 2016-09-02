@@ -24,7 +24,7 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * <p>
- *     This interface defines a stream to which {@link Command}s are pushed during the compilation of a Sightly script by the {@link
+ *     This interface defines a stream to which {@link Command}s are pushed during the compilation of a HTL script by the {@link
  *     org.apache.sling.scripting.sightly.compiler.SightlyCompiler}. Depending on how a consumer wants to use the stream there are several
  *     options:
  *      <ul>
