@@ -23,7 +23,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Sightly REPL</title>
+        <title>HTL REPL</title>
 
         <link rel="stylesheet" href="/etc/clientlibs/repl/bootstrap.min.css">
         <link rel="stylesheet" href="/etc/clientlibs/repl/bootstrap-theme.min.css">
@@ -33,32 +33,32 @@
 
     <body>
         <div id="logo">&nbsp;</div>
-        <h1><small>Read-Eval-Print Loop</small></h1>
+        <div class="container-fluid">
+            <div id="main" class="row">
+                <div id="input" class="col-xs-6">
+                    <div class="editorContainer">
+                        <p class="lead">template.html</p>
+                        <div id="template" class="editor" data-src="/apps/repl/components/repl/template.html" data-mode="ace/mode/html" data-writeable></div>
+                    </div>
 
-        <div id="main" class="row">
-            <div id="input" class="col-xs-6">
-                <div class="editorContainer">
-                    <p class="lead">template.html</p>
-                    <div id="template" class="editor" data-src="/apps/repl/components/repl/template.html" data-mode="ace/mode/html" data-writeable></div>
+                    <div class="editorContainer">
+                        <p class="lead">logic.js</p>
+                        <div id="logic" class="editor" data-src="/apps/repl/components/repl/logic.js" data-mode="ace/mode/javascript" data-writeable></div>
+                    </div>
                 </div>
-
-                <div class="editorContainer">
-                    <p class="lead">logic.js</p>
-                    <div id="logic" class="editor" data-src="/apps/repl/components/repl/logic.js" data-mode="ace/mode/javascript" data-writeable></div>
+                <div id="output" class="editorContainer col-xs-6">
+                    <div class="clearfix">
+                        <p class="lead pull-left">output.html</p>
+                        <ul class="nav nav-pills navbar-right">
+                            <li class="active"><a data-toggle="tab" href="#source">Source</a></li>
+                            <li><a data-toggle="tab" href="#view">View</a></li>
+                            <li><a data-toggle="tab" href="#java">Java</a></li>
+                        </ul>
+                    </div>
+                    <div id="source" class="output-view editor" data-src="/htl/repl.template.html" data-mode="ace/mode/html"></div>
+                    <iframe id="view" class="output-view hidden" src="/htl/repl.template.html"></iframe>
+                    <div id="java" class="output-view editor hidden" data-src="/htl/repl.java.html" data-mode="ace/mode/java"></div>
                 </div>
-            </div>
-            <div id="output" class="editorContainer col-xs-6">
-                <div class="clearfix">
-                    <p class="lead pull-left">output.html</p>
-                    <ul class="nav nav-pills navbar-right">
-                        <li class="active"><a data-toggle="tab" href="#source">Source</a></li>
-                        <li><a data-toggle="tab" href="#view">View</a></li>
-                        <li><a data-toggle="tab" href="#java">Java</a></li>
-                    </ul>
-                </div>
-                <div id="source" class="output-view editor" data-src="/sightly/repl.template.html" data-mode="ace/mode/html"></div>
-                <iframe id="view" class="output-view hidden" src="/sightly/repl.template.html"></iframe>
-                <div id="java" class="output-view editor hidden" data-src="/sightly/repl.java.html" data-mode="ace/mode/java"></div>
             </div>
         </div>
 

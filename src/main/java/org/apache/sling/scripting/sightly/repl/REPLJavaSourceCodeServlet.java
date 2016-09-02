@@ -91,7 +91,7 @@ public class REPLJavaSourceCodeServlet extends SlingSafeMethodsServlet {
             }
             LOGGER.warn("Source code for " + (classesFolder.isDirectory() ? classesFolder.getAbsolutePath() : "") +
                     "/org/apache/sling/scripting/sightly/apps/repl/components/repl/template_html.java was not found. Maybe you need to " +
-                    "configure the Sightly Scripting Engine to keep the generated source files?");
+                    "configure the HTL Scripting Engine to keep the generated source files?");
         }
         return "";
     }

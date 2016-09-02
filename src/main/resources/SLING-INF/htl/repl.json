@@ -1,0 +1,5 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "sling:resourceType":"repl/components/repl",
+    "jcr:title": "HTL REPL"
+}
