@@ -32,5 +32,5 @@ mvn clean verify
 cd testing
 mvn clean package slingstart:start -Dlaunchpad.keep.running=true -Dhttp.port=8080
 ```
-Then browse to [http://localhost:8080/sightly/repl.html](http://localhost:8080/sightly/repl.html).
+Then browse to [http://localhost:8080/htl/repl.html](http://localhost:8080/htl/repl.html).
  
