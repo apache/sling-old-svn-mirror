@@ -97,8 +97,6 @@
                     <systemPropertyVariables>
                         <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                         <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
-                        <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
-                        <launchpad.ready.1>GET:/index.html:200:.*Welcome to the Sling Launchpad.*</launchpad.ready.1>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
