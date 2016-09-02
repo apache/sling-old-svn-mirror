@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.pojo;
 
 import javax.script.Bindings;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>Use</code> interface can be implemented by Java objects which are instantiated as part of processing {@code data-sly-use}

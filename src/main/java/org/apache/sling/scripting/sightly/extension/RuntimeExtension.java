@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.extension;
 
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A {@code RuntimeExtension} represents a HTL runtime construct that provides some processing capabilities for the various
