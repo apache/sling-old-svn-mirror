@@ -211,7 +211,14 @@ public class StreamedUploadOperation extends AbstractPostOperation {
      * @return
      */
     private String getUploadName(Part part) {
-        String name = part.getSubmittedFileName();
+        // only return non null if the submitted file name is non null.
+        // the Sling API states that if the field name is '*' then the submitting file name is used,
+        // otherwise the field name is used.
+        String name = part.getName();
+        String fileName = part.getSubmittedFileName();
+        if ("*".equals(name)) {
+            name = fileName;
+        }
         // strip of possible path (some browsers include the entire path)
         name = name.substring(name.lastIndexOf('/') + 1);
         name = name.substring(name.lastIndexOf('\\') + 1);
