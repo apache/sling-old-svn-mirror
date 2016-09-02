@@ -65,10 +65,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides the {@code sightly} namespace for usage in Sightly &amp; JS scripts called from Sightly
+ * Provides the {@code sightly} namespace for usage in HTL &amp; JS scripts called from Sightly
  */
-@Component(metatype = true, label = "Apache Sling Scripting Sightly JavaScript Bindings Provider",
-        description = "The Apache Sling Scripting Sightly JavaScript Bindings Provider loads the JS Use-API and makes it available in the" +
+@Component(metatype = true, label = "Apache Sling Scripting HTL JavaScript Bindings Provider",
+        description = "The Apache Sling Scripting HTL JavaScript Bindings Provider loads the JS Use-API and makes it available in the" +
                 " bindings map.")
 @Service(SlyBindingsValuesProvider.class)
 @Properties({

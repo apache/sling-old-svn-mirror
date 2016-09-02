@@ -45,7 +45,7 @@ import org.osgi.framework.Constants;
  */
 @Component(
     metatype = true,
-    label = "Apache Sling Scripting Sightly JavaScript Use Provider",
+    label = "Apache Sling Scripting HTL JavaScript Use Provider",
     description = "The JavaScript Use Provider is responsible for instantiating JavaScript Use-API objects."
 )
 @Service(UseProvider.class)
