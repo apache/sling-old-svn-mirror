@@ -18,7 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.compiler.commands;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The {@code CommandVisitor} is the mechanism through which a {@link Command} can be processed.

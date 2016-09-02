@@ -24,7 +24,7 @@ import org.apache.sling.scripting.sightly.compiler.commands.Command;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandVisitor;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * <p>
