@@ -35,7 +35,7 @@ import org.osgi.framework.Constants;
 
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly Resource Use Provider",
+        label = "Apache Sling Scripting HTL Resource Use Provider",
         description = "The Java Use Provider is responsible for instantiating resource objects."
 )
 @Service(UseProvider.class)

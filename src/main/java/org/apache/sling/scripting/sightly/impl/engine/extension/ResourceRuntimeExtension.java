@@ -46,7 +46,7 @@ import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
- * Runtime support for including resources in a Sightly script through {@code data-sly-resource}.
+ * Runtime support for including resources in a HTL script through {@code data-sly-resource}.
  */
 @Component
 @Service(RuntimeExtension.class)

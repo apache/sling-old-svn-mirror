@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly Java Use Provider",
+        label = "Apache Sling Scripting HTL Java Use Provider",
         description = "The Java Use Provider is responsible for instantiating Java Use-API objects."
 )
 @Service(UseProvider.class)

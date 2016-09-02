@@ -31,7 +31,7 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 
 /**
- * Sightly specific {@code BindingsValuesProvider}.
+ * HTL specific {@code BindingsValuesProvider}.
  */
 @Component()
 @Service(BindingsValuesProvider.class)

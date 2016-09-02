@@ -34,12 +34,12 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 
 /**
- * Holds various Sightly engine global configurations.
+ * Holds various HTL engine global configurations.
  */
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly Engine Configuration",
-        description = "Sightly Engine Configuration Options"
+        label = "Apache Sling Scripting HTL Engine Configuration",
+        description = "HTL Engine Configuration Options"
 )
 @Service(SightlyEngineConfiguration.class)
 @Properties({
@@ -47,7 +47,7 @@ import org.osgi.service.component.ComponentContext;
                 name = SightlyEngineConfiguration.SCR_PROP_NAME_KEEPGENERATED,
                 boolValue = SightlyEngineConfiguration.SCR_PROP_DEFAULT_KEEPGENERATED,
                 label = "Keep Generated Java Source Code",
-                description = "If enabled, the Java source code generated during Sightly template files compilation will be stored. " +
+                description = "If enabled, the Java source code generated during HTL template files compilation will be stored. " +
                         "Its location is dependent on the available org.apache.sling.commons.classloader.ClassLoaderWriter."
         )
 })

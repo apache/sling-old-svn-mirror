@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Sightly Script engine
+ * The HTL Script engine
  */
 public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Compilable {
 
