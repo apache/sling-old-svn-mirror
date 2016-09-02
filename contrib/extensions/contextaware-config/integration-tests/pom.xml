@@ -166,7 +166,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.26</version>
+            <version>2.1.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>junit</groupId>
@@ -196,7 +196,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.teleporter</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -208,7 +208,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.14</version>
             <scope>test</scope>
         </dependency>
         <dependency>
