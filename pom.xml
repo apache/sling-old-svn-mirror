@@ -34,10 +34,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Java Compiler</name>
+    <name>Apache Sling Scripting HTL Java Compiler</name>
 
     <description>
-        The Apache Sling Scripting Sightly Java Compiler provides support for transpiling the Abstract Syntax Tree produced by the
+        The Apache Sling Scripting HTL Java Compiler provides support for transpiling the Abstract Syntax Tree produced by the
         org.apache.sling.scripting.sightly.compiler module into Java source code.
     </description>
 
@@ -119,14 +119,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <groups>
-                        <group>
-                            <title>Apache Sling Scriptin Sightly Java Compiler</title>
-                            <packages>org.apache.sling.scripting.sightly.compiler.java</packages>
-                        </group>
-                    </groups>
-                    <doctitle>${project.name} Documentation (Version: ${project.version})</doctitle>
-                    <windowtitle>${project.name} Documentation (Version: ${project.version})</windowtitle>
+                    <stylesheet>maven</stylesheet>
+                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>

@@ -23,7 +23,7 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * A {@code RuntimeExtension} represents a Sightly runtime construct that provides some processing capabilities for the various
+ * A {@code RuntimeExtension} represents a HTL runtime construct that provides some processing capabilities for the various
  * {@code data-sly-*} block elements.
  */
 @ConsumerType

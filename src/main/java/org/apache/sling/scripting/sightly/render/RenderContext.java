@@ -23,7 +23,7 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The {@code RenderContext} defines the context for executing Sightly scripts.
+ * The {@code RenderContext} defines the context for executing HTL scripts.
  */
 @ProviderType
 public interface RenderContext {
@@ -36,7 +36,7 @@ public interface RenderContext {
     RuntimeObjectModel getObjectModel();
 
     /**
-     * Returns the map of script bindings available to Sightly scripts.
+     * Returns the map of script bindings available to HTL scripts.
      *
      * @return the global bindings for a script
      */

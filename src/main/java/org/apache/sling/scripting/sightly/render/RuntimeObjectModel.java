@@ -23,7 +23,7 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * The {@code RuntimeObjectModel} provides various utility object inspection &amp; conversion methods that can be applied to runtime
- * objects when executing Sightly scripts.
+ * objects when executing HTL scripts.
  */
 @ProviderType
 public interface RuntimeObjectModel {
