@@ -93,8 +93,8 @@ public class StreamingUploadOperationTest {
         List<Part> partsList = new ArrayList<Part>();
         partsList.add(new MockPart("formfield1", null, null, 0, new ByteArrayInputStream("testformfield1".getBytes("UTF-8"))));
         partsList.add(new MockPart("formfield2", null, null, 0, new ByteArrayInputStream("testformfield2".getBytes("UTF-8"))));
-        partsList.add(new MockPart("body1", "text/plain", "test1.txt", 4, new ByteArrayInputStream("test".getBytes("UTF-8"))));
-        partsList.add(new MockPart("body2", "text/plain2", "test2.txt", 8, new ByteArrayInputStream("test1234".getBytes("UTF-8"))));
+        partsList.add(new MockPart("test1.txt", "text/plain", "test1bad.txt", 4, new ByteArrayInputStream("test".getBytes("UTF-8"))));
+        partsList.add(new MockPart("*", "text/plain2", "test2.txt", 8, new ByteArrayInputStream("test1234".getBytes("UTF-8"))));
         partsList.add(new MockPart("badformfield2", null, null, 0, new ByteArrayInputStream("testbadformfield2".getBytes("UTF-8"))));
         final Iterator<Part> partsIterator = partsList.iterator();
         final Map<String, Resource> repository = new HashMap<String, Resource>();
