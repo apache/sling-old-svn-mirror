@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runtime support for including resources in a Sightly script through {@code data-sly-include}.
+ * Runtime support for including resources in a HTL script through {@code data-sly-include}.
  */
 @Component
 @Service(RuntimeExtension.class)

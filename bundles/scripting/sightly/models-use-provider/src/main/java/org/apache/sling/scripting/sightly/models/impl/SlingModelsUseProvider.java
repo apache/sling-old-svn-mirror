@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * Sightly {@link UseProvider} which will instantiate a referenced Sling Model.
+ * HTL {@link UseProvider} which will instantiate a referenced Sling Model.
  * </p>
  * <p>
  * For that it tries to use the {@link ModelFactory#createModel(Object, Class)} first with the adaptable {@link SlingHttpServletRequest}
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(
     metatype = true,
-    label = "Apache Sling Scripting Sightly Sling Models Use Provider",
+    label = "Apache Sling Scripting HTL Sling Models Use Provider",
     description = "The Sling Models Use Provider is responsible for instantiating Sling Models to be used with Sightly's Use-API."
 )
 @Service

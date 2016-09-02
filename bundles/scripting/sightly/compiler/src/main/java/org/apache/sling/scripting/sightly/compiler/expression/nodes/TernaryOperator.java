@@ -23,7 +23,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.compiler.expression.NodeVisitor;
 
 /**
- * Defines the Sightly ternary operator (e.g. {@code condition ? then : else}).
+ * Defines the HTL ternary operator (e.g. {@code condition ? then : else}).
  */
 public final class TernaryOperator implements ExpressionNode {
 

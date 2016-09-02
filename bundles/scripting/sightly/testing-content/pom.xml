@@ -36,12 +36,12 @@
     <version>1.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Integration Tests Content</name>
+    <name>Apache Sling Scripting HTL Integration Tests Content</name>
 
     <description>
         This bundle contains:
-            - Content adapted from the Adobe Sightly TCK meant to test the org.apache.sling.scripting.sightly implementations.
-            - Content meant to test performance of the org.apache.sling.scripting.sightly implementation.
+            - Content adapted from the Adobe HTL TCK meant to test the org.apache.sling.scripting.HTL implementations.
+            - Content meant to test performance of the org.apache.sling.scripting.HTL implementation.
     </description>
 
     <scm>

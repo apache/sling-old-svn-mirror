@@ -37,7 +37,7 @@ import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 
 /**
- * Rendering context for Sightly rendering units.
+ * Rendering context for HTL rendering units.
  */
 public class RenderContextImpl implements RenderContext {
 

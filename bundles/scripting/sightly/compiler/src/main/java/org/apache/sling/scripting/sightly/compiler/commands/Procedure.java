@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * This {@link Command} allows defining a Sightly template - the only functional construct of the language.
+ * This {@link Command} allows defining a HTL template - the only functional construct of the language.
  */
 public class Procedure {
 

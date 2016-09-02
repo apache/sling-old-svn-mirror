@@ -50,12 +50,12 @@ import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
 
 /**
- * Interprets identifiers as paths to other Sightly templates
+ * Interprets identifiers as paths to other HTL templates
  */
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly Render Unit Use Provider",
-        description = "The Render Unit Use Provider is responsible for instantiating Sightly templates through the Use-API."
+        label = "Apache Sling Scripting HTL Render Unit Use Provider",
+        description = "The Render Unit Use Provider is responsible for instantiating HTL templates through the Use-API."
 )
 @Service(UseProvider.class)
 @Properties({

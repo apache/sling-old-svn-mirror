@@ -37,10 +37,10 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Apache Sling Scripting Sightly Reactor</name>
+    <name>Apache Sling Scripting HTL Reactor</name>
 
     <description>
-        The Apache Sling Scripting Sightly Reactor project.
+        The Apache Sling Scripting HTL Reactor project.
     </description>
 
     <scm>

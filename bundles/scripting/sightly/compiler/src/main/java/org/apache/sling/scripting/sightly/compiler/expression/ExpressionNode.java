@@ -21,7 +21,7 @@ package org.apache.sling.scripting.sightly.compiler.expression;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * Defines a node in a Sightly expression tree.
+ * Defines a node in a HTL expression tree.
  */
 @ProviderType
 public interface ExpressionNode {

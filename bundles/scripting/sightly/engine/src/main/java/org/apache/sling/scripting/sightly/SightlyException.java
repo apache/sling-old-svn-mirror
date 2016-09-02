@@ -21,7 +21,7 @@ package org.apache.sling.scripting.sightly;
 import org.apache.sling.api.SlingException;
 
 /**
- * Exceptions caused by the Sightly engine
+ * Exceptions caused by the HTL engine
  */
 public class SightlyException extends SlingException {
 

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * Tracks information related to Sightly variables, at different levels of the compiler.
+ * Tracks information related to HTL variables, at different levels of the compiler.
  */
 public final class VariableTracker<T> {
 

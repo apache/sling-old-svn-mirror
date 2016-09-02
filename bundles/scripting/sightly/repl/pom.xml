@@ -30,8 +30,8 @@
     <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Read-Eval-Print Loop Environment</name>
-    <description>REPL for Apache Sling Scripting Sightly engine</description>
+    <name>Apache Sling Scripting HTL Read-Eval-Print Loop Environment</name>
+    <description>REPL for Apache Sling Scripting HTL engine</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/repl</connection>

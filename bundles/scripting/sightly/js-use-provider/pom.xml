@@ -36,10 +36,10 @@
     <version>1.0.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly JavaScript Use Provider</name>
+    <name>Apache Sling Scripting HTL JavaScript Use Provider</name>
 
     <description>
-        The Apache Sling Sightly JavaScript Use Provider adds support for accessing JS scripts from Sightly's Use-API.
+        The Apache Sling HTL JavaScript Use Provider adds support for accessing JS scripts from HTL's Use-API.
     </description>
 
     <scm>
@@ -113,7 +113,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Sightly -->
+        <!-- HTL -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly</artifactId>

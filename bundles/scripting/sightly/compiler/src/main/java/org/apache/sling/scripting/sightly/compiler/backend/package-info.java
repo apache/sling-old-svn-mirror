@@ -18,8 +18,8 @@
  ******************************************************************************/
 
 /**
- * The {@code org.apache.sling.scripting.sightly.compiler.backend} defines the API that can be used by Sightly Backend Compilers, used to
- * compile Sightly {@link org.apache.sling.scripting.sightly.compiler.commands.Command}s into executable code for other languages.
+ * The {@code org.apache.sling.scripting.sightly.compiler.backend} defines the API that can be used by HTL Backend Compilers, used to
+ * compile HTL {@link org.apache.sling.scripting.sightly.compiler.commands.Command}s into executable code for other languages.
  */
 @Version("1.0.0")
 package org.apache.sling.scripting.sightly.compiler.backend;

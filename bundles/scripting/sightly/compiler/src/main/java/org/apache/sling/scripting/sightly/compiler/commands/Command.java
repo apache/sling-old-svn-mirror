@@ -21,7 +21,7 @@ package org.apache.sling.scripting.sightly.compiler.commands;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * A {@code Command} represents the type of instruction a certain Sightly expression or block element should execute. Commands are immutable
+ * A {@code Command} represents the type of instruction a certain HTL expression or block element should execute. Commands are immutable
  * and can only be processed through a {@link CommandVisitor}.
  */
 @ProviderType

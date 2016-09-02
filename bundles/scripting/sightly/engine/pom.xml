@@ -36,11 +36,11 @@
     <version>1.0.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Engine</name>
+    <name>Apache Sling Scripting HTL Engine</name>
 
     <description>
-        The Apache Sling Scripting Sightly Engine is a Java implementation of the Sightly specification. The bundle contains the Sightly
-        engine and its plugin framework implementation.
+        The Apache Sling Scripting HTL Engine is a Java implementation of the HTML Template Language specification. The bundle contains the
+        HTL script engine and its runtime implementation.
     </description>
 
     <scm>
@@ -124,14 +124,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <groups>
-                        <group>
-                            <title>Sightly Template Engine</title>
-                            <packages>org.apache.sling.scripting.sightly.api</packages>
-                        </group>
-                    </groups>
-                    <doctitle>${project.name} Documentation (Version: ${project.version})</doctitle>
-                    <windowtitle>${project.name} Documentation (Version: ${project.version})</windowtitle>
+                    <stylesheet>maven</stylesheet>
+                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
@@ -141,7 +135,7 @@
     <!-- D E P E N D E N C I E S                                                 -->
     <!-- ======================================================================= -->
     <dependencies>
-        <!-- Sightly Compilers -->
+        <!-- HTL Compilers -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>

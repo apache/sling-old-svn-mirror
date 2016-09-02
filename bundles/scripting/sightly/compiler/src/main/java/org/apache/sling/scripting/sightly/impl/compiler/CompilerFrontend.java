@@ -19,7 +19,7 @@
 package org.apache.sling.scripting.sightly.impl.compiler;
 
 /**
- * Sightly compiler frontend.
+ * HTL compiler frontend.
  */
 public interface CompilerFrontend {
 

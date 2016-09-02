@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(
         metatype = true,
-        label = "Apache Sling Scripting Sightly Script Use Provider",
+        label = "Apache Sling Scripting HTL Script Use Provider",
         description = "The Script Use Provider is responsible for instantiating objects from scripts evaluated by other Sling Scripting " +
                 "Engines."
 )

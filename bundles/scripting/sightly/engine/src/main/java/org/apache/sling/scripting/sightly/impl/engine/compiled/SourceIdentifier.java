@@ -30,7 +30,7 @@ import org.apache.sling.scripting.sightly.java.compiler.ClassInfo;
 
 /**
  * Identifies a Java source file based on a {@link Resource}. Depending on the used constructor this class might provide the abstraction
- * for either a Java source file generated for a Sightly HTML script or for a Sightly {@link Resource}-based Java Use-API Object.
+ * for either a Java source file generated for a HTL script or for a HTL {@link Resource}-based Java Use-API Object.
  */
 public class SourceIdentifier implements ClassInfo {
 
