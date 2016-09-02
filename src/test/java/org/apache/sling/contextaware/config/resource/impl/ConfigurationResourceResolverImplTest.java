@@ -18,11 +18,10 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.apache.sling.contextaware.config.resource.impl.TestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
@@ -59,21 +58,21 @@ public class ConfigurationResourceResolverImplTest {
                 .put("sling:config-ref", "/conf/site2")
                 .build());
         site2Page1 = context.create().resource("/content/site2/page1");
-
+        
         // configuration
-        context.create().resource("/libs/sling:test/test");
         context.create().resource("/conf/site1/sling:test/test");
-        context.create().resource("/apps/sling:test/feature/a");
-        context.create().resource("/libs/sling:test/feature/b");
         context.create().resource("/conf/site1/sling:test/feature/c");
         context.create().resource("/conf/site2/sling:test/feature/c");
         context.create().resource("/conf/site2/sling:test/feature/d");
+        context.create().resource("/apps/conf/sling:test/feature/a");
+        context.create().resource("/libs/conf/sling:test/test");
+        context.create().resource("/libs/conf/sling:test/feature/b");
     }
 
     @Test
     public void testGetResource() {
         assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
-        assertEquals("/libs/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
+        assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
     @Test
@@ -81,16 +80,16 @@ public class ConfigurationResourceResolverImplTest {
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
         assetResourcePaths(new String[] {
                 "/conf/site1/sling:test/feature/c",
-                "/apps/sling:test/feature/a", 
-                "/libs/sling:test/feature/b" },
+                "/apps/conf/sling:test/feature/a", 
+                "/libs/conf/sling:test/feature/b" },
                 col1);
 
         Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, BUCKET, "feature");
         assetResourcePaths(new String[] {
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
-                "/apps/sling:test/feature/a",
-                "/libs/sling:test/feature/b" },
+                "/apps/conf/sling:test/feature/a",
+                "/libs/conf/sling:test/feature/b" },
                 col2);
     }
 
@@ -106,13 +105,4 @@ public class ConfigurationResourceResolverImplTest {
         assertEquals(ImmutableList.of("/content/site2"), underTest.getAllContextPaths(site2Page1));
     }
     
-    private void assetResourcePaths(String[] expectedPaths, Collection<Resource> actualResources) {
-        String[] actualPaths = new String[actualResources.size()];
-        int i = 0;
-        for (Iterator<Resource> it=actualResources.iterator(); it.hasNext(); i++) {
-            actualPaths[i] = it.next().getPath();
-        }
-        assertArrayEquals(expectedPaths, actualPaths);
-    }
-
 }
