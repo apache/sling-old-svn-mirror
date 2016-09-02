@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
-@Component(service=ConfigurationResolver.class)
+@Component(service=ConfigurationResolver.class, immediate=true)
 public class ConfigurationResolverImpl implements ConfigurationResolver {
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
