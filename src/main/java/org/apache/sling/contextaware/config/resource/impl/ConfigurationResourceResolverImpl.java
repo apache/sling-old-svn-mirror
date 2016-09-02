@@ -74,33 +74,25 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         this.configuration = null;
     }
 
-
-    public List<String> getResolvePaths(final Resource contentResource) {
-        final List<String> refs = new ArrayList<>();
-
-        // find property reference
-        ConfigReference ref = this.findConfigRef(contentResource);
-
-        if (ref == null) {
-            // nothing found so far, check if we are in a configured tree itself
-            if (isAllowedConfigPath(contentResource.getPath())) {
-                ref = new ConfigReference(contentResource, contentResource.getPath());
-            }
-        }
-
-        if ( ref != null ) {
-            refs.add(ref.getConfigReference());
+    List<String> getResolvePaths(final Resource contentResource) {
+        final List<String> refPaths = new ArrayList<>();
+        
+        // add all config references found in resource hierarchy
+        final List<ConfigReference> refs = new ArrayList<>();
+        findConfigRefs(refs, contentResource);
+        for (ConfigReference ref : refs) {
+            refPaths.add(ref.getConfigReference());
         }
 
         // finally add the global fallbacks
         if ( this.configuration.fallbackPaths() != null ) {
             for(final String path : this.configuration.fallbackPaths()) {
                 logger.debug("[{}] fallback config => {}", refs.size(), path);
-                refs.add(path);
+                refPaths.add(path);
             }
         }
 
-        return refs;
+        return refPaths;
     }
 
     /**
@@ -116,8 +108,12 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         return true;
     }
 
-
-   private ConfigReference findConfigRef(final Resource startResource) {
+    /**
+     * Find next configuration refrence for given resource or one of it's parents.
+     * @param startResource Resource to start searching
+     * @return Config reference or null if none found
+     */
+    private ConfigReference findNextConfigRef(final Resource startResource) {
         // start at resource, go up
         Resource resource = startResource;
         while (resource != null) {
@@ -154,11 +150,16 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         return null;
     }
 
-    private void findAllConfigRefs(final List<String> refs, final Resource startResource) {
-        ConfigReference ref = findConfigRef(startResource);
+    /**
+     * Searches the resource hierarchy upwards for all config references and returns them.
+     * @param refs List to add found resources to
+     * @param startResource Resource to start searching
+     */
+    private void findConfigRefs(final List<ConfigReference> refs, final Resource startResource) {
+        ConfigReference ref = findNextConfigRef(startResource);
         if (ref != null) {
-            refs.add(ref.getContentResource().getPath());
-            findAllConfigRefs(refs, ref.getContentResource().getParent());
+            refs.add(ref);
+            findConfigRefs(refs, ref.getContentResource().getParent());
         }
     }
 
@@ -265,7 +266,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public String getContextPath(Resource resource) {
-        ConfigReference ref = findConfigRef(resource);
+        ConfigReference ref = findNextConfigRef(resource);
         if (ref != null) {
             return ref.getContentResource().getPath();
         }
@@ -276,9 +277,13 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public Collection<String> getAllContextPaths(Resource resource) {
-        final List<String> refs = new ArrayList<>();
-        findAllConfigRefs(refs, resource);
-        return refs;
+        final List<String> contextPaths = new ArrayList<>();
+        final List<ConfigReference> refs = new ArrayList<>();
+        findConfigRefs(refs, resource);
+        for (ConfigReference ref : refs) {
+            contextPaths.add(ref.getContentResource().getPath());
+        }
+        return contextPaths;
     }
 
     private static class ConfigReference {

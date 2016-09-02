@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -90,27 +89,25 @@ public class ConfigurationResourceResolverImplHierarchyTest {
     }
 
     @Test
-    @Ignore  // TODO: impl. does not yet match the test
     public void testGetResource() {
         assertEquals("/conf/tenant1/region1/site1/sling:test/cfgSite1", underTest.getResource(site1Page1, BUCKET, "cfgSite1").getPath());
         assertEquals("/conf/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site1Page1, BUCKET, "cfgRegion1").getPath());
         assertEquals("/conf/tenant1/sling:test/cfgTenant1", underTest.getResource(site1Page1, BUCKET, "cfgTenant1").getPath());
-        assertEquals("/conf/global/sling:test/cfgGloba", underTest.getResource(site1Page1, BUCKET, "cfgGlobal").getPath());
+        assertEquals("/conf/global/sling:test/cfgGlobal", underTest.getResource(site1Page1, BUCKET, "cfgGlobal").getPath());
         assertEquals("/apps/conf/sling:test/cfgAppsGlobal", underTest.getResource(site1Page1, BUCKET, "cfgAppsGlobal").getPath());
         assertEquals("/libs/conf/sling:test/cfgLibsGlobal", underTest.getResource(site1Page1, BUCKET, "cfgLibsGlobal").getPath());
         assertEquals("/conf/tenant1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
 
-        assertNull(underTest.getResource(site2Page1, BUCKET, "cfgSite1").getPath());
+        assertNull(underTest.getResource(site2Page1, BUCKET, "cfgSite1"));
         assertEquals("/conf/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site2Page1, BUCKET, "cfgRegion1").getPath());
         assertEquals("/conf/tenant1/sling:test/cfgTenant1", underTest.getResource(site2Page1, BUCKET, "cfgTenant1").getPath());
-        assertEquals("/conf/global/sling:test/cfgGloba", underTest.getResource(site2Page1, BUCKET, "cfgGlobal").getPath());
+        assertEquals("/conf/global/sling:test/cfgGlobal", underTest.getResource(site2Page1, BUCKET, "cfgGlobal").getPath());
         assertEquals("/apps/conf/sling:test/cfgAppsGlobal", underTest.getResource(site2Page1, BUCKET, "cfgAppsGlobal").getPath());
         assertEquals("/libs/conf/sling:test/cfgLibsGlobal", underTest.getResource(site2Page1, BUCKET, "cfgLibsGlobal").getPath());
         assertEquals("/conf/tenant1/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
     @Test
-    @Ignore  // TODO: impl. does not yet match the test
     public void testGetResourceCollection() {
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "cfgCol");
         assetResourcePaths(new String[] {
