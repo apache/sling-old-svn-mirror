@@ -19,14 +19,23 @@
 package org.apache.sling.contextaware.config.example;
 
 import org.apache.sling.contextaware.config.annotation.Configuration;
+import org.apache.sling.contextaware.config.annotation.Property;
 
-@Configuration
-public @interface SpecialNamesConfig {
+@Configuration(name = "simpleConfig",
+    label = "Simple configuration",
+    description = "This is a configuration example with additional metadata.",
+    property = {
+            "param1=value1",
+            "param2=123"
+    })
+public @interface MetadataSimpleConfig {
 
-    String $stringParam();
+    @Property(label = "String Param", description = "Enter strings here.", property = "p1=v1")
+    String stringParam();
     
-    int int__Param() default 5;
+    @Property(label = "Integer Param")
+    int intParam() default 5;
     
-    boolean bool_Param();
+    boolean boolParam();
     
 }

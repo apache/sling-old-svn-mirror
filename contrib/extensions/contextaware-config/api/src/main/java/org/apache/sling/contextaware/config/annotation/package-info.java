@@ -16,17 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.example;
-
-import org.apache.sling.contextaware.config.annotation.Configuration;
-
-@Configuration
-public @interface SpecialNamesConfig {
-
-    String $stringParam();
-    
-    int int__Param() default 5;
-    
-    boolean bool_Param();
-    
-}
+/**
+ * Annotations for context-aware configurations.
+ */
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.contextaware.config.annotation;

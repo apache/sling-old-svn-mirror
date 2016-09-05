@@ -18,6 +18,12 @@
  */
 package org.apache.sling.contextaware.config.example;
 
+import org.apache.sling.contextaware.config.annotation.Configuration;
+
+/**
+ * All types in the example configuration class are *not* supported.
+ */
+@Configuration
 public @interface IllegalTypesConfig {
 
     Class clazz();

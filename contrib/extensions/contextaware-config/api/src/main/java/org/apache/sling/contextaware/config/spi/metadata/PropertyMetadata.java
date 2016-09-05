@@ -54,7 +54,7 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
     public PropertyMetadata(@Nonnull String name, @Nonnull Class<T> type) {
         super(name);
         if (type == null || !isSupportedType(type)) {
-            throw new IllegalArgumentException("Invalid parameter type: " + type);
+            throw new IllegalArgumentException("Parameter '" + name + "': Invalid type " + type);
         }
         this.type = type;
     }

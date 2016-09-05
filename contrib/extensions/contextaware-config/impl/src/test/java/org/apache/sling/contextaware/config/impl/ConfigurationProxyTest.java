@@ -244,18 +244,4 @@ public class ConfigurationProxyTest {
         cfg.charArray();
     }
     
-    @Test
-    public void testGetPropertyName() {
-        // test all variants defined in OSGi spec as example
-        assertEquals("myProperty143", ConfigurationProxy.getPropertyName("myProperty143"));
-        assertEquals("new", ConfigurationProxy.getPropertyName("$new"));
-        assertEquals("my$prop", ConfigurationProxy.getPropertyName("my$$prop"));
-        assertEquals("dot.prop", ConfigurationProxy.getPropertyName("dot_prop"));
-        assertEquals(".secret", ConfigurationProxy.getPropertyName("_secret"));
-        assertEquals("another_prop", ConfigurationProxy.getPropertyName("another__prop"));
-        assertEquals("three_.prop", ConfigurationProxy.getPropertyName("three___prop"));
-        assertEquals("four._prop", ConfigurationProxy.getPropertyName("four_$__prop"));
-        assertEquals("five..prop", ConfigurationProxy.getPropertyName("five_$_prop"));
-    }
-
 }

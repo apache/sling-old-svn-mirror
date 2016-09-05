@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -38,8 +37,8 @@ public class PropertyMetadataTest {
         underTest.setLabel("label1");
         underTest.setDescription("desc1");
         underTest.setDefaultValue("value1");
-        Map<String, Object> props = ImmutableMap.<String, Object>of("p1", "v1");
-        underTest.setProperties(new ValueMapDecorator(props));
+        Map<String,String> props = ImmutableMap.of("p1", "v1");
+        underTest.setProperties(props);
         
         assertEquals("label1", underTest.getLabel());
         assertEquals("desc1", underTest.getDescription());

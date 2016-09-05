@@ -18,6 +18,9 @@
  */
 package org.apache.sling.contextaware.config.example;
 
+import org.apache.sling.contextaware.config.annotation.Configuration;
+
+@Configuration
 public @interface SimpleConfig {
 
     String stringParam();

@@ -16,31 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.impl.metadata;
+package org.apache.sling.contextaware.config.annotation;
 
-import java.util.Set;
-
-import org.apache.sling.contextaware.config.spi.ConfigurationMetadataProvider;
-import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
-import org.osgi.service.component.annotations.Component;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Provides configuration metadata from deployed annotation interface classes
- * describing configurations from any bundle.
+ * Adds further metadata for properties of context-aware configuration annotation classes.
  */
-@Component
-public class AnnotationClassConfigurationMetadataProvider implements ConfigurationMetadataProvider {
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Property {
 
-    @Override
-    public Set<String> getConfigurationNames() {
-        // TODO: implement
-        return null;
-    }
-
-    @Override
-    public ConfigurationMetadata getConfigurationMetadata(String configName) {
-        // TODO: implement
-        return null;
-    }
-
+    /**
+     * @return Label for the property (e.g. for configuration editor GUIs).
+     */
+    String label() default "";
+    
+    /**
+     * @return Description for the property (e.g. for configuration editor GUIs).
+     */
+    String description() default "";
+    
+    /**
+     * @return Further properties e.g. for configuration editor GUIs.
+     */
+    String[] property() default {};
+    
 }

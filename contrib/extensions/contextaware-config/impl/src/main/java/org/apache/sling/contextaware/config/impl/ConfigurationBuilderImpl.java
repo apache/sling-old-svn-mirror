@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
+import org.apache.sling.contextaware.config.impl.metadata.AnnotationClassParser;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
@@ -143,7 +144,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         }
         else {
             // derive configuration name from annotation class if no name specified
-            return clazz.getName();
+            return AnnotationClassParser.getConfigurationName(clazz);
         }
     }
 

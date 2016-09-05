@@ -18,7 +18,6 @@
  */
 package org.apache.sling.contextaware.config.spi.metadata;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,7 +32,7 @@ import org.osgi.annotation.versioning.ProviderType;
 public final class ConfigurationMetadata extends AbstractMetadata {
 
     private boolean isList;
-    private final List<PropertyMetadata<?>> propertyMetadata = new ArrayList<>();
+    private List<PropertyMetadata<?>> propertyMetadata;
 
     /**
      * @param name Configuration name
@@ -64,10 +63,17 @@ public final class ConfigurationMetadata extends AbstractMetadata {
     }
 
     /**
-     * @return Configuration set parts
+     * @return Configuration properties
      */
-    public @Nonnull Collection<PropertyMetadata<?>> getPropertyMetadata() {
+    public Collection<PropertyMetadata<?>> getPropertyMetadata() {
         return this.propertyMetadata;
+    }
+
+    /**
+     * @param propertyMetadata Configuration properties
+     */
+    public void setPropertyMetadata(List<PropertyMetadata<?>> propertyMetadata) {
+        this.propertyMetadata = propertyMetadata;
     }
 
 }

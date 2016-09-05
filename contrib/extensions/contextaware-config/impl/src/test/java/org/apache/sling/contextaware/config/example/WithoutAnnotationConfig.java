@@ -18,15 +18,11 @@
  */
 package org.apache.sling.contextaware.config.example;
 
-import org.apache.sling.contextaware.config.annotation.Configuration;
+/**
+ * Annotation classes without the proper Configuration annotation are not supported.
+ */
+public @interface WithoutAnnotationConfig {
 
-@Configuration
-public @interface SpecialNamesConfig {
-
-    String $stringParam();
-    
-    int int__Param() default 5;
-    
-    boolean bool_Param();
+    String stringParam();
     
 }

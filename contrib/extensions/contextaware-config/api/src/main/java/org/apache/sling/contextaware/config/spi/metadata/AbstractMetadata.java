@@ -18,9 +18,10 @@
  */
 package org.apache.sling.contextaware.config.spi.metadata;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.ValueMap;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -32,7 +33,7 @@ abstract class AbstractMetadata {
     private final String name;
     private String label;
     private String description;
-    private ValueMap properties;
+    private Map<String,String> properties;
 
     public AbstractMetadata(@Nonnull String name) {
         if (name == null) {
@@ -79,14 +80,14 @@ abstract class AbstractMetadata {
     /**
      * @return Further properties for documentation and configuration of behavior in configuration editor.
      */
-    public ValueMap getProperties() {
+    public Map<String,String> getProperties() {
         return this.properties;
     }
     
     /**
      * @param properties Further properties for documentation and configuration of behavior in configuration editor.
      */
-    public void setProperties(ValueMap properties) {
+    public void setProperties(Map<String,String> properties) {
         this.properties = properties;
     }
     
