@@ -14,28 +14,27 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>28</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>htl-maven-plugin</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling HTL Maven Plugin</name>
     <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/no</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/no</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/no</url>
     </scm>
 
     <properties>
