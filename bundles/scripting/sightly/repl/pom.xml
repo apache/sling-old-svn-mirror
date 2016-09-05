@@ -27,16 +27,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL Read-Eval-Print Loop Environment</name>
     <description>REPL for Apache Sling Scripting HTL engine</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.sightly.repl-1.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/repl</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/repl</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/repl</url>
     </scm>
 
     <build>
