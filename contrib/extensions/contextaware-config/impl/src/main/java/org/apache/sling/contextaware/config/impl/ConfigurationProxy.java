@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
+import org.apache.sling.contextaware.config.spi.metadata.PropertyMetadata;
 
 /**
  * Maps the property of a resource to a dynamic proxy object implementing
@@ -178,11 +179,7 @@ final class ConfigurationProxy {
      * @return true if type is supported
      */
     static boolean isValidType(Class<?> type) {
-        return type == String.class
-                || type == int.class
-                || type == long.class
-                || type == double.class
-                || type == boolean.class;
+        return PropertyMetadata.SUPPORTED_TYPES.contains(type);
     }
 
     /**

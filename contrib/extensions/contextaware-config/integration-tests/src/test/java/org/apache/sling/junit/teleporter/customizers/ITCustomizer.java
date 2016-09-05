@@ -31,7 +31,8 @@ public class ITCustomizer implements TeleporterRule.Customizer {
         cst.setServerCredentials("admin", "admin");
         cst.includeDependencyPrefix("org.apache.sling.contextaware.config.it");
         cst.setTestReadyTimeoutSeconds(TimeoutsProvider.getInstance().getTimeout(10));
-        cst.getAdditionalBundleHeaders().put("Sling-Config-Packages", "org.apache.sling.contextaware.config.it.example");
+        cst.getAdditionalBundleHeaders().put("Sling-ContextAware-Config-Packages",
+                "org.apache.sling.contextaware.config.it.example");
     }
 
 }
