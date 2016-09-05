@@ -249,7 +249,10 @@ public class SourceIdentifier implements ClassInfo {
     }
 
     /**
-     * Test whether the argument is a Java keyword
+     * Test whether the argument is a Java keyword.
+     *
+     * @param key the String to test
+     * @return {@code true} if the String is a Java keyword, {@code false} otherwise
      */
     public static boolean isJavaKeyword(String key) {
         return javaKeywords.contains(key);

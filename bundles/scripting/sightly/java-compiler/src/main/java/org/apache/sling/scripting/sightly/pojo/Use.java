@@ -33,12 +33,12 @@ public interface Use {
 
     /**
      * <p>
-     * Called to initialize the Java object with the current Java Scripting API bindings.
+     *     Called to initialize the Java object with the current Java Scripting API bindings.
      * </p>
-     * <p/>
-     * This method is called only if the object has been instantiated by HTL as part of processing the {@code data-sly-use}
-     * attribute. The Java Scripting API bindings provide all the global variables known to a script being executed.
-     * <p/>
+     * <p>
+     *     This method is called only if the object has been instantiated by HTL as part of processing the {@code data-sly-use}
+     *     attribute. The Java Scripting API bindings provide all the global variables known to a script being executed.
+     * </p>
      *
      * @param bindings The Java Scripting API bindings.
      */
