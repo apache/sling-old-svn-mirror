@@ -18,26 +18,19 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.contextaware.config.spi.ConfigurationMetadataProvider;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.util.tracker.BundleTracker;
-import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,99 +96,6 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
 
     void removeConfigurationMetadata(ConfigurationMapping configMapping) {
         configurationMetadataMap.remove(configMapping.getConfigMetadata().getName());
-    }
-    
-
-    private static class ConfigurationMapping {
-        private final ConfigurationMetadata configMetadata;
-        private final Class<?> configClass;
-        
-        public ConfigurationMapping(ConfigurationMetadata configMetadata, Class<?> configClass) {
-            this.configMetadata = configMetadata;
-            this.configClass = configClass;
-        }
-        
-        public ConfigurationMetadata getConfigMetadata() {
-            return configMetadata;
-        }
-        
-        public Class<?> getConfigClass() {
-            return configClass;
-        }
-    }
-
-    private static class ConfigPackageBundleTackerCustomizer implements BundleTrackerCustomizer<List<ConfigurationMapping>> {
-
-        private final AnnotationClassConfigurationMetadataProvider metadataProvider;
-        
-        public ConfigPackageBundleTackerCustomizer(AnnotationClassConfigurationMetadataProvider metadataProvider) {
-            this.metadataProvider = metadataProvider;
-        }
-
-        @Override
-        public List<ConfigurationMapping> addingBundle(Bundle bundle, BundleEvent event) {
-            Dictionary<String, String> headers = bundle.getHeaders();
-            String packageList = headers.get(HEADER);
-            if (packageList == null) {
-                return null;
-            }
-            
-            List<ConfigurationMapping> configMappings = new ArrayList<>();
-
-            packageList = StringUtils.deleteWhitespace(packageList);
-            String[] packages = StringUtils.split(packageList, ",");
-            for (String singlePackage : packages) {
-                Enumeration<URL> classUrls = bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class", true);
-
-                if (classUrls == null) {
-                    log.warn("No configuration classes found in package {}, ignoring.", singlePackage);
-                    continue;
-                }
-
-                while (classUrls.hasMoreElements()) {
-                    String className = toClassName(classUrls.nextElement());
-                    try {
-                        Class<?> configType = bundle.loadClass(className);
-                        
-                        if (AnnotationClassParser.isContextAwareConfig(configType)) {
-                            log.debug("{}: Add configuration class {}", bundle.getSymbolicName(), className);
-                            
-                            ConfigurationMapping configMapping = metadataProvider.addConfigurationMetadata(configType);
-                            if (configMapping != null) {
-                                configMappings.add(configMapping);
-                            }
-                        }
-                    }
-                    catch (ClassNotFoundException ex) {
-                        log.warn("Unable to load class: " + className, ex);
-                    }
-
-                }
-            }
-            return configMappings;
-       }
-
-        /**
-         * Convert class URL to class name.
-         */
-        private String toClassName(URL url) {
-            final String f = url.getFile();
-            final String cn = f.substring(1, f.length() - ".class".length());
-            return cn.replace('/', '.');
-        }
-        
-        @Override
-        public void modifiedBundle(Bundle bundle, BundleEvent event, List<ConfigurationMapping> configurationMappings) {
-            // nothing to do   
-        }
-
-        @Override
-        public void removedBundle(Bundle bundle, BundleEvent event, List<ConfigurationMapping> configurationMappings) {
-            for (ConfigurationMapping configMapping : configurationMappings) {
-                metadataProvider.removeConfigurationMetadata(configMapping);
-            }
-        }
-
     }
     
 }
