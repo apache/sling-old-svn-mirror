@@ -65,10 +65,8 @@ class ServerSideTeleporter extends TeleporterRule {
                     return service;
                 }
             }
-            catch(IllegalStateException ex) {
-                if (System.currentTimeMillis() >= timeout) {
-                    throw ex;
-                }
+            catch (IllegalStateException ex) {
+                // ignore, try again
             }
             try {
                 Thread.sleep(50L);
@@ -77,7 +75,8 @@ class ServerSideTeleporter extends TeleporterRule {
                 // ignore
             }
         }
-        throw new IllegalStateException("Unable to get an instance of the service.");
+        throw new IllegalStateException(
+                "unable to get a service reference, class=" + serviceClass.getName() + ", filter='" + ldapFilter + "'");
     }
 
     private <T> T getServiceInternal (Class<T> serviceClass, String ldapFilter) {
