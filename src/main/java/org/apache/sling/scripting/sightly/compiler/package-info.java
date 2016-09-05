@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 /**
- * The {code org.apache.sling.scripting.sightly.compiler} package defines the API exposed by the
+ * The {@code org.apache.sling.scripting.sightly.compiler} package defines the API exposed by the
  * {@link org.apache.sling.scripting.sightly.compiler.SightlyCompiler}.
  */
 @Version("1.0.0")
