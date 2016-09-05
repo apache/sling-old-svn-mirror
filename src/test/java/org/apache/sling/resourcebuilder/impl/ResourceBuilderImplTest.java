@@ -200,11 +200,6 @@ public class ResourceBuilderImplTest {
     }
     
     @Test(expected=IllegalArgumentException.class)
-    public void absolutePathFails() throws Exception {
-        getBuilder(testRootPath).resource("/absolute");
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
     public void aboveParentFails() throws Exception {
         getBuilder(testRootPath).resource("../foo");
     }
@@ -332,4 +327,23 @@ public class ResourceBuilderImplTest {
         // Resource is created at root in this case
         A.assertResource("/d/e/f");
     }
+
+    @Test
+    public void absolutePath() throws Exception {
+        new ResourceBuilderService()
+            .forResolver(resourceResolver)
+            .resource("/a/b/c")
+            .resource("/a/b/f")
+            .resource("/g/h/i")
+            .resource("j/l/m")
+            .resource("/o/p/q");
+        
+        // absolute paths are supported and can be mixed with relative paths
+        A.assertResource("/a/b/c");
+        A.assertResource("/a/b/f");
+        A.assertResource("/g/h/i");
+        A.assertResource("/g/h/i/j/l/m");
+        A.assertResource("/o/p/q");
+    }
+    
 }
