@@ -21,6 +21,7 @@ package org.apache.sling.testing.paxexam;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.options.MavenUrlReference.VersionResolver;
 
 /**
@@ -198,6 +199,11 @@ public class SlingVersionResolver implements VersionResolver {
     }
 
     public String setVersion(final String groupId, final String artifactId, final String version) {
+        return versions.put(key(groupId, artifactId), version);
+    }
+
+    public String setVersionFromProject(final String groupId, final String artifactId) {
+        final String version = MavenUtils.getArtifactVersion(groupId, artifactId);
         return versions.put(key(groupId, artifactId), version);
     }
 
