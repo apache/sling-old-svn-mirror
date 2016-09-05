@@ -59,8 +59,18 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         }
         originalParent = parent;
         resourceResolver = originalParent.getResourceResolver();
-        withIntermediatePrimaryType(null);
-        atParent();
+        intermediatePrimaryType = DEFAULT_PRIMARY_TYPE;
+        currentParent = parent;
+        hierarchyMode = true;
+    }
+    
+    private ResourceBuilderImpl cloneResourceBuilder(Resource newCurrentParent,
+            String newIntermediatePrimaryType, boolean newHierarchyMode) {
+        ResourceBuilderImpl clone = new ResourceBuilderImpl(originalParent, mimeTypeService);
+        clone.currentParent = newCurrentParent;
+        clone.intermediatePrimaryType = newIntermediatePrimaryType;
+        clone.hierarchyMode = newHierarchyMode;
+        return clone;
     }
     
     @Override
@@ -80,9 +90,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
 
     @Override
     public ResourceBuilder atParent() {
-        currentParent = originalParent;
-        hierarchyMode();
-        return this;
+        return cloneResourceBuilder(originalParent, this.intermediatePrimaryType, true);
     }
     
     private boolean isAbsolutePath(String path) {
@@ -145,10 +153,10 @@ public class ResourceBuilderImpl implements ResourceBuilder {
                     "PersistenceException while creating Resource " + fullPath, pex);
         }
         
-        if(r == null) {
+        if (r == null) {
             throw new RuntimeException("Failed to get or create resource " + fullPath);
         } else if(hierarchyMode) {
-            currentParent = r;
+            return cloneResourceBuilder(r, this.intermediatePrimaryType, this.hierarchyMode);
         }
         return this;
     }
@@ -231,9 +239,8 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             throw new RuntimeException("Unable to get or created file resource " + relativePath + " under " + currentParent.getPath());
         }
         if(hierarchyMode) {
-            currentParent = file;
+            return cloneResourceBuilder(file, this.intermediatePrimaryType, this.hierarchyMode);
         }
-        
         return this;
     }
 
@@ -244,20 +251,18 @@ public class ResourceBuilderImpl implements ResourceBuilder {
 
     @Override
     public ResourceBuilder withIntermediatePrimaryType(String primaryType) {
-        intermediatePrimaryType = primaryType == null ? DEFAULT_PRIMARY_TYPE : primaryType;
-        return this;
+        String intermediatePrimaryType = primaryType == null ? DEFAULT_PRIMARY_TYPE : primaryType;
+        return cloneResourceBuilder(currentParent, intermediatePrimaryType, hierarchyMode);
     }
 
     @Override
     public ResourceBuilder siblingsMode() {
-        hierarchyMode = false;
-        return this;
+        return cloneResourceBuilder(currentParent, intermediatePrimaryType, false);
     }
 
     @Override
     public ResourceBuilder hierarchyMode() {
-        hierarchyMode = true;
-        return this;
+        return cloneResourceBuilder(currentParent, intermediatePrimaryType, true);
     }
     
     @Override

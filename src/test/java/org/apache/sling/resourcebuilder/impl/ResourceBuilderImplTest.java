@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -345,5 +346,24 @@ public class ResourceBuilderImplTest {
         A.assertResource("/g/h/i/j/l/m");
         A.assertResource("/o/p/q");
     }
-    
+
+    @Test
+    public void reuseInstance() throws Exception {
+        ResourceBuilder content = new ResourceBuilderService()
+                .forResolver(resourceResolver)
+                .resource("/content");
+        content.resource("a");
+        content.resource("b/c");
+        content.resource("/test")
+                .siblingsMode()
+                .resource("1")
+                .resource("2");
+
+        A.assertResource("/content/a");
+        A.assertResource("/content/b/c");
+        A.assertResource("/test");
+        A.assertResource("/test/1");
+        A.assertResource("/test/2");
+    }
+
 }
