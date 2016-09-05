@@ -36,12 +36,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will process string
      *     formatting. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>the format String (e.g. 'Hello {0}, welcome to {1}')</li>
-     *         <li>an array of objects that will replace the format placeholders</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>the format String (e.g. 'Hello {0}, welcome to {1}')</li>
+     *     <li>an array of objects that will replace the format placeholders</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#122-format.
      * </p>
@@ -52,15 +51,14 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will process
      *     i18n. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>the String to translate</li>
-     *         <li>optional: locale information</li>
-     *         <li>optional: hint information</li>
-     *         <li>optional (not part of the specification): basename information; for more details see
-     *         {@link java.util.ResourceBundle#getBundle(String, Locale)}</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>the String to translate</li>
+     *     <li>optional: locale information</li>
+     *     <li>optional: hint information</li>
+     *     <li>optional (not part of the specification): basename information; for more details see
+     *     {@link java.util.ResourceBundle#getBundle(String, Locale)}</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#123-i18n.
      * </p>
@@ -71,12 +69,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will process
      *     join operations on arrays. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>the array of objects to join (e.g. [1, 2, 3])</li>
-     *         <li>the join string (e.g. ';')</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>the array of objects to join (e.g. [1, 2, 3])</li>
+     *     <li>the join string (e.g. ';')</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#124-array-join.
      * </p>
@@ -87,12 +84,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will provide
      *     URI manipulation support. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>optional: a URI string to process</li>
-     *         <li>optional: a Map containing URI manipulation options</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>optional: a URI string to process</li>
+     *     <li>optional: a Map containing URI manipulation options</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#125-uri-manipulation.
      * </p>
@@ -103,12 +99,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will provide
      *     XSS escaping and filtering support. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>the original string to escape / filter</li>
-     *         <li>the context to be applied - see {@link org.apache.sling.scripting.sightly.compiler.expression.MarkupContext}</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>the original string to escape / filter</li>
+     *     <li>the context to be applied - see {@link org.apache.sling.scripting.sightly.compiler.expression.MarkupContext}</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#121-display-context.
      * </p>
@@ -119,12 +114,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will perform
      *     script execution delegation. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>optional: the relative or absolute path of the script to execute</li>
-     *         <li>optional: a Map of options to perform script include processing</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>optional: the relative or absolute path of the script to execute</li>
+     *     <li>optional: a Map of options to perform script include processing</li>
+     * </ol>
      * <p>
      *     For more details about the supported options check
      *     https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#228-include.
@@ -136,12 +130,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will perform
      *     resource inclusion in the rendering process. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>optional: a relative or absolute path of the resource to be included</li>
-     *         <li>optional: a Map containing the resource processing options</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>optional: a relative or absolute path of the resource to be included</li>
+     *     <li>optional: a Map containing the resource processing options</li>
+     * </ol>
      * <p>
      *     For more details about the supported options check
      *     https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#229-resource.
@@ -153,12 +146,11 @@ public final class RuntimeFunction {
      * <p>
      *     The name of the {@link org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall} function that will provide
      *     the support for loading Use-API objects. The function will receive the following parameters:
-     *
-     *     <ol>
-     *         <li>an identifier that allows to discover the Use-API object that needs to be loaded</li>
-     *         <li>optional: a Map of the arguments that are passed to the Use-API object for initialisation or to provide context</li>
-     *     </ol>
      * </p>
+     * <ol>
+     *     <li>an identifier that allows to discover the Use-API object that needs to be loaded</li>
+     *     <li>optional: a Map of the arguments that are passed to the Use-API object for initialisation or to provide context</li>
+     * </ol>
      * <p>
      *     For more details check https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md#221-use.
      * </p>
