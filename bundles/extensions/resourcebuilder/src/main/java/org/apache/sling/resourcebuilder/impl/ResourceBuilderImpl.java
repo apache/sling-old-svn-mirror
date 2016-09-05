@@ -85,12 +85,16 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         return this;
     }
     
-    private void checkRelativePath(String relativePath) {
-        if(relativePath.startsWith("/")) {
-            throw new IllegalArgumentException("Path is not relative:" + relativePath);
+    private boolean isAbsolutePath(String path) {
+        return path.startsWith("/") && !path.contains("..");
+    }
+
+    private void checkRelativePath(String path) {
+        if(path.startsWith("/")) {
+            throw new IllegalArgumentException("Path is not relative:" + path);
         }
-        if(relativePath.contains("..")) {
-            throw new IllegalArgumentException("Path contains invalid pattern '..': " + relativePath);
+        if(path.contains("..")) {
+            throw new IllegalArgumentException("Path contains invalid pattern '..': " + path);
         }
     }
 
@@ -104,19 +108,28 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     }
     
     @Override
-    public ResourceBuilder resource(String relativePath, Object... properties) {
+    public ResourceBuilder resource(String path, Object... properties) {
         Resource r = null;
-        checkRelativePath(relativePath);
-        final String parentPath = parentPath(relativePath);
+        
+        final String parentPath;
+        final String fullPath;
+        if (isAbsolutePath(path)) {
+            parentPath = ResourceUtil.getParent(path);
+            fullPath = path;
+        }
+        else {
+            checkRelativePath(path);
+            parentPath = parentPath(path);
+            fullPath = currentParent.getPath() + "/" + path;
+        }
         final Resource myParent = ensureResourceExists(parentPath);
-        final String fullPath = currentParent.getPath() + "/" + relativePath;
         
         try {
             r = currentParent.getResourceResolver().getResource(fullPath);
             final Map<String, Object> props = MapArgsConverter.toMap(properties);
             if(r == null) {
                 r = currentParent.getResourceResolver().create(myParent, 
-                        ResourceUtil.getName(relativePath), props);
+                        ResourceUtil.getName(fullPath), props);
             } else {
                 // Resource exists, set our properties
                 final ModifiableValueMap mvm = r.adaptTo(ModifiableValueMap.class);
@@ -129,13 +142,11 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             }
         } catch(PersistenceException pex) {
             throw new RuntimeException(
-                    "PersistenceException while creating Resource " + relativePath 
-                    + " under " + currentParent.getPath(), pex);
+                    "PersistenceException while creating Resource " + fullPath, pex);
         }
         
         if(r == null) {
-            throw new RuntimeException("Failed to get or create resource " + relativePath 
-                    + " under " + currentParent.getPath());
+            throw new RuntimeException("Failed to get or create resource " + fullPath);
         } else if(hierarchyMode) {
             currentParent = r;
         }
