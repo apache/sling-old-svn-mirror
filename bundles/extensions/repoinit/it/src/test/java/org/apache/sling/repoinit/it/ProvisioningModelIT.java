@@ -21,12 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 
-import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,7 +44,6 @@ public class ProvisioningModelIT {
     
     @Before
     public void setup() throws Exception {
-        WaitFor.services(teleporter, SlingRepository.class, RepoInitParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
     }
     
