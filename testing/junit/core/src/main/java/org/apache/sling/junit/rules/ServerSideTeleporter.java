@@ -48,9 +48,42 @@ class ServerSideTeleporter extends TeleporterRule {
         }
     }
 
+    /**
+     * Get OSGi service - if it is not available (yet?) try again and again until the configured timeout is reached.
+     */
     public <T> T getService (Class<T> serviceClass, String ldapFilter) {
+        String configuredTimeout = (String)bundleContext.getBundle().getHeaders().get("Sling-Test-WaitForService-Timeout");
+        if (configuredTimeout == null) {
+            configuredTimeout = "10";
+        }
+        final long timeout = System.currentTimeMillis() + Integer.parseInt(configuredTimeout) * 1000;
+        
+        while (System.currentTimeMillis() < timeout) {
+            try {
+                T service = getServiceInternal(serviceClass, ldapFilter);
+                if (service != null) {
+                    return service;
+                }
+            }
+            catch(IllegalStateException ex) {
+                if (System.currentTimeMillis() >= timeout) {
+                    throw ex;
+                }
+            }
+            try {
+                Thread.sleep(50L);
+            }
+            catch (InterruptedException ex) {
+                // ignore
+            }
+        }
+        throw new IllegalStateException("Unable to get an instance of the service.");
+    }
+
+    private <T> T getServiceInternal (Class<T> serviceClass, String ldapFilter) {
         final ServiceGetter sg = new ServiceGetter(bundleContext, serviceClass, ldapFilter);
         toUnget.add(sg.serviceReference);
         return serviceClass.cast(sg.service);
     }
+
 }
