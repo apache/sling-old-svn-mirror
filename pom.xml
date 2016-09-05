@@ -82,14 +82,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <stylesheet>maven</stylesheet>
-                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>3.0.3</version>
@@ -110,22 +102,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- ======================================================================= -->
-    <!-- R E P O R T I N G                                                       -->
-    <!-- ======================================================================= -->
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <stylesheet>maven</stylesheet>
-                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <!-- ======================================================================= -->
     <!-- D E P E N D E N C I E S                                                 -->
