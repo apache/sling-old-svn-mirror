@@ -21,25 +21,25 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>28</version>
         <relativePath/>
     </parent>
 
-    <artifactId>sightly-maven-plugin</artifactId>
+    <artifactId>htl-maven-plugin</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Apache Sling Sightly Maven Plugin</name>
+    <name>Apache Sling HTL Maven Plugin</name>
+    <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/sightly-maven-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/sightly-maven-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/sightly-maven-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
     </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sling.java.version>7</sling.java.version>
         <maven.version>3.3.3</maven.version>
     </properties>
 
@@ -90,7 +90,7 @@
             <artifactId>plexus-build-api</artifactId>
             <version>0.0.7</version>
         </dependency>
-        
+
 
         <!-- Testing Dependencies -->
         <dependency>
@@ -102,7 +102,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.sling.maven.sightly;
+package org.apache.sling.maven.htl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,7 +55,7 @@ public class ValidateMojo extends AbstractMojo {
 
     private static final String DEFAULT_INCLUDES = "**/*.html";
     private static final String DEFAULT_EXCLUDES = "";
-    
+
     @Component
     private BuildContext buildContext;
 
@@ -97,9 +97,9 @@ public class ValidateMojo extends AbstractMojo {
     private int sourceDirectoryLength = 0;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        
+
         long start = System.currentTimeMillis();
-        
+
         if (!sourceDirectory.isAbsolute()) {
             sourceDirectory = new File(project.getBasedir(), sourceDirectory.getPath());
         }
@@ -111,7 +111,7 @@ public class ValidateMojo extends AbstractMojo {
             throw new MojoExecutionException(
                     String.format("Configured sourceDirectory={%s} is not a directory.", sourceDirectory.getAbsolutePath()));
         }
-        
+
         if ( !buildContext.hasDelta(sourceDirectory )) {
             getLog().info("No files found to validate, skipping");
             return;
@@ -125,14 +125,14 @@ public class ValidateMojo extends AbstractMojo {
         processedExcludes = processExcludes();
         try {
             SightlyCompiler compiler = new SightlyCompiler();
-            
+
             Scanner scanner = buildContext.newScanner(sourceDirectory);
             scanner.setExcludes(new String[] { processedExcludes } );
             scanner.setIncludes(new String[] { processedIncludes } );
             scanner.scan();
-            
+
             String[] includedFiles = scanner.getIncludedFiles();
-            
+
             processedFiles = new ArrayList<>(includedFiles.length);
             for ( String includedFile : includedFiles ) {
                 processedFiles.add(new File(sourceDirectory, includedFile));
@@ -145,7 +145,7 @@ public class ValidateMojo extends AbstractMojo {
                 File script = entry.getKey();
                 CompilationResult result = entry.getValue();
                 buildContext.removeMessages(script);
-                
+
                 if (result.getWarnings().size() > 0) {
                     for (CompilerMessage message : result.getWarnings()) {
                         buildContext.addMessage(script, message.getLine(), message.getColumn(), message.getMessage(), BuildContext.SEVERITY_WARNING, null);
@@ -160,9 +160,9 @@ public class ValidateMojo extends AbstractMojo {
                     hasErrors = true;
                 }
             }
-            
+
             getLog().info("Processed " + processedFiles.size() + " files in " + ( System.currentTimeMillis() - start ) + " milliseconds");
-            
+
             if (mayFailExecution && hasWarnings && failOnWarnings) {
                 throw new MojoFailureException("Compilation warnings were configured to fail the build.");
             }
@@ -244,7 +244,7 @@ public class ValidateMojo extends AbstractMojo {
 
     // visible for testing only
     void setBuildContext(BuildContext buildContext) {
-        
+
         this.buildContext = buildContext;
     }
 }

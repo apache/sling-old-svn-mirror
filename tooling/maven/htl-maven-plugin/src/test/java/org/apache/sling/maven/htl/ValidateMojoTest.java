@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.sling.maven.sightly;
+package org.apache.sling.maven.htl;
 
 import java.io.File;
 import java.util.List;
@@ -102,10 +102,10 @@ public class ValidateMojoTest {
     private ValidateMojo getMojo(File baseDir, String pomFile) throws Exception {
         SilentLog log = new SilentLog();
         DefaultBuildContext buildContext = new DefaultBuildContext();
-        
+
         File pom = new File(baseDir, pomFile);
         ValidateMojo validateMojo = new ValidateMojo();
-        mojoRule.configureMojo(validateMojo, mojoRule.extractPluginConfiguration("sightly-maven-plugin", pom));
+        mojoRule.configureMojo(validateMojo, mojoRule.extractPluginConfiguration("htl-maven-plugin", pom));
         MavenProject mavenProject = new ProjectStub(pom);
         mojoRule.setVariableValueToObject(validateMojo, "project", mavenProject);
         validateMojo.setLog(log);

@@ -19,23 +19,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>sightly-maven-plugin-it-explicit-excludes</artifactId>
+    <artifactId>htl-maven-plugin-it-explicit-includes</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Sightly Maven Plugin IT - Explicit excludes</name>
+    <name>HTL Maven Plugin IT - Explicit includes</name>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>sightly-maven-plugin</artifactId>
+                <artifactId>htl-maven-plugin</artifactId>
                 <configuration>
                     <sourceDirectory>src/main/resources</sourceDirectory>
-                    <!-- only script.html will be compiled -->
-                    <excludes>
-                        <exclude>**/exclude.html</exclude>
-                    </excludes>
+                    <!-- only *.sly files will be compiled -->
+                    <includes>
+                        <include>**/*.sly</include>
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>

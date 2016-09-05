@@ -19,23 +19,24 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>sightly-maven-plugin-it-explicit-includes</artifactId>
+    <artifactId>htl-maven-plugin-it-fail-on-warnings</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Sightly Maven Plugin IT - Explicit includes</name>
+    <name>HTL Maven Plugin IT - Fail On Warnings</name>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>sightly-maven-plugin</artifactId>
+                <artifactId>htl-maven-plugin</artifactId>
                 <configuration>
                     <sourceDirectory>src/main/resources</sourceDirectory>
-                    <!-- only *.sly files will be compiled -->
+                    <!-- only the warning.sly file will be compiled -->
                     <includes>
-                        <include>**/*.sly</include>
+                        <include>**/warning.sly</include>
                     </includes>
+                    <failOnWarnings>true</failOnWarnings>
                 </configuration>
                 <executions>
                     <execution>
