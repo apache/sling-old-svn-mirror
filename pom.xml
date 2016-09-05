@@ -63,6 +63,16 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling.scripting.sightly.models.impl
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
