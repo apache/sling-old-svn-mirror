@@ -25,16 +25,16 @@
     </parent>
 
     <artifactId>htl-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling HTL Maven Plugin</name>
     <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/no</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/no</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/no</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
     </scm>
 
     <properties>
