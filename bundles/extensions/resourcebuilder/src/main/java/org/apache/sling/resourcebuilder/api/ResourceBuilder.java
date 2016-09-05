@@ -45,12 +45,13 @@ public interface ResourceBuilder {
     
     /** Create a Resource, which optionally becomes the current 
      *  parent Resource. 
-     * @param relativePath The path of the Resource to create, relative to 
-     *          this builder's current parent Resource.
+     * @param path The path of the Resource to create.
+     *    If it's a relative path this builder's current resource is used as parent.
+     *    Otherwise the resource is created ad the given absoulte path.
      * @param properties optional name-value pairs 
      * @return this builder
      */
-    ResourceBuilder resource(String relativePath, Object ... properties);
+    ResourceBuilder resource(String path, Object ... properties);
 
     /** Create a file under the current parent resource
      * @param filename The name of the created file
