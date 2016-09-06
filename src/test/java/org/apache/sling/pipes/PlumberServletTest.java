@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.pipes.impl.CustomWriter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -78,8 +79,8 @@ public class PlumberServletTest  extends AbstractPipeTest {
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
         JSONObject object = new JSONObject(finalResponse);
-        assertEquals("response should be an obj with size value equals to 4", object.getInt(PlumberServlet.KEY_SIZE), 4);
-        assertEquals("response should be an obj with items value equals to a 4 valued array", object.getJSONArray(PlumberServlet.KEY_ITEMS).length(), 4);
+        assertEquals("response should be an obj with size value equals to 4", object.getInt(OutputWriter.KEY_SIZE), 4);
+        assertEquals("response should be an obj with items value equals to a 4 valued array", object.getJSONArray(OutputWriter.KEY_ITEMS).length(), 4);
     }
 
     @Test
@@ -134,11 +135,11 @@ public class PlumberServletTest  extends AbstractPipeTest {
         servlet.execute(request, response, false);
         assertDummyTree();
         JSONObject response = new JSONObject(stringResponse.toString());
-        JSONArray array = response.getJSONArray(PlumberServlet.KEY_ITEMS);
+        JSONArray array = response.getJSONArray(OutputWriter.KEY_ITEMS);
         for (int i = 0; i < array.length(); i++) {
             JSONObject object = array.optJSONObject(i);
             assertNotNull("there should be an object returned at each time", object);
-            String path = object.optString(PlumberServlet.PATH_KEY);
+            String path = object.optString(CustomWriter.PATH_KEY);
             assertNotNull("the string path should be returned for each item, containing the path of the resource");
             String pathLength = object.optString(pathLengthParam);
             assertNotNull("there should be a pathLength param, as specified in the writer", pathLength);
@@ -176,7 +177,7 @@ public class PlumberServletTest  extends AbstractPipeTest {
         when(request.getResource()).thenReturn(resource);
         when(request.getParameter(PlumberServlet.PARAM_PATH)).thenReturn(pathParam);
         when(request.getParameter(PlumberServlet.PARAM_BINDINGS)).thenReturn(bindings);
-        when(request.getParameter(PlumberServlet.PARAM_WRITER)).thenReturn(writer);
+        when(request.getParameter(CustomWriter.PARAM_WRITER)).thenReturn(writer);
         when(request.getParameter(BasePipe.DRYRUN_KEY)).thenReturn(dryRun);
         return request;
     }
