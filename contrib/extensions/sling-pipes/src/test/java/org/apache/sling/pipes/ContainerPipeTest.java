@@ -45,8 +45,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testDummyTree() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_DUMMYTREE);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
+        ContainerPipe pipe = (ContainerPipe)getPipe(PATH_PIPE + "/" + NN_DUMMYTREE);
         assertNotNull("A container pipe should be built out from the given configuration", pipe);
         Iterator<Resource> resourceIterator = pipe.getOutput();
         assertTrue("There should be some results", resourceIterator.hasNext());
@@ -78,8 +77,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testOtherTree() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_OTHERTREE);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
+        ContainerPipe pipe = (ContainerPipe)getPipe(PATH_PIPE + "/" + NN_OTHERTREE);
         Iterator<Resource> resourceIterator = pipe.getOutput();
         assertTrue("There should be some results", resourceIterator.hasNext());
         Resource firstResource = resourceIterator.next();
@@ -98,17 +96,11 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testRottenTree() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_ROTTENTREE);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
-        assertFalse("There shouldn't be any resource", resourceIterator.hasNext());
+        assertFalse("There shouldn't be any resource", getOutput(PATH_PIPE + "/" + NN_ROTTENTREE).hasNext());
     }
 
     @Test
     public void testOnePipe() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_ONEPIPE);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
-        assertTrue("There should be children", resourceIterator.hasNext());
+        assertTrue("There should be children", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
     }
 }

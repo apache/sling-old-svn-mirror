@@ -43,6 +43,7 @@ public class BasePipe implements Pipe {
     protected ContainerPipe parent;
     protected String distributionAgent;
     protected PipeBindings bindings;
+    protected ReferencePipe referrer;
 
     // used by pipes using complex JCR configurations
     public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy"});
@@ -127,11 +128,15 @@ public class BasePipe implements Pipe {
         return configuredInput;
     }
 
+    protected Pipe getPreviousPipe(){
+        return referrer == null ? parent.getPreviousPipe(this) : referrer.getPreviousPipe();
+    }
+
     @Override
     public Resource getInput() {
         Resource resource = getConfiguredInput();
         if (resource == null && parent != null){
-            Pipe previousPipe = parent.getPreviousPipe(this);
+            Pipe previousPipe = getPreviousPipe();
             if (previousPipe != null) {
                 return bindings.getExecutedResource(previousPipe.getName());
             }
@@ -166,7 +171,11 @@ public class BasePipe implements Pipe {
      * @return
      */
     public Iterator<Resource> getOutput(){
-        return Collections.singleton(getInput()).iterator();
+        Resource resource = getInput();
+        if (resource != null){
+            return Collections.singleton(resource).iterator();
+        }
+        return EMPTY_ITERATOR;
     }
 
     /**
@@ -180,6 +189,11 @@ public class BasePipe implements Pipe {
     @Override
     public String getDistributionAgent() {
         return distributionAgent;
+    }
+
+    @Override
+    public void setReferrer(ReferencePipe pipe) {
+        referrer = pipe;
     }
 
     public static final Iterator<Resource> EMPTY_ITERATOR = Collections.emptyIterator();

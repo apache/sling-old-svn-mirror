@@ -130,6 +130,10 @@ public class PipeBindings {
         getBindings().putAll(bindings);
     }
 
+    public void copyBindings(PipeBindings original){
+        getBindings().putAll(original.getBindings());
+    }
+
     /**
      * Update current resource of a given pipe, and appropriate binding
      * @param pipe
@@ -144,6 +148,7 @@ public class PipeBindings {
     }
 
     public void addBinding(String name, Object value){
+        log.debug("Adding binding {}={}", name, value);
         getBindings().put(name, value);
     }
 

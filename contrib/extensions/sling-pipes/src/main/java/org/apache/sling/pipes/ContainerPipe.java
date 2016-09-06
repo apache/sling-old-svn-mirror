@@ -17,23 +17,11 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -84,10 +72,6 @@ public class ContainerPipe extends BasePipe {
 
     @Override
     public Iterator<Resource> getOutput()  {
-        if (pipeList.size() == 1) {
-            //corner case with only one element: no need to have a container resource iterator
-            return pipeList.iterator().next().getOutput();
-        }
         return new ContainerResourceIterator(this);
     }
 
@@ -187,7 +171,8 @@ public class ContainerPipe extends BasePipe {
             //2 choices here:
             // either cursor is at 0 with no resource left: end,
             // either cursor is on last pipe with a resource left: hasNext
-            return cursor > 0;
+            // the second part is for the corner case with only one item
+            return cursor > 0 || (iterators.size() == 1 && it.hasNext());
         }
 
         /**
@@ -220,7 +205,7 @@ public class ContainerPipe extends BasePipe {
 
         @Override
         public void remove() {
-
+            throw new UnsupportedOperationException();
         }
     }
 

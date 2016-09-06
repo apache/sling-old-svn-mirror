@@ -40,10 +40,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * This unit test is not part of the ResourceBuilder impl project to avoid a dependency
- * to the sling-mock project there (because sling-mock itself has a dependency to the ResourceBuilder).
- */
 public class ResourceBuilderImplTest {
     
     private String testRootPath;

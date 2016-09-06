@@ -14,27 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.sling.pipes;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
-/**
- * test the sling query pipe
- */
-public class SlingQueryPipeTest extends AbstractPipeTest {
+public class NotPipeTest extends AbstractPipeTest {
 
     @Before
-    public void setup() {
-        super.setup();
-        context.load().json("/users.json", "/content/users");
-        context.load().json("/slingQuery.json", PATH_PIPE);
+    public void setUp() throws Exception {
+        context.load().json("/reference.json", PATH_PIPE);
     }
 
     @Test
-    public void testChildren() throws Exception {
-        assertTrue("this pipe should have an output", getOutput(PATH_PIPE + "/" + NN_SIMPLE).hasNext());
+    public void testTrue() throws Exception {
+        assertFalse("working referred pipe should make not pipe fail", getOutput(PATH_PIPE + "/not").hasNext());
+    }
+
+    @Test
+    public void testFalse() throws Exception {
+        //not working referred pipe should stream input of the not pipe
+        testOneResource(PATH_PIPE + "/notfailure", PATH_APPLE);
     }
 }

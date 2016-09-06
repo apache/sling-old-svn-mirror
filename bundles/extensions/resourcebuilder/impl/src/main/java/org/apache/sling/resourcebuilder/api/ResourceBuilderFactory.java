@@ -24,20 +24,20 @@ import org.apache.sling.api.resource.ResourceResolver;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * Creates {@link ResourceBuilder} instances.
+ * Factory service for building {@link ResourceBuilder} instances.
  */
 @ProviderType
 public interface ResourceBuilderFactory {
-
+    
     /** Start a ResourceBuilder using the supplied parent resource 
      *  @return the new builder
      * */
     ResourceBuilder forParent(Resource parent);
-
+    
     /** Start a ResourceBuilder using the supplied ResourceResolver,
      *  starting with the root resource as the builder's parent resource. 
      *  @return the new builder
      * */
     ResourceBuilder forResolver(ResourceResolver r);
-
+    
 }

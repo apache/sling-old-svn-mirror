@@ -39,8 +39,7 @@ public class MultiPropertyPipeTest extends AbstractPipeTest {
 
     @Test
     public void testMV() throws Exception{
-        Resource conf = context.resourceResolver().getResource(PATH_PIPE + "/working");
-        Pipe pipe = plumber.getPipe(conf);
+        Pipe pipe = getPipe(PATH_PIPE + "/working");
         Iterator<Resource> outputs = pipe.getOutput();
         Resource resource = outputs.next();
         assertNotNull(resource);
@@ -56,14 +55,8 @@ public class MultiPropertyPipeTest extends AbstractPipeTest {
 
     @Test
     public void testNonWorkingMV() throws Exception{
-        Resource conf = context.resourceResolver().getResource(PATH_PIPE + "/typo");
-        Pipe pipe = plumber.getPipe(conf);
-        assertFalse("There should not be next for a non existing resource", pipe.getOutput().hasNext());
-        conf = context.resourceResolver().getResource(PATH_PIPE + "/notProperty");
-        pipe = plumber.getPipe(conf);
-        assertFalse("There should not be next for a resource that is not a property", pipe.getOutput().hasNext());
-        conf = context.resourceResolver().getResource(PATH_PIPE + "/notMultiple");
-        pipe = plumber.getPipe(conf);
-        assertFalse("There should not be next for a property that is not multiple", pipe.getOutput().hasNext());
+        assertFalse("There should not be next for a non existing resource", getOutput(PATH_PIPE + "/typo").hasNext());
+        assertFalse("There should not be next for a resource that is not a property", getOutput(PATH_PIPE + "/notProperty").hasNext());
+        assertFalse("There should not be next for a property that is not multiple", getOutput(PATH_PIPE + "/notMultiple").hasNext());
     }
 }

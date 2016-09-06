@@ -30,22 +30,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.pipes.AuthorizablePipe;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.ContainerPipe;
-import org.apache.sling.pipes.FilterPipe;
-import org.apache.sling.pipes.PathPipe;
-import org.apache.sling.pipes.JsonPipe;
-import org.apache.sling.pipes.MovePipe;
-import org.apache.sling.pipes.MultiPropertyPipe;
-import org.apache.sling.pipes.ParentPipe;
-import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.ReferencePipe;
-import org.apache.sling.pipes.RemovePipe;
-import org.apache.sling.pipes.SlingQueryPipe;
-import org.apache.sling.pipes.WritePipe;
-import org.apache.sling.pipes.XPathPipe;
+import org.apache.sling.pipes.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +72,7 @@ public class PlumberImpl implements Plumber {
         registerPipe(MovePipe.RESOURCE_TYPE, MovePipe.class);
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
+        registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
     }
 
     @Override
