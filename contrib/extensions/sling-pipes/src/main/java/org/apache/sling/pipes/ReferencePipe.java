@@ -26,29 +26,35 @@ import java.util.Iterator;
 public class ReferencePipe extends BasePipe {
     public static final String RESOURCE_TYPE = "slingPipes/reference";
 
-    Pipe reference;
+    protected Pipe reference;
 
     public ReferencePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
-        Resource pipeResource = resolver.getResource(getPath());
+        Resource pipeResource = resolver.getResource(getExpr());
         if (pipeResource == null){
-            throw new Exception("Reference configuration error: There is no resource at " + getPath());
+            throw new Exception("Reference configuration error: There is no resource at " + getExpr());
         }
         reference = plumber.getPipe(pipeResource);
         if (reference == null){
             throw new Exception("Unable to build out pipe out of " + getPath());
         }
-    }
-
-    @Override
-    public Iterator<Resource> getOutput() {
-        return reference.getOutput();
+        reference.setReferrer(this);
     }
 
     @Override
     public void setParent(ContainerPipe parent) {
         super.setParent(parent);
         reference.setParent(parent);
+    }
+
+    @Override
+    public void setBindings(PipeBindings bindings) {
+        reference.setBindings(bindings);
+    }
+
+    @Override
+    public Iterator<Resource> getOutput() {
+        return reference.getOutput();
     }
 
     @Override
@@ -59,15 +65,5 @@ public class ReferencePipe extends BasePipe {
     @Override
     public boolean modifiesContent() {
         return reference.modifiesContent();
-    }
-
-    @Override
-    public Resource getInput() {
-        return reference.getInput();
-    }
-
-    @Override
-    public Resource getConfiguredInput() {
-        return reference.getConfiguredInput();
     }
 }
