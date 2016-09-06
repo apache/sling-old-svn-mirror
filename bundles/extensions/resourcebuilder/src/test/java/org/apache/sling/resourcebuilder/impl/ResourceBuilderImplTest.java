@@ -311,7 +311,7 @@ public class ResourceBuilderImplTest {
     
     @Test
     public void forParent() throws PersistenceException {
-        new ResourceBuilderService()
+        new ResourceBuilderFactoryService()
             .forParent(getTestRoot(testRootPath))
             .resource("a/b/c")
             .commit();
@@ -320,7 +320,7 @@ public class ResourceBuilderImplTest {
     
     @Test
     public void forResolver() throws PersistenceException {
-        new ResourceBuilderService()
+        new ResourceBuilderFactoryService()
             .forResolver(resourceResolver)
             .resource("d/e/f")
             .commit();
@@ -331,7 +331,7 @@ public class ResourceBuilderImplTest {
 
     @Test
     public void absolutePath() throws Exception {
-        new ResourceBuilderService()
+        new ResourceBuilderFactoryService()
             .forResolver(resourceResolver)
             .resource("/a/b/c")
             .resource("/a/b/f")
@@ -349,7 +349,7 @@ public class ResourceBuilderImplTest {
 
     @Test
     public void reuseInstance() throws Exception {
-        ResourceBuilder content = new ResourceBuilderService()
+        ResourceBuilder content = new ResourceBuilderFactoryService()
                 .forResolver(resourceResolver)
                 .resource("/content");
         content.resource("a");

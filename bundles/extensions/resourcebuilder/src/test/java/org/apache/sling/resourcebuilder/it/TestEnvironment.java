@@ -27,12 +27,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
+import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 
 class TestEnvironment {
     
     final ResourceBuilder builder;
-    final ResourceBuilder builderService;
+    final ResourceBuilderFactory builderService;
     final ResourceResolver resolver;
     final String testRootPath;
     final Resource parent;
@@ -43,7 +44,7 @@ class TestEnvironment {
         resolver = teleporter.getService(ResourceResolverFactory.class).getAdministrativeResourceResolver(null);
         final Resource root = resolver.getResource("/");
         parent = resolver.create(root, testRootPath, null);
-        builderService = teleporter.getService(ResourceBuilder.class); 
+        builderService = teleporter.getService(ResourceBuilderFactory.class); 
         builder = builderService.forParent(parent);
         A = new ResourceAssertions(testRootPath, resolver);
     }
