@@ -20,11 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.apache.sling.contextaware.config.it.example.SimpleConfig;
-import org.apache.sling.contextaware.config.it.util.WaitFor;
 import org.apache.sling.contextaware.config.spi.ConfigurationMetadataProvider;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -32,11 +30,6 @@ public class ConfigurationMetadataProviderIT {
     
     @Rule
     public TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "IT");
-    
-    @Before
-    public void setUp() throws Exception {
-        WaitFor.services(teleporter, ConfigurationMetadataProvider.class);
-    }
     
     @Test
     public void testConfigurationMetadata() {
