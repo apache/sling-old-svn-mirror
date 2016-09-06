@@ -68,9 +68,7 @@ public class WritePipeTest extends AbstractPipeTest {
 
     @Test
     public void testPiped() throws Exception {
-        Resource confResource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_PIPED);
-        Pipe pipe = plumber.getPipe(confResource);
-        assertNotNull("pipe should be found", pipe);
+        Pipe pipe = getPipe(PATH_PIPE + "/" + NN_PIPED);
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         Iterator<Resource> it = pipe.getOutput();
         assertTrue("There should be one result", it.hasNext());
@@ -90,13 +88,9 @@ public class WritePipeTest extends AbstractPipeTest {
 
     @Test
     public void testVariablePiped() throws Exception {
-        String pipePath = PATH_PIPE + "/" + NN_VARIABLE_PIPED;
-        Resource confResource = context.resourceResolver().getResource(pipePath);
-        Pipe pipe = plumber.getPipe(confResource);
-        assertNotNull("pipe should be found", pipe);
-        Iterator<Resource> it = pipe.getOutput();
+        Iterator<Resource> it = getOutput(PATH_PIPE + "/" + NN_VARIABLE_PIPED);
         Resource resource = it.next();
-        assertEquals("path should be the one configured in first pipe", pipePath + "/conf/fruit/conf/apple", resource.getPath());
+        assertEquals("path should be the one configured in first pipe", PATH_PIPE + "/" + NN_VARIABLE_PIPED + "/conf/fruit/conf/apple", resource.getPath());
         context.resourceResolver().commit();
         ValueMap properties = resource.adaptTo(ValueMap.class);
         assertEquals("Configured value should be written", "apple is a fruit and its color is green", properties.get("jcr:description", ""));
@@ -108,8 +102,7 @@ public class WritePipeTest extends AbstractPipeTest {
 
     @Test
     public void testSimpleTree() throws Exception {
-        Resource confResource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_SIMPLETREE);
-        Pipe pipe = plumber.getPipe(confResource);
+        Pipe pipe = getPipe(PATH_PIPE + "/" + NN_SIMPLETREE);
         assertNotNull("pipe should be found", pipe);
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         pipe.getOutput();

@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
 import org.apache.sling.pipes.impl.PlumberImpl;
@@ -23,6 +24,12 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
+
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * this abstract class for pipes implements a plumber with all registered pipes, plus some test ones, and give some paths,
@@ -52,4 +59,25 @@ public class AbstractPipeTest {
         context.load().json("/fruits.json", PATH_FRUITS);
     }
 
+    protected Pipe getPipe(String path){
+        Resource resource = context.resourceResolver().getResource(path);
+        return plumber.getPipe(resource);
+    }
+
+    protected Iterator<Resource> getOutput(String path){
+        Pipe pipe = getPipe(path);
+        assertNotNull("pipe should be found", pipe);
+        return pipe.getOutput();
+    }
+
+    /**
+     * tests given pipe (pipePath) outputs at least one resource, which path is resourcepath
+     * @param pipePath
+     * @param resourcePath
+     */
+    protected void testOneResource(String pipePath, String resourcePath){
+        Iterator<Resource> it = getOutput(pipePath);
+        assertTrue("pipe should have results", it.hasNext());
+        assertEquals("return result should be the one expected", resourcePath, it.next().getPath());
+    }
 }
