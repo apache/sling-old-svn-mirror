@@ -68,7 +68,7 @@ List of files to exclude, specified as fileset patterns which are relative to `s
 * **Required:** No
 * **User Property:** `excludes`
 
-<a name="param-failOnWarning"><code>failOnWarnings</code></a>:
+<a name="param-failOnWarnings"><code>failOnWarnings</code></a>:
 
 If set to `true` it will fail the build on compiler warnings.
 * **Type:** `boolean`
