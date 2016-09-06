@@ -74,16 +74,6 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     }
     
     @Override
-    public ResourceBuilder forParent(Resource parent) {
-        throw new UnsupportedOperationException(CANNOT_RESTART);
-    }
-    
-    @Override
-    public ResourceBuilder forResolver(ResourceResolver v) {
-        throw new UnsupportedOperationException(CANNOT_RESTART);
-    }
-    
-    @Override
     public Resource getCurrentParent() {
         return currentParent;
     }
@@ -274,4 +264,5 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         }
         return this;
     }
+
 }
