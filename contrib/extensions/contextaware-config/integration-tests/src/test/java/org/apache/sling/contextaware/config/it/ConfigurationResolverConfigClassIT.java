@@ -27,6 +27,7 @@ import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.it.example.SimpleConfig;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
+import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,7 +45,7 @@ public class ConfigurationResolverConfigClassIT {
     @Before
     public void setUp() throws Exception {
         resourceResolver = teleporter.getService(ResourceResolverFactory.class).getAdministrativeResourceResolver(null);
-        resourceBuilder = teleporter.getService(ResourceBuilder.class).forResolver(resourceResolver);
+        resourceBuilder = teleporter.getService(ResourceBuilderFactory.class).forResolver(resourceResolver);
     }
     
     @After
