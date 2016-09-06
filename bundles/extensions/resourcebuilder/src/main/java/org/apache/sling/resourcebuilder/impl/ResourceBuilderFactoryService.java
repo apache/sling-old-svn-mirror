@@ -18,8 +18,6 @@
  */
 package org.apache.sling.resourcebuilder.impl;
 
-import java.io.InputStream;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -27,27 +25,18 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
+import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 
-/** ResourceBuilder service, only implements the for* methods to
- *  create new builders. This allows us to provide a single service
- *  interface which transparently becomes stateful, by switching from
- *  this object to the ResourceBuilderImpl.
+/**
+ * ResourceBuilderFactory service.
  */
 @Component
-@Service(value=ResourceBuilder.class)
-public class ResourceBuilderService implements ResourceBuilder {
+@Service(value=ResourceBuilderFactory.class)
+public class ResourceBuilderFactoryService implements ResourceBuilderFactory {
     
     @Reference
     private MimeTypeService mimeTypeService;
     
-    
-    private ResourceBuilder notStarted() {
-        throw new IllegalStateException(
-                "This ResourceBuilder is not started, please use the"
-                + "forParent or forResolver methods to start it."
-         );
-    }
-
     @Override
     public ResourceBuilder forParent(Resource parent) {
         return new ResourceBuilderImpl(parent, mimeTypeService);
@@ -62,49 +51,4 @@ public class ResourceBuilderService implements ResourceBuilder {
         return forParent(root);
     }
 
-    @Override
-    public ResourceBuilder resource(String relativePath, Object... properties) {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified) {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder file(String filename, InputStream data) {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder commit() {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder withIntermediatePrimaryType(String primaryType) {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder siblingsMode() {
-        return notStarted();
-    }
-
-    @Override
-    public ResourceBuilder hierarchyMode() {
-        return notStarted();
-    }
-
-    @Override
-    public Resource getCurrentParent() {
-        notStarted();
-        return null;
-    }
-
-    @Override
-    public ResourceBuilder atParent() {
-        return notStarted();
-    }
 }
