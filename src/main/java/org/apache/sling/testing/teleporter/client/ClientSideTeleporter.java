@@ -48,6 +48,7 @@ public class ClientSideTeleporter extends TeleporterRule {
     private DependencyAnalyzer dependencyAnalyzer;
     private int testReadyTimeoutSeconds = 20;
     private int webConsoleReadyTimeoutSeconds = 30;
+    private int waitForServiceTimout = 10;
     private String baseUrl;
     private String serverCredentials;
     private String testServletPath = DEFAULT_TEST_SERVLET_PATH;
@@ -58,6 +59,7 @@ public class ClientSideTeleporter extends TeleporterRule {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
             .set("Sling-Test-Regexp", c.getName() + ".*")
+            .set("Sling-Test-WaitForService-Timeout", Integer.toString(waitForServiceTimout))
             .add(c);
 
         for(Map.Entry<String, String> header : additionalBundleHeaders.entrySet()) {
@@ -108,6 +110,14 @@ public class ClientSideTeleporter extends TeleporterRule {
     /** Define how long to wait for the webconsole to be ready, before installing the test bundle */
     public void setWebConsoleReadyTimeoutSeconds (int tm) {
         webConsoleReadyTimeoutSeconds = tm;
+    }
+    
+    /**
+     * Define how long to wait to get a service reference.
+     * This applies only on the server-side when using the {@link #getService(Class)} or {@link #getService(Class, String)} methods.
+     */
+    public void setWaitForServiceTimoutSeconds (int tm) {
+        waitForServiceTimout = tm;
     }
     
     /** Set the credentials to use to install our test bundle on the server */
