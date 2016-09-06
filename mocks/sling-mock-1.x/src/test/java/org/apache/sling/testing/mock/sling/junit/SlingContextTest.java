@@ -27,7 +27,9 @@ import static org.mockito.Mockito.verify;
 import java.io.IOException;
 
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.Before;
 import org.junit.Rule;
@@ -109,4 +111,19 @@ public class SlingContextTest {
         assertNull(context.resourceResolver().adaptTo(Double.class));
     }
 
+    @Test
+    public void testResourceBuilder() {
+        
+        context.build().resource("/test1", "prop1", "value1")
+            .siblingsMode()
+            .resource("a")
+            .resource("b");
+        
+        Resource test1 = context.resourceResolver().getResource("/test1");
+        assertNotNull(test1);
+        assertEquals("value1", ResourceUtil.getValueMap(test1).get("prop1", String.class));
+        assertNotNull(test1.getChild("a"));
+        assertNotNull(test1.getChild("b"));
+    }
+        
 }
