@@ -39,6 +39,7 @@ public abstract class RenderUnit implements Record<RenderUnit> {
     /**
      * Render the main script template
      *
+     * @param out           the {@link PrintWriter} to which the commands are written
      * @param renderContext the rendering context
      * @param arguments     the arguments for this unit
      */

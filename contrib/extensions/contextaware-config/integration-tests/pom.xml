@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.16</version>
+            <version>1.0.17-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

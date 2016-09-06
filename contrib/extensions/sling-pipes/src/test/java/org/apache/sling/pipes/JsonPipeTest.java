@@ -40,9 +40,7 @@ public class JsonPipeTest extends AbstractPipeTest {
 
     @Test
     public void testPipedJson() throws Exception{
-        Resource resource = context.resourceResolver().getResource(CONF);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> outputs = pipe.getOutput();
+        Iterator<Resource> outputs = getOutput(CONF);
         outputs.next();
         Resource result = outputs.next();
         context.resourceResolver().commit();
@@ -53,9 +51,7 @@ public class JsonPipeTest extends AbstractPipeTest {
 
     @Test
     public void testPipedArray() throws Exception {
-        Resource resource = context.resourceResolver().getResource(ARRAY);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
-        Iterator<Resource> outputs = pipe.getOutput();
+        Iterator<Resource> outputs = getOutput(ARRAY);
         Resource first = outputs.next();
         Resource second = outputs.next();
         Resource third = outputs.next();

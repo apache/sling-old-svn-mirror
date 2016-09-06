@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-    <version>1.0.11-SNAPSHOT</version>
+    <version>1.0.13-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL JavaScript Use Provider</name>
@@ -66,6 +66,16 @@
                         <Sling-Bundle-Resources>/libs/sling/sightly/js;path:=/SLING-INF/libs/sling/sightly/js</Sling-Bundle-Resources>
                         <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling.scripting.sightly.js.impl
+                    </excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
@@ -117,19 +127,19 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly</artifactId>
-            <version>1.0.19-SNAPSHOT</version>
+            <version>1.0.21-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 

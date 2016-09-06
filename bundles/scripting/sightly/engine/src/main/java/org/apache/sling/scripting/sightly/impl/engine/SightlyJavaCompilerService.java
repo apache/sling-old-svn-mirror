@@ -80,6 +80,7 @@ public class SightlyJavaCompilerService {
      * compilation. In case the requested class does not denote a fully qualified classname, this service will try to find the class through
      * Sling's servlet resolution mechanism and compile the class on-the-fly if required.
      *
+     * @param renderContext the render context
      * @param className     name of class to use for object instantiation
      * @return object instance of the requested class
      */

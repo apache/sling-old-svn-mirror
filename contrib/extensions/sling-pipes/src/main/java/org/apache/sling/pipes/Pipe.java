@@ -27,24 +27,24 @@ public interface Pipe {
     /**
      * Name of the pipe
      */
-    public static final String PN_NAME = "name";
+    String PN_NAME = "name";
 
     /**
      * expression of the pipe, usage depends on the pipe implementation
      */
-    public static final String PN_EXPR = "expr";
+    String PN_EXPR = "expr";
 
     /**
      * resource's path associated to the path, usage depends on the pipe implementation
      */
-    public static final String PN_PATH = "path";
+    String PN_PATH = "path";
 
     /**
      * Node name for the pipe's configuration
      */
-    public static final String NN_CONF = "conf";
+    String NN_CONF = "conf";
 
-    public static final String PN_DISTRIBUTION_AGENT = "distribution.agent";
+    String PN_DISTRIBUTION_AGENT = "distribution.agent";
 
     /**
      * returns true if that pipe will modify content during its execution
@@ -115,4 +115,10 @@ public interface Pipe {
      * Get Distribution agent
      */
     String getDistributionAgent();
+
+    /**
+     * sets the reference pipe this pipe is referred by
+     * @param pipe
+     */
+    void setReferrer(ReferencePipe pipe);
 }

@@ -44,9 +44,7 @@ public class MovePipeTest extends AbstractPipeTest {
     @Ignore //move operation is not supported yet by MockSession
     @Test
     public void testMoveNode() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + MOVENODE_PIPE);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> output = pipe.getOutput();
+        Iterator<Resource> output = getOutput(PATH_PIPE + MOVENODE_PIPE);
         Assert.assertTrue(output.hasNext());
         output.next();
         Session session = context.resourceResolver().adaptTo(Session.class);
@@ -57,9 +55,7 @@ public class MovePipeTest extends AbstractPipeTest {
     @Ignore //move operation is not supported yet by MockSession
     @Test
     public void testMoveProperty() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + MOVEPROPERTY_PIPE);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> output = pipe.getOutput();
+        Iterator<Resource> output = getOutput(PATH_PIPE + MOVEPROPERTY_PIPE);
         Assert.assertTrue(output.hasNext());
         output.next();
         Session session = context.resourceResolver().adaptTo(Session.class);

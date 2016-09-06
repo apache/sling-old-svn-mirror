@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.sling.scripting.sightly.repl</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL Read-Eval-Print Loop Environment</name>
@@ -87,6 +87,16 @@
                         <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
                         <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling.scripting.sightly.repl.impl
+                    </excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>

@@ -43,9 +43,7 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testFilterProperties(){
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_PROPERTIES);
-        ContainerPipe pipe = (ContainerPipe)plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
+        Iterator<Resource> resourceIterator = getOutput(PATH_PIPE + "/" + NN_PROPERTIES);
         assertTrue("output has one resource...", resourceIterator.hasNext());
         ValueMap properties = resourceIterator.next().adaptTo(ValueMap.class);
         assertFalse("...and only One", resourceIterator.hasNext());
@@ -55,9 +53,7 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testNoChildrenPasses(){
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_NOCHILDREN);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
+        Iterator<Resource> resourceIterator = getOutput(PATH_PIPE + "/" + NN_NOCHILDREN);
         assertTrue("output has one resource...", resourceIterator.hasNext());
         resourceIterator.next().adaptTo(ValueMap.class);
         assertFalse("...and only One", resourceIterator.hasNext());
@@ -66,26 +62,17 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testNoChildrenFails(){
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_NOCHILDREN_FAILS);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
-        assertFalse("output has no resource...", resourceIterator.hasNext());
+        assertFalse("output has no resource...", getOutput(PATH_PIPE + "/" + NN_NOCHILDREN_FAILS).hasNext());
     }
 
     @Test
     public void testTestPasses() {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_TEST);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
-        assertTrue("output has one resource...", resourceIterator.hasNext());
+        assertTrue("output has one resource...", getOutput(PATH_PIPE + "/" + NN_TEST).hasNext());
     }
 
     @Test
     public void testTestFails() {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_TEST_FAILS);
-        Pipe pipe = plumber.getPipe(resource);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
-        assertFalse("output has no resource...", resourceIterator.hasNext());
+        assertFalse("output has no resource...", getOutput(PATH_PIPE + "/" + NN_TEST_FAILS).hasNext());
     }
 
     @Test

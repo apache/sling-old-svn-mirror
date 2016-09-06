@@ -31,7 +31,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL Java Compiler</name>
@@ -82,14 +82,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <stylesheet>maven</stylesheet>
-                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>3.0.3</version>
@@ -107,24 +99,18 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
-
-    <!-- ======================================================================= -->
-    <!-- R E P O R T I N G                                                       -->
-    <!-- ======================================================================= -->
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <stylesheet>maven</stylesheet>
-                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling.scripting.sightly.java.compiler.impl
+                    </excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
 
     <!-- ======================================================================= -->
     <!-- D E P E N D E N C I E S                                                 -->
@@ -134,7 +120,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
