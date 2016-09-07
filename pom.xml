@@ -39,6 +39,20 @@
         <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/resourcebuilder</url>
     </scm>
   
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>sling/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <modules>
         <module>impl</module>
         <module>integration-tests</module>
