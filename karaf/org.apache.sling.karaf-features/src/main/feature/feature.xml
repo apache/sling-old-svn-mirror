@@ -357,69 +357,28 @@
     <feature version="${feature.version}">sling-extension-explorer</feature>
   </feature>
   <feature name="sling-launchpad-nosql-couchbase" version="${feature.version}">
-    <config name="org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config-default">
-      provider.roots=["/"]
-    </config>
-    <config name="org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default">
-      clientId=sling-resourceprovider-couchbase
-      couchbaseHosts=localhost:8091
-      bucketName=sling
-      enabled=true
-    </config>
+    <configfile finalname="/etc/org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config-default.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config-default</configfile>
+    <configfile finalname="/etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default</configfile>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-nosql-couchbase</feature>
   </feature>
   <feature name="sling-launchpad-nosql-mongodb" version="${feature.version}">
-    <config name="org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default">
-      provider.roots=["/"]
-      connectionString=localhost:27017
-      database=sling
-      collection=resources
-    </config>
+    <configfile finalname="/etc/org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default</configfile>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-nosql-mongodb</feature>
   </feature>
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
-    <config name="org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge">
-      enabled=true
-    </config>
+    <configfile finalname="/etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge</configfile>
     <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
-    <config name="org.apache.felix.jaas.Configuration.factory-GuestLoginModule">
-      jaas.controlFlag=optional
-      jaas.classname=org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule
-      jaas.ranking=300
-    </config>
-    <config name="org.apache.felix.jaas.Configuration.factory-LoginModuleImpl">
-      jaas.controlFlag=required
-      jaas.classname=org.apache.jackrabbit.oak.security.authentication.user.LoginModuleImpl
-    </config>
-    <config name="org.apache.felix.jaas.Configuration.factory-TokenLoginModule">
-      jaas.controlFlag=sufficient
-      jaas.classname=org.apache.jackrabbit.oak.security.authentication.token.TokenLoginModule
-      jaas.ranking=200
-    </config>
-    <config name="org.apache.felix.jaas.ConfigurationSpi">
-      jaas.defaultRealmName=jackrabbit.oak
-      jaas.configProviderName=FelixJaasProvider
-    </config>
-    <config name="org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl">
-      org.apache.jackrabbit.oak.authentication.configSpiName=FelixJaasProvider
-    </config>
-    <config name="org.apache.jackrabbit.oak.security.user.UserConfigurationImpl">
-      groupsPath=/home/groups
-      usersPath=/home/users
-      defaultDepth=1
-      importBehavior=besteffort
-    </config>
-    <config name="org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName">
-      length=21
-    </config>
-    <config name="org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider">
-      enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
-      userPrivilegeNames=["jcr:all"]
-      groupPrivilegeNames=["jcr:read"]
-    </config>
+    <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-GuestLoginModule.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-GuestLoginModule</configfile>
+    <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl</configfile>
+    <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-TokenLoginModule.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-TokenLoginModule</configfile>
+    <configfile finalname="/etc/org.apache.felix.jaas.ConfigurationSpi.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.ConfigurationSpi</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider</configfile>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling</feature>
@@ -437,24 +396,14 @@
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
     <feature version="${feature.version}">sling-jcr-oak</feature>
     <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
-    <config name="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService">
-      name=Default\ NodeStore
-      repository.home=sling/repository
-    </config>
-    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
-      localIndexDir=sling/repository/index
-    </config>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</configfile>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${feature.version}">
     <feature version="${feature.version}">sling-jcr-oak</feature>
-    <config name="org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService">
-      mongouri=mongodb://localhost:27017
-      db=sling
-    </config>
-    <config name="org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService">
-      localIndexDir=sling/repository/index
-    </config>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</configfile>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
     <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.14.3</bundle>
   </feature>
@@ -591,17 +540,8 @@
     <feature version="${feature.version}">sling-extension-query</feature>
     <feature version="${feature.version}">sling-extension-validation</feature>
     <feature version="${feature.version}">sling-auth-form</feature>
-    <config name="org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder">
-      subject=message\ from\ fling
-      from=fling@sling.apache.org
-      smtpHostname=localhost
-      smtpPort=8025
-      smtpUsername=sling
-      smtpPassword=fling
-    </config>
-    <config name="org.apache.sling.samples.fling.internal.WiserSmtpService">
-      smtpPort=8025
-    </config>
+    <configfile finalname="/etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder</configfile>
+    <configfile finalname="/etc/org.apache.sling.samples.fling.internal.WiserSmtpService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.samples.fling.internal.WiserSmtpService</configfile>
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
