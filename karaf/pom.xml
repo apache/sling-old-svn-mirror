@@ -41,6 +41,7 @@
   </scm>
 
   <modules>
+    <module>org.apache.sling.karaf-configs</module>
     <module>org.apache.sling.karaf-distribution</module>
     <module>org.apache.sling.karaf-features</module>
     <module>org.apache.sling.karaf-integration-tests</module>
