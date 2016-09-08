@@ -86,6 +86,8 @@
                 <excludes>
                   <exclude>src/main/resources/org/apache/sling/servlets/post/HtmlResponse.html</exclude>
                   <exclude>src/main/resources/org/apache/sling/servlets/post/HtmlNoGoBackResponse.html</exclude>
+                  <exclude>developer-tests/README.md</exclude>
+                  <exclude>Protocols.md</exclude>
                 </excludes>
               </configuration>
             </plugin>

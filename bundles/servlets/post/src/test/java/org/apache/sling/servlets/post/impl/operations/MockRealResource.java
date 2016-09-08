@@ -24,6 +24,9 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -34,20 +37,27 @@ public class MockRealResource implements Resource {
     private final ResourceResolver resourceResolver;
     private final String path;
     private final String resourceType;
+    private final String name;
+    private final String parentPath;
     private MockValueMap properties = new MockValueMap();
 
     public MockRealResource(ResourceResolver resourceResolver, String path, String resourceType) {
         this.resourceResolver = resourceResolver;
         this.path = path;
         this.resourceType = resourceType;
+        this.name = path.substring(path.lastIndexOf('/'));
+        this.parentPath = path.substring(0,path.lastIndexOf('/'));
     }
 
     public MockRealResource(ResourceResolver resourceResolver, String path, String resourceType, Map<String, Object> properties) {
         this.resourceResolver = resourceResolver;
         this.path = path;
+        this.name = path.substring(path.lastIndexOf('/')+1);
+        this.parentPath = path.substring(0,path.lastIndexOf('/'));
         this.resourceType = resourceType;
         this.properties.putAll(properties);
     }
+
 
     @Override
     public String getPath() {
@@ -56,22 +66,21 @@ public class MockRealResource implements Resource {
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
     public Resource getParent() {
-        return null;
+        return resourceResolver.getResource(parentPath);
     }
 
     @Override
     public Iterator<Resource> listChildren() {
-        return null;
+        return resourceResolver.listChildren(this);
     }
 
-    @Override
-    public Iterable<Resource> getChildren() {
-        return null;
+    @Override    public Iterable<Resource> getChildren() {
+        return resourceResolver.getChildren(this);
     }
 
     @Override
@@ -91,7 +100,7 @@ public class MockRealResource implements Resource {
 
     @Override
     public boolean isResourceType(String s) {
-        return false;
+        return s.equals(resourceType);
     }
 
     @Override
@@ -108,6 +117,18 @@ public class MockRealResource implements Resource {
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> aClass) {
         if (ValueMap.class.isAssignableFrom(aClass)) {
             return (AdapterType) properties;
+        }
+        if (InputStream.class.isAssignableFrom(aClass) && properties.containsKey("jcr:data")) {
+            Object o = properties.get("jcr:data");
+            if (o instanceof InputStream) {
+                return (AdapterType) o;
+            } else {
+                try {
+                    return (AdapterType) new ByteArrayInputStream(String.valueOf(properties.get("jcr:data")).getBytes("UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException("Cant convert UTF-8 to byte[]");
+                }
+            }
         }
         return null;
     }
