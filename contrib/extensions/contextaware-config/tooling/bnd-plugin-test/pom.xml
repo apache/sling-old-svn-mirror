@@ -56,7 +56,7 @@
                     <exportScr>true</exportScr>
                     <instructions>
                         <!-- Generate metadata files for config annotation classes -->
-                        <_plugin>org.apache.sling.contextaware.config.bndplugin.AnnotationClassMetadataGeneratorPlugin</_plugin>
+                        <_plugin>org.apache.sling.contextaware.config.bndplugin.ConfigurationClassScannerPlugin</_plugin>
                     </instructions>
                 </configuration>
                 <dependencies>
