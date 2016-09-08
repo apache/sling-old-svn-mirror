@@ -18,26 +18,35 @@
  */
 package org.apache.sling.contextaware.config.bndplugintest;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.jar.Attributes;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.jar.Manifest;
 
 import org.junit.Test;
 
-public class HeaderTest {
+public class HeaderIT {
 
     private static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
     
     @Test
     public void testBundleHeader() throws Exception {
         
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF")) {
+        try (InputStream is = new FileInputStream("target/classes/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(is);
-            Attributes classesHeader = manifest.getEntries().get(CONFIGURATION_CLASSES_HEADER);
+            String classesHeader = manifest.getMainAttributes().getValue(CONFIGURATION_CLASSES_HEADER);
             
-            assertTrue(classesHeader.keySet().contains("classesHeader.SimpleConfig"));
+            Set<String> classNames = new HashSet<>(Arrays.asList(classesHeader.split(",")));
+            
+            assertTrue(classNames.contains("org.apache.sling.contextaware.config.bndplugintest.MetadataSimpleConfig"));
+            assertTrue(classNames.contains("org.apache.sling.contextaware.config.bndplugintest.NestedConfig"));
+            assertTrue(classNames.contains("org.apache.sling.contextaware.config.bndplugintest.SimpleConfig"));
+            assertFalse(classNames.contains("org.apache.sling.contextaware.config.bndplugintest.WithoutAnnotationConfig"));
         }
         
     }
