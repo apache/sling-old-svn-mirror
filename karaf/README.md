@@ -28,9 +28,3 @@ For Karaf < 4.1.0 you need to configure _Felix File Install_ in `etc/config.prop
     karaf@root()> feature:install sling-extension-explorer
 
 5) Browse to [http://localhost:8181/](http://localhost:8181/⁠).
-
-
-KAR - Karaf Archive
--------------------
-
-    karaf@root()> kar:install mvn:org.apache.sling/org.apache.sling.karaf-features/0.1.1-SNAPSHOT/kar
