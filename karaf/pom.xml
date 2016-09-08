@@ -41,27 +41,12 @@
   </scm>
 
   <modules>
+    <module>org.apache.sling.karaf-configs</module>
     <module>org.apache.sling.karaf-distribution</module>
     <module>org.apache.sling.karaf-features</module>
     <module>org.apache.sling.karaf-integration-tests</module>
     <module>org.apache.sling.karaf-launchpad-oak-tar-integration-tests</module>
     <module>org.apache.sling.karaf-repoinit</module>
   </modules>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <configuration>
-          <excludes combine.children="append">
-            <exclude>**/*.md</exclude>
-            <exclude>**/target/</exclude>
-            <exclude>**/*.iml</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

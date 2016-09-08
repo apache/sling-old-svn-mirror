@@ -20,7 +20,6 @@ package org.apache.sling.servlets.post.impl.operations;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -28,6 +27,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
+import org.apache.sling.servlets.post.impl.helper.StreamedChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -58,12 +57,6 @@ import java.util.Map;
 public class StreamedUploadOperation extends AbstractPostOperation {
     private static final Logger LOG = LoggerFactory.getLogger(StreamedUploadOperation.class);
     public static final String NT_FILE = "nt:file";
-    public static final String NT_RESOURCE = "nt:resource";
-    public static final String JCR_LASTMODIFIED = "jcr:lastModified";
-    public static final String JCR_MIMETYPE = "jcr:mimeType";
-    public static final String JCR_DATA = "jcr:data";
-    private static final String MT_APP_OCTET = "application/octet-stream";
-    private static final String JCR_CONTENT = "jcr:content";
     private ServletContext servletContext;
 
     public void setServletContext(final ServletContext servletContext) {
@@ -167,33 +160,10 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         }
 
 
-
-        Map<String, Object> resourceProps = new HashMap<String, Object>();
-        resourceProps.put("jcr:primaryType", NT_RESOURCE);
-        resourceProps.put(JCR_LASTMODIFIED, Calendar.getInstance());
-        // TODO: Should all the formFields be added to the prop map ?
-        resourceProps.put(JCR_MIMETYPE, getContentType(part));
-        try {
-            resourceProps.put(JCR_DATA, part.getInputStream());
-        } catch (IOException e) {
-            throw new PersistenceException("Error while retrieving inputstream from request part.", e);
-        }
-        Resource result = fileResource.getChild(JCR_CONTENT);
-        if ( result != null ) {
-            final ModifiableValueMap vm = result.adaptTo(ModifiableValueMap.class);
-            if ( vm == null ) {
-                throw new PersistenceException("Resource at " + fileResource.getPath() + '/' + JCR_CONTENT + " is not modifiable.");
-            }
-            vm.putAll(resourceProps);
-        } else {
-            result = parentResource.getResourceResolver().create(fileResource, JCR_CONTENT, resourceProps);
-        }
-        // Commit must be called to perform to cause streaming so the next part can be found.
+        StreamedChunk chunk = new StreamedChunk(part, formFields, servletContext);
+        Resource result = chunk.store(fileResource, changes);
         result.getResourceResolver().commit();
 
-        for( String key : resourceProps.keySet()) {
-            changes.add(Modification.onModified(result.getPath() + '/' + key));
-        }
     }
 
     /**
@@ -235,31 +205,6 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
 
-    /**
-     * Get the content type of the part.
-     * @param part
-     * @return
-     */
-    private String getContentType(final Part part) {
-        String contentType = part.getContentType();
-        if (contentType != null) {
-            int idx = contentType.indexOf(';');
-            if (idx > 0) {
-                contentType = contentType.substring(0, idx);
-            }
-        }
-        if (contentType == null || contentType.equals(MT_APP_OCTET)) {
-            // try to find a better content type
-            ServletContext ctx = this.servletContext;
-            if (ctx != null) {
-                contentType = ctx.getMimeType(part.getSubmittedFileName());
-            }
-            if (contentType == null || contentType.equals(MT_APP_OCTET)) {
-                contentType = MT_APP_OCTET;
-            }
-        }
-        return contentType;
-    }
 
 
 
