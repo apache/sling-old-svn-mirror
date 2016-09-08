@@ -117,7 +117,7 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
         final boolean templateResourceExistenceVerified = false;
         final TemplateMode templateMode = templateModeProvider.provideTemplateMode(resource);
         logger.debug("using template mode {} for template '{}'", templateMode, template);
-        final boolean useDecoupledLogic = configuration.useDecoupledLogic();
+        final boolean useDecoupledLogic = templateMode.isMarkup() && configuration.useDecoupledLogic();
         final ICacheEntryValidity validity = NonCacheableCacheEntryValidity.INSTANCE;
         return new TemplateResolution(templateResource, templateResourceExistenceVerified, templateMode, useDecoupledLogic, validity);
     }
