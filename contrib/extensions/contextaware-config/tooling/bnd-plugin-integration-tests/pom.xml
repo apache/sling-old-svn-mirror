@@ -27,10 +27,10 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.contextaware.config.bnd-plugin-integration-test</artifactId>
+    <artifactId>org.apache.sling.contextaware.config.bnd-plugin-integration-tests</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Configuration bnd Plugin Integration Test</name>
+    <name>Apache Sling Context-Aware Configuration bnd Plugin Integration Tests</name>
     <description>Project to test the bnd Plugin</description>
 
     <build>

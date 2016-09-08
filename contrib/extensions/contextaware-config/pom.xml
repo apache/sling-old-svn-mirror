@@ -44,7 +44,7 @@
         <module>impl</module>
         <module>integration-tests</module>
         <module>tooling/bnd-plugin</module>
-        <module>tooling/bnd-plugin-integration-test</module>
+        <module>tooling/bnd-plugin-integration-tests</module>
     </modules>
 
 </project>
