@@ -21,6 +21,8 @@ package org.apache.sling.resourcebuilder.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import java.util.Random;
 import java.util.UUID;
@@ -32,28 +34,29 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.test.ResourceAssertions;
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
+import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ResourceBuilderImplTest {
     
     private String testRootPath;
-    private ResourceResolver resourceResolver;
     private long lastModified;
     private Random random = new Random(System.currentTimeMillis());
-    private static final MimeTypeService mimeTypeService = new MockMimeTypeService();
     private ResourceAssertions A;
     
-    @Rule
-    public SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
+    @Mock
+    private MimeTypeService mimeTypeService;
+    
+    private ResourceResolver resourceResolver;
     
     private Resource getTestRoot(String path) throws PersistenceException {
-        final Resource root = context.resourceResolver().resolve("/");
+        final Resource root = resourceResolver.resolve("/");
         assertNotNull("Expecting non-null root", root);
         return resourceResolver.create(root, ResourceUtil.getName(path), null);
     }
@@ -82,9 +85,11 @@ public class ResourceBuilderImplTest {
     }
     
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        when(mimeTypeService.getMimeType(anyString())).thenReturn("application/javascript");
+        resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
+        
         testRootPath = "/" + UUID.randomUUID().toString();
-        resourceResolver = context.resourceResolver();
         A = new ResourceAssertions(testRootPath, resourceResolver);
     }
     
