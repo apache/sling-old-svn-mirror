@@ -8,6 +8,10 @@ Apache Sling Karaf
 Getting Started
 ---------------
 
+For Karaf < 4.1.0 you need to configure _Felix File Install_ in `etc/config.properties` to include `*.config` files (not necessary when using _Sling's Karaf Distribution_):
+
+  `felix.fileinstall.filter = .*\\.(cfg|config)`
+
 1) [Start Apache Karaf](https://karaf.apache.org/manual/latest/#_quick_start) or _Sling's Karaf Distribution_.
 
 2) Add the Apache Sling features repository (not necessary when using _Sling's Karaf Distribution_):
