@@ -19,32 +19,38 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-  
+
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>28</version>
-        <relativePath/>
+        <relativePath />
     </parent>
-  
-    <artifactId>org.apache.sling.contextaware-config.reactor</artifactId>
-    <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Configuration Reactor</name>
-    <description>Sling Context-Aware Configuration handling</description>
-  
+    
+    <artifactId>org.apache.sling.contextaware.config.bnd-plugin</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Apache Sling Context-Aware Configuration bnd Plugin</name>
+    <description>The bnd plugin generated metadata for configuration annotation classes</description>
+
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</developerConnection>
-        <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</url>
     </scm>
     
-    <modules>
-        <module>api</module>
-        <module>impl</module>
-        <module>integration-tests</module>
-        <module>tooling/bnd-plugin</module>
-        <module>tooling/bnd-plugin-test</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.contextaware.config.api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bndlib</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>
