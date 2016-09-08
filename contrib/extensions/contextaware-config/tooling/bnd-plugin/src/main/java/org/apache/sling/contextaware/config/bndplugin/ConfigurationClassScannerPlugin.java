@@ -65,6 +65,7 @@ public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
         // set bundle header containing all class names found
         analyzer.set(CONFIGURATION_CLASSES_HEADER, StringUtils.join(classNames, ","));
         
+        // we did not change any classes - no need to re-analyze
         return false;
     }
     

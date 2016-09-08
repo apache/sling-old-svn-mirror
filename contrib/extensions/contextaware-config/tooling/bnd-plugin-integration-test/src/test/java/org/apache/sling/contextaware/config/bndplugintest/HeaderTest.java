@@ -18,15 +18,28 @@
  */
 package org.apache.sling.contextaware.config.bndplugintest;
 
-import org.apache.sling.contextaware.config.annotation.Configuration;
+import static org.junit.Assert.assertTrue;
 
-@Configuration
-public @interface NestedConfig {
+import java.io.InputStream;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-    String stringParam();
+import org.junit.Test;
+
+public class HeaderTest {
+
+    private static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
     
-    SimpleConfig subConfig();
-    
-    ListConfig[] subListConfig();
+    @Test
+    public void testBundleHeader() throws Exception {
+        
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF")) {
+            Manifest manifest = new Manifest(is);
+            Attributes classesHeader = manifest.getEntries().get(CONFIGURATION_CLASSES_HEADER);
+            
+            assertTrue(classesHeader.keySet().contains("classesHeader.SimpleConfig"));
+        }
+        
+    }
     
 }

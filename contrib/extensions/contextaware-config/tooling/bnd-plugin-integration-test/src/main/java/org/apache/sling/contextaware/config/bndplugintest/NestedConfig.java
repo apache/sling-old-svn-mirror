@@ -21,8 +21,10 @@ package org.apache.sling.contextaware.config.bndplugintest;
 import org.apache.sling.contextaware.config.annotation.Configuration;
 
 @Configuration
-public @interface ListConfig {
+public @interface NestedConfig {
 
     String stringParam();
+    
+    SimpleConfig subConfig();
     
 }

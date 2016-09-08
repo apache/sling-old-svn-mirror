@@ -26,19 +26,19 @@
         <version>28</version>
         <relativePath />
     </parent>
-    
+
     <artifactId>org.apache.sling.contextaware.config.bnd-plugin</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration bnd Plugin</name>
-    <description>The bnd plugin generated metadata for configuration annotation classes</description>
+    <description>This bnd plugin detected all configuration annotation classes and adds a bundle header 'Sling-ContextAware-Configuration-Classes' containing their names.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/bnd-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/tooling/bnd-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/tooling/bnd-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/tooling/bnd-plugin</url>
     </scm>
-    
+
     <dependencies>
         <dependency>
             <groupId>biz.aQute.bnd</groupId>

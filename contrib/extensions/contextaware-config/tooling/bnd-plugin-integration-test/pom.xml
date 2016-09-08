@@ -27,11 +27,11 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.contextaware.config.bnd-plugin-test</artifactId>
+    <artifactId>org.apache.sling.contextaware.config.bnd-plugin-integration-test</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Configuration bnd Plugin Test Project</name>
-    <description>Test metadata generation of bnd plugin</description>
+    <name>Apache Sling Context-Aware Configuration bnd Plugin Integration Test</name>
+    <description>Project to test the bnd Plugin</description>
 
     <build>
         <plugins>
@@ -55,7 +55,7 @@
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
                     <instructions>
-                        <!-- Generate metadata files for config annotation classes -->
+                        <!-- Generate bundle header containing all configuration annotation classes -->
                         <_plugin>org.apache.sling.contextaware.config.bndplugin.ConfigurationClassScannerPlugin</_plugin>
                     </instructions>
                 </configuration>
@@ -75,7 +75,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.contextaware.config.api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
