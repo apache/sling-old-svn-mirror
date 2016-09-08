@@ -78,14 +78,15 @@ public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
         List<String> classNames = new ArrayList<>();
         Collection<Clazz> clazzes = analyzer.getClassspace().values();
         Instruction instruction = new Instruction(annotationClassName);
-        for (Clazz clazz : clazzes) {
-            try {
+        try {
+            for (Clazz clazz : clazzes) {
                 if (clazz.isAnnotation() && clazz.is(QUERY.ANNOTATED, instruction, analyzer)) {
                     classNames.add(clazz.getClassName().getFQN());
                 }
-            } catch (Exception ex) {
-                reporter.exception(ex, "Error querying for classes with annotation: " + annotationClassName);
             }
+        }
+        catch (Exception ex) {
+            reporter.exception(ex, "Error querying for classes with annotation: " + annotationClassName);
         }
         return classNames;
     }
