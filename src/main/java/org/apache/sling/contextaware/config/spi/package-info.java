@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * API for accessing context-aware configuration.
+ * SPI for applications hooking into the configuration infrastructure for parameterizing and customizing.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.config;
+package org.apache.sling.contextaware.config.spi;

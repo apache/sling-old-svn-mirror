@@ -16,8 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.contextaware.config.spi;
+
+import java.util.SortedSet;
+
+import javax.annotation.Nonnull;
+
+import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
- * API for accessing context-aware configuration.
+ * Allows application to provide the necessary metadata for configurations.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.config;
+@ConsumerType
+public interface ConfigurationMetadataProvider {
+
+    /**
+     * Get all configuration names.
+     * @return Configuration names
+     */
+    @Nonnull SortedSet<String> getConfigurationNames();
+
+    /**
+     * Get configuration metadata.
+     * @param configName Configuration name
+     * @return Configuration metadata or null if none exists for the given name.
+     */
+    ConfigurationMetadata getConfigurationMetadata(String configName);
+
+}
