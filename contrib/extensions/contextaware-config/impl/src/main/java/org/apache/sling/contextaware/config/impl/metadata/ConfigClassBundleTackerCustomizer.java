@@ -18,74 +18,45 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Detects deployed bundles with configuration class header.
  */
-class ConfigClassBundleTackerCustomizer implements BundleTrackerCustomizer<List<ConfigurationMapping>> {
+class ConfigClassBundleTackerCustomizer implements BundleTrackerCustomizer<BundleConfigurationMapping> {
 
     static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
     
     private final AnnotationClassConfigurationMetadataProvider metadataProvider;
-    
-    private static final Logger log = LoggerFactory.getLogger(ConfigClassBundleTackerCustomizer.class);
     
     public ConfigClassBundleTackerCustomizer(AnnotationClassConfigurationMetadataProvider metadataProvider) {
         this.metadataProvider = metadataProvider;
     }
 
     @Override
-    public List<ConfigurationMapping> addingBundle(Bundle bundle, BundleEvent event) {
+    public BundleConfigurationMapping addingBundle(Bundle bundle, BundleEvent event) {
         Dictionary<String, String> headers = bundle.getHeaders();
         String classeNamesList = headers.get(CONFIGURATION_CLASSES_HEADER);
         if (classeNamesList == null) {
             return null;
         }
-        
-        List<ConfigurationMapping> configMappings = new ArrayList<>();
-
-        classeNamesList = StringUtils.deleteWhitespace(classeNamesList);
-        String[] classNames = StringUtils.split(classeNamesList, ",");
-        for (String className : classNames) {
-            try {
-                Class<?> configClass = bundle.loadClass(className);
-                
-                if (AnnotationClassParser.isContextAwareConfig(configClass)) {
-                    log.debug("{}: Add configuration class {}", bundle.getSymbolicName(), className);
-                    
-                    ConfigurationMapping configMapping = new ConfigurationMapping(configClass);
-                    if (metadataProvider.addConfigurationMetadata(configMapping)) {
-                        configMappings.add(configMapping);
-                    }
-                }
-            }
-            catch (ClassNotFoundException ex) {
-                log.warn("Unable to load class: " + className, ex);
-            }
-        }
-        return configMappings;
+        BundleConfigurationMapping bundleMapping = new BundleConfigurationMapping(bundle, classeNamesList);
+        metadataProvider.addBundeMapping(bundleMapping);
+        return bundleMapping;
    }
 
     @Override
-    public void modifiedBundle(Bundle bundle, BundleEvent event, List<ConfigurationMapping> configurationMappings) {
+    public void modifiedBundle(Bundle bundle, BundleEvent event, BundleConfigurationMapping bundleMapping) {
         // nothing to do   
     }
 
     @Override
-    public void removedBundle(Bundle bundle, BundleEvent event, List<ConfigurationMapping> configurationMappings) {
-        for (ConfigurationMapping configMapping : configurationMappings) {
-            metadataProvider.removeConfigurationMetadata(configMapping);
-        }
+    public void removedBundle(Bundle bundle, BundleEvent event, BundleConfigurationMapping bundleMapping) {
+        metadataProvider.removeBundleMapping(bundleMapping);
     }
 
 }

@@ -18,8 +18,9 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
-import java.util.List;
-import java.util.Set;
+import java.util.Collections;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,8 +32,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.util.tracker.BundleTracker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Detects configuration annotation classes deployed by any bundle via OSGi extender pattern.
@@ -40,16 +39,14 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = true, service = ConfigurationMetadataProvider.class)
 public class AnnotationClassConfigurationMetadataProvider implements ConfigurationMetadataProvider {
     
-    private BundleTracker<List<ConfigurationMapping>> bundleTracker;
+    private BundleTracker<BundleConfigurationMapping> bundleTracker;
     
-    private ConcurrentMap<String,ConfigurationMapping> configurationMetadataMap = new ConcurrentHashMap<>();
+    private ConcurrentMap<Bundle,BundleConfigurationMapping> bundleMappings = new ConcurrentHashMap<>();
     
-    private static final Logger log = LoggerFactory.getLogger(AnnotationClassConfigurationMetadataProvider.class);
-        
     @Activate
     private void activate(BundleContext bundleContext) {
         ConfigClassBundleTackerCustomizer bundlerTrackerCustomizer = new ConfigClassBundleTackerCustomizer(this);
-        bundleTracker = new BundleTracker<List<ConfigurationMapping>>(bundleContext, Bundle.ACTIVE, bundlerTrackerCustomizer);
+        bundleTracker = new BundleTracker<BundleConfigurationMapping>(bundleContext, Bundle.ACTIVE, bundlerTrackerCustomizer);
         bundleTracker.open();
     }
     
@@ -60,13 +57,17 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
     }
 
     @Override
-    public Set<String> getConfigurationNames() {
-        return configurationMetadataMap.keySet();
+    public SortedSet<String> getConfigurationNames() {
+        SortedSet<String> allConfigNames = new TreeSet<String>();
+        for (BundleConfigurationMapping bundleMapping : bundleMappings.values()) {
+            allConfigNames.addAll(bundleMapping.getConfigurationNames());
+        }
+        return Collections.unmodifiableSortedSet(allConfigNames);
     }
 
     @Override
     public ConfigurationMetadata getConfigurationMetadata(String configName) {
-        ConfigurationMapping mapping = configurationMetadataMap.get(configName);
+        ConfigurationMapping mapping = getConfigurationMapping(configName);
         if (mapping != null) {
             return mapping.getConfigMetadata();
         }
@@ -74,24 +75,23 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
             return null;
         }
     }
-
-    boolean addConfigurationMetadata(ConfigurationMapping configMapping) {
-        ConfigurationMapping conflictingConfigMapping = configurationMetadataMap.putIfAbsent(configMapping.getConfigName(), configMapping);
-        
-        if (conflictingConfigMapping != null) {
-            log.warn("Configuration name conflict: Both configuration classes {} and {} define the configuration name '{}', ignoring the latter.",
-                    conflictingConfigMapping.getConfigClass().getName(),
-                    configMapping.getConfigClass().getName(),
-                    configMapping.getConfigName());
-            return false;
+    
+    ConfigurationMapping getConfigurationMapping(String configName) {
+        for (BundleConfigurationMapping bundleMapping : bundleMappings.values()) {
+            ConfigurationMapping configMapping = bundleMapping.getConfigurationMapping(configName);
+            if (configMapping != null) {
+                return configMapping;
+            }
         }
-        else {
-            return true;
-        }
+        return null;
     }
 
-    void removeConfigurationMetadata(ConfigurationMapping configMapping) {
-        configurationMetadataMap.remove(configMapping.getConfigMetadata().getName());
+    void addBundeMapping(BundleConfigurationMapping bundleMapping) {
+        bundleMappings.put(bundleMapping.getBundle(), bundleMapping);
+    }
+
+    void removeBundleMapping(BundleConfigurationMapping bundleMapping) {
+        bundleMappings.remove(bundleMapping.getBundle());
     }
     
 }

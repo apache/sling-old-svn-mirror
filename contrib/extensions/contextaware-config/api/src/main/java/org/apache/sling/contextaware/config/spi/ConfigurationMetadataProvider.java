@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.spi;
 
-import java.util.Set;
+import java.util.SortedSet;
 
 import javax.annotation.Nonnull;
 
@@ -35,7 +35,7 @@ public interface ConfigurationMetadataProvider {
      * Get all configuration names.
      * @return Configuration names
      */
-    @Nonnull Set<String> getConfigurationNames();
+    @Nonnull SortedSet<String> getConfigurationNames();
 
     /**
      * Get configuration metadata.
