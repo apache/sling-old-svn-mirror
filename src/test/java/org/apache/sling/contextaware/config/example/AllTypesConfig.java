@@ -29,6 +29,9 @@ import static org.apache.sling.contextaware.config.example.AllTypesDefaults.LONG
 import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT;
 import static org.apache.sling.contextaware.config.example.AllTypesDefaults.STRING_DEFAULT_2;
 
+import org.apache.sling.contextaware.config.annotation.Configuration;
+
+@Configuration
 public @interface AllTypesConfig {
 
     String stringParam();

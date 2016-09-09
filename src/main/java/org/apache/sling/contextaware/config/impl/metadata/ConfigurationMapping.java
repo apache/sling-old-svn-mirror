@@ -16,17 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.example;
+package org.apache.sling.contextaware.config.impl.metadata;
 
-import org.apache.sling.contextaware.config.annotation.Configuration;
+import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 
-@Configuration
-public @interface SpecialNamesConfig {
+/**
+ * Contains mapping of configuration class to metadata parsed from it's fields and annotations.
+ */
+class ConfigurationMapping {
 
-    String $stringParam();
+    private final Class<?> configClass;
+    private final ConfigurationMetadata configMetadata;
     
-    int int__Param() default 5;
+    public ConfigurationMapping(Class<?> configClass) {
+        this.configClass = configClass;
+        this.configMetadata = AnnotationClassParser.buildConfigurationMetadata(configClass);
+    }
     
-    boolean bool_Param();
+    public Class<?> getConfigClass() {
+        return configClass;
+    }
+    
+    public String getConfigName() {
+        return configMetadata.getName();
+    }
+
+    public ConfigurationMetadata getConfigMetadata() {
+        return configMetadata;
+    }
     
 }
