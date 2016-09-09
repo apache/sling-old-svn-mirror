@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +34,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
+import org.apache.sling.contextaware.config.impl.metadata.AnnotationClassParser;
+import org.apache.sling.contextaware.config.spi.metadata.PropertyMetadata;
 
 /**
  * Maps the property of a resource to a dynamic proxy object implementing
@@ -43,8 +43,6 @@ import org.apache.sling.contextaware.config.ConfigurationResolveException;
  * Nested configurations with annotation classes referencing other annotation classes are also supported.
  */
 final class ConfigurationProxy {
-
-    private static final Pattern METHOD_NAME_MAPPING = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
 
     private ConfigurationProxy() {
         // static methods only
@@ -60,8 +58,8 @@ final class ConfigurationProxy {
     public @Nonnull static <T> T get(@Nullable Resource resource, @Nonnull Class<T> clazz) {
 
         // only annotation interface classes are supported
-        if (!(clazz.isInterface() && clazz.isAnnotation())) {
-            throw new ConfigurationResolveException("Annotation interface class expected: " + clazz.getName());
+        if (!AnnotationClassParser.isContextAwareConfig(clazz)) {
+            throw new ConfigurationResolveException("Annotation interface class with @Configuration annotation expected: " + clazz.getName());
         }
 
         // create dynamic proxy for annotation class accessing underlying resource properties
@@ -84,7 +82,7 @@ final class ConfigurationProxy {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) {
-            String propName = getPropertyName(method.getName());
+            String propName = AnnotationClassParser.getPropertyName(method.getName());
 
             // check for nested configuration classes
             Class<?> targetType = method.getReturnType();
@@ -93,7 +91,7 @@ final class ConfigurationProxy {
             if (isArray) {
                 componentType = targetType.getComponentType();
             }
-            if (componentType.isInterface() && componentType.isAnnotation()) {
+            if (AnnotationClassParser.isContextAwareConfig(componentType)) {
                 Resource childResource = resource != null ? resource.getChild(propName) : null;
                 if (isArray) {
                     List<Object> listItems = new ArrayList<>();
@@ -144,45 +142,12 @@ final class ConfigurationProxy {
     }
 
     /**
-     * Implements the method name mapping as defined in OSGi R6 Compendium specification,
-     * Chapter 112. Declarative Services Specification, Chapter 112.8.2.1. Component Property Mapping.
-     * @param Method
-     * @return Mapped property name
-     */
-    static String getPropertyName(String methodName) {
-        Matcher matcher = METHOD_NAME_MAPPING.matcher(methodName);
-        StringBuffer mappedName = new StringBuffer();
-        while (matcher.find()) {
-            String replacement = "";
-            if (matcher.group(1) != null) {
-                replacement = "\\$";
-            }
-            if (matcher.group(2) != null) {
-                replacement = "";
-            }
-            if (matcher.group(3) != null) {
-                replacement = "_";
-            }
-            if (matcher.group(4) != null) {
-                replacement = ".";
-            }
-            matcher.appendReplacement(mappedName, replacement);
-        }
-        matcher.appendTail(mappedName);
-        return mappedName.toString();
-    }
-
-    /**
      * Ensures the given type is support for reading configuration parameters.
      * @param type Type
      * @return true if type is supported
      */
     static boolean isValidType(Class<?> type) {
-        return type == String.class
-                || type == int.class
-                || type == long.class
-                || type == double.class
-                || type == boolean.class;
+        return PropertyMetadata.SUPPORTED_TYPES.contains(type);
     }
 
     /**
