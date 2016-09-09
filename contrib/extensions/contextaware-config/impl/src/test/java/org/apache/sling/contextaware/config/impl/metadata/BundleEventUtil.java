@@ -30,6 +30,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.Bundle;
@@ -44,6 +45,8 @@ import org.osgi.framework.Version;
  */
 final class BundleEventUtil {
     
+    private static final AtomicLong BUNDLE_COUNTER = new AtomicLong(); 
+    
     private BundleEventUtil() {
         // static methods only
     }
@@ -51,7 +54,7 @@ final class BundleEventUtil {
     /**
      * Simulate a bundle STARTED event with a given set of classes simulated to be found in the bundle's classpath. 
      */
-    public static Bundle sendBundleStartedEvent(BundleContext bundleContext, Class... classes) {
+    public static Bundle startDummyBundle(BundleContext bundleContext, Class... classes) {
         DummyBundle bundle = new DummyBundle(bundleContext, classes);
         bundle.setState(Bundle.ACTIVE);
         BundleEvent event = new BundleEvent(BundleEvent.STARTED, bundle);
@@ -62,7 +65,7 @@ final class BundleEventUtil {
     /**
      * Simulate a bundle STARTED event with a given set of classes simulated to be found in the bundle's classpath. 
      */
-    public static void sendBundleStoppedEvent(Bundle bundle) {
+    public static void stopDummyBundle(Bundle bundle) {
         ((DummyBundle)bundle).setState(Bundle.RESOLVED);
         BundleEvent event = new BundleEvent(BundleEvent.STOPPED, bundle);
         MockOsgi.sendBundleEvent(bundle.getBundleContext(), event);
@@ -71,13 +74,15 @@ final class BundleEventUtil {
     private static class DummyBundle implements Bundle {
 
         private final BundleContext bundleContext;
-        private int state = Bundle.UNINSTALLED;
         private final Class[] classes;
+        private final Long bundleId;
+        private int state = Bundle.UNINSTALLED;
         private final String classNames;
 
         public DummyBundle(BundleContext bundleContext, Class[] classes) {
-            this.classes = classes;
             this.bundleContext = bundleContext;
+            this.classes = classes;
+            this.bundleId = BUNDLE_COUNTER.incrementAndGet();
             
             StringBuilder sb = new StringBuilder();
             for (Class clazz : classes) {
@@ -163,7 +168,7 @@ final class BundleEventUtil {
 
         @Override
         public long getBundleId() {
-            return 0;
+            return bundleId;
         }
 
         @Override
@@ -198,7 +203,7 @@ final class BundleEventUtil {
 
         @Override
         public String getSymbolicName() {
-            return null;
+            return "DummyBundle" + bundleId;
         }
 
         @Override
@@ -222,8 +227,11 @@ final class BundleEventUtil {
         }
 
         @Override
-        public int compareTo(Bundle o) {
-            return 0;
+        public int compareTo(Bundle obj) {
+            if (obj instanceof DummyBundle) {
+                return bundleId.compareTo(((DummyBundle)obj).bundleId);
+            }
+            return -1;
         }
 
         @Override
@@ -244,6 +252,24 @@ final class BundleEventUtil {
         @Override
         public File getDataFile(String filename) {
             return null;
+        }
+
+        @Override
+        public int hashCode() {
+            return bundleId.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof DummyBundle) {
+                return bundleId.equals(((DummyBundle)obj).bundleId);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return getSymbolicName();
         }
 
     }

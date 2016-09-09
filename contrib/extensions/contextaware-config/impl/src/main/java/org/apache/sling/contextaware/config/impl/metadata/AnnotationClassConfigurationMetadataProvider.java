@@ -21,8 +21,7 @@ package org.apache.sling.contextaware.config.impl.metadata;
 import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.sling.contextaware.config.spi.ConfigurationMetadataProvider;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
@@ -32,6 +31,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.util.tracker.BundleTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Detects configuration annotation classes deployed by any bundle via OSGi extender pattern.
@@ -40,8 +41,9 @@ import org.osgi.util.tracker.BundleTracker;
 public class AnnotationClassConfigurationMetadataProvider implements ConfigurationMetadataProvider {
     
     private BundleTracker<BundleConfigurationMapping> bundleTracker;
+    private ConcurrentSkipListMap<Bundle,BundleConfigurationMapping> bundleMappings = new ConcurrentSkipListMap<>();
     
-    private ConcurrentMap<Bundle,BundleConfigurationMapping> bundleMappings = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(AnnotationClassConfigurationMetadataProvider.class);
     
     @Activate
     private void activate(BundleContext bundleContext) {
@@ -76,14 +78,37 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
         }
     }
     
+    /**
+     * Get configuration mapping for given config name.
+     * On the way check for config name mapping conflicts accross bundles and log a warning if found.
+     * Is difficult to do this beforehand due to the lazy initialization of the bundle config mappings and the
+     * dynamic behavior of coming and going bundles with configuration classes.
+     * @param configName Configuration name
+     * @return Configuration mapping or null if none found
+     */
     ConfigurationMapping getConfigurationMapping(String configName) {
+        ConfigurationMapping matchingConfigMapping = null;
+        BundleConfigurationMapping matchingBundleMapping = null;
         for (BundleConfigurationMapping bundleMapping : bundleMappings.values()) {
             ConfigurationMapping configMapping = bundleMapping.getConfigurationMapping(configName);
             if (configMapping != null) {
-                return configMapping;
+                if (matchingConfigMapping == null) {
+                    matchingConfigMapping = configMapping;
+                    matchingBundleMapping = bundleMapping;
+                }
+                else {
+                    // conflict in name mapping across bundles found
+                    log.warn("Configuration name conflict: Both configuration classes {} (Bundle {}) "
+                            + "and {} (Bundle {}) define the configuration name '{}', ignoring the latter.",
+                            matchingConfigMapping.getConfigClass().getName(),
+                            matchingBundleMapping.getBundle().getSymbolicName(),
+                            configMapping.getConfigClass().getName(),
+                            bundleMapping.getBundle().getSymbolicName(),
+                            configName);
+                }
             }
         }
-        return null;
+        return matchingConfigMapping;
     }
 
     void addBundeMapping(BundleConfigurationMapping bundleMapping) {
