@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.testmodels.classes.constructorinjection.OptionalPrimitivesModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

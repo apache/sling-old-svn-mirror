@@ -17,9 +17,7 @@
 package org.apache.sling.models.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -35,8 +33,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
-
-import javax.jws.WebParam.Mode;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -158,7 +154,7 @@ public class ImplementsExtendsTest {
         // make sure adaption is not longer possible: implementation class mapping is removed
         Resource res = getMockResourceWithProps();
         try {
-            SampleServiceInterface model = factory.getAdapter(res, SampleServiceInterface.class);
+            factory.getAdapter(res, SampleServiceInterface.class);
             Assert.fail("Getting the model for interface 'SampleServiceInterface' should fail after the accroding adapter factory has been unregistered");
         } catch (ModelClassException e) {
             

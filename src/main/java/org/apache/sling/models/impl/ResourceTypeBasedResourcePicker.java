@@ -16,19 +16,19 @@
  */
 package org.apache.sling.models.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.osgi.framework.Constants;
-
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @Service
@@ -41,7 +41,6 @@ public class ResourceTypeBasedResourcePicker implements ImplementationPicker {
         if (resource == null) {
             return null;
         }
-        final ResourceResolver resolver = resource.getResourceResolver();
 
         Map<String, Class<?>> implementationsByRT = mapByResourceType(implementationsTypes);
         return AdapterImplementations.getModelClassForResource(resource, implementationsByRT);

@@ -87,6 +87,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         return getValue(adaptable, type, filterString, callbackRegistry);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Object getService(Object adaptable, Class<T> type, String filter,
             DisposalCallbackRegistry callbackRegistry) {
         // cannot use SlingScriptHelper since it does not support ordering by service ranking due to https://issues.apache.org/jira/browse/SLING-5665
@@ -107,6 +108,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Object[] getServices(Object adaptable, Class<T> type, String filter,
             DisposalCallbackRegistry callbackRegistry) {
         // cannot use SlingScriptHelper since it does not support ordering by service ranking due to https://issues.apache.org/jira/browse/SLING-5665
