@@ -16,12 +16,20 @@
  */
 package org.apache.sling.models.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.testmodels.classes.*;
 import org.apache.sling.models.testmodels.interfaces.SubClassModel;
 import org.apache.sling.models.testmodels.interfaces.SuperClassModel;
 import org.junit.Before;
@@ -32,15 +40,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InterfaceInheritanceTest {

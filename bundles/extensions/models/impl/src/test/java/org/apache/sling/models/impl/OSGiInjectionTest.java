@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
