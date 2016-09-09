@@ -18,24 +18,44 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 
 class ConfigurationMapping {
 
-    private final ConfigurationMetadata configMetadata;
     private final Class<?> configClass;
+    private final String configName;
+    private AtomicReference<ConfigurationMetadata> configMetadataRef = new AtomicReference<>(null);
     
-    public ConfigurationMapping(ConfigurationMetadata configMetadata, Class<?> configClass) {
-        this.configMetadata = configMetadata;
+    public ConfigurationMapping(Class<?> configClass) {
         this.configClass = configClass;
-    }
-    
-    public ConfigurationMetadata getConfigMetadata() {
-        return configMetadata;
+        this.configName = AnnotationClassParser.getConfigurationName(configClass);
     }
     
     public Class<?> getConfigClass() {
         return configClass;
     }
+    
+    public String getConfigName() {
+        return configName;
+    }
 
+    public ConfigurationMetadata getConfigMetadata() {
+        // thread-safe lazy initialization via atomic reference
+        ConfigurationMetadata configMetadata = configMetadataRef.get();
+        if (configMetadata == null) {
+            configMetadata = AnnotationClassParser.buildConfigurationMetadata(configClass);
+            if (configMetadataRef.compareAndSet(null, configMetadata)) {
+                return configMetadata;
+            }
+            else { 
+                return configMetadataRef.get();
+            }
+        }
+        else {
+            return configMetadata;
+        }
+    }
+    
 }

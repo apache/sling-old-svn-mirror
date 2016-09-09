@@ -73,10 +73,17 @@ final class BundleEventUtil {
         private final BundleContext bundleContext;
         private int state = Bundle.UNINSTALLED;
         private final Class[] classes;
+        private final String classNames;
 
         public DummyBundle(BundleContext bundleContext, Class[] classes) {
             this.classes = classes;
             this.bundleContext = bundleContext;
+            
+            StringBuilder sb = new StringBuilder();
+            for (Class clazz : classes) {
+                sb.append(clazz.getName()).append(",");
+            }
+            classNames = sb.toString();
         }
 
         @Override
@@ -91,7 +98,7 @@ final class BundleEventUtil {
         @Override
         public Dictionary<String,String> getHeaders() {
             Dictionary<String,String> headers = new Hashtable<>();
-            headers.put(AnnotationClassConfigurationMetadataProvider.HEADER, "dummy.package");
+            headers.put(ConfigClassBundleTackerCustomizer.CONFIGURATION_CLASSES_HEADER, classNames);
             return headers;
         }
 

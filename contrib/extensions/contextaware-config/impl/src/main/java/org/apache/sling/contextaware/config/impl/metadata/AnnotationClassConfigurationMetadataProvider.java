@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = true, service = ConfigurationMetadataProvider.class)
 public class AnnotationClassConfigurationMetadataProvider implements ConfigurationMetadataProvider {
     
-    static final String HEADER = "Sling-ContextAware-Config-Packages";
-        
     private BundleTracker<List<ConfigurationMapping>> bundleTracker;
     
     private ConcurrentMap<String,ConfigurationMapping> configurationMetadataMap = new ConcurrentHashMap<>();
@@ -50,7 +48,7 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
         
     @Activate
     private void activate(BundleContext bundleContext) {
-        ConfigPackageBundleTackerCustomizer bundlerTrackerCustomizer = new ConfigPackageBundleTackerCustomizer(this);
+        ConfigClassBundleTackerCustomizer bundlerTrackerCustomizer = new ConfigClassBundleTackerCustomizer(this);
         bundleTracker = new BundleTracker<List<ConfigurationMapping>>(bundleContext, Bundle.ACTIVE, bundlerTrackerCustomizer);
         bundleTracker.open();
     }
@@ -77,20 +75,18 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
         }
     }
 
-    ConfigurationMapping addConfigurationMetadata(Class<?> configClass) {
-        ConfigurationMetadata configMetadata = AnnotationClassParser.buildConfigurationMetadata(configClass);
-        ConfigurationMapping configMapping = new ConfigurationMapping(configMetadata, configClass);
-        ConfigurationMapping conflictingConfigMapping = configurationMetadataMap.putIfAbsent(configMetadata.getName(), configMapping);
+    boolean addConfigurationMetadata(ConfigurationMapping configMapping) {
+        ConfigurationMapping conflictingConfigMapping = configurationMetadataMap.putIfAbsent(configMapping.getConfigName(), configMapping);
         
         if (conflictingConfigMapping != null) {
             log.warn("Configuration name conflict: Both configuration classes {} and {} define the configuration name '{}', ignoring the latter.",
                     conflictingConfigMapping.getConfigClass().getName(),
                     configMapping.getConfigClass().getName(),
-                    configMetadata.getName());
-            return null;
+                    configMapping.getConfigName());
+            return false;
         }
         else {
-            return configMapping;
+            return true;
         }
     }
 
