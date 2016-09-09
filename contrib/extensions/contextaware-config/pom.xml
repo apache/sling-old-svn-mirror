@@ -43,8 +43,27 @@
         <module>api</module>
         <module>impl</module>
         <module>integration-tests</module>
+        <!-- BND plugin has to be available before starting maven build -> get from maven repository -->
+        <!--
         <module>tooling/bnd-plugin</module>
         <module>tooling/bnd-plugin-integration-tests</module>
+        -->
     </modules>
+    
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>tooling/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>
