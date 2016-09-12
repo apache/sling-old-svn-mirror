@@ -58,7 +58,7 @@ public class ContextPathStrategyMultiplexerTest {
     
     @Test
     public void testWithNoStrategies() {
-        Collection<Resource> resources = underTest.findContextPaths(site1Page1);
+        Collection<Resource> resources = underTest.findContextResources(site1Page1);
         assertTrue(resources.isEmpty());
     }
 
@@ -70,13 +70,13 @@ public class ContextPathStrategyMultiplexerTest {
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site1Page1));
+        }, underTest.findContextResources(site1Page1));
 
         assetResourcePaths(new String[] {
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site2Page1));
+        }, underTest.findContextResources(site2Page1));
     }
     
     @Test
@@ -88,7 +88,7 @@ public class ContextPathStrategyMultiplexerTest {
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site1Page1));
+        }, underTest.findContextResources(site1Page1));
     }
     
     @Test
@@ -100,7 +100,7 @@ public class ContextPathStrategyMultiplexerTest {
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site1Page1));
+        }, underTest.findContextResources(site1Page1));
     }
     
     private void registerContextPathStrategy(String... paths) {
@@ -113,7 +113,7 @@ public class ContextPathStrategyMultiplexerTest {
         }
         context.registerService(ContextPathStrategy.class, new ContextPathStrategy() {
             @Override
-            public Collection<Resource> findContextPaths(Resource resource) {
+            public Collection<Resource> findContextResources(Resource resource) {
                 return resources;
             }
         });

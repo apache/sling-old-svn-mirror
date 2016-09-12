@@ -41,6 +41,6 @@ public interface ContextPathStrategy {
      *      Only one of the parent resources or the resources itself may be included in the result.
      *      If none are found an empty list is returned.
      */
-    @Nonnull Collection<Resource> findContextPaths(@Nonnull Resource resource);
+    @Nonnull Collection<Resource> findContextResources(@Nonnull Resource resource);
 
 }

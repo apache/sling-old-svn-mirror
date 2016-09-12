@@ -40,7 +40,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     @Override
-    public Collection<Resource> findContextPaths(Resource resource) {
+    public Collection<Resource> findContextResources(Resource resource) {
         List<Resource> resources = new ArrayList<>();
         findConfigRefs(resources, resource);
         return resources;

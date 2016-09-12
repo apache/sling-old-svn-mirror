@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +32,7 @@ import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolv
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -54,11 +56,12 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         String[] fallbackPaths() default {"/conf/global", "/apps/conf", "/libs/conf"};
     }
 
-    private static final String PROPERTY_CONFIG = "sling:config-ref";
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private volatile Config configuration;
+    
+    @Reference
+    private ContextPathStrategyMultiplexer contextPathStrategy;
 
     Config getConfiguration() {
         return this.configuration;
@@ -78,8 +81,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         final List<String> refPaths = new ArrayList<>();
         
         // add all config references found in resource hierarchy
-        final List<ConfigReference> refs = new ArrayList<>();
-        findConfigRefs(refs, contentResource);
+        final Collection<ConfigReference> refs = findConfigRefs(contentResource);
         for (ConfigReference ref : refs) {
             refPaths.add(ref.getConfigReference());
         }
@@ -109,63 +111,52 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     }
 
     /**
-     * Find next configuration refrence for given resource or one of it's parents.
-     * @param startResource Resource to start searching
-     * @return Config reference or null if none found
-     */
-    private ConfigReference findNextConfigRef(final Resource startResource) {
-        // start at resource, go up
-        Resource resource = startResource;
-        while (resource != null) {
-            String ref = getReference(resource);
-            if (ref != null) {
-                // if absolute path found we are (probably) done
-                if (ref.startsWith("/")) {
-                    // combine full path if relativeRef is present
-                    ref = ResourceUtil.normalize(ref);
-
-                    if (ref != null && !isAllowedConfigPath(ref)) {
-                        logger.warn("Ignoring reference to {} from {} - not in allowed paths.", ref, resource.getPath());
-                        ref = null;
-                    }
-
-                    if (ref != null && isFallbackConfigPath(ref)) {
-                        logger.warn("Ignoring reference to {} from {} - already a fallback path.", ref, resource.getPath());
-                        ref = null;
-                    }
-
-                    if (ref != null) {
-                        return new ConfigReference(resource, ref);
-                    }
-
-                } else {
-                    logger.error("Invalid relative reference found for {} : {}. This entry is ignored", resource.getPath(), ref);
-                }
-            }
-            // if getParent() returns null, stop
-            resource = resource.getParent();
-        }
-
-        // if hit root and nothing found, return null
-        return null;
-    }
-
-    /**
      * Searches the resource hierarchy upwards for all config references and returns them.
      * @param refs List to add found resources to
      * @param startResource Resource to start searching
      */
-    private void findConfigRefs(final List<ConfigReference> refs, final Resource startResource) {
-        ConfigReference ref = findNextConfigRef(startResource);
-        if (ref != null) {
-            refs.add(ref);
-            findConfigRefs(refs, ref.getContentResource().getParent());
+    private Collection<ConfigReference> findConfigRefs(final Resource startResource) {
+        Collection<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
+        List<ConfigReference> configReferences = new ArrayList<>();
+        
+        for (Resource resource : contextResources) {
+            String ref = getReference(resource);
+            if (ref != null) {
+                configReferences.add(new ConfigReference(resource, ref));
+            }
         }
+        
+        
+        return configReferences;
     }
 
     private String getReference(final Resource resource) {
-        final String ref = resource.getValueMap().get(PROPERTY_CONFIG, String.class);
-        logger.trace("Reference '{}' found at {}", ref, resource.getPath());
+        String ref = resource.getValueMap().get(DefaultContextPathStrategy.PROPERTY_CONFIG, String.class);
+
+        if (ref != null) {
+            // if absolute path found we are (probably) done
+            if (ref.startsWith("/")) {
+                // combine full path if relativeRef is present
+                ref = ResourceUtil.normalize(ref);
+
+                if (ref != null && !isAllowedConfigPath(ref)) {
+                    logger.warn("Ignoring reference to {} from {} - not in allowed paths.", ref, resource.getPath());
+                    ref = null;
+                }
+
+                if (ref != null && isFallbackConfigPath(ref)) {
+                    logger.warn("Ignoring reference to {} from {} - already a fallback path.", ref, resource.getPath());
+                    ref = null;
+                }
+
+            } else {
+                logger.error("Invalid relative reference found for {} : {}. This entry is ignored", resource.getPath(), ref);
+            }
+        }
+        
+        if (ref != null) {
+            logger.trace("Reference '{}' found at {}", ref, resource.getPath());
+        }
 
         return ref;
     }
@@ -266,9 +257,9 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public String getContextPath(Resource resource) {
-        ConfigReference ref = findNextConfigRef(resource);
-        if (ref != null) {
-            return ref.getContentResource().getPath();
+        Iterator<ConfigReference> it = findConfigRefs(resource).iterator();
+        if (it.hasNext()) {
+            return it.next().getContentResource().getPath();
         }
         else {
             return null;
@@ -278,8 +269,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     @Override
     public Collection<String> getAllContextPaths(Resource resource) {
         final List<String> contextPaths = new ArrayList<>();
-        final List<ConfigReference> refs = new ArrayList<>();
-        findConfigRefs(refs, resource);
+        final Collection<ConfigReference> refs = findConfigRefs(resource);
         for (ConfigReference ref : refs) {
             contextPaths.add(ref.getContentResource().getPath());
         }

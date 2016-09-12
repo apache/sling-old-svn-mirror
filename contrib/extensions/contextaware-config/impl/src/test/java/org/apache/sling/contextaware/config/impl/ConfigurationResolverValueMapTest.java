@@ -30,6 +30,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
+import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.contextaware.config.resource.impl.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,6 +52,8 @@ public class ConfigurationResolverValueMapTest {
 
     @Before
     public void setUp() {
+        context.registerInjectActivateService(new DefaultContextPathStrategy());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 

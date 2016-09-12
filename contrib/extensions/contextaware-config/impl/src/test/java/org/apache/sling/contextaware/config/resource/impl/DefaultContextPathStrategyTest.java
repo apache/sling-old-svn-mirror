@@ -57,13 +57,13 @@ public class DefaultContextPathStrategyTest {
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site1Page1));
+        }, underTest.findContextResources(site1Page1));
 
         assetResourcePaths(new String[] {
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
                 "/content/tenant1"
-        }, underTest.findContextPaths(site2Page1));
+        }, underTest.findContextResources(site2Page1));
     }
 
 }

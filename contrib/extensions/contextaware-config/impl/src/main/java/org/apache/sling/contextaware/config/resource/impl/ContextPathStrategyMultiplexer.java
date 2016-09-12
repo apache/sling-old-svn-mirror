@@ -70,7 +70,7 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
     }
 
     @Override
-    public Collection<Resource> findContextPaths(Resource resource) {
+    public Collection<Resource> findContextResources(Resource resource) {
         List<Collection<Resource>> allResults = getAllResults(resource);
         if (allResults.isEmpty()) {
             return Collections.emptyList();
@@ -89,7 +89,7 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
     private List<Collection<Resource>> getAllResults(Resource resource) {
         List<Collection<Resource>> results = new ArrayList<>();
         for (ContextPathStrategy contextPathStrategy : contextPathStrategies) {
-            Collection<Resource> result = contextPathStrategy.findContextPaths(resource);
+            Collection<Resource> result = contextPathStrategy.findContextResources(resource);
             if (!result.isEmpty()) {
                 results.add(result);
             }
