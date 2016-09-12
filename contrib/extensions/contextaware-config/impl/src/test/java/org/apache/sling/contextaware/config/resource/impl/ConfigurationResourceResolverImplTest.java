@@ -31,7 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class ConfigurationResourceResolverImplTest {
     
@@ -50,23 +49,21 @@ public class ConfigurationResourceResolverImplTest {
         underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
 
         // content resources
-        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/site1")
-                .build());
+        context.build()
+            .resource("/content/site1", "sling:config-ref", "/conf/site1")
+            .resource("/content/site2", "sling:config-ref", "/conf/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
-        context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/site2")
-                .build());
         site2Page1 = context.create().resource("/content/site2/page1");
         
         // configuration
-        context.create().resource("/conf/site1/sling:test/test");
-        context.create().resource("/conf/site1/sling:test/feature/c");
-        context.create().resource("/conf/site2/sling:test/feature/c");
-        context.create().resource("/conf/site2/sling:test/feature/d");
-        context.create().resource("/apps/conf/sling:test/feature/a");
-        context.create().resource("/libs/conf/sling:test/test");
-        context.create().resource("/libs/conf/sling:test/feature/b");
+        context.build()
+            .resource("/conf/site1/sling:test/test")
+            .resource("/conf/site1/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/d")
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/test")
+            .resource("/libs/conf/sling:test/feature/b");
     }
 
     @Test

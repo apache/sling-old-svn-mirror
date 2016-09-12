@@ -136,7 +136,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.7.0</version>
+            <version>1.7.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

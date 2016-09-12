@@ -39,8 +39,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * Test {@link ConfigurationResolver} with annotation classes for reading the config.
  */
@@ -60,53 +58,36 @@ public class ConfigurationResolverAnnotationClassTest {
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1")
-                .put("intParam", 111)
-                .put("boolParam", true)
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig",
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
 
-        context.create().resource("/conf/content/site2/sling:configs/sampleName", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.1")
-                .put("intParam", 1111)
-                .put("boolParam", true)
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/sampleName",
+                "stringParam", "configValue1.1",
+                "intParam", 1111,
+                "boolParam", true);
 
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue3")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue4")
-                .put("intParam", 444)
-                .put("boolParam", true)
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/1", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue2.1")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/2", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue2.2")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/subListConfig/3", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue2.3")
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig",
+                "stringParam", "configValue3")
+            .siblingsMode()
+            .resource("subConfig", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
+            .hierarchyMode()
+            .resource("subListConfig")
+            .siblingsMode()
+                .resource("1", "stringParam", "configValue2.1")
+                .resource("2", "stringParam", "configValue2.2")
+                .resource("3", "stringParam", "configValue2.3");
 
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig/1", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.1")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig/2", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.2")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig/3", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.3")
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
 
         // content resources
-        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/content/site1")
-                .build());
-        context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/content/site2")
-                .build());
+        context.build().resource("/content/site1", "sling:config-ref", "/conf/content/site1")
+            .resource("/content/site2", "sling:config-ref", "/conf/content/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
     }

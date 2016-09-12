@@ -19,14 +19,13 @@
 package org.apache.sling.contextaware.config.resource.impl;
 
 import static org.apache.sling.contextaware.config.resource.impl.TestUtils.assetResourcePaths;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 public class DefaultContextPathStrategyTest {
     
@@ -43,19 +42,12 @@ public class DefaultContextPathStrategyTest {
         underTest = context.registerInjectActivateService(new DefaultContextPathStrategy());
 
         // content resources that form a deeper hierarchy
-        context.create().resource("/content/tenant1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1")
-                .build());
-        context.create().resource("/content/tenant1/region1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1")
-                .build());
-        context.create().resource("/content/tenant1/region1/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1/site1")
-                .build());
+        context.build()
+            .resource("/content/tenant1", "sling:config-ref", "/conf/tenant1")
+            .resource("/content/tenant1/region1", "sling:config-ref", "/conf/tenant1/region1")
+            .resource("/content/tenant1/region1/site1", "sling:config-ref", "/conf/tenant1/region1/site1")
+            .resource("/content/tenant1/region1/site2", "sling:config-ref", "/conf/tenant1/region1/site2");
         site1Page1 = context.create().resource("/content/tenant1/region1/site1/page1");
-        context.create().resource("/content/tenant1/region1/site2", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1/site2")
-                .build());
         site2Page1 = context.create().resource("/content/tenant1/region1/site2/page1");
     }
 

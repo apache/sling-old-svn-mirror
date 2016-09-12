@@ -55,8 +55,7 @@ public class AdaptToConfigClassIT {
     
     @Test
     public void testNonExistingConfig() throws Exception {
-        resourceBuilder.resource("content/page1");
-        Resource resourcePage1 = resourceResolver.getResource("/content/page1");
+        Resource resourcePage1 = resourceBuilder.resource("/content/page1").getCurrentParent();
         
         SimpleConfig config = resourcePage1.adaptTo(ConfigurationBuilder.class).as(SimpleConfig.class);
         assertNotNull(config);
@@ -68,13 +67,11 @@ public class AdaptToConfigClassIT {
     
     @Test
     public void testExistingConfig() throws Exception {
-        resourceBuilder.resource("conf/content/page1/sling:configs/org.apache.sling.contextaware.config.it.example.SimpleConfig",
+        resourceBuilder.resource("/conf/content/page1/sling:configs/org.apache.sling.contextaware.config.it.example.SimpleConfig",
                 "stringParam", "value1",
                 "intParam", 123,
                 "boolParam", true)
-            .atParent()
-            .resource("content/page1",
-                    "sling:config-ref", "/conf/content/page1");
+            .resource("/content/page1", "sling:config-ref", "/conf/content/page1");
 
         Resource resourcePage1 = resourceResolver.getResource("/content/page1");
         
