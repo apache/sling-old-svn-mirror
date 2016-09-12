@@ -46,11 +46,23 @@ public class ContentBuilderTest {
     }
 
     @Test
-    public void testResourceWithProperties() {
-        Resource resource = context.create().resource(
-                "/content/test1/resource2",
-                ImmutableMap.<String, Object> builder().put("jcr:title", "Test Title").put("stringProp", "value1")
-                        .build());
+    public void testResourceWithProperties_Map() {
+        Resource resource = context.create().resource("/content/test1/resource2", ImmutableMap.<String,Object>builder()
+                .put("jcr:title", "Test Title")
+                .put("stringProp", "value1")
+                .build());
+        assertNotNull(resource);
+        assertEquals("resource2", resource.getName());
+        ValueMap props = ResourceUtil.getValueMap(resource);
+        assertEquals("Test Title", props.get("jcr:title", String.class));
+        assertEquals("value1", props.get("stringProp", String.class));
+    }
+
+    @Test
+    public void testResourceWithProperties_ObjectArray() {
+        Resource resource = context.create().resource("/content/test1/resource2",
+                "jcr:title", "Test Title",
+                "stringProp", "value1");
         assertNotNull(resource);
         assertEquals("resource2", resource.getName());
         ValueMap props = ResourceUtil.getValueMap(resource);

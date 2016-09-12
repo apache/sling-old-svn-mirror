@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.resourcebuilder.impl.MapArgsConverter;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -72,6 +73,26 @@ public class ContentBuilder {
             return resourceResolver.create(parentResource, name, properties);
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + path, ex);
+        }
+    }
+
+    /**
+     * Create resource. If parent resource(s) do not exist they are created
+     * automatically using <code>nt:unstructured</code> nodes.
+     * @param path Page path
+     * @param properties Properties for resource.
+     * @return Resource object
+     */
+    @SuppressWarnings("unchecked")
+    public final Resource resource(String path, Object... properties) {
+        if (properties == null || properties.length == 0) {
+            return resource(path);
+        }
+        else if (properties.length == 1 && properties[0] instanceof Map) {
+            return resource(path, (Map<String,Object>)properties[0]);
+        }
+        else {
+            return resource(path, MapArgsConverter.toMap(properties));
         }
     }
 
