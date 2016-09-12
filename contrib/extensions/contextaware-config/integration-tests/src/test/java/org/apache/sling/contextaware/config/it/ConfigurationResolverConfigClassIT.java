@@ -55,8 +55,7 @@ public class ConfigurationResolverConfigClassIT {
     
     @Test
     public void testNonExistingConfig() throws Exception {
-        resourceBuilder.resource("content/page1");
-        Resource resourcePage1 = resourceResolver.getResource("/content/page1");
+        Resource resourcePage1 = resourceBuilder.resource("/content/page1").getCurrentParent();
         
         ConfigurationResolver configResolver = teleporter.getService(ConfigurationResolver.class);
         SimpleConfig config = configResolver.get(resourcePage1).name("test").as(SimpleConfig.class);
@@ -69,13 +68,11 @@ public class ConfigurationResolverConfigClassIT {
     
     @Test
     public void testExistingConfig() throws Exception {
-        resourceBuilder.resource("conf/content/page1/sling:configs/test",
+        resourceBuilder.resource("/conf/content/page1/sling:configs/test",
                 "stringParam", "value1",
                 "intParam", 123,
                 "boolParam", true)
-            .atParent()
-            .resource("content/page1",
-                    "sling:config-ref", "/conf/content/page1");
+            .resource("/content/page1", "sling:config-ref", "/conf/content/page1");
         
         Resource resourcePage1 = resourceResolver.getResource("/content/page1");
         
