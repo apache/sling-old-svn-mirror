@@ -54,7 +54,7 @@ public class ConfigurationResourceResolverImplTest {
                 .put("sling:config-ref", "/conf/site1")
                 .build());
         site1Page1 = context.create().resource("/content/site1/page1");
-        site2Page1 = context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
+        context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
                 .put("sling:config-ref", "/conf/site2")
                 .build());
         site2Page1 = context.create().resource("/content/site2/page1");
