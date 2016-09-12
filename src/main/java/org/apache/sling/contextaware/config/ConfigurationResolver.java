@@ -24,7 +24,7 @@ import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * Getting context-specific configurations for a given resource context.
+ * Getting context-aware configurations for a given resource context.
  * Context-specific configuration may be different for different parts of the resource
  * hierarchy, and configuration parameter inheritance may take place.
  *

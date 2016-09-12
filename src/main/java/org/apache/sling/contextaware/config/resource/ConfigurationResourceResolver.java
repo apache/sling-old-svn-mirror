@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * Getting context-specific configuration resources for a given resource context.
+ * Getting context-aware configuration resources for a given resource context.
  * This is a low-level interface for supporting advanced use cases. If you just want to fetch
  * some configuration parameters {@link org.apache.sling.contextaware.config.ConfigurationResolver}
  * is the right place.
@@ -36,7 +36,7 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface ConfigurationResourceResolver {
 
     /**
-     * Get a context-specific singleton configuration resource defined by the given configuration name.
+     * Get a context-aware singleton configuration resource defined by the given configuration name.
      *
      * @param resource Context resource to fetch configuration for
      * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
@@ -48,7 +48,7 @@ public interface ConfigurationResourceResolver {
     @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
 
     /**
-     * Get a collection of context-specific configuration resources defined by the given configuration name.
+     * Get a collection of context-aware configuration resources defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
      * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
@@ -66,9 +66,9 @@ public interface ConfigurationResourceResolver {
     String getContextPath(@Nonnull Resource resource);
 
     /**
-     * Get all context paths for which context-specific configurations could be defined.
+     * Get all context paths for which context-aware configurations could be defined.
      * The context paths are always ancestors of the resource path, or the resource path itself.
-     * Which ancestors are allowed for context-specific configuration depends on configuration.
+     * Which ancestors are allowed for context-aware configuration depends on configuration.
      * @param resource Context resource to fetch configuration for
      * @return List of context paths
      */

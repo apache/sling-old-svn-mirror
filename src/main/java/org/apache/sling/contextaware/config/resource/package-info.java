@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * API for accessing context-specific configuration resources.
+ * API for accessing context-aware configuration resources.
  * This is a low-level API.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
