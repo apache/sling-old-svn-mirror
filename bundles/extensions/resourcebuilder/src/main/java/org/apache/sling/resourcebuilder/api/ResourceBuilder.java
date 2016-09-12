@@ -19,6 +19,7 @@
 package org.apache.sling.resourcebuilder.api;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 
@@ -39,7 +40,17 @@ public interface ResourceBuilder {
      * @param properties optional name-value pairs 
      * @return this builder
      */
-    ResourceBuilder resource(String path, Object ... properties);
+    ResourceBuilder resource(String path, Object... properties);
+
+    /** Create a Resource, which optionally becomes the current 
+     *  parent Resource. 
+     * @param path The path of the Resource to create.
+     *    If it's a relative path this builder's current resource is used as parent.
+     *    Otherwise the resource is created ad the given absoulte path.
+     * @param properties Name-value pairs 
+     * @return this builder
+     */
+    ResourceBuilder resource(String path, Map<String, Object> properties);
 
     /** Create a file under the current parent resource
      * @param filename The name of the created file

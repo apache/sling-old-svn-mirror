@@ -24,6 +24,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -106,6 +108,18 @@ public class ResourceBuilderImplTest {
     public void basicResource() throws Exception {
         getBuilder(testRootPath)
             .resource("child", "title", "foo")
+            .commit();
+        
+        A.assertProperties("child", "title", "foo");
+        assertEquals(A.fullPath("child"), A.assertResource("child").getPath());
+    }
+    
+    @Test
+    public void basicResourceWithMap() throws Exception {
+        Map<String,Object> props = new HashMap<String,Object>();
+        props.put("title", "foo");
+        getBuilder(testRootPath)
+            .resource("child", props)
             .commit();
         
         A.assertProperties("child", "title", "foo");
