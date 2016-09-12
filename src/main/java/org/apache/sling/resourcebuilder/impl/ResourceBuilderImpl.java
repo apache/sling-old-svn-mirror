@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 
@@ -106,7 +107,7 @@ public class ResourceBuilderImpl implements ResourceBuilder {
     }
     
     @Override
-    public ResourceBuilder resource(String path, Object... properties) {
+    public ResourceBuilder resource(String path, Map<String,Object> properties) {
         Resource r = null;
         
         final String parentPath;
@@ -124,17 +125,16 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         
         try {
             r = currentParent.getResourceResolver().getResource(fullPath);
-            final Map<String, Object> props = MapArgsConverter.toMap(properties);
-            if(r == null) {
+            if (r == null) {
                 r = currentParent.getResourceResolver().create(myParent, 
-                        ResourceUtil.getName(fullPath), props);
+                        ResourceUtil.getName(fullPath), properties);
             } else {
                 // Resource exists, set our properties
                 final ModifiableValueMap mvm = r.adaptTo(ModifiableValueMap.class);
                 if(mvm == null) {
                     throw new IllegalStateException("Cannot modify properties of " + r.getPath());
                 }
-                for(Map.Entry <String, Object> e : props.entrySet()) {
+                for(Map.Entry <String, Object> e : properties.entrySet()) {
                     mvm.put(e.getKey(), e.getValue());
                 }
             }
@@ -149,6 +149,20 @@ public class ResourceBuilderImpl implements ResourceBuilder {
             return cloneResourceBuilder(r, this.intermediatePrimaryType, this.hierarchyMode);
         }
         return this;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public ResourceBuilder resource(String path, Object... properties) {
+        if (properties == null || properties.length == 0) {
+            return resource(path, ValueMap.EMPTY);
+        }
+        else if (properties.length == 1 && properties[0] instanceof Map) {
+            return resource(path, (Map<String,Object>)properties[0]);
+        }
+        else {
+            return resource(path, MapArgsConverter.toMap(properties));
+        }
     }
     
     /** Create a Resource at the specified path if none exists yet,
