@@ -28,8 +28,7 @@ import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = ContextPathStrategy.class,
-    property=ContextPathStrategy.ROOTS + "=/")
+@Component(service = ContextPathStrategy.class)
 public class DefaultContextPathStrategy implements ContextPathStrategy {
 
     /**

@@ -28,23 +28,17 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * Allows application to define a strategy to find context paths for content paths.
  * A context paths is the root path of a "configuration context", which is a subtree in the resource hierarchy.
- * Each context may have it's own context-aware configuration attached to.
- * If multiple context path strategy implementations are defined the fist one with matching 
- * path (context.roots) is used ordered by service ranking.
+ * Each context may have it's own context-aware configuration attached to.0
+ * If multiple context path strategy implementations are defined the results of them are merged.
  */
 @ConsumerType
 public interface ContextPathStrategy {
 
     /**
-     * The name of the service registration property containing the root paths
-     * this context strategy should apply to. If none is set it is applied to all paths.
-     */
-    String ROOTS = "context.roots";
-
-    /**
      * Finds context paths for the given resource.
      * @param resource Context resource
      * @return Root resource for each context found (in order of closest matching first).
+     *      Only one of the parent resources or the resources itself may be included in the result.
      *      If none are found an empty list is returned.
      */
     @Nonnull Collection<Resource> findContextPaths(@Nonnull Resource resource);
