@@ -19,5 +19,5 @@
 /**
  * Content builder for creating test content.
  */
-@org.osgi.annotation.versioning.Version("1.0")
+@org.osgi.annotation.versioning.Version("1.1")
 package org.apache.sling.testing.mock.sling.builder;
