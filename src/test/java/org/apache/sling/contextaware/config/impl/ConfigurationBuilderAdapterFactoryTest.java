@@ -29,8 +29,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 public class ConfigurationBuilderAdapterFactoryTest {
     
     @Rule
@@ -45,16 +43,13 @@ public class ConfigurationBuilderAdapterFactoryTest {
         context.registerInjectActivateService(new ConfigurationBuilderAdapterFactory());
 
         // config resource
-        context.create().resource("/conf/content/site1/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1")
-                .put("intParam", 111)
-                .put("boolParam", true)
-                .build());
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig", 
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
 
         // content resources
-        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/content/site1")
-                .build());
+        context.build().resource("/content/site1", "sling:config-ref", "/conf/content/site1");
         site1Page1 = context.create().resource("/content/site1/page1");
     }
 

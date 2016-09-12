@@ -47,8 +47,6 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 public class ConfigurationProxyTest {
     
     @Rule
@@ -97,18 +95,18 @@ public class ConfigurationProxyTest {
 
     @Test
     public void testConfig_AllTypes() {
-        Resource resource = context.create().resource("/test", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue2")
-                .put("intParam", 222)
-                .put("longParam", 3456L)
-                .put("doubleParam", 0.123d)
-                .put("boolParam", true)
-                .put("stringArrayParam", new String[] {STRING_DEFAULT_2,STRING_DEFAULT})
-                .put("intArrayParam", new int[] {INT_DEFAULT_2})
-                .put("longArrayParam", new long[] {LONG_DEFAULT_2,LONG_DEFAULT})
-                .put("doubleArrayParam", new double[] {DOUBLE_DEFAULT_2})
-                .put("boolArrayParam", new boolean[] {BOOL_DEFAULT_2,BOOL_DEFAULT})
-                .build());
+        Resource resource = context.build().resource("/test",
+                "stringParam", "configValue2",
+                "intParam", 222,
+                "longParam", 3456L,
+                "doubleParam", 0.123d,
+                "boolParam", true,
+                "stringArrayParam", new String[] {STRING_DEFAULT_2,STRING_DEFAULT},
+                "intArrayParam", new int[] {INT_DEFAULT_2},
+                "longArrayParam", new long[] {LONG_DEFAULT_2,LONG_DEFAULT},
+                "doubleArrayParam", new double[] {DOUBLE_DEFAULT_2},
+                "boolArrayParam", new boolean[] {BOOL_DEFAULT_2,BOOL_DEFAULT})
+                .getCurrentParent();
         AllTypesConfig cfg = ConfigurationProxy.get(resource, AllTypesConfig.class);
 
         assertEquals("configValue2", cfg.stringParam());
@@ -136,11 +134,9 @@ public class ConfigurationProxyTest {
 
     @Test
     public void testConfig_SpecialNames() {
-        Resource resource = context.create().resource("/test", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue2")
-                .put("int_Param", 222)
-                .put("bool.Param", true)
-                .build());
+        Resource resource = context.build()
+                .resource("/test",  "stringParam", "configValue2", "int_Param", 222, "bool.Param", true)
+                .getCurrentParent();
         SpecialNamesConfig cfg = ConfigurationProxy.get(resource, SpecialNamesConfig.class);
 
         assertEquals("configValue2", cfg.$stringParam());
@@ -150,24 +146,14 @@ public class ConfigurationProxyTest {
 
     @Test
     public void testConfig_Nested() {
-        Resource resource = context.create().resource("/test", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "v1")
-                .build());
-        context.create().resource("/test/subConfig", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "v2")
-                .put("intParam", 444)
-                .put("boolParam", true)
-                .build());
-        context.create().resource("/test/subListConfig/1", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "v3.1")
-                .build());
-        context.create().resource("/test/subListConfig/2", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "v3.2")
-                .build());
-        context.create().resource("/test/subListConfig/3", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "v3.3")
-                .build());
+        context.build().resource("/test", "stringParam", "v1")
+            .resource("/test/subConfig", "stringParam", "v2", "intParam", 444, "boolParam", true)
+            .resource("/test/subListConfig/1", "stringParam", "v3.1")
+            .resource("/test/subListConfig/2", "stringParam", "v3.2")
+            .resource("/test/subListConfig/3", "stringParam", "v3.3");
 
+        Resource resource = context.resourceResolver().getResource("/test");
+        
         NestedConfig cfg = ConfigurationProxy.get(resource, NestedConfig.class);
 
         assertEquals("v1", cfg.stringParam());

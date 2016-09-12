@@ -35,8 +35,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * Test {@link ConfigurationResolver} with ValueMap for reading the config.
  */
@@ -56,29 +54,20 @@ public class ConfigurationResolverValueMapTest {
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources
-        context.create().resource("/conf/content/site2/sling:configs/sampleName", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1")
-                .put("intParam", 111)
-                .put("boolParam", true)
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/sampleName", 
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
 
-        context.create().resource("/conf/content/site2/sling:configs/sampleList/1", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.1")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/sampleList/2", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.2")
-                .build());
-        context.create().resource("/conf/content/site2/sling:configs/sampleList/3", ImmutableMap.<String, Object>builder()
-                .put("stringParam", "configValue1.3")
-                .build());
+        context.build().resource("/conf/content/site2/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
 
         // content resources
-        context.create().resource("/content/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/content/site1")
-                .build());
-        context.create().resource("/content/site2", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/content/site2")
-                .build());
+        context.build().resource("/content/site1", "sling:config-ref", "/conf/content/site1")
+            .resource("/content/site2", "sling:config-ref", "/conf/content/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
     }

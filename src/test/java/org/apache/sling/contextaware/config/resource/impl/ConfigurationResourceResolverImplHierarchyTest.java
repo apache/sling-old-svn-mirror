@@ -31,8 +31,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * Tests with content and configurations that form a deeper nested hierarchy.
  */
@@ -53,39 +51,33 @@ public class ConfigurationResourceResolverImplHierarchyTest {
         underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
 
         // content resources that form a deeper hierarchy
-        context.create().resource("/content/tenant1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1")
-                .build());
-        context.create().resource("/content/tenant1/region1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1")
-                .build());
-        context.create().resource("/content/tenant1/region1/site1", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1/site1")
-                .build());
+        context.build()
+            .resource("/content/tenant1", "sling:config-ref", "/conf/tenant1")
+            .resource("/content/tenant1/region1", "sling:config-ref", "/conf/tenant1/region1")
+            .resource("/content/tenant1/region1/site1", "sling:config-ref", "/conf/tenant1/region1/site1")
+            .resource("/content/tenant1/region1/site2", "sling:config-ref", "/conf/tenant1/region1/site2");
         site1Page1 = context.create().resource("/content/tenant1/region1/site1/page1");
-        context.create().resource("/content/tenant1/region1/site2", ImmutableMap.<String, Object>builder()
-                .put("sling:config-ref", "/conf/tenant1/region1/site2")
-                .build());
         site2Page1 = context.create().resource("/content/tenant1/region1/site2/page1");
 
         // configuration
-        context.create().resource("/conf/tenant1/region1/site1/sling:test/cfgSite1");
-        context.create().resource("/conf/tenant1/region1/site1/sling:test/cfgCol/site1");
-        context.create().resource("/conf/tenant1/region1/sling:test/cfgRegion1");
-        context.create().resource("/conf/tenant1/region1/sling:test/cfgCol/region1");
-        context.create().resource("/conf/tenant1/sling:test/cfgTenant1");
-        context.create().resource("/conf/tenant1/sling:test/cfgCol/tenant1");
-        context.create().resource("/conf/tenant1/sling:test/test");
-        context.create().resource("/conf/global/sling:test/cfgGlobal");
-        context.create().resource("/conf/global/sling:test/cfgCol/confGlobal");
-        context.create().resource("/conf/global/sling:test/test");
-        context.create().resource("/apps/conf/sling:test/cfgAppsGlobal");
-        context.create().resource("/apps/conf/sling:test/cfgCol/appsGlobal");
-        context.create().resource("/apps/conf/sling:test/test");
-        context.create().resource("/libs/conf/sling:test/cfgLibsGlobal");
-        context.create().resource("/libs/conf/sling:test/cfgCol/libsGlobal1");
-        context.create().resource("/libs/conf/sling:test/cfgCol/libsGlobal2");
-        context.create().resource("/libs/conf/sling:test/test");
+        context.build()
+            .resource("/conf/tenant1/region1/site1/sling:test/cfgSite1")
+            .resource("/conf/tenant1/region1/site1/sling:test/cfgCol/site1")
+            .resource("/conf/tenant1/region1/sling:test/cfgRegion1")
+            .resource("/conf/tenant1/region1/sling:test/cfgCol/region1")
+            .resource("/conf/tenant1/sling:test/cfgTenant1")
+            .resource("/conf/tenant1/sling:test/cfgCol/tenant1")
+            .resource("/conf/tenant1/sling:test/test")
+            .resource("/conf/global/sling:test/cfgGlobal")
+            .resource("/conf/global/sling:test/cfgCol/confGlobal")
+            .resource("/conf/global/sling:test/test")
+            .resource("/apps/conf/sling:test/cfgAppsGlobal")
+            .resource("/apps/conf/sling:test/cfgCol/appsGlobal")
+            .resource("/apps/conf/sling:test/test")
+            .resource("/libs/conf/sling:test/cfgLibsGlobal")
+            .resource("/libs/conf/sling:test/cfgCol/libsGlobal1")
+            .resource("/libs/conf/sling:test/cfgCol/libsGlobal2")
+            .resource("/libs/conf/sling:test/test");
     }
 
     @Test
