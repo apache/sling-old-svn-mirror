@@ -55,7 +55,7 @@ public class ModelAdapterFactoryUtilTest {
 
     @Test
     public void testOsgiService() {
-        context.registerService(MimeTypeService.class, new MockMimeTypeService(), null);
+        context.registerService(MimeTypeService.class, new MockMimeTypeService());
 
         OsgiServiceModel model = context.resourceResolver().adaptTo(OsgiServiceModel.class);
         assertNotNull(model);
