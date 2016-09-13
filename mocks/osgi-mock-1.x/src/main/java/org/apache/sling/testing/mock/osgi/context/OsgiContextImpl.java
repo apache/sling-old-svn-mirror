@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.sling.testing.mock.osgi.MapUtil;
 import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.BundleContext;
@@ -92,7 +93,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final T service) {
-        return registerService(null, service, null);
+        return registerService(null, service, (Map<String,Object>)null);
     }
 
     /**
@@ -103,7 +104,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final Class<T> serviceClass, final T service) {
-        return registerService(serviceClass, service, null);
+        return registerService(serviceClass, service, (Map<String,Object>)null);
     }
 
     /**
@@ -124,6 +125,18 @@ public class OsgiContextImpl {
     }
 
     /**
+     * Registers a service in the mocked OSGi environment.
+     * @param <T> Service type
+     * @param serviceClass Service class
+     * @param service Service instance
+     * @param properties Service properties (optional)
+     * @return Registered service instance
+     */
+    public final <T> T registerService(final Class<T> serviceClass, final T service, final Object... properties) {
+        return registerService(serviceClass, service, MapUtil.toMap(properties));
+    }
+    
+    /**
      * Injects dependencies, activates and registers a service in the mocked
      * OSGi environment.
      * @param <T> Service type
@@ -131,7 +144,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerInjectActivateService(final T service) {
-        return registerInjectActivateService(service, null);
+        return registerInjectActivateService(service, (Map<String,Object>)null);
     }
 
     /**
@@ -147,6 +160,18 @@ public class OsgiContextImpl {
         MockOsgi.activate(service, bundleContext(), properties);
         registerService(null, service, properties);
         return service;
+    }
+
+    /**
+     * Injects dependencies, activates and registers a service in the mocked
+     * OSGi environment.
+     * @param <T> Service type
+     * @param service Service instance
+     * @param properties Service properties (optional)
+     * @return Registered service instance
+     */
+    public final <T> T registerInjectActivateService(final T service, final Object... properties) {
+        return registerInjectActivateService(service, MapUtil.toMap(properties));
     }
 
     /**

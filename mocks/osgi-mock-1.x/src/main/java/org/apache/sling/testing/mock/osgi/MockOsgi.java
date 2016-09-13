@@ -18,7 +18,7 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
-import static org.apache.sling.testing.mock.osgi.MapUtil.propertiesMergeWithOsgiMetadata;
+import static org.apache.sling.testing.mock.osgi.MapMergeUtil.propertiesMergeWithOsgiMetadata;
 import static org.apache.sling.testing.mock.osgi.MapUtil.toDictionary;
 import static org.apache.sling.testing.mock.osgi.MapUtil.toMap;
 
@@ -82,6 +82,14 @@ public final class MockOsgi {
     }
 
     /**
+     * @param properties Properties
+     * @return Mocked {@link ComponentContext} instance
+     */
+    public static ComponentContext newComponentContext(Object... properties) {
+        return componentContext().properties(properties).build();
+    }
+
+    /**
      * @param bundleContext Bundle context
      * @param properties Properties
      * @return Mocked {@link ComponentContext} instance
@@ -96,7 +104,18 @@ public final class MockOsgi {
      * @param properties Properties
      * @return Mocked {@link ComponentContext} instance
      */
-    public static ComponentContext newComponentContext(BundleContext bundleContext, Map<String, Object> properties) {
+    public static ComponentContext newComponentContext(BundleContext bundleContext,
+            Map<String, Object> properties) {
+        return componentContext().bundleContext(bundleContext).properties(properties).build();
+    }
+
+    /**
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return Mocked {@link ComponentContext} instance
+     */
+    public static ComponentContext newComponentContext(BundleContext bundleContext,
+            Object... properties) {
         return componentContext().bundleContext(bundleContext).properties(properties).build();
     }
 
@@ -202,6 +221,17 @@ public final class MockOsgi {
     }
 
     /**
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if activation method was called. False if no activate method is defined.
+     */
+    public static boolean activate(Object target, BundleContext bundleContext, Object... properties) {
+        return activate(target, bundleContext, toDictionary(properties));
+    }
+
+    /**
      * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @return true if deactivation method was called. False if no deactivate method is defined.
@@ -276,6 +306,17 @@ public final class MockOsgi {
     }
 
     /**
+     * Simulate activation of service instance. Invokes the @Deactivate annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if deactivation method was called. False if no deactivate method is defined.
+     */
+    public static boolean deactivate(Object target, BundleContext bundleContext, Object... properties) {
+        return deactivate(target, bundleContext, toDictionary(properties));
+    }
+
+    /**
      * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context
@@ -296,6 +337,17 @@ public final class MockOsgi {
     public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
         Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
         return OsgiServiceUtil.modified(target, bundleContext, mergedProperties);
+    }
+    
+    /**
+     * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if modified method was called. False if no modified method is defined.
+     */
+    public static boolean modified(Object target, BundleContext bundleContext, Object... properties) {
+        return modified(target, bundleContext, toMap(properties));
     }
     
     /**
