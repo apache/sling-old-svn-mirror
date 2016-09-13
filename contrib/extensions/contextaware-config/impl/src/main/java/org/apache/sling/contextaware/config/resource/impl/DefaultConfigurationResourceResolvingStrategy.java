@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -38,14 +38,18 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service=ConfigurationResourcePersistence.class)
-@Designate(ocd=DefaultConfigurationResourcePersistence.Config.class)
-public class DefaultConfigurationResourcePersistence implements ConfigurationResourcePersistence {
+@Component(service=ConfigurationResourceResolvingStrategy.class)
+@Designate(ocd=DefaultConfigurationResourceResolvingStrategy.Config.class)
+public class DefaultConfigurationResourceResolvingStrategy implements ConfigurationResourceResolvingStrategy {
 
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Resolver",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Resource Resolving Strategy",
                            description="Standardized access to configurations in the resource tree.")
     static @interface Config {
 
+        @AttributeDefinition(name="Enabled",
+                description = "Enable this configuration resourcer resolving strategy.")
+        boolean enabled() default true;
+        
         @AttributeDefinition(name="Allowed paths",
                              description = "Whitelist of paths where configurations can reside in.")
         String[] allowedPaths() default {"/conf", "/apps/conf", "/libs/conf"};
@@ -57,23 +61,23 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private volatile Config configuration;
+    private volatile Config config;
     
     @Reference
     private ContextPathStrategyMultiplexer contextPathStrategy;
 
     Config getConfiguration() {
-        return this.configuration;
+        return this.config;
     }
 
     @Activate
     private void activate(final Config config) {
-        this.configuration = config;
+        this.config = config;
     }
 
     @Deactivate
     private void deactivate() {
-        this.configuration = null;
+        this.config = null;
     }
 
     List<String> getResolvePaths(final Resource contentResource) {
@@ -84,8 +88,8 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
         refPaths.addAll(refs);
 
         // finally add the global fallbacks
-        if ( this.configuration.fallbackPaths() != null ) {
-            for(final String path : this.configuration.fallbackPaths()) {
+        if ( this.config.fallbackPaths() != null ) {
+            for(final String path : this.config.fallbackPaths()) {
                 logger.debug("[{}] fallback config => {}", refs.size(), path);
                 refPaths.add(path);
             }
@@ -158,10 +162,10 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
     }
 
     private boolean isAllowedConfigPath(String path) {
-        if (this.configuration.allowedPaths() == null) {
+        if (this.config.allowedPaths() == null) {
             return false;
         }
-        for (String pattern : this.configuration.allowedPaths()) {
+        for (String pattern : this.config.allowedPaths()) {
             if (logger.isTraceEnabled()) {
                 logger.trace("- checking if '{}' starts with {}", path, pattern);
             }
@@ -173,8 +177,8 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
     }
 
     private boolean isFallbackConfigPath(final String ref) {
-        if ( this.configuration.fallbackPaths() != null ) {
-            for(final String name : this.configuration.fallbackPaths()) {
+        if ( this.config.fallbackPaths() != null ) {
+            for(final String name : this.config.fallbackPaths()) {
                 if ( name.equals(ref) ) {
                     return true;
                 }
@@ -185,7 +189,7 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
 
     @Override
     public Resource getResource(final Resource contentResource, final String bucketName, final String configName) {
-        if (contentResource == null || !checkName(bucketName) || !checkName(configName)) {
+        if (!config.enabled() || contentResource == null || !checkName(bucketName) || !checkName(configName)) {
             return null;
         }
         String name = bucketName + "/" + configName;
@@ -211,7 +215,7 @@ public class DefaultConfigurationResourcePersistence implements ConfigurationRes
 
     @Override
     public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
-        if (contentResource == null || !checkName(bucketName) || !checkName(configName)) {
+        if (!config.enabled() || contentResource == null || !checkName(bucketName) || !checkName(configName)) {
             return Collections.emptyList();
         }
         String name = bucketName + "/" + configName;

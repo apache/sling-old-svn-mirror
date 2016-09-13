@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Detects all {@link ContextPathStrategy} implementations in the container
- * and consolidates their result based on service ranking and root path configuration.
+ * and consolidates their result based on service ranking.
  */
 @Component(service = ContextPathStrategyMultiplexer.class,
 reference={
@@ -59,16 +59,19 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
         }
     };
     
-    private RankedServices<ContextPathStrategy> contextPathStrategies = new RankedServices<>(Order.DESCENDING);
+    private RankedServices<ContextPathStrategy> items = new RankedServices<>(Order.DESCENDING);
         
     protected void bindContextPathStrategy(ContextPathStrategy contextPathStrategy, Map<String, Object> props) {
-        contextPathStrategies.bind(contextPathStrategy, props);
+        items.bind(contextPathStrategy, props);
     }
     
     protected void unbindContextPathStrategy(ContextPathStrategy contextPathStrategy, Map<String, Object> props) {
-        contextPathStrategies.unbind(contextPathStrategy, props);
+        items.unbind(contextPathStrategy, props);
     }
 
+    /**
+     * Merges all results from the detected implementations into a single answer.
+     */
     @Override
     public Collection<Resource> findContextResources(Resource resource) {
         List<Collection<Resource>> allResults = getAllResults(resource);
@@ -88,8 +91,8 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      */
     private List<Collection<Resource>> getAllResults(Resource resource) {
         List<Collection<Resource>> results = new ArrayList<>();
-        for (ContextPathStrategy contextPathStrategy : contextPathStrategies) {
-            Collection<Resource> result = contextPathStrategy.findContextResources(resource);
+        for (ContextPathStrategy item : items) {
+            Collection<Resource> result = item.findContextResources(resource);
             if (!result.isEmpty()) {
                 results.add(result);
             }
@@ -100,7 +103,7 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
     /**
      * Merges results from different context path strategy implementations.
      * Eliminating of duplicates and sorting is done solely based on path length.
-     * The contract of the ContextPathStrategy defines that only partnes or the resource itself
+     * The contract of the ContextPathStrategy defines that only parents or the resource itself
      * is returned, so the assumption should be safe.
      * @param allResults List of all results
      * @return Merged result

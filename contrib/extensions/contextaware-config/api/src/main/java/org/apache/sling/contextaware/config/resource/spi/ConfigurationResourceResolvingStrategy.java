@@ -32,7 +32,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * This SPI allows application to define their own persistence or inheritence strategies.
  */
 @ConsumerType
-public interface ConfigurationResourcePersistence {
+public interface ConfigurationResourceResolvingStrategy {
 
     /**
      * Get a context-aware singleton configuration resource defined by the given configuration name.

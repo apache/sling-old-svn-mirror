@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNull;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,7 +41,7 @@ public class DefaultConfigurationResourcePersistenceHierachyTest {
     @Rule
     public SlingContext context = new SlingContext();
 
-    private ConfigurationResourcePersistence underTest;
+    private ConfigurationResourceResolvingStrategy underTest;
 
     private Resource site1Page1;
     private Resource site2Page1;
@@ -50,7 +50,7 @@ public class DefaultConfigurationResourcePersistenceHierachyTest {
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
         context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourcePersistence());
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
         // content resources that form a deeper hierarchy
         context.build()

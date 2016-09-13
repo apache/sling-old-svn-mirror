@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,7 +56,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
     private ResourceResolverFactory resolverFactory;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
-    private ConfigurationResourcePersistence configResolver;
+    private ConfigurationResourceResolvingStrategy configResolver;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private XSSAPI xssAPI;
@@ -87,7 +87,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     private void printConfiguration(final PrintWriter pw) {
-        final DefaultConfigurationResourcePersistence configResolverImpl = (DefaultConfigurationResourcePersistence)configResolver;
+        final DefaultConfigurationResourceResolvingStrategy configResolverImpl = (DefaultConfigurationResourceResolvingStrategy)configResolver;
         tableStart(pw, "Configuration", 2);
         pw.println("<tr>");
         pw.println("<td style='width:20%'>Allowed paths</td>");
@@ -215,7 +215,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
                 pw.println("<td>Config paths</td>");
 
                 pw.println("<td>");
-                for (String p : ((DefaultConfigurationResourcePersistence)configResolver).getResolvePaths(content)) {
+                for (String p : ((DefaultConfigurationResourceResolvingStrategy)configResolver).getResolvePaths(content)) {
                     if (confRsrc != null && confRsrc.getPath().startsWith(p + "/")) {
                         pw.print("<b>");
                         pw.print(xssAPI.encodeForHTML(p));

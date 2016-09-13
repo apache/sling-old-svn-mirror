@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -36,16 +35,16 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     private ContextPathStrategyMultiplexer contextPathStrategy;
     
     @Reference
-    private ConfigurationResourcePersistence persistence;
+    private ConfigurationResourceResolvingStrategyMultiplexer configurationResourceResolvingStrategy;
 
     @Override
     public Resource getResource(Resource resource, String bucketName, String configName) {
-        return persistence.getResource(resource, bucketName, configName);
+        return configurationResourceResolvingStrategy.getResource(resource, bucketName, configName);
     }
 
     @Override
     public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
-        return persistence.getResourceCollection(resource, bucketName, configName);
+        return configurationResourceResolvingStrategy.getResourceCollection(resource, bucketName, configName);
     }
 
     @Override

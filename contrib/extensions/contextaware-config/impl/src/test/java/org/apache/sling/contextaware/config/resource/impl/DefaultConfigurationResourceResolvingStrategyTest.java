@@ -20,24 +20,26 @@ package org.apache.sling.contextaware.config.resource.impl;
 
 import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class DefaultConfigurationResourcePersistenceTest {
+public class DefaultConfigurationResourceResolvingStrategyTest {
     
     private static final String BUCKET = "sling:test";
 
     @Rule
     public SlingContext context = new SlingContext();
 
-    private ConfigurationResourcePersistence underTest;
+    private ConfigurationResourceResolvingStrategy underTest;
 
     private Resource site1Page1;
     private Resource site2Page1;
@@ -46,7 +48,6 @@ public class DefaultConfigurationResourcePersistenceTest {
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
         context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourcePersistence());
 
         // content resources
         context.build()
@@ -68,12 +69,16 @@ public class DefaultConfigurationResourcePersistenceTest {
 
     @Test
     public void testGetResource() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
         assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
         assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
     @Test
     public void testGetResourceCollection() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
         assetResourcePaths(new String[] {
                 "/conf/site1/sling:test/feature/c",
@@ -88,6 +93,16 @@ public class DefaultConfigurationResourcePersistenceTest {
                 "/apps/conf/sling:test/feature/a",
                 "/libs/conf/sling:test/feature/b" },
                 col2);
+    }
+
+    @Test
+    public void testDisabled() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
+                "enabled", false);
+
+        assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
+        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
+        assertTrue(col1.isEmpty());
     }
 
 }
