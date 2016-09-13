@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.resourcebuilder.impl.MapArgsConverter;
+import org.apache.sling.testing.mock.osgi.MapUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -83,17 +83,8 @@ public class ContentBuilder {
      * @param properties Properties for resource.
      * @return Resource object
      */
-    @SuppressWarnings("unchecked")
     public final Resource resource(String path, Object... properties) {
-        if (properties == null || properties.length == 0) {
-            return resource(path);
-        }
-        else if (properties.length == 1 && properties[0] instanceof Map) {
-            return resource(path, (Map<String,Object>)properties[0]);
-        }
-        else {
-            return resource(path, MapArgsConverter.toMap(properties));
-        }
+        return resource(path, MapUtil.toMap(properties));
     }
 
     /**
