@@ -121,6 +121,9 @@ public class OsgiServiceUtilTest {
         Dictionary<String,Object> newPropertiesDictonary = new Hashtable<String,Object>(newProperties);
         MockOsgi.modified(service3, bundleContext, newPropertiesDictonary);
         assertEquals(newProperties.get("prop3"), service3.getConfig().get("prop3"));
+
+        MockOsgi.modified(service3, bundleContext, "prop3", "value4");
+        assertEquals("value4", service3.getConfig().get("prop3"));
     }
 
     @Test
