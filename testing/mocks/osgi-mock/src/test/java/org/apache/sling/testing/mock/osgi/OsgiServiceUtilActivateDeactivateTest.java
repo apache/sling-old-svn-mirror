@@ -58,7 +58,7 @@ public class OsgiServiceUtilActivateDeactivateTest {
     public void testService2() {
         Service2 service = new Service2();
         
-        assertTrue(MockOsgi.activate(service, bundleContext, map));
+        assertTrue(MockOsgi.activate(service, bundleContext, "prop1", "value1"));
         assertTrue(service.isActivated());
         assertSame(bundleContext, service.getBundleContext());
         
