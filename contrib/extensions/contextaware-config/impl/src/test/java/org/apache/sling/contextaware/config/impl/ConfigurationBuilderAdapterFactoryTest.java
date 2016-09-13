@@ -23,9 +23,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.example.SimpleConfig;
-import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
-import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
-import org.apache.sling.contextaware.config.resource.impl.DefaultContextPathStrategy;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,9 +38,7 @@ public class ConfigurationBuilderAdapterFactoryTest {
     
     @Before
     public void setUp() {
-        context.registerInjectActivateService(new DefaultContextPathStrategy());
-        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
-        context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);;
         context.registerInjectActivateService(new ConfigurationResolverImpl());
         context.registerInjectActivateService(new ConfigurationBuilderAdapterFactory());
 

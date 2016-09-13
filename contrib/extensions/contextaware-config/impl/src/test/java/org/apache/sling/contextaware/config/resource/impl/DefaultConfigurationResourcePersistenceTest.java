@@ -24,29 +24,29 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistence;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
-public class ConfigurationResourceResolverImplTest {
+public class DefaultConfigurationResourcePersistenceTest {
     
     private static final String BUCKET = "sling:test";
 
     @Rule
     public SlingContext context = new SlingContext();
 
-    private ConfigurationResourceResolver underTest;
+    private ConfigurationResourcePersistence underTest;
 
     private Resource site1Page1;
     private Resource site2Page1;
 
     @Before
     public void setUp() {
-        underTest = ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);;
+        context.registerInjectActivateService(new DefaultContextPathStrategy());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourcePersistence());
 
         // content resources
         context.build()
@@ -90,16 +90,4 @@ public class ConfigurationResourceResolverImplTest {
                 col2);
     }
 
-    @Test
-    public void testGetContextPath() {
-        assertEquals("/content/site1", underTest.getContextPath(site1Page1));
-        assertEquals("/content/site2", underTest.getContextPath(site2Page1));
-    }
-
-    @Test
-    public void testGetAllContextPaths() {
-        assertEquals(ImmutableList.of("/content/site1"), underTest.getAllContextPaths(site1Page1));
-        assertEquals(ImmutableList.of("/content/site2"), underTest.getAllContextPaths(site2Page1));
-    }
-    
 }

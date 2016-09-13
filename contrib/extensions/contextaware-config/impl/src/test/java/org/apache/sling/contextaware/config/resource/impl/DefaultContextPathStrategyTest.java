@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.apache.sling.contextaware.config.resource.impl.TestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
