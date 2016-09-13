@@ -170,15 +170,17 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         @Override
         public T convert(final Resource resource, final Class<T> clazz, final String name) {
             return ConfigurationProxy.get(resource, clazz, new ChildResolver() {
+                private ConfigurationBuilder getConfiguration(String configName) {
+                    String childName = name + "/" + configName;
+                    return configurationResolver.get(contentResource).name(childName);
+                }
                 @Override
                 public <C> C getChild(String configName, Class<C> clazz) {
-                    String childName = name + "/" + configName;
-                    return configurationResolver.get(contentResource).name(childName).as(clazz);
+                    return getConfiguration(configName).as(clazz);
                 }
                 @Override
                 public <C> Collection<C> getChildren(String configName, Class<C> clazz) {
-                    String childName = name + "/" + configName;
-                    return configurationResolver.get(contentResource).name(childName).asCollection(clazz);
+                    return getConfiguration(configName).asCollection(clazz);
                 }
             });
         }

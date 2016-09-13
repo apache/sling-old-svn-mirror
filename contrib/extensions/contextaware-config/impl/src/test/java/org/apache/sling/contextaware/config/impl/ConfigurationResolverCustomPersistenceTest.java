@@ -76,9 +76,9 @@ public class ConfigurationResolverCustomPersistenceTest {
                 "intParam", 1111,
                 "boolParam", true);
 
-        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig/jcr:content",
-                "stringParam", "configValue3")
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig")
             .siblingsMode()
+            .resource("jcr:content", "stringParam", "configValue3")
             .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
             .hierarchyMode()
             .resource("subListConfig")

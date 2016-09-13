@@ -51,6 +51,7 @@ final class ConfigurationProxy {
      * Get dynamic proxy for given resources's properties mapped to given annotation class.
      * @param resource Resource
      * @param clazz Annotation class
+     * @param childResolver This is used to resolve nested configuration objects relative to the current configuration resource
      * @return Dynamic proxy object
      */
     @SuppressWarnings("unchecked")
