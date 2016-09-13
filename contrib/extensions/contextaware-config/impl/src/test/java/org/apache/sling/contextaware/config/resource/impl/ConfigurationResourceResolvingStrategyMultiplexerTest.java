@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
+import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl.def;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,13 +35,14 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
-// TODO: this web console plugin is currently quite broken and need to be refactored
+// TODO: this web console plugin is currently quite broken and needs to be refactored and moved to another package
 @Component(service=Servlet.class,
            property={"org.osgi.framework.Constants.SERVICE_DESCRIPTION=Apache Sling Web Console Plugin for configurations",
                    WebConsoleConstants.PLUGIN_LABEL + "=" + WebConsolePlugin.LABEL,

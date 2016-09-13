@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl.def;
 
 import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -38,8 +39,6 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
 
     @Rule
     public SlingContext context = new SlingContext();
-
-    private ConfigurationResourceResolvingStrategy underTest;
 
     private Resource site1Page1;
     private Resource site2Page1;
@@ -69,7 +68,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
 
     @Test
     public void testGetResource() {
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
         assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
         assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
@@ -77,7 +76,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
 
     @Test
     public void testGetResourceCollection() {
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
         assetResourcePaths(new String[] {
@@ -97,7 +96,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
 
     @Test
     public void testDisabled() {
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
                 "enabled", false);
 
         assertNull(underTest.getResource(site1Page1, BUCKET, "test"));

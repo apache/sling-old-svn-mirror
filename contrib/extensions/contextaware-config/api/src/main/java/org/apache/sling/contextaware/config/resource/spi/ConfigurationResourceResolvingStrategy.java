@@ -27,9 +27,8 @@ import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Defines how and where the configuration resources are looked up,
- * and how to read and store configuration data in the configuration resources.
- * This SPI allows application to define their own persistence or inheritence strategies.
+ * Defines how and where the configuration resources are looked up.
+ * This SPI allows application to define their own configuration storage and inheritance strategies.
  */
 @ConsumerType
 public interface ConfigurationResourceResolvingStrategy {

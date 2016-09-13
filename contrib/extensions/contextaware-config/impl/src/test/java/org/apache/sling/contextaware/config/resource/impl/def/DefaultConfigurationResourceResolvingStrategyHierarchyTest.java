@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl.def;
 
 import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -34,7 +35,7 @@ import org.junit.Test;
 /**
  * Tests with content and configurations that form a deeper nested hierarchy.
  */
-public class DefaultConfigurationResourcePersistenceHierachyTest {
+public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     
     private static final String BUCKET = "sling:test";
 

@@ -25,6 +25,8 @@ import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
+import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
 public final class ConfigurationResourceTestUtils {
