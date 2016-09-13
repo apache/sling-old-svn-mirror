@@ -39,8 +39,6 @@ public class DefaultContextPathStrategyTest {
 
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new DefaultContextPathStrategy());
-
         // content resources that form a deeper hierarchy
         context.build()
             .resource("/content/tenant1", "sling:config-ref", "/conf/tenant1")
@@ -53,6 +51,8 @@ public class DefaultContextPathStrategyTest {
 
     @Test
     public void testFindContextPaths() {
+        underTest = context.registerInjectActivateService(new DefaultContextPathStrategy());
+
         assetResourcePaths(new String[] {
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
@@ -64,6 +64,15 @@ public class DefaultContextPathStrategyTest {
                 "/content/tenant1/region1",
                 "/content/tenant1"
         }, underTest.findContextResources(site2Page1));
+    }
+
+    @Test
+    public void testDisabled() {
+        underTest = context.registerInjectActivateService(new DefaultContextPathStrategy(),
+                "enabled", false);
+
+        assetResourcePaths(new String[0], underTest.findContextResources(site1Page1));
+        assetResourcePaths(new String[0], underTest.findContextResources(site2Page1));
     }
 
 }

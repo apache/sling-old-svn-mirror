@@ -43,9 +43,9 @@ import org.slf4j.LoggerFactory;
 @Designate(ocd=ConfigurationResourceResolverImpl.Config.class)
 public class ConfigurationResourceResolverImpl implements ConfigurationResourceResolver {
 
-    @ObjectClassDefinition(name="Apache Sling Context Aware Configuration Resolver",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Resolver",
                            description="Standardized access to configurations in the resource tree.")
-    public static @interface Config {
+    static @interface Config {
 
         @AttributeDefinition(name="Allowed paths",
                              description = "Whitelist of paths where configurations can reside in.")

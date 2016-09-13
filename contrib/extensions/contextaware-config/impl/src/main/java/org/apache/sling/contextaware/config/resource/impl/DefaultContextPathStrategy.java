@@ -20,17 +20,34 @@ package org.apache.sling.contextaware.config.resource.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(service = ContextPathStrategy.class)
+@Designate(ocd=DefaultContextPathStrategy.Config.class)
 public class DefaultContextPathStrategy implements ContextPathStrategy {
 
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Context Path Strategy",
+            description="Detects context path by existence of " + PROPERTY_CONFIG + " properties.")
+    static @interface Config {
+        
+        @AttributeDefinition(name="Enabled",
+                      description = "Enable this context path strategy.")
+        boolean enabled() default true;
+        
+    }
+    
     /**
      * Property that points to the configuration to be used.
      * Additionally each resource having this property marks the beginning of a new context sub-tree.
@@ -39,8 +56,18 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
    
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
+    private volatile Config config;
+    
+    @Activate
+    private void activate(ComponentContext componentContext, Config config) {
+        this.config = config; 
+    }
+    
     @Override
     public Collection<Resource> findContextResources(Resource resource) {
+        if (!config.enabled()) {
+            return Collections.emptyList();
+        }
         List<Resource> resources = new ArrayList<>();
         findConfigRefs(resources, resource);
         return resources;
