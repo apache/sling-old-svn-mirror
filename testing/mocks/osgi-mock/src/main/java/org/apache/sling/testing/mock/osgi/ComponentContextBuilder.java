@@ -54,6 +54,11 @@ public final class ComponentContextBuilder {
         return this;
     }
         
+    public ComponentContextBuilder properties(Object... properties) {
+        this.properties = MapUtil.toDictionary(properties);
+        return this;
+    }
+        
     public ComponentContextBuilder usingBundle(Bundle usingBundle) {
         this.usingBundle = usingBundle;
         return this;

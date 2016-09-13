@@ -18,23 +18,28 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
-import org.osgi.framework.Constants;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-
 /**
  * Map util methods.
  */
-final class MapUtil {
+public final class MapUtil {
+    
+    private MapUtil() {
+        // static methods only
+    }
 
+    /**
+     * Convert map to dictionary.
+     * @param map Map
+     * @return Dictionary
+     */
     public static <T, U> Dictionary<T, U> toDictionary(Map<T, U> map) {
         if (map == null) {
             return null;
@@ -42,6 +47,11 @@ final class MapUtil {
         return new Hashtable<T, U>(map);
     }
 
+    /**
+     * Convert Dictionary to map
+     * @param dictionary Dictionary
+     * @return Map
+     */
     public static <T, U> Map<T, U> toMap(Dictionary<T, U> dictionary) {
         if (dictionary == null) {
             return null;
@@ -55,55 +65,41 @@ final class MapUtil {
         return map;
     }
 
-    public static Dictionary<String, Object> propertiesMergeWithOsgiMetadata(Object target, 
-            ConfigurationAdmin configAdmin, 
-            Dictionary<String, Object> properties) {
-        return toDictionary(propertiesMergeWithOsgiMetadata(target, configAdmin, toMap(properties)));
+    /**
+     * Convert key/value pairs to dictionary
+     * @param args Key/value pairs
+     * @return Dictionary
+     */
+    public static Dictionary<String, Object> toDictionary(Object... args) {
+        return toDictionary(toMap(args));
     }
     
     /**
-     * Merge service properties from three sources (with this precedence):
-     * 1. Properties defined in calling unit test code
-     * 2. Properties from ConfigurationAdmin
-     * 3. Properties from OSGi SCR metadata
-     * @param target Target service
-     * @param configAdmin Configuration admin or null if none is registered
-     * @param properties Properties from unit test code or null if none where passed
-     * @return Merged properties
+     * Convert key/value pairs to map
+     * @param args Key/value pairs
+     * @return Map
      */
-    public static Map<String, Object> propertiesMergeWithOsgiMetadata(Object target,
-            ConfigurationAdmin configAdmin,
-            Map<String, Object> properties) {
-        Map<String, Object> mergedProperties = new HashMap<String, Object>();
-        
-        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(target.getClass());
-        if (metadata != null) {
-            Map<String,Object> metadataProperties = metadata.getProperties();
-            if (metadataProperties != null) {
-                mergedProperties.putAll(metadataProperties);
-
-                // merge with configuration from config admin
-                if (configAdmin != null) {
-                    Object pid = metadataProperties.get(Constants.SERVICE_PID);
-                    if (pid != null) {
-                        try {
-                            Configuration config = configAdmin.getConfiguration(pid.toString());
-                            mergedProperties.putAll(toMap(config.getProperties()));
-                        }
-                        catch (IOException ex) {
-                            throw new RuntimeException("Unable to read config for pid " + pid, ex);
-                        }
-                    }
-                }
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> toMap(Object... args) {
+        if (args == null || args.length == 0) {
+            return Collections.emptyMap();
+        }
+        if (args.length == 1) {
+            if (args[0] instanceof Map) {
+                return (Map)args[0];
+            }
+            else if (args[0] instanceof Dictionary) {
+                return toMap((Dictionary)args[0]);
             }
         }
-        
-        // merge with properties from calling unit test code
-        if (properties != null) {
-            mergedProperties.putAll(properties);
+        if (args.length % 2 != 0) {
+            throw new IllegalArgumentException("args must be an even number of name/values:" + Arrays.asList(args));
         }
-        
-        return mergedProperties;
+        final Map<String, Object> result = new HashMap<>();
+        for (int i=0 ; i < args.length; i+=2) {
+            result.put(args[i].toString(), args[i+1]);
+        }
+        return result;
     }
     
 }
