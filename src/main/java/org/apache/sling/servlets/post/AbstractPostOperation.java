@@ -214,6 +214,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      * @param session The JCR session
      * @param request The http request
      * @return {@code true} if a save is required.
+     * @throws RepositoryException
      */
     protected boolean isSessionSaveRequired(Session session, SlingHttpServletRequest request)
             throws RepositoryException {
@@ -226,6 +227,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      * @param path The path
      * @param session The JCR session
      * @return The path without the workspace
+     * @throws RepositoryException
      */
     protected String removeAndValidateWorkspace(String path, Session session) throws RepositoryException {
         final int wsSepPos = path.indexOf(":/");
@@ -364,9 +366,9 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     /**
      * Orders the given node according to the specified command. The following
-     * syntax is supported: <xmp> | first | before all child nodes | before A |
+     * syntax is supported: &lt;xmp&gt; | first | before all child nodes | before A |
      * before child node A | after A | after child node A | last | after all
-     * nodes | N | at a specific position, N being an integer </xmp>
+     * nodes | N | at a specific position, N being an integer &lt;/xmp&gt;
      *
      * @param request The http request
      * @param item node to order
