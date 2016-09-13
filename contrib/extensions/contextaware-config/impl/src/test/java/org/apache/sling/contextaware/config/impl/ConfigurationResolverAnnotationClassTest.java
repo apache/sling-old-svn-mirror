@@ -54,7 +54,7 @@ public class ConfigurationResolverAnnotationClassTest {
 
     @Before
     public void setUp() {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);;
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         // config resources

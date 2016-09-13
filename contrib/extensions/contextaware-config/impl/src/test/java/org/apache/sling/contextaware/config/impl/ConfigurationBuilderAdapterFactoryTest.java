@@ -38,7 +38,7 @@ public class ConfigurationBuilderAdapterFactoryTest {
     
     @Before
     public void setUp() {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);;
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
         context.registerInjectActivateService(new ConfigurationResolverImpl());
         context.registerInjectActivateService(new ConfigurationBuilderAdapterFactory());
 

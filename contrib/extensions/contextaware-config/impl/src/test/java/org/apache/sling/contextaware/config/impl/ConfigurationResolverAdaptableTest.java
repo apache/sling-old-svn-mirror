@@ -51,7 +51,7 @@ public class ConfigurationResolverAdaptableTest {
 
     @Before
     public void setUp() {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);;
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
         underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
 
         context.addModelsForPackage("org.apache.sling.contextaware.config.example");

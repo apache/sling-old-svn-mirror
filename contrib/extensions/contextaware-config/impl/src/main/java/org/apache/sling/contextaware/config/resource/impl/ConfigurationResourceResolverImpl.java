@@ -33,18 +33,31 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Reference
     private ContextPathStrategyMultiplexer contextPathStrategy;
-    
     @Reference
     private ConfigurationResourceResolvingStrategyMultiplexer configurationResourceResolvingStrategy;
+    @Reference
+    private ConfigurationResourcePersistenceStrategyMultiplexer configurationResourcePersistenceStrategy;
 
     @Override
     public Resource getResource(Resource resource, String bucketName, String configName) {
-        return configurationResourceResolvingStrategy.getResource(resource, bucketName, configName);
+        Resource configResource = configurationResourceResolvingStrategy.getResource(resource, bucketName, configName);
+        if (configResource == null) {
+            return null;
+        }
+        return configurationResourcePersistenceStrategy.getResource(configResource);
     }
 
     @Override
     public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
-        return configurationResourceResolvingStrategy.getResourceCollection(resource, bucketName, configName);
+        Collection<Resource> configResources = configurationResourceResolvingStrategy.getResourceCollection(resource, bucketName, configName);
+        List<Resource> transformedResources = new ArrayList<>();
+        for (Resource configResource : configResources) {
+            Resource transformedResource = configurationResourcePersistenceStrategy.getResource(configResource);
+            if (transformedResource != null) {
+                transformedResources.add(transformedResource);
+            }
+        }
+        return transformedResources;
     }
 
     @Override
