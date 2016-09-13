@@ -140,8 +140,8 @@ public class SlingAuthenticatorTest extends TestCase {
      */
     public void test_siblingNodeShouldNotHaveAuthenticationInfo() throws Throwable {
         final String AUTH_TYPE = "AUTH_TYPE_TEST";
-        final String PROTECTED_PATH = "/test";
-        final String REQUEST_NOT_PROTECTED_PATH = "/test2";
+        final String PROTECTED_PATH = "/content/en/test";
+        final String REQUEST_NOT_PROTECTED_PATH = "/content/en/test2";
 
         SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
 
@@ -166,8 +166,8 @@ public class SlingAuthenticatorTest extends TestCase {
      */
     public void test_childNodeShouldHaveAuthenticationInfo() throws Throwable {
         final String AUTH_TYPE = "AUTH_TYPE_TEST";
-        final String PROTECTED_PATH = "/test";
-        final String REQUEST_CHILD_NODE = "/test/childnodetest";
+        final String PROTECTED_PATH = "/content/en/test";
+        final String REQUEST_CHILD_NODE = "/content/en/test/childnodetest";
 
         SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
 
@@ -223,7 +223,7 @@ public class SlingAuthenticatorTest extends TestCase {
      * Builds an auth handler for a specific path;
      * @param authType             name of the auth for this path
      * @param authProtectedPath    path protected by the auth handler
-     * @return
+     * @return AbstractAuthenticationHandlerHolder with only an AuthenticationInfo
      */
     private AbstractAuthenticationHandlerHolder buildAuthHolderForAuthTypeAndPath(final String authType, final String authProtectedPath) {
         return new AbstractAuthenticationHandlerHolder(authProtectedPath, null) {
@@ -248,6 +248,41 @@ public class SlingAuthenticatorTest extends TestCase {
 
             }
         };
+    }
+
+    public void test_childNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test/test2";
+        final String handlerPath = "/content/test";
+
+        assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
+    public void test_siblingNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test2";
+        final String handlerPath = "/content/test";
+
+        assertFalse(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
+    public void test_actualNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "/content/test";
+
+        assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
+    public void test_rootNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "/";
+
+        assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
+    public void test_emptyNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "";
+
+        assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
     }
 
 }

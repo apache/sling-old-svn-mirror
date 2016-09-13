@@ -543,9 +543,9 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderList = holdersArray[m];
             if ( holderList != null ) {
                 for (AbstractAuthenticationHandlerHolder holder : holderList) {
-                    if (path.startsWith(holder.path)) {
+                    if (new AuthenticationHandlerPath(path, holder.path).isNodeRequiresAuthHandler()) {
                         log.debug("login: requesting authentication using handler: {}",
-                            holder);
+                                holder);
 
                         try {
                             done = holder.requestCredentials(request, response);
@@ -604,7 +604,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderSet = holdersArray[m];
             if (holderSet != null) {
                 for (AbstractAuthenticationHandlerHolder holder : holderSet) {
-                    if (path.startsWith(holder.path)) {
+                    if (new AuthenticationHandlerPath(path, holder.path).isNodeRequiresAuthHandler()) {
                         log.debug("logout: dropping authentication using handler: {}",
                             holder);
 
@@ -723,7 +723,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> local = localArray[m];
             if (local != null) {
                 for (AbstractAuthenticationHandlerHolder holder : local) {
-                    if (path.startsWith(holder.path)) {
+                    if (new AuthenticationHandlerPath(path, holder.path).isNodeRequiresAuthHandler()) {
                         final AuthenticationInfo authInfo = holder.extractCredentials(
                             request, response);
 
@@ -917,7 +917,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AuthenticationRequirementHolder> holders = holderSetArray[m];
             if (holders != null) {
                 for (AuthenticationRequirementHolder holder : holders) {
-                    if (path.startsWith(holder.path)) {
+                    if (new AuthenticationHandlerPath(path, holder.path).isNodeRequiresAuthHandler()) {
                         return !holder.requiresAuthentication();
                     }
                 }
@@ -1637,6 +1637,37 @@ public class SlingAuthenticator implements Authenticator,
                 (org.apache.sling.engine.auth.AuthenticationHandler) handler,
                 serviceReference);
         }
+    }
+
+    /**
+     * SLING-6053
+     * Auth handler is required for the node and for all his children.
+     * Solved the case when sibling node name startsWith same name.
+     * <p>
+     * Eg: node: /page & node /page1
+     */
+    static class AuthenticationHandlerPath {
+
+        private final String requestPath;
+        private final String handlerPath;
+
+        AuthenticationHandlerPath(final String requestPath, final String handlerPath) {
+            this.requestPath = requestPath;
+            this.handlerPath = handlerPath;
+        }
+
+        boolean isNodeRequiresAuthHandler() {
+            if (requestPath.equalsIgnoreCase(handlerPath)) {
+                return true;
+            }
+            if (requestPath.startsWith(handlerPath)) {
+                final String suffix = requestPath.substring(handlerPath.length());
+                //if is child node auth handler is applied;
+                return suffix.contains("/");
+            }
+            return false;
+        }
+
     }
 
 }
