@@ -120,8 +120,8 @@ public class SlingAuthenticatorTest extends TestCase {
     }
 
     /**
-     * Test is KO, not working.
-     *
+     * Test is OK after commit 	424e412
+     * JIRA: SLING-6053
      * Issue can be reproduced with the following steps:
      *
      * Create node "/page"
