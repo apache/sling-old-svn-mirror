@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.spi;
+package org.apache.sling.contextaware.config.spi;
 
 import javax.annotation.Nonnull;
 
@@ -24,11 +24,11 @@ import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Defines how configuration data is stored in the resource hierarchy.
+ * Defines how configuration data is stored in the configuration resource.
  * This SPI allows application to define their own content structure and node types to be used for configuration data storage.
  */
 @ConsumerType
-public interface ConfigurationResourcePersistenceStrategy {
+public interface ConfigurationPersistenceStrategy {
 
     /**
      * Allows the strategy to transform the given configuration resource according to it's persistent strategies.

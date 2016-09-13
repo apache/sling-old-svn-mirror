@@ -29,7 +29,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
-import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,8 +49,7 @@ public class ConfigurationResolverValueMapTest {
 
     @Before
     public void setUp() {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
-        underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
+        underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
 
         // config resources
         context.build().resource("/conf/content/site2/sling:configs/sampleName", 

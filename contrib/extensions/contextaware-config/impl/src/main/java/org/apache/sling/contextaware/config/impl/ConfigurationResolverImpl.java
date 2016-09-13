@@ -24,17 +24,20 @@ import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 @Component(service=ConfigurationResolver.class, immediate=true)
 public class ConfigurationResolverImpl implements ConfigurationResolver {
 
-    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    @Reference
     private ConfigurationResourceResolver configurationResourceResolver;
 
+    @Reference
+    private ConfigurationPersistenceStrategyMultiplexer configurationResourcePersistenceStrategy;
+    
     @Override
     public ConfigurationBuilder get(Resource resource) {
-        return new ConfigurationBuilderImpl(resource, configurationResourceResolver);
+        return new ConfigurationBuilderImpl(resource, this,
+                configurationResourceResolver, configurationResourcePersistenceStrategy);
     }
 
 }

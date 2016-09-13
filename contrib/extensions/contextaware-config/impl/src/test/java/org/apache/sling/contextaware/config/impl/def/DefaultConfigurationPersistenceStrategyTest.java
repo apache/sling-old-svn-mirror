@@ -16,20 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl.def;
+package org.apache.sling.contextaware.config.impl.def;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistenceStrategy;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 
-public class DefaultConfigurationResourcePersistenceStrategyTest {
+public class DefaultConfigurationPersistenceStrategyTest {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -43,7 +43,7 @@ public class DefaultConfigurationResourcePersistenceStrategyTest {
     
     @Test
     public void testGetResource() {
-        ConfigurationResourcePersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourcePersistenceStrategy());
+        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         Resource result = underTest.getResource(resource);
         assertSame(resource, result);
@@ -51,7 +51,7 @@ public class DefaultConfigurationResourcePersistenceStrategyTest {
 
     @Test
     public void testDisabled() {
-        ConfigurationResourcePersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourcePersistenceStrategy(),
+        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy(),
                 "enabled", false);
         
         assertNull(underTest.getResource(resource));

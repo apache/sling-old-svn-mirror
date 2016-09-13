@@ -30,7 +30,6 @@ import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.example.SimpleSlingModel;
-import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,8 +50,7 @@ public class ConfigurationResolverAdaptableTest {
 
     @Before
     public void setUp() {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
-        underTest = context.registerInjectActivateService(new ConfigurationResolverImpl());
+        underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
 
         context.addModelsForPackage("org.apache.sling.contextaware.config.example");
         

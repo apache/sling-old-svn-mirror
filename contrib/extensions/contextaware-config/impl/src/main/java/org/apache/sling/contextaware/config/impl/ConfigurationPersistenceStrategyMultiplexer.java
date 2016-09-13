@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.impl;
 
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistenceStrategy;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -34,22 +34,22 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * Detects all {@link ConfigurationResourcePersistenceStrategy} implementations in the container
  * and consolidates their result based on service ranking.
  */
-@Component(service = ConfigurationResourcePersistenceStrategyMultiplexer.class,
+@Component(service = ConfigurationPersistenceStrategyMultiplexer.class,
 reference={
-        @Reference(name="configurationResourcePersistenceStrategy", service=ConfigurationResourcePersistenceStrategy.class,
+        @Reference(name="configurationResourcePersistenceStrategy", service=ConfigurationPersistenceStrategy.class,
                 bind="bindConfigurationResourcePersistenceStrategy", unbind="unbindConfigurationResourcePersistenceStrategy",
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ConfigurationResourcePersistenceStrategyMultiplexer implements ConfigurationResourcePersistenceStrategy {
+public class ConfigurationPersistenceStrategyMultiplexer implements ConfigurationPersistenceStrategy {
     
-    private RankedServices<ConfigurationResourcePersistenceStrategy> items = new RankedServices<>(Order.DESCENDING);
+    private RankedServices<ConfigurationPersistenceStrategy> items = new RankedServices<>(Order.DESCENDING);
         
-    protected void bindConfigurationResourcePersistenceStrategy(ConfigurationResourcePersistenceStrategy configurationResourcePersistenceStrategy, Map<String, Object> props) {
+    protected void bindConfigurationResourcePersistenceStrategy(ConfigurationPersistenceStrategy configurationResourcePersistenceStrategy, Map<String, Object> props) {
         items.bind(configurationResourcePersistenceStrategy, props);
     }
     
-    protected void unbindConfigurationResourcePersistenceStrategy(ConfigurationResourcePersistenceStrategy configurationResourcePersistenceStrategy, Map<String, Object> props) {
+    protected void unbindConfigurationResourcePersistenceStrategy(ConfigurationPersistenceStrategy configurationResourcePersistenceStrategy, Map<String, Object> props) {
         items.unbind(configurationResourcePersistenceStrategy, props);
     }
 
@@ -58,7 +58,7 @@ public class ConfigurationResourcePersistenceStrategyMultiplexer implements Conf
      */    
     @Override
     public Resource getResource(Resource resource) {
-        for (ConfigurationResourcePersistenceStrategy item : items) {
+        for (ConfigurationPersistenceStrategy item : items) {
             Resource result = item.getResource(resource);
             if (result != null) {
                 return result;

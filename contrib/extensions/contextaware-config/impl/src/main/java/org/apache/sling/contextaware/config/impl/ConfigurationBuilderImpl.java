@@ -28,22 +28,31 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
+import org.apache.sling.contextaware.config.ConfigurationResolver;
+import org.apache.sling.contextaware.config.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.contextaware.config.impl.metadata.AnnotationClassParser;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private static final String CONFIGS_PARENT_NAME = "sling:configs";
 
     private final Resource contentResource;
+    private final ConfigurationResolver configurationResolver;
     private final ConfigurationResourceResolver configurationResourceResolver;
+    private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
 
     private String configName;
 
     public ConfigurationBuilderImpl(final Resource resource,
-            final ConfigurationResourceResolver configurationResourceResolver) {
+            final ConfigurationResolver configurationResolver,
+            final ConfigurationResourceResolver configurationResourceResolver,
+            final ConfigurationPersistenceStrategy configurationPersistenceStrategy) {
         this.contentResource = resource;
+        this.configurationResolver = configurationResolver;
         this.configurationResourceResolver = configurationResourceResolver;
+        this.configurationPersistenceStrategy = configurationPersistenceStrategy;
     }
 
     @Override
@@ -82,7 +91,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @param <T> Target class
      */
     private interface Converter<T> {
-        T convert(Resource resource, Class<T> clazz);
+        T convert(Resource resource, Class<T> clazz, String name);
     }
 
     /**
@@ -98,7 +107,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             validateConfigurationName(name);
             configResource = this.configurationResourceResolver.getResource(this.contentResource, CONFIGS_PARENT_NAME, name);
         }
-        return converter.convert(configResource, clazz);
+        return convert(configResource, clazz, converter, name);
     }
 
     /**
@@ -112,16 +121,25 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (this.contentResource != null) {
            validateConfigurationName(name);
            final Collection<T> result = new ArrayList<>();
-           for(final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, CONFIGS_PARENT_NAME, name)) {
-               final T obj = converter.convert(rsrc, clazz);
-               if ( obj != null ) {
+           for (final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, CONFIGS_PARENT_NAME, name)) {
+               final T obj = convert(rsrc, clazz, converter, name + "/" + rsrc.getName());
+               if (obj != null) {
                    result.add(obj);
                }
            }
            return result;
-        } else {
+        }
+        else {
             return Collections.emptyList();
         }
+    }
+    
+    private <T> T convert(Resource resource, Class<T> clazz, Converter<T> converter, String name) {
+        Resource configResource = null;
+        if (resource != null) {
+            configResource = configurationPersistenceStrategy.getResource(resource);
+        }
+        return converter.convert(configResource, clazz, name);
     }
 
     // --- Annotation class support ---
@@ -148,10 +166,21 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         }
     }
 
-    private static class AnnotationConverter<T> implements Converter<T> {
+    private class AnnotationConverter<T> implements Converter<T> {
         @Override
-        public T convert(Resource resource, Class<T> clazz) {
-            return ConfigurationProxy.get(resource, clazz);
+        public T convert(final Resource resource, final Class<T> clazz, final String name) {
+            return ConfigurationProxy.get(resource, clazz, new ChildResolver() {
+                @Override
+                public <C> C getChild(String configName, Class<C> clazz) {
+                    String childName = name + "/" + configName;
+                    return configurationResolver.get(contentResource).name(childName).as(clazz);
+                }
+                @Override
+                public <C> Collection<C> getChildren(String configName, Class<C> clazz) {
+                    String childName = name + "/" + configName;
+                    return configurationResolver.get(contentResource).name(childName).asCollection(clazz);
+                }
+            });
         }
     }
     
@@ -169,7 +198,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private static class ValueMapConverter implements Converter<ValueMap> {
         @Override
-        public ValueMap convert(Resource resource, Class<ValueMap> clazz) {
+        public ValueMap convert(Resource resource, Class<ValueMap> clazz, String name) {
             return ResourceUtil.getValueMap(resource);
         }
     }
@@ -188,7 +217,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private static class AdaptableConverter<T> implements Converter<T> {
         @Override
-        public T convert(Resource resource, Class<T> clazz) {
+        public T convert(Resource resource, Class<T> clazz, String name) {
             if (resource == null || clazz == ConfigurationBuilder.class) {
                 return null;
             }

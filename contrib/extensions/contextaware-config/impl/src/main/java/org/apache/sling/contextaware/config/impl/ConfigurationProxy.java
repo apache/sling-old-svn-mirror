@@ -22,9 +22,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -55,7 +54,7 @@ final class ConfigurationProxy {
      * @return Dynamic proxy object
      */
     @SuppressWarnings("unchecked")
-    public @Nonnull static <T> T get(@Nullable Resource resource, @Nonnull Class<T> clazz) {
+    public @Nonnull static <T> T get(@Nullable Resource resource, @Nonnull Class<T> clazz, ChildResolver childResolver) {
 
         // only annotation interface classes are supported
         if (!AnnotationClassParser.isContextAwareConfig(clazz)) {
@@ -66,7 +65,15 @@ final class ConfigurationProxy {
         // wrap in caching invocation handler so client code can call all methods multiple times
         // without having to worry about performance
         return (T)Proxy.newProxyInstance(clazz.getClassLoader(), new Class[] { clazz },
-                new CachingInvocationHandler(new DynamicProxyInvocationHandler(resource)));
+                new CachingInvocationHandler(new DynamicProxyInvocationHandler(resource, childResolver)));
+    }
+    
+    /**
+     * Resolves nested configurations.
+     */
+    public static interface ChildResolver {
+        <T> T getChild(String configName, Class<T> clazz);
+        <T> Collection<T> getChildren(String configName, Class<T> clazz);        
     }
 
     /**
@@ -75,9 +82,11 @@ final class ConfigurationProxy {
     static class DynamicProxyInvocationHandler implements InvocationHandler {
 
         private final Resource resource;
+        private final ChildResolver childResolver;
 
-        private DynamicProxyInvocationHandler(Resource resource) {
+        private DynamicProxyInvocationHandler(Resource resource, ChildResolver childResolver) {
             this.resource = resource;
+            this.childResolver = childResolver;
         }
 
         @Override
@@ -92,19 +101,12 @@ final class ConfigurationProxy {
                 componentType = targetType.getComponentType();
             }
             if (AnnotationClassParser.isContextAwareConfig(componentType)) {
-                Resource childResource = resource != null ? resource.getChild(propName) : null;
                 if (isArray) {
-                    List<Object> listItems = new ArrayList<>();
-                    if ( childResource != null ) {
-                        Iterable<Resource> listItemResources = childResource.getChildren();
-                        for (Resource listItemResource : listItemResources) {
-                            listItems.add(get(listItemResource, componentType));
-                        }
-                    }
+                    Collection<?> listItems = childResolver.getChildren(propName, componentType);
                     return listItems.toArray((Object[])Array.newInstance(componentType, listItems.size()));
                 }
                 else {
-                    return ConfigurationProxy.get(childResource, componentType);
+                    return childResolver.getChild(propName, componentType);
                 }
             }
 
@@ -139,15 +141,15 @@ final class ConfigurationProxy {
 
         }
 
-    }
-
-    /**
-     * Ensures the given type is support for reading configuration parameters.
-     * @param type Type
-     * @return true if type is supported
-     */
-    static boolean isValidType(Class<?> type) {
-        return PropertyMetadata.SUPPORTED_TYPES.contains(type);
+        /**
+         * Ensures the given type is support for reading configuration parameters.
+         * @param type Type
+         * @return true if type is supported
+         */
+        private boolean isValidType(Class<?> type) {
+            return PropertyMetadata.SUPPORTED_TYPES.contains(type);
+        }
+        
     }
 
     /**

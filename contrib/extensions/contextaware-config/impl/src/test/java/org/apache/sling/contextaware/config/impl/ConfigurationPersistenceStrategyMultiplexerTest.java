@@ -16,33 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.impl;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourcePersistenceStrategy;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistenceStrategy;
+import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
-public class ConfigurationResourcePersistenceStrategyMultiplexerTest {
+public class ConfigurationPersistenceStrategyMultiplexerTest {
 
     @Rule
     public SlingContext context = new SlingContext();
     
-    private ConfigurationResourcePersistenceStrategyMultiplexer underTest;
+    private ConfigurationPersistenceStrategyMultiplexer underTest;
     
     private Resource resource1;
     private Resource resource2;
     
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ConfigurationResourcePersistenceStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         resource1 = context.create().resource("/conf/test1");
         resource2 = context.create().resource("/conf/test2");
     }
@@ -54,7 +54,7 @@ public class ConfigurationResourcePersistenceStrategyMultiplexerTest {
 
     @Test
     public void testWithDefaultStrategy() {
-        context.registerInjectActivateService(new DefaultConfigurationResourcePersistenceStrategy());
+        context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
 
         Resource result = underTest.getResource(resource1);
         assertSame(resource1, result);
@@ -64,7 +64,7 @@ public class ConfigurationResourcePersistenceStrategyMultiplexerTest {
     public void testMultipleStrategies() {
         
         // strategy 1
-        context.registerService(ConfigurationResourcePersistenceStrategy.class, new ConfigurationResourcePersistenceStrategy() {
+        context.registerService(ConfigurationPersistenceStrategy.class, new ConfigurationPersistenceStrategy() {
             @Override
             public Resource getResource(Resource resource) {
                 return resource2;
@@ -72,7 +72,7 @@ public class ConfigurationResourcePersistenceStrategyMultiplexerTest {
         }, Constants.SERVICE_RANKING, 2000);
         
         // strategy 2
-        context.registerService(ConfigurationResourcePersistenceStrategy.class, new ConfigurationResourcePersistenceStrategy() {
+        context.registerService(ConfigurationPersistenceStrategy.class, new ConfigurationPersistenceStrategy() {
             @Override
             public Resource getResource(Resource resource) {
                 return resource1;

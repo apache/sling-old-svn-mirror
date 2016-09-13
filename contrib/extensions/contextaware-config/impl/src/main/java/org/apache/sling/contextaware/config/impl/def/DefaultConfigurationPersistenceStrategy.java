@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl.def;
+package org.apache.sling.contextaware.config.impl.def;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistenceStrategy;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -27,9 +27,9 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@Component(service = ConfigurationResourcePersistenceStrategy.class)
-@Designate(ocd=DefaultConfigurationResourcePersistenceStrategy.Config.class)
-public class DefaultConfigurationResourcePersistenceStrategy implements ConfigurationResourcePersistenceStrategy {
+@Component(service = ConfigurationPersistenceStrategy.class)
+@Designate(ocd=DefaultConfigurationPersistenceStrategy.Config.class)
+public class DefaultConfigurationPersistenceStrategy implements ConfigurationPersistenceStrategy {
 
     @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Resource Persistence Strategy",
             description="Directly uses configuration resources for storing configuration data.")

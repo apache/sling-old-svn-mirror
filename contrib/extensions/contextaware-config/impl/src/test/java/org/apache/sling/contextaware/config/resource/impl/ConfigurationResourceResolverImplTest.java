@@ -25,12 +25,10 @@ import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
-import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourcePersistenceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.osgi.framework.Constants;
 
 import com.google.common.collect.ImmutableList;
 
@@ -92,47 +90,6 @@ public class ConfigurationResourceResolverImplTest {
                 col2);
     }
 
-    @Test
-    public void testWithCustomPersistenceStrategy() {
-        
-        // custom strategy which redirects all config resources to a jcr:content subnode
-        context.registerService(ConfigurationResourcePersistenceStrategy.class, new ConfigurationResourcePersistenceStrategy() {
-            @Override
-            public Resource getResource(Resource resource) {
-                return resource.getChild("jcr:content");
-            }
-        }, Constants.SERVICE_RANKING, 2000);
-        
-        // add jcr:content subnodes
-        context.build()
-            .resource("/conf/site1/sling:test/test/jcr:content")
-            .resource("/conf/site1/sling:test/feature/c/jcr:content")
-            .resource("/conf/site2/sling:test/feature/c/jcr:content")
-            .resource("/conf/site2/sling:test/feature/d/jcr:content")
-            .resource("/apps/conf/sling:test/feature/a/jcr:content")
-            .resource("/libs/conf/sling:test/test/jcr:content")
-            .resource("/libs/conf/sling:test/feature/b/jcr:content");
-        
-        
-        assertEquals("/conf/site1/sling:test/test/jcr:content", underTest.getResource(site1Page1, BUCKET, "test").getPath());
-        assertEquals("/libs/conf/sling:test/test/jcr:content", underTest.getResource(site2Page1, BUCKET, "test").getPath());
-
-        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
-                "/conf/site1/sling:test/feature/c/jcr:content",
-                "/apps/conf/sling:test/feature/a/jcr:content", 
-                "/libs/conf/sling:test/feature/b/jcr:content" },
-                col1);
-
-        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
-                "/conf/site2/sling:test/feature/c/jcr:content",
-                "/conf/site2/sling:test/feature/d/jcr:content",
-                "/apps/conf/sling:test/feature/a/jcr:content",
-                "/libs/conf/sling:test/feature/b/jcr:content" },
-                col2);
-    }
-    
     @Test
     public void testGetContextPath() {
         assertEquals("/content/site1", underTest.getContextPath(site1Page1));

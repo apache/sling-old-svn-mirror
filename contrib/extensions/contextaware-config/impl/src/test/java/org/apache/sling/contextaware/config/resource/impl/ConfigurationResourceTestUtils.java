@@ -25,7 +25,6 @@ import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
-import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourcePersistenceStrategy;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -51,7 +50,7 @@ public final class ConfigurationResourceTestUtils {
     }
     
     /**
-     * Register all services for {@link org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver}.
+     * Register all services for {@link ConfigurationResourceResolver}.
      * @param context Sling context
      */
     public static ConfigurationResourceResolver registerConfigurationResourceResolver(SlingContext context) {
@@ -59,8 +58,6 @@ public final class ConfigurationResourceTestUtils {
         context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
         context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
         context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
-        context.registerInjectActivateService(new DefaultConfigurationResourcePersistenceStrategy());
-        context.registerInjectActivateService(new ConfigurationResourcePersistenceStrategyMultiplexer());
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
     
