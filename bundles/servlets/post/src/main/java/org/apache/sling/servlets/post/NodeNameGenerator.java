@@ -27,7 +27,7 @@ public interface NodeNameGenerator {
     /**
      * Get the to-be-created node name from the request.
      *
-     * @param req request
+     * @param request request
      * @param parentPath the path to the new node's parent
      * @param requirePrefix if true, ignore parameters which do not being with ./
      * @param defaultNodeNameGenerator the default node name generator
