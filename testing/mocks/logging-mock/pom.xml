@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.logging-mock</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing Mock Log Configuration</name>
     <description>Default simple SLF4J log configuration for Mock libraries.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.logging-mock-2.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.logging-mock-2.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.logging-mock-2.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/logging-mock</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/logging-mock</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/logging-mock</url>
     </scm>
 
     <dependencies>
