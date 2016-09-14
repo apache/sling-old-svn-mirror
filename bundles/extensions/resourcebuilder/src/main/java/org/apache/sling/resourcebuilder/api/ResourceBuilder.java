@@ -56,7 +56,7 @@ public interface ResourceBuilder {
      * @param filename The name of the created file
      * @param data The file data
      * @param mimeType If null, use the Sling MimeTypeService to set the mime type
-     * @param lastModified if < 0, current time is used
+     * @param lastModified if &lt; 0, current time is used
      * @return this builder
      */
     ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified);
