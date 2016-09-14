@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-    <version>1.8.0</version>
+    <version>1.8.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing OSGi Mock</name>
     <description>Mock implementation of selected OSGi APIs.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.osgi-mock-1.8.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.osgi-mock-1.8.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.osgi-mock-1.8.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/branches/testing/mocks/osgi-mock-1.x</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/branches/testing/mocks/osgi-mock-1.x</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/branches/testing/mocks/osgi-mock-1.x</url>
     </scm>
 
     <dependencies>
