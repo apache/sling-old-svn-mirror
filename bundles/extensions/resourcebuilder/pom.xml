@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourcebuilder</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Builder</name>
@@ -53,9 +53,9 @@
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
     </properties>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourcebuilder-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourcebuilder-1.0.0</developerConnection>
-        <url>https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourcebuilder-1.0.0</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/resourcebuilder</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/resourcebuilder</developerConnection>
+        <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/resourcebuilder</url>
     </scm>
     
     <build>
