@@ -50,22 +50,18 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     private final Logger log = LoggerFactory.getLogger(getClass());
     private JSONWriter writer;
     
-    /** @inheritDoc */
     public Renderer createRenderer() { 
         return new JsonRenderer();
     }
 
-    /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());
     }
 
-    /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
     }
 
-    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         if(writer != null) {
             throw new IllegalStateException("Output Writer already set");
@@ -81,7 +77,6 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         }
     }
 
-    /** @inheritDoc */
     public void cleanup() {
         if(writer != null) {
             try {
@@ -93,7 +88,6 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         writer = null;
     }
 
-    /** @inheritDoc */
     public void info(String cssClass, String info) {
         try {
             startItem("info");
@@ -105,7 +99,6 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         }
     }
 
-    /** @inheritDoc */
     public void list(String cssClass, Collection<String> data) {
         try {
             startItem("list");
@@ -122,12 +115,10 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         }
     }
 
-    /** @inheritDoc */
     public void title(int level, String title) {
         // Titles are not needed in JSON
     }
     
-    /** @inheritDoc */
     public void link(String info, String url, String method) {
         try {
             startItem("link");
@@ -140,7 +131,6 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         }
     }
 
-    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }

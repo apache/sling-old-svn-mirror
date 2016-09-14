@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
-import org.apache.sling.junit.SlingTestContext;
 import org.apache.sling.junit.SlingTestContextProvider;
 import org.apache.sling.junit.TestSelector;
 import org.apache.sling.junit.TestsManager;
@@ -72,14 +71,12 @@ public class TestsManagerImpl implements TestsManager {
         bundleContext = null;
     }
     
-    /** @inheritDoc */
     public void clearCaches() {
         log.debug("Clearing internal caches");
         lastModified.clear();
         lastTrackingCount = -1;
     }
     
-    /** @inheritDoc */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException {
         maybeUpdateProviders();
 
@@ -104,7 +101,6 @@ public class TestsManagerImpl implements TestsManager {
         return provider.createTestClass(testName);
     }
 
-    /** inheritDoc */
     public Collection<String> getTestNames(TestSelector selector) {
         maybeUpdateProviders();
         
@@ -172,7 +168,6 @@ public class TestsManagerImpl implements TestsManager {
         lastTrackingCount = tracker.getTrackingCount();
     }
 
-    /** @inheritDoc */
     public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception {
         renderer.title(2, "Running tests");
         final JUnitCore junit = new JUnitCore();
@@ -209,7 +204,6 @@ public class TestsManagerImpl implements TestsManager {
         }
     }
 
-    /** @inheritDoc */
     public void listTests(Collection<String> testNames, Renderer renderer) throws Exception {
         renderer.title(2, "Test classes");
         final String note = "The test set can be restricted using partial test names"
