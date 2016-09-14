@@ -29,20 +29,20 @@
 
     <artifactId>org.apache.sling.servlet-helpers</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.0</version>
 
     <name>Apache Sling Servlet Helpers</name>
     <description>Mock implementations of SlingHttpServletRequest, SlingHttpServletResponse and related classes.</description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/servlet-helpers
+            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlet-helpers-1.1.0
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/servlet-helpers
+            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlet-helpers-1.1.0
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/servlet-helpers
+            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.servlet-helpers-1.1.0
         </url>
     </scm>
 
