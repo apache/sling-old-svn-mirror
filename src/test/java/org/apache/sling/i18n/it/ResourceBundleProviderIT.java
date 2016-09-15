@@ -80,6 +80,7 @@ public class ResourceBundleProviderIT {
                 SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
                 CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString())),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.4.0")
                 ).getOptions();
     }
