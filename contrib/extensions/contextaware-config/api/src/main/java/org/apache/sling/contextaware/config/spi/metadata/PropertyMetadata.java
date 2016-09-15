@@ -25,6 +25,7 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -51,14 +52,40 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
     private final Class<T> type;
     private T defaultValue;
 
+    /**
+     * @param name Property name
+     * @param type Property type
+     */
+    @SuppressWarnings("unchecked")
     public PropertyMetadata(@Nonnull String name, @Nonnull Class<T> type) {
         super(name);
-        if (type == null || !isSupportedType(type)) {
+        Class<T> convertedType = (Class<T>)typeToPrimitive(type);
+        if (convertedType == null || !isSupportedType(convertedType)) {
             throw new IllegalArgumentException("Parameter '" + name + "': Invalid type " + type);
         }
-        this.type = type;
+        this.type = convertedType;
+    }
+
+    /**
+     * @param name Property name
+     * @param defaultValue Default value (also defines property type)
+     */
+    @SuppressWarnings("unchecked")
+    public PropertyMetadata(@Nonnull String name, @Nonnull T defaultValue) {
+        this(name, (Class<T>)defaultValue.getClass());
+        this.defaultValue = defaultValue;
     }
     
+    private static Class<?> typeToPrimitive(Class<?> clazz) {
+        if (clazz != String.class && !clazz.isPrimitive()) {
+            Class<?> type = ClassUtils.wrapperToPrimitive(clazz);
+            if (type != null) {
+                return type;
+            }
+        }
+        return clazz;
+    }
+
     private static boolean isSupportedType(Class<?> paramType) {
         if (paramType.isArray()) {
             return isSupportedType(paramType.getComponentType());

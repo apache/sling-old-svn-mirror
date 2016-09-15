@@ -18,11 +18,14 @@
  */
 package org.apache.sling.contextaware.config.management.impl;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.contextaware.config.management.ConfigurationData;
 import org.apache.sling.contextaware.config.management.ValueInfo;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
@@ -60,14 +63,21 @@ final class ConfigurationDataImpl implements ConfigurationData {
 
     @Override
     public ValueMap getValues() {
-        // TODO: merge with default values
         return properties;
     }
 
     @Override
     public ValueMap getEffectiveValues() {
-        // TODO: this may return different values when property inheritance is enabled
-        return getValues();
+        Map<String,Object> props = new HashMap<>();
+        if (configMetadata != null) {
+            for (PropertyMetadata<?> propertyMetadata : configMetadata.getPropertyMetadata().values()) {
+                if (propertyMetadata.getDefaultValue() != null) {
+                    props.put(propertyMetadata.getName(), propertyMetadata.getDefaultValue());
+                }
+            }
+        }
+        props.putAll(properties);
+        return new ValueMapDecorator(props);
     }
 
     @SuppressWarnings("unchecked")

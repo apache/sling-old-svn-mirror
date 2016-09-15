@@ -43,13 +43,12 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
 
     @Override
     public T getValue() {
-        return ObjectUtils.defaultIfNull(value, defaultValue);
+        return value;
     }
 
     @Override
     public T getEffectiveValue() {
-        // TODO: this may return different values when property inheritance is enabled
-        return getValue();
+        return ObjectUtils.defaultIfNull(value, defaultValue);
     }
 
     @Override
