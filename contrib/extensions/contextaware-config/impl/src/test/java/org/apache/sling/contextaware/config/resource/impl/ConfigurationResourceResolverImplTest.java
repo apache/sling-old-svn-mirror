@@ -46,6 +46,8 @@ public class ConfigurationResourceResolverImplTest {
 
     @Before
     public void setUp() {
+        context.registerInjectActivateService(new DefaultContextPathStrategy());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
         underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
 
         // content resources

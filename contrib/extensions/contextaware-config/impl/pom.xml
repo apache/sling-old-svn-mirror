@@ -60,6 +60,10 @@
                 <configuration>
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
+                    <instructions>
+                        <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html -->
+                        <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
+                    </instructions>
                 </configuration>
             </plugin>
         </plugins>
@@ -98,6 +102,12 @@
             <artifactId>org.apache.sling.xss</artifactId>
             <version>1.0.8</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
