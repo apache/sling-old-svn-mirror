@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
+import static org.apache.sling.contextaware.config.impl.ConfigurationResolverImpl.CONFIGS_PARENT_NAME;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,8 +37,6 @@ import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolv
 import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
-
-    private static final String CONFIGS_PARENT_NAME = "sling:configs";
 
     private final Resource contentResource;
     private final ConfigurationResolver configurationResolver;

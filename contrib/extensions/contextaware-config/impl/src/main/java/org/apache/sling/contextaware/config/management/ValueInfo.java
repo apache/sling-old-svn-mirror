@@ -18,25 +18,60 @@
  */
 package org.apache.sling.contextaware.config.management;
 
+import javax.annotation.CheckForNull;
+
 import org.apache.sling.contextaware.config.spi.metadata.PropertyMetadata;
 import org.osgi.annotation.versioning.ProviderType;
 
-//TODO: document interface, probably change to 
+/**
+ * Provides detailed information about a given configuration value.
+ * @param <T> Property type
+ */
 @ProviderType
 public interface ValueInfo<T> {
 
-    PropertyMetadata<T> getPropertyMetadata();
+    /**
+     * Property metadata.
+     * @return Property metadata. Null if no metadata exists.
+     */
+    @CheckForNull PropertyMetadata<T> getPropertyMetadata();
     
-    T getValue();
+    /**
+     * Get value stored for the current context path. No inherited value. No default value.
+     * @return Value
+     */
+    @CheckForNull T getValue();
     
-    T getEffectiveValue();
+    /**
+     * Get value storedf or the current context path, or inherited from upper levels, or the default value.
+     * @return Value
+     */
+    @CheckForNull T getEffectiveValue();
     
-    String getConfigSourcePath();
+    /**
+     * Get the path of the configuration resource the value is stored in.
+     * @return Resource path or null if no resource associated. 
+     */
+    @CheckForNull String getConfigSourcePath();
+
+    /**
+     * @return true if the value is not defined for the current context path but inherited from upper levels.
+     */
+    boolean isInherited();
     
-    boolean isDefault();
-    
+    /**
+     * @return true if the value is overrided by an configuration override provider.
+     */
     boolean isOverridden();
     
+    /**
+     * @return true if no value is defined but a default value is returned.
+     */
+    boolean isDefault();
+    
+    /**
+     * @return true if this value is locked on a higher level and is not allowed to be overridden.
+     */
     boolean isLocked();
     
 }

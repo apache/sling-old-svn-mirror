@@ -80,7 +80,7 @@ public class AnnotationClassParserTest {
         assertEquals("This is a configuration example with additional metadata.", metadata.getDescription());
         assertEquals(ImmutableMap.of("param1", "value1", "param2", "123"), metadata.getProperties());
         
-        Collection<PropertyMetadata<?>> propertyMetadataList = metadata.getPropertyMetadata();
+        Collection<PropertyMetadata<?>> propertyMetadataList = metadata.getPropertyMetadata().values();
         assertEquals(3, propertyMetadataList.size());
         
         for (PropertyMetadata<?> propertyMetadata : propertyMetadataList) {

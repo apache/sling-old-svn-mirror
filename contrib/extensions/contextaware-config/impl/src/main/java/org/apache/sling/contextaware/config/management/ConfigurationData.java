@@ -18,19 +18,43 @@
  */
 package org.apache.sling.contextaware.config.management;
 
+import java.util.Set;
+
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.osgi.annotation.versioning.ProviderType;
 
-// TODO: document interface, probably change to 
+/**
+ * Provides access to the configuration data and metadata for a given context path.
+ */
 @ProviderType
 public interface ConfigurationData {
 
-    @Nonnull ValueMap getValueMap();
+    /**
+     * List of property names defined in configuration metadata or values are defined for.
+     * @return Property names
+     */
+    @Nonnull Set<String> getPropertyNames();
 
-    @Nonnull ValueMap getEffectiveValueMap();
+    /**
+     * Configuration values stored for the given context path. No inherited values. No default values.
+     * @return Values
+     */
+    @Nonnull ValueMap getValues();
 
-    @Nonnull ValueInfo getValueInfo(String propertyName);
+    /**
+     * Configuration values stored for the given context path merged with inherited values and default values.
+     * @return Values
+     */
+    @Nonnull ValueMap getEffectiveValues();
+
+    /**
+     * Get detailed metadata information about the property value.
+     * @param propertyName Property name
+     * @return Value information. Null if neither property metadata nor an existing value exists.
+     */
+    @CheckForNull ValueInfo<?> getValueInfo(String propertyName);
     
 }
