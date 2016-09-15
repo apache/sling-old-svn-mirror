@@ -199,7 +199,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         // strategy: find first item among all configured paths
         int idx = 1;
         for (final String path : getResolvePaths(contentResource)) {
-            final Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            final Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
 
@@ -228,7 +228,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final List<Resource> result = new ArrayList<>();
         int idx = 1;
         for (String path : this.getResolvePaths(contentResource)) {
-            Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
             if (item != null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
