@@ -93,7 +93,6 @@ public class RequestParser implements TestSelector {
         return selectedMethodName;
     }
     
-    /** @inheritDoc */
     public boolean acceptTestName(String testName) {
         if(testNameSelector.length() == 0) {
             return true;
@@ -102,7 +101,6 @@ public class RequestParser implements TestSelector {
         }
     }
 
-    /** @inheritDoc */
     public String getSelectedTestMethodName() {
         return selectedMethodName;
     }

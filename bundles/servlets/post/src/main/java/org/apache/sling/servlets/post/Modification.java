@@ -74,7 +74,7 @@ public class Modification {
 
     /**
      * Records a 'moved' change.
-     * <p/>
+     * <p>
      * Note: the moved change only records the basic move command. the implied
      * changes on the moved properties and sub nodes are not recorded.
      *
@@ -87,7 +87,7 @@ public class Modification {
 
     /**
      * Records a 'copied' change.
-     * <p/>
+     * <p>
      * Note: the copy change only records the basic copy command. the implied
      * changes on the copied properties and sub nodes are not recorded.
      *

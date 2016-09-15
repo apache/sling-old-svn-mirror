@@ -45,7 +45,7 @@ public class SlingAuthenticatorTest extends TestCase {
         checkQuote("\"", "\"\\\"\"");
         checkQuote("simplevalue", "\"simplevalue\"");
         checkQuote("simple value", "\"simple+value\"");
-        checkQuote("email@address.com", "\"email%40address.com\"");
+        checkQuote("email@address.com", "\"email@address.com\"");
 
         checkQuote("string\ttab", "\"string%09tab\"");
         checkQuote("test中文", "\"test%E4%B8%AD%E6%96%87\"");

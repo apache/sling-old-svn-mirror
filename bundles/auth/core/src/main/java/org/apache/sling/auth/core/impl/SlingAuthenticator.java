@@ -1488,6 +1488,8 @@ public class SlingAuthenticator implements Authenticator,
             char c = value.charAt(i);
             if (c == '"') {
                 builder.append("\\\"");
+            } else if (c == '@') {
+                builder.append(c);
             } else if (c == 127 || (c < 32 && c != '\t')) {
                 throw new IllegalArgumentException(
                     "Cookie value may not contain CTL character");

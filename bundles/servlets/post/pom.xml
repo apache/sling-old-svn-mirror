@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.servlets.post</artifactId>
     <packaging>bundle</packaging>
-    <version>2.3.13-SNAPSHOT</version>
+    <version>2.3.15-SNAPSHOT</version>
 
     <name>Apache Sling Default POST Servlets</name>
     <description>

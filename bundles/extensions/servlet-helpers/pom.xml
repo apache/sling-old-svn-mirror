@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.servlet-helpers</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <name>Apache Sling Servlet Helpers</name>
     <description>Mock implementations of SlingHttpServletRequest, SlingHttpServletResponse and related classes.</description>
