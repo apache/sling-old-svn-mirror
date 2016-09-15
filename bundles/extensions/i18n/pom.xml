@@ -38,7 +38,7 @@
     </description>
 
     <properties>
-        <exam.version>3.3.0</exam.version>
+        <exam.version>3.5.0</exam.version>
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
@@ -121,11 +121,6 @@
                         <bundle.file.name>${bundle.file.name}</bundle.file.name>
                         <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
                     </systemPropertyVariables>
-                    <classpathDependencyExcludes>
-                     <!-- The osgi.org dependencies cause trouble with pax exam -->
-                        <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes>
-                        <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes>
-                    </classpathDependencyExcludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -232,12 +227,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.paxexam.util</artifactId>
-            <version>1.0.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.14</version>
             <scope>test</scope>
@@ -292,6 +281,11 @@
             <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
-      </dependencies>
-
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.paxexam.util</artifactId>
+            <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
