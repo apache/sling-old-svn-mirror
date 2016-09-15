@@ -76,7 +76,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     List<String> getResolvePaths(final Resource contentResource) {
         final List<String> refPaths = new ArrayList<>();
-        
+
         // add all config references found in resource hierarchy
         final List<ConfigReference> refs = new ArrayList<>();
         findConfigRefs(refs, contentResource);
@@ -207,7 +207,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         // strategy: find first item among all configured paths
         int idx = 1;
         for (final String path : getResolvePaths(contentResource)) {
-            final Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            final Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
 
@@ -236,7 +236,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         final List<Resource> result = new ArrayList<>();
         int idx = 1;
         for (String path : this.getResolvePaths(contentResource)) {
-            Resource item = contentResource.getResourceResolver().getResource(path + "/" + name);
+            Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
             if (item != null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
