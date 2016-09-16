@@ -187,10 +187,18 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         return false;
     }
+    
+    private boolean isEnabledAndParamsValid(final Resource contentResource, final String bucketName, final String configName) {
+        return config.enabled() && contentResource != null && checkName(bucketName) && checkName(configName);
+    }
+    
+    private String buildResourcePath(String path, String name) {
+        return ResourceUtil.normalize(path + "/" + name);
+    }
 
     @Override
     public Resource getResource(final Resource contentResource, final String bucketName, final String configName) {
-        if (!config.enabled() || contentResource == null || !checkName(bucketName) || !checkName(configName)) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
             return null;
         }
         String name = bucketName + "/" + configName;
@@ -199,7 +207,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         // strategy: find first item among all configured paths
         int idx = 1;
         for (final String path : getResolvePaths(contentResource)) {
-            final Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
+            final Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
 
@@ -216,7 +224,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     @Override
     public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
-        if (!config.enabled() || contentResource == null || !checkName(bucketName) || !checkName(configName)) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
             return Collections.emptyList();
         }
         String name = bucketName + "/" + configName;
@@ -228,7 +236,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final List<Resource> result = new ArrayList<>();
         int idx = 1;
         for (String path : this.getResolvePaths(contentResource)) {
-            Resource item = contentResource.getResourceResolver().getResource(ResourceUtil.normalize(path + "/" + name));
+            Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
@@ -254,6 +262,54 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
 
         return result;
+    }
+    
+    private String getFirstReference(Resource contentResource) {
+        Collection<String> refs = this.findConfigRefs(contentResource);
+        if (refs.isEmpty()) {
+            return null;
+        }
+        else {
+            return refs.iterator().next();
+        }
+    }
+
+    @Override
+    public String getResourcePath(Resource contentResource, String bucketName, String configName) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
+            return null;
+        }
+        String name = bucketName + "/" + configName;
+
+        String configPath = getFirstReference(contentResource);
+        if (configPath != null) {
+            configPath = buildResourcePath(configPath, name);
+            logger.debug("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
+            return configPath;
+        }
+        else {
+            logger.debug("No configuration path {}  foundfor resource {}.", name, contentResource.getPath());
+            return null;
+        }
+    }
+
+    @Override
+    public String getResourceCollectionParentPath(Resource contentResource, String bucketName, String configName) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
+            return null;
+        }
+        String name = bucketName + "/" + configName;
+
+        String configPath = getFirstReference(contentResource);
+        if (configPath != null) {
+            configPath = buildResourcePath(configPath, name);
+            logger.debug("Building configuration collection parent path {} for resource {}: {}", name, contentResource.getPath(), configPath);
+            return configPath;
+        }
+        else {
+            logger.debug("No configuration collection parent path {}  foundfor resource {}.", name, contentResource.getPath());
+            return null;
+        }
     }
 
 }

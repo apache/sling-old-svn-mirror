@@ -95,6 +95,18 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
     }
 
     @Test
+    public void testGetResourcePath() throws Exception {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+        assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
+    }
+
+    @Test
+    public void testGetResourceCollectionParentPath() throws Exception {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+        assertEquals("/conf/site1/sling:test/feature", underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
+    }
+
+    @Test
     public void testDisabled() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
                 "enabled", false);
@@ -102,6 +114,8 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
         assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
         assertTrue(col1.isEmpty());
+        assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
+        assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
 
 }

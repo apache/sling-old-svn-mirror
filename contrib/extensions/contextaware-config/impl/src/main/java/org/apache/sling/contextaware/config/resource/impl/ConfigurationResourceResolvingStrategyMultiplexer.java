@@ -82,4 +82,32 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
         return result;
     }
 
+    /**
+     * Gets the configuration resource path from the first implementation that has an answer.
+     */
+    @Override
+    public String getResourcePath(Resource resource, String bucketName, String configName) {
+        for (ConfigurationResourceResolvingStrategy item : items) {
+            String result = item.getResourcePath(resource, bucketName, configName);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets the configuration resource collection parent path from the first implementation that has an answer.
+     */
+    @Override
+    public String getResourceCollectionParentPath(Resource resource, String bucketName, String configName) {
+        for (ConfigurationResourceResolvingStrategy item : items) {
+            String result = item.getResourceCollectionParentPath(resource, bucketName, configName);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
 }

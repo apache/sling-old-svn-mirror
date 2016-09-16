@@ -77,6 +77,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         
         Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
         assertTrue(col1.isEmpty());
+
+        assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
+        assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
 
     @Test
@@ -91,6 +94,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
                 "/apps/conf/sling:test/feature/a", 
                 "/libs/conf/sling:test/feature/b" },
                 col1);
+
+        assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
+        assertEquals("/conf/site1/sling:test/feature", underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
     
     @Test
@@ -106,6 +112,14 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
             public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
                 return ImmutableList.copyOf(context.resourceResolver().getResource("/conf/site1/sling:test/feature").listChildren());
             }
+            @Override
+            public String getResourcePath(Resource resource, String bucketName, String configName) {
+                return "/conf/site1/sling:test/test";
+            }
+            @Override
+            public String getResourceCollectionParentPath(Resource resource, String bucketName, String configName) {
+                return "/conf/site1/sling:test/feature";
+            }
         }, Constants.SERVICE_RANKING, 2000);
         
         // strategy 2
@@ -118,6 +132,14 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
             public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
                 return ImmutableList.copyOf(context.resourceResolver().getResource("/libs/conf/sling:test/feature").listChildren());
             }
+            @Override
+            public String getResourcePath(Resource resource, String bucketName, String configName) {
+                return null;
+            }
+            @Override
+            public String getResourceCollectionParentPath(Resource resource, String bucketName, String configName) {
+                return null;
+            }
         }, Constants.SERVICE_RANKING, 1000);
         
         assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
@@ -127,6 +149,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
                 "/conf/site1/sling:test/feature/c",
                 "/libs/conf/sling:test/feature/b" },
                 col1);
+        
+        assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
+        assertEquals("/conf/site1/sling:test/feature", underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
     
     
