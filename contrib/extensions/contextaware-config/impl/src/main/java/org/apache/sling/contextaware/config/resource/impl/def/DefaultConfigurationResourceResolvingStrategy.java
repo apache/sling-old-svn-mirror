@@ -22,9 +22,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections.PredicateUtils;
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.ArrayIterator;
+import org.apache.commons.collections.iterators.FilterIterator;
+import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
@@ -81,22 +88,14 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         this.config = null;
     }
 
-    List<String> getResolvePaths(final Resource contentResource) {
-        final List<String> refPaths = new ArrayList<>();
-        
-        // add all config references found in resource hierarchy
-        final Collection<String> refs = findConfigRefs(contentResource);
-        refPaths.addAll(refs);
-
-        // finally add the global fallbacks
-        if ( this.config.fallbackPaths() != null ) {
-            for(final String path : this.config.fallbackPaths()) {
-                logger.debug("[{}] fallback config => {}", refs.size(), path);
-                refPaths.add(path);
-            }
-        }
-
-        return refPaths;
+    @SuppressWarnings("unchecked")
+    Iterator<String> getResolvePaths(final Resource contentResource) {
+        return new IteratorChain(
+            // add all config references found in resource hierarchy
+            findConfigRefs(contentResource),
+            // finally add the global fallbacks
+            new ArrayIterator(this.config.fallbackPaths())
+        );
     }
 
     /**
@@ -117,18 +116,16 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
      * @param refs List to add found resources to
      * @param startResource Resource to start searching
      */
-    private Collection<String> findConfigRefs(final Resource startResource) {
-        Collection<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
-        List<String> configReferences = new ArrayList<>();
-        
-        for (Resource resource : contextResources) {
-            String ref = getReference(resource);
-            if (ref != null) {
-                configReferences.add(ref);
-            }
-        }
-        
-        return configReferences;
+    @SuppressWarnings("unchecked")
+    private Iterator<String> findConfigRefs(final Resource startResource) {
+        Iterator<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
+        // get config resource path for each context resource, filter out items where not reference could be resolved
+        return new FilterIterator(new TransformIterator(contextResources, new Transformer() {
+                @Override
+                public Object transform(Object input) {
+                    return getReference((Resource)input);
+                }
+            }), PredicateUtils.notNullPredicate());
     }
 
     private String getReference(final Resource resource) {
@@ -163,9 +160,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isAllowedConfigPath(String path) {
-        if (this.config.allowedPaths() == null) {
-            return false;
-        }
         for (String pattern : this.config.allowedPaths()) {
             if (logger.isTraceEnabled()) {
                 logger.trace("- checking if '{}' starts with {}", path, pattern);
@@ -178,11 +172,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isFallbackConfigPath(final String ref) {
-        if ( this.config.fallbackPaths() != null ) {
-            for(final String name : this.config.fallbackPaths()) {
-                if ( name.equals(ref) ) {
-                    return true;
-                }
+        for(final String name : this.config.fallbackPaths()) {
+            if ( name.equals(ref) ) {
+                return true;
             }
         }
         return false;
@@ -206,7 +198,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         // strategy: find first item among all configured paths
         int idx = 1;
-        for (final String path : getResolvePaths(contentResource)) {
+        Iterator<String> paths = getResolvePaths(contentResource);
+        while (paths.hasNext()) {
+            final String path = paths.next();
             final Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
@@ -235,7 +229,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final Set<String> names = new HashSet<>();
         final List<Resource> result = new ArrayList<>();
         int idx = 1;
-        for (String path : this.getResolvePaths(contentResource)) {
+        Iterator<String> paths = getResolvePaths(contentResource);
+        while (paths.hasNext()) {
+            final String path = paths.next();
             Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 if (logger.isTraceEnabled()) {
@@ -264,16 +260,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         return result;
     }
     
-    private String getFirstReference(Resource contentResource) {
-        Collection<String> refs = this.findConfigRefs(contentResource);
-        if (refs.isEmpty()) {
-            return null;
-        }
-        else {
-            return refs.iterator().next();
-        }
-    }
-
     @Override
     public String getResourcePath(Resource contentResource, String bucketName, String configName) {
         if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
@@ -281,9 +267,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         String name = bucketName + "/" + configName;
 
-        String configPath = getFirstReference(contentResource);
-        if (configPath != null) {
-            configPath = buildResourcePath(configPath, name);
+        Iterator<String> configPaths = this.findConfigRefs(contentResource);
+        if (configPaths.hasNext()) {
+            String configPath = buildResourcePath(configPaths.next(), name);
             logger.debug("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
             return configPath;
         }
@@ -300,9 +286,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         String name = bucketName + "/" + configName;
 
-        String configPath = getFirstReference(contentResource);
-        if (configPath != null) {
-            configPath = buildResourcePath(configPath, name);
+        Iterator<String> configPaths = this.findConfigRefs(contentResource);
+        if (configPaths.hasNext()) {
+            String configPath = buildResourcePath(configPaths.next(), name);
             logger.debug("Building configuration collection parent path {} for resource {}: {}", name, contentResource.getPath(), configPath);
             return configPath;
         }

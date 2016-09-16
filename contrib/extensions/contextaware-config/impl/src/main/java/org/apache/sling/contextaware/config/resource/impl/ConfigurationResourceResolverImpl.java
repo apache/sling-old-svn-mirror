@@ -48,7 +48,7 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public String getContextPath(Resource resource) {
-        Iterator<Resource> it = contextPathStrategy.findContextResources(resource).iterator();
+        Iterator<Resource> it = contextPathStrategy.findContextResources(resource);
         if (it.hasNext()) {
             return it.next().getPath();
         }
@@ -60,9 +60,9 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     @Override
     public Collection<String> getAllContextPaths(Resource resource) {
         final List<String> contextPaths = new ArrayList<>();
-        Collection<Resource> contextResources = contextPathStrategy.findContextResources(resource);
-        for (Resource contextResource : contextResources) {
-            contextPaths.add(contextResource.getPath());
+        Iterator<Resource> contextResources = contextPathStrategy.findContextResources(resource);
+        while (contextResources.hasNext()) {
+            contextPaths.add(contextResources.next().getPath());
         }
         return contextPaths;
     }

@@ -29,6 +29,8 @@ import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurati
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
+import com.google.common.collect.ImmutableList;
+
 public final class ConfigurationResourceTestUtils {
     
     private ConfigurationResourceTestUtils() {
@@ -47,6 +49,15 @@ public final class ConfigurationResourceTestUtils {
             actualPaths[i] = it.next().getPath();
         }
         assertArrayEquals(expectedPaths, actualPaths);
+    }
+    
+    /**
+     * Assert that resources with the given path exist in the given order in the given collection.
+     * @param expectedPaths Expected path
+     * @param actualResources Actual resources
+     */
+    public static void assetResourcePaths(String[] expectedPaths, Iterator<Resource> actualResources) {
+        assetResourcePaths(expectedPaths, ImmutableList.copyOf(actualResources));
     }
     
     /**

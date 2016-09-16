@@ -18,10 +18,9 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
@@ -64,52 +63,70 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
     }
     
     @Override
-    public Collection<Resource> findContextResources(Resource resource) {
+    public Iterator<Resource> findContextResources(Resource resource) {
         if (!config.enabled()) {
-            return Collections.emptyList();
+            return Collections.emptyIterator();
         }
-        List<Resource> resources = new ArrayList<>();
-        findConfigRefs(resources, resource);
-        return resources;
+        return new ConfigResourceIterator(resource);
     }
     
     /**
      * Searches the resource hierarchy upwards for all context and returns the root resource for each of them.
-     * @param refs List to add found resources to
-     * @param startResource Resource to start searching
      */
-    private void findConfigRefs(final List<Resource> resources, final Resource startResource) {
-        Resource resource = findNextContextResource(startResource);
-        if (resource != null) {
-            resources.add(resource);
-            findConfigRefs(resources, resource.getParent());
-        }
-    }
+    private class ConfigResourceIterator implements Iterator<Resource> {
 
-    /**
-     * Find next configuration context root for given resource.
-     * @param startResource Resource to start searching
-     * @return Next resource with sling:config-ref property or null if none found.
-     */
-    private Resource findNextContextResource(Resource startResource) {
-        // start at resource, go up
-        Resource resource = startResource;
+        private Resource next;
         
-        while (resource != null) {
-            if (hasConfigRef(resource)) {
-                log.trace("Found context path '{}'.", resource.getPath());
-                return resource;
-            }
-            // if getParent() returns null, stop
-            resource = resource.getParent();
+        public ConfigResourceIterator(Resource startResource) {
+            next = findNextContextResource(startResource);
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return next != null;
         }
 
-        // if hit root and nothing found, return null
-        return null;
-    }
-    
-    private boolean hasConfigRef(final Resource resource) {
-        return resource.getValueMap().get(PROPERTY_CONFIG, String.class) != null;
+        @Override
+        public Resource next() {
+            if (next == null) {
+                throw new NoSuchElementException();
+            }
+            Resource result = next;
+            next = findNextContextResource(next.getParent());
+            return result;
+        }
+        
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Find next configuration context root for given resource.
+         * @param startResource Resource to start searching
+         * @return Next resource with sling:config-ref property or null if none found.
+         */
+        private Resource findNextContextResource(Resource startResource) {
+            // start at resource, go up
+            Resource resource = startResource;
+            
+            while (resource != null) {
+                if (hasConfigRef(resource)) {
+                    log.trace("Found context path '{}'.", resource.getPath());
+                    return resource;
+                }
+                // if getParent() returns null, stop
+                resource = resource.getParent();
+            }
+
+            // if hit root and nothing found, return null
+            return null;
+        }
+        
+        private boolean hasConfigRef(final Resource resource) {
+            return resource.getValueMap().get(PROPERTY_CONFIG, String.class) != null;
+        }
+
     }
 
 }

@@ -19,14 +19,17 @@
 package org.apache.sling.contextaware.config.resource.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Set;
 
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.iterators.CollatingIterator;
+import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -73,10 +76,10 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * Merges all results from the detected implementations into a single answer.
      */
     @Override
-    public Collection<Resource> findContextResources(Resource resource) {
-        List<Collection<Resource>> allResults = getAllResults(resource);
+    public Iterator<Resource> findContextResources(Resource resource) {
+        List<Iterator<Resource>> allResults = getAllResults(resource);
         if (allResults.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyIterator();
         }
         if (allResults.size() == 1) {
             return allResults.get(0);
@@ -89,11 +92,11 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * @param resource Start resource
      * @return List of all results
      */
-    private List<Collection<Resource>> getAllResults(Resource resource) {
-        List<Collection<Resource>> results = new ArrayList<>();
+    private List<Iterator<Resource>> getAllResults(Resource resource) {
+        List<Iterator<Resource>> results = new ArrayList<>();
         for (ContextPathStrategy item : items) {
-            Collection<Resource> result = item.findContextResources(resource);
-            if (!result.isEmpty()) {
+            Iterator<Resource> result = item.findContextResources(resource);
+            if (result.hasNext()) {
                 results.add(result);
             }
         }
@@ -108,12 +111,17 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * @param allResults List of all results
      * @return Merged result
      */
-    private Collection<Resource> mergeResults(List<Collection<Resource>> allResults) {
-        SortedSet<Resource> mergedResult = new TreeSet<>(PATH_LENGTH_COMPARATOR);
-        for (Collection<Resource> resources : allResults) {
-            mergedResult.addAll(resources);
-        }
-        return mergedResult;
+    @SuppressWarnings("unchecked")
+    private Iterator<Resource> mergeResults(List<Iterator<Resource>> allResults) {
+        return new FilterIterator(new CollatingIterator(PATH_LENGTH_COMPARATOR, allResults),
+                // eliminate duplicate resources reported by different implementations
+                new Predicate() {
+                    private Set<String> resourcePaths = new HashSet<>();
+                    @Override
+                    public boolean evaluate(Object object) {
+                        return resourcePaths.add(((Resource)object).getPath());
+                    }
+                });
     }
     
 }

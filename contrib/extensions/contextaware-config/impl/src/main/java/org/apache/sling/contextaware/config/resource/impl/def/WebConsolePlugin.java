@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -216,7 +217,9 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
                 pw.println("<td>Config paths</td>");
 
                 pw.println("<td>");
-                for (String p : ((DefaultConfigurationResourceResolvingStrategy)configResolver).getResolvePaths(content)) {
+                Iterator<String> paths = ((DefaultConfigurationResourceResolvingStrategy)configResolver).getResolvePaths(content);
+                while (paths.hasNext()) {
+                    String p = paths.next();
                     if (confRsrc != null && confRsrc.getPath().startsWith(p + "/")) {
                         pw.print("<b>");
                         pw.print(xssAPI.encodeForHTML(p));

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.spi;
 
-import java.util.Collection;
+import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 
@@ -38,9 +38,9 @@ public interface ContextPathStrategy {
      * Finds context paths for the given resource.
      * @param resource Context resource
      * @return Root resource for each context found (in order of closest matching first).
-     *      Only one of the parent resources or the resources itself may be included in the result.
+     *      Only one of the parent resources or the resource itself may be included in the result.
      *      If none are found an empty list is returned.
      */
-    @Nonnull Collection<Resource> findContextResources(@Nonnull Resource resource);
+    @Nonnull Iterator<Resource> findContextResources(@Nonnull Resource resource);
 
 }

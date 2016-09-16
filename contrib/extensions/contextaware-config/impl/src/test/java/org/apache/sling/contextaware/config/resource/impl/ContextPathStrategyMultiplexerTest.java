@@ -19,10 +19,10 @@
 package org.apache.sling.contextaware.config.resource.impl;
 
 import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
@@ -59,8 +59,8 @@ public class ContextPathStrategyMultiplexerTest {
     
     @Test
     public void testWithNoStrategies() {
-        Collection<Resource> resources = underTest.findContextResources(site1Page1);
-        assertTrue(resources.isEmpty());
+        Iterator<Resource> resources = underTest.findContextResources(site1Page1);
+        assertFalse(resources.hasNext());
     }
 
     @Test
@@ -114,8 +114,8 @@ public class ContextPathStrategyMultiplexerTest {
         }
         context.registerService(ContextPathStrategy.class, new ContextPathStrategy() {
             @Override
-            public Collection<Resource> findContextResources(Resource resource) {
-                return resources;
+            public Iterator<Resource> findContextResources(Resource resource) {
+                return resources.iterator();
             }
         });
     }
