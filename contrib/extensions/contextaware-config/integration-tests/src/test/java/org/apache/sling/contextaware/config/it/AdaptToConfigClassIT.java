@@ -16,6 +16,9 @@
  */
 package org.apache.sling.contextaware.config.it;
 
+import static org.apache.sling.contextaware.config.it.TestUtils.CONFIG_ROOT_PATH;
+import static org.apache.sling.contextaware.config.it.TestUtils.CONTENT_ROOT_PATH;
+import static org.apache.sling.contextaware.config.it.TestUtils.cleanUp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -41,6 +44,9 @@ public class AdaptToConfigClassIT {
     private ResourceResolver resourceResolver;
     private ResourceBuilder resourceBuilder;
     
+    private static final String PAGE_PATH = CONTENT_ROOT_PATH + "/page1";
+    private static final String CONFIG_PATH = CONFIG_ROOT_PATH + "/page1";
+    
     @SuppressWarnings("deprecation")
     @Before
     public void setUp() throws Exception {
@@ -50,12 +56,13 @@ public class AdaptToConfigClassIT {
     
     @After
     public void tearDown() {
+        cleanUp(resourceResolver);
         resourceResolver.close();
     }
     
     @Test
     public void testNonExistingConfig() throws Exception {
-        Resource resourcePage1 = resourceBuilder.resource("/content/page1").getCurrentParent();
+        Resource resourcePage1 = resourceBuilder.resource(PAGE_PATH).getCurrentParent();
         
         SimpleConfig config = resourcePage1.adaptTo(ConfigurationBuilder.class).as(SimpleConfig.class);
         assertNotNull(config);
@@ -67,13 +74,13 @@ public class AdaptToConfigClassIT {
     
     @Test
     public void testExistingConfig() throws Exception {
-        resourceBuilder.resource("/conf/content/page1/sling:configs/org.apache.sling.contextaware.config.it.example.SimpleConfig",
+        resourceBuilder.resource(CONFIG_PATH + "/sling:configs/org.apache.sling.contextaware.config.it.example.SimpleConfig",
                 "stringParam", "value1",
                 "intParam", 123,
                 "boolParam", true)
-            .resource("/content/page1", "sling:config-ref", "/conf/content/page1");
+            .resource(PAGE_PATH, "sling:config-ref", CONFIG_PATH);
 
-        Resource resourcePage1 = resourceResolver.getResource("/content/page1");
+        Resource resourcePage1 = resourceResolver.getResource(PAGE_PATH);
         
         SimpleConfig config = resourcePage1.adaptTo(ConfigurationBuilder.class).as(SimpleConfig.class);
         assertNotNull(config);
