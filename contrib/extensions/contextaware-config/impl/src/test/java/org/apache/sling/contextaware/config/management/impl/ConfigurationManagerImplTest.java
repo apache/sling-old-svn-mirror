@@ -29,6 +29,8 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.impl.ConfigurationPersistenceStrategyMultiplexer;
+import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.contextaware.config.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.contextaware.config.management.ConfigurationData;
 import org.apache.sling.contextaware.config.management.ConfigurationManager;
@@ -62,9 +64,9 @@ public class ConfigurationManagerImplTest {
     private ConfigurationManager underTest;
     
     private Resource contextResource;
-    private Resource configResource;
-    private Resource configResourceItem1;
-    private Resource configResourceItem2;
+    protected Resource configResource;
+    protected Resource configResourceItem1;
+    protected Resource configResourceItem2;
     private ConfigurationMetadata configMetadata;
     
     private static final String CONFIG_NAME = "testConfigName";
@@ -74,16 +76,13 @@ public class ConfigurationManagerImplTest {
         context.registerService(ConfigurationResourceResolver.class, configurationResourceResolver);
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
+        context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         underTest = context.registerInjectActivateService(new ConfigurationManagerImpl());
         
-        configResource = context.create().resource("/conf/test",
-                "prop1", "value1",
-                "prop4", true);
         contextResource = context.create().resource("/content/test");
-        configResourceItem1 = context.create().resource("/conf/item/1",
-                "prop1", "value1");
-        configResourceItem2 = context.create().resource("/conf/item/2",
-                "prop4", true);
+        
+        prepareConfigResources();
         
         configMetadata = new ConfigurationMetadata(CONFIG_NAME);
         configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
@@ -93,6 +92,16 @@ public class ConfigurationManagerImplTest {
 
         when(configurationResourceResolver.getResourceCollection(any(Resource.class), anyString(), anyString()))
             .thenReturn(ImmutableList.<Resource>of());
+    }
+    
+    protected void prepareConfigResources() {
+        configResource = context.create().resource("/conf/test",
+                "prop1", "value1",
+                "prop4", true);
+        configResourceItem1 = context.create().resource("/conf/item/1",
+                "prop1", "value1");
+        configResourceItem2 = context.create().resource("/conf/item/2",
+                "prop4", true);
     }
     
     @Test

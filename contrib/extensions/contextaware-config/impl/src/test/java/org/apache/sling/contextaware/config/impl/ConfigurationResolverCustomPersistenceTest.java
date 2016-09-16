@@ -33,6 +33,7 @@ import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.example.ListConfig;
 import org.apache.sling.contextaware.config.example.NestedConfig;
 import org.apache.sling.contextaware.config.example.SimpleConfig;
+import org.apache.sling.contextaware.config.management.impl.CustomConfigurationPersistenceStrategy;
 import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -58,12 +59,8 @@ public class ConfigurationResolverCustomPersistenceTest {
         underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
 
         // custom strategy which redirects all config resources to a jcr:content subnode
-        context.registerService(ConfigurationPersistenceStrategy.class, new ConfigurationPersistenceStrategy() {
-            @Override
-            public Resource getResource(Resource resource) {
-                return resource.getChild("jcr:content");
-            }
-        }, Constants.SERVICE_RANKING, 2000);
+        context.registerService(ConfigurationPersistenceStrategy.class,
+                new CustomConfigurationPersistenceStrategy(), Constants.SERVICE_RANKING, 2000);
         
         // config resources
         context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig/jcr:content",

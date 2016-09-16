@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.contextaware.config.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.contextaware.config.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.contextaware.config.management.ConfigurationData;
 import org.apache.sling.contextaware.config.management.ConfigurationManager;
@@ -41,13 +42,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     private ConfigurationResourceResolver configurationResourceResolver;
     @Reference
     private ConfigurationMetadataProviderMultiplexer configurationMetadataProvider;
+    @Reference
+    private ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy;
 
     @Override
     public ConfigurationData getConfigurationData(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         Resource configResource = configurationResourceResolver.getResource(resource, CONFIGS_PARENT_NAME, configName);
         if (configResource != null) {
-            return new ConfigurationDataImpl(configResource, configMetadata);
+            return new ConfigurationDataImpl(configurationPersistenceStrategy.getResource(configResource), configMetadata);
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
@@ -62,7 +65,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(resource, CONFIGS_PARENT_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
         for (Resource configResource : configResources) {
-            configData.add(new ConfigurationDataImpl(configResource, configMetadata));
+            configData.add(new ConfigurationDataImpl(configurationPersistenceStrategy.getResource(configResource), configMetadata));
         }
         return configData;
     }
