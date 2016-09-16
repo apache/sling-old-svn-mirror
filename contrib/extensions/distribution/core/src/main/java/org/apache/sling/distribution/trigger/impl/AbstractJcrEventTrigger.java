@@ -33,6 +33,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -114,7 +115,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
 
         public void onEvent(EventIterator eventIterator) {
-            log.info("jcr trigger onevent");
+            log.debug("jcr trigger on event");
 
             List<DistributionRequest> requestList = new ArrayList<DistributionRequest>();
 
@@ -128,13 +129,12 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                             addToList(request, requestList);
                         }
                     } else {
-                        log.info("skip unsafe event {}", event);
+                        log.debug("skip unsafe event {}", event);
                     }
                 } catch (RepositoryException e) {
                     log.error("Error while handling event {}", event, e);
                 }
             }
-
 
             if (requestList.size() > 0) {
                 boolean scheduled = scheduler.schedule(new DistributionExecutor(requestList, requestHandler), scheduler.NOW());
@@ -156,9 +156,44 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             Set<String> allPaths = new TreeSet<String>();
             allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
             allPaths.addAll(Arrays.asList(request.getPaths()));
+
+            addMissingPaths(request, allPaths);
+
             lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[allPaths.size()]));
             requestList.set(requestList.size() - 1, lastRequest);
         }
+    }
+
+    private void addMissingPaths(DistributionRequest request, Set<String> allPaths) {
+        List<String> requestPaths = Arrays.asList(request.getPaths());
+
+        for (String path : requestPaths) {
+            for (String existingPath : allPaths) {
+                // in case a requested path is descendant of an existing path, also add its siblings
+                if (existingPath.length() > path.length() && path.startsWith(existingPath)) {
+                    ResourceResolver resourceResolver = null;
+                    try {
+                        resourceResolver = DistributionUtils.loginService(resolverFactory, serviceUser);
+                        Resource resource = resourceResolver.getResource(path);
+                        if (resource != null) {
+                            for (Resource child : resource.getParent().getChildren()) {
+                                String childPath = child.getPath();
+                                if (!childPath.equals(path)) {
+                                    allPaths.add(childPath);
+                                }
+                            }
+                        } else {
+                            throw new RuntimeException("resource at path " + path + " is null");
+                        }
+                    } catch (LoginException le) {
+                        log.error("cannot obtain resource resolver for {}", serviceUser);
+                    } finally {
+                        DistributionUtils.safelyLogout(resourceResolver);
+                    }
+                }
+            }
+        }
+
     }
 
     public void enable() {
@@ -211,7 +246,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
      */
     Session getSession() throws RepositoryException {
         return cachedSession != null ? cachedSession
-            : (cachedSession = repository.loginService(serviceUser, null));
+                : (cachedSession = repository.loginService(serviceUser, null));
     }
 
 
