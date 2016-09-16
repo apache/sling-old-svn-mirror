@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
-import static org.apache.sling.contextaware.config.impl.ConfigurationResolverImpl.CONFIGS_PARENT_NAME;
+import static org.apache.sling.contextaware.config.impl.ConfigurationNameConstants.CONFIGS_PARENT_NAME;
 
 import java.util.ArrayList;
 import java.util.Collection;

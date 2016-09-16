@@ -35,6 +35,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public final class PropertyMetadata<T> extends AbstractMetadata {
 
+    // these are all types supported for fields of annotation classes (plus class which indicates nested configurations)
     private static final Class<?>[] SUPPORTED_TYPES_ARRAY = {
         String.class,
         int.class,
@@ -60,8 +61,8 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
     public PropertyMetadata(@Nonnull String name, @Nonnull Class<T> type) {
         super(name);
         Class<T> convertedType = (Class<T>)typeToPrimitive(type);
-        if (convertedType == null || !isSupportedType(convertedType)) {
-            throw new IllegalArgumentException("Parameter '" + name + "': Invalid type " + type);
+        if (!isSupportedType(convertedType)) {
+            throw new IllegalArgumentException("Invalid type for property '" + name + "': " + type);
         }
         this.type = convertedType;
     }

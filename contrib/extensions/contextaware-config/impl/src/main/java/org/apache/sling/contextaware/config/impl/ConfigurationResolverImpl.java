@@ -28,11 +28,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=ConfigurationResolver.class, immediate=true)
 public class ConfigurationResolverImpl implements ConfigurationResolver {
 
-    /**
-     * Node name for configuration data.
-     */
-    public static final String CONFIGS_PARENT_NAME = "sling:configs";
-    
     @Reference
     private ConfigurationResourceResolver configurationResourceResolver;
 

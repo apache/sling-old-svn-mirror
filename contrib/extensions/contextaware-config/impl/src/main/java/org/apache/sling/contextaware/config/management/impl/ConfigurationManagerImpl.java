@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.management.impl;
 
-import static org.apache.sling.contextaware.config.impl.ConfigurationResolverImpl.CONFIGS_PARENT_NAME;
+import static org.apache.sling.contextaware.config.impl.ConfigurationNameConstants.CONFIGS_PARENT_NAME;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,11 +50,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             return new ConfigurationDataImpl(configResource, configMetadata);
         }
         if (configMetadata != null) {
-            // if no config resource found but a valid context path exists return synthetic resource with config metadata
-            String contextPath = configurationResourceResolver.getContextPath(resource);
-            if (contextPath != null) {
-                return new ConfigurationDataImpl(configMetadata);
-            }
+            // if no config resource found but config metadata exist return empty config data with default values
+            return new ConfigurationDataImpl(configMetadata);
         }
         return null;
     }
