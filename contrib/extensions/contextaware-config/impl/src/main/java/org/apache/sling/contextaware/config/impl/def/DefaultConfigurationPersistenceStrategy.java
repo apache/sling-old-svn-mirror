@@ -38,6 +38,11 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
+/**
+ * The default persistence strategy is quite simple: directly use the configuration resources.
+ * All existing properties are removed when new properties are stored in a singleton config resource.
+ * All existing child resources are removed when a new configs are stored for collection config resources. 
+ */
 @Component(service = ConfigurationPersistenceStrategy.class)
 @Designate(ocd=DefaultConfigurationPersistenceStrategy.Config.class)
 public class DefaultConfigurationPersistenceStrategy implements ConfigurationPersistenceStrategy {
@@ -54,16 +59,11 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
 
     private volatile Config config;
     
-    private static final String DEFAULT_RESOURCE_TYPE = "nt:unstructured";
-
     @Activate
     private void activate(ComponentContext componentContext, Config config) {
         this.config = config; 
     }
         
-    /**
-     * The default persistence strategy is quite simple: directly use the configuration resources.
-     */
     @Override
     public Resource getResource(Resource resource) {
         if (!config.enabled()) {
@@ -99,7 +99,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     
     private Resource getOrCreateResource(ResourceResolver resourceResolver, String path, Map<String,Object> properties) {
         try {
-            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_TYPE, false);
+            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, (String)null, (String)null, false);
             replaceProperties(resource, properties);
             return resource;
         }
