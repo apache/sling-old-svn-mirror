@@ -23,13 +23,15 @@ import static org.apache.sling.contextaware.config.impl.ConfigurationNameConstan
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.contextaware.config.management.ConfigurationData;
 import org.apache.sling.contextaware.config.management.ConfigurationManager;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceException;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +42,14 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Reference
     private ConfigurationResourceResolver configurationResourceResolver;
     @Reference
+    private ConfigurationResourceResolvingStrategyMultiplexer configurationResourceResolvingStrategy;
+    @Reference
     private ConfigurationMetadataProviderMultiplexer configurationMetadataProvider;
     @Reference
     private ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy;
 
     @Override
-    public ConfigurationData getConfigurationData(Resource resource, String configName) {
+    public ConfigurationData get(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         Resource configResource = configurationResourceResolver.getResource(resource, CONFIGS_PARENT_NAME, configName);
         if (configResource != null) {
@@ -59,7 +63,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
 
     @Override
-    public Collection<ConfigurationData> getConfigurationDataCollection(Resource resource, String configName) {
+    public Collection<ConfigurationData> getCollection(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(resource, CONFIGS_PARENT_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
@@ -70,17 +74,29 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
 
     @Override
-    public void writeConfigurationData(Resource resource, String configName, ValueMap values) {
-        // TODO: implement
+    public void persist(Resource resource, String configName, Map<String,Object> values) {
+        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+        if (configResourcePath == null) {
+            throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
+        }
+        if (!configurationPersistenceStrategy.persist(resource.getResourceResolver(), configResourcePath, values)) {
+            throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
+        }
     }
 
     @Override
-    public void writeConfigurationDataCollection(Resource resource, String configName, Collection<ValueMap> values) {
-        // TODO: implement
+    public void persistCollection(Resource resource, String configName, Collection<Map<String,Object>> values) {
+        String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
+        if (configResourceParentPath == null) {
+            throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
+        }
+        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, values)) {
+            throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
+        }
     }
 
     @Override
-    public ConfigurationData newConfigurationDataItem(String configName) {
+    public ConfigurationData newCollectionItem(String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         if (configMetadata != null) {
             return new ConfigurationDataImpl(configMetadata);

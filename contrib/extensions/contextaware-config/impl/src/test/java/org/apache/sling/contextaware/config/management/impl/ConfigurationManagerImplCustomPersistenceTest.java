@@ -35,17 +35,8 @@ public class ConfigurationManagerImplCustomPersistenceTest extends Configuration
     }
 
     @Override
-    protected void prepareConfigResources() {
-        configResource = context.create().resource("/conf/test");
-        context.create().resource("/conf/test/jcr:content",
-                "prop1", "value1",
-                "prop4", true);
-        configResourceItem1 = context.create().resource("/conf/item/1");
-        context.create().resource("/conf/item/1/jcr:content",
-                "prop1", "value1");
-        configResourceItem2 = context.create().resource("/conf/item/2");
-        context.create().resource("/conf/item/2/jcr:content",
-                "prop4", true);
+    protected String getConfigPropertiesPath(String path) {
+        return path + "/jcr:content";
     }
-    
+
 }

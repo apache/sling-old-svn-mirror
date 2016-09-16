@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -55,7 +54,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
 
     private volatile Config config;
     
-    private static final String DEFAULT_RESOURCE_TYPE = JcrConstants.NT_UNSTRUCTURED;
+    private static final String DEFAULT_RESOURCE_TYPE = "nt:unstructured";
 
     @Activate
     private void activate(ComponentContext componentContext, Config config) {

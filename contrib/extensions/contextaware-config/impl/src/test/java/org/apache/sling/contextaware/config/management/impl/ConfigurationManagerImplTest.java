@@ -27,13 +27,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.contextaware.config.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.contextaware.config.management.ConfigurationData;
 import org.apache.sling.contextaware.config.management.ConfigurationManager;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.contextaware.config.spi.ConfigurationMetadataProvider;
 import org.apache.sling.contextaware.config.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.contextaware.config.spi.metadata.PropertyMetadata;
@@ -58,6 +62,8 @@ public class ConfigurationManagerImplTest {
     @Mock
     private ConfigurationResourceResolver configurationResourceResolver;
     @Mock
+    private ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy;
+    @Mock
     private ConfigurationMetadataProvider configurationMetadataProvider;
     
     private ConfigurationManager underTest;
@@ -73,7 +79,9 @@ public class ConfigurationManagerImplTest {
     @Before
     public void setUp() {
         context.registerService(ConfigurationResourceResolver.class, configurationResourceResolver);
+        context.registerService(ConfigurationResourceResolvingStrategy.class, configurationResourceResolvingStrategy);
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
+        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
@@ -81,7 +89,17 @@ public class ConfigurationManagerImplTest {
         
         contextResource = context.create().resource("/content/test");
         
-        prepareConfigResources();
+        context.create().resource(getConfigPropertiesPath("/conf/test"),
+                "prop1", "value1",
+                "prop4", true);
+        context.create().resource(getConfigPropertiesPath("/conf/item/1"),
+                "prop1", "value1");
+        context.create().resource(getConfigPropertiesPath("/conf/item/2"),
+                "prop4", true);
+
+        configResource = context.resourceResolver().getResource("/conf/test");
+        configResourceItem1 = context.resourceResolver().getResource("/conf/item/1");
+        configResourceItem2 = context.resourceResolver().getResource("/conf/item/2");
         
         configMetadata = new ConfigurationMetadata(CONFIG_NAME);
         configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
@@ -90,25 +108,19 @@ public class ConfigurationManagerImplTest {
                 "prop3", new PropertyMetadata<>("prop3", 5)));
 
         when(configurationResourceResolver.getResourceCollection(any(Resource.class), anyString(), anyString()))
-            .thenReturn(ImmutableList.<Resource>of());
+                .thenReturn(ImmutableList.<Resource>of());
     }
     
-    protected void prepareConfigResources() {
-        configResource = context.create().resource("/conf/test",
-                "prop1", "value1",
-                "prop4", true);
-        configResourceItem1 = context.create().resource("/conf/item/1",
-                "prop1", "value1");
-        configResourceItem2 = context.create().resource("/conf/item/2",
-                "prop4", true);
+    protected String getConfigPropertiesPath(String path) {
+        return path;
     }
     
     @Test
-    public void testGetConfigurationData() {
+    public void testGet() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
         when(configurationResourceResolver.getResource(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME)).thenReturn(configResource);
 
-        ConfigurationData configData = underTest.getConfigurationData(contextResource, CONFIG_NAME);
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NAME);
         assertNotNull(configData);
 
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), configData.getPropertyNames());
@@ -117,10 +129,10 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
-    public void testGetConfigurationData_NoConfigResource() {
+    public void testGet_NoConfigResource() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
 
-        ConfigurationData configData = underTest.getConfigurationData(contextResource, CONFIG_NAME);
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NAME);
         assertNotNull(configData);
 
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
@@ -129,10 +141,10 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
-    public void testGetConfigurationData_NoConfigMetadata() {
+    public void testGet_NoConfigMetadata() {
         when(configurationResourceResolver.getResource(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME)).thenReturn(configResource);
 
-        ConfigurationData configData = underTest.getConfigurationData(contextResource, CONFIG_NAME);
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NAME);
         assertNotNull(configData);
 
         assertEquals(ImmutableSet.of("prop1", "prop4"), configData.getPropertyNames());
@@ -141,18 +153,18 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
-    public void testGetConfigurationData_NoConfigResource_NoConfigMetadata() {
-        ConfigurationData configData = underTest.getConfigurationData(contextResource, CONFIG_NAME);
+    public void testGet_NoConfigResource_NoConfigMetadata() {
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NAME);
         assertNull(configData);
     }
 
     @Test
-    public void testGetConfigurationDataCollection() {
+    public void testGetCollection() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
         when(configurationResourceResolver.getResourceCollection(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME))
             .thenReturn(ImmutableList.of(configResourceItem1, configResourceItem2));
         
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationDataCollection(contextResource, CONFIG_NAME));
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResource, CONFIG_NAME));
         assertEquals(2, configDatas.size());
         
         ConfigurationData configData1 = configDatas.get(0);
@@ -167,19 +179,19 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
-    public void testGetConfigurationDataCollection_NoConfigResources() {
+    public void testGetCollection_NoConfigResources() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
         
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationDataCollection(contextResource, CONFIG_NAME));
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResource, CONFIG_NAME));
         assertEquals(0, configDatas.size());
     }
 
     @Test
-    public void testGetConfigurationDataCollection_NoConfigMetadata() {
+    public void testGetCollection_NoConfigMetadata() {
         when(configurationResourceResolver.getResourceCollection(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME))
             .thenReturn(ImmutableList.of(configResourceItem1, configResourceItem2));
         
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationDataCollection(contextResource, CONFIG_NAME));
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResource, CONFIG_NAME));
         assertEquals(2, configDatas.size());
         
         ConfigurationData configData1 = configDatas.get(0);
@@ -194,9 +206,54 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
-    public void testGetConfigurationDataCollection_NoConfigResources_NoConfigMetadata() {
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationDataCollection(contextResource, CONFIG_NAME));
+    public void testGetCollection_NoConfigResources_NoConfigMetadata() {
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResource, CONFIG_NAME));
         assertEquals(0, configDatas.size());
+    }
+
+    @Test
+    public void testPersist() throws Exception {
+        when(configurationResourceResolvingStrategy.getResourcePath(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME))
+            .thenReturn("/conf/new");
+        
+        underTest.persist(contextResource, CONFIG_NAME,
+                ImmutableMap.<String, Object>of("prop1", "value1"));
+        context.resourceResolver().commit();
+
+        ValueMap props = context.resourceResolver().getResource(getConfigPropertiesPath("/conf/new")).getValueMap();
+        assertEquals("value1", props.get("prop1"));
+    }
+
+    @Test
+    public void testPersistCollection() throws Exception {
+        when(configurationResourceResolvingStrategy.getResourceCollectionParentPath(contextResource, CONFIGS_PARENT_NAME, CONFIG_NAME))
+            .thenReturn("/conf/newcol");
+
+        underTest.persistCollection(contextResource, CONFIG_NAME, ImmutableList.<Map<String,Object>>of(
+                ImmutableMap.<String, Object>of("prop1", "value1"),
+                ImmutableMap.<String, Object>of("prop2", 5)
+        ));
+        context.resourceResolver().commit();
+
+        ValueMap props0 = context.resourceResolver().getResource(getConfigPropertiesPath("/conf/newcol/0")).getValueMap();
+        assertEquals("value1", props0.get("prop1"));
+        ValueMap props1 = context.resourceResolver().getResource(getConfigPropertiesPath("/conf/newcol/1")).getValueMap();
+        assertEquals((Integer)5, props1.get("prop2"));
+    }
+
+    @Test
+    public void testNewCollectionItem() {
+        when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
+        
+        ConfigurationData newItem = underTest.newCollectionItem(CONFIG_NAME);
+        assertNotNull(newItem);
+        assertEquals((Integer)5, newItem.getEffectiveValues().get("prop3", 0));
+    }
+
+    @Test
+    public void testNewCollectionItem_NoConfigMetadata() {
+        ConfigurationData newItem = underTest.newCollectionItem(CONFIG_NAME);
+        assertNull(newItem);
     }
 
 }

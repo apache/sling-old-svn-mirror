@@ -19,12 +19,12 @@
 package org.apache.sling.contextaware.config.management;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -41,7 +41,7 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @return Configuration data. Is null when no configuration resource found and no configuration metadata exists.
      */
-    @CheckForNull ConfigurationData getConfigurationData(@Nonnull Resource resource, @Nonnull String configName);
+    @CheckForNull ConfigurationData get(@Nonnull Resource resource, @Nonnull String configName);
 
     /**
      * Get configuration data collection for the given context resource and configuration name.
@@ -49,7 +49,7 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @return Configuration data collection. Is empty when no configuration resources found.
      */
-    @Nonnull Collection<ConfigurationData> getConfigurationDataCollection(@Nonnull Resource resource, @Nonnull String configName);
+    @Nonnull Collection<ConfigurationData> getCollection(@Nonnull Resource resource, @Nonnull String configName);
     
     /**
      * Write configuration to repository data using the inner-most context path as reference.
@@ -57,7 +57,7 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @param values Values to be stored. All existing properties are erased and replaced with the new ones.
      */
-    void writeConfigurationData(@Nonnull Resource resource, @Nonnull String configName, @Nonnull ValueMap values);
+    void persist(@Nonnull Resource resource, @Nonnull String configName, @Nonnull Map<String,Object> values);
 
     /**
      * Write configuration data collection using the inner-most context path as reference.
@@ -65,13 +65,13 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @param values Value collection to be stored. All existing collection entries on this context path level are erased and replaced with the new ones.
      */
-    void writeConfigurationDataCollection(@Nonnull Resource resource, @Nonnull String configName, @Nonnull Collection<ValueMap> values);
+    void persistCollection(@Nonnull Resource resource, @Nonnull String configName, @Nonnull Collection<Map<String,Object>> values);
     
     /**
      * Creates a new empty configuration data item for a configuration data collection for the given configuration name.
      * @param configName Configuration name
      * @return Configuration data. Is null when no configuration metadata exists.
      */
-    @CheckForNull ConfigurationData newConfigurationDataItem(@Nonnull String configName);
+    @CheckForNull ConfigurationData newCollectionItem(@Nonnull String configName);
     
 }
