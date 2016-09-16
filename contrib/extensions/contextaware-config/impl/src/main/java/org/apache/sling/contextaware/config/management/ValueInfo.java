@@ -55,23 +55,26 @@ public interface ValueInfo<T> {
     @CheckForNull String getConfigSourcePath();
 
     /**
-     * @return true if the value is not defined for the current context path but inherited from upper levels.
-     */
-    boolean isInherited();
-    
-    /**
-     * @return true if the value is overrided by an configuration override provider.
-     */
-    boolean isOverridden();
-    
-    /**
      * @return true if no value is defined but a default value is returned.
      */
     boolean isDefault();
     
     /**
+     * @return true if the value is not defined for the current context path but inherited from upper levels.
+     */
+    // for future use
+    //boolean isInherited();
+    
+    /**
+     * @return true if the value is overridden by an configuration override provider.
+     */
+    // for future use
+    //boolean isOverridden();
+    
+    /**
      * @return true if this value is locked on a higher level and is not allowed to be overridden.
      */
-    boolean isLocked();
+    // for future use
+    //boolean isLocked();
     
 }

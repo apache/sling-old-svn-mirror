@@ -16,11 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.impl;
+package org.apache.sling.contextaware.config.management.impl;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
@@ -65,6 +67,33 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
             }
         }
         return null;
+    }
+
+    /**
+     * Persist configuration data with the first implementation that accepts it.
+     */
+    @Override
+    public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
+        for (ConfigurationPersistenceStrategy item : items) {
+            if (item.persist(resourceResolver, configResourcePath, properties)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Persist configuration data with the first implementation that accepts it.
+     */
+    @Override
+    public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
+            Collection<Map<String,Object>> propertiesCollection) {
+        for (ConfigurationPersistenceStrategy item : items) {
+            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, propertiesCollection)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.contextaware.config.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.contextaware.config.management.ConfigurationData;

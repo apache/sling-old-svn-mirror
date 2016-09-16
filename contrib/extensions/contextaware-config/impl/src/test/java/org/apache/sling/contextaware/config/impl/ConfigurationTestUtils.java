@@ -20,6 +20,7 @@ package org.apache.sling.contextaware.config.impl;
 
 import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.contextaware.config.management.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 

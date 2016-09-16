@@ -18,7 +18,11 @@
  */
 package org.apache.sling.contextaware.config.management.impl;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 
 public class CustomConfigurationPersistenceStrategy implements ConfigurationPersistenceStrategy {
@@ -26,6 +30,19 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     @Override
     public Resource getResource(Resource resource) {
         return resource.getChild("jcr:content");
+    }
+
+    @Override
+    public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
+        // TODO: implement persistence
+        return false;
+    }
+
+    @Override
+    public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
+            Collection<Map<String,Object>> propertiesCollection) {
+        // TODO: implement persistence
+        return false;
     }
 
 }

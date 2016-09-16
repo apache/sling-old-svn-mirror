@@ -57,26 +57,8 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     }
 
     @Override
-    public boolean isInherited() {
-        // TODO: implement check
-        return false;
-    }
-
-    @Override
-    public boolean isOverridden() {
-        // TODO: implement check
-        return false;
-    }
-
-    @Override
     public boolean isDefault() {
         return value == null && defaultValue != null;
-    }
-
-    @Override
-    public boolean isLocked() {
-        // TODO: implement check
-        return false;
     }
 
 }
