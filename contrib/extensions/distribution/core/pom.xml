@@ -71,7 +71,8 @@
                             org.apache.sling.distribution.util
                         </Export-Package>
                         <Import-Package>
-                            org.apache.http.nio.*resolution:=optional,
+                            org.apache.http.nio.*;resolution:=optional,
+                            org.apache.http.impl.nio.client.*;resolution:=optional,
                             org.apache.sling.event.jobs;version="[1.5.0,3.0)",
                             org.apache.sling.event.jobs.consumer;version="[1.1,2)",
                             org.apache.sling.jcr.api;version="2.2.0",
