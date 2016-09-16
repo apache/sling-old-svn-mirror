@@ -44,6 +44,7 @@ public interface ConfigurationBuilder {
      * Configuration name is optional - if not given via {@link #name(String)} method it is derived
      * from the annotation interface class name.
      * @param clazz Annotation interface class
+     * @param <T> Annotation class type
      * @return Configuration object. Contains only the default values if content resource or configuration cannot be found.
      */
     @Nonnull <T> T as(@Nonnull Class<T> clazz);
@@ -53,6 +54,7 @@ public interface ConfigurationBuilder {
      * Configuration name is optional - if not given via {@link #name(String)} method it is derived
      * from the annotation interface class name.
      * @param clazz Annotation interface class
+     * @param <T> Annotation class type
      * @return Collection of configuration objects. Is empty if content resource or configuration cannot be found.
      */
     @Nonnull <T> Collection<T> asCollection(@Nonnull Class<T> clazz);
@@ -65,21 +67,22 @@ public interface ConfigurationBuilder {
 
     /**
      * Get collection of configuration resources with their properties mapped to the given annotation class.
-     * @param clazz Annotation interface class
      * @return Collection of value map. Is empty if content resource or configuration cannot be found.
      */
     @Nonnull Collection<ValueMap> asValueMapCollection();
 
     /**
      * Get configuration as singleton configuration resource and adapt it to the given class.
-     * @param clazz Class that can be adapted from a {@link Resource}
+     * @param clazz Class that can be adapted from a {@link org.apache.sling.api.resource.Resource}
+     * @param <T> Annotation class type
      * @return Object instance or null if content resource or configuration cannot be found or if the adaption was not possible.
      */
     <T> T asAdaptable(@Nonnull Class<T> clazz);
 
     /**
      * Get collection of configuration resources and adapt them to the given class.
-     * @param clazz Class that can be adapted from a {@link Resource}
+     * @param clazz Class that can be adapted from a {@link org.apache.sling.api.resource.Resource}
+     * @param <T> Annotation class type
      * @return Collection of object instances. Is empty if content resource or configuration cannot be found or if the adaption was not possible.
      */
     @Nonnull <T> Collection<T> asAdaptableCollection(@Nonnull Class<T> clazz);

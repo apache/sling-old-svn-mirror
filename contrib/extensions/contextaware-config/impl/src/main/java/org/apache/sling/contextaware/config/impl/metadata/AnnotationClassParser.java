@@ -82,7 +82,7 @@ public final class AnnotationClassParser {
     /**
      * Implements the method name mapping as defined in OSGi R6 Compendium specification,
      * Chapter 112. Declarative Services Specification, Chapter 112.8.2.1. Component Property Mapping.
-     * @param Method
+     * @param methodName Method name
      * @return Mapped property name
      */
     public static String getPropertyName(String methodName) {

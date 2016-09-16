@@ -69,7 +69,6 @@ public interface ConfigurationManager {
     
     /**
      * Creates a new empty configuration data item for a configuration data collection for the given configuration name.
-     * @param resource Context resource
      * @param configName Configuration name
      * @return Configuration data. Is null when no configuration metadata exists.
      */

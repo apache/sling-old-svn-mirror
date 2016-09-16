@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
- * Detects all {@link ConfigurationResourcePersistenceStrategy} implementations in the container
+ * Detects all {@link ConfigurationPersistenceStrategy} implementations in the container
  * and consolidates their result based on service ranking.
  */
 @Component(service = ConfigurationPersistenceStrategyMultiplexer.class,
