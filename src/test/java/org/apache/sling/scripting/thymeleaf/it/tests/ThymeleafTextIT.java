@@ -53,7 +53,7 @@ public class ThymeleafTextIT extends ThymeleafTestSupport {
     @Test
     public void testResourceName() {
         final Element name = document.getElementById("name");
-        assertThat("text", is(name.text()));
+        assertThat(name.text(), is("text"));
     }
 
 }

@@ -53,7 +53,7 @@ public class AdaptToModelIT extends ThymeleafTestSupport {
     @Test
     public void testPageName() {
         final Element name = document.getElementById("name");
-        assertThat("adaptto", is(name.text()));
+        assertThat(name.text(), is("adaptto"));
     }
 
 }
