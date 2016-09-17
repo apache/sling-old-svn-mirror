@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.it.tests;
+package org.apache.sling.scripting.thymeleaf.it.tests.html;
 
 import java.io.IOException;
 
+import org.apache.sling.scripting.thymeleaf.it.tests.ThymeleafTestSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
