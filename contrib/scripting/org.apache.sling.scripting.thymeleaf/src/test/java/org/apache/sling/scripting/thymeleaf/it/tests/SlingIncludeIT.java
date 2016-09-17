@@ -48,21 +48,21 @@ public class SlingIncludeIT extends ThymeleafTestSupport {
     @Test
     public void testJspIncludeSimple() {
         final Element simple = document.getElementById("simple");
-        assertThat("/content/thymeleaf/include", is(simple.text()));
+        assertThat(simple.text(), is("/content/thymeleaf/include"));
     }
 
     @Test
     public void testJspIncludeWrap() {
         final Element wrap = document.getElementById("wrap");
-        assertThat(1, is(wrap.children().size()));
-        assertThat("/content/thymeleaf/include", is(wrap.child(0).text()));
+        assertThat(wrap.children().size(), is(1));
+        assertThat(wrap.child(0).text(), is("/content/thymeleaf/include"));
     }
 
     @Test
     public void testJspIncludeUnwrap() {
         final Element unwrap = document.getElementById("unwrap");
-        assertThat(0, is(unwrap.children().size()));
-        assertThat("/content/thymeleaf/include", is(unwrap.text()));
+        assertThat(unwrap.children().size(), is(0));
+        assertThat(unwrap.text(), is("/content/thymeleaf/include"));
     }
 
 }

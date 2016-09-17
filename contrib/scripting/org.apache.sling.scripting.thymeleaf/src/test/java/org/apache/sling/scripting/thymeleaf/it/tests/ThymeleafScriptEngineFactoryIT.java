@@ -41,12 +41,12 @@ public class ThymeleafScriptEngineFactoryIT extends ThymeleafTestSupport {
 
     @Test
     public void testScriptEngineFactoryEngineName() {
-        assertThat("Apache Sling Scripting Thymeleaf", is(scriptEngineFactory.getEngineName()));
+        assertThat(scriptEngineFactory.getEngineName(), is("Apache Sling Scripting Thymeleaf"));
     }
 
     @Test
     public void testScriptEngineFactoryLanguageName() {
-        assertThat("Thymeleaf", is(scriptEngineFactory.getLanguageName()));
+        assertThat(scriptEngineFactory.getLanguageName(), is("Thymeleaf"));
     }
 
     @Test
