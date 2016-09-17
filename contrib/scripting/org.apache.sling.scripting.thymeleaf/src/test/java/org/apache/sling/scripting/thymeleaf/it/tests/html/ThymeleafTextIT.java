@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.it.tests;
+package org.apache.sling.scripting.thymeleaf.it.tests.html;
 
 import java.io.IOException;
 
+import org.apache.sling.scripting.thymeleaf.it.tests.ThymeleafTestSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,19 +36,25 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class ThymeleafDecoupledTemplateLogicIT extends ThymeleafTestSupport {
+public class ThymeleafTextIT extends ThymeleafTestSupport {
 
     private Document document;
 
     @Before
     public void setup() throws IOException {
-        final String url = String.format("http://localhost:%s/thymeleaf/decoupled.html", httpPort());
+        final String url = String.format("http://localhost:%s/thymeleaf/text.html", httpPort());
         document = Jsoup.connect(url).get();
     }
 
     @Test
     public void testTitle() {
-        assertThat(document.title(), is("Thymeleaf Decoupled Template Logic"));
+        assertThat(document.title(), is("Thymeleaf Text"));
+    }
+
+    @Test
+    public void testResourceName() {
+        final Element name = document.getElementById("name");
+        assertThat(name.text(), is("text"));
     }
 
 }

@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.it.tests;
+package org.apache.sling.scripting.thymeleaf.it.tests.html;
 
 import java.io.IOException;
 
+import org.apache.sling.scripting.thymeleaf.it.tests.ThymeleafTestSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -35,26 +36,25 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class LinkBuilderIT extends ThymeleafTestSupport {
+public class AdaptToModelIT extends ThymeleafTestSupport {
 
     private Document document;
 
     @Before
     public void setup() throws IOException {
-        final String url = String.format("http://localhost:%s/thymeleaf/link.html", httpPort());
+        final String url = String.format("http://localhost:%s/thymeleaf/adaptto.html", httpPort());
         document = Jsoup.connect(url).get();
     }
 
     @Test
-    public void testFooLink() throws IOException {
-        final Element link = document.getElementById("foo");
-        assertThat(link.attributes().get("href"), is("foobar"));
+    public void testTitle() {
+        assertThat(document.title(), is("Sling Models adaptTo()"));
     }
 
     @Test
-    public void testBarLink() throws IOException {
-        final Element link = document.getElementById("bar");
-        assertThat(link.attributes().get("href"), is("bar"));
+    public void testPageName() {
+        final Element name = document.getElementById("name");
+        assertThat(name.text(), is("adaptto"));
     }
 
 }

@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.it.tests;
+package org.apache.sling.scripting.thymeleaf.it.tests.html;
 
 import java.io.IOException;
 
+import org.apache.sling.scripting.thymeleaf.it.tests.ThymeleafTestSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,19 +36,26 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class ThymeleafReplaceIT extends ThymeleafTestSupport {
+public class LinkBuilderIT extends ThymeleafTestSupport {
 
     private Document document;
 
     @Before
     public void setup() throws IOException {
-        final String url = String.format("http://localhost:%s/thymeleaf/replace.html", httpPort());
+        final String url = String.format("http://localhost:%s/thymeleaf/link.html", httpPort());
         document = Jsoup.connect(url).get();
     }
 
     @Test
-    public void testTitle() {
-        assertThat(document.title(), is("Head Title"));
+    public void testFooLink() throws IOException {
+        final Element link = document.getElementById("foo");
+        assertThat(link.attributes().get("href"), is("foobar"));
+    }
+
+    @Test
+    public void testBarLink() throws IOException {
+        final Element link = document.getElementById("bar");
+        assertThat(link.attributes().get("href"), is("bar"));
     }
 
 }
