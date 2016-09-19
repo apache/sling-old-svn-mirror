@@ -19,10 +19,8 @@
 package org.apache.sling.contextaware.config.impl.metadata;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,7 +82,7 @@ public final class AnnotationClassParser {
     /**
      * Implements the method name mapping as defined in OSGi R6 Compendium specification,
      * Chapter 112. Declarative Services Specification, Chapter 112.8.2.1. Component Property Mapping.
-     * @param Method
+     * @param methodName Method name
      * @return Mapped property name
      */
     public static String getPropertyName(String methodName) {
@@ -129,10 +127,11 @@ public final class AnnotationClassParser {
         configMetadata.setProperties(propsArrayToMap(configAnnotation.property()));
 
         // property metadata
-        List<PropertyMetadata<?>> propertyMetadataList = new ArrayList<>();
+        Map<String,PropertyMetadata<?>> propertyMetadataList = new HashMap<>();
         Method[] propertyMethods = clazz.getDeclaredMethods();
         for (Method propertyMethod : propertyMethods) {
-            propertyMetadataList.add(buildPropertyMetadata(propertyMethod, propertyMethod.getReturnType()));
+            PropertyMetadata<?> propertyMetadata = buildPropertyMetadata(propertyMethod, propertyMethod.getReturnType());
+            propertyMetadataList.put(propertyMetadata.getName(), propertyMetadata);
         }
         configMetadata.setPropertyMetadata(propertyMetadataList);
         

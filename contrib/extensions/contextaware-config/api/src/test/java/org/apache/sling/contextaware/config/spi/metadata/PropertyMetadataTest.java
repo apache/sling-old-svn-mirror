@@ -76,4 +76,15 @@ public class PropertyMetadataTest {
         new PropertyMetadata<>(null, Object.class);
     }
 
+    @Test
+    public void testDefaultValueConstructor() {
+        PropertyMetadata<String> stringProp = new PropertyMetadata<>("name1", "defValue");
+        assertEquals("defValue", stringProp.getDefaultValue());
+        assertEquals(String.class, stringProp.getType());
+        
+        PropertyMetadata<Integer> intProp = new PropertyMetadata<>("name1", 5);
+        assertEquals((Integer)5, intProp.getDefaultValue());
+        assertEquals(int.class, intProp.getType());
+    }
+    
 }

@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.apache.sling.api.resource.Resource;
-
-final class TestUtils {
+public final class ConfigurationNameConstants {
     
-    private TestUtils() {
-        // static methods only
+    private ConfigurationNameConstants() {
+        // constants only
     }
 
-    public static void assetResourcePaths(String[] expectedPaths, Collection<Resource> actualResources) {
-        String[] actualPaths = new String[actualResources.size()];
-        int i = 0;
-        for (Iterator<Resource> it=actualResources.iterator(); it.hasNext(); i++) {
-            actualPaths[i] = it.next().getPath();
-        }
-        assertArrayEquals(expectedPaths, actualPaths);
-    }
-    
+    /**
+     * Node name for configuration data.
+     */
+    public static final String CONFIGS_PARENT_NAME = "sling:configs";
+        
 }

@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl.def;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -35,12 +36,14 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
+// TODO: this web console plugin is currently quite broken and needs to be refactored and moved to another package
 @Component(service=Servlet.class,
            property={"org.osgi.framework.Constants.SERVICE_DESCRIPTION=Apache Sling Web Console Plugin for configurations",
                    WebConsoleConstants.PLUGIN_LABEL + "=" + WebConsolePlugin.LABEL,
@@ -55,7 +58,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
     private ResourceResolverFactory resolverFactory;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
-    private ConfigurationResourceResolver configResolver;
+    private ConfigurationResourceResolvingStrategy configResolver;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private XSSAPI xssAPI;
@@ -86,7 +89,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     private void printConfiguration(final PrintWriter pw) {
-        final ConfigurationResourceResolverImpl configResolverImpl = (ConfigurationResourceResolverImpl) configResolver;
+        final DefaultConfigurationResourceResolvingStrategy configResolverImpl = (DefaultConfigurationResourceResolvingStrategy)configResolver;
         tableStart(pw, "Configuration", 2);
         pw.println("<tr>");
         pw.println("<td style='width:20%'>Allowed paths</td>");
@@ -214,7 +217,9 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
                 pw.println("<td>Config paths</td>");
 
                 pw.println("<td>");
-                for (String p : ((ConfigurationResourceResolverImpl)configResolver).getResolvePaths(content)) {
+                Iterator<String> paths = ((DefaultConfigurationResourceResolvingStrategy)configResolver).getResolvePaths(content);
+                while (paths.hasNext()) {
+                    String p = paths.next();
                     if (confRsrc != null && confRsrc.getPath().startsWith(p + "/")) {
                         pw.print("<b>");
                         pw.print(xssAPI.encodeForHTML(p));
