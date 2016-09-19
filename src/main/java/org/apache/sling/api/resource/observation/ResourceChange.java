@@ -28,8 +28,8 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * A resource change event is immutable.
  *
- * A change event can either be local or external. Local changes happended
- * on the same instance, while external changes happended on a different
+ * A change event can either be local or external. Local changes happened
+ * on the same instance, while external changes happened on a different
  * instance.
  *
  * Resource listeners only receive external changes if they mark themselves
