@@ -18,8 +18,7 @@
  */
 package org.apache.sling.contextaware.config.spi.metadata;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -32,7 +31,7 @@ import org.osgi.annotation.versioning.ProviderType;
 public final class ConfigurationMetadata extends AbstractMetadata {
 
     private boolean isList;
-    private List<PropertyMetadata<?>> propertyMetadata;
+    private Map<String,PropertyMetadata<?>> propertyMetadata;
 
     /**
      * @param name Configuration name
@@ -65,14 +64,14 @@ public final class ConfigurationMetadata extends AbstractMetadata {
     /**
      * @return Configuration properties
      */
-    public Collection<PropertyMetadata<?>> getPropertyMetadata() {
+    public Map<String,PropertyMetadata<?>> getPropertyMetadata() {
         return this.propertyMetadata;
     }
 
     /**
      * @param propertyMetadata Configuration properties
      */
-    public void setPropertyMetadata(List<PropertyMetadata<?>> propertyMetadata) {
+    public void setPropertyMetadata(Map<String,PropertyMetadata<?>> propertyMetadata) {
         this.propertyMetadata = propertyMetadata;
     }
 
