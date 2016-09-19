@@ -72,6 +72,12 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.contextaware.config.api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
@@ -108,12 +114,6 @@
             <artifactId>org.apache.sling.xss</artifactId>
             <version>1.0.8</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
