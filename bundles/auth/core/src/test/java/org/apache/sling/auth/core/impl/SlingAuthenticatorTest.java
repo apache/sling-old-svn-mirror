@@ -258,7 +258,7 @@ public class SlingAuthenticatorTest extends TestCase {
     }
 
     public void test_siblingNodeAuthenticationHandlerPath() throws Throwable {
-        final String requestPath = "/content/test2";
+        final String requestPath = "/content/test2.html/en/2016/09/19/test.html";
         final String handlerPath = "/content/test";
 
         assertFalse(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
@@ -277,6 +277,22 @@ public class SlingAuthenticatorTest extends TestCase {
 
         assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
     }
+
+    public void test_requestPathSelectorsAreTakenInConsideration() throws Throwable {
+        final String requestPath = "/content/test.selector1.selector2.html/en/2016/test.html";
+        final String handlerPath = "/content/test";
+
+        assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
+
+    public void test_requestPathSelectorsSiblingAreTakenInConsideration() throws Throwable {
+        final String requestPath = "/content/test.selector1.selector2.html/en/2016/09/19/test.html";
+        final String handlerPath = "/content/test2";
+
+        assertFalse(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
 
     public void test_emptyNodeAuthenticationHandlerPath() throws Throwable {
         final String requestPath = "/content/test";

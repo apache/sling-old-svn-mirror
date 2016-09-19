@@ -1657,11 +1657,15 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         boolean isNodeRequiresAuthHandler() {
-            if (requestPath.equalsIgnoreCase(handlerPath)) {
+            final String requestPathNoSelectors = requestPath.contains(".") ?
+                    requestPath.substring(0, requestPath.indexOf(".")) :
+                    requestPath;
+
+            if (requestPathNoSelectors.equalsIgnoreCase(handlerPath)) {
                 return true;
             }
-            if (requestPath.startsWith(handlerPath)) {
-                final String suffix = requestPath.substring(handlerPath.length());
+            if (requestPathNoSelectors.startsWith(handlerPath)) {
+                final String suffix = requestPathNoSelectors.substring(handlerPath.length());
                 //if is child node auth handler is applied;
                 return suffix.contains("/");
             }
