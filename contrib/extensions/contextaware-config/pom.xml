@@ -41,6 +41,7 @@
     
     <modules>
         <module>api</module>
+        <module>spi</module>
         <module>impl</module>
         <module>integration-tests</module>
         <!-- BND plugin has to be available before starting maven build -> get from maven repository -->

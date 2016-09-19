@@ -27,6 +27,7 @@
   org.apache.sling/org.apache.sling.testing.tools
   org.apache.sling/org.apache.sling.resourcebuilder
   org.apache.sling/org.apache.sling.contextaware.config.api
+  org.apache.sling/org.apache.sling.contextaware.config.spi
   org.apache.sling/org.apache.sling.contextaware.config.impl
     
 [configurations]

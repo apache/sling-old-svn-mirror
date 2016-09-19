@@ -26,45 +26,25 @@
         <version>28</version>
         <relativePath />
     </parent>
-
-    <artifactId>org.apache.sling.contextaware.config.impl</artifactId>
+    
+    <artifactId>org.apache.sling.contextaware.config.spi</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Configuration Implementation</name>
-    <description>Apache Sling Context-Aware Configuration Implementation</description>
+    <name>Apache Sling Context-Aware Configuration SPI</name>
+    <description>Apache Sling Context-Aware Configuration SPI</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/impl</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/impl</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/impl</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/spi</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/spi</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/spi</url>
     </scm>
-
+    
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <executions>
-                    <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
-                    <execution>
-                        <id>scr-metadata</id>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                        <configuration>
-                            <supportIncrementalBuild>true</supportIncrementalBuild>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!-- Export SCR metadata to classpath to have them available in unit tests -->
-                    <exportScr>true</exportScr>
-                    <instructions>
-                        <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html -->
-                        <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
-                    </instructions>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -73,12 +53,6 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.contextaware.config.api</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.contextaware.config.spi</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -93,26 +67,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.9.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.xss</artifactId>
-            <version>1.0.8</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -122,18 +79,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
             <version>2.1.0</version>
@@ -141,14 +86,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
-            <version>1.0.0</version>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+            <version>1.8.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>1.8.0</version>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -167,7 +112,5 @@
             <version>2.0.87-beta</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
-
 </project>
