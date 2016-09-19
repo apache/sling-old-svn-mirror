@@ -16,16 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.impl;
+package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.TestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,21 +35,23 @@ import org.junit.Test;
 /**
  * Tests with content and configurations that form a deeper nested hierarchy.
  */
-public class ConfigurationResourceResolverImplHierarchyTest {
+public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     
     private static final String BUCKET = "sling:test";
 
     @Rule
     public SlingContext context = new SlingContext();
 
-    private ConfigurationResourceResolver underTest;
+    private ConfigurationResourceResolvingStrategy underTest;
 
     private Resource site1Page1;
     private Resource site2Page1;
 
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
+        context.registerInjectActivateService(new DefaultContextPathStrategy());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
         // content resources that form a deeper hierarchy
         context.build()

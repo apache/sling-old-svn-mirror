@@ -34,6 +34,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.ConfigurationResolveException;
@@ -43,6 +46,7 @@ import org.apache.sling.contextaware.config.example.ListConfig;
 import org.apache.sling.contextaware.config.example.NestedConfig;
 import org.apache.sling.contextaware.config.example.SimpleConfig;
 import org.apache.sling.contextaware.config.example.SpecialNamesConfig;
+import org.apache.sling.contextaware.config.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +58,7 @@ public class ConfigurationProxyTest {
     
     @Test
     public void testNonExistingConfig_AllTypes() {
-        AllTypesConfig cfg = ConfigurationProxy.get(null, AllTypesConfig.class);
+        AllTypesConfig cfg = get(null, AllTypesConfig.class);
 
         assertNull(cfg.stringParam());
         assertEquals(STRING_DEFAULT, cfg.stringParamWithDefault());
@@ -81,7 +85,7 @@ public class ConfigurationProxyTest {
 
     @Test
     public void testNonExistingConfig_Nested() {
-        NestedConfig cfg = ConfigurationProxy.get(null, NestedConfig.class);
+        NestedConfig cfg = get(null, NestedConfig.class);
 
         assertNull(cfg.stringParam());
         
@@ -107,7 +111,7 @@ public class ConfigurationProxyTest {
                 "doubleArrayParam", new double[] {DOUBLE_DEFAULT_2},
                 "boolArrayParam", new boolean[] {BOOL_DEFAULT_2,BOOL_DEFAULT})
                 .getCurrentParent();
-        AllTypesConfig cfg = ConfigurationProxy.get(resource, AllTypesConfig.class);
+        AllTypesConfig cfg = get(resource, AllTypesConfig.class);
 
         assertEquals("configValue2", cfg.stringParam());
         assertEquals(STRING_DEFAULT, cfg.stringParamWithDefault());
@@ -137,7 +141,7 @@ public class ConfigurationProxyTest {
         Resource resource = context.build()
                 .resource("/test",  "stringParam", "configValue2", "int_Param", 222, "bool.Param", true)
                 .getCurrentParent();
-        SpecialNamesConfig cfg = ConfigurationProxy.get(resource, SpecialNamesConfig.class);
+        SpecialNamesConfig cfg = get(resource, SpecialNamesConfig.class);
 
         assertEquals("configValue2", cfg.$stringParam());
         assertEquals(222, cfg.int__Param());
@@ -154,7 +158,7 @@ public class ConfigurationProxyTest {
 
         Resource resource = context.resourceResolver().getResource("/test");
         
-        NestedConfig cfg = ConfigurationProxy.get(resource, NestedConfig.class);
+        NestedConfig cfg = get(resource, NestedConfig.class);
 
         assertEquals("v1", cfg.stringParam());
         
@@ -173,61 +177,90 @@ public class ConfigurationProxyTest {
     @Test(expected=ConfigurationResolveException.class)
     public void testInvalidClassConversion() {
         // test with class not supported for configuration mapping
-        ConfigurationProxy.get(null, Rectangle2D.class);
+        get(null, Rectangle2D.class);
     }
 
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_Class() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.clazz();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_Byte() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.byteSingle();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_ByteArray() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.byteArray();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_Short() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.shortSingle();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_ShortArray() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.shortArray();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_Float() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.floatSingle();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_FloatArray() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.floatArray();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_Char() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.charSingle();
     }
     
     @Test(expected=ConfigurationResolveException.class)
     public void testIllegalTypes_CharArray() {
-        IllegalTypesConfig cfg = ConfigurationProxy.get(null, IllegalTypesConfig.class);
+        IllegalTypesConfig cfg = get(null, IllegalTypesConfig.class);
         cfg.charArray();
+    }
+    
+    private <T> T get(Resource resource, Class<T> clazz) {
+        return ConfigurationProxy.get(resource, clazz, childResolver(resource));
+    }
+    
+    // simulate simple child resolver without involving ConfigurationResolver implementation
+    private ChildResolver childResolver(final Resource resource) {
+        return new ChildResolver() {
+            @Override
+            public <T> T getChild(String configName, Class<T> clazz) {
+                Resource child = resource!=null ? resource.getChild(configName) : null;
+                return ConfigurationProxy.get(child, clazz, childResolver(child));
+            }
+            @Override
+            public <T> Collection<T> getChildren(String configName, Class<T> clazz) {
+                List<T> collection = new ArrayList<>();
+                Resource childParent = resource!=null ? resource.getChild(configName) : null;
+                if (childParent != null) {
+                    for (Resource child : childParent.getChildren()) {
+                        T result = ConfigurationProxy.get(child, clazz, childResolver(child));
+                        if (result != null) {
+                            collection.add(result);
+                        }
+                    }
+                }
+                return collection;
+            }
+        };
     }
     
 }

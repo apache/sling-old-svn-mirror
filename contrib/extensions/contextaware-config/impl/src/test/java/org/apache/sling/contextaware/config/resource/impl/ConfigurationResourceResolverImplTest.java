@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.apache.sling.contextaware.config.resource.impl.TestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
@@ -46,7 +46,7 @@ public class ConfigurationResourceResolverImplTest {
 
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
+        underTest = ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
 
         // content resources
         context.build()

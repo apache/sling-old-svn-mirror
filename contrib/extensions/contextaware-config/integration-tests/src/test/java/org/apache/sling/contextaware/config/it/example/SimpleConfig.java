@@ -25,6 +25,8 @@ public @interface SimpleConfig {
 
     String stringParam();
     
+    String stringParamDefault() default "defValue";
+    
     int intParam();
     
     boolean boolParam();

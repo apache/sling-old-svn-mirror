@@ -22,12 +22,9 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
  * Common properties for configuration and properties.
  */
-@ProviderType
 abstract class AbstractMetadata {
 
     private final String name;
