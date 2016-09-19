@@ -293,6 +293,13 @@ public class SlingAuthenticatorTest extends TestCase {
         assertFalse(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
     }
 
+    public void test_requestPathBackSlash() throws Throwable {
+        final String requestPath = "/page1\\somesubepage";
+        final String handlerPath = "/page";
+
+        assertFalse(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
+    }
+
 
     public void test_emptyNodeAuthenticationHandlerPath() throws Throwable {
         final String requestPath = "/content/test";
@@ -300,5 +307,7 @@ public class SlingAuthenticatorTest extends TestCase {
 
         assertTrue(new SlingAuthenticator.AuthenticationHandlerPath(requestPath, handlerPath).isNodeRequiresAuthHandler());
     }
+
+
 
 }
