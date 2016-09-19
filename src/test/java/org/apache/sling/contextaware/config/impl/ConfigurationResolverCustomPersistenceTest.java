@@ -33,15 +33,18 @@ import org.apache.sling.contextaware.config.ConfigurationResolver;
 import org.apache.sling.contextaware.config.example.ListConfig;
 import org.apache.sling.contextaware.config.example.NestedConfig;
 import org.apache.sling.contextaware.config.example.SimpleConfig;
+import org.apache.sling.contextaware.config.management.impl.CustomConfigurationPersistenceStrategy;
+import org.apache.sling.contextaware.config.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.osgi.framework.Constants;
 
 /**
  * Test {@link ConfigurationResolver} with annotation classes for reading the config.
  */
-public class ConfigurationResolverAnnotationClassTest {
+public class ConfigurationResolverCustomPersistenceTest {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -55,33 +58,37 @@ public class ConfigurationResolverAnnotationClassTest {
     public void setUp() {
         underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
 
+        // custom strategy which redirects all config resources to a jcr:content subnode
+        context.registerService(ConfigurationPersistenceStrategy.class,
+                new CustomConfigurationPersistenceStrategy(), Constants.SERVICE_RANKING, 2000);
+        
         // config resources
-        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig",
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.SimpleConfig/jcr:content",
                 "stringParam", "configValue1",
                 "intParam", 111,
                 "boolParam", true);
 
-        context.build().resource("/conf/content/site2/sling:configs/sampleName",
+        context.build().resource("/conf/content/site2/sling:configs/sampleName/jcr:content",
                 "stringParam", "configValue1.1",
                 "intParam", 1111,
                 "boolParam", true);
 
-        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig",
-                "stringParam", "configValue3")
+        context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.NestedConfig")
             .siblingsMode()
-            .resource("subConfig", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
+            .resource("jcr:content", "stringParam", "configValue3")
+            .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
             .hierarchyMode()
             .resource("subListConfig")
             .siblingsMode()
-                .resource("1", "stringParam", "configValue2.1")
-                .resource("2", "stringParam", "configValue2.2")
-                .resource("3", "stringParam", "configValue2.3");
+                .resource("1/jcr:content", "stringParam", "configValue2.1")
+                .resource("2/jcr:content", "stringParam", "configValue2.2")
+                .resource("3/jcr:content", "stringParam", "configValue2.3");
 
         context.build().resource("/conf/content/site2/sling:configs/org.apache.sling.contextaware.config.example.ListConfig")
             .siblingsMode()
-            .resource("1", "stringParam", "configValue1.1")
-            .resource("2", "stringParam", "configValue1.2")
-            .resource("3", "stringParam", "configValue1.3");
+            .resource("1/jcr:content", "stringParam", "configValue1.1")
+            .resource("2/jcr:content", "stringParam", "configValue1.2")
+            .resource("3/jcr:content", "stringParam", "configValue1.3");
 
         // content resources
         context.build().resource("/content/site1", "sling:config-ref", "/conf/content/site1")

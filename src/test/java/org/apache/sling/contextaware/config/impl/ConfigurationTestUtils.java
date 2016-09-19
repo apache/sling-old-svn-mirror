@@ -18,27 +18,27 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.ConfigurationBuilder;
 import org.apache.sling.contextaware.config.ConfigurationResolver;
+import org.apache.sling.contextaware.config.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.contextaware.config.management.impl.ConfigurationPersistenceStrategyMultiplexer;
-import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
-@Component(service=ConfigurationResolver.class, immediate=true)
-public class ConfigurationResolverImpl implements ConfigurationResolver {
-
-    @Reference
-    private ConfigurationResourceResolver configurationResourceResolver;
-
-    @Reference
-    private ConfigurationPersistenceStrategyMultiplexer configurationResourcePersistenceStrategy;
+public final class ConfigurationTestUtils {
     
-    @Override
-    public ConfigurationBuilder get(Resource resource) {
-        return new ConfigurationBuilderImpl(resource, this,
-                configurationResourceResolver, configurationResourcePersistenceStrategy);
+    private ConfigurationTestUtils() {
+        // static methods only
     }
 
+    /**
+     * Register all services for {@link ConfigurationResolver}.
+     * @param context Sling context
+     */
+    public static ConfigurationResolver registerConfigurationResolver(SlingContext context) {
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
+        context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
+        return context.registerInjectActivateService(new ConfigurationResolverImpl());
+    }
+    
 }
