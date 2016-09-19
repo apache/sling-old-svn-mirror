@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.rules</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing Rules</name>
@@ -37,11 +37,11 @@
     </description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.rules-1.0.0</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.rules-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.rules-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/rules</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/rules</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/rules</url>
     </scm>
-    
+
     <build>
         <plugins>
            <plugin>
