@@ -160,10 +160,6 @@ public abstract class AbstractJobHandlingTest {
                     .create(true)
                     .put("name", "Default NodeStore")
                     .asOption(),
-                ConfigurationAdminOptions.newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
-                    .create(true)
-                    .put("enabled", true)
-                    .asOption(),
                 ConfigurationAdminOptions.newConfiguration("org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
                     .create(true)
                     .put("oak.observation.queue-length", 500000)
