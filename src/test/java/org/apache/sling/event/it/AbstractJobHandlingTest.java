@@ -164,6 +164,11 @@ public abstract class AbstractJobHandlingTest {
                     .create(true)
                     .put("enabled", true)
                     .asOption(),
+                ConfigurationAdminOptions.newConfiguration("org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
+                    .create(true)
+                    .put("oak.observation.queue-length", 500000)
+                    .asOption(),
+
                 // logging
                 systemProperty("pax.exam.logging").value("none"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
