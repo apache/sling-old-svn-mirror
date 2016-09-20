@@ -18,7 +18,7 @@
  */
 package org.apache.sling.event.jobs.consumer;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The status of a job after it has been processed by a {@link JobExecutor}.

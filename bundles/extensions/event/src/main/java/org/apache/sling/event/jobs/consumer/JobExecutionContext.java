@@ -18,7 +18,7 @@
  */
 package org.apache.sling.event.jobs.consumer;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  *

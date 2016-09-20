@@ -21,7 +21,8 @@ package org.apache.sling.event.jobs;
 import java.util.Calendar;
 import java.util.Set;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * A job

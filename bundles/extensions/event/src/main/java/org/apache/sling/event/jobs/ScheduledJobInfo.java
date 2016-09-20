@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Information about a scheduled job

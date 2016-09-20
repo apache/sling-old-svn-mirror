@@ -20,7 +20,7 @@ package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A job executor consumes a job.
