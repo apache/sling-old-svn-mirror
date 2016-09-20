@@ -160,10 +160,6 @@ public abstract class AbstractJobHandlingTest {
                     .create(true)
                     .put("name", "Default NodeStore")
                     .asOption(),
-                ConfigurationAdminOptions.newConfiguration("org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
-                    .create(true)
-                    .put("oak.observation.queue-length", 500000)
-                    .asOption(),
 
                 // logging
                 systemProperty("pax.exam.logging").value("none"),
