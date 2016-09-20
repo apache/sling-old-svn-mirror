@@ -17,8 +17,7 @@
  * under the License.
  */
 
-@Version("2.0.0")
+@org.osgi.annotation.versioning.Version("2.0.1")
 package org.apache.sling.event.jobs;
 
-import aQute.bnd.annotation.Version;
 

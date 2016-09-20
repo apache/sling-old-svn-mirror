@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This is a builder interface to build jobs and scheduled jobs.

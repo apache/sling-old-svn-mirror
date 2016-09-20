@@ -21,7 +21,9 @@ package org.apache.sling.event.impl.jobs;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +36,13 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
@@ -63,6 +66,9 @@ import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -80,10 +86,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="scheduler.period", longValue=60),
     @Property(name="scheduler.concurrent", boolValue=false),
     @Property(name=EventConstants.EVENT_TOPIC,
-              value={SlingConstants.TOPIC_RESOURCE_ADDED,
-                     SlingConstants.TOPIC_RESOURCE_CHANGED,
-                     SlingConstants.TOPIC_RESOURCE_REMOVED,
-                     ResourceHelper.BUNDLE_EVENT_STARTED,
+              value={ResourceHelper.BUNDLE_EVENT_STARTED,
                      ResourceHelper.BUNDLE_EVENT_UPDATED})
 })
 public class JobManagerImpl
@@ -122,15 +125,27 @@ public class JobManagerImpl
     /** Job Scheduler. */
     private org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl jobScheduler;
 
+    private volatile ServiceRegistration<ResourceChangeListener> changeListenerReg;
+
     /**
      * Activate this component.
      * @param props Configuration properties
      */
     @Activate
-    protected void activate(final Map<String, Object> props) throws LoginException {
+    protected void activate(final BundleContext ctx, final Map<String, Object> props) throws LoginException {
         this.jobScheduler = new org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl(this.configuration, this.scheduler, this);
         this.maintenanceTask = new CleanUpTask(this.configuration, this.jobScheduler);
 
+        final Dictionary<String, Object> regProps = new Hashtable<>();
+        regProps.put(ResourceChangeListener.PATHS, this.configuration.getScheduledJobsPath(false));
+        regProps.put(ResourceChangeListener.CHANGES, new String[] {
+            ResourceChange.ChangeType.ADDED.name(),
+            ResourceChange.ChangeType.CHANGED.name(),
+            ResourceChange.ChangeType.REMOVED.name()
+        });
+        regProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        regProps.put(Constants.SERVICE_DESCRIPTION, "Resource change listener for scheduled jobs");
+        this.changeListenerReg = ctx.registerService(ResourceChangeListener.class, this.jobScheduler, regProps);
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
 
@@ -140,6 +155,11 @@ public class JobManagerImpl
     @Deactivate
     protected void deactivate() {
         logger.debug("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
+
+        if ( this.changeListenerReg != null ) {
+            this.changeListenerReg.unregister();
+            this.changeListenerReg = null;
+        }
 
         this.jobScheduler.deactivate();
 
