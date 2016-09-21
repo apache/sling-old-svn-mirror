@@ -22,18 +22,18 @@ For example to get a configuration resource for a content resource at /content/m
 
     Resource pageResource = resourceResolver.getResource("/content/mysite/page1");
 
-    Resource configResource = configurationResourceResolver.getResource(pageResource, "site-configuration");
+    Resource configResource = configurationResourceResolver.getResource(pageResource, "configs", "site-configuration");
 
 Or if you have several configuration resources of the same type and you need all of them:
 
-    Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "socialmedia");
+    Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(pageResource, "configs", socialmedia");
 
 1.2 Context-Aware Configurations
 ================================
 
 While context-aware resources give you pure resources and your application code can decide what to do with it,
-the most common use case is some configuration. A configuration is usually described by a DTO like class, interface
-or annotation (like Declarative Services does for component configurations). These are typed configuration objects
+the most common use case is some configuration. A configuration is usually described by an annotation class
+(like Declarative Services does for component configurations). These are typed configuration objects
 and the context-aware configuration support automatically converts resources into the wanted configuration type.
 
 Context-aware configurations are built on top of context-aware resources. The same concept is used: configurations are
@@ -57,56 +57,56 @@ The following is how the default implementation in Apache Sling works:
 =====================
 
 The first step is to find out to which context (e.g. site or tenant) a resource belongs. The mechanism starts at the given content resource
-and looks for a property named "sling:config". It traverses up the resource hierarchy until either root os reached or such a property is found.
-If no property is found, there are the following fallbacks which will be searched in the given order : "/config/global", "/apps", and "/libs".
+and looks for a property named "sling:config-ref". It traverses up the resource hierarchy until either root os reached or such a property is found.
+If no property is found, there are the following fallbacks which will be searched in the given order : "/conf/global", "/apps/conf", and "/libs/conf".
 These fallbacks are also used if a configuration resource is requested which does not exist in the given context.
 
 For example with this content structure
 
     /content
       /mysite
-        @sling:config = /config/tenants/piedpiper
+        @sling:config-ref = /conf/tenants/piedpiper
           /page1
           /page2
           /sub
-            @sling:config = /config/tenants/piedpiper/sub
+            @sling:config-ref = /conf/tenants/piedpiper/sub
               /pageA
               /pageB
                 
-The context for "/content/mysite/page1" is "/config/tenants/piedpiper" while for "/content/mysite/sub/pageA" it is "/config/tenants/piedpiper/sub"
+The context for "/content/mysite/page1" is "/conf/tenants/piedpiper" while for "/content/mysite/sub/pageA" it is "/conf/tenants/piedpiper/sub"
 
 For "/content/mysite/page1" the implementation searches at these paths for a configuration resource named "socialmedia/facebook":
 
-    /config/tenants/piedpiper/sling:configs/socialmedia/facebook
-    /config/global/sling:configs/socialmedia/facebook
-    /apps/sling:configs/socialmedia/facebook
-    /libs/sling:configs/socialmedia/facebook
+    /conf/tenants/piedpiper/sling:configs/socialmedia/facebook
+    /conf/global/sling:configs/socialmedia/facebook
+    /apps/conf/sling:configs/socialmedia/facebook
+    /libs/conf/sling:configs/socialmedia/facebook
 
 The first resource found at these locations is used, if none is found, no context-aware resource will be returned.
 
 For "/content/mysite/sub/pageA" the implementation searches at these paths for a configuration resource named "socialmedia/facebook"
 
-    /config/tenants/piedpiper/sub/sling:configs/socialmedia/facebook
-    /config/global/sling:configs/socialmedia/facebook
-    /apps/sling:configs/socialmedia/facebook
-    /libs/sling:configs/socialmedia/facebook
+    /conf/tenants/piedpiper/sub/sling:configs/socialmedia/facebook
+    /conf/global/sling:configs/socialmedia/facebook
+    /apps/conf/sling:configs/socialmedia/facebook
+    /libs/conf/sling:configs/socialmedia/facebook
 
 2.2 Content Model
 =================
 
-Configurations are stored under /config
+Configurations are stored under /conf
 
-    /config
+    /conf
         /global
             /sling:configs
                 /socialmedia
                     /youtube
-                      @enabled = false  <-  "enabled" is a property of the youtube resource, denoted by the @ prefix
-                      @url = https://youtube.com <-  "url" is a property of the youtube resource, denoted by the @ prefix
+                      @enabled = false
+                      @url = https://youtube.com
         /tenants
             /piedpiper
                 /sling:configs
                     /socialmedia
                         /facebook 
-                          @enabled = true  <-  "enabled" is a property of the facebook resource, denoted by the @ prefix
-                          @url = https://facebook.com <-  "url" is a property of the facebook resource, denoted by the @ prefix
+                          @enabled = true
+                          @url = https://facebook.com
