@@ -18,12 +18,13 @@
  */
 package org.apache.sling.i18n.it;
 
+import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionModels;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 
-import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -35,15 +36,13 @@ import javax.jcr.Session;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.i18n.impl.Message;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.paxexam.util.SlingPaxOptions;
+import org.apache.sling.testing.paxexam.TestSupport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
@@ -51,7 +50,7 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class ResourceBundleProviderIT {
+public class ResourceBundleProviderIT extends TestSupport {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -73,6 +72,22 @@ public class ResourceBundleProviderIT {
     private Node enRoot;
 
     @org.ops4j.pax.exam.Configuration
+    public Option[] configuration() {
+        final String workingDirectory = workingDirectory(); // from TestSupport
+        final int httpPort = findFreePort(); // from TestSupport
+
+        return new Option[]{
+            baseConfiguration(), // from TestSupport
+            slingLaunchpadOakTar(workingDirectory, httpPort), // from SlingOptions
+            slingExtensionModels(), // from SlingOptions (for illustration)
+            // build artifact
+            testBundle("bundle.filename"), // from TestSupport
+            // testing
+            junitBundles()
+        };
+    }
+/*
+    @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
         final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
@@ -84,7 +99,7 @@ public class ResourceBundleProviderIT {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.4.0")
                 ).getOptions();
     }
-
+*/
     static abstract class Retry {
         Retry(int timeoutMsec) {
             final long timeout = System.currentTimeMillis() + timeoutMsec;

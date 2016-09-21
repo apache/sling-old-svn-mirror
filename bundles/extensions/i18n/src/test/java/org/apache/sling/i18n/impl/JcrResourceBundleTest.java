@@ -328,6 +328,30 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                 // TODO Auto-generated method stub
 
             }
+
+            @Override
+            public Resource getParent(Resource child) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public boolean hasChildren(Resource resource) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+                // TODO Auto-generated method stub
+                return null;
+            }
         };
 
         createTestContent();
