@@ -30,6 +30,7 @@ import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,6 +47,7 @@ public class JMSQueueManager implements QueueManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSQueueManager.class);
     private static final String NRETRIES = "_nr";
+    private static final Set<String> INTERNAL_PROPS = Collections.singleton(NRETRIES);
 
     @Reference
     private ConnectionFactoryService connectionFactoryService;
@@ -92,8 +94,10 @@ public class JMSQueueManager implements QueueManager {
         Session session = null;
         try {
             session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-            message.put(NRETRIES, 0L); // set the number of retries to 0.
-            TextMessage textMessage = session.createTextMessage(Json.toJson(message));
+            //TODO Instead of copy do addition at JSON writer level
+            Map<String, Object> msgCopy = new HashMap<>(message);
+            msgCopy.put(NRETRIES, 0L); // set the number of retries to 0.
+            TextMessage textMessage = session.createTextMessage(Json.toJson(msgCopy));
             textMessage.setJMSType(JMSMessageTypes.JSON.toString());
             LOGGER.info("Sending to {} message {} ", name, textMessage);
             session.createProducer(session.createQueue(name.toString())).send(textMessage);
@@ -189,6 +193,13 @@ public class JMSQueueManager implements QueueManager {
         }
     }
 
+    private static Map<String,Object> filter(Map<String, Object> map) {
+        //Filter out internal properties
+        for (String internalKey : INTERNAL_PROPS){
+            map.remove(internalKey);
+        }
+        return map;
+    }
 
     public static class JMSQueueSession implements Closeable, MessageListener {
         private static final Logger LOGGER = LoggerFactory.getLogger(JMSQueueSession.class);
@@ -248,7 +259,7 @@ public class JMSQueueManager implements QueueManager {
                             final Map<String, Object> mapMessage = Json.toMap(textMessage.getText());
                             Types.QueueName queueName = Types.queueName(queue.getQueueName());
                             if (queueName.equals(name) && messageFilter.accept(queueName, mapMessage)) {
-                                queueReader.onMessage(queueName, mapMessage);
+                                queueReader.onMessage(queueName, filter(mapMessage));
                                 session.commit();
                                 // all ok.
                                 committed = true;
@@ -260,7 +271,7 @@ public class JMSQueueManager implements QueueManager {
                     LOGGER.info("QueueReader requested requeue of message ", e);
                     if (retryByRequeue && textMessage != null) {
                         Map<String, Object> mapMessage = Json.toMap(textMessage.getText());
-                        if ((int)mapMessage.get(NRETRIES) < maxRetries) {
+                        if ((long)mapMessage.get(NRETRIES) < maxRetries) {
                             mapMessage.put(NRETRIES, ((long) mapMessage.get(NRETRIES)) + 1);
                             TextMessage retryMessage = session.createTextMessage(Json.toJson(mapMessage));
                             retryMessage.setJMSType(JMSMessageTypes.JSON.toString());

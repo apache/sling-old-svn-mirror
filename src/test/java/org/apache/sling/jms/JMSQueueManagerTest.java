@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -204,7 +205,7 @@ public class JMSQueueManagerTest {
         // make the test map unique, if the dequeue fails, then the message wont be the first.
         testMap.put("testing", queueName + System.currentTimeMillis());
         LOGGER.info("Sending message to queue");
-        jmsQueueManager.add(Types.queueName(queueName), testMap);
+        jmsQueueManager.add(Types.queueName(queueName), Collections.unmodifiableMap(testMap));
         LOGGER.info("Sent message to queue ... receiving from queue");
 
         checkMessagesInQueue(queueName, 1);
