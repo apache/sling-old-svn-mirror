@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,7 +32,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -39,6 +39,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
@@ -46,8 +49,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 
 /**
  * The IdMapService is responsible for storing a slingId-clusterNodeId
@@ -56,7 +57,7 @@ import org.osgi.service.event.EventHandler;
  */
 @Component(immediate = false)
 @Service(value = { IdMapService.class })
-public class IdMapService extends AbstractServiceWithBackgroundCheck implements EventHandler {
+public class IdMapService extends AbstractServiceWithBackgroundCheck implements ResourceChangeListener {
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -80,7 +81,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration eventHandlerRegistration;
+    private volatile ServiceRegistration<ResourceChangeListener> eventHandlerRegistration;
     
     /** test-only constructor **/
     public static IdMapService testConstructor(
@@ -131,18 +132,16 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         }
         Dictionary<String,Object> properties = new Hashtable<String,Object>();
         properties.put(Constants.SERVICE_DESCRIPTION, "IdMap Change Listener.");
+        properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         String[] topics = new String[] {
-                SlingConstants.TOPIC_RESOURCE_ADDED,
-                SlingConstants.TOPIC_RESOURCE_CHANGED,
-                SlingConstants.TOPIC_RESOURCE_REMOVED };
-        properties.put(EventConstants.EVENT_TOPIC, topics);
-        String path = getIdMapPath();
-        if (path.endsWith("/")) {
-            path = path.substring(0, path.length()-1);
-        }
-        properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
-        eventHandlerRegistration = bundleContext.registerService(
-                EventHandler.class.getName(), this, properties);
+                ChangeType.ADDED.toString(),
+                ChangeType.CHANGED.toString(),
+                ChangeType.REMOVED.toString()
+                };
+        properties.put(ResourceChangeListener.CHANGES, topics);
+        properties.put(ResourceChangeListener.PATHS, getIdMapPath());
+
+        this.eventHandlerRegistration = bundleContext.registerService(ResourceChangeListener.class, this, properties);
     }
 
     /** Get or create a ResourceResolver **/
@@ -318,18 +317,11 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
     }
 
     @Override
-    public void handleEvent(Event event) {
-        final String resourcePath = (String) event.getProperty("path");
-        if (resourcePath == null) {
-            // not of my business
-            return;
-        }
-        
-        if (!resourcePath.startsWith(getIdMapPath())) {
-            // not of my business
-            return;
-        }
-        logger.debug("handleEvent: got event for path: {}, event: {}", resourcePath, event);
+    public void onChange(List<ResourceChange> changes) {
+        // the listener is registered on the .../idmap subpath, so any
+        // change it receives should be relevant. hence no further
+        // filtering necessary here.
+        logger.debug("onChange: got notified of changes, clearing cache.");
         clearCache();
     }
 

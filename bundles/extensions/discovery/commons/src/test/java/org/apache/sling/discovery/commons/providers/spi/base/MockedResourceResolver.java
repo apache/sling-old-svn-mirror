@@ -326,4 +326,24 @@ public class MockedResourceResolver implements ResourceResolver {
 
     }
 
+    @Override
+    public Resource getParent(Resource child) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public boolean hasChildren(Resource resource) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
 }
