@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Servlet executing plumber for a pipe path given as 'path' parameter,
@@ -110,13 +112,16 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             OutputWriter writer = getWriter(request, response, pipe);
             int i = 0;
             Iterator<Resource> resourceIterator = pipe.getOutput();
+            Set<String> paths = new HashSet<String>();
             while (resourceIterator.hasNext()){
                 Resource resource = resourceIterator.next();
+                paths.add(resource.getPath());
                 if (++i < size) {
                     writer.writeItem(resource);
                 }
             }
             writer.ends(i);
+            plumber.persist(resolver, pipe, paths);
         } catch (Exception e) {
             throw new ServletException(e);
         }

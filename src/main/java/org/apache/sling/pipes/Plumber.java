@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -27,7 +28,7 @@ import java.util.Set;
  */
 public interface Plumber {
 
-    public static final String RESOURCE_TYPE = "slingPipes/plumber";
+    String RESOURCE_TYPE = "slingPipes/plumber";
 
     /**
      * Instantiate a pipe from the given resource and returns it
@@ -59,9 +60,19 @@ public interface Plumber {
     Set<String> execute(ResourceResolver resolver, Pipe pipe, Map bindings, boolean save) throws Exception;
 
     /**
+     * Persist some pipe changes, and eventually distribute changes
+     * @param resolver
+     * @param pipe pipe from which the change occurred
+     * @param paths set of changed paths
+     */
+    void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths) throws PersistenceException;
+
+    /**
      * Registers
      * @param type
      * @param pipeClass
      */
     void registerPipe(String type, Class<? extends BasePipe> pipeClass);
+
+
 }
