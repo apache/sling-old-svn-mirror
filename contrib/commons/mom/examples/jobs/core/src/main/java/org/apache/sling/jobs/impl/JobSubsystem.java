@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jobs.*;
 import org.apache.sling.jobs.impl.spi.JobStorage;
 import org.apache.sling.jobs.impl.storage.InMemoryJobStorage;
@@ -192,7 +193,7 @@ public class JobSubsystem  implements JobManager, JobConsumer {
             if ( consumer instanceof JobTypeValve) {
                 jobTypes = ImmutableSet.of();
             } else {
-                jobTypes = Types.jobType((String[]) properties.get(JobConsumer.JOB_TYPES));
+                jobTypes = Types.jobType(PropertiesUtil.toStringArray(properties.get(JobConsumer.JOB_TYPES)));
             }
         }
 
