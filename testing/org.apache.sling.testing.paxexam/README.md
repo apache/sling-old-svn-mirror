@@ -15,6 +15,50 @@ Apache Sling Testing Pax Exam
 Getting Started
 ---------------
 
+Add required dependencies:
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.paxexam</artifactId>
+      <version>${org.apache.sling.testing.paxexam.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-cm</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-forked</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-junit4</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>${org.ops4j.pax.exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+
 Configure the build artifact (*bundle*) to use in integration testing in `pom.xml`:
 
       <plugin>
@@ -37,6 +81,21 @@ Configure the build artifact (*bundle*) to use in integration testing in `pom.xm
             </property>
           </systemProperties>
         </configuration>
+      </plugin>
+
+Add `depends-maven-plugin` when using `TestSupport#baseConfiguration()` or `SlingVersionResolver#setVersionFromProject(…)` (see below):
+
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <version>1.3.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
 Create a test class (extend `TestSupport` to use helper methods and `Option`s) and provide a *Configuration* (`Option[]`) for Pax Exam:
@@ -66,3 +125,7 @@ Create a test class (extend `TestSupport` to use helper methods and `Option`s) a
 **Overriding (or adding) versions:**
 
     SlingOptions.versionResolver.setVersion(SLING_GROUP_ID, "org.apache.sling.jcr.oak.server", "1.1.0");
+
+using a version from project (`pom.xml`):
+
+    SlingOptions.versionResolver.setVersionFromProject(SLING_GROUP_ID, "org.apache.sling.jcr.oak.server");
