@@ -100,6 +100,26 @@
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                            <minPortNumber>45000</minPortNumber>
+                            <maxPortNumber>45999</maxPortNumber>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.18.1</version>
@@ -117,20 +137,10 @@
                         <pax.exam.log.level>${pax.exam.log.level}</pax.exam.log.level>
                         <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
                         <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                        <bundle.build.dir>${basedir}/target</bundle.build.dir>
+                        <org.osgi.service.http.port>${http.port}</org.osgi.service.http.port>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.servicemix.tooling</groupId>
-                <artifactId>depends-maven-plugin</artifactId>
-                <version>1.3.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-depends-file</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -212,12 +222,6 @@
             <scope>provided</scope>
         </dependency>
         <!-- Testing -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.paxexam</artifactId>
-            <version>0.0.2</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
