@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -42,20 +43,20 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +67,9 @@ import org.slf4j.LoggerFactory;
  * repository.
  */
 @Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
-@Service({ResourceBundleProvider.class, EventHandler.class})
-@Property(name=EventConstants.EVENT_TOPIC, value="org/apache/sling/api/resource/Resource/*", propertyPrivate=true)
-public class JcrResourceBundleProvider implements ResourceBundleProvider, EventHandler {
+@Service({ResourceBundleProvider.class, ResourceChangeListener.class})
+@Property(name=ResourceChangeListener.PATHS, value="/", propertyPrivate=true)
+public class JcrResourceBundleProvider implements ResourceBundleProvider, ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
 
@@ -185,22 +186,21 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
     // ---------- EventHandler ------------------------------------------------
 
     @Override
-    public void handleEvent(final org.osgi.service.event.Event event) {
-        final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-        if (path != null) {
-            log.trace("handleEvent: Detecting event {} for path '{}'", event, path);
+    public void onChange(List<ResourceChange> changes) {
+        for(final ResourceChange change : changes) {
+            log.trace("handleEvent: Detecting event {} for path '{}'", change.getType(), change.getPath());
 
             // if this change was on languageRootPath level this might change basename and locale as well, therefore
             // invalidate everything
-            if (languageRootPaths.contains(path)) {
+            if (languageRootPaths.contains(change.getPath())) {
                 log.debug(
                         "handleEvent: Detected change of cached language root '{}', removing all cached ResourceBundles",
-                        path);
+                        change.getPath());
                 scheduleReloadBundles(true);
             } else {
                 // if it is only a change below a root path, only messages of one resource bundle can be affected!
                 for (final String root : languageRootPaths) {
-                    if (path.startsWith(root)) {
+                    if (change.getPath().startsWith(root)) {
                         // figure out which JcrResourceBundle from the cached ones is affected
                         for (JcrResourceBundle bundle : resourceBundleCache.values()) {
                             if (bundle.getLanguageRootPaths().contains(root)) {
@@ -216,46 +216,41 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, EventH
                     }
                 }
                 // may be a completely new dictionary
-                if (isDictionaryResource(path, event)) {
+                if (isDictionaryResource(change)) {
                     scheduleReloadBundles(true);
                 }
             }
         }
     }
 
-    private boolean isDictionaryResource(final String path, final org.osgi.service.event.Event event) {
+    private boolean isDictionaryResource(final ResourceChange change) {
         // language node changes happen quite frequently (https://issues.apache.org/jira/browse/SLING-2881)
         // therefore only consider changes either for sling:MessageEntry's
         // or for JSON dictionaries
-        String resourceType = (String) event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
-        if (resourceType == null) {
-            return false;
-        }
-        if (JcrResourceBundle.RT_MESSAGE_ENTRY.equals(resourceType)) {
-            log.debug("Found new dictionary entry: New {} resource in '{}' detected", JcrResourceBundle.RT_MESSAGE_ENTRY, path);
-            return true;
-        }
         // get valuemap
         resourceResolver.refresh();
-        Resource resource = resourceResolver.getResource(path);
+        final Resource resource = resourceResolver.getResource(change.getPath());
         if (resource == null) {
-            log.trace("Could not resource for '{}' for event {}", path, event);
+            log.trace("Could not get resource for '{}' for event {}", change.getPath(), change.getType());
             return false;
         }
-        ValueMap valueMap = resource.adaptTo(ValueMap.class);
-        if (valueMap == null) {
-            log.trace("Could not get value map for '{}' for event {}", path, event);
+        if ( resource.getResourceType() == null ) {
             return false;
         }
-        // FIXME: derivatives from mix:Message are not detected
-        if (hasMixin(valueMap, JcrResourceBundle.MIXIN_MESSAGE)) {
-            log.debug("Found new dictionary entry: New {} resource in '{}' detected", JcrResourceBundle.MIXIN_MESSAGE, path);
+        if (resource.isResourceType(JcrResourceBundle.RT_MESSAGE_ENTRY)) {
+            log.debug("Found new dictionary entry: New {} resource in '{}' detected", JcrResourceBundle.RT_MESSAGE_ENTRY, change.getPath());
             return true;
         }
-        if (path.endsWith(".json")) {
+        final ValueMap valueMap = resource.getValueMap();
+        // FIXME: derivatives from mix:Message are not detected
+        if (hasMixin(valueMap, JcrResourceBundle.MIXIN_MESSAGE)) {
+            log.debug("Found new dictionary entry: New {} resource in '{}' detected", JcrResourceBundle.MIXIN_MESSAGE, change.getPath());
+            return true;
+        }
+        if (change.getPath().endsWith(".json")) {
             // check for mixin
             if (hasMixin(valueMap, JcrResourceBundle.MIXIN_LANGUAGE)) {
-                log.debug("Found new dictionary: New {} resource in '{}' detected", JcrResourceBundle.MIXIN_LANGUAGE, path);
+                log.debug("Found new dictionary: New {} resource in '{}' detected", JcrResourceBundle.MIXIN_LANGUAGE, change.getPath());
                 return true;
             }
         }
