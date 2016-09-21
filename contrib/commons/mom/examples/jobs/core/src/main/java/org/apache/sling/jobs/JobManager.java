@@ -34,8 +34,9 @@ public interface JobManager {
 
     /**
      * Fluent API to create, start and schedule new jobs
-     * @param queue Required queue
-     * @param  jobType required job type.
+     * @param queue Required queue. This job will be submitted to the named queue.
+     * @param  jobType required job type. The job will have a job type which is used to select the Job consumer that can
+     *                 process the job.
      * @return A job builder
      */
     @Nonnull

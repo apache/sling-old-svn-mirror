@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
+ * A JobBuilder allows users of the JobSystem to modify the properties of the Job and submit it for processing.
  */
 public interface JobBuilder {
 

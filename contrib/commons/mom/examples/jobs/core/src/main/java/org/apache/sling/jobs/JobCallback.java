@@ -26,5 +26,9 @@ package org.apache.sling.jobs;
  */
 public interface JobCallback {
 
+    /**
+     * Call back with an update job state.
+     * @param finalJobState
+     */
     void callback(Job finalJobState);
 }

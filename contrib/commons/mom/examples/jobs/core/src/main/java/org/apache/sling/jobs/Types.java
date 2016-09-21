@@ -31,10 +31,15 @@ public final class Types {
 
 
 
+
     private Types() {
 
     }
 
+    /**
+     * Interface to identify JobQueues. JobQueues have an associated MoM Queue and a MoM Topic, both of which
+     * are available via this interface. The MoM Queue contains commands, the the MoM Topic contains status updates.
+     */
     public interface JobQueue {
         org.apache.sling.mom.Types.QueueName asQueueName();
 
@@ -42,17 +47,36 @@ public final class Types {
 
     }
 
+    /**
+     * Interface to identify JobTypes. Jobs are identified by a JobType, independent of the JobQueue or the underlying
+     * MoM Queue or MoM Topic.
+     */
     public interface JobType {
     }
 
+    /**
+     * Create a JobQueue from a string represtnation, normally this us a path representing the jobQueue, although the path
+     * hierachy may not have any significance depending on the MoM implementation.
+     * @param jobQueue
+     * @return
+     */
     public static JobQueue jobQueue(String jobQueue) {
         return new JobQueueImpl(jobQueue);
     }
 
+    /**
+     * Create a JobType from a string representation.
+     * @param jobType
+     * @return
+     */
     public static JobType jobType(String jobType) {
         return new JobTypeImpl(jobType);
     }
 
+    /**
+     * A special JobQueue that represents any available queue. Normally used for filtering queue messages. Probably wont
+     * work as a destination queue (broadcast) depending on the MoM Implementation.
+     */
     public static JobQueue ANY_JOB_QUEUE = new AnyJobQueue();
 
 

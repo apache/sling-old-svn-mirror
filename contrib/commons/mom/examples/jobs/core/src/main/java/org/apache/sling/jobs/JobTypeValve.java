@@ -22,6 +22,9 @@ import javax.annotation.Nonnull;
 
 /**
  * Created by ieb on 12/04/2016.
+ * An interface to allow a component, normally a JobConsumer to inspect a JobType and indicate that
+ * it can perform further actions on it. JobTypeValves are used in place of static JobType declarations.
+ * This interface is only implemented where static declaration of JobTypes does not satisfy the use cases.
  */
 public interface JobTypeValve {
 
