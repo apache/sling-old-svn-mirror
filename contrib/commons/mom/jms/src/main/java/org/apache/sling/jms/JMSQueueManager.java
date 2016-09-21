@@ -175,7 +175,11 @@ public class JMSQueueManager implements QueueManager {
         }
 
         public void close() {
-            session.close();
+            try {
+                session.close();
+            } catch ( Exception e ) {
+                LOGGER.debug("Exception when closing session.",e);
+            }
         }
     }
 
