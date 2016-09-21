@@ -107,8 +107,8 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <!-- 16.0.0 has a bug or 2 -->
-            <version>16.0.1</version>
+            <!-- Use the version being used in Sling -->
+            <version>15.0</version>
         </dependency>
       <!-- Testing -->
         <dependency>
