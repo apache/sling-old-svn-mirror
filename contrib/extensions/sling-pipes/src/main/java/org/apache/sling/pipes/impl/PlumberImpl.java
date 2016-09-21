@@ -23,6 +23,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
@@ -30,17 +31,32 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.AuthorizablePipe;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.FilterPipe;
+import org.apache.sling.pipes.JsonPipe;
+import org.apache.sling.pipes.MovePipe;
+import org.apache.sling.pipes.MultiPropertyPipe;
+import org.apache.sling.pipes.NotPipe;
+import org.apache.sling.pipes.ParentPipe;
+import org.apache.sling.pipes.PathPipe;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.pipes.RemovePipe;
+import org.apache.sling.pipes.SlingQueryPipe;
+import org.apache.sling.pipes.WritePipe;
+import org.apache.sling.pipes.XPathPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Filter;
+
 
 /**
  * implements plumber interface, and registers default pipes
@@ -52,7 +68,7 @@ public class PlumberImpl implements Plumber {
 
     Map<String, Class<? extends BasePipe>> registry;
 
-    @Reference (policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL_UNARY)
     protected volatile Distributor distributor = null;
 
     @Activate
@@ -115,18 +131,25 @@ public class PlumberImpl implements Plumber {
                 set.add(resource.getPath());
             }
         }
-        if  (pipe.modifiesContent() && save && resolver.hasChanges() && !pipe.isDryRun()){
+        if (save) {
+            persist(resolver, pipe, set);
+        }
+        log.info("[{}] done executing.", pipe.getName());
+        return set;
+    }
+
+    @Override
+    public void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths) throws PersistenceException {
+        if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
             log.info("[{}] saving changes...", pipe.getName());
             resolver.commit();
             if (distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
                 log.info("a distribution agent is configured, will try to distribute the changes");
-                DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, set.toArray(new String[set.size()]));
+                DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, paths.toArray(new String[paths.size()]));
                 DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
                 log.info("distribution response : {}", response);
             }
         }
-        log.info("[{}] done executing.", pipe.getName());
-        return set;
     }
 
     @Override

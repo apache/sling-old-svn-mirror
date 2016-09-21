@@ -103,6 +103,7 @@ public class PlumberServletTest  extends AbstractPipeTest {
         servlet.execute(request, response, true);
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
+        assertFalse("There should be no more pending changes", context.resourceResolver().hasChanges());
     }
 
     /**
