@@ -313,7 +313,12 @@ public class OakViewChecker extends BaseViewChecker {
 
     protected void updateProperties() {
         if (discoveryService == null) {
-            logger.error("issueHeartbeat: discoveryService is null");
+            // SLING-6065: it's legitimate that updateProperties()
+            // (which comes from BaseViewChecker.issueHeartbeat())
+            // is called while discoveryService is not yet set. That's 
+            // due to the fact that discoveryService is set in initialize()
+            // which is called once the OakDiscoveryService is activated
+            // and that can come at a later point.
         } else {
             discoveryService.updateProperties();
         }
