@@ -57,7 +57,7 @@ The following is how the default implementation in Apache Sling works:
 =====================
 
 The first step is to find out to which context (e.g. site or tenant) a resource belongs. The mechanism starts at the given content resource
-and looks for a property named "sling:config-ref". It traverses up the resource hierarchy until either root os reached or such a property is found.
+and looks for a property named "sling:config-ref". It traverses up the resource hierarchy until either root is reached or such a property is found.
 If no property is found, there are the following fallbacks which will be searched in the given order : "/conf/global", "/apps/conf", and "/libs/conf".
 These fallbacks are also used if a configuration resource is requested which does not exist in the given context.
 
