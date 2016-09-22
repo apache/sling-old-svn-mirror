@@ -30,6 +30,8 @@ import java.util.List;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.event.dea.DEAConstants;
 import org.apache.sling.settings.SlingSettingsService;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -77,7 +79,9 @@ public class DistributingEventHandlerTest {
             public void postEvent(final Event event) {
                 final String topic = event.getTopic();
                 if ( topic.equals(SlingConstants.TOPIC_RESOURCE_ADDED) ) {
-                    sender.handleEvent(event);
+                    final ResourceChange change = new ResourceChange(ChangeType.ADDED,
+                            (String)event.getProperty(SlingConstants.PROPERTY_PATH), false, null, null, null);
+                    sender.onChange(Collections.singletonList(change));
                 } else if ( topic.startsWith(TOPIC_PREFIX) ) {
                     events.add(event);
                 }

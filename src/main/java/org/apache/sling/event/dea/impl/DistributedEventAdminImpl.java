@@ -18,17 +18,13 @@
  */
 package org.apache.sling.event.dea.impl;
 
-import java.util.Map;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.EventAdmin;
 
 /**
@@ -37,6 +33,14 @@ import org.osgi.service.event.EventAdmin;
  */
 @Component(name="org.apache.sling.event.impl.DistributingEventHandler")
 public class DistributedEventAdminImpl {
+
+    public @interface Config {
+
+        /** The path where all jobs are stored. */
+        String repository_path() default DEFAULT_REPOSITORY_PATH;
+
+        int cleanup_period() default DEFAULT_CLEANUP_PERIOD;
+    }
 
     public static final String RESOURCE_TYPE_FOLDER = "sling:Folder";
 
@@ -54,15 +58,8 @@ public class DistributedEventAdminImpl {
     /** Default repository path. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/distribution";
 
-    /** The path where all jobs are stored. */
-    @Property(value=DEFAULT_REPOSITORY_PATH)
-    private static final String CONFIG_PROPERTY_REPOSITORY_PATH = "repository.path";
-
     /** Default clean up time is 15 minutes. */
     private static final int DEFAULT_CLEANUP_PERIOD = 15;
-
-    @Property(intValue=DEFAULT_CLEANUP_PERIOD)
-    private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** The local receiver of distributed events .*/
     private DistributedEventReceiver receiver;
@@ -71,19 +68,16 @@ public class DistributedEventAdminImpl {
     private DistributedEventSender sender;
 
     @Activate
-    protected void activate(final BundleContext bundleContext, final Map<String, Object> props) {
-        final int cleanupPeriod = PropertiesUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
-        final String rootPath = PropertiesUtil.toString(props.get(
-                CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
-        final String ownRootPath = rootPath.concat("/").concat(settings.getSlingId());
+    protected void activate(final BundleContext bundleContext, final Config props) {
+        final String ownRootPath = props.repository_path().concat("/").concat(settings.getSlingId());
 
         this.receiver = new DistributedEventReceiver(bundleContext,
-                rootPath,
+                props.repository_path(),
                 ownRootPath,
-                cleanupPeriod,
+                props.cleanup_period(),
                 this.resourceResolverFactory, this.settings);
         this.sender = new DistributedEventSender(bundleContext,
-                              rootPath,
+                              props.repository_path(),
                               ownRootPath,
                               this.resourceResolverFactory, this.eventAdmin);
     }
