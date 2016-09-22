@@ -19,14 +19,14 @@
 package org.apache.sling.contextaware.config.impl;
 
 public final class ConfigurationNameConstants {
-    
+
     private ConfigurationNameConstants() {
         // constants only
     }
 
     /**
-     * Node name for configuration data.
+     * Resource name for configuration data.
      */
     public static final String CONFIGS_PARENT_NAME = "sling:configs";
-        
+
 }
