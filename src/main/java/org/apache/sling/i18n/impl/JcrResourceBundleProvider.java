@@ -67,7 +67,8 @@ import org.slf4j.LoggerFactory;
  * repository.
  */
 @Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
-@Service({ResourceBundleProvider.class})
+@Service({ResourceBundleProvider.class, ResourceChangeListener.class})
+@Property(name=ResourceChangeListener.PATHS, value="/")
 public class JcrResourceBundleProvider implements ResourceBundleProvider, ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
@@ -126,7 +127,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
     /**
      * paths from which JCR resource bundles have been loaded
      */
-    private final Set<LanguageRoot> languageRootPaths = Collections.newSetFromMap(new ConcurrentHashMap<LanguageRoot, Boolean>());
+    private final Set<String> languageRootPaths = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     /**
      * Return root resource bundle as created on-demand by
@@ -198,8 +199,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
                 scheduleReloadBundles(true);
             } else {
                 // if it is only a change below a root path, only messages of one resource bundle can be affected!
-                for (final LanguageRoot root : languageRootPaths) {
-                    if (change.getPath().startsWith(root.path)) {
+                for (final String root : languageRootPaths) {
+                    if (change.getPath().startsWith(root)) {
                         // figure out which JcrResourceBundle from the cached ones is affected
                         for (JcrResourceBundle bundle : resourceBundleCache.values()) {
                             if (bundle.getLanguageRootPaths().contains(root)) {
@@ -449,18 +450,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
         // register language root paths
         final Set<String> languageRoots = resourceBundle.getLanguageRootPaths();
-        for(final String path : languageRoots) {
-            boolean found = this.languageRootPaths.contains(path);
-            if ( !found ) {
-                final Dictionary<String, Object> properties = new Hashtable<>();
-                properties.put(ResourceChangeListener.PATHS, path);
-                final ServiceRegistration<ResourceChangeListener> reg =
-                        this.bundleContext.registerService(ResourceChangeListener.class,
-                                this, properties);
-                final LanguageRoot root = new LanguageRoot(path, reg);
-                languageRootPaths.add(root);
-            }
-        }
+        this.languageRootPaths.addAll(languageRoots);
+
         log.debug("registerResourceBundle({}, ...): added service registration and language roots {}", key, languageRoots);
         log.info("Currently loaded dictionaries across all locales: {}", languageRootPaths);
     }
@@ -533,9 +524,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     private void clearCache() {
         resourceBundleCache.clear();
-        for(final LanguageRoot root : this.languageRootPaths) {
-            root.registration.unregister();
-        }
         languageRootPaths.clear();
 
         synchronized (this) {
@@ -701,31 +689,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         @Override
         public String toString() {
             return "Key(" + baseName + ", " + locale + ")";
-        }
-    }
-
-    public static final class LanguageRoot {
-
-        public final String path;
-
-        public final ServiceRegistration<ResourceChangeListener> registration;
-
-        public LanguageRoot(final String path, final ServiceRegistration<ResourceChangeListener> reg) {
-            this.path = path;
-            this.registration = reg;
-        }
-
-        @Override
-        public int hashCode() {
-            return this.path.hashCode();
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if ( obj == null ) {
-                return false;
-            }
-            return ((obj instanceof LanguageRoot) && this.path.equals(((LanguageRoot)obj).path)) || this.path.equals(obj.toString());
         }
     }
 }
