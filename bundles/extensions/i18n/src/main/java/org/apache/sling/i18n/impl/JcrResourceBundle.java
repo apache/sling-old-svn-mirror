@@ -210,9 +210,7 @@ public class JcrResourceBundle extends ResourceBundle {
                 loadSlingMessageDictionary(dictionaryResource, dictionary);
             }
 
-            if (!dictionary.isEmpty()) {
-                languageRoots.add(root);
-            }
+            languageRoots.add(root);
         }
 
         // linked hash map to keep order (not functionally important, but helpful for dictionary debugging)
