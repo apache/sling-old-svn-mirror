@@ -97,7 +97,7 @@ public class DistributedEventReceiver
     private volatile Set<String> instances;
 
     /** The service registration. */
-    private volatile ServiceRegistration serviceRegistration;
+    private volatile ServiceRegistration<?> serviceRegistration;
 
     public DistributedEventReceiver(final BundleContext bundleContext,
             final String rootPath,
@@ -127,7 +127,7 @@ public class DistributedEventReceiver
                 props.put("scheduler.period", 1800L);
                 props.put("scheduler.concurrent", Boolean.FALSE);
 
-                final ServiceRegistration reg =
+                final ServiceRegistration<?> reg =
                         bundleContext.registerService(new String[] {EventHandler.class.getName(),
                                                                    Runnable.class.getName(),
                                                                    TopologyEventListener.class.getName()},
