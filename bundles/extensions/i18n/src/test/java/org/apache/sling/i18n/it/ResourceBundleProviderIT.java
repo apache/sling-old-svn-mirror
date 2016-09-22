@@ -160,6 +160,10 @@ public class ResourceBundleProviderIT {
                     .create(true)
                     .put("name", "Default NodeStore")
                     .asOption(),
+                ConfigurationAdminOptions.newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
+                    .create(true)
+                    .put("enabled", true)
+                    .asOption(),
 
                 // logging
                 systemProperty("pax.exam.logging").value("none"),
