@@ -67,6 +67,14 @@ public interface ResourceChangeListener {
      *     <li>The {@code **} characters match zero or more characters crossing directory boundaries.</li>
      * </ul>
      *
+     * <p>
+     * In general, it can't be guaranteed that a remove event is sent for every resource if a tree of resources
+     * is removed. For example if a listener is registered for {@code /foo/bar} and {@code /foo} is removed,
+     * the listener might not get a remove event for {@code /foo/bar}. The same is true if any pattern is used
+     * and any parent of a matching resource is removed. Therefore, if a listener is interested in
+     * remove events, it will get a remove of any parent resource from the specified path or pattern. The listener
+     * must handle these events accordingly.
+     *
      * <p>If one of the paths is a sub resource of another specified path, the sub path is ignored.</p>
      *
      * <p>If this property is missing or invalid, the listener is ignored. The type of the property must either be String, or a String
