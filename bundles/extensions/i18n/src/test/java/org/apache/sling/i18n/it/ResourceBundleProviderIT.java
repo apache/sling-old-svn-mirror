@@ -38,7 +38,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.i18n.ResourceBundleProvider;
-import org.apache.sling.i18n.impl.Message;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Before;
@@ -69,7 +68,7 @@ public class ResourceBundleProviderIT {
 
     private static final String PORT_CONFIG = "org.osgi.service.http.port";
 
-    public static final int RETRY_TIMEOUT_MSEC = 10000;
+    public static final int RETRY_TIMEOUT_MSEC = 50000;
     public static final String MSG_KEY1 = "foo";
     public static final String MSG_KEY2 = "foo2";
 
@@ -277,7 +276,7 @@ public class ResourceBundleProviderIT {
     public void setup() throws RepositoryException {
         session = repository.loginAdministrative(null);
         final Node root = session.getRootNode();
-        Node libs = null;
+        final Node libs;
         if(root.hasNode("libs")) {
            libs = root.getNode("libs");
         } else {
@@ -328,32 +327,45 @@ public class ResourceBundleProviderIT {
         };
     }
 
+    private void setMessage(final Node rootNode, final String key, final String message) throws RepositoryException {
+        final String nodeName = "node_" + key;
+        final Node node;
+        if ( rootNode.hasNode(nodeName) ) {
+            node = rootNode.getNode(nodeName);
+        } else {
+            node = rootNode.addNode(nodeName, "sling:MessageEntry");
+        }
+        node.setProperty("sling:key", key);
+        node.setProperty("sling:message", message);
+    }
+
     @Test
     public void testChangesDetection() throws RepositoryException {
         // set a key which is only available in the en dictionary
-        new Message("", MSG_KEY2, "EN_message", false).add(enRoot);
+        setMessage(enRoot, MSG_KEY2, "EN_message");
         session.save();
+
         // since "en" is the fallback for all other resource bundle, the value from "en" must be exposed
         assertMessages(MSG_KEY2, "EN_message", "EN_message", "EN_message");
 
-        new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
-        new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
+        setMessage(deRoot, MSG_KEY1, "DE_message");
+        setMessage(frRoot, MSG_KEY1, "FR_message");
         session.save();
         assertMessages(MSG_KEY1, "DE_message", "DE_message", "FR_message");
 
-        new Message("", MSG_KEY1, "DE_changed", false).add(deRoot);
-        new Message("", MSG_KEY1, "FR_changed", false).add(frRoot);
+        setMessage(deRoot, MSG_KEY1, "DE_changed");
+        setMessage(frRoot, MSG_KEY1, "FR_changed");
         session.save();
         assertMessages(MSG_KEY1, "DE_changed", "DE_changed", "FR_changed");
 
-        new Message("", MSG_KEY1, "DE_message", false).add(deRoot);
-        new Message("", MSG_KEY1, "DE_DE_message", false).add(deDeRoot);
-        new Message("", MSG_KEY1, "FR_message", false).add(frRoot);
+        setMessage(deRoot, MSG_KEY1, "DE_message");
+        setMessage(deDeRoot, MSG_KEY1, "DE_DE_message");
+        setMessage(frRoot, MSG_KEY1, "FR_message");
         session.save();
         assertMessages(MSG_KEY1, "DE_message", "DE_DE_message", "FR_message");
 
         // now change a key which is only available in the "en" dictionary
-        new Message("", MSG_KEY2, "EN_changed", false).add(enRoot);
+        setMessage(enRoot, MSG_KEY2, "EN_changed");
         session.save();
         assertMessages(MSG_KEY2, "EN_changed", "EN_changed", "EN_changed");
     }
