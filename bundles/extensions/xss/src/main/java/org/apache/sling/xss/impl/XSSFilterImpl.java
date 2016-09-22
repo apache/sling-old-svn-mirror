@@ -19,25 +19,26 @@ package org.apache.sling.xss.impl;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSFilter;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.owasp.validator.html.model.Attribute;
 import org.owasp.validator.html.model.Tag;
 import org.slf4j.Logger;
@@ -48,9 +49,12 @@ import org.slf4j.LoggerFactory;
  * <a href="http://code.google.com/p/owaspantisamy/">http://code.google.com/p/owaspantisamy/</a>.
  */
 @Component(immediate = true)
-@Service(value = {EventHandler.class, XSSFilter.class})
-@Property(name = EventConstants.EVENT_TOPIC, value = {"org/apache/sling/api/resource/Resource/*"})
-public class XSSFilterImpl implements XSSFilter, EventHandler {
+@Service(value = {ResourceChangeListener.class, XSSFilter.class})
+@Properties({
+	@Property(name = ResourceChangeListener.CHANGES, value = {"ADDED","CHANGED", "REMOVED"}),
+    @Property(name = ResourceChangeListener.PATHS, value = {"glob:/**/sling/xss/config.xml", "glob:/sling/xss/config.xml"})
+})
+public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
 
@@ -81,13 +85,13 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
     private ResourceResolverFactory resourceResolverFactory = null;
 
     @Override
-    public void handleEvent(final Event event) {
-        final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-        if (path.endsWith("/" + DEFAULT_POLICY_PATH)) {
-            LOGGER.debug("Detected policy file change at {}. Updating default handler.", path);
-            updateDefaultHandler();
-        }
-    }
+	public void onChange(List<ResourceChange> resourceChanges) {
+		for(ResourceChange change : resourceChanges){
+			LOGGER.debug("Detected policy file change at {}. Updating default handler.", change.getPath());
+			updateDefaultHandler();
+		}
+
+	}
 
     @Override
     public boolean check(final ProtectionContext context, final String src) {
@@ -249,5 +253,4 @@ public class XSSFilterImpl implements XSSFilter, EventHandler {
         }
         return isValid;
     }
-
 }
