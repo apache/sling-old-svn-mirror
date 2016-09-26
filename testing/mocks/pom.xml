@@ -21,10 +21,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>26</version>
-    <relativePath/>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>sling</artifactId>
+      <version>26</version>
+      <relativePath/>
   </parent>
 
   <groupId>org.apache.sling</groupId>
@@ -36,9 +36,9 @@
   <inceptionYear>2016</inceptionYear>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks</developerConnection>
+      <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks</url>
   </scm>
 
 
@@ -59,12 +59,12 @@
   </build>
 
   <modules>
-    <module>logging-mock</module>
-    <module>resourceresolver-mock</module>
-    <module>jcr-mock</module>
-    <module>osgi-mock</module>
-    <module>sling-mock</module>
-    <module>sling-mock-oak</module>
+      <module>logging-mock</module>
+      <module>resourceresolver-mock</module>
+      <module>jcr-mock</module>
+      <module>osgi-mock</module>
+      <module>sling-mock</module>
+      <module>sling-mock-oak</module>
   </modules>
 
 </project>

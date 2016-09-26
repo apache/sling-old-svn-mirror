@@ -259,28 +259,28 @@
     
           <!-- Publish test artifact -->
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <!-- Update to 3.0.2 to avoid heap space problem -->
-            <version>3.0.2</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>test-jar</goal>
-                </goals>
-              </execution>
-            </executions>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jar-plugin</artifactId>
+              <!-- Update to 3.0.2 to avoid heap space problem -->
+              <version>3.0.2</version>
+              <executions>
+                  <execution>
+                      <goals>
+                          <goal>test-jar</goal>
+                      </goals>
+                  </execution>
+              </executions>
           </plugin>
     
           <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <extensions>true</extensions>
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <extensions>true</extensions>
           </plugin>
     
           <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-scr-plugin</artifactId>
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-scr-plugin</artifactId>
           </plugin>
     
         </plugins>
