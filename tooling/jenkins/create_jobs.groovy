@@ -31,7 +31,7 @@ modules.each {
                 scm('H/15 * * * *')
             }
 
-            jdk(jdkMapping(it))
+            jdk(jdkMapping.get(it))
 
             label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
 
