@@ -25,6 +25,10 @@ def modules = [
         location: "bundles/extensions/discovery/support"
     ],
     [
+        location: "bundles/extensions/event"
+    ],
+
+    [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
     ],
