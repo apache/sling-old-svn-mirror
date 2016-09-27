@@ -90,6 +90,7 @@ modules.each {
 
             publishers {
                 archiveJunit('**/target/surefire-reports/*.xml') {
+                    allowEmptyResults()
                     testDataPublishers {
                         publishTestStabilityData()
                     }
