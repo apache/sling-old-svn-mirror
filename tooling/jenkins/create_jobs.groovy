@@ -9,6 +9,9 @@ def modules = [
     ]
 ]
 
+// should be sorted from the oldest to the latest version
+// so that artifacts built using the oldest version are
+// deployed for maximum compatibility
 def defaultJdks = ["1.7", "1.8"]
 def jdkMapping = [
     "1.7": "JDK 1.7 (latest)",
@@ -23,6 +26,7 @@ modules.each {
 
     jdks.each {
         def jdkKey = it
+        def deploy = true
         job(jobName + "-" + jdkKey) {
 
             logRotator {
@@ -44,10 +48,14 @@ modules.each {
             steps {
                 maven {
                    goals("clean")
-                   goals("verify")
+                   // ensure that for multiple jdk versions only one actually deploys artifacts
+                   // this should be the 'oldest' JDK
+                   goals(deploy ? "deploy" : "verify")
                    mavenInstallation("Maven 3.3.9") 
                 }
             }
+
+            deploy = false
 
             publishers {
                 archiveJunit('**/target/surefire-reports/*.xml')
