@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.slingoakrestrictions.impl;
+package org.apache.sling.jcr.slingoakrestrictions.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.oak.api.PropertyState;
 import org.apache.jackrabbit.oak.api.Tree;
 import org.apache.jackrabbit.oak.api.Type;
+import org.apache.sling.jcr.slingoakrestrictions.impl.ResourceTypePattern;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
