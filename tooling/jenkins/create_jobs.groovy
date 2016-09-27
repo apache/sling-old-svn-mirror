@@ -46,7 +46,7 @@ modules.each {
 
             jdk(jdkMapping.get(jdkKey))
 
-            label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
+            label('Ubuntu&&!ubuntu3')
 
             steps {
                 maven {
