@@ -107,11 +107,7 @@
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
           <module>extensions/obr</module>
-          <module>extensions/distribution/api</module>
-          <module>extensions/distribution/core</module>
-          <module>extensions/distribution/extensions</module>
-          <module>extensions/distribution/sample</module>
-          <module>extensions/distribution/it</module>
+          <module>extensions/distribution</module>
           <module>extensions/logtail</module>
           <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
