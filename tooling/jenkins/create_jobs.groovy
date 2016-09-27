@@ -23,10 +23,10 @@ modules.each {
     def svnDir = svnBase +"/" + it.location
     def jobName = "sling-" + it.location.replaceAll('/', '-')
     def jdks = it.jdks ?: defaultJdks
+    def deploy = true
 
     jdks.each {
         def jdkKey = it
-        def deploy = true
         job(jobName + "-" + jdkKey) {
 
             logRotator {
