@@ -2,7 +2,28 @@ def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 def modules = [
     [
         location: "bundles/extensions/i18n"
-    ], 
+    ],
+    [
+        location: "bundles/extensions/discovery/api"
+    ],
+    [
+        location: "bundles/extensions/discovery/base"
+    ],
+    [
+        location: "bundles/extensions/discovery/commons"
+    ],
+    [
+        location: "bundles/extensions/discovery/impl"
+    ],
+    [
+        location: "bundles/extensions/discovery/oak"
+    ],
+    [
+        location: "bundles/extensions/discovery/standalone"
+    ],
+    [
+        location: "bundles/extensions/discovery/support"
+    ],
     [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
