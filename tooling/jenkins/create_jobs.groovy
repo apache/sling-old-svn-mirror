@@ -19,7 +19,7 @@ modules.each {
   
     def svnDir = svnBase +"/" + it.location
     def jobName = "sling-" + it.location.replaceAll('/', '-')
-    def jdks = it.jdk ?: defaultJdks
+    def jdks = it.jdks ?: defaultJdks
 
     jdks.each {
         job(jobName + "-" + it) {
