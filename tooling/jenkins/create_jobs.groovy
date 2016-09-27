@@ -1,29 +1,46 @@
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
-def modules = ["bundles/extensions/i18n", "contrib/extensions/sling-pipes"]
+def modules = [
+    [
+        location: "bundles/extensions/i18n"
+    ], 
+    [
+        location: "contrib/extensions/sling-pipes",
+        jdks: ["1.8"]
+    ]
+]
+
+def defaultJdks = ["1.7", "1.8"]
+def jdkMapping = [
+    "1.7": "JDK 1.7 (latest)",
+    "1.8": "JDK 1.8 (latest)"
+]
 
 modules.each {
   
-    def svnDir = svnBase +"/" + it
-    def jobName = "sling-" + it.replaceAll('/', '-')
+    def svnDir = svnBase +"/" + it.location
+    def jobName = "sling-" + it.location.replaceAll('/', '-')
+    def jdks = it.jdk ?: defaultJdks
 
-    job(jobName) {
-        scm {
-            svn(svnDir)
-        }
+    jdks.each {
+        job(jobName + "-" + it) {
+            scm {
+                svn(svnDir)
+            }
 
-        triggers {
-            scm('H/15 * * * *')
-        }
-        
-        jdk('JDK 1.7 (latest)')
+            triggers {
+                scm('H/15 * * * *')
+            }
 
-        label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
+            jdk(jdkMapping(it))
 
-        steps {
-            maven {
-               goals("clean")
-               goals("verify")
-               mavenInstallation("Maven 3.3.9") 
+            label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
+
+            steps {
+                maven {
+                   goals("clean")
+                   goals("verify")
+                   mavenInstallation("Maven 3.3.9") 
+                }
             }
         }
     }
