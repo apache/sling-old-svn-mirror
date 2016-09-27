@@ -6,6 +6,9 @@ def modules = [
     [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
+    ],
+    [
+        location: "contrib/extensions/distribution"
     ]
 ]
 
