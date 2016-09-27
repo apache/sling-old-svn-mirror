@@ -1,6 +1,9 @@
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 def modules = [
     [
+        location: "bundles/commons/classloader"
+    ],
+    [
         location: "bundles/extensions/i18n"
     ],
     [
