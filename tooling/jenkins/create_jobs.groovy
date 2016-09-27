@@ -31,6 +31,8 @@ modules.each {
                 scm('H/15 * * * *')
             }
 
+            out.println("jdk key is " + it + " , mappings is " + jdkMapping + " , desired version is " + jdkMapping.get(it))
+
             jdk(jdkMapping.get(it))
 
             label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
@@ -41,6 +43,10 @@ modules.each {
                    goals("verify")
                    mavenInstallation("Maven 3.3.9") 
                 }
+            }
+
+            publishers {
+                archiveJunit('**/target/surefire-reports/*.xml')
             }
         }
     }
