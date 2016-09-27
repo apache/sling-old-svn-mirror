@@ -24,6 +24,11 @@ modules.each {
     jdks.each {
         def jdkKey = it
         job(jobName + "-" + jdkKey) {
+
+            logRotator {
+                numToKeep(15)
+            }
+
             scm {
                 svn(svnDir)
             }
@@ -46,6 +51,8 @@ modules.each {
 
             publishers {
                 archiveJunit('**/target/surefire-reports/*.xml')
+                // send emails for each broken build, notify individuals as well
+                mailer('commits@sling.apache.org', false, true)
             }
         }
     }
