@@ -58,7 +58,11 @@ modules.each {
             deploy = false
 
             publishers {
-                archiveJunit('**/target/surefire-reports/*.xml')
+                archiveJunit('**/target/surefire-reports/*.xml') {
+                    testDataPublishers {
+                        publishTestStabilityData()
+                    }
+                }
                 // send emails for each broken build, notify individuals as well
                 mailer('commits@sling.apache.org', false, true)
             }
