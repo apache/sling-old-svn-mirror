@@ -22,7 +22,8 @@ modules.each {
     def jdks = it.jdks ?: defaultJdks
 
     jdks.each {
-        job(jobName + "-" + it) {
+        def jdk = it
+        job(jobName + "-" + jdk) {
             scm {
                 svn(svnDir)
             }
@@ -31,9 +32,7 @@ modules.each {
                 scm('H/15 * * * *')
             }
 
-            out.println("jdk key is " + it + " , mappings is " + jdkMapping + " , desired version is " + jdkMapping.get(it))
-
-            jdk(jdkMapping.get(it))
+            jdk(jdkMapping.get(jdk))
 
             label('ubuntu1||ubuntu2||ubuntu4||ubuntu5||ubuntu6')
 
