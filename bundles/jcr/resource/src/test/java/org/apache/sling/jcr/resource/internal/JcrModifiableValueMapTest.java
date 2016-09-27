@@ -122,6 +122,22 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         assertContains(pvm2, currentlyStored);
     }
 
+    public void testRemove()
+    throws Exception {
+        getSession().refresh(false);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
+
+        final String key = "removeMe";
+        final Long longValue = 5L;
+
+        pvm.put(key, longValue);
+
+        final Object removedValue = pvm.remove(key);
+        assertTrue(removedValue instanceof Long);
+        assertTrue(removedValue == longValue);
+        assertFalse(pvm.containsKey(key));
+    }
+
     public void testSerializable()
     throws Exception {
         this.rootNode.getSession().refresh(false);
