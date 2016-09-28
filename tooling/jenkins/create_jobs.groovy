@@ -53,7 +53,10 @@ def modules = [
         location: "installer/it"
     ],
     [
-        location: "installer/providers"
+        location: "installer/providers/jcr"
+    ],
+    [
+        location: "installer/providers/file"
     ],
     [
         location: 'testing/junit/core'
