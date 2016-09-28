@@ -89,7 +89,7 @@ modules.each {
             deploy = false
 
             publishers {
-                archiveJunit('**/target/surefire-reports/*.xml') {
+                archiveJunit('**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml') {
                     allowEmptyResults()
                     testDataPublishers {
                         publishTestStabilityData()
