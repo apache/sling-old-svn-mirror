@@ -395,7 +395,8 @@ def modules = [
         location: 'testing/samples/bundle-with-it'
     ],
     [
-        location: 'testing/samples/module-with-it'
+        location: 'testing/samples/module-with-it',
+        jdks: ["1.8"]
     ],
     [
         location: 'testing/sling-pax-util'
@@ -413,7 +414,8 @@ def modules = [
         location: 'testing/serversetup'
     ],
     [
-        location: 'testing/org.apache.sling.testing.paxexam'
+        location: 'testing/org.apache.sling.testing.paxexam',
+        jdks: ["1.8"]
     ]
 ]
 
