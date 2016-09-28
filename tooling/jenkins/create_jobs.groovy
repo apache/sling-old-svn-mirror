@@ -477,7 +477,7 @@ modules.each {
                     }
                 }
                 // send emails for each broken build, notify individuals as well
-                mailer('commits@sling.apache.org', false, true)
+//                mailer('commits@sling.apache.org', false, true)
             }
         }
     }
