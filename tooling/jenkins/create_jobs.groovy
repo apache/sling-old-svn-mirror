@@ -1,34 +1,283 @@
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 def modules = [
     [
-        location: "bundles/commons/classloader"
+        location: 'bundles/api'
     ],
     [
-        location: "bundles/extensions/i18n"
+        location: 'bundles/auth/core'
     ],
     [
-        location: "bundles/extensions/discovery/api"
+        location: 'bundles/auth/form'
     ],
     [
-        location: "bundles/extensions/discovery/base"
+        location: 'bundles/commons/classloader'
     ],
     [
-        location: "bundles/extensions/discovery/commons"
+        location: 'bundles/commons/compiler'
     ],
     [
-        location: "bundles/extensions/discovery/impl"
+        location: 'bundles/commons/json'
     ],
     [
-        location: "bundles/extensions/discovery/oak"
+        location: 'bundles/commons/log'
     ],
     [
-        location: "bundles/extensions/discovery/standalone"
+        location: 'bundles/commons/logservice'
     ],
     [
-        location: "bundles/extensions/discovery/support"
+        location: 'bundles/commons/mime'
     ],
     [
-        location: "bundles/extensions/event"
+        location: 'bundles/commons/osgi'
+    ],
+    [
+        location: 'bundles/commons/scheduler'
+    ],
+    [
+        location: 'bundles/commons/testing'
+    ],
+    [
+        location: 'bundles/commons/threaddump'
+    ],
+    [
+        location: 'bundles/commons/threads'
+    ],
+    [
+        location: 'bundles/commons/fsclassloader'
+    ],
+    [
+        location: 'bundles/commons/contentdetection'
+    ],
+    [
+        location: 'bundles/commons/metrics'
+    ],
+    [
+        location: 'bundles/commons/org.apache.sling.commons.messaging.mail'
+    ],
+    [
+        location: 'bundles/commons/org.apache.sling.commons.messaging'
+    ],
+    [
+        location: 'bundles/engine'
+    ],
+    [
+        location: 'bundles/extensions/adapter'
+    ],
+    [
+        location: 'bundles/extensions/bundleresource'
+    ],
+    [
+        location: 'bundles/extensions/dea'
+    ],
+    [
+        location: 'bundles/extensions/discovery/api'
+    ],
+    [
+        location: 'bundles/extensions/discovery/impl'
+    ],
+    [
+        location: 'bundles/extensions/discovery/standalone'
+    ],
+    [
+        location: 'bundles/extensions/discovery/support'
+    ],
+    [
+        location: 'bundles/extensions/discovery/commons'
+    ],
+    [
+        location: 'bundles/extensions/discovery/base'
+    ],
+    [
+        location: 'bundles/extensions/discovery/oak'
+    ],
+    [
+        location: 'bundles/extensions/event'
+    ],
+    [
+        location: 'bundles/extensions/explorer'
+    ],
+    [
+        location: 'bundles/extensions/feature-flags'
+    ],
+    [
+        location: 'bundles/extensions/framework-extension-activation'
+    ],
+    [
+        location: 'bundles/extensions/framework-extension-transaction'
+    ],
+    [
+        location: 'bundles/extensions/framework-extension-ws'
+    ],
+    [
+        location: 'bundles/extensions/framework-extension-xml'
+    ],
+    [
+        location: 'bundles/extensions/fsresource'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/annotations'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/core'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/it'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/junit-bridge'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/samples'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/support'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/webconsole'
+    ],
+    [
+        location: 'bundles/extensions/javax.activation'
+    ],
+    [
+        location: 'bundles/extensions/models/api'
+    ],
+    [
+        location: 'bundles/extensions/models/impl'
+    ],
+    [
+        location: 'bundles/extensions/models/integration-tests'
+    ],
+    [
+        location: 'bundles/extensions/models/validation-impl'
+    ],
+    [
+        location: 'bundles/extensions/serviceusermapper'
+    ],
+    [
+        location: 'bundles/extensions/settings'
+    ],
+    [
+        location: 'bundles/extensions/validation/api'
+    ],
+    [
+        location: 'bundles/extensions/validation/core'
+    ],
+    [
+        location: 'bundles/extensions/validation/examples'
+    ],
+    [
+        location: 'bundles/extensions/validation/it-http'
+    ],
+    [
+        location: 'bundles/extensions/validation/test-services'
+    ],
+    [
+        location: 'bundles/extensions/validation'
+    ],
+    [
+        location: 'bundles/extensions/webconsolebranding'
+    ],
+    [
+        location: 'bundles/extensions/webconsolesecurityprovider'
+    ],
+    [
+        location: 'bundles/extensions/i18n'
+    ],
+    [
+        location: 'bundles/extensions/xss'
+    ],
+    [
+        location: 'bundles/extensions/resourcebuilder'
+    ],
+    [
+        location: 'bundles/extensions/servlet-helpers'
+    ],
+    [
+        location: 'bundles/extensions/repoinit/it'
+    ],
+    [
+        location: 'bundles/extensions/repoinit/parser'
+    ],
+    [
+        location: 'bundles/jcr/api'
+    ],
+    [
+        location: 'bundles/jcr/base'
+    ],
+    [
+        location: 'bundles/jcr/classloader'
+    ],
+    [
+        location: 'bundles/jcr/contentloader'
+    ],
+    [
+        location: 'bundles/jcr/davex'
+    ],
+    [
+        location: 'bundles/jcr/it-jackrabbit-oak'
+    ],
+    [
+        location: 'bundles/jcr/it-resource-versioning'
+    ],
+    [
+        location: 'bundles/jcr/jackrabbit-accessmanager'
+    ],
+    [
+        location: 'bundles/jcr/jackrabbit-base'
+    ],
+    [
+        location: 'bundles/jcr/jackrabbit-server'
+    ],
+    [
+        location: 'bundles/jcr/jackrabbit-usermanager'
+    ],
+    [
+        location: 'bundles/jcr/jcr-wrapper'
+    ],
+    [
+        location: 'bundles/jcr/oak-server'
+    ],
+    [
+        location: 'bundles/jcr/registration'
+    ],
+    [
+        location: 'bundles/jcr/resource'
+    ],
+    [
+        location: 'bundles/jcr/webconsole'
+    ],
+    [
+        location: 'bundles/jcr/webdav'
+    ],
+    [
+        location: 'bundles/jcr/repoinit'
+    ],
+    [
+        location: 'bundles/resourceaccesssecurity/core'
+    ],
+    [
+        location: 'bundles/resourceaccesssecurity/it'
+    ],
+    [
+        location: 'bundles/resourceresolver'
+    ],
+    [
+        location: 'bundles/scripting/api'
+    ],
+    [
+        location: 'bundles/scripting/core'
+    ],
+    [
+        location: 'bundles/scripting/javascript'
+    ],
+    [
+        location: 'bundles/scripting/jsp-jstl'
+    ],
+    [
+        location: 'bundles/scripting/jsp-taglib'
+    ],
+    [
+        location: 'bundles/scripting/jsp'
     ],
     [
         location: 'bundles/scripting/sightly/engine'
@@ -53,6 +302,18 @@ def modules = [
     ],
     [
         location: 'bundles/scripting/sightly/java-compiler'
+    ],
+    [
+        location: 'bundles/servlets/compat'
+    ],
+    [
+        location: 'bundles/servlets/get'
+    ],
+    [
+        location: 'bundles/servlets/post'
+    ],
+    [
+        location: 'bundles/servlets/resolver'
     ],
     [
         location: "contrib/extensions/sling-pipes",
