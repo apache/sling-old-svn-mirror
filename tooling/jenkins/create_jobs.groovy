@@ -54,8 +54,72 @@ def modules = [
     ],
     [
         location: "installer/providers"
+    ],
+    [
+        location: 'testing/junit/core'
+    ],
+    [
+        location: 'testing/junit/healthcheck'
+    ],
+    [
+        location: 'testing/junit/performance'
+    ],
+    [
+        location: 'testing/junit/remote'
+    ],
+    [
+        location: 'testing/junit/scriptable'
+    ],
+    [
+        location: 'testing/junit/teleporter'
+    ],
+    [
+        location: 'testing/junit/rules'
+    ],
+    [
+        location: 'testing/mocks/jcr-mock'
+    ],
+    [
+        location: 'testing/mocks/osgi-mock'
+    ],
+    [
+        location: 'testing/mocks/resourceresolver-mock'
+    ],
+    [
+        location: 'testing/mocks/sling-mock'
+    ],
+    [
+        location: 'testing/mocks/logging-mock'
+    ],
+    [
+        location: 'testing/mocks/sling-mock-oak'
+    ],
+    [
+        location: 'testing/samples/bundle-with-it'
+    ],
+    [
+        location: 'testing/samples/module-with-it'
+    ],
+    [
+        location: 'testing/sling-pax-util'
+    ],
+    [
+        location: 'testing/tools'
+    ],
+    [
+        location: 'testing/hamcrest'
+    ],
+    [
+        location: 'testing/http/clients'
+    ],
+    [
+        location: 'testing/serversetup'
+    ],
+    [
+        location: 'testing/org.apache.sling.testing.paxexam'
     ]
 ]
+
 
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
