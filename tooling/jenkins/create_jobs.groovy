@@ -437,6 +437,10 @@ def modules = [
     ],
 ]
 
+// TODO - create launchpad jobs
+// TODO - automatic links from modules in bundles and installer (others?)
+//        to the launchpad testing jobs
+// TODO - define (or infer?) dependencies between groups of jobs (sightly, validation, etc )
 
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
