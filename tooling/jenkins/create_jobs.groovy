@@ -52,10 +52,12 @@ def modules = [
         location: 'bundles/commons/metrics'
     ],
     [
-        location: 'bundles/commons/org.apache.sling.commons.messaging.mail'
+        location: 'bundles/commons/org.apache.sling.commons.messaging.mail',
+        jdks: ["1.8"]
     ],
     [
-        location: 'bundles/commons/org.apache.sling.commons.messaging'
+        location: 'bundles/commons/org.apache.sling.commons.messaging',
+        jdks: ["1.8"]
     ],
     [
         location: 'bundles/engine'
