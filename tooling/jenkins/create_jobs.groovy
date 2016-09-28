@@ -150,7 +150,8 @@ def modules = [
         location: 'bundles/extensions/models/integration-tests'
     ],
     [
-        location: 'bundles/extensions/models/validation-impl'
+        location: 'bundles/extensions/models/validation-impl',
+        jdks: ["1.8"]
     ],
     [
         location: 'bundles/extensions/serviceusermapper'
@@ -159,22 +160,23 @@ def modules = [
         location: 'bundles/extensions/settings'
     ],
     [
-        location: 'bundles/extensions/validation/api'
+        location: 'bundles/extensions/validation/api',
+        jdks: ["1.8"]
     ],
     [
-        location: 'bundles/extensions/validation/core'
+        location: 'bundles/extensions/validation/core',
+        jdks: ["1.8"]
     ],
     [
-        location: 'bundles/extensions/validation/examples'
+        location: 'bundles/extensions/validation/examples',
+        jdks: ["1.8"]
     ],
     [
-        location: 'bundles/extensions/validation/it-http'
+        location: 'bundles/extensions/validation/it-http',
+        jdks: ["1.8"]
     ],
     [
-        location: 'bundles/extensions/validation/test-services'
-    ],
-    [
-        location: 'bundles/extensions/validation',
+        location: 'bundles/extensions/validation/test-services',
         jdks: ["1.8"]
     ],
     [
