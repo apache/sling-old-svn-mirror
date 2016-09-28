@@ -44,7 +44,16 @@ def modules = [
         location: "installer/core"
     ],
     [
-        location: "installer/factories"
+        location: 'installer/factories/configuration'
+    ],
+    [
+        location: 'installer/factories/deploymentpck'
+    ],
+    [
+        location: 'installer/factories/subsystems'
+    ],
+    [
+        location: 'installer/factories/subsystem_base'
     ],
     [
         location: "installer/hc"
