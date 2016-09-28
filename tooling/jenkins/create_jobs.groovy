@@ -30,13 +30,30 @@ def modules = [
     [
         location: "bundles/extensions/event"
     ],
-
     [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
     ],
     [
         location: "contrib/extensions/distribution"
+    ],
+    [
+        location: "installer/console"
+    ],
+    [
+        location: "installer/core"
+    ],
+    [
+        location: "installer/factories"
+    ],
+    [
+        location: "installer/hc"
+    ],
+    [
+        location: "installer/it"
+    ],
+    [
+        location: "installer/providers"
     ]
 ]
 
