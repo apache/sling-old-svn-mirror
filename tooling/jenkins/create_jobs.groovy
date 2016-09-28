@@ -31,6 +31,30 @@ def modules = [
         location: "bundles/extensions/event"
     ],
     [
+        location: 'bundles/scripting/sightly/engine'
+    ],
+    [
+        location: 'bundles/scripting/sightly/js-use-provider'
+    ],
+    [
+        location: 'bundles/scripting/sightly/models-use-provider'
+    ],
+    [
+        location: 'bundles/scripting/sightly/repl'
+    ],
+    [
+        location: 'bundles/scripting/sightly/testing-content'
+    ],
+    [
+        location: 'bundles/scripting/sightly/testing'
+    ],
+    [
+        location: 'bundles/scripting/sightly/compiler'
+    ],
+    [
+        location: 'bundles/scripting/sightly/java-compiler'
+    ],
+    [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
     ],
