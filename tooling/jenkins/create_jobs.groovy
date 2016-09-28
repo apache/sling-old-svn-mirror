@@ -456,6 +456,7 @@ modules.each {
 
             steps {
                 maven {
+                   goals("-U")
                    goals("clean")
                    // ensure that for multiple jdk versions only one actually deploys artifacts
                    // this should be the 'oldest' JDK
