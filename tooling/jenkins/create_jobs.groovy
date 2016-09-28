@@ -174,7 +174,8 @@ def modules = [
         location: 'bundles/extensions/validation/test-services'
     ],
     [
-        location: 'bundles/extensions/validation'
+        location: 'bundles/extensions/validation',
+        jdks: ["1.8"]
     ],
     [
         location: 'bundles/extensions/webconsolebranding'
