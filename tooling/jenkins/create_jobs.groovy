@@ -356,6 +356,10 @@ def modules = [
         location: "installer/providers/file"
     ],
     [
+        location: "parent",
+        jdks: ["1.7"]
+    ],
+    [
         location: 'testing/junit/core'
     ],
     [
@@ -419,7 +423,16 @@ def modules = [
     [
         location: 'testing/org.apache.sling.testing.paxexam',
         jdks: ["1.8"]
-    ]
+    ],
+    [
+        location: 'tooling/support/install'
+    ],
+    [
+        location: 'tooling/support/provisioning-model'
+    ],
+    [
+        location: 'tooling/support/source'
+    ],
 ]
 
 
