@@ -440,7 +440,6 @@ def modules = [
 // TODO - create launchpad jobs
 // TODO - automatic links from modules in bundles and installer (others?)
 //        to the launchpad testing jobs
-// TODO - define (or infer?) dependencies between groups of jobs (sightly, validation, etc )
 
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
@@ -475,13 +474,37 @@ for more details</p>''')
                 svn(svnDir)
             }
 
+            // note on dependency managment
+            // we ask Jenkins to create dependencies between projects automatically
+            // if SNAPSHOT dependencies are found between projects. This might create
+            // too many dependencies, e.g. if foo-core depends on foo-core and projects
+            // build for Java 1.7 and 1.8 the following depdendencies will be created
+            //
+            // foo-api-1.7 → foo-core-1.7
+            // foo-api-1.7 → foo-core-1.8
+            // foo-api-1.8 → foo-core-1.7
+            // foo-api-1.8 → foo-core-1.8
+            //
+            // in effect we will trigger builds twice as often as needed. Since SNAPSHOT
+            // dependencies are not that often found between bundles and builds should
+            // be quick this is acceptable for now. The alternative would be to define
+            // the dependencies manually, which is cumbersome and error-prone
+
             triggers {
+                snapshotDependencies(true)
                 scm('H/15 * * * *')
             }
+
+            blockOnUpstreamProjects()
 
             jdk(jdkMapping.get(jdkKey))
 
             mavenInstallation("Maven 3.3.9")
+
+            // we have no use for archived artifacts since they are deployed on
+            // repository.apache.org so speed up the build a bit (and probably
+            // save on disk space)
+            archivingDisabled(true)
 
             label('Ubuntu&&!ubuntu3')
 
