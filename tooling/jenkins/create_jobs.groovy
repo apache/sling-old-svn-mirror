@@ -1,8 +1,10 @@
+
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 // all modules should be listed here
 // keys:
 //   - location ( required ) : the SVN directory relatory to svnBase
 //   - jdks (optional) : override the default jdks to use for build
+//   - downstream (optional): list of downstream projects
 def modules = [
     [
         location: 'bundles/api'
@@ -371,7 +373,8 @@ def modules = [
     ],
     [
         location: 'launchpad/builder',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ["launchpad/testing", "launchpad/testing-war"]
     ],
     [
         location: 'launchpad/content',
@@ -506,17 +509,26 @@ def jdkMapping = [
     "1.8": "JDK 1.8 (latest)"
 ]
 
-
-modules.each {
+modules.each { module ->
   
-    def svnDir = svnBase +"/" + it.location
-    def jobName = "sling-" + it.location.replaceAll('/', '-')
-    def jdks = it.jdks ?: defaultJdks
+    def svnDir = svnBase +"/" + module.location
+    def jdks = module.jdks ?: defaultJdks
     def deploy = true
 
-    jdks.each {
-        def jdkKey = it
-        mavenJob(jobName + "-" + jdkKey) {
+    def downstreamProjects = module.downstream?: []
+    def downstreamEntries = modules.findAll { downstreamProjects.contains(it.location) }
+    def downstreamJobs = []
+
+    downstreamEntries.each { downstreamEntry ->
+        def downstreamJdks = downstreamEntry.jdks?: defaultJdks
+        def downstreamLocation = downstreamEntry.location
+        downstreamJdks.each { downstreamJdk ->
+            downstreamJobs.add(jobName(downstreamLocation,downstreamJdk))
+        }
+    }
+
+    jdks.each { jdkKey ->
+        mavenJob(jobName(module.location, jdkKey)) {
 
             description('''
 <p>This build was automatically generated and any manual edits will be lost.</p>
@@ -574,6 +586,10 @@ for more details</p>''')
             deploy = false
 
             publishers {
+                if ( downstreamJobs ) {
+                    downstream(downstreamJobs)
+                }
+
                 // TODO - can we remove the glob and rely on the defaults?
                 archiveJunit('**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml') {
                     allowEmptyResults()
@@ -586,4 +602,8 @@ for more details</p>''')
             }
         }
     }
+}
+
+String jobName(String location, String jdk) {
+    return "sling-" + location.replaceAll('/','-')+'-' + jdk;
 }
