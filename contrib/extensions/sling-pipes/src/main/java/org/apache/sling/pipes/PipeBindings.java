@@ -75,6 +75,9 @@ public class PipeBindings {
         if (additionalBindings != null) {
             ValueMap bindings = additionalBindings.adaptTo(ValueMap.class);
             addBindings(bindings);
+            for (String ignoredProperty : BasePipe.IGNORED_PROPERTIES){
+                getBindings().remove(ignoredProperty);
+            }
         }
 
         Resource scriptsResource = resource.getChild(PN_ADDITIONALSCRIPTS);
