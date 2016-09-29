@@ -306,7 +306,8 @@ def modules = [
         location: 'bundles/scripting/sightly/testing-content'
     ],
     [
-        location: 'bundles/scripting/sightly/testing'
+        location: 'bundles/scripting/sightly/testing',
+        jdks: ['1.8']
     ],
     [
         location: 'bundles/scripting/sightly/compiler'
