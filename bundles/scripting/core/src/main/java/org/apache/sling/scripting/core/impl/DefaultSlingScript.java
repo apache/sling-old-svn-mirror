@@ -45,6 +45,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -60,6 +61,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -74,6 +76,8 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
@@ -83,6 +87,8 @@ import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.sling.commons.json.io.JSONRenderer;
+import org.apache.sling.commons.json.io.JSONWriter;
 
 class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
@@ -95,6 +101,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The set of protected keys. */
     private static final Set<String> PROTECTED_KEYS =
         new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, RESOLVER, OUT, LOG));
+
+    private static final String BVP_VARIABLES_SELECTOR = "bvpvars";
 
     /** The resource pointing to the script. */
 
@@ -196,9 +204,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         Reader reader = null;
         boolean disposeScriptHelper = !props.containsKey(SLING);
         ResourceResolver oldResolver = null;
+        BindingsWrapper bvpVariables = null;
         try {
             bindings = verifySlingBindings(props);
-
+            bvpVariables = new BindingsWrapper();
             // use final variable for inner class!
             final Bindings b = bindings;
             // create script context
@@ -371,21 +380,34 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             }
 
             // evaluate the script
-            final Object result;
-            if (method == null && this.scriptEngine instanceof Compilable) {
-                CachedScript cachedScript = scriptCache.getScript(scriptName);
-                if (cachedScript == null) {
-                    ScriptNameAwareReader snReader = new ScriptNameAwareReader(reader, scriptName);
-                    CompiledScript compiledScript = ((Compilable) scriptEngine).compile(snReader);
-                    cachedScript = new CachedScriptImpl(scriptName, compiledScript);
-                    scriptCache.putScript(cachedScript);
-                    LOGGER.debug("Adding {} to the script cache.", scriptName);
+            Object result = null;
+            String selectorString = props.getRequest().getRequestPathInfo().getSelectorString();
+            if(StringUtils.isBlank(selectorString) || !selectorString.contains(BVP_VARIABLES_SELECTOR)) {
+                LOGGER.debug("No " + BVP_VARIABLES_SELECTOR + " selector found in the request URI. Script will be evaluated.");
+                if (method == null && this.scriptEngine instanceof Compilable) {
+                    CachedScript cachedScript = scriptCache.getScript(scriptName);
+                    if (cachedScript == null) {
+                        ScriptNameAwareReader snReader = new ScriptNameAwareReader(reader, scriptName);
+                        CompiledScript compiledScript = ((Compilable) scriptEngine).compile(snReader);
+                        cachedScript = new CachedScriptImpl(scriptName, compiledScript);
+                        scriptCache.putScript(cachedScript);
+                        LOGGER.debug("Adding {} to the script cache.", scriptName);
+                    } else {
+                        LOGGER.debug("Script {} was already cached.", scriptName);
+                    }
+                    result = cachedScript.getCompiledScript().eval(ctx);
                 } else {
-                    LOGGER.debug("Script {} was already cached.", scriptName);
+                    result = scriptEngine.eval(reader, ctx);
                 }
-                result = cachedScript.getCompiledScript().eval(ctx);
             } else {
-                result = scriptEngine.eval(reader, ctx);
+                LOGGER.warn("Found " + BVP_VARIABLES_SELECTOR + " selector in the request URI. "
+                        + "Script will not be evaluated. Returning available scripting variables as json...");
+                acquireScriptingVariables(ctx, bvpVariables, 100, scriptEngine.getFactory().getEngineName());
+                acquireScriptingVariables(ctx, bvpVariables, 200, "GLOBAL");
+                acquireScriptingVariables(ctx, bvpVariables, -314, "SLING");
+                JSONObject variablesAsJson = new JSONObject(bvpVariables.toJSONString());
+                props.getResponse().setContentType("application/json");
+                ctx.getWriter().write(variablesAsJson.toString());
             }
 
             // call method - if supplied and script engine supports direct invocation
@@ -416,6 +438,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             throw new ScriptEvaluationException(this.scriptName, se.getMessage(),
                 cause);
 
+        } catch (JSONException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return null;
         } finally {
             if ( props.getRequest() != null ) {
                 requestResourceResolver.set(oldResolver);
@@ -438,6 +463,20 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 }
             }
 
+        }
+    }
+
+    private void acquireScriptingVariables(final ScriptContext ctx, BindingsWrapper bvpInfo, int scope, String scopeLiteral) {
+        if (ctx.getBindings(scope) != null) {
+            for (Object binding : ctx.getBindings(scope).keySet()) {
+                if (PROTECTED_KEYS.contains(binding.toString())) {
+                    bvpInfo.getBaseVariables().add(new ScriptingVariableModel(binding.toString(),
+                            ctx.getBindings(scope).get(binding).getClass().getName(), scopeLiteral));
+                } else {
+                    bvpInfo.getCustomVariables().add(new ScriptingVariableModel(binding.toString(),
+                            ctx.getBindings(scope).get(binding).getClass().getName(), scopeLiteral));
+                }
+            }
         }
     }
 
