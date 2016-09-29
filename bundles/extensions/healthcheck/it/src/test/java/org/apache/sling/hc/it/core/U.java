@@ -22,6 +22,7 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
@@ -67,6 +68,8 @@ public class U {
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
 
         return options(
+            repository("https://repo.maven.apache.org/maven2/").id("central"),
+            repository("https://repository.apache.org/snapshots/").id("apache-snapshots").allowSnapshots(),
             when(localRepo.length() > 0).useOptions(
                     systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
             ),                    
