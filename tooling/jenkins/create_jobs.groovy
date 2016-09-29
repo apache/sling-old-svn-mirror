@@ -1,4 +1,8 @@
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
+// all modules should be listed here
+// keys:
+//   - location ( required ) : the SVN directory relatory to svnBase
+//   - jdks (optional) : override the default jdks to use for build
 def modules = [
     [
         location: 'bundles/api'
@@ -487,15 +491,21 @@ def modules = [
 
 // TODO - automatic links from modules in bundles and installer (others?)
 //        to the launchpad testing jobs
+// TODO - move job definitions to separate file to separate data from code
+// TODO - re-enable job notifications once stable
 
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
 // deployed for maximum compatibility
 def defaultJdks = ["1.7", "1.8"]
+def defaultMvn = "Maven 3.3.9"
+def defaultSlave = "Ubuntu&&!ubuntu3"
+
 def jdkMapping = [
     "1.7": "JDK 1.7 (latest)",
     "1.8": "JDK 1.8 (latest)"
 ]
+
 
 modules.each {
   
@@ -546,17 +556,21 @@ for more details</p>''')
 
             jdk(jdkMapping.get(jdkKey))
 
-            mavenInstallation("Maven 3.3.9")
+            mavenInstallation(defaultMvn)
 
             // we have no use for archived artifacts since they are deployed on
             // repository.apache.org so speed up the build a bit (and probably
             // save on disk space)
             archivingDisabled(true)
 
-            label('Ubuntu&&!ubuntu3')
+            label(defaultSlave)
 
+            // ensure that only one job deploys artifacts
+            // besides being less efficient, it's not sure which
+            // job is triggered first and we may end up with a
+            // mix of Java 7 and Java 8 artifacts for projects which
+            // use these 2 versions
             goals(deploy ? "-U clean deploy" : "-U clean verify");
-
             deploy = false
 
             publishers {
