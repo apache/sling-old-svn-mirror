@@ -358,6 +358,54 @@ def modules = [
         location: "installer/providers/file"
     ],
     [
+        location: 'launchpad/api',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/base',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/builder',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/content',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/installer',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/integration-tests',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/test-bundles',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/test-fragment',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/test-services-war',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/test-services',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/testing-war',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'launchpad/testing',
+        jdks: ["1.8"]
+    ],
+    [
         location: "parent",
         jdks: ["1.7"]
     ],
@@ -437,7 +485,6 @@ def modules = [
     ],
 ]
 
-// TODO - create launchpad jobs
 // TODO - automatic links from modules in bundles and installer (others?)
 //        to the launchpad testing jobs
 
