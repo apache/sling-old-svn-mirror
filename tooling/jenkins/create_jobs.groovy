@@ -460,7 +460,7 @@ modules.each {
 
     jdks.each {
         def jdkKey = it
-        job(jobName + "-" + jdkKey) {
+        mavenJob(jobName + "-" + jdkKey) {
 
             description('''
 <p>This build was automatically generated and any manual edits will be lost.</p>
@@ -481,22 +481,16 @@ for more details</p>''')
 
             jdk(jdkMapping.get(jdkKey))
 
+            mavenInstallation("Maven 3.3.9")
+
             label('Ubuntu&&!ubuntu3')
 
-            steps {
-                maven {
-                   goals("-U")
-                   goals("clean")
-                   // ensure that for multiple jdk versions only one actually deploys artifacts
-                   // this should be the 'oldest' JDK
-                   goals(deploy ? "deploy" : "verify")
-                   mavenInstallation("Maven 3.3.9") 
-                }
-            }
+            goals(deploy ? "-U clean deploy" : "-U clean verify");
 
             deploy = false
 
             publishers {
+                // TODO - can we remove the glob and rely on the defaults?
                 archiveJunit('**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml') {
                     allowEmptyResults()
                     testDataPublishers {
