@@ -14,7 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.impl;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -25,14 +31,13 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.pipes.impl.CustomWriter;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipeTest;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.WritePipeTest;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,7 +49,7 @@ import static org.mockito.Mockito.when;
 /**
  * testing the servlet logic (parameters & output)
  */
-public class PlumberServletTest  extends AbstractPipeTest {
+public class PlumberServletTest extends AbstractPipeTest {
 
     String containersPath = PATH_PIPE + "/" + "containers";
 
