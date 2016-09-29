@@ -494,7 +494,6 @@ def modules = [
 ]
 
 // TODO - move job definitions to separate file to separate data from code
-// TODO - re-enable job notifications once stable
 
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
@@ -609,7 +608,7 @@ for more details</p>''')
                     }
                 }
                 // send emails for each broken build, notify individuals as well
-//                mailer('commits@sling.apache.org', false, true)
+                mailer('commits@sling.apache.org', false, true)
             }
         }
     }
