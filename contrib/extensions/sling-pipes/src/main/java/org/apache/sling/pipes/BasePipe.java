@@ -16,6 +16,11 @@
  */
 package org.apache.sling.pipes;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -23,18 +28,13 @@ import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * provides generic utilities for a pipe
  */
 public class BasePipe implements Pipe {
     Logger logger = LoggerFactory.getLogger(BasePipe.class);
     public static final String RESOURCE_TYPE = "slingPipes/base";
-    protected static final String DRYRUN_KEY = "dryRun";
+    public static final String DRYRUN_KEY = "dryRun";
     protected static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";
 
     protected ResourceResolver resolver;

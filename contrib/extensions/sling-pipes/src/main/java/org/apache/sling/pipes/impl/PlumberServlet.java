@@ -14,7 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.impl;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Reference;
@@ -26,16 +33,17 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.pipes.impl.CustomJsonWriter;
-import org.apache.sling.pipes.impl.CustomWriter;
+import org.apache.sling.pipes.AuthorizablePipe;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.SlingQueryPipe;
+import org.apache.sling.pipes.WritePipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Servlet executing plumber for a pipe path given as 'path' parameter,

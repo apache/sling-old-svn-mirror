@@ -16,6 +16,8 @@
  */
 package org.apache.sling.pipes;
 
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
@@ -24,8 +26,6 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
-
-import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -44,7 +44,8 @@ public class AbstractPipeTest {
     protected static final String NN_SIMPLE = "simple";
     protected static final String NN_COMPLEX = "complex";
     protected static final String PN_INDEX = "/index";
-    Plumber plumber;
+
+    protected Plumber plumber;
 
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);

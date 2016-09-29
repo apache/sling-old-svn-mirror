@@ -16,15 +16,14 @@
  */
 package org.apache.sling.pipes.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.DefaultOutputWriter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * writes current resource, dubbing a given child resource "writer" property/value pairs, allowing expressions

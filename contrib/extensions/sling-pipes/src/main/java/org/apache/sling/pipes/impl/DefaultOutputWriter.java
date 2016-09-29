@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.impl;
+
+import java.io.IOException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
-
-import java.io.IOException;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Pipe;
 
 /**
  * default output writer with size and output resources' path
