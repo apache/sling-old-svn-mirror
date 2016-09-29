@@ -143,8 +143,8 @@ public abstract class AbstractSlingContextImplTest {
     
     @Test
     public void testResourceResolverFactory() {
-        ResourceResolverFactory factory = context.getService(ResourceResolverFactory.class);
-        assertNotNull(factory);
+        ResourceResolverFactory[] factories = context.getServices(ResourceResolverFactory.class, null);
+        assertEquals(1, factories.length);
     }
 
     @Model(adaptables = SlingHttpServletRequest.class)

@@ -64,7 +64,7 @@ class ResourceResolverFactoryInitializer {
             // register JCR node types found in classpath
             registerJcrNodeTypes(slingRepository, nodeTypeMode);
             
-            // initialize JCR resource provider factory
+            // initialize JCR resource provider
             ensureJcrResourceProviderDependencies(bundleContext);
             initializeJcrResourceProvider(bundleContext);
         }
@@ -81,7 +81,7 @@ class ResourceResolverFactoryInitializer {
     }
     
     /**
-     * Ensure dependencies for JcrResourceProviderFactory are present.
+     * Ensure dependencies for JcrResourceProvider are present.
      * @param bundleContext Bundle context
      */
     private static void ensureJcrResourceProviderDependencies(BundleContext bundleContext) {
@@ -92,15 +92,15 @@ class ResourceResolverFactoryInitializer {
     }
  
     /**
-     * Initialize JCR resource provider factory.
+     * Initialize JCR resource provider.
      * @param bundleContext Bundle context
      */
     private static void initializeJcrResourceProvider(BundleContext bundleContext) {
         Dictionary<String, Object> config = new Hashtable<String, Object>();
-        JcrResourceProvider factory = new JcrResourceProvider();
-        MockOsgi.injectServices(factory, bundleContext);
-        MockOsgi.activate(factory, bundleContext, config);
-        bundleContext.registerService(ResourceProvider.class, factory, config);
+        JcrResourceProvider provider = new JcrResourceProvider();
+        MockOsgi.injectServices(provider, bundleContext);
+        MockOsgi.activate(provider, bundleContext, config);
+        bundleContext.registerService(ResourceProvider.class, provider, config);
     }
     
     /**
