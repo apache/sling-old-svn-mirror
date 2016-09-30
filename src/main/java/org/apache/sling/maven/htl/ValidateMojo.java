@@ -88,6 +88,12 @@ public class ValidateMojo extends AbstractMojo {
     @Parameter(property = "failOnWarnings", defaultValue = "false")
     private boolean failOnWarnings;
 
+    /**
+     * If set to "true" the validation will be skipped.
+     */
+    @Parameter
+    private boolean skip;
+
     private boolean hasWarnings = false;
     private boolean hasErrors = false;
     private String processedIncludes = null;
@@ -97,6 +103,10 @@ public class ValidateMojo extends AbstractMojo {
     private int sourceDirectoryLength = 0;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Skipping validation.");
+            return;
+        }
 
         long start = System.currentTimeMillis();
 
