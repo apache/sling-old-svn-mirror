@@ -20,7 +20,6 @@ The Apache Sling HTL Maven Plugin, M2Eclipse compatible, provides support for va
                     <goals>
                         <goal>validate</goal>
                     </goals>
-                    <phase>compile</phase>
                 </execution>
             </executions>
         </plugin>
