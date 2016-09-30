@@ -50,7 +50,7 @@
     org.apache.sling/org.apache.sling.discovery.commons/1.0.12
     org.apache.sling/org.apache.sling.discovery.base/1.1.4
     org.apache.sling/org.apache.sling.discovery.oak/1.2.8
-    org.apache.sling/org.apache.sling.engine/2.6.3-SNAPSHOT
+    org.apache.sling/org.apache.sling.engine/2.6.4
     org.apache.sling/org.apache.sling.event/4.1.0
     org.apache.sling/org.apache.sling.event.dea/1.0.4
     org.apache.sling/org.apache.sling.fsresource/1.1.5-SNAPSHOT
