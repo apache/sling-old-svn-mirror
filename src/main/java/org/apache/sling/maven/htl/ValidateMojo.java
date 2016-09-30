@@ -104,8 +104,8 @@ public class ValidateMojo extends AbstractMojo {
             sourceDirectory = new File(project.getBasedir(), sourceDirectory.getPath());
         }
         if (!sourceDirectory.exists()) {
-            throw new MojoExecutionException(
-                    String.format("Configured sourceDirectory={%s} does not exist.", sourceDirectory.getAbsolutePath()));
+            getLog().info("Source directory does not exist, skipping.");
+            return;
         }
         if (!sourceDirectory.isDirectory()) {
             throw new MojoExecutionException(
@@ -113,7 +113,7 @@ public class ValidateMojo extends AbstractMojo {
         }
 
         if ( !buildContext.hasDelta(sourceDirectory )) {
-            getLog().info("No files found to validate, skipping");
+            getLog().info("No files found to validate, skipping.");
             return;
         }
 
