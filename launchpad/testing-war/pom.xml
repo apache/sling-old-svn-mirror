@@ -182,7 +182,7 @@
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
                     <excludes combine.children="append">
-                        <exclude>sling/*</exclude>
+                        <exclude>sling/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
