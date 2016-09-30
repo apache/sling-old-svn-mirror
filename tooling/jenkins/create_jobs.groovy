@@ -468,6 +468,9 @@ def modules = [
         jdks: ["1.7"]
     ],
     [
+        location: 'samples/slingshot'
+    ],
+    [
         location: 'testing/junit/core'
     ],
     [
