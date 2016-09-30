@@ -5,6 +5,7 @@ def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 //   - location ( required ) : the SVN directory relatory to svnBase
 //   - jdks (optional) : override the default jdks to use for build
 //   - downstream (optional): list of downstream projects
+//   - archive (optional): list of archive patterns
 def modules = [
     [
         location: 'bundles/api'
@@ -393,7 +394,8 @@ def modules = [
     [
         location: 'launchpad/builder',
         jdks: ["1.8"],
-        downstream: ["launchpad/testing", "launchpad/testing-war"]
+        downstream: ["launchpad/testing", "launchpad/testing-war"],
+        archive: ["*logs/error.log"]
     ],
     [
         location: 'launchpad/content',
@@ -425,11 +427,13 @@ def modules = [
     ],
     [
         location: 'launchpad/testing-war',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        archive: ["**/logs/error.log"]
     ],
     [
         location: 'launchpad/testing',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        archive: ["**/logs/error.log"]
     ],
     [
         location: "parent",
@@ -616,6 +620,14 @@ for more details</p>''')
             publishers {
                 if ( downstreamJobs ) {
                     downstream(downstreamJobs)
+                }
+
+                if (module.archive) {
+                    archiveArtifacts() {
+                        module.archive.each { archiveEntry ->
+                            pattern(archiveEntry)
+                        }
+                    }
                 }
 
                 // TODO - can we remove the glob and rely on the defaults?
