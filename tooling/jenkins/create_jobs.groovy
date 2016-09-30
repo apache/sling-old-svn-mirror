@@ -349,6 +349,21 @@ def modules = [
         location: 'contrib/extensions/distribution/extensions'
     ],
     [
+        location: 'contrib/nosql/couchbase-client'
+    ],
+    [
+        location: 'contrib/nosql/couchbase-resourceprovider'
+    ],
+    [
+        location: 'contrib/nosql/generic'
+    ],
+    [
+        location: 'contrib/nosql/launchpad'
+    ],
+    [
+        location: 'contrib/nosql/mongodb-resourceprovider'
+    ],
+    [
         location: "installer/console"
     ],
     [
