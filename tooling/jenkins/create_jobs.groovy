@@ -333,7 +333,20 @@ def modules = [
         jdks: ["1.8"]
     ],
     [
-        location: "contrib/extensions/distribution"
+        location: 'contrib/extensions/distribution/api'
+    ],
+    [
+        location: 'contrib/extensions/distribution/core'
+    ],
+    [
+        location: 'contrib/extensions/distribution/it',
+        jdks: ['1.7']
+    ],
+    [
+        location: 'contrib/extensions/distribution/sample'
+    ],
+    [
+        location: 'contrib/extensions/distribution/extensions'
     ],
     [
         location: "installer/console"
