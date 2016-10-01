@@ -423,7 +423,7 @@ def modules = [
         location: 'launchpad/builder',
         jdks: ["1.8"],
         downstream: ["launchpad/testing", "launchpad/testing-war"],
-        archive: ["*logs/error.log"]
+        archive: ["**/logs/error.log"]
     ],
     [
         location: 'launchpad/content',
