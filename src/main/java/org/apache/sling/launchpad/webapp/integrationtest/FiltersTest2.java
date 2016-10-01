@@ -25,7 +25,6 @@ public class FiltersTest2 extends HttpTestBase {
     public void testCounters() throws IOException {
         HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/system.json", HttpServletResponse.SC_OK);
         final String [] headers = {
-            "FILTER_COUNTER_HTTPSERVICE",
             "FILTER_COUNTER_SLING",
             "FILTER_COUNTER_NOPROP",
             "FILTER_COUNTER_SLING_WITH_PATTERN"
