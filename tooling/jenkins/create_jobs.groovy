@@ -340,7 +340,8 @@ def modules = [
     ],
     [
         location: 'contrib/extensions/distribution/it',
-        jdks: ['1.8']
+        jdks: ['1.8'],
+        archive: ["**/logs/error.log"]
     ],
     [
         location: 'contrib/extensions/distribution/sample'
