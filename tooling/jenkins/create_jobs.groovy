@@ -439,19 +439,23 @@ def modules = [
     ],
     [
         location: 'launchpad/test-bundles',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ["launchpad/testing", "launchpad/testing-war"]
     ],
     [
         location: 'launchpad/test-fragment',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/test-services-war',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/test-services',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/testing-war',
@@ -471,7 +475,8 @@ def modules = [
         location: 'samples/slingshot'
     ],
     [
-        location: 'testing/junit/core'
+        location: 'testing/junit/core',
+        downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'testing/junit/healthcheck'
@@ -480,10 +485,12 @@ def modules = [
         location: 'testing/junit/performance'
     ],
     [
-        location: 'testing/junit/remote'
+        location: 'testing/junit/remote',
+        downstream: ["launchpad/test-bundles"]
     ],
     [
-        location: 'testing/junit/scriptable'
+        location: 'testing/junit/scriptable',
+        downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'testing/junit/teleporter'
@@ -602,25 +609,10 @@ for more details</p>''')
                 numToKeep(15)
             }
 
+            // TODO - configure ViewSVN
             scm {
                 svn(svnDir)
             }
-
-            // note on dependency managment
-            // we ask Jenkins to create dependencies between projects automatically
-            // if SNAPSHOT dependencies are found between projects. This might create
-            // too many dependencies, e.g. if foo-core depends on foo-core and projects
-            // build for Java 1.7 and 1.8 the following depdendencies will be created
-            //
-            // foo-api-1.7 → foo-core-1.7
-            // foo-api-1.7 → foo-core-1.8
-            // foo-api-1.8 → foo-core-1.7
-            // foo-api-1.8 → foo-core-1.8
-            //
-            // in effect we will trigger builds twice as often as needed. Since SNAPSHOT
-            // dependencies are not that often found between bundles and builds should
-            // be quick this is acceptable for now. The alternative would be to define
-            // the dependencies manually, which is cumbersome and error-prone
 
             triggers {
                 snapshotDependencies(true)
@@ -646,10 +638,9 @@ for more details</p>''')
             // mix of Java 7 and Java 8 artifacts for projects which
             // use these 2 versions
             goals(deploy ? "-U clean deploy" : "-U clean verify");
-            deploy = false
 
             publishers {
-                if ( downstreamJobs ) {
+                if ( deploy && downstreamJobs ) {
                     downstream(downstreamJobs)
                 }
 
@@ -671,6 +662,8 @@ for more details</p>''')
                 // send emails for each broken build, notify individuals as well
                 mailer('commits@sling.apache.org', false, true)
             }
+
+            deploy = false
         }
     }
 }
