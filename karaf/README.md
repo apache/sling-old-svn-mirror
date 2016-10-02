@@ -2,8 +2,10 @@ Apache Sling Karaf
 ==================
 
 * **Apache Sling Karaf Features**: a features repository for easy deployment of [Apache Sling](https://sling.apache.org) on [Apache Karaf](https://karaf.apache.org) (see [Provisioning](https://karaf.apache.org/manual/latest/#_provisioning) for details)
+* **Apache Sling Karaf Configs**: configurations for provisioning with Apache Karaf
 * **Apache Sling Karaf Distribution**: a [distribution](https://karaf.apache.org/manual/latest/#_custom_distributions) of [Apache Sling](https://sling.apache.org) based on [Apache Karaf](https://karaf.apache.org) (Sling's features and artifacts in a single archive)
 
+**NOTE:** Tested and built with Apache Karaf 4.0.5
 
 Getting Started
 ---------------
