@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.impl;
+package org.apache.sling.pipes.internal;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.impl;
+package org.apache.sling.pipes.internal;
+
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * same thing as CustomWriter, but uses a JSON object passed as writer parameter
