@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory;
  * provides generic utilities for a pipe
  */
 public class BasePipe implements Pipe {
-    Logger logger = LoggerFactory.getLogger(BasePipe.class);
+
+    private final Logger logger = LoggerFactory.getLogger(BasePipe.class);
+
     public static final String RESOURCE_TYPE = "slingPipes/base";
     public static final String DRYRUN_KEY = "dryRun";
     protected static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";

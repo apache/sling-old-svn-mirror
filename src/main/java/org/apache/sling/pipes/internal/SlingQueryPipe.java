@@ -14,35 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.SlingQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.query.Query;
+import static org.apache.sling.query.SlingQuery.$;
+
 import java.util.Iterator;
 
 /**
- * generates output based on an xpath query (no input is considered)
+ * this pipe uses SlingQuery to filters children (filter defined in expr property) of
+ * a resource (defined in the path property)
  */
-public class XPathPipe extends BasePipe {
+public class SlingQueryPipe extends BasePipe {
+    private static Logger logger = LoggerFactory.getLogger(SlingQueryPipe.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(XPathPipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/xpath";
+    public final static String RESOURCE_TYPE = "slingPipes/slingQuery";
 
-    public XPathPipe(Plumber plumber, Resource resource) throws Exception {
+    public SlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
 
     @Override
+    public boolean modifiesContent() {
+        return false;
+    }
+
     public Iterator<Resource> getOutput() {
-        String query = getExpr();
-        if (StringUtils.isNotBlank(query)){
-            logger.info("Executing query: {}", query);
-            return resource.getResourceResolver().findResources(query, Query.XPATH);
+        Resource resource = getInput();
+        if (resource != null) {
+            String queryExpression = getExpr();
+            SlingQuery query = $(resource).children(getExpr());
+            logger.info("[sling query]: executing $({}).children({})", resource.getPath(), queryExpression);
+            return query.iterator();
         }
         return EMPTY_ITERATOR;
     }

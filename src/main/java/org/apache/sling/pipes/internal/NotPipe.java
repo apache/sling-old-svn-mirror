@@ -14,27 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.ReferencePipe;
 
-import static org.junit.Assert.assertTrue;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
- * test the sling query pipe
+ * executes a pipe referred in the configuration, but invert output:
+ * nothing if the pipe has something, input if the pipe has nothing
  */
-public class SlingQueryPipeTest extends AbstractPipeTest {
+public class NotPipe extends ReferencePipe {
 
-    @Before
-    public void setup() {
-        super.setup();
-        context.load().json("/users.json", "/content/users");
-        context.load().json("/slingQuery.json", PATH_PIPE);
+    public static final String RESOURCE_TYPE = "slingPipes/not";
+
+    public NotPipe(Plumber plumber, Resource resource) throws Exception {
+        super(plumber, resource);
     }
 
-    @Test
-    public void testChildren() throws Exception {
-        assertTrue("this pipe should have an output", getOutput(PATH_PIPE + "/" + NN_SIMPLE).hasNext());
+    @Override
+    public Iterator<Resource> getOutput() {
+        if (reference.getOutput().hasNext()){
+            return EMPTY_ITERATOR;
+        }
+        return Collections.singleton(getInput()).iterator();
     }
 }

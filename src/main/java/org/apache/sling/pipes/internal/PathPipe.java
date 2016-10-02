@@ -14,16 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.apache.sling.api.resource.Resource;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.StringTokenizer;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Plumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * creates or get given expression's path and returns corresponding resource
@@ -37,6 +42,8 @@ public class PathPipe extends BasePipe {
     String nodeType;
 
     boolean autosave;
+
+    private final Logger logger = LoggerFactory.getLogger(PathPipe.class);
 
     public PathPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

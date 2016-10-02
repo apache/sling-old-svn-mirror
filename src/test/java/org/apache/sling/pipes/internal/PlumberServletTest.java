@@ -35,7 +35,6 @@ import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipeTest;
 import org.apache.sling.pipes.OutputWriter;
-import org.apache.sling.pipes.WritePipeTest;
 import org.junit.Before;
 import org.junit.Test;
 

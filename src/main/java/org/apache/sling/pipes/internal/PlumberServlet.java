@@ -33,15 +33,12 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.pipes.AuthorizablePipe;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.SlingQueryPipe;
-import org.apache.sling.pipes.WritePipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
