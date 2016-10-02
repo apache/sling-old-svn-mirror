@@ -14,30 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
 
-import org.apache.sling.api.resource.Resource;
+package org.apache.sling.pipes.internal;
 
-import java.util.Collections;
-import java.util.Iterator;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * executes a pipe referred in the configuration, but invert output:
- * nothing if the pipe has something, input if the pipe has nothing
- */
-public class NotPipe extends ReferencePipe {
+import static org.junit.Assert.assertFalse;
 
-    public static final String RESOURCE_TYPE = "slingPipes/not";
+public class NotPipeTest extends AbstractPipeTest {
 
-    public NotPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    @Before
+    public void setUp() throws Exception {
+        context.load().json("/reference.json", PATH_PIPE);
     }
 
-    @Override
-    public Iterator<Resource> getOutput() {
-        if (reference.getOutput().hasNext()){
-            return EMPTY_ITERATOR;
-        }
-        return Collections.singleton(getInput()).iterator();
+    @Test
+    public void testTrue() throws Exception {
+        assertFalse("working referred pipe should make not pipe fail", getOutput(PATH_PIPE + "/not").hasNext());
+    }
+
+    @Test
+    public void testFalse() throws Exception {
+        //not working referred pipe should stream input of the not pipe
+        testOneResource(PATH_PIPE + "/notfailure", PATH_APPLE);
     }
 }

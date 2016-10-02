@@ -14,29 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.pipes.internal;
 
-package org.apache.sling.pipes;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Plumber;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Collections;
+import java.util.Iterator;
 
-import static org.junit.Assert.assertFalse;
+/**
+ * very simple pipe, returning parent resource of input resource
+ */
+public class ParentPipe extends BasePipe {
 
-public class NotPipeTest extends AbstractPipeTest {
+    public static final String RESOURCE_TYPE = "slingPipes/parent";
 
-    @Before
-    public void setUp() throws Exception {
-        context.load().json("/reference.json", PATH_PIPE);
+    public ParentPipe(Plumber plumber, Resource resource) throws Exception {
+        super(plumber, resource);
     }
 
-    @Test
-    public void testTrue() throws Exception {
-        assertFalse("working referred pipe should make not pipe fail", getOutput(PATH_PIPE + "/not").hasNext());
-    }
-
-    @Test
-    public void testFalse() throws Exception {
-        //not working referred pipe should stream input of the not pipe
-        testOneResource(PATH_PIPE + "/notfailure", PATH_APPLE);
+    @Override
+    public Iterator<Resource> getOutput() {
+        Resource resource = getInput();
+        return Collections.singleton(resource.getParent()).iterator();
     }
 }

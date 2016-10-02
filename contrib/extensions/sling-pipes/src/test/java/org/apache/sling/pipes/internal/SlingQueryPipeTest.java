@@ -14,27 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.Collections;
-import java.util.Iterator;
+import static org.junit.Assert.assertTrue;
 
 /**
- * very simple pipe, returning parent resource of input resource
+ * test the sling query pipe
  */
-public class ParentPipe extends BasePipe {
+public class SlingQueryPipeTest extends AbstractPipeTest {
 
-    public static final String RESOURCE_TYPE = "slingPipes/parent";
-
-    public ParentPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    @Before
+    public void setup() {
+        super.setup();
+        context.load().json("/users.json", "/content/users");
+        context.load().json("/slingQuery.json", PATH_PIPE);
     }
 
-    @Override
-    public Iterator<Resource> getOutput() {
-        Resource resource = getInput();
-        return Collections.singleton(resource.getParent()).iterator();
+    @Test
+    public void testChildren() throws Exception {
+        assertTrue("this pipe should have an output", getOutput(PATH_PIPE + "/" + NN_SIMPLE).hasNext());
     }
 }
