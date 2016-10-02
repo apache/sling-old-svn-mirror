@@ -16,6 +16,10 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.Iterator;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpState;
@@ -35,12 +39,8 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.Iterator;
-
 /**
- * Pipe outputing binding related to a json stream: either an object
+ * Pipe outputting binding related to a json stream: either an object
  */
 public class JsonPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
