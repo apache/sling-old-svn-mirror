@@ -22,7 +22,6 @@ package org.apache.sling.mom;
 import java.util.Map;
 
 /**
- * Created by ieb on 31/03/2016.
  * Manages named queues allowing messages to be added to the queue and a queue reader to be opened to read messages from a queue.
  */
 public interface QueueManager {

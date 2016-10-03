@@ -28,7 +28,6 @@ import org.apache.sling.mom.TopicManager;
 import javax.annotation.Nonnull;
 
 /**
- * Created by ieb on 30/03/2016.
  * Sends messages out to JMS Queues or topics. Normally called by the local JobManager Implementation.
  * Uses a TopicManager or QueueManager to perform the send operation.
  */

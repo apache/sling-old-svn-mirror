@@ -36,7 +36,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 11/04/2016.
  */
 @Component(immediate = true)
 public class JobManagerTestComponent  {

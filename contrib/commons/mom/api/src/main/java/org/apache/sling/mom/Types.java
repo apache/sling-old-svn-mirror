@@ -19,7 +19,6 @@
 package org.apache.sling.mom;
 
 /**
- * Created by ieb on 13/04/2016.
  */
 public final class Types {
     private Types() {

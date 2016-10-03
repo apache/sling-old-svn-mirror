@@ -23,7 +23,6 @@ import org.apache.sling.mom.Types;
 import java.util.Map;
 
 /**
- * Created by ieb on 06/04/2016.
  */
 class QueueEntry {
     private final Types.CommandName name;

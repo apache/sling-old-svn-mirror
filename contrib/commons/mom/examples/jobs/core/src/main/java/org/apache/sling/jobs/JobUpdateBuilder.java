@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
- * Created by ieb on 14/04/2016.
  * Create a job update ading properties and building.
  */
 public interface JobUpdateBuilder {

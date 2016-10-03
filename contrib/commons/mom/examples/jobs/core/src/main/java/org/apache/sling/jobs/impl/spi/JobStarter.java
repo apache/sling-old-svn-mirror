@@ -21,7 +21,6 @@ package org.apache.sling.jobs.impl.spi;
 import org.apache.sling.jobs.Job;
 
 /**
- * Created by ieb on 29/03/2016.
  * Starts a job, used by the JobBuilderImpl to perform the add operation.
  */
 public interface JobStarter {

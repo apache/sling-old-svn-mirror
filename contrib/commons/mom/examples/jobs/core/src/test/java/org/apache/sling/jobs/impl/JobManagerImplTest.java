@@ -44,7 +44,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 06/04/2016.
  */
 public class JobManagerImplTest {
 

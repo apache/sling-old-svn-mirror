@@ -22,7 +22,6 @@ package org.apache.sling.jobs.impl.spi;
  * Objects that can be converted to and from a Map are expected to extend this base class.
  * The values contained in the Map are expected to be Maps or values that can be serialised into most
  * common formats. It would be safe to use json or yaml as an example of a common format.
- * Created by ieb on 28/03/2016.
  *
  */
 public interface MapValueAdapter {

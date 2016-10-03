@@ -20,7 +20,6 @@
 package org.apache.sling.jobs;
 
 /**
- * Created by ieb on 13/04/2016.
  * When a job is complete, the callback gets called.
  * This interface is implemented by the Jobs Implementation and passed into a JobsConsumer.
  */

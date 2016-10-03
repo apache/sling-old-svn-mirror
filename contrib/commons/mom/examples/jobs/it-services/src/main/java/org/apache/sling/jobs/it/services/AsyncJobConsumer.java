@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 /**
- * Created by ieb on 15/04/2016.
  * This job consumer consumes jobs from the job subsystem. It accepts the jobs into a queue and uses a thread pool to drain the queue.
  * If the queue fills up, jobs are returned back to the jobsystem without being accepted. The size of the queue, the number of threads and
  * the maximum number of threads should be tuned for maximum throughput at an acceptable resource usage level. Retuning the consumer

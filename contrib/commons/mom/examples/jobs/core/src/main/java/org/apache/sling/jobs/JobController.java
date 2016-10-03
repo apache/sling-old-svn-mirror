@@ -20,7 +20,6 @@
 package org.apache.sling.jobs;
 
 /**
- * Created by ieb on 30/03/2016.
  * A job controller provides a mechanism by which a running job can be sent control messages.
  * Jobs when they start should register a JobController implementation with the JobManager so that
  * it can act on control messages sent. Alternatively a TopicListener can be used to route

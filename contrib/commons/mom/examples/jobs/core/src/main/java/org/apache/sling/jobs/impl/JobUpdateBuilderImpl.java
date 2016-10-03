@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
- * Created by ieb on 23/03/2016.
  */
 public class JobUpdateBuilderImpl implements JobUpdateBuilder {
 

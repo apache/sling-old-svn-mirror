@@ -31,7 +31,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 06/04/2016.
  */
 public class JobUpdateImplTest {
 

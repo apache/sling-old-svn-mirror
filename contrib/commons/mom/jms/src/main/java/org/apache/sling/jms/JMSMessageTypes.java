@@ -19,7 +19,6 @@
 package org.apache.sling.jms;
 
 /**
- * Created by ieb on 04/04/2016.
  */
 public enum JMSMessageTypes {
     /**

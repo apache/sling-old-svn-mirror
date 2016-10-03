@@ -45,7 +45,6 @@ import java.util.Set;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 31/03/2016.
  */
 public class JMSTopicManagerTest {
 

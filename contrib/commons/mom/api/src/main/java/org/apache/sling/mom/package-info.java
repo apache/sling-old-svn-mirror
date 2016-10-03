@@ -18,7 +18,6 @@
  */
 
 /**
- * Created by ieb on 30/03/2016.
  */
 
 @Version("1.0.0")

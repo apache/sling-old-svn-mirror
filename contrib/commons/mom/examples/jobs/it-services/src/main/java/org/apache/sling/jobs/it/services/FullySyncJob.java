@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 
 /**
- * Created by ieb on 11/04/2016.
  */
 @Component(immediate = true)
 @Properties({

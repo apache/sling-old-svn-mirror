@@ -33,7 +33,6 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
- * Created by ieb on 12/04/2016.
  * This is a configuration factory that creates QueueReader instances on configuration. These connect to the JobManager
  * service and are registered using the OSGi Whiteboard pattern with the QueueManager. The JobManager service must implement JobConsumer.
  *

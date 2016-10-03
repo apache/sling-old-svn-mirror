@@ -29,7 +29,6 @@ import java.util.Map;
 /**
  * JobImpl is a data object to hold the current state of the job in the current JVM as loaded into memory.
  * The JobImpl also listens for JobUpdates.
- * Created by ieb on 23/03/2016.
  */
 public class JobImpl implements Job, JobUpdateListener {
     private final Types.JobQueue jobQueue;

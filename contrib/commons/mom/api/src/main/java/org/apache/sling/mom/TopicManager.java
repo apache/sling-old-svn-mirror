@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by ieb on 30/03/2016.
  * Manages Topics allowing callers to publish messages onto a Topic and Subscribe to a topic.
  *
  * To create a subscriber implement the Subscriber interface and the implementation of TopicManager should

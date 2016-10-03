@@ -30,7 +30,6 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 05/04/2016.
  * Tests in memory storage.
  */
 public class InMemoryJobStorageTest {

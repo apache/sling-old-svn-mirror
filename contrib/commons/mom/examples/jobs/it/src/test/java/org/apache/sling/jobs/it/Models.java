@@ -6,7 +6,6 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 
 /**
- * Created by ieb on 07/04/2016.
  */
 public class Models {
     public static final int LONG_TIMEOUT_SECONDS = 2; // TODO 10

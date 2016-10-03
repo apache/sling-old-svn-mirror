@@ -34,7 +34,6 @@ import java.util.Map;
  * Represents messages sent to the Job via a message queue.
  * Abort, stop and update messages should be sent via a priority queue.
  * Start messages should be sent by a processing queue.
- * Created by ieb on 23/03/2016.
  */
 public class JobUpdateImpl implements MapValueAdapter,  JobUpdate {
     private static final long TTL = 1000 * 60;

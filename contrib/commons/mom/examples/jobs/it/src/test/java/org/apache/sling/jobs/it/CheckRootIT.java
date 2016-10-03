@@ -18,7 +18,6 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 07/04/2016.
  */
 public class CheckRootIT {
 

@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by ieb on 29/03/2016.
  * Provides an implementation of a JobBuilder.
  */
 public class JobBuilderImpl implements JobBuilder {

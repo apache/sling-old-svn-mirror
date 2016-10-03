@@ -25,7 +25,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Created by ieb on 29/03/2016.
  * Provides JobStorage local to the JVM. Implementation may or may not decide to persist over restarts, page, etc
  */
 public interface JobStorage {

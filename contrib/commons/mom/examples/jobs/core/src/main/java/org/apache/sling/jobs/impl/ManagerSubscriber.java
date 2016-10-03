@@ -27,7 +27,6 @@ import org.apache.sling.mom.Types;
 import java.util.Map;
 
 /**
- * Created by ieb on 30/03/2016.
  * Listens to a topic to retrieve control messages.
  */
 @Component(immediate = true, metatype = true)

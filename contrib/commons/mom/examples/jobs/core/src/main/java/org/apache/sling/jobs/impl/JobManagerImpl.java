@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Created by ieb on 29/03/2016.
  * Implements a JobManager, storing Jobs in a JobStorage implementation.
  * Implements a JobStarter so it can start Jobs and queue them by sending a message.
  * Implements a JobUpdateListener so it can store inbound update messages.

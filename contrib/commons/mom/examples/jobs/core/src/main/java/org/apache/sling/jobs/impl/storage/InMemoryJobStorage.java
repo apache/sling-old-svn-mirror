@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by ieb on 29/03/2016.
  * An unbounded local JVM job store.
  */
 public class InMemoryJobStorage implements JobStorage {

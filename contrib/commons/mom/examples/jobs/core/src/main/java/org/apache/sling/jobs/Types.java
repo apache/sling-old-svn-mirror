@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by ieb on 13/04/2016.
  * This has to be part of the API to prevent all sorts of other issues.
  */
 public final class Types {
