@@ -21,7 +21,6 @@ package org.apache.sling.mom;
 import java.util.Map;
 
 /**
- * Created by ieb on 30/03/2016.
  *
  * To implement a topic subscriber implement this interface, register it as an OSGi service and the TopicManager
  * which will implement a OSGi Whiteboard pattern will register it based on the values in the OSGi property "topics".

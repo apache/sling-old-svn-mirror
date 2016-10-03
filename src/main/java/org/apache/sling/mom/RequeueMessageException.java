@@ -19,7 +19,6 @@
 package org.apache.sling.mom;
 
 /**
- * Created by ieb on 02/04/2016.
  * Thown when a queue reader cant process a message and needs to indicate that the message sould be re-queued and retried some time later.
  */
 public class RequeueMessageException extends Exception {

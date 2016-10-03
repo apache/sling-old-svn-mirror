@@ -22,7 +22,6 @@ package org.apache.sling.mom;
 import java.util.Map;
 
 /**
- * Created by ieb on 30/03/2016.
  * Filter inbound messages, optionally implemented by QueueReaders.
  */
 public interface MessageFilter {
