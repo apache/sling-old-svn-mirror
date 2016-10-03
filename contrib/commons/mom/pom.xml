@@ -16,7 +16,7 @@
     <modules>
         <module>jms</module>
         <module>api</module>
-        <module>examples/jobs/core</module>
-        <module>examples/jobs/it-services</module>
+        <module>jobs/core</module>
+        <module>jobs/it-services</module>
     </modules>
 </project>

@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/examples/jobs/it-services</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/examples/jobs/it-services</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/mom/examples/jobs/it-services</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/jobs/it-services</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/jobs/it-services</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/mom/jobs/it-services</url>
     </scm>
 
     <properties>

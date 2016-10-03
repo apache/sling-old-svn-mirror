@@ -162,38 +162,6 @@ public class JobManagerImplTest {
         return job;
     }
 
-    @Test
-    public void testGetJob() throws Exception {
-        String testId = "testGetJobById"+System.currentTimeMillis();
-        Job job = createJob(testId);
-        Map<String, Object> template = new HashMap<String, Object>();
-        template.put("testid", testId);
-        try {
-            Job searchedJob = jobManager.getJob(job.getQueue(), template);
-            assertNotNull(searchedJob);
-            assertEquals(job.getId(), searchedJob.getId());
-            assertEquals(testId, searchedJob.getProperties().get("testid"));
-        } catch ( UnsupportedOperationException e) {
-            LOGGER.info("Method getJob to be implemented. Cant be tested, so test passes for the moment.");
-        }
-
-    }
-
-    @Test
-    public void testFindJobs() throws Exception {
-        String testId = "testGetJobById"+System.currentTimeMillis();
-        Job job = createJob(testId);
-        Map<String, Object> template = new HashMap<String, Object>();
-        template.put("testid", testId);
-        try {
-            @SuppressWarnings("unchecked") Collection<Job> searchedResults = jobManager.findJobs(JobManager.QueryType.ALL, job.getQueue(), 10, template);
-            assertNotNull(searchedResults);
-            fail("Implement code to test search results");
-        } catch ( UnsupportedOperationException e) {
-            LOGGER.info("Method findJobs to be implemented. Cant be tested, so test passes for the moment.");
-        }
-
-    }
 
     @Test
     public void testStopJobById() throws Exception {

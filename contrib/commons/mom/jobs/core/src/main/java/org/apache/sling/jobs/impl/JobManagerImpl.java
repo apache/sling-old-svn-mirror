@@ -69,19 +69,6 @@ public  class JobManagerImpl implements JobManager, JobStarter, JobUpdateListene
         return jobStorage.get(jobId);
     }
 
-
-    @Nullable
-    @Override
-    public Job getJob(@Nonnull Types.JobQueue queue, @Nonnull Map<String, Object> template) {
-        throw new UnsupportedOperationException("TODO, implementation required");
-    }
-
-    @Nonnull
-    @Override
-    public Collection<Job> findJobs(@Nonnull QueryType type, @Nonnull Types.JobQueue queue, long limit, @Nullable Map<String, Object>... templates) {
-        throw new UnsupportedOperationException("TODO, implementation required");
-    }
-
     @Override
     public void stopJobById(@Nonnull String jobId) {
         Job job = getJobById(jobId);

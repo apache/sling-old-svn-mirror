@@ -57,6 +57,12 @@ public interface JobManager {
 
 
     /**
+     * This method comes from the existing Sling Event API and has not been implemented, as it was found
+     * not to be necessary to implement Jobs on the MoM API. Since it was not implemented
+     * It has not been included in the first release of the API.
+     * If it is required, it can be added and implemented.
+     *
+     * ---------------------------------------
      * Find a job - either queued or active.
      *
      * This method searches for a job with the given topic and filter properties. If more than one
@@ -71,9 +77,10 @@ public interface JobManager {
      * @param template The map acts like a template. The searched job
      *                    must match the template (AND query).
      * @return A job or <code>null</code>
+     *    @Nullable
+     * Job getJob(@Nonnull Types.JobQueue queue, @Nonnull Map<String, Object> template);
+     *
      */
-    @Nullable
-    Job getJob(@Nonnull Types.JobQueue queue, @Nonnull Map<String, Object> template);
 
     /**
      * The requested job types for the query.
@@ -92,6 +99,12 @@ public interface JobManager {
         DROPPED     // history of dropped jobs
     }
     /**
+     * This method comes from the existing Sling Event API and has not been implemented, as it was found
+     * not to be necessary to implement Jobs on the MoM API. Since it was not implemented
+     * It has not been included in the first release of the API.
+     * If it is required, it can be added and implemented.
+     *
+     * ---------------------------------------
      * Return all jobs of a given type.
      *
      * Based on the type parameter, either the history of jobs can be returned or unfinished jobs. The type
@@ -114,9 +127,9 @@ public interface JobManager {
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
      * @return A collection of jobs - the collection might be empty.
+     *    @Nonnull
+     *  Collection<Job> findJobs(@Nonnull QueryType type, @Nonnull Types.JobQueue queue, long limit, @Nullable Map<String, Object>... templates);
      */
-    @Nonnull
-    Collection<Job> findJobs(@Nonnull QueryType type, @Nonnull Types.JobQueue queue, long limit, @Nullable Map<String, Object>... templates);
 
     /**
      * Stop a job, by sending a message.

@@ -106,18 +106,6 @@ public class JobSubsystem  implements JobManager, JobConsumer {
         return manager.getJobById(jobId);
     }
 
-    @Nullable
-    @Override
-    public Job getJob(@Nonnull Types.JobQueue queue, @Nonnull Map<String, Object> template) {
-        return manager.getJob(queue, template);
-    }
-
-    @Nonnull
-    @Override
-    public Collection<Job> findJobs(@Nonnull QueryType type, @Nonnull Types.JobQueue queue, long limit, @Nullable Map<String, Object>... templates) {
-        return manager.findJobs(type, queue, limit, templates);
-    }
-
     @Override
     public void stopJobById(@Nonnull String jobId) {
         manager.stopJobById(jobId);
