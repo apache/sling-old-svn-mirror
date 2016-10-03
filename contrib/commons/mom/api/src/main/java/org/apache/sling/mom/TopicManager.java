@@ -20,6 +20,8 @@
 package org.apache.sling.mom;
 
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,6 +34,7 @@ import java.util.Set;
  * To create a subscriber implement the Subscriber interface and the implementation of TopicManager should
  * implement the OSGi whiteboard pattern.
  */
+@ProviderType
 public interface TopicManager {
 
 

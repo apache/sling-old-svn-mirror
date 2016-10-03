@@ -18,6 +18,8 @@
  */
 package org.apache.sling.mom;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
 /**
@@ -26,6 +28,7 @@ import java.util.Map;
  * which will implement a OSGi Whiteboard pattern will register it based on the values in the OSGi property "topics".
  * The component may optionally implement MessageFilter if it wants to separate filtering messages sooner.
  */
+@ProviderType
 public interface Subscriber {
 
     /**

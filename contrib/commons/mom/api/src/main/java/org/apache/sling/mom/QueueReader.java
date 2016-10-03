@@ -19,6 +19,8 @@
 
 package org.apache.sling.mom;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
 /**
@@ -28,6 +30,7 @@ import java.util.Map;
  * This interface should be implemented as an OSGi Service. The implementation of the MoM API should register any services
  * implementing QueueReader using the OSGi Whiteboard pattern.
  */
+@ProviderType
 public interface QueueReader  {
 
 

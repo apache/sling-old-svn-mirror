@@ -19,6 +19,9 @@
 
 package org.apache.sling.jobs;
 
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A job controller provides a mechanism by which a running job can be sent control messages.
  * Jobs when they start should register a JobController implementation with the JobManager so that
@@ -26,6 +29,7 @@ package org.apache.sling.jobs;
  * message to the Job, bypassing the manager, although this TopicListener will need to filter
  * for all messages associated with the Job.
  */
+@ProviderType
 public interface JobController {
 
 

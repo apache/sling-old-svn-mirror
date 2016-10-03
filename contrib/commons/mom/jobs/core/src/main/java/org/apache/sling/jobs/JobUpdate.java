@@ -19,6 +19,7 @@
 package org.apache.sling.jobs;
 
 import org.apache.sling.mom.TopicManager;
+import org.osgi.annotation.versioning.ProviderType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +37,7 @@ import java.util.Map;
  * The API does not specify the implementation, only that the various JobUpdate messages are delivered with an delay appropriate for the
  * type of message, identified by the JobUpdateCommand type.
  */
+@ProviderType
 public interface JobUpdate {
 
     /**

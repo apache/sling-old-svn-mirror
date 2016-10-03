@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jobs;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -26,6 +28,7 @@ import java.util.Map;
 /**
  * Based on org.apache.sling.event.job.JobManager but trimmed down and adjusted to deal with distributed job queues.
  */
+@ProviderType
 public interface JobManager {
 
 

@@ -20,6 +20,7 @@
 package org.apache.sling.jobs.impl.spi;
 
 import org.apache.sling.jobs.Job;
+import org.osgi.annotation.versioning.ProviderType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,6 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Provides JobStorage local to the JVM. Implementation may or may not decide to persist over restarts, page, etc
  */
+@ProviderType
 public interface JobStorage {
 
 

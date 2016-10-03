@@ -19,10 +19,14 @@
 
 package org.apache.sling.jobs;
 
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * When a job is complete, the callback gets called.
  * This interface is implemented by the Jobs Implementation and passed into a JobsConsumer.
  */
+@ProviderType
 public interface JobCallback {
 
     /**

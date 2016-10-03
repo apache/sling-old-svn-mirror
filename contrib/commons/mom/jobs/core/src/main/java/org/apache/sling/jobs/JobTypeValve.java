@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jobs;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -25,6 +27,7 @@ import javax.annotation.Nonnull;
  * it can perform further actions on it. JobTypeValves are used in place of static JobType declarations.
  * This interface is only implemented where static declaration of JobTypes does not satisfy the use cases.
  */
+@ProviderType
 public interface JobTypeValve {
 
     /**
