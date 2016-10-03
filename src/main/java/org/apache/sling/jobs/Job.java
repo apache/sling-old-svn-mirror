@@ -21,6 +21,7 @@ package org.apache.sling.jobs;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.sling.mom.TopicManager;
+import org.osgi.annotation.versioning.ProviderType;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
@@ -34,6 +35,7 @@ import java.util.Set;
  * Largely based on org.apache.sling.event.Job.
  * A Job contains the complete state of the Job as known in the current JVM.
  */
+@ProviderType
 public interface Job {
 
 

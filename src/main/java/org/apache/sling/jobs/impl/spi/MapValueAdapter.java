@@ -18,12 +18,15 @@
  */
 package org.apache.sling.jobs.impl.spi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Objects that can be converted to and from a Map are expected to extend this base class.
  * The values contained in the Map are expected to be Maps or values that can be serialised into most
  * common formats. It would be safe to use json or yaml as an example of a common format.
  *
  */
+@ProviderType
 public interface MapValueAdapter {
 
 

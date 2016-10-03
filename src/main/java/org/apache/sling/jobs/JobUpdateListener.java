@@ -18,12 +18,15 @@
  */
 package org.apache.sling.jobs;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 
 /**
  * Listens for JobUpdate messages.
  * Examples of a JobUpdateListener include implementations of a Job that consumes JobUpdateMessages, or JobConsumers that execute a Job.
  */
+@ProviderType
 public interface JobUpdateListener {
 
     /**

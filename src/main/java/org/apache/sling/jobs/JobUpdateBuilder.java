@@ -19,6 +19,8 @@
 
 package org.apache.sling.jobs;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.Map;
 /**
  * Create a job update ading properties and building.
  */
+@ProviderType
 public interface JobUpdateBuilder {
 
     @Nonnull

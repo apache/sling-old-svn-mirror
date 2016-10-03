@@ -18,6 +18,9 @@
  */
 package org.apache.sling.jobs;
 
+
+import org.osgi.annotation.versioning.ProviderType;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -30,6 +33,7 @@ import javax.annotation.Nonnull;
  * the job queue is to be discouraged, as it may require too much from the JobConsumer implementation to guarantee the contract
  * in this interface.
  */
+@ProviderType
 public interface JobConsumer {
 
     String JOB_TYPES = "job.types";

@@ -19,10 +19,12 @@
 package org.apache.sling.jobs.impl.spi;
 
 import org.apache.sling.jobs.Job;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Starts a job, used by the JobBuilderImpl to perform the add operation.
  */
+@ProviderType
 public interface JobStarter {
     Job start(Job j);
 }
