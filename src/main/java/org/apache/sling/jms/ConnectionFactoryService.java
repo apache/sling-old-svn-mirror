@@ -21,7 +21,6 @@ package org.apache.sling.jms;
 import javax.jms.ConnectionFactory;
 
 /**
- * Created by ieb on 30/03/2016.
  * Implementations of this service provide JMS Connection factories. In general implementations should work OOTB with no
  * further configuration and provide an efficient JMS Connection Factory that allows sessions to be created with minimal
  * overhead.

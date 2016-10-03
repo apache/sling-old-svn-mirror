@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by ieb on 30/03/2016.
  * A JMS implementation of a QueueManager. It will allow callers to add messages to named queues, and consumers to read
  * messages from named queues in order. The component uses a single connection to the JMS broker, but dedicated sessions
  * for each send and for each Queue reader.

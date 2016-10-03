@@ -40,7 +40,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by ieb on 30/03/2016.
  * This class provides support for sending messages to topics over JMS and subscribing to topics. It uses the ConnectionFactoryService
  * to interact with JMS. There is nothing in
  */

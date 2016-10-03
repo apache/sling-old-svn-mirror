@@ -46,7 +46,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 01/04/2016.
  */
 public class JMSQueueManagerTest {
 
