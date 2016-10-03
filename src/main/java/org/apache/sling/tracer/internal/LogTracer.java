@@ -265,7 +265,7 @@ public class LogTracer {
 
     private void registerFilters(BundleContext context) {
         Dictionary<String, Object> slingFilterProps = new Hashtable<String, Object>();
-        slingFilterProps.put("filter.scope", "REQUEST");
+        slingFilterProps.put("sling.filter.scope", "REQUEST");
         slingFilterProps.put(Constants.SERVICE_DESCRIPTION, "Sling Filter required for Log Tracer");
         slingFilterRegistration = context.registerService(Filter.class.getName(),
                 new SlingTracerFilter(), slingFilterProps);
