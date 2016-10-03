@@ -19,11 +19,14 @@
 
 package org.apache.sling.mom;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
 /**
  * Manages named queues allowing messages to be added to the queue and a queue reader to be opened to read messages from a queue.
  */
+@ProviderType
 public interface QueueManager {
 
     /**
