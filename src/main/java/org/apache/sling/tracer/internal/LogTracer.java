@@ -111,8 +111,9 @@ public class LogTracer {
     private static final String PROP_TRACER_ENABLED = "enabled";
 
     private static final boolean PROP_TRACER_SERVLET_ENABLED_DEFAULT = false;
-    @Property(label = "Servlet Enabled",
-            description = "Enable the Tracer Servlet",
+    @Property(label = "Recording Servlet Enabled",
+            description = "Enable the Tracer Servlet. This servlet is required for the tracer recording feature " +
+                    "to work and provides access to the json dump of the recording performed",
             boolValue = PROP_TRACER_SERVLET_ENABLED_DEFAULT
     )
     private static final String PROP_TRACER_SERVLET_ENABLED = "servletEnabled";
@@ -270,6 +271,15 @@ public class LogTracer {
 
         Dictionary<String, Object> filterProps = new Hashtable<String, Object>();
         filterProps.put("pattern", "/.*");
+
+        //Do not use constant name to keep dependency as optional
+        //filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        //filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+        //        "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
+
+        filterProps.put("osgi.http.whiteboard.filter.pattern", "/");
+        filterProps.put("osgi.http.whiteboard.context.select",
+                "(osgi.http.whiteboard.context.name=*)");
         filterProps.put(Constants.SERVICE_DESCRIPTION, "Servlet Filter required for Log Tracer");
         filterRegistration = context.registerService(Filter.class.getName(),
                 new TracerFilter(), filterProps);
