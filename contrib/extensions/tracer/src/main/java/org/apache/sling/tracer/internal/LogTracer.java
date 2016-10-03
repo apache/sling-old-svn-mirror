@@ -54,6 +54,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
@@ -272,14 +273,10 @@ public class LogTracer {
         Dictionary<String, Object> filterProps = new Hashtable<String, Object>();
         filterProps.put("pattern", "/.*");
 
-        //Do not use constant name to keep dependency as optional
-        //filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
-        //filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-        //        "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
+        filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
 
-        filterProps.put("osgi.http.whiteboard.filter.pattern", "/");
-        filterProps.put("osgi.http.whiteboard.context.select",
-                "(osgi.http.whiteboard.context.name=*)");
         filterProps.put(Constants.SERVICE_DESCRIPTION, "Servlet Filter required for Log Tracer");
         filterRegistration = context.registerService(Filter.class.getName(),
                 new TracerFilter(), filterProps);
