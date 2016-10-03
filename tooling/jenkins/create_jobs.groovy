@@ -623,9 +623,11 @@ for more details</p>''')
                 numToKeep(15)
             }
 
-            // TODO - configure ViewSVN
             scm {
-                svn(svnDir)
+                svn(svnDir) { svnNode ->
+                    svnNode / browser(class: 'hudson.scm.browsers.ViewSVN') /
+                        url << 'http://svn.apache.org/viewcvs.cgi/?root=Apache-SVN'
+                }
             }
 
             triggers {
