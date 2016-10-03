@@ -73,7 +73,8 @@
                             activemq-protobuf,
                             activemq-kahadb-store,
                             activemq-jms-pool,
-                            hawtbuf</Embed-Dependency>
+                            hawtbuf,
+                            gson</Embed-Dependency>
                         <Import-Package>
                             org.apache.activemq.jaas*;resolution:=optional,
                             org.apache.commons.net.ftp*;resolution:=optional,
@@ -83,7 +84,6 @@
                             javax.jmdns*;resolution:=optional,
                             !org.apache.maven*,
                             *
-
                         </Import-Package>
                         <!--
                         <Import-Package>com.thoughtworks.xstream*;resolution:=optional,
@@ -106,6 +106,7 @@
                             *
                         </Import-Package>
                         -->
+                        <Export-Package></Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
