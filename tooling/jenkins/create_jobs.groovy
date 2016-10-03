@@ -350,13 +350,13 @@ def modules = [
         location: 'contrib/extensions/distribution/extensions'
     ],
     [
-        location: 'extensions/hapi/samplecontent'
+        location: 'contrib/extensions/hapi/samplecontent'
     ],
     [
-        location: 'extensions/hapi/core'
+        location: 'contrib/extensions/hapi/core'
     ],
     [
-        location: 'extensions/hapi/client'
+        location: 'contrib/extensions/hapi/client'
     ],
     [
         location: 'contrib/nosql/couchbase-client'
