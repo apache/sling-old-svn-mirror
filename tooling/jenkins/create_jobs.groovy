@@ -482,6 +482,10 @@ def modules = [
         jdks: ["1.7"]
     ],
     [
+        location: 'samples/fling',
+        jdks: ["1.8"]
+    ],
+    [
         location: 'samples/slingshot'
     ],
     [
