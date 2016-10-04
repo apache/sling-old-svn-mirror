@@ -19,6 +19,7 @@
 
 package org.apache.sling.jms;
 
+import org.apache.sling.jms.impl.Json;
 import org.junit.Before;
 import org.junit.Test;
 

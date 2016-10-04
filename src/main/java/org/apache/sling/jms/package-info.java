@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jms;
 
 /**
  */
-public enum JMSMessageTypes {
-    /**
-     * A text message containing json.
-     */
-    JSON
-}
+
+@Version("1.0.0")
+package org.apache.sling.jms;
+
+import aQute.bnd.annotation.Version;
