@@ -18,5 +18,6 @@
         <module>api</module>
         <module>jobs/core</module>
         <module>jobs/it-services</module>
+<!--        <module>jobs/it</module> Takes more than 1 min to run due to full OSGi container -->
     </modules>
 </project>

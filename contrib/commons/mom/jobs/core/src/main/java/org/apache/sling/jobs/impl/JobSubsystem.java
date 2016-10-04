@@ -28,8 +28,14 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.jobs.*;
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobBuilder;
+import org.apache.sling.jobs.JobCallback;
+import org.apache.sling.jobs.JobConsumer;
+import org.apache.sling.jobs.JobManager;
+import org.apache.sling.jobs.JobTypeValve;
+import org.apache.sling.jobs.JobUpdateListener;
+import org.apache.sling.jobs.Types;
 import org.apache.sling.jobs.impl.spi.JobStorage;
 import org.apache.sling.jobs.impl.storage.InMemoryJobStorage;
 import org.apache.sling.mom.QueueManager;
@@ -41,7 +47,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Closeable;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -180,9 +187,33 @@ public class JobSubsystem  implements JobManager, JobConsumer {
             if ( consumer instanceof JobTypeValve) {
                 jobTypes = ImmutableSet.of();
             } else {
-                jobTypes = Types.jobType(PropertiesUtil.toStringArray(properties.get(JobConsumer.JOB_TYPES)));
+                jobTypes = getJobTypes(properties);
             }
         }
+
+        public Set<Types.JobType> getJobTypes(Map<Object, Object> properties) {
+            Object types = properties.get(JobConsumer.JOB_TYPES);
+            if (types instanceof String) {
+                return Types.jobType(new String[]{(String) types});
+
+            } else if (types instanceof String[]) {
+                return Types.jobType((String[]) types);
+
+            } else if (types instanceof Iterable) {
+                List<String> l = new ArrayList<String>();
+                for (Object o : (Iterable<?>) types) {
+                    l.add(String.valueOf(o));
+                }
+                return Types.jobType((String[]) l.toArray(new String[l.size()]));
+            }
+            throw new IllegalArgumentException("For the JobConsumer to work, the job consumer must either " +
+                    "implement a JobTypeValve or define a list of JobTypes, neither were specified. " +
+                    "Please check the implementation or OSGi configuration, was expecting " +
+                    JobConsumer.JOB_TYPES + " property to be set to a String[]");
+        }
+
+
+
 
         @Override
         public boolean accept(@Nonnull Types.JobType jobType) {

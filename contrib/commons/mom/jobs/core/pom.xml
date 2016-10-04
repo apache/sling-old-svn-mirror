@@ -116,11 +116,6 @@
             <!-- Use the version being used in Sling -->
             <version>15.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.4.0</version>
-        </dependency>
       <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
