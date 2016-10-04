@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jms;
+package org.apache.sling.jms.impl;
 
 import org.apache.felix.scr.annotations.*;
+import org.apache.sling.jms.ConnectionFactoryService;
 import org.apache.sling.mom.*;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;

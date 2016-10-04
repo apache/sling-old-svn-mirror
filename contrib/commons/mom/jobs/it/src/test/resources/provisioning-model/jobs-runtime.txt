@@ -32,10 +32,14 @@
   org.apache.sling/org.apache.sling.jobs-it-services/0.0.1-SNAPSHOT
 
 [configurations]
+  # The ActiveMQConnectionFactoryService must be configured to start, could use any property, even one not used.
+  org.apache.sling.amq.ActiveMQConnectionFactoryService
+  jms.brokerUri="vm://localhost:61616?broker.useShutdownHook\=false"
+
   # Configure a queue to listen to the queue used in the IT Services components.
   # In general a queue should only be activated on an instance if the
   # instance is configured with consumers for that queue.
   # If consumers are not present, then the queue will dequeue and force a retry
   # of each item it can process untill the retry limit is reached.
   org.apache.sling.jobs.impl.JobQueueConsumerFactory
-  queue-name="org/apache/sling/jobs/it/services"
+    queue-name="org/apache/sling/jobs/it/services"
