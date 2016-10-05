@@ -25,7 +25,7 @@ public class RequeueMessageException extends Exception {
 
     /**
      *
-     * @param message
+     * @param message the message
      */
     public RequeueMessageException(String message) {
         super(message);
@@ -33,8 +33,8 @@ public class RequeueMessageException extends Exception {
 
     /**
      *
-     * @param message
-     * @param cause
+     * @param message the message
+     * @param cause the cause
      */
     public RequeueMessageException(String message, Throwable cause) {
         super(message, cause);
