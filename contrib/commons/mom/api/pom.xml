@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.mom</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Apache Sling Message oriented Middleware API</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/mom/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/mom/api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.mom-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.mom-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.mom-1.0.0</url>
     </scm>
 
     <properties>
