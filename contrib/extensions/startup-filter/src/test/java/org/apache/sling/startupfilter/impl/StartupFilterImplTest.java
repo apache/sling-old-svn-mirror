@@ -133,6 +133,7 @@ public class StartupFilterImplTest {
     private AtomicInteger activeFilterCount;
     private ServiceRegistration serviceRegistration;
     private String requestPath;
+    private String pathInfo;
     private static final String CONSOLE_ROOT = "/test/system/console";
 
     @Before
@@ -202,7 +203,7 @@ public class StartupFilterImplTest {
             will(new ChangeInteger(activeFilterCount, false));
 
             allowing(request).getPathInfo();
-            will(returnValue(getRequestPath()));
+            will(returnValue(getPathInfo()));
 
             allowing(chain).doFilter(with(any(ServletRequest.class)), with(any(ServletResponse.class)));
         }});
@@ -212,6 +213,10 @@ public class StartupFilterImplTest {
 
     private String getRequestPath() {
         return requestPath;
+    }
+
+    private String getPathInfo() {
+        return pathInfo;
     }
 
     private void assertRequest(final int expectedStatus, final String expectedMessage) throws Exception {
@@ -237,14 +242,22 @@ public class StartupFilterImplTest {
 
     @Test
     public void testBypassRoot() throws Exception {
-        requestPath = CONSOLE_ROOT;
+        requestPath = pathInfo = CONSOLE_ROOT;
         setProvider(null);
         assertRequest(-1, "");
     }
 
     @Test
+    public void testNullPathInfo() throws Exception {
+        requestPath = pathInfo = CONSOLE_ROOT;
+        pathInfo = null;
+        setProvider(null);
+        assertRequest(503, "Startup in progress");
+    }
+
+    @Test
     public void testBypassSubpath() throws Exception {
-        requestPath = CONSOLE_ROOT + "/something";
+        requestPath = pathInfo = CONSOLE_ROOT + "/something";
         setProvider(null);
         assertRequest(-1, "");
     }
