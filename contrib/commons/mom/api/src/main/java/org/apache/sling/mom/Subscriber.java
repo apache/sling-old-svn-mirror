@@ -39,8 +39,8 @@ public interface Subscriber {
     /**
      * Will be called with each message matching the filters the TopicListener is registered with.
      *
-     * @param topic
-     * @param message
+     * @param topic message topic.
+     * @param message message as a map of maps.
      */
     void onMessage(Types.TopicName topic, Map<String, Object> message);
 
