@@ -44,14 +44,9 @@
     org.apache.sling/org.apache.sling.installer.core/3.6.8
     org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
     org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
-    org.apache.sling/org.apache.sling.installer.factory.subsystems/1.0.0
-    org.apache.sling/org.apache.sling.installer.factory.subsystems-base/1.0.0-SNAPSHOT
     org.apache.felix/org.apache.felix.configadmin/1.8.10
     org.apache.felix/org.apache.felix.eventadmin/1.4.8
     org.apache.aries/org.apache.aries.util/1.1.1
     org.apache.felix/org.apache.felix.coordinator/1.0.2
-    org.eclipse.equinox/org.eclipse.equinox.region/1.2.101.v20150831-1342
-    org.apache.aries.subsystem/org.apache.aries.subsystem.api/2.0.6
-    org.apache.aries.subsystem/org.apache.aries.subsystem.core/2.0.6
     # dependency with javax.inject - required for Sling Models (SLING-4710)
     org.apache.geronimo.specs/geronimo-atinject_1.0_spec/1.0
