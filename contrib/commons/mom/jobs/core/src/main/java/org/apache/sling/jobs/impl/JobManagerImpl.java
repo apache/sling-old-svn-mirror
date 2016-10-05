@@ -49,8 +49,8 @@ public  class JobManagerImpl implements JobManager, JobStarter, JobUpdateListene
 
     /**
      *
-     * @param jobStorage
-     * @param messageSender
+     * @param jobStorage job storage used by the manager.
+     * @param messageSender the message sender that listens for updates.
      */
     public JobManagerImpl(JobStorage jobStorage, JobUpdateListener messageSender) {
         this.jobStorage = jobStorage;

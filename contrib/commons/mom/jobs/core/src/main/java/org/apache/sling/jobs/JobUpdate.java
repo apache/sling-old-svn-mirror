@@ -33,7 +33,7 @@ import java.util.Map;
  * put the JobUpdates that start a message on a separate queue from the JobUpdates that update, abort or stop a job, so that
  * those messages do not get delayed by a backlog of job start messages. Alternatively the implementation may decide to implement
  * a scheduler that consumes job start messages at full queue throughput and queue jobs into a separate implementation specific queue.
- * <p/>
+ * <p>
  * The API does not specify the implementation, only that the various JobUpdate messages are delivered with an delay appropriate for the
  * type of message, identified by the JobUpdateCommand type.
  */
@@ -56,7 +56,7 @@ public interface JobUpdate {
      * exist on the receiver the update message may be stored until the TTL expires before it is applied. This allows
      * messages sent out of order to wait till expires has been reached before applying the update. The rules determining
      * how expiring messages are applied is an implementation detail.
-     * @return
+     * @return the epoch time in ms when the update expires.
      */
     long expires();
 
@@ -125,18 +125,21 @@ public interface JobUpdate {
     /**
      * On first execution the value of this property is zero.
      * This property is managed by the job handling.
+     * @return the retry count.
      */
     int getRetryCount();
 
     /**
      * The property to track the retry maximum retry count for jobs.
      * This property is managed by the job handling.
+     * @return the number of retries.
      */
     int getNumberOfRetries();
 
 
     /**
      * The time when the job started.
+     * @return epoch time when the job was started.
      */
     long getStarted();
 

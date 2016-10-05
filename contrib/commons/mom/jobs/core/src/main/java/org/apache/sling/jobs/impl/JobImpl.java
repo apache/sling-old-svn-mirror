@@ -147,7 +147,7 @@ public class JobImpl implements Job, JobUpdateListener {
 
     /**
      * Apply an job update to this job, checking that the update is valid for the job.
-     * @param jobUpdate
+     * @param jobUpdate job update.
      */
     @Override
     public void update(@Nonnull JobUpdate jobUpdate) {

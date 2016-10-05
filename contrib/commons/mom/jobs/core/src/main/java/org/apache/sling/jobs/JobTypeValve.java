@@ -32,7 +32,7 @@ public interface JobTypeValve {
 
     /**
      * Return true if the component, normally a JobConsumer, can process the jobType.
-     * @param jobType
+     * @param jobType the job type.
      * @return true if can be processed.
      */
     boolean accept(@Nonnull Types.JobType jobType);

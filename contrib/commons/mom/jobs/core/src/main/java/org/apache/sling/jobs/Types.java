@@ -56,8 +56,8 @@ public final class Types {
     /**
      * Create a JobQueue from a string represtnation, normally this us a path representing the jobQueue, although the path
      * hierachy may not have any significance depending on the MoM implementation.
-     * @param jobQueue
-     * @return
+     * @param jobQueue job queue name.
+     * @return the job queue.
      */
     public static JobQueue jobQueue(String jobQueue) {
         return new JobQueueImpl(jobQueue);
@@ -65,8 +65,8 @@ public final class Types {
 
     /**
      * Create a JobType from a string representation.
-     * @param jobType
-     * @return
+     * @param jobType job type name.
+     * @return job type.
      */
     public static JobType jobType(String jobType) {
         return new JobTypeImpl(jobType);
