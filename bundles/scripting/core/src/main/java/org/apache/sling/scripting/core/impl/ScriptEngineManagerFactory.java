@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
@@ -126,7 +125,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
             while ((line = reader.readLine()) != null) {
                 if (!line.startsWith("#") && line.trim().length() > 0) {
 	                try {
-	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
+	                    Class<ScriptEngineFactory> clazz = (Class<ScriptEngineFactory>) bundle.loadClass(line);
 	                    ScriptEngineFactory spi = clazz.newInstance();
 	                    registerFactory(mgr, spi, null);
 	                } catch (Throwable t) {
@@ -153,6 +152,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     // ---------- BundleListener interface -------------------------------------
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.STARTED
             && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
