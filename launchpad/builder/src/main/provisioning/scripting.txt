@@ -49,4 +49,7 @@
         org.apache.sling.scripting.cache.additional_extensions=["js"]
 
     org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-org.apache.sling.scripting.sightly.js.provider
-        user.mapping=["org.apache.sling.scripting.sightly.js.provider\=sling-scripting"]
+        user.mapping=[
+            "org.apache.sling.scripting.core\=sling-scripting",
+            "org.apache.sling.scripting.sightly.js.provider\=sling-scripting"
+        ]

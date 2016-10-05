@@ -106,7 +106,9 @@ public class BindingsValuesProvidersByContextIT {
 
                         mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
                         mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
-                        mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject()
+                        mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject(),
+                        mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").versionAsInProject(),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.log").version("4.0.0")
                 ),
                 junitBundles()
         );
