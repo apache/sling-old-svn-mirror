@@ -123,6 +123,8 @@
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
           <module>extensions/sling-dynamic-include</module>
+          <module>extensions/startup-filter</module>
+          <module>extensions/startup-filter-disabler</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
