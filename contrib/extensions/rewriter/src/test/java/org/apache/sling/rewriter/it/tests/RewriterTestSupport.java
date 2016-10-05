@@ -18,18 +18,18 @@
  */
 package org.apache.sling.rewriter.it.tests;
 
-import org.apache.sling.testing.paxexam.TestSupport;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.ProbeBuilder;
-import org.ops4j.pax.exam.TestProbeBuilder;
-
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingJavascript;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+
+import org.apache.sling.testing.paxexam.TestSupport;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.ProbeBuilder;
+import org.ops4j.pax.exam.TestProbeBuilder;
 
 public abstract class RewriterTestSupport extends TestSupport {
 
@@ -49,10 +49,10 @@ public abstract class RewriterTestSupport extends TestSupport {
 
     @ProbeBuilder
     public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
-        testProbeBuilder.setHeader("Sling-Initial-Content", String.join(",",
-            "apps/esp;path:=/apps/esp;overwrite:=true;uninstall:=true",
+        testProbeBuilder.setHeader("Sling-Initial-Content",
+            "apps/esp;path:=/apps/esp;overwrite:=true;uninstall:=true" + "," +
             "content;path:=/content;overwrite:=true;uninstall:=true"
-        ));
+        );
         return testProbeBuilder;
     }
 
