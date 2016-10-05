@@ -32,12 +32,12 @@ public interface MapValueAdapter {
 
     /**
      * Populate the object from a map value.
-     * @param mapValue
+     * @param mapValue object representing the map value.
      */
     void fromMapValue(Object mapValue);
 
     /**
-     * Adapt the object into a value suitable for use in a map to be serialised by standard map -> json,yaml writers.
+     * Adapt the object into a value suitable for use in a map to be serialised by standard map to json,yaml writers.
      * @return a value, which may be a primitive, an array or a map of primitives.
      */
     Object toMapValue();

@@ -50,7 +50,7 @@ public interface JobStorage {
 
     /**
      * Remove the Job
-     * @param jobId
+     * @param jobId the job id.
      * @return the job removed or null if not present.
      */
     @Nullable

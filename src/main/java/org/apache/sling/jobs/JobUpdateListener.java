@@ -31,7 +31,7 @@ public interface JobUpdateListener {
 
     /**
      * Update the job state with a message.
-     * @param update
+     * @param update update message.
      */
     void update(@Nonnull JobUpdate update);
 }

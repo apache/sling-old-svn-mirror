@@ -139,6 +139,7 @@ public interface JobManager {
      * When a job is stopped and the job consumer supports stopping the job processing, it is up
      * to the job consumer how the stopping is handled. The job can be marked as finished successful,
      * permanently failed or being retried.
+     * @param jobId the job id to stop.
      */
     void stopJobById(@Nonnull String jobId);
 

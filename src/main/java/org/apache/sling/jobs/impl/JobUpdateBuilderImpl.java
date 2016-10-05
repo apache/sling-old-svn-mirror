@@ -38,7 +38,7 @@ public class JobUpdateBuilderImpl implements JobUpdateBuilder {
 
     /**
      * Create a JobUpdateBuilder from a job.
-     * @param job
+     * @param job the job.
      */
     public JobUpdateBuilderImpl(@Nonnull Job job) {
         this.job = job;

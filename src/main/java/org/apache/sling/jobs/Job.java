@@ -86,18 +86,21 @@ public interface Job {
     /**
      * On first execution the value of this property is zero.
      * This property is managed by the job handling.
+     * @return the retry count.
      */
     int getRetryCount();
 
     /**
      * The property to track the retry maximum retry count for jobs.
      * This property is managed by the job handling.
+     * @return the number of retries.
      */
     int getNumberOfRetries();
 
 
     /**
      * The time when the job started.
+     * @return the epch time in ms when the job was started.
      */
     long getStarted();
 
@@ -109,13 +112,14 @@ public interface Job {
 
     /**
      * Get the job state
+     * @return the job state.
      */
     @Nonnull
     JobState getJobState();
 
     /**
      * Set the new state.
-     * @param newState
+     * @param newState the new state.
      */
     void setState(@Nonnull JobState newState);
 
@@ -135,6 +139,10 @@ public interface Job {
     @Nullable
     String getResultMessage();
 
+    /**
+     *
+     * @return a Job update builder.
+     */
     @Nonnull
     JobUpdateBuilder newJobUpdateBuilder();
 
@@ -148,6 +156,7 @@ public interface Job {
 
     /**
      * Set the current job controller.
+     * @param  jobController the job controller.
      */
     void setJobController(@Nonnull JobController jobController);
 

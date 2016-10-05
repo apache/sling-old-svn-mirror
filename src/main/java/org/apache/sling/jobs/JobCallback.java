@@ -31,7 +31,7 @@ public interface JobCallback {
 
     /**
      * Call back with an update job state.
-     * @param finalJobState
+     * @param finalJobState job state.
      */
     void callback(Job finalJobState);
 }

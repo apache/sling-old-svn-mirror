@@ -97,7 +97,7 @@ public class Utils {
 
     /**
      * Generate an ID based on the unique name of the jvm process and a counter.
-     * @return
+     * @return a generated ID.
      */
     @Nonnull
     public static String generateId() {
