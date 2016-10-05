@@ -136,6 +136,12 @@ public class ResourceChange {
 
     /**
      * Optional information about changed properties.
+     * The application code can not rely on getting the correct set of changed
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no changed properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
      */
@@ -145,6 +151,12 @@ public class ResourceChange {
 
     /**
      * Optional information about added properties.
+     * The application code can not rely on getting the correct set of added
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no added properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
      */
@@ -154,6 +166,12 @@ public class ResourceChange {
 
     /**
      * Optional information about removed properties.
+     * The application code can not rely on getting the correct set of removed
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no removed properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
      */
