@@ -329,6 +329,15 @@ def modules = [
         location: 'bundles/servlets/resolver'
     ],
     [
+        location: 'crankstart/launcher'
+    ],
+    [
+        location: 'crankstart/test-services'
+    ],
+    [
+        location: 'crankstart/test-model'
+    ],
+    [
         location: "contrib/extensions/sling-pipes",
         jdks: ["1.8"]
     ],
