@@ -19,7 +19,6 @@
 package org.apache.sling.scripting.java.impl;
 
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class JavaServletConfig implements ServletConfig {
 
     private final Map<String, String> initParams;
 
-    public JavaServletConfig(ServletContext servletContext, Dictionary<?, ?> config) {
+    public JavaServletConfig(ServletContext servletContext, Map<String, Object> config) {
         this.servletContext = servletContext;
 
         // set the servlet name
@@ -55,14 +54,12 @@ public class JavaServletConfig implements ServletConfig {
 
         // copy the "java." properties
         initParams = new HashMap<String, String>();
-        for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
-            final String key = (String) ke.nextElement();
-            if (key.startsWith("java.")) {
-                final Object value = config.get(key);
-                if ( value != null ) {
-                    final String strValue = String.valueOf(value).trim();
+        for (final Map.Entry<String, Object> entry : config.entrySet()) {
+            if (entry.getKey().startsWith("java.")) {
+                if ( entry.getValue() != null ) {
+                    final String strValue = String.valueOf(entry.getValue()).trim();
                     if ( strValue.length() > 0 ) {
-                        initParams.put(key.substring("java.".length()), strValue);
+                        initParams.put(entry.getKey().substring("java.".length()), strValue);
                     }
                 }
             }
@@ -72,6 +69,7 @@ public class JavaServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getInitParameter(java.lang.String)
      */
+    @Override
     public String getInitParameter(String name) {
         return initParams.get(name);
     }
@@ -79,6 +77,7 @@ public class JavaServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getInitParameterNames()
      */
+    @Override
     public Enumeration<String> getInitParameterNames() {
         return Collections.enumeration(initParams.keySet());
     }
@@ -86,6 +85,7 @@ public class JavaServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getServletContext()
      */
+    @Override
     public ServletContext getServletContext() {
         return servletContext;
     }
@@ -93,6 +93,7 @@ public class JavaServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getServletName()
      */
+    @Override
     public String getServletName() {
         return servletName;
     }
