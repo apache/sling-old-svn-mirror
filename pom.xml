@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>28</version>
         <relativePath />
     </parent>
 
@@ -60,14 +60,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.scripting.core;version=2.1.0,
-                            org.apache.sling.scripting.core.servlet;version=1.0.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.scripting.core.impl,
-                            org.apache.sling.scripting.core.impl.helper
-                        </Private-Package>
                         <Embed-Dependency>
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
                         </Embed-Dependency>
@@ -75,7 +67,20 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.servicemix.tooling</groupId>
+                <artifactId>depends-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-depends-file</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
                 <executions>
                   <execution>
                     <goals>
@@ -92,18 +97,6 @@
                         </property>
                     </systemProperties>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.servicemix.tooling</groupId>
-                <artifactId>depends-maven-plugin</artifactId>
-                <version>1.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-depends-file</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -126,7 +119,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -162,19 +154,7 @@
 
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -213,8 +193,6 @@
         <dependency>
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-simple</artifactId>
-        	<version>1.5.2</version>
-        	<scope>test</scope>
         </dependency>
 
         <dependency>

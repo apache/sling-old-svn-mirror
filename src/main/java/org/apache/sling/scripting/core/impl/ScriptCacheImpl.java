@@ -20,10 +20,12 @@
 package org.apache.sling.scripting.core.impl;
 
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -47,6 +49,10 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -96,7 +102,7 @@ import org.slf4j.LoggerFactory;
  * The {@code ScriptCache} stores information about {@link CompiledScript} instances evaluated by various {@link ScriptEngine}s that
  * implement the {@link Compilable} interface.
  */
-public class ScriptCacheImpl implements EventHandler, ScriptCache {
+public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
 
@@ -181,28 +187,29 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
     }
 
     @Override
-    public void handleEvent(final Event event) {
+	public void onChange(List<ResourceChange> changes) {
         /**
          * since the events trigger a synchronised map operation (remove in this case) we should handle events asynchronously so that we
          * don't block event processing
          */
-        final String topic = event.getTopic();
-        if (SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic) || SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
-            Runnable eventTask = new Runnable() {
-                @Override
-                public void run() {
-                    String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-                    writeLock.lock();
-                    try {
-                        internalMap.remove(path);
-                        LOGGER.debug("Detected script change for {} - removed entry from the cache.", path);
-                    } finally {
-                        writeLock.unlock();
+    	for(final ResourceChange change : changes){
+            if (ChangeType.CHANGED.equals(change.getType()) || ChangeType.REMOVED.equals(change.getType())) {
+            	Runnable eventTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        String path = change.getPath();
+                        writeLock.lock();
+                        try {
+                            internalMap.remove(path);
+                            LOGGER.debug("Detected script change for {} - removed entry from the cache.", path);
+                        } finally {
+                            writeLock.unlock();
+                        }
                     }
-                }
-            };
-            threadPool.execute(eventTask);
-        }
+                };
+                threadPool.execute(eventTask);
+            }	
+    	}        
     }
 
     protected Set<String> getCachedScripts() {
@@ -255,19 +262,21 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
             internalMap.clear();
             extensions.addAll(Arrays.asList(additionalExtensions));
             if (extensions.size() > 0) {
-                adminResolver = rrf.getAdministrativeResourceResolver(null);
-                StringBuilder eventHandlerFilter = new StringBuilder("(|");
+                adminResolver = rrf.getAdministrativeResourceResolver(null);                
+                StringBuilder eventHandlerFilter = new StringBuilder();
+                List<String> paths = new ArrayList<String>();
                 for (String searchPath : adminResolver.getSearchPath()) {
                     for (String extension : extensions) {
-                        eventHandlerFilter.append("(path=").append(searchPath).append("**/*.").append(extension).append(")");
+                    	paths.add("glob:"+searchPath+"**/*."+extension);
                     }
                 }
-                eventHandlerFilter.append(")");
-                Dictionary eventHandlerProperties = new Hashtable();
-                eventHandlerProperties.put(EventConstants.EVENT_FILTER, eventHandlerFilter.toString());
-                eventHandlerProperties.put(EventConstants.EVENT_TOPIC,
-                        new String[]{SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED});
-                eventHandlerServiceRegistration = bundleContext.registerService(EventHandler.class.getName(), this, eventHandlerProperties);
+                String[] pathArray = new String[paths.size()];
+                pathArray=(String[])paths.toArray(pathArray);
+                Dictionary<String,Object> eventHandlerProperties = new Hashtable<String,Object>();
+                eventHandlerProperties.put(ResourceChangeListener.PATHS, pathArray);
+                eventHandlerProperties.put(ResourceChangeListener.CHANGES,
+                        new String[]{ChangeType.CHANGED.name(), ChangeType.REMOVED.name()});
+                eventHandlerServiceRegistration = bundleContext.registerService(ResourceChangeListener.class.getName(), this, eventHandlerProperties);
             }
         } catch (LoginException e) {
             LOGGER.error("Unable to set automated cache invalidation for the ScriptCache.", e);

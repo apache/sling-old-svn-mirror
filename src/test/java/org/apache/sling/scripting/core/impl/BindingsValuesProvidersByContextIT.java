@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
@@ -84,8 +83,16 @@ public class BindingsValuesProvidersByContextIT {
                 when(localRepo.length() > 0).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
+                systemProperty("pax.exam.logging").value("none"),
                 provision(
                         bundle(bundleFile.toURI().toString()),
+
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.6"),
+                        mavenBundle("org.slf4j", "slf4j-api", "1.7.13"),
+                        mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.13"),
+                        mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.13"),
+
                         mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.scr").versionAsInProject(),
                         mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.eventadmin").versionAsInProject(),
                         mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.webconsole").versionAsInProject(),
@@ -136,6 +143,7 @@ public class BindingsValuesProvidersByContextIT {
                 return id;
             }
 
+            @Override
             public void addBindings(Bindings b) {
             }
         };
@@ -150,6 +158,7 @@ public class BindingsValuesProvidersByContextIT {
                 return id;
             }
 
+            @Override
             public void addBindings(Bindings b) {
             }
         };
@@ -174,52 +183,64 @@ public class BindingsValuesProvidersByContextIT {
     private ScriptEngineFactory factory(final String engineName) {
         return new ScriptEngineFactory() {
 
+            @Override
             public ScriptEngine getScriptEngine() {
                 return null;
             }
 
+            @Override
             public String getProgram(String... arg0) {
                 return null;
             }
 
+            @Override
             public Object getParameter(String arg0) {
                 return null;
             }
 
+            @Override
             public String getOutputStatement(String arg0) {
                 return null;
             }
 
+            @Override
             public List<String> getNames() {
                 final List<String> names = new ArrayList<String>();
                 names.add(engineName);
                 return names;
             }
 
+            @Override
             public List<String> getMimeTypes() {
                 return null;
             }
 
+            @Override
             public String getMethodCallSyntax(String arg0, String arg1, String... arg2) {
                 return null;
             }
 
+            @Override
             public String getLanguageVersion() {
                 return null;
             }
 
+            @Override
             public String getLanguageName() {
                 return null;
             }
 
+            @Override
             public List<String> getExtensions() {
                 return null;
             }
 
+            @Override
             public String getEngineVersion() {
                 return null;
             }
 
+            @Override
             public String getEngineName() {
                 return engineName;
             }
