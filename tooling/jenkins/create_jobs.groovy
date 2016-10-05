@@ -329,13 +329,13 @@ def modules = [
         location: 'bundles/servlets/resolver'
     ],
     [
-        location: 'crankstart/launcher'
+        location: 'contrib/crankstart/launcher'
     ],
     [
-        location: 'crankstart/test-services'
+        location: 'contrib/crankstart/test-services'
     ],
     [
-        location: 'crankstart/test-model'
+        location: 'contrib/crankstart/test-model'
     ],
     [
         location: "contrib/extensions/sling-pipes",
