@@ -31,12 +31,15 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
@@ -46,7 +49,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +59,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(value=ProcessorManager.class)
 public class ProcessorManagerImpl
-    implements ProcessorManager, EventHandler {
+    implements ProcessorManager, ResourceChangeListener, ExternalResourceChangeListener  {
 
     private static final String CONFIG_REL_PATH = "config/rewriter";
     private static final String CONFIG_PATH = "/" + CONFIG_REL_PATH;
@@ -76,14 +78,14 @@ public class ProcessorManagerImpl
     /** The resource resolver. */
     private ResourceResolver resourceResolver;
 
-    /** loaded processor configurationss */
+    /** loaded processor configurations */
     private final Map<String, ConfigEntry[]> processors = new HashMap<String, ConfigEntry[]>();
 
-    /** Ordered processor configs. */
+    /** Ordered processor configurations. */
     private List<ProcessorConfiguration> orderedProcessors = new ArrayList<ProcessorConfiguration>();
 
     /** Event handler registration */
-    private ServiceRegistration eventHandlerRegistration;
+    private volatile ServiceRegistration<ResourceChangeListener> eventHandlerRegistration;
 
     /** Search paths */
     private String[] searchPaths;
@@ -95,7 +97,8 @@ public class ProcessorManagerImpl
      * Activate this component.
      * @param ctx
      */
-    protected void activate(final ComponentContext ctx)
+    @SuppressWarnings("deprecation")
+	protected void activate(final ComponentContext ctx)
     throws LoginException, InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
         this.factoryCache = new FactoryCache(this.bundleContext);
@@ -103,20 +106,18 @@ public class ProcessorManagerImpl
         // create array of search paths for actions and constraints
         this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
         this.searchPaths = resourceResolver.getSearchPath();
-
         this.initProcessors();
-
-        // register event handler
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("event.topics", new String[] { "org/apache/sling/api/resource/Resource/*",
-            "org/apache/sling/api/resource/ResourceProvider/*" });
-        props.put("service.description","Processor Configuration/Modification Handler");
-        props.put("service.vendor","The Apache Software Foundation");
-
-        this.eventHandlerRegistration = ctx.getBundleContext()
-                  .registerService(EventHandler.class.getName(), this, props);
-
-        this.factoryCache.start();
+    	// register event handler
+		final Dictionary<String, Object> props = new Hashtable<String, Object>();
+		props.put(ResourceChangeListener.CHANGES,
+				new String[] { ChangeType.ADDED.toString(), ChangeType.CHANGED.toString(),
+						ChangeType.REMOVED.toString(), ChangeType.PROVIDER_ADDED.toString(), ChangeType.PROVIDER_REMOVED.toString() });
+		props.put(ResourceChangeListener.PATHS, searchPaths);
+		props.put("service.description", "Processor Configuration/Modification Handler");
+		props.put("service.vendor", "The Apache Software Foundation");
+		this.eventHandlerRegistration = ctx.getBundleContext().registerService(ResourceChangeListener.class, this,
+				props);
+    	this.factoryCache.start();
 
         WebConsoleConfigPrinter.register(this.bundleContext, this);
     }
@@ -142,48 +143,50 @@ public class ProcessorManagerImpl
         this.bundleContext = null;
     }
 
-    /**
-     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
-     */
-    public void handleEvent(final org.osgi.service.event.Event event) {
-        // check if the event handles something in the search paths
-        String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        int foundPos = -1;
-        for(final String sPath : this.searchPaths) {
-            if ( path.startsWith(sPath) ) {
-                foundPos = sPath.length();
-                break;
-            }
-        }
-        if ( foundPos != -1 ) {
-            // now check if this is a rewriter config
-            // relative path after the search path
-            final int firstSlash = path.indexOf('/', foundPos);
-            final int pattern = path.indexOf(CONFIG_PATH, foundPos);
-            // only if firstSlash and pattern are at the same position, this migt be a rewriter config
-            if ( firstSlash == pattern && firstSlash != -1 ) {
-                // the node should be a child of CONFIG_PATH
-                if ( path.length() > pattern + CONFIG_PATH.length() && path.charAt(pattern + CONFIG_PATH.length()) == '/') {
-                    // if a child resource is changed, make sure we have the correct path
-                    final int slashPos = path.indexOf('/', pattern + CONFIG_PATH.length() + 1);
-                    if ( slashPos != -1 ) {
-                        path = path.substring(0, slashPos);
-                    }
-                    // we should do the update async as we don't want to block the event delivery
-                    final String configPath = path;
-                    final Thread t = new Thread() {
-                        public void run() {
-                            if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
-                                removeProcessor(configPath);
-                            } else {
-                                updateProcessor(configPath);
-                            }
-                        }
-                    };
-                    t.start();
+    @Override
+	public void onChange(final List<ResourceChange> changes) {
+    	for(final ResourceChange change : changes){
+    		// check if the event handles something in the search paths
+            String path = change.getPath();
+            int foundPos = -1;
+            for(final String sPath : this.searchPaths) {
+                if ( path.startsWith(sPath) ) {
+                    foundPos = sPath.length();
+                    break;
                 }
             }
-        }
+            if ( foundPos != -1 ) {
+                // now check if this is a rewriter config
+                // relative path after the search path
+                final int firstSlash = path.indexOf('/', foundPos);
+                final int pattern = path.indexOf(CONFIG_PATH, foundPos);
+                // only if firstSlash and pattern are at the same position, this might be a rewriter config
+                if ( firstSlash == pattern && firstSlash != -1 ) {
+                    // the node should be a child of CONFIG_PATH
+                    if ( path.length() > pattern + CONFIG_PATH.length() && path.charAt(pattern + CONFIG_PATH.length()) == '/') {
+                        // if a child resource is changed, make sure we have the correct path
+                        final int slashPos = path.indexOf('/', pattern + CONFIG_PATH.length() + 1);
+                        if ( slashPos != -1 ) {
+                            path = path.substring(0, slashPos);
+                        }
+                        // we should do the update async as we don't want to block the event delivery
+                        final String configPath = path;
+                        final Thread t = new Thread() {
+                            @Override
+                            public void run() {
+                                if (change.getType().equals(ChangeType.REMOVED)) {
+                                    removeProcessor(configPath);
+                                } else {
+                                    updateProcessor(configPath);
+                                }
+                            }
+                        };
+                        t.start();
+                    }
+                }
+            }
+    	}
+
     }
 
     /**
@@ -424,6 +427,7 @@ public class ProcessorManagerImpl
     /**
      * @see org.apache.sling.rewriter.ProcessorManager#getProcessor(org.apache.sling.rewriter.ProcessorConfiguration, org.apache.sling.rewriter.ProcessingContext)
      */
+    @Override
     public Processor getProcessor(ProcessorConfiguration configuration,
                                   ProcessingContext      context) {
         if ( configuration == null ) {
@@ -455,6 +459,7 @@ public class ProcessorManagerImpl
     /**
      * @see org.apache.sling.rewriter.ProcessorManager#getProcessorConfigurations()
      */
+    @Override
     public List<ProcessorConfiguration> getProcessorConfigurations() {
         return this.orderedProcessors;
     }
@@ -464,6 +469,7 @@ public class ProcessorManagerImpl
         /**
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
          */
+        @Override
         public int compare(ProcessorConfiguration config0, ProcessorConfiguration config1) {
             final int o0 = ((ProcessorConfigurationImpl)config0).getOrder();
             final int o1 = ((ProcessorConfigurationImpl)config1).getOrder();
