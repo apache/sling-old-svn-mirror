@@ -91,16 +91,31 @@ public class ModelPreprocessor {
         env.logger.debug("Processing project " + info.project);
 
         // read local model
-        final String directory = nodeValue(info.plugin,
-                "modelDirectory",
-                new File(info.project.getBasedir(), "src/main/provisioning").getAbsolutePath());
         final String pattern = nodeValue(info.plugin,
-                "modelPattern", "((.*)\\.txt|(.*)\\.model)");
-
+                "modelPattern", AbstractSlingStartMojo.DEFAULT_MODEL_PATTERN);
+        
         final String inlinedModel = nodeValue(info.plugin,
                 "model", null);
+        
+        String scope = Artifact.SCOPE_PROVIDED;
         try {
-            info.localModel = readLocalModel(info.project, inlinedModel, new File(directory), pattern, env.logger);
+            if (hasNodeValue(info.plugin, "modelDirectory")) {
+                final String directory = nodeValue(info.plugin,
+                        "modelDirectory", null);
+                info.localModel = readLocalModel(info.project, inlinedModel, new File(directory), pattern, env.logger);
+            } else {
+                // use multiple fallbacks here only in case the default model directory is not explicitly set
+                File defaultModelDirectory = new File(info.project.getBasedir(), "src/main/provisioning");
+                if (defaultModelDirectory.exists()) {
+                    env.logger.debug("Try to extract model from default provisioning directory " + defaultModelDirectory.getAbsolutePath());
+                    info.localModel = readLocalModel(info.project, inlinedModel, defaultModelDirectory, pattern, env.logger);
+                } else {
+                    File defaultModelDirectoryInTest = new File(info.project.getBasedir(), "src/test/provisioning");
+                    env.logger.debug("Try to extract model from default test provisioning directory " + defaultModelDirectoryInTest.getAbsolutePath());
+                    info.localModel = readLocalModel(info.project, inlinedModel, defaultModelDirectoryInTest, pattern, env.logger);
+                    scope = Artifact.SCOPE_TEST;
+                }
+            }
         } catch ( final IOException ioe) {
             throw new MavenExecutionException(ioe.getMessage(), ioe);
         }
@@ -132,7 +147,7 @@ public class ModelPreprocessor {
             throw new MavenExecutionException("Unable to create model file for " + info.project + " : " + errors, (File)null);
         }
 
-        addDependenciesFromModel(env, info);
+        addDependenciesFromModel(env, info, scope);
 
         try {
            ProjectHelper.storeProjectInfo(info);
@@ -144,14 +159,15 @@ public class ModelPreprocessor {
 
     /**
      * Add all dependencies from the model
-     * @param project The project
-     * @param model The model
-     * @param log The logger
+     * @param env The environment
+     * @param info The project info
+     * @param scope The scope which the new dependencies should have
      * @throws MavenExecutionException
      */
     private void addDependenciesFromModel(
             final Environment env,
-            final ProjectInfo info)
+            final ProjectInfo info,
+            final String scope)
     throws MavenExecutionException {
         if ( info.project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART ) ) {
             // add base artifact if defined in current model
@@ -168,7 +184,7 @@ public class ModelPreprocessor {
                 if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
                     dep.setType(BuildConstants.TYPE_WAR);
                 }
-                dep.setScope(Artifact.SCOPE_PROVIDED);
+                dep.setScope(scope);
 
                 info.project.getDependencies().add(dep);
                 env.logger.debug("- adding base dependency " + ModelUtils.toString(dep));
@@ -197,7 +213,7 @@ public class ModelPreprocessor {
                         dep.setType(a.getType());
                         dep.setClassifier(a.getClassifier());
 
-                        dep.setScope(Artifact.SCOPE_PROVIDED);
+                        dep.setScope(scope);
 
                         env.logger.debug("- adding dependency " + ModelUtils.toString(dep));
                         info.project.getDependencies().add(dep);
@@ -348,6 +364,18 @@ public class ModelPreprocessor {
             return defaultValue;
         }
     }
+    
+    /**
+     * Checks if plugin configuration value is set in POM for a specific configuration parameter.
+     * @param plugin Plugin
+     * @param name Configuration parameter.
+     * @return {@code true} in case the configuration has been set in the pom, otherwise {@code false}
+     */
+    private boolean hasNodeValue(final Plugin plugin, final String name) {
+        final Xpp3Dom config = plugin == null ? null : (Xpp3Dom)plugin.getConfiguration();
+        final Xpp3Dom node = (config == null ? null : config.getChild(name));
+        return (node != null);
+    }
 
     /**
      * Gets plugins configuration from POM (boolean parameter).
@@ -387,7 +415,9 @@ public class ModelPreprocessor {
      * Only files ending with .txt or .model are read.
      *
      * @param project The current maven project
+     * @param inlinedModel the inlined model to be merged with the models in modelDirectory (may be null)
      * @param modelDirectory The directory to scan for models
+     * @param pattern Pattern used to find the textual models within the modelDirectory
      * @param logger The logger
      */
     protected Model readLocalModel(

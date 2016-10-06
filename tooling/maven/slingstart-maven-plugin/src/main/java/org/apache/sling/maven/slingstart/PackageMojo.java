@@ -75,7 +75,8 @@ public class PackageMojo extends AbstractSlingStartMojo {
             fis = new FileInputStream(manifestFile);
             final Manifest mf = new Manifest(fis);
 
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".jar");
+            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
+            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".standalonelaunchpad.jar");
 
             final JarArchiverHelper helper = new JarArchiverHelper(jarArchiver, this.project, outputFile, mf);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
@@ -105,7 +106,8 @@ public class PackageMojo extends AbstractSlingStartMojo {
             final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_WEBAPP);
 
             final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".war");
+            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
+            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".webapplaunchpad.war");
 
             final JarArchiverHelper helper = new JarArchiverHelper(this.jarArchiver, this.project, outputFile);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
