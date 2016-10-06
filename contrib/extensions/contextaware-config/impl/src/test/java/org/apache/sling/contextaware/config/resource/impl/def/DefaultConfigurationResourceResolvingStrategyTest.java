@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -78,20 +78,16 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
     public void testGetResourceCollection() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
-        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.getResourceCollection(site1Page1, BUCKET, "feature"),
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
-                "/libs/conf/sling:test/feature/b" },
-                col1);
+                "/libs/conf/sling:test/feature/b" );
 
-        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), 
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
                 "/apps/conf/sling:test/feature/a",
-                "/libs/conf/sling:test/feature/b" },
-                col2);
+                "/libs/conf/sling:test/feature/b" );
     }
 
     @Test

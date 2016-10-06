@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
@@ -67,17 +67,15 @@ public class ContextPathStrategyMultiplexerTest {
     public void testWithDefaultStrategy() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
 
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site1Page1), 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site1Page1));
+                "/content/tenant1");
 
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site2Page1), 
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site2Page1));
+                "/content/tenant1");
     }
     
     @Test
@@ -85,11 +83,10 @@ public class ContextPathStrategyMultiplexerTest {
         registerContextPathStrategy("/content/tenant1");
         registerContextPathStrategy("/content/tenant1/region1/site1", "/content/tenant1/region1");
         
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site1Page1),
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site1Page1));
+                "/content/tenant1");
     }
     
     @Test
@@ -97,11 +94,10 @@ public class ContextPathStrategyMultiplexerTest {
         registerContextPathStrategy("/content/tenant1", "/content/tenant1/region1");
         registerContextPathStrategy("/content/tenant1/region1/site1", "/content/tenant1/region1");
         
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site1Page1), 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site1Page1));
+                "/content/tenant1");
     }
     
     private void registerContextPathStrategy(String... paths) {

@@ -42,7 +42,7 @@ public final class ConfigurationResourceTestUtils {
      * @param expectedPaths Expected path
      * @param actualResources Actual resources
      */
-    public static void assetResourcePaths(String[] expectedPaths, Collection<Resource> actualResources) {
+    public static void assertThatResourcePaths(Collection<Resource> actualResources, String... expectedPaths) {
         String[] actualPaths = new String[actualResources.size()];
         int i = 0;
         for (Iterator<Resource> it=actualResources.iterator(); it.hasNext(); i++) {
@@ -56,8 +56,8 @@ public final class ConfigurationResourceTestUtils {
      * @param expectedPaths Expected path
      * @param actualResources Actual resources
      */
-    public static void assetResourcePaths(String[] expectedPaths, Iterator<Resource> actualResources) {
-        assetResourcePaths(expectedPaths, ImmutableList.copyOf(actualResources));
+    public static void assertThatResourcePaths(Iterator<Resource> actualResources, String... expectedPaths) {
+        assertThatResourcePaths(ImmutableList.copyOf(actualResources), expectedPaths);
     }
     
     /**

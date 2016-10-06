@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
+import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
@@ -51,17 +51,15 @@ public class DefaultContextPathStrategyTest {
     public void testFindContextPaths() {
         ContextPathStrategy underTest = context.registerInjectActivateService(new DefaultContextPathStrategy());
 
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site1Page1), 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site1Page1));
+                "/content/tenant1");
 
-        assetResourcePaths(new String[] {
+        assertThatResourcePaths(underTest.findContextResources(site2Page1),
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
-                "/content/tenant1"
-        }, underTest.findContextResources(site2Page1));
+                "/content/tenant1");
     }
 
     @Test
@@ -69,8 +67,8 @@ public class DefaultContextPathStrategyTest {
         ContextPathStrategy underTest = context.registerInjectActivateService(new DefaultContextPathStrategy(),
                 "enabled", false);
 
-        assetResourcePaths(new String[0], underTest.findContextResources(site1Page1));
-        assetResourcePaths(new String[0], underTest.findContextResources(site2Page1));
+        assertThatResourcePaths(underTest.findContextResources(site1Page1), new String[0]);
+        assertThatResourcePaths(underTest.findContextResources(site2Page1), new String[0]);
     }
 
 }
