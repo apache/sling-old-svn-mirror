@@ -18,9 +18,11 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -51,15 +53,15 @@ public class DefaultContextPathStrategyTest {
     public void testFindContextPaths() {
         ContextPathStrategy underTest = context.registerInjectActivateService(new DefaultContextPathStrategy());
 
-        assertThatResourcePaths(underTest.findContextResources(site1Page1), 
+        assertThat(underTest.findContextResources(site1Page1), ResourceIteratorMatchers.paths( 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
-                "/content/tenant1");
+                "/content/tenant1"));
 
-        assertThatResourcePaths(underTest.findContextResources(site2Page1),
+        assertThat(underTest.findContextResources(site2Page1), ResourceIteratorMatchers.paths(
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
-                "/content/tenant1");
+                "/content/tenant1"));
     }
 
     @Test
@@ -67,8 +69,8 @@ public class DefaultContextPathStrategyTest {
         ContextPathStrategy underTest = context.registerInjectActivateService(new DefaultContextPathStrategy(),
                 "enabled", false);
 
-        assertThatResourcePaths(underTest.findContextResources(site1Page1), new String[0]);
-        assertThatResourcePaths(underTest.findContextResources(site2Page1), new String[0]);
+        assertFalse(underTest.findContextResources(site1Page1).hasNext());
+        assertFalse(underTest.findContextResources(site2Page1).hasNext());
     }
 
 }

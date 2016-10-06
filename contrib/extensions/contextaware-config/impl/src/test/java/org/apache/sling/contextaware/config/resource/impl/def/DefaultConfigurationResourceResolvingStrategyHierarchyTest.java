@@ -18,11 +18,12 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -102,22 +103,22 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
 
     @Test
     public void testGetResourceCollection() {
-        assertThatResourcePaths(underTest.getResourceCollection(site1Page1, BUCKET, "cfgCol"),
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "cfgCol"), ResourceCollectionMatchers.paths(
                 "/conf/tenant1/region1/site1/sling:test/cfgCol/site1",
                 "/conf/tenant1/region1/sling:test/cfgCol/region1", 
                 "/conf/tenant1/sling:test/cfgCol/tenant1", 
                 "/conf/global/sling:test/cfgCol/confGlobal", 
                 "/apps/conf/sling:test/cfgCol/appsGlobal", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal1", 
-                "/libs/conf/sling:test/cfgCol/libsGlobal2");
+                "/libs/conf/sling:test/cfgCol/libsGlobal2"));
 
-        assertThatResourcePaths(underTest.getResourceCollection(site2Page1, BUCKET, "cfgCol"), 
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "cfgCol"), ResourceCollectionMatchers.paths( 
                 "/conf/tenant1/region1/sling:test/cfgCol/region1", 
                 "/conf/tenant1/sling:test/cfgCol/tenant1", 
                 "/conf/global/sling:test/cfgCol/confGlobal", 
                 "/apps/conf/sling:test/cfgCol/appsGlobal", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal1", 
-                "/libs/conf/sling:test/cfgCol/libsGlobal2");
+                "/libs/conf/sling:test/cfgCol/libsGlobal2"));
     }
 
 }

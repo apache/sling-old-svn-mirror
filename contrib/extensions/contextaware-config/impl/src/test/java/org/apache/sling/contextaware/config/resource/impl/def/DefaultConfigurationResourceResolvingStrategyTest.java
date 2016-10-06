@@ -18,14 +18,13 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assertThatResourcePaths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -78,16 +77,16 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
     public void testGetResourceCollection() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
-        assertThatResourcePaths(underTest.getResourceCollection(site1Page1, BUCKET, "feature"),
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
-                "/libs/conf/sling:test/feature/b" );
+                "/libs/conf/sling:test/feature/b"));
 
-        assertThatResourcePaths(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), 
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
                 "/apps/conf/sling:test/feature/a",
-                "/libs/conf/sling:test/feature/b" );
+                "/libs/conf/sling:test/feature/b"));
     }
 
     @Test
@@ -108,8 +107,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
                 "enabled", false);
 
         assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
-        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
-        assertTrue(col1.isEmpty());
+        assertTrue(underTest.getResourceCollection(site1Page1, BUCKET, "feature").isEmpty());
         assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
