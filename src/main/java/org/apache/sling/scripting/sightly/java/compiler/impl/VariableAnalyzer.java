@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.sling.scripting.sightly.java.compiler.SightlyJavaCompilerException;
-import org.apache.sling.scripting.sightly.java.compiler.impl.utils.JavaEscapeUtils;
+import org.apache.sling.scripting.sightly.java.compiler.JavaEscapeUtils;
 import org.apache.sling.scripting.sightly.compiler.util.VariableTracker;
 
 /**
@@ -140,16 +140,16 @@ public class VariableAnalyzer {
     }
 
     private String findDynamicName(String original) {
-        return DYNAMIC_PREFIX + JavaEscapeUtils.getEscapedToken(original);
+        return DYNAMIC_PREFIX + JavaEscapeUtils.makeJavaIdentifier(original);
     }
 
     private String findGlobalName(String original) {
-        return GLOBAL_PREFIX + JavaEscapeUtils.getEscapedToken(original);
+        return GLOBAL_PREFIX + JavaEscapeUtils.makeJavaIdentifier(original);
     }
 
     private String findSafeName(String original) {
         int occurrenceCount = tracker.getOccurrenceCount(original);
-        String syntaxSafe = JavaEscapeUtils.getEscapedToken(original);
+        String syntaxSafe = JavaEscapeUtils.makeJavaIdentifier(original);
         if (occurrenceCount == 0) {
             return syntaxSafe; //no other declarations in scope. Use this very name
         } else {
