@@ -54,20 +54,16 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
         
-        // configuration
-        context.build()
-            .resource("/conf/site1/sling:test/test")
-            .resource("/conf/site1/sling:test/feature/c")
-            .resource("/conf/site2/sling:test/feature/c")
-            .resource("/conf/site2/sling:test/feature/d")
-            .resource("/apps/conf/sling:test/feature/a")
-            .resource("/libs/conf/sling:test/test")
-            .resource("/libs/conf/sling:test/feature/b");
     }
 
     @Test
     public void testGetResource() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/test")
+            .resource("/libs/conf/sling:test/test");
 
         assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
         assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
@@ -76,6 +72,14 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
     @Test
     public void testGetResourceCollection() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/d")
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/feature/b");
 
         assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c",
