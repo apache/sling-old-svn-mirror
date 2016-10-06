@@ -382,7 +382,7 @@ public class LogTracerTest {
                 context.bundleContext().getServiceReferences(Filter.class, null);
         ServiceReference<Filter> result = null;
         for (ServiceReference<Filter> ref : refs) {
-            if (slingFilter && ref.getProperty("filter.scope") != null) {
+            if (slingFilter && ref.getProperty("sling.filter.scope") != null) {
                 result = ref;
                 break;
             } else if (!slingFilter && ref.getProperty("pattern") != null) {

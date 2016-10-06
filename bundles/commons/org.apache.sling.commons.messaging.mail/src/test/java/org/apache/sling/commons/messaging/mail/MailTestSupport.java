@@ -36,6 +36,7 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 
 public abstract class MailTestSupport {
@@ -78,6 +79,7 @@ public abstract class MailTestSupport {
     protected Option[] baseConfiguration() {
         final String filename = System.getProperty("bundle.filename");
         return options(
+            repository("https://repository.apache.org/snapshots/").id("apache-snapshots").allowSnapshots(),
             junitBundles(),
             provision(
                 wrappedBundle(mavenBundle().groupId("org.subethamail").artifactId("subethasmtp").versionAsInProject()),

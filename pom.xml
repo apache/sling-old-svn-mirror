@@ -78,8 +78,6 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-        <module>tooling/maven/apache-sling-jar-resource-bundle</module>
-
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
@@ -141,7 +139,6 @@
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
         <module>bundles/jcr/oak-server</module>
-        <module>bundles/jcr/it-jackrabbit-oak</module>
         <module>bundles/jcr/repoinit</module>
 
         <!-- Servlets -->

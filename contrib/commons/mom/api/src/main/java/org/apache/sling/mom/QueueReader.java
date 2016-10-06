@@ -19,16 +19,18 @@
 
 package org.apache.sling.mom;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
 /**
- * Created by ieb on 30/03/2016.
  * A queue reader receives messages from the queue in the onMessage method. It should avoid performing processing in
  * the onMessage method aiming to return as fast as possible.
  *
  * This interface should be implemented as an OSGi Service. The implementation of the MoM API should register any services
  * implementing QueueReader using the OSGi Whiteboard pattern.
  */
+@ProviderType
 public interface QueueReader  {
 
 

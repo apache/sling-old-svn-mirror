@@ -32,6 +32,7 @@
 
     <properties>
         <pax.url.version>2.1.0</pax.url.version>
+        <org.ops4j.pax.url.mvn.repositories></org.ops4j.pax.url.mvn.repositories>
     </properties>
  
     <build>
@@ -102,10 +103,35 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <org.ops4j.pax.url.mvn.repositories>${org.ops4j.pax.url.mvn.repositories}</org.ops4j.pax.url.mvn.repositories>
+                            </systemPropertyVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
-          </plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                            <requireJavaVersion>
+                                <version>[1.7,1.8)</version>
+                            </requireJavaVersion>
+                            </rules>    
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>          
+        </plugins>
     </build>   
 
     <dependencies>

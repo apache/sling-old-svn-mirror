@@ -107,11 +107,7 @@
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
           <module>extensions/obr</module>
-          <module>extensions/distribution/api</module>
-          <module>extensions/distribution/core</module>
-          <module>extensions/distribution/extensions</module>
-          <module>extensions/distribution/sample</module>
-          <module>extensions/distribution/it</module>
+          <module>extensions/distribution</module>
           <module>extensions/logtail</module>
           <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
@@ -120,13 +116,15 @@
           <module>extensions/security</module>
           <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
-          <module>extensions/sling-oak-restrictions</module>
+          <module>extensions/oak-restrictions</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
           <module>extensions/tracer</module>
           <module>extensions/urlrewriter</module>
           <module>extensions/hapi</module>
           <module>extensions/sling-dynamic-include</module>
+          <module>extensions/startup-filter</module>
+          <module>extensions/startup-filter-disabler</module>
 
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>

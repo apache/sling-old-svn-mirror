@@ -31,3 +31,10 @@
     # Set the servlet resolver's cache size to zero for testing
     servletresolver.cacheSize=I"0"
 
+ # Test repository initialization from provisioning model
+ # No need to test all repoinit statements, this is done
+ # by the repoinit it module
+ [:repoinit]
+create path /repoinit/provisioningModelTest
+
+create service user provisioningModelUser

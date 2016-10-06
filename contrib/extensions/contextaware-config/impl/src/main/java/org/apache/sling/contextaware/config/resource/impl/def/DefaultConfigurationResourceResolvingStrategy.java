@@ -54,12 +54,12 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Resource Resolving Strategy",
                            description="Standardized access to configurations in the resource tree.")
-    static @interface Config {
+    public static @interface Config {
 
         @AttributeDefinition(name="Enabled",
                 description = "Enable this configuration resourcer resolving strategy.")
         boolean enabled() default true;
-        
+
         @AttributeDefinition(name="Allowed paths",
                              description = "Whitelist of paths where configurations can reside in.")
         String[] allowedPaths() default {"/conf", "/apps/conf", "/libs/conf"};
@@ -72,7 +72,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private volatile Config config;
-    
+
     @Reference
     private ContextPathStrategyMultiplexer contextPathStrategy;
 
@@ -153,7 +153,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 logger.error("Invalid relative reference found for {} : {}. This entry is ignored", resource.getPath(), ref);
             }
         }
-        
+
         if (ref != null) {
             logger.trace("Reference '{}' found at {}", ref, resource.getPath());
         }
@@ -181,11 +181,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         return false;
     }
-    
+
     private boolean isEnabledAndParamsValid(final Resource contentResource, final String bucketName, final String configName) {
         return config.enabled() && contentResource != null && checkName(bucketName) && checkName(configName);
     }
-    
+
     private String buildResourcePath(String path, String name) {
         return ResourceUtil.normalize(path + "/" + name);
     }
@@ -261,7 +261,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         return result;
     }
-    
+
     @Override
     public String getResourcePath(Resource contentResource, String bucketName, String configName) {
         if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {

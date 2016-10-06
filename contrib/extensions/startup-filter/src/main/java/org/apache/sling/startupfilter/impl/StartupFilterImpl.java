@@ -101,7 +101,7 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         // Bypass for the managerRoot path
         if(request instanceof HttpServletRequest) {
             final String pathInfo = ((HttpServletRequest)request).getPathInfo();
-            if(managerRoot != null && managerRoot.length() > 0 && pathInfo.startsWith(managerRoot)) {
+            if(managerRoot != null && managerRoot.length() > 0 && pathInfo != null && pathInfo.startsWith(managerRoot)) {
                 log.debug("Bypassing filter for path {} which starts with {}", pathInfo, managerRoot);
                 chain.doFilter(request, sr);
                 return;

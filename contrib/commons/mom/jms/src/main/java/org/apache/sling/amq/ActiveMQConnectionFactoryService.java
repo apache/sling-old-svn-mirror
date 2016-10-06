@@ -19,11 +19,7 @@
 package org.apache.sling.amq;
 
 import org.apache.activemq.pool.PooledConnectionFactory;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.jms.ConnectionFactoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +56,7 @@ import javax.jms.ConnectionFactory;
  * properties:/foo/bar.properties uses a properties file as per http://activemq.apache.org/broker-properties-uri.html
  *
  */
-@Component(immediate = true, metatype = true)
+@Component(immediate = true, metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service(value=ConnectionFactoryService.class)
 public class ActiveMQConnectionFactoryService implements ConnectionFactoryService {
 

@@ -35,7 +35,10 @@ import org.codehaus.plexus.logging.Logger;
 @Component(role = AbstractMavenLifecycleParticipant.class)
 public class DependencyLifecycleParticipant extends AbstractMavenLifecycleParticipant {
 
-    private static final String PLUGIN_ID = "slingstart-maven-plugin";
+    /**
+     *  the plugin ID consists of <code>groupId:artifactId</code>, see {@link Plugin#constructKey(String, String)}
+     */
+    private static final String PLUGIN_ID = "org.apache.sling:slingstart-maven-plugin";
 
     @Requirement
     private Logger logger;
@@ -58,20 +61,15 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         env.logger = logger;
         env.session = session;
 
-        logger.debug("Searching for " + BuildConstants.PACKAGING_SLINGSTART + "/" + BuildConstants.PACKAGING_PARTIAL_SYSTEM + " projects...");
+        logger.debug("Searching for project leveraging plugin '" + PLUGIN_ID + "'...");
 
         for (final MavenProject project : session.getProjects()) {
-            if ( project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART)
-                 || project.getPackaging().equals(BuildConstants.PACKAGING_PARTIAL_SYSTEM)) {
-                logger.debug("Found " + project.getPackaging() + " project: " + project);
-                // search plugin configuration (optional)
+            // consider all projects where this plugin is configured
+            Plugin plugin = project.getPlugin(PLUGIN_ID);
+            if (plugin != null) {
+                logger.debug("Found project " + project + " leveraging " + PLUGIN_ID +".");
                 final ProjectInfo info = new ProjectInfo();
-                for (Plugin plugin : project.getBuild().getPlugins()) {
-                    if (plugin.getArtifactId().equals(PLUGIN_ID)) {
-                        info.plugin = plugin;
-                        break;
-                    }
-                }
+                info.plugin = plugin;
                 info.project = project;
                 env.modelProjects.put(project.getGroupId() + ":" + project.getArtifactId(), info);
             }

@@ -16,7 +16,7 @@
  */
 package org.apache.sling.scripting.java.impl;
 
-import java.util.Dictionary;
+import java.util.Map;
 
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -31,7 +31,7 @@ public class CompilerOptions extends Options {
      * Create an compiler options object using data available from
      * the component configuration.
      */
-    public static CompilerOptions createOptions(final Dictionary<String, Object> props) {
+    public static CompilerOptions createOptions(final Map<String, Object> props) {
         final String currentVersion = System.getProperty("java.specification.version");
         final CompilerOptions opts = new CompilerOptions();
 

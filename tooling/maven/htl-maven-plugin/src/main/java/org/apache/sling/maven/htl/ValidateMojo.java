@@ -88,6 +88,12 @@ public class ValidateMojo extends AbstractMojo {
     @Parameter(property = "failOnWarnings", defaultValue = "false")
     private boolean failOnWarnings;
 
+    /**
+     * If set to "true" the validation will be skipped.
+     */
+    @Parameter
+    private boolean skip;
+
     private boolean hasWarnings = false;
     private boolean hasErrors = false;
     private String processedIncludes = null;
@@ -97,6 +103,10 @@ public class ValidateMojo extends AbstractMojo {
     private int sourceDirectoryLength = 0;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Skipping validation.");
+            return;
+        }
 
         long start = System.currentTimeMillis();
 
@@ -104,8 +114,8 @@ public class ValidateMojo extends AbstractMojo {
             sourceDirectory = new File(project.getBasedir(), sourceDirectory.getPath());
         }
         if (!sourceDirectory.exists()) {
-            throw new MojoExecutionException(
-                    String.format("Configured sourceDirectory={%s} does not exist.", sourceDirectory.getAbsolutePath()));
+            getLog().info("Source directory does not exist, skipping.");
+            return;
         }
         if (!sourceDirectory.isDirectory()) {
             throw new MojoExecutionException(
@@ -113,7 +123,7 @@ public class ValidateMojo extends AbstractMojo {
         }
 
         if ( !buildContext.hasDelta(sourceDirectory )) {
-            getLog().info("No files found to validate, skipping");
+            getLog().info("No files found to validate, skipping.");
             return;
         }
 

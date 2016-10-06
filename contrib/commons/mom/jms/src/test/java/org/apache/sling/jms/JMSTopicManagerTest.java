@@ -20,6 +20,7 @@ package org.apache.sling.jms;
 
 import org.apache.sling.amq.ActiveMQConnectionFactoryService;
 import org.apache.sling.amq.ActiveMQConnectionFactoryServiceTest;
+import org.apache.sling.jms.impl.JMSTopicManager;
 import org.apache.sling.mom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -45,7 +46,6 @@ import java.util.Set;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 31/03/2016.
  */
 public class JMSTopicManagerTest {
 

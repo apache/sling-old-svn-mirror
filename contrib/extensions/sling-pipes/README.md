@@ -18,7 +18,7 @@ getInput  +---+---+   getOutput
 A sling pipe is essentially a sling resource stream:
 * it provides an output as a sling resource iterator
 * it gets its input either from a configured path, either, if its chained (see container pipes below), from another pipe's output
-* each pipe can have additional dynamic inputs using other's bindings, and outputing its own bindings
+* each pipe can have additional dynamic inputs using other's bindings, and outputting its own bindings
  
 At the moment, there are 3 types of pipes to consider:
 * "reader" pipes, that will just output a set of resource depending on the input

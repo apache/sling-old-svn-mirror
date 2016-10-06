@@ -21,6 +21,7 @@ package org.apache.sling.jms;
 
 import org.apache.sling.amq.ActiveMQConnectionFactoryService;
 import org.apache.sling.amq.ActiveMQConnectionFactoryServiceTest;
+import org.apache.sling.jms.impl.JMSQueueManager;
 import org.apache.sling.mom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +47,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Created by ieb on 01/04/2016.
  */
 public class JMSQueueManagerTest {
 

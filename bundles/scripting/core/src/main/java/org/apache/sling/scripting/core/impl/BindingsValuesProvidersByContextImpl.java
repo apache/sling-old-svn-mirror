@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.script.ScriptEngineFactory;
 
@@ -170,7 +170,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     }
 
     private Event newEvent(final String topic, final ServiceReference reference) {
-        Dictionary<Object, Object> props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put("service.id", reference.getProperty(Constants.SERVICE_ID));
         return new Event(topic, props);
     }

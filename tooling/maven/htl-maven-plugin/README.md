@@ -20,7 +20,6 @@ The Apache Sling HTL Maven Plugin, M2Eclipse compatible, provides support for va
                     <goals>
                         <goal>validate</goal>
                     </goals>
-                    <phase>compile</phase>
                 </execution>
             </executions>
         </plugin>
@@ -42,6 +41,7 @@ Validates HTL scripts syntax during the build process.
 | [`includes`](#param-includes)               | `String[]` | `1.0.0` | List of files to include, specified as fileset patterns which are relative to `sourceDirectory`. |
 | [`excludes`](#param-excludes)               | `String[]` | `1.0.0` | List of files to exclude, specified as fileset patterns which are relative to `sourceDirectory`. |
 | [`failOnWarnings`](#param-failOnWarnings)   | `boolean`  | `1.0.0` | If set to `true` it will fail the build on compiler warnings.                                    |
+| [`skip`](#param-skip)                       | `boolean`  | `1.0.2` | If set to `true` the validation will be skipped.                                                 |
 
 ### Parameter Details
 
@@ -74,5 +74,12 @@ If set to `true` it will fail the build on compiler warnings.
 * **Type:** `boolean`
 * **Required:** No
 * **User Property:** `failOnWarnings`
+* **Default:** `false`
+
+<a name="param-skip"><code>skip</code></a>:
+
+If set to `true` the validation will be skipped.
+* **Type:** `boolean`
+* **Required:** No
 * **Default:** `false`
 

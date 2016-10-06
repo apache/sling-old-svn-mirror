@@ -52,7 +52,6 @@ public class RenderContextImpl implements RenderContext {
         bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
         scriptResourceResolver = (ResourceResolver) scriptContext.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
                 SlingScriptConstants.SLING_SCOPE);
-        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, scriptResourceResolver);
         sling = BindingsUtils.getHelper(bindings);
         extensionRegistryService = sling.getService(ExtensionRegistryService.class);
     }
