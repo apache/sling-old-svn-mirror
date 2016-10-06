@@ -32,22 +32,29 @@ import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     /**
-     * The model directory
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * The model directory containing the provision models.
+     * This parameter is evaluated in the {@link DependencyLifecycleParticipant}.
+     * As default first <code>${basedir}/src/main/provisioning</code> and then
+     * <code>${basedir}/src/test/provisioning</code> is used 
+     * (in case the former does not exist).
      */
     @Parameter(defaultValue="${basedir}/src/main/provisioning")
     private File modelDirectory;
 
     /**
-     * The model file name pattern
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * The model file name pattern to consider.
+     * This parameter is evaluated in the {@link DependencyLifecycleParticipant}.
      */
-    @Parameter
+    @Parameter(defaultValue=DEFAULT_MODEL_PATTERN)
     private String modelPattern;
+    
+    public static final String DEFAULT_MODEL_PATTERN = "((.*)\\.txt|(.*)\\.model)";
 
     /**
-     * Inlined model, supported since version 1.3.
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * Inlined model. Is processed first and afterwards merged with any model found in {@link #modelDirectory}.
+     * This parameter is evaluated in the {@link DependencyLifecycleParticipant}.
+     * @since 1.3
+     * @see <a href="https://issues.apache.org/jira/browse/SLING-4912">SLING-4912</a>
      */
     @Parameter
     private String model;
@@ -61,6 +68,9 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     @Parameter(property = "session", readonly = true, required = true)
     protected MavenSession mavenSession;
 
+    /**
+     * If set to {@code true} creates a WAR artifact in addition to the standalone JAR from the model.
+     */
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
 
