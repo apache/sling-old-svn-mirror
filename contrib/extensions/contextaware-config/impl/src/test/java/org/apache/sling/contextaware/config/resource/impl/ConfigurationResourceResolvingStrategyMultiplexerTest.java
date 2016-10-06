@@ -153,6 +153,5 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertEquals("/conf/site1/sling:test/feature", underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
-    
-    
+
 }
