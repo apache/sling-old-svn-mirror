@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -129,7 +131,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private String getReference(final Resource resource) {
-        String ref = resource.getValueMap().get(DefaultContextPathStrategy.PROPERTY_CONFIG, String.class);
+        String ref = resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
 
         if (ref != null) {
             // if absolute path found we are (probably) done
