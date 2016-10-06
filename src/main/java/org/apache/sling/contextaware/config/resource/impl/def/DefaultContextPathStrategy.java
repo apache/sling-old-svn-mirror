@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -37,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultContextPathStrategy implements ContextPathStrategy {
 
     @ObjectClassDefinition(name="Apache Sling Context-Aware Default Context Path Strategy",
-            description="Detects context path by existence of " + PROPERTY_CONFIG + " properties.")
+            description="Detects context path by existence of " + PROPERTY_CONFIG_REF + " properties.")
     public static @interface Config {
 
         @AttributeDefinition(name="Enabled",
@@ -45,12 +47,6 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         boolean enabled() default true;
 
     }
-
-    /**
-     * Property that points to the configuration to be used.
-     * Additionally each resource having this property marks the beginning of a new context sub-tree.
-     */
-    public static final String PROPERTY_CONFIG = "sling:config-ref";
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -123,7 +119,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         }
 
         private boolean hasConfigRef(final Resource resource) {
-            return resource.getValueMap().get(PROPERTY_CONFIG, String.class) != null;
+            return resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class) != null;
         }
 
     }
