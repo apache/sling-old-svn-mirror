@@ -292,7 +292,23 @@ def modules = [
         location: 'bundles/scripting/jsp'
     ],
     [
-        location: 'bundles/scripting/sightly/engine'
+        location: 'bundles/scripting/sightly/compiler',
+        downstream: ['bundles/scripting/sightly/java-compiler']
+    ],
+    [
+        location: 'bundles/scripting/sightly/java-compiler',
+        downstream: [
+            'bundles/scripting/sightly/engine',
+            'bundles/scripting/sightly/js-use-provider',
+            'bundles/scripting/sightly/models-use-provider'
+        ]
+    ],
+    [
+        location: 'bundles/scripting/sightly/engine',
+        downstream: [
+            'bundles/scripting/sightly/testing-content',
+            'bundles/scripting/sightly/testing'
+        ]
     ],
     [
         location: 'bundles/scripting/sightly/js-use-provider'
@@ -304,17 +320,12 @@ def modules = [
         location: 'bundles/scripting/sightly/repl'
     ],
     [
-        location: 'bundles/scripting/sightly/testing-content'
+        location: 'bundles/scripting/sightly/testing-content',
+        downstream: ['bundles/scripting/sightly/testing']
     ],
     [
         location: 'bundles/scripting/sightly/testing',
         jdks: ['1.8']
-    ],
-    [
-        location: 'bundles/scripting/sightly/compiler'
-    ],
-    [
-        location: 'bundles/scripting/sightly/java-compiler'
     ],
     [
         location: 'bundles/servlets/compat'
@@ -606,7 +617,7 @@ def jdkMapping = [
 ]
 
 modules.each { module ->
-  
+
     def svnDir = svnBase +"/" + module.location
     def jdks = module.jdks ?: defaultJdks
     def deploy = true
