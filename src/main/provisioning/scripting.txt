@@ -37,7 +37,7 @@
     create service user sling-scripting
 
     set ACL for sling-scripting
-        deny    jcr:all     on /libs,/apps
+        deny    jcr:all     on /
         allow   jcr:read    on /libs,/apps
     end
     # SLING-5848 - Define service user and ACLs for Scripting >>>
