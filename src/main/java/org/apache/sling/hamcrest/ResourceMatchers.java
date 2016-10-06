@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.hamcrest.matchers.ResourceChildrenMatcher;
 import org.apache.sling.hamcrest.matchers.ResourceNameMatcher;
+import org.apache.sling.hamcrest.matchers.ResourcePathMatcher;
 import org.apache.sling.hamcrest.matchers.ResourcePropertiesMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -69,7 +70,7 @@ public final class ResourceMatchers {
      * Matches resources which have exactly the children with the names given in <tt>children</tt>. The order is not validated.
      * 
      * <pre>
-     * assertThat(resource, containsChildren('child1', 'child2'));
+     * assertThat(resource, containsChildrenInAnyOrder('child1', 'child2'));
      * </pre>
      * 
      * @param children the expected children, not <code>null</code> or empty
@@ -80,10 +81,24 @@ public final class ResourceMatchers {
     }
     
     /**
+     * Matches only if the resource has the given path
+     * 
+     * <pre>
+     * assertThat(resource, hasName('/a/b/c'));
+     * </pre>
+     * 
+     * @param path the resources path, not <code>null</code> or empty
+     * @return a matcher instance
+     */
+    public static Matcher<Resource> resourceWithPath(String path) {
+        return new ResourcePathMatcher(path);
+    }
+
+    /**
      * Matches only if the resource has the given name
      * 
      * <pre>
-     * assertThat(resource, hasName('resource1'));
+     * assertThat(resource, resourceWithName('resource1'));
      * </pre>
      * 
      * @param name the resources name, not <code>null</code> or empty

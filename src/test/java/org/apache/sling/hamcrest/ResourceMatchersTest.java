@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.hamcrest;
+package org.apache.sling.hamcrest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +44,16 @@ public class ResourceMatchersTest {
         Resource resource = context.resourceResolver().getResource("/resource");
         Assert.assertThat(resource, ResourceMatchers.resourceOfType("some/type"));
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.resourceOfType("some/other/type")));
+    }
+
+    @Test
+    public void testResourceWithPath() throws PersistenceException {
+        MockHelper.create(context.resourceResolver())
+        .resource("/resource").commit();
+        
+        Resource resource = context.resourceResolver().getResource("/resource");
+        Assert.assertThat(resource, ResourceMatchers.resourceWithPath("/resource"));
+        Assert.assertThat(resource, Matchers.not(ResourceMatchers.resourceWithPath("some/other/name")));
     }
 
     @Test
@@ -130,4 +140,5 @@ public class ResourceMatchersTest {
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.containsChildren("child2", "child1")));
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.containsChildren("child1", "child2", "child3")));
     }
+
 }
