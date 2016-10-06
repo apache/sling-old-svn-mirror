@@ -329,6 +329,21 @@ def modules = [
         location: 'bundles/servlets/resolver'
     ],
     [
+        location: 'contrib/commons/mom/api'
+    ],
+    [
+        location: 'contrib/commons/mom/jms'
+    ],
+    [
+        location: 'contrib/commons/mom/jobs/core'
+    ],
+    [
+        location: 'contrib/commons/mom/jobs/it-services'
+    ],
+    [
+        location: 'contrib/commons/mom/jobs/it'
+    ],
+    [
         location: 'contrib/crankstart/launcher'
     ],
     [
