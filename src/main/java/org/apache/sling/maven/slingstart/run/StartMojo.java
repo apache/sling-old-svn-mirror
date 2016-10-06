@@ -390,11 +390,13 @@ public class StartMojo extends AbstractMojo {
 
         // If a launchpad JAR is specified, use it
         if (launchpadJar != null) {
+            getLog().info("Using launchpad jar from '" +  launchpadJar + "' given as configuration parameter!");
             return launchpadJar;
         }
 
         // If a launchpad dependency is configured, resolve it
         if (launchpadDependency != null) {
+            getLog().info("Using launchpad dependency '" +  launchpadDependency + "' given as configuration parameter!");
             return getArtifact(launchpadDependency).getFile();
         }
 
@@ -402,7 +404,17 @@ public class StartMojo extends AbstractMojo {
         if (this.project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART)) {
             final File jarFile = new File(this.project.getBuild().getDirectory(), this.project.getBuild().getFinalName() + ".jar");
             if (jarFile.exists()) {
+                getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
                 return jarFile;
+            }
+        }
+
+        // In case there was a provisioning model found but this is not a slingstart project, the JAR might be attached already through goal "package"
+        for (Artifact attachedArtifact : project.getAttachedArtifacts()) {
+            // find the attached artifact with classifier "standalone"
+            if (BuildConstants.TYPE_JAR.equals(attachedArtifact.getType()) && BuildConstants.CLASSIFIER_APP.equals(attachedArtifact.getClassifier())) {
+                getLog().info("Using launchpad jar being attached as additional project artifact: '" +  attachedArtifact.getFile() + "'!");
+                return attachedArtifact.getFile();
             }
         }
 
@@ -416,6 +428,7 @@ public class StartMojo extends AbstractMojo {
                 d.setVersion(dep.getVersion());
                 d.setScope(Artifact.SCOPE_RUNTIME);
                 d.setType(BuildConstants.TYPE_JAR);
+                getLog().info("Using launchpad jar from first dependency of type 'slingstart': '"+ d +"'!");
                 return getArtifact(d).getFile();
             }
         }
