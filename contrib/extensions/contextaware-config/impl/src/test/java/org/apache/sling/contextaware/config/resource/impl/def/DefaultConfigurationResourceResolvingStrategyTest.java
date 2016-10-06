@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -49,8 +51,8 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
 
         // content resources
         context.build()
-            .resource("/content/site1", "sling:config-ref", "/conf/site1")
-            .resource("/content/site2", "sling:config-ref", "/conf/site2");
+            .resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/site1")
+            .resource("/content/site2", PROPERTY_CONFIG_REF, "/conf/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
         
@@ -69,8 +71,12 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
         assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
+    /**
+     * Default resource inheritance without customizing inheritance.
+     * => no resource list merging.
+     */
     @Test
-    public void testGetResourceCollection() {
+    public void testGetResourceCollection_NoInheritProps() {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
         // build config resources
@@ -82,9 +88,112 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/libs/conf/sling:test/feature/b");
 
         assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+                "/conf/site1/sling:test/feature/c"));
+
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+                "/conf/site2/sling:test/feature/c",
+                "/conf/site2/sling:test/feature/d"));
+    }
+
+    /**
+     * Default resource inheritance without customizing inheritance, but with now resources inner-most context.
+     * => inherit from next context level.
+     */
+    @Test
+    public void testGetResourceCollection_NoInheritProps_InheritParent() {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/feature/b");
+
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+                "/apps/conf/sling:test/feature/a"));
+
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+                "/apps/conf/sling:test/feature/a"));
+    }
+
+    /**
+     * Resource inheritance with enabling list merging on inner-most context level.
+     * => merge resource lists from all levels
+     */
+    @Test
+    public void testGetResourceCollection_PropsChild() {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/conf/site1/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/conf/site2/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/d")
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/feature/b");
+
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
                 "/libs/conf/sling:test/feature/b"));
+
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+                "/conf/site2/sling:test/feature/c",
+                "/conf/site2/sling:test/feature/d",
+                "/apps/conf/sling:test/feature/a",
+                "/libs/conf/sling:test/feature/b"));
+    }
+
+    /**
+     * Resource inheritance with enabling list merging on a parent context level.
+     * => merge resource lists from all levels
+     */
+    @Test
+    public void testGetResourceCollection_PropsParent() {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/d")
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/libs/conf/sling:test/feature/b");
+
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+                "/conf/site1/sling:test/feature/c",
+                "/apps/conf/sling:test/feature/a", 
+                "/libs/conf/sling:test/feature/b"));
+
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+                "/conf/site2/sling:test/feature/c",
+                "/conf/site2/sling:test/feature/d",
+                "/apps/conf/sling:test/feature/a",
+                "/libs/conf/sling:test/feature/b"));
+    }
+
+    /**
+     * Resource inheritance with enabling list merging on a parent context level, but disabling it on the inner-most level.
+     * => no resource list merging.
+     */
+    @Test
+    public void testGetResourceCollection_PropsParent_ChildCancel() {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/feature", PROPERTY_CONFIG_INHERIT, false)
+            .resource("/conf/site1/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/c")
+            .resource("/conf/site2/sling:test/feature/d")
+            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/libs/conf/sling:test/feature/b");
+
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+                "/conf/site1/sling:test/feature/c"));
 
         assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site2/sling:test/feature/c",
