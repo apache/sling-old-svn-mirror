@@ -32,6 +32,7 @@
 
     <properties>
         <pax.url.version>2.1.0</pax.url.version>
+        <org.ops4j.pax.url.mvn.repositories></org.ops4j.pax.url.mvn.repositories>
     </properties>
  
     <build>
@@ -102,6 +103,11 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <org.ops4j.pax.url.mvn.repositories>${org.ops4j.pax.url.mvn.repositories}</org.ops4j.pax.url.mvn.repositories>
+                            </systemPropertyVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
