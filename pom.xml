@@ -139,7 +139,6 @@
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
         <module>bundles/jcr/oak-server</module>
-        <module>bundles/jcr/it-jackrabbit-oak</module>
         <module>bundles/jcr/repoinit</module>
 
         <!-- Servlets -->
