@@ -18,12 +18,11 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceTestUtils.assetResourcePaths;
 import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
+import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -74,20 +73,16 @@ public class ConfigurationResourceResolverImplTest {
 
     @Test
     public void testGetResourceCollection() {
-        Collection<Resource> col1 = underTest.getResourceCollection(site1Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
-                "/libs/conf/sling:test/feature/b" },
-                col1);
-
-        Collection<Resource> col2 = underTest.getResourceCollection(site2Page1, BUCKET, "feature");
-        assetResourcePaths(new String[] {
+                "/libs/conf/sling:test/feature/b"));
+        
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
                 "/apps/conf/sling:test/feature/a",
-                "/libs/conf/sling:test/feature/b" },
-                col2);
+                "/libs/conf/sling:test/feature/b" ));
     }
 
     @Test

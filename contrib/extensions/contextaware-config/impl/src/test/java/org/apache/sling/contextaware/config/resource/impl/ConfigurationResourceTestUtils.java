@@ -18,18 +18,10 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-
-import com.google.common.collect.ImmutableList;
 
 public final class ConfigurationResourceTestUtils {
     
@@ -37,29 +29,6 @@ public final class ConfigurationResourceTestUtils {
         // static methods only
     }
 
-    /**
-     * Assert that resources with the given path exist in the given order in the given collection.
-     * @param expectedPaths Expected path
-     * @param actualResources Actual resources
-     */
-    public static void assetResourcePaths(String[] expectedPaths, Collection<Resource> actualResources) {
-        String[] actualPaths = new String[actualResources.size()];
-        int i = 0;
-        for (Iterator<Resource> it=actualResources.iterator(); it.hasNext(); i++) {
-            actualPaths[i] = it.next().getPath();
-        }
-        assertArrayEquals(expectedPaths, actualPaths);
-    }
-    
-    /**
-     * Assert that resources with the given path exist in the given order in the given collection.
-     * @param expectedPaths Expected path
-     * @param actualResources Actual resources
-     */
-    public static void assetResourcePaths(String[] expectedPaths, Iterator<Resource> actualResources) {
-        assetResourcePaths(expectedPaths, ImmutableList.copyOf(actualResources));
-    }
-    
     /**
      * Register all services for {@link ConfigurationResourceResolver}.
      * @param context Sling context
