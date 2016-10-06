@@ -184,6 +184,12 @@ public class ResourceResolverFactoryActivator {
                             "the ResourceResolver mapping. The default value is /etc/map.")
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
+    @Property(value = "/",
+            label = "Mapping Observation",
+            description = "The paths where vanity paths or aliases can be found. These paths are used to " +
+                          "listen for resource events.")
+    private static final String PROP_OBSERVATION_PATHS = "resource.resolver.map.observation";
+
     @Property(intValue = MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS,
               label = "Default Vanity Path Redirect Status",
               description = "The default status code used when a sling:vanityPath is configured to redirect " +
@@ -338,6 +344,9 @@ public class ResourceResolverFactoryActivator {
     /** Vanity path blacklist */
     private volatile String[] vanityPathBlackList;
 
+    /** Observation paths */
+    private volatile String[] observationPaths;
+
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
     /** Factory registration. */
@@ -425,6 +434,10 @@ public class ResourceResolverFactoryActivator {
         return logResourceResolverClosing;
     }
 
+    public String[] getObservationPaths() {
+        return this.observationPaths;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /**
@@ -484,6 +497,7 @@ public class ResourceResolverFactoryActivator {
 
         // the root of the resolver mappings
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
+        observationPaths = PropertiesUtil.toStringArray(PROP_OBSERVATION_PATHS, new String[] {"/"});
 
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
@@ -753,4 +767,5 @@ public class ResourceResolverFactoryActivator {
     public ResourceProviderTracker getResourceProviderTracker() {
         return resourceProviderTracker;
     }
+
 }
