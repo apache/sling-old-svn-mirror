@@ -24,7 +24,6 @@ import java.util.NoSuchElementException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -39,29 +38,29 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
 
     @ObjectClassDefinition(name="Apache Sling Context-Aware Default Context Path Strategy",
             description="Detects context path by existence of " + PROPERTY_CONFIG + " properties.")
-    static @interface Config {
-        
+    public static @interface Config {
+
         @AttributeDefinition(name="Enabled",
                       description = "Enable this context path strategy.")
         boolean enabled() default true;
-        
+
     }
-    
+
     /**
      * Property that points to the configuration to be used.
      * Additionally each resource having this property marks the beginning of a new context sub-tree.
      */
     public static final String PROPERTY_CONFIG = "sling:config-ref";
-   
+
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
     private volatile Config config;
-    
+
     @Activate
-    private void activate(ComponentContext componentContext, Config config) {
-        this.config = config; 
+    private void activate(Config config) {
+        this.config = config;
     }
-    
+
     @Override
     public Iterator<Resource> findContextResources(Resource resource) {
         if (!config.enabled()) {
@@ -69,18 +68,18 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         }
         return new ConfigResourceIterator(resource);
     }
-    
+
     /**
      * Searches the resource hierarchy upwards for all context and returns the root resource for each of them.
      */
     private class ConfigResourceIterator implements Iterator<Resource> {
 
         private Resource next;
-        
+
         public ConfigResourceIterator(Resource startResource) {
             next = findNextContextResource(startResource);
         }
-        
+
         @Override
         public boolean hasNext() {
             return next != null;
@@ -95,7 +94,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             next = findNextContextResource(next.getParent());
             return result;
         }
-        
+
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
@@ -109,7 +108,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         private Resource findNextContextResource(Resource startResource) {
             // start at resource, go up
             Resource resource = startResource;
-            
+
             while (resource != null) {
                 if (hasConfigRef(resource)) {
                     log.trace("Found context path '{}'.", resource.getPath());
@@ -122,7 +121,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             // if hit root and nothing found, return null
             return null;
         }
-        
+
         private boolean hasConfigRef(final Resource resource) {
             return resource.getValueMap().get(PROPERTY_CONFIG, String.class) != null;
         }
