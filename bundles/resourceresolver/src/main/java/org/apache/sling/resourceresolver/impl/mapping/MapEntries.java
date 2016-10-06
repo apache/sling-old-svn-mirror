@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,6 +56,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
@@ -64,11 +68,10 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MapEntries implements EventHandler {
+public class MapEntries implements ResourceChangeListener, ExternalResourceChangeListener {
 
     public static final MapEntries EMPTY = new MapEntries();
 
@@ -116,7 +119,7 @@ public class MapEntries implements EventHandler {
 
     private Map<String, Map<String, String>> aliasMap;
 
-    private ServiceRegistration registration;
+    private ServiceRegistration<ResourceChangeListener> registration;
 
     private EventAdmin eventAdmin;
 
@@ -191,12 +194,11 @@ public class MapEntries implements EventHandler {
 
         doInit();
 
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(EventConstants.EVENT_TOPIC, "org/apache/sling/api/resource/*");
-        props.put(EventConstants.EVENT_FILTER, createFilter(this.enabledVanityPaths));
-        props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(ResourceChangeListener.PATHS, factory.getObservationPaths());
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
+        this.registration = bundleContext.registerService(ResourceChangeListener.class, this, props);
 
         this.vanityCounter = new AtomicLong(0);
         this.vanityBloomFilterFile = bundleContext.getDataFile(VANITY_BLOOM_FILTER_NAME);
@@ -322,7 +324,7 @@ public class MapEntries implements EventHandler {
         return newRefreshed;
     }
 
-    private boolean doAddAttributes(String path, String[] addedAttributes, boolean refreshed) {
+    private boolean doAddAttributes(String path, Set<String> addedAttributes, boolean refreshed) {
         this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
@@ -354,7 +356,7 @@ public class MapEntries implements EventHandler {
         return newRefreshed;
     }
 
-    private boolean doUpdateAttributes(String path, String[] changedAttributes, boolean refreshed) {
+    private boolean doUpdateAttributes(String path, Set<String> changedAttributes, boolean refreshed) {
         this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
@@ -388,7 +390,7 @@ public class MapEntries implements EventHandler {
         return newRefreshed;
     }
 
-    private boolean doRemoveAttributes(String path, String[] removedAttributes, boolean nodeDeletion, boolean refreshed) {
+    private boolean doRemoveAttributes(String path, Set<String> removedAttributes, boolean nodeDeletion, boolean refreshed) {
         this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
@@ -726,7 +728,7 @@ public class MapEntries implements EventHandler {
         return mapEntries;
     }
 
-    // ---------- EventListener interface
+    // ---------- ResourceChangeListener interface
 
     /**
      * Handles the change to any of the node properties relevant for vanity URL
@@ -735,69 +737,72 @@ public class MapEntries implements EventHandler {
      * appropriate events.
      */
     @Override
-    public void handleEvent(final Event event) {
-
-        // check for path (used for some tests below
-        final Object p = event.getProperty(SlingConstants.PROPERTY_PATH);
-        final String path;
-        if (p instanceof String) {
-            path = (String) p;
-            log.debug("handleEvent, topic={}, path={}", event.getTopic(), path);
-        } else {
-            log.debug("handleEvent, topic={}, no path provided, event ignored", event.getTopic());
-            return;
-        }
-
-        // don't care for system area
-        if (path.startsWith(JCR_SYSTEM_PREFIX)) {
-            return;
-        }
-
+    public void onChange(List<ResourceChange> changes) {
         boolean wasResolverRefreshed = false;
 
-        //removal of a node is handled differently
-        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
-            final String actualContentPath = getActualContentPath(path);
-            for (final String target : this.vanityTargets.keySet()) {
-                if (target.startsWith(actualContentPath)) {
-                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {PROP_VANITY_PATH}, true, wasResolverRefreshed);
-                }
-            }
-            for (final String target : this.aliasMap.keySet()) {
-                if (actualContentPath.startsWith(target)) {
-                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {ResourceResolverImpl.PROP_ALIAS}, true, wasResolverRefreshed);
-                }
-            }
-            if (path.startsWith(this.mapRoot)) {
-                //need to update the configuration
-                wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
-            }
-        //session.move() is handled differently see also SLING-3713 and
-        } else if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()) && event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES) == null) {
-            wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
-        } else {
-            String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
-            if (addedAttributes != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("found added attributes {}", addedAttributes);
-                }
-                wasResolverRefreshed = doAddAttributes(path, addedAttributes, wasResolverRefreshed);
+        for(final ResourceChange rc : changes) {
+            // check for path (used for some tests below
+            final String path = rc.getPath();
+            log.debug("onChange, type={}, path={}", rc.getType(), path);
+
+            // don't care for system area
+            if (path.startsWith(JCR_SYSTEM_PREFIX)) {
+                continue;
             }
 
-            String [] changedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_CHANGED_ATTRIBUTES);
-            if (changedAttributes != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("found changed attributes {}", changedAttributes);
+            // removal of a resource is handled differently
+            if (rc.getType() == ResourceChange.ChangeType.REMOVED) {
+                final String actualContentPath = getActualContentPath(path);
+                for (final String target : this.vanityTargets.keySet()) {
+                    if (target.startsWith(actualContentPath)) {
+                        wasResolverRefreshed = doRemoveAttributes(path, Collections.singleton(PROP_VANITY_PATH), true, wasResolverRefreshed);
+                    }
                 }
-                wasResolverRefreshed = doUpdateAttributes(path, changedAttributes, wasResolverRefreshed);
-            }
+                for (final String target : this.aliasMap.keySet()) {
+                    if (actualContentPath.startsWith(target)) {
+                        wasResolverRefreshed = doRemoveAttributes(path, Collections.singleton(ResourceResolverImpl.PROP_ALIAS), true, wasResolverRefreshed);
+                    }
+                }
+                if (path.startsWith(this.mapRoot)) {
+                    //need to update the configuration
+                    wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
+                }
+            //session.move() is handled differently see also SLING-3713 and
+            } else if (rc.getType() == ResourceChange.ChangeType.ADDED ) {
+                wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
+            } else {
+                Set<String> addedAttributes = rc.getAddedPropertyNames();
+                if (addedAttributes != null) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("found added attributes {}", addedAttributes);
+                    }
+                    wasResolverRefreshed = doAddAttributes(path, addedAttributes, wasResolverRefreshed);
 
-            String [] removedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES);
-            if (removedAttributes != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("found removed attributes {}", removedAttributes);
+                    Set<String> changedAttributes = rc.getChangedPropertyNames();
+                    if (changedAttributes != null) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("found changed attributes {}", changedAttributes);
+                        }
+                        wasResolverRefreshed = doUpdateAttributes(path, changedAttributes, wasResolverRefreshed);
+                    }
+
+                    Set<String> removedAttributes = rc.getRemovedPropertyNames();
+                    if (removedAttributes != null) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("found removed attributes {}", removedAttributes);
+                        }
+                        wasResolverRefreshed = doRemoveAttributes(path, removedAttributes, false, wasResolverRefreshed);
+                    }
+                } else {
+
+                    if (path.startsWith(this.mapRoot)) {
+                        doUpdateConfiguration();
+                    } else {
+                        doUpdateVanity(path);
+                        doUpdateAlias(path, false);
+                    }
                 }
-                wasResolverRefreshed = doRemoveAttributes(path, removedAttributes, false, wasResolverRefreshed);
+
             }
         }
     }

@@ -32,6 +32,8 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     String getMapRoot();
 
+    String[] getObservationPaths();
+
     Map<?, ?> getVirtualURLMap();
 
     Mapping[] getMappings();
@@ -39,15 +41,15 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
     int getDefaultVanityPathRedirectStatus();
 
     boolean isVanityPathEnabled();
-    
+
     long getMaxCachedVanityPathEntries();
-    
+
     boolean isMaxCachedVanityPathEntriesStartup();
-    
+
     int getVanityBloomFilterMaxBytes();
 
     boolean isOptimizeAliasResolutionEnabled();
-    
+
     boolean hasVanityPathPrecedence();
 
     public class VanityPathConfig implements Comparable<VanityPathConfig> {
@@ -59,6 +61,7 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
             this.isExclude = isExclude;
         }
 
+        @Override
         public int compareTo(VanityPathConfig o2) {
             return new Integer(o2.prefix.length()).compareTo(this.prefix.length());
         }
