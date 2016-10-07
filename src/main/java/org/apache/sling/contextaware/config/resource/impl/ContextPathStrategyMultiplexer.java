@@ -20,19 +20,15 @@ package org.apache.sling.contextaware.config.resource.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.iterators.CollatingIterator;
-import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
+import org.apache.sling.contextaware.config.resource.impl.util.ResourceEliminateDuplicatesIterator;
+import org.apache.sling.contextaware.config.resource.impl.util.ResourcePathCollatingIterator;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,15 +48,6 @@ reference={
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
 public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
-    
-    private static Comparator<Resource> PATH_LENGTH_COMPARATOR = new Comparator<Resource>() {
-        @Override
-        public int compare(Resource o1, Resource o2) {
-            Integer length1 = o1.getPath().length();
-            Integer length2 = o2.getPath().length();
-            return length2.compareTo(length1);
-        }
-    };
     
     private RankedServices<ContextPathStrategy> items = new RankedServices<>(Order.DESCENDING);
         
@@ -113,15 +100,9 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      */
     @SuppressWarnings("unchecked")
     private Iterator<Resource> mergeResults(List<Iterator<Resource>> allResults) {
-        return new FilterIterator(new CollatingIterator(PATH_LENGTH_COMPARATOR, allResults),
-                // eliminate duplicate resources reported by different implementations
-                new Predicate() {
-                    private Set<String> resourcePaths = new HashSet<>();
-                    @Override
-                    public boolean evaluate(Object object) {
-                        return resourcePaths.add(((Resource)object).getPath());
-                    }
-                });
+        return new ResourceEliminateDuplicatesIterator(
+                new ResourcePathCollatingIterator(allResults)
+        );
     }
     
 }
