@@ -21,8 +21,8 @@ package org.apache.sling.junit.impl.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,11 +34,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.PatternLayout;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Layout;
-import ch.qos.logback.core.read.CyclicBufferAppender;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -54,6 +49,12 @@ import org.osgi.service.http.NamespaceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Layout;
+import ch.qos.logback.core.read.CyclicBufferAppender;
 
 @Component(immediate=true, metatype=true,
         label = "Apache Sling Test Log Collector",
@@ -221,7 +222,7 @@ public class TestLogServlet extends HttpServlet {
     }
 
     private void registerFilter(BundleContext ctx) {
-        Properties props = new Properties();
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION, "Filter to extract testName from request headers");
         props.put(Constants.SERVICE_VENDOR, ctx.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
 
