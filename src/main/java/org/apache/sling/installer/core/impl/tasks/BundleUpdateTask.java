@@ -56,6 +56,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
+    @Override
     public void execute(final InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = BundleInfo.getMatchingBundle(this.getBundleContext(), symbolicName, null);
@@ -129,7 +130,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
     	} catch (final Exception e) {
-            this.getLogger().info("Removing failing update task - unable to retry: " + this, e);
+            this.getLogger().warn("Removing failing update task - unable to retry: " + this, e);
             this.setFinishedState(ResourceState.IGNORED);
     	}
     }
