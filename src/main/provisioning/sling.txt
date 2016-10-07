@@ -32,7 +32,6 @@
     org.apache.geronimo.bundles/commons-httpclient/3.1_1
     org.apache.httpcomponents/httpcore-osgi/4.4.1
     org.apache.httpcomponents/httpclient-osgi/4.4.1
-    com.google.guava/guava/15.0
     org.apache.sling/org.apache.sling.adapter/2.1.8
     org.apache.sling/org.apache.sling.api/2.14.2
     org.apache.sling/org.apache.sling.auth.core/1.3.20
@@ -122,6 +121,7 @@
     org.apache.sling/org.apache.sling.extensions.explorer/1.0.4
     io.dropwizard.metrics/metrics-core/3.1.0
     org.apache.sling/org.apache.sling.commons.metrics/1.0.1-SNAPSHOT
+    com.google.guava/guava/15.0
 
 [configurations]
   org.apache.sling.engine.impl.log.RequestLogger
