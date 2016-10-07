@@ -64,9 +64,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 description = "Enable this configuration resourcer resolving strategy.")
         boolean enabled() default true;
 
-        @AttributeDefinition(name="Allowed paths",
-                             description = "Whitelist of paths where configurations can reside in.")
-        String[] allowedPaths() default {"/conf", "/apps/conf", "/libs/conf"};
+        @AttributeDefinition(name="Configurations path",
+                             description = "Paths where the configurations are stored in.")
+        String configPath() default "/conf";
 
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
@@ -136,7 +136,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             }), PredicateUtils.notNullPredicate());
         
         // expand paths and eliminate duplicates
-        return new PathEliminateDuplicatesIterator(new PathParentExpandIterator("/conf", configPaths));
+        return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
 
     private String getReference(final Resource resource) {
@@ -171,15 +171,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isAllowedConfigPath(String path) {
-        for (String pattern : this.config.allowedPaths()) {
-            if (logger.isTraceEnabled()) {
-                logger.trace("- checking if '{}' starts with {}", path, pattern);
-            }
-            if (path.equals(pattern) || path.startsWith(pattern + "/")) {
-                return true;
-            }
+        if (logger.isTraceEnabled()) {
+            logger.trace("- checking if '{}' starts with {}", path, config.configPath());
         }
-        return false;
+        return path.startsWith(config.configPath() + "/");
     }
 
     private boolean isFallbackConfigPath(final String ref) {
