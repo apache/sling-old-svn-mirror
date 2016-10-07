@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.junit.Activator;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 /** Server-side variant of the TeleporterRule, which provides
@@ -33,8 +35,15 @@ class ServerSideTeleporter extends TeleporterRule {
     
     private static final int WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS = 10;
     
-    ServerSideTeleporter() {
-        bundleContext = Activator.getBundleContext();
+    ServerSideTeleporter(Class<?> classUnderTest) {
+        Bundle bundle = FrameworkUtil.getBundle(classUnderTest);
+
+        if (bundle != null) {
+            bundleContext = bundle.getBundleContext();
+        } else {
+            bundleContext = null;
+        }
+
         if(bundleContext == null) {
             throw new IllegalStateException("Null BundleContext, should not happen when this class is used");
         }
