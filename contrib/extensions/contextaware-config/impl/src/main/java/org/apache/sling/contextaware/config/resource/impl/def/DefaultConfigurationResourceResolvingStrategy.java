@@ -234,7 +234,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final List<Resource> result = new ArrayList<>();
         final Set<String> nameCandidates = new HashSet<>();
         final List<Resource> resultCandidates = new ArrayList<>();
-        
+
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource);
         Boolean listMergingEnabled = null;
@@ -242,10 +242,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             final String path = paths.next();
             Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
-                
+
                 // check inheritance mode on current level
                 listMergingEnabled = item.getValueMap().get(PROPERTY_CONFIG_INHERIT, listMergingEnabled);
-                
+
                 // in inheritance is enabled on this level and candidates where collected on previous levels add them now
                 if (listMergingEnabled == Boolean.TRUE && !resultCandidates.isEmpty()) {
                     result.addAll(resultCandidates);
@@ -253,7 +253,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                     resultCandidates.clear();
                     nameCandidates.clear();
                 }
-                
+
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
                 }
@@ -261,7 +261,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 // add resource items only if none found yet, or inheritance is enabled
                 if (result.isEmpty() || listMergingEnabled == Boolean.TRUE) {
                     for (Resource child : item.getChildren()) {
-                        if (!names.contains(child.getName())) {
+                        if (isValidResourceCollectionItem(child)
+                                && !names.contains(child.getName())) {
                             result.add(child);
                             names.add(child.getName());
                         }
@@ -298,7 +299,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         return result;
     }
-    
+
     private boolean isValidResourceCollectionItem(Resource resource) {
         // do not include jcr:content nodes in resource collection list
         return !StringUtils.equals(resource.getName(), "jcr:content");
