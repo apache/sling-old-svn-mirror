@@ -35,6 +35,7 @@ import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
@@ -270,7 +271,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 // they may be added later if inheritance is enabled on a parent level
                 else {
                     for (Resource child : item.getChildren()) {
-                        if (!names.contains(child.getName()) && !nameCandidates.contains(child.getName())) {
+                        if (isValidResourceCollectionItem(child)
+                                && !names.contains(child.getName()) && !nameCandidates.contains(child.getName())) {
                             resultCandidates.add(child);
                             nameCandidates.add(child.getName());
                         }
@@ -295,6 +297,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
 
         return result;
+    }
+    
+    private boolean isValidResourceCollectionItem(Resource resource) {
+        // do not include jcr:content nodes in resource collection list
+        return !StringUtils.equals(resource.getName(), "jcr:content");
     }
 
     @Override

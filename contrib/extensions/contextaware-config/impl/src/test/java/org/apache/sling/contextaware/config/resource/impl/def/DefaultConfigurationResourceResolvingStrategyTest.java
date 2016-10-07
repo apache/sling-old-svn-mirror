@@ -202,6 +202,24 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
                 "/libs/conf/sling:test/feature/b"));
     }
 
+    /**
+     * Ensure jcr:content nodes are not included in resource collection.
+     */
+    @Test
+    public void testGetResourceCollection_SkipJcrContent() {
+        ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+
+        // build config resources
+        context.build()
+            .resource("/conf/site1/sling:test/feature/a")
+            .resource("/conf/site1/sling:test/feature/b")
+            .resource("/conf/site2/sling:test/feature/jcr:content");
+
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+                "/conf/site1/sling:test/feature/a",
+                "/conf/site1/sling:test/feature/b"));
+    }
+
     @Test
     public void testGetResourcePath() throws Exception {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
