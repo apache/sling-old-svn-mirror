@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.management.ObjectName;
+
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An abstract OSGi service factory for registering {@link org.apache.sling.distribution.agent.impl.SimpleDistributionAgent}s
  */
-abstract class AbstractDistributionAgentFactory {
+abstract class AbstractDistributionAgentFactory<DistributionAgentMBeanType> {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -54,13 +56,19 @@ abstract class AbstractDistributionAgentFactory {
 
     static final String LOG_LEVEL = "log.level";
 
+    private final Class<DistributionAgentMBeanType> distributionAgentMBeanType;
 
     private ServiceRegistration componentReg;
+    private ServiceRegistration mbeanServiceRegistration;
     private String agentName;
     private final List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
     private boolean triggersEnabled = false;
 
     private SimpleDistributionAgent agent;
+
+    public AbstractDistributionAgentFactory(Class<DistributionAgentMBeanType> distributionAgentMBeanType) {
+        this.distributionAgentMBeanType = distributionAgentMBeanType;
+    }
 
     void activate(BundleContext context, Map<String, Object> config) {
         log.info("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
@@ -115,11 +123,18 @@ abstract class AbstractDistributionAgentFactory {
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
                     agent.enable();
 
+
                     if (triggersEnabled) {
                         for (DistributionTrigger trigger : triggers) {
                             agent.enableTrigger(trigger);
                         }
                     }
+
+                    Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+                    mbeanProps.put("jmx.objectname", "org.apache.sling.distribution:type=agent,id=" + ObjectName.quote(agentName));
+
+                    DistributionAgentMBeanType mbean = createMBeanAgent(agent, config);
+                    mbeanServiceRegistration = context.registerService(distributionAgentMBeanType.getName(), mbean, mbeanProps);
 
                 }
 
@@ -160,15 +175,29 @@ abstract class AbstractDistributionAgentFactory {
                 agent.disable();
             }
 
-            componentReg.unregister();
-            componentReg = null;
+            if (safeUnregister(componentReg)) {
+                componentReg = null;
+            }
             agent = null;
+        }
+
+        if (safeUnregister(mbeanServiceRegistration)) {
+            mbeanServiceRegistration = null;
         }
 
         log.info("deactivated agent {}", agentName);
     }
 
+    private static boolean safeUnregister(ServiceRegistration serviceRegistration) {
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
+            return true;
+        }
+        return false;
+    }
 
     protected abstract SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog);
+
+    protected abstract DistributionAgentMBeanType createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration);
 
 }

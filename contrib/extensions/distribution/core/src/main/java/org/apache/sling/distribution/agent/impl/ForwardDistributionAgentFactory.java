@@ -39,10 +39,13 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBeanImpl;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -78,7 +81,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name = "webconsole.configurationFactory.nameHint", value = "Agent name: {name}")
-public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory<ForwardDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -198,6 +201,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private ConfigurationAdmin configAdmin;
 
+    public ForwardDistributionAgentFactory() {
+        super(ForwardDistributionAgentMBean.class);
+    }
+
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
         super.activate(context, config);
@@ -300,4 +307,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     }
+
+    @Override
+    protected ForwardDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new ForwardDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

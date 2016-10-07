@@ -35,10 +35,14 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.ReverseDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.ReverseDistributionAgentMBeanImpl;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
@@ -47,7 +51,6 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
@@ -71,7 +74,7 @@ import org.osgi.framework.BundleContext;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
-public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFactory<ReverseDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -154,6 +157,9 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private SlingRepository slingRepository;
 
+    public ReverseDistributionAgentFactory() {
+        super(ReverseDistributionAgentMBean.class);
+    }
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -201,4 +207,10 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
                 queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository, distributionLog, allowedRequests, null, 0);
 
     }
+
+    @Override
+    protected ReverseDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new ReverseDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }
