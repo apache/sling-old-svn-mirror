@@ -18,6 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
@@ -230,24 +232,59 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         final Set<String> names = new HashSet<>();
         final List<Resource> result = new ArrayList<>();
+        final Set<String> nameCandidates = new HashSet<>();
+        final List<Resource> resultCandidates = new ArrayList<>();
+        
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource);
+        Boolean listMergingEnabled = null;
         while (paths.hasNext()) {
             final String path = paths.next();
             Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
+                
+                // check inheritance mode on current level
+                listMergingEnabled = item.getValueMap().get(PROPERTY_CONFIG_INHERIT, listMergingEnabled);
+                
+                // in inheritance is enabled on this level and candidates where collected on previous levels add them now
+                if (listMergingEnabled == Boolean.TRUE && !resultCandidates.isEmpty()) {
+                    result.addAll(resultCandidates);
+                    names.addAll(nameCandidates);
+                    resultCandidates.clear();
+                    nameCandidates.clear();
+                }
+                
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
                 }
 
-                for (Resource child : item.getChildren()) {
-                    if ( !child.getName().contains(":") && !names.contains(child.getName()) ) {
-                        result.add(child);
-                        names.add(child.getName());
+                // add resource items only if none found yet, or inheritance is enabled
+                if (result.isEmpty() || listMergingEnabled == Boolean.TRUE) {
+                    for (Resource child : item.getChildren()) {
+                        if (!names.contains(child.getName())) {
+                            result.add(child);
+                            names.add(child.getName());
+                        }
+                    }
+                }
+                // if resources are skipped due to inheritance restrictions collect them in candidate list
+                // they may be added later if inheritance is enabled on a parent level
+                else {
+                    for (Resource child : item.getChildren()) {
+                        if (isValidResourceCollectionItem(child)
+                                && !names.contains(child.getName()) && !nameCandidates.contains(child.getName())) {
+                            resultCandidates.add(child);
+                            nameCandidates.add(child.getName());
+                        }
                     }
                 }
 
-            } else {
+                // do not go further upwards in level is inheritance is broken here
+                if (listMergingEnabled == Boolean.FALSE) {
+                    break;
+                }
+            }
+            else {
                 if (logger.isTraceEnabled()) {
                     logger.trace("- no item '{}' under config '{}'", name, path);
                 }
@@ -260,6 +297,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
 
         return result;
+    }
+    
+    private boolean isValidResourceCollectionItem(Resource resource) {
+        // do not include jcr:content nodes in resource collection list
+        return !StringUtils.equals(resource.getName(), "jcr:content");
     }
 
     @Override
