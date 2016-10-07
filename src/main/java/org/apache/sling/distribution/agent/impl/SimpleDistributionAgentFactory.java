@@ -33,9 +33,12 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.SimpleDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.SimpleDistributionAgentMBeanImpl;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -62,7 +65,7 @@ import org.osgi.framework.BundleContext;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
-public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFactory<SimpleDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -132,6 +135,9 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
     @Reference
     private SlingRepository slingRepository;
 
+    public SimpleDistributionAgentFactory() {
+        super(SimpleDistributionAgentMBean.class);
+    }
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -171,4 +177,10 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
                 distributionLog, null, null, 0);
 
     }
+
+    @Override
+    protected SimpleDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new SimpleDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

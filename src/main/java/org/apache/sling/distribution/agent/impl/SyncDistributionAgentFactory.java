@@ -37,10 +37,13 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.SyncDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.SyncDistributionAgentMBeanImpl;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -74,7 +77,7 @@ import org.osgi.framework.BundleContext;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
-public class SyncDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class SyncDistributionAgentFactory extends AbstractDistributionAgentFactory<SyncDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -178,6 +181,10 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Reference
     private SlingRepository slingRepository;
 
+    public SyncDistributionAgentFactory() {
+        super(SyncDistributionAgentMBean.class);
+    }
+
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
         super.activate(context, config);
@@ -252,4 +259,10 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
                 distributionLog, allowedRequests, null, retryAttepts);
 
     }
+
+    @Override
+    protected SyncDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new SyncDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

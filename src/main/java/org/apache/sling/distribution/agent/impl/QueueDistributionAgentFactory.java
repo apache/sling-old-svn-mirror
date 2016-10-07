@@ -33,10 +33,13 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.QueueDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.QueueDistributionAgentMBeanImpl;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
@@ -68,7 +71,7 @@ import org.osgi.framework.BundleContext;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
-public class QueueDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class QueueDistributionAgentFactory extends AbstractDistributionAgentFactory<QueueDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -138,6 +141,10 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     @Reference
     private SlingRepository slingRepository;
 
+    public QueueDistributionAgentFactory() {
+        super(QueueDistributionAgentMBean.class);
+    }
+
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
         super.activate(context, config);
@@ -187,4 +194,10 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
                 queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, slingRepository,
                 distributionLog, allowedRequests, allowedRoots, 0);
     }
+
+    @Override
+    protected QueueDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new QueueDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }
