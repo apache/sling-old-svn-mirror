@@ -59,7 +59,7 @@ public abstract class JcrUtil {
                             node.addNode(token, FOLDER_NODE_TYPE);
                         } catch (RepositoryException re) {
                             // we ignore this as this folder might be created from a different task
-                            node.refresh(false);
+                            session.refresh(false);
                         }
                     }
                     node = node.getNode(token);
