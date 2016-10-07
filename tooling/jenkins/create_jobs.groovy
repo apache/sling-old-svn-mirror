@@ -292,16 +292,10 @@ def modules = [
         location: 'bundles/scripting/jsp'
     ],
     [
-        location: 'bundles/scripting/sightly/compiler',
-        downstream: ['bundles/scripting/sightly/java-compiler']
+        location: 'bundles/scripting/sightly/compiler'
     ],
     [
-        location: 'bundles/scripting/sightly/java-compiler',
-        downstream: [
-            'bundles/scripting/sightly/engine',
-            'bundles/scripting/sightly/js-use-provider',
-            'bundles/scripting/sightly/models-use-provider'
-        ]
+        location: 'bundles/scripting/sightly/java-compiler'
     ],
     [
         location: 'bundles/scripting/sightly/engine',
