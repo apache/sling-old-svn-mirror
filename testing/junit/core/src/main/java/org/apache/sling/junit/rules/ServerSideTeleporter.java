@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.junit.Activator;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 /** Server-side variant of the TeleporterRule, which provides
@@ -30,14 +32,21 @@ import org.osgi.framework.ServiceReference;
 class ServerSideTeleporter extends TeleporterRule {
     private final List<ServiceReference> toUnget = new ArrayList<ServiceReference>();
     private final BundleContext bundleContext;
+    private final Bundle bundleUnderTest;
     
     private static final int WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS = 10;
     
-    ServerSideTeleporter() {
+    ServerSideTeleporter(Class<?> classUnderTest) {
         bundleContext = Activator.getBundleContext();
-        if(bundleContext == null) {
+        if (bundleContext == null) {
             throw new IllegalStateException("Null BundleContext, should not happen when this class is used");
         }
+        
+        Bundle bundle = FrameworkUtil.getBundle(classUnderTest);
+        if (bundle == null) {
+            bundle = bundleContext.getBundle();
+        }
+        bundleUnderTest = bundle;
     }
     
     @Override
@@ -54,7 +63,7 @@ class ServerSideTeleporter extends TeleporterRule {
      * Get OSGi service - if it is not available (yet?) try again and again until the configured timeout is reached.
      */
     public <T> T getService (Class<T> serviceClass, String ldapFilter) {
-        String configuredTimeout = (String)bundleContext.getBundle().getHeaders().get("Sling-Test-WaitForService-Timeout");
+        String configuredTimeout = (String)bundleUnderTest.getHeaders().get("Sling-Test-WaitForService-Timeout");
         if (configuredTimeout == null) {
             configuredTimeout = Integer.toString(WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS);
         }
