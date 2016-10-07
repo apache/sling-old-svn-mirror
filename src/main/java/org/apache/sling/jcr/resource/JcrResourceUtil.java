@@ -440,10 +440,10 @@ public class JcrResourceUtil {
                             } else {
                                 node.addNode(token);
                             }
-                            if ( autoSave ) node.getSession().save();
+                            if ( autoSave ) session.save();
                         } catch (RepositoryException re) {
                             // we ignore this as this folder might be created from a different task
-                            node.refresh(false);
+                            session.refresh(false);
                         }
                     }
                     node = node.getNode(token);
@@ -456,7 +456,7 @@ public class JcrResourceUtil {
                 } else {
                     node.addNode(relativePath);
                 }
-                if ( autoSave ) node.getSession().save();
+                if ( autoSave ) session.save();
             }
             return node.getNode(relativePath);
         } else {
