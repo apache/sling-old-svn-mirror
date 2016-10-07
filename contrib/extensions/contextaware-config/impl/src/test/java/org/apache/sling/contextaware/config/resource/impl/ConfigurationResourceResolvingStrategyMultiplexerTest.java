@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -57,8 +59,8 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
 
         // content resources
         context.build()
-            .resource("/content/site1", "sling:config-ref", "/conf/site1")
-            .resource("/content/site2", "sling:config-ref", "/conf/site2");
+            .resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/site1")
+            .resource("/content/site2", PROPERTY_CONFIG_REF, "/conf/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
         
         // configuration
@@ -69,6 +71,7 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
             .resource("/conf/site2/sling:test/feature/d")
             .resource("/apps/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/test")
+            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
             .resource("/libs/conf/sling:test/feature/b");
     }
     
@@ -150,6 +153,5 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertEquals("/conf/site1/sling:test/feature", underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }
-    
-    
+
 }
