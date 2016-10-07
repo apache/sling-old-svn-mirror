@@ -78,7 +78,7 @@ public abstract class TeleporterRule extends ExternalResource {
         TeleporterRule result = null;
         
         if(isServerSide()) {
-            result = new ServerSideTeleporter();
+            result = new ServerSideTeleporter(classUnderTest);
         } else {
             // Client-side. Instantiate the class dynamically to 
             // avoid bringing its dependencies into this module when
