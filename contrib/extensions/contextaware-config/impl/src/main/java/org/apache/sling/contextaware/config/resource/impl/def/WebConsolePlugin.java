@@ -92,9 +92,9 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
         final DefaultConfigurationResourceResolvingStrategy configResolverImpl = (DefaultConfigurationResourceResolvingStrategy)configResolver;
         tableStart(pw, "Configuration", 2);
         pw.println("<tr>");
-        pw.println("<td style='width:20%'>Allowed paths</td>");
+        pw.println("<td style='width:20%'>Configurations path</td>");
         pw.print("<td>");
-        pw.print(xssAPI.encodeForHTML(Arrays.toString(configResolverImpl.getConfiguration().allowedPaths())));
+        pw.print(xssAPI.encodeForHTML(configResolverImpl.getConfiguration().configPath()));
         pw.println("</td>");
         pw.println("</tr>");
         pw.println("<tr>");

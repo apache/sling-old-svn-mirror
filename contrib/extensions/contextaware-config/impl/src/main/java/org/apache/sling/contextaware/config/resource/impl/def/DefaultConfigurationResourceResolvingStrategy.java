@@ -39,6 +39,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.contextaware.config.resource.impl.util.PathEliminateDuplicatesIterator;
+import org.apache.sling.contextaware.config.resource.impl.util.PathParentExpandIterator;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -62,9 +64,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 description = "Enable this configuration resourcer resolving strategy.")
         boolean enabled() default true;
 
-        @AttributeDefinition(name="Allowed paths",
-                             description = "Whitelist of paths where configurations can reside in.")
-        String[] allowedPaths() default {"/conf", "/apps/conf", "/libs/conf"};
+        @AttributeDefinition(name="Configurations path",
+                             description = "Paths where the configurations are stored in.")
+        String configPath() default "/conf";
 
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
@@ -122,14 +124,19 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
      */
     @SuppressWarnings("unchecked")
     private Iterator<String> findConfigRefs(final Resource startResource) {
+        // collect all context path resources
         Iterator<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
+        
         // get config resource path for each context resource, filter out items where not reference could be resolved
-        return new FilterIterator(new TransformIterator(contextResources, new Transformer() {
+        Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
                 @Override
                 public Object transform(Object input) {
                     return getReference((Resource)input);
                 }
             }), PredicateUtils.notNullPredicate());
+        
+        // expand paths and eliminate duplicates
+        return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
 
     private String getReference(final Resource resource) {
@@ -164,20 +171,15 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isAllowedConfigPath(String path) {
-        for (String pattern : this.config.allowedPaths()) {
-            if (logger.isTraceEnabled()) {
-                logger.trace("- checking if '{}' starts with {}", path, pattern);
-            }
-            if (path.equals(pattern) || path.startsWith(pattern + "/")) {
-                return true;
-            }
+        if (logger.isTraceEnabled()) {
+            logger.trace("- checking if '{}' starts with {}", path, config.configPath());
         }
-        return false;
+        return path.startsWith(config.configPath() + "/");
     }
 
     private boolean isFallbackConfigPath(final String ref) {
-        for(final String name : this.config.fallbackPaths()) {
-            if ( name.equals(ref) ) {
+        for(final String path : this.config.fallbackPaths()) {
+            if (StringUtils.equals(ref, path) || StringUtils.startsWith(ref, path + "/")) {
                 return true;
             }
         }
