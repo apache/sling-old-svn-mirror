@@ -56,10 +56,10 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
 
         // content resources that form a deeper hierarchy
         context.build()
-            .resource("/content/tenant1", PROPERTY_CONFIG_REF, "/conf/tenant1")
-            .resource("/content/tenant1/region1", PROPERTY_CONFIG_REF, "/conf/tenant1/region1")
-            .resource("/content/tenant1/region1/site1", PROPERTY_CONFIG_REF, "/conf/tenant1/region1/site1")
-            .resource("/content/tenant1/region1/site2", PROPERTY_CONFIG_REF, "/conf/tenant1/region1/site2");
+            .resource("/content/tenant1", PROPERTY_CONFIG_REF, "/conf/brand1/tenant1")
+            .resource("/content/tenant1/region1", PROPERTY_CONFIG_REF, "/conf/brand1/tenant1/region1")
+            .resource("/content/tenant1/region1/site1", PROPERTY_CONFIG_REF, "/conf/brand1/tenant1/region1/site1")
+            .resource("/content/tenant1/region1/site2", PROPERTY_CONFIG_REF, "/conf/brand1/tenant1/region1/site2");
         site1Page1 = context.create().resource("/content/tenant1/region1/site1/page1");
         site2Page1 = context.create().resource("/content/tenant1/region1/site2/page1");
 
@@ -69,10 +69,11 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     public void testGetResource() {
         // build config resources
         context.build()
-            .resource("/conf/tenant1/region1/site1/sling:test/cfgSite1")
-            .resource("/conf/tenant1/region1/sling:test/cfgRegion1")
-            .resource("/conf/tenant1/sling:test/cfgTenant1")
-            .resource("/conf/tenant1/sling:test/test")
+            .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgSite1")
+            .resource("/conf/brand1/tenant1/region1/sling:test/cfgRegion1")
+            .resource("/conf/brand1/tenant1/sling:test/cfgTenant1")
+            .resource("/conf/brand1/tenant1/sling:test/test")
+            .resource("/conf/brand1/sling:test/cfgBrand1")
             .resource("/conf/global/sling:test/cfgGlobal")
             .resource("/conf/global/sling:test/test")
             .resource("/apps/conf/sling:test/cfgAppsGlobal")
@@ -80,30 +81,33 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/libs/conf/sling:test/cfgLibsGlobal")
             .resource("/libs/conf/sling:test/test");
 
-        assertEquals("/conf/tenant1/region1/site1/sling:test/cfgSite1", underTest.getResource(site1Page1, BUCKET, "cfgSite1").getPath());
-        assertEquals("/conf/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site1Page1, BUCKET, "cfgRegion1").getPath());
-        assertEquals("/conf/tenant1/sling:test/cfgTenant1", underTest.getResource(site1Page1, BUCKET, "cfgTenant1").getPath());
+        assertEquals("/conf/brand1/tenant1/region1/site1/sling:test/cfgSite1", underTest.getResource(site1Page1, BUCKET, "cfgSite1").getPath());
+        assertEquals("/conf/brand1/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site1Page1, BUCKET, "cfgRegion1").getPath());
+        assertEquals("/conf/brand1/tenant1/sling:test/cfgTenant1", underTest.getResource(site1Page1, BUCKET, "cfgTenant1").getPath());
+        assertEquals("/conf/brand1/sling:test/cfgBrand1", underTest.getResource(site1Page1, BUCKET, "cfgBrand1").getPath());
         assertEquals("/conf/global/sling:test/cfgGlobal", underTest.getResource(site1Page1, BUCKET, "cfgGlobal").getPath());
         assertEquals("/apps/conf/sling:test/cfgAppsGlobal", underTest.getResource(site1Page1, BUCKET, "cfgAppsGlobal").getPath());
         assertEquals("/libs/conf/sling:test/cfgLibsGlobal", underTest.getResource(site1Page1, BUCKET, "cfgLibsGlobal").getPath());
-        assertEquals("/conf/tenant1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
+        assertEquals("/conf/brand1/tenant1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
 
         assertNull(underTest.getResource(site2Page1, BUCKET, "cfgSite1"));
-        assertEquals("/conf/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site2Page1, BUCKET, "cfgRegion1").getPath());
-        assertEquals("/conf/tenant1/sling:test/cfgTenant1", underTest.getResource(site2Page1, BUCKET, "cfgTenant1").getPath());
+        assertEquals("/conf/brand1/tenant1/region1/sling:test/cfgRegion1", underTest.getResource(site2Page1, BUCKET, "cfgRegion1").getPath());
+        assertEquals("/conf/brand1/tenant1/sling:test/cfgTenant1", underTest.getResource(site2Page1, BUCKET, "cfgTenant1").getPath());
+        assertEquals("/conf/brand1/sling:test/cfgBrand1", underTest.getResource(site2Page1, BUCKET, "cfgBrand1").getPath());
         assertEquals("/conf/global/sling:test/cfgGlobal", underTest.getResource(site2Page1, BUCKET, "cfgGlobal").getPath());
         assertEquals("/apps/conf/sling:test/cfgAppsGlobal", underTest.getResource(site2Page1, BUCKET, "cfgAppsGlobal").getPath());
         assertEquals("/libs/conf/sling:test/cfgLibsGlobal", underTest.getResource(site2Page1, BUCKET, "cfgLibsGlobal").getPath());
-        assertEquals("/conf/tenant1/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
+        assertEquals("/conf/brand1/tenant1/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
     }
 
     @Test
     public void testGetResourceCollectionWithInheritance() {
         // build config resources
         context.build()
-            .resource("/conf/tenant1/region1/site1/sling:test/cfgCol/site1")
-            .resource("/conf/tenant1/region1/sling:test/cfgCol/region1")
-            .resource("/conf/tenant1/sling:test/cfgCol/tenant1")
+            .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgCol/site1")
+            .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol/region1")
+            .resource("/conf/brand1/tenant1/sling:test/cfgCol/tenant1")
+            .resource("/conf/brand1/sling:test/cfgCol/brand1")
             .resource("/conf/global/sling:test/cfgCol/confGlobal")
             .resource("/apps/conf/sling:test/cfgCol/appsGlobal")
             .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_INHERIT, true)
@@ -111,21 +115,50 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal2");
 
         assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "cfgCol"), ResourceCollectionMatchers.paths(
-                "/conf/tenant1/region1/site1/sling:test/cfgCol/site1",
-                "/conf/tenant1/region1/sling:test/cfgCol/region1", 
-                "/conf/tenant1/sling:test/cfgCol/tenant1", 
+                "/conf/brand1/tenant1/region1/site1/sling:test/cfgCol/site1",
+                "/conf/brand1/tenant1/region1/sling:test/cfgCol/region1", 
+                "/conf/brand1/tenant1/sling:test/cfgCol/tenant1", 
+                "/conf/brand1/sling:test/cfgCol/brand1", 
                 "/conf/global/sling:test/cfgCol/confGlobal", 
                 "/apps/conf/sling:test/cfgCol/appsGlobal", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal1", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal2"));
 
         assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "cfgCol"), ResourceCollectionMatchers.paths( 
-                "/conf/tenant1/region1/sling:test/cfgCol/region1", 
-                "/conf/tenant1/sling:test/cfgCol/tenant1", 
+                "/conf/brand1/tenant1/region1/sling:test/cfgCol/region1", 
+                "/conf/brand1/tenant1/sling:test/cfgCol/tenant1", 
+                "/conf/brand1/sling:test/cfgCol/brand1", 
                 "/conf/global/sling:test/cfgCol/confGlobal", 
                 "/apps/conf/sling:test/cfgCol/appsGlobal", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal1", 
                 "/libs/conf/sling:test/cfgCol/libsGlobal2"));
     }
 
+    @Test
+    public void testGetResourceCollectionContentConfigRefInheritanceAndConfigResourceInheritance() {
+        
+        context.build()
+            .resource("/content/level1", PROPERTY_CONFIG_REF, "/conf/a1/a2")
+            .resource("/content/level1/level2", PROPERTY_CONFIG_REF, "/conf/b1/b2")
+            .resource("/conf/a1/sling:test/cfgCol/a1")
+            .resource("/conf/a1/a2/sling:test/cfgCol/a1_a2")
+            .resource("/conf/b1/sling:test/cfgCol/b1")
+            .resource("/conf/b1/b2/sling:test/cfgCol/b1_b2")
+            .resource("/conf/global/sling:test/cfgCol/confGlobal")
+            .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/apps/conf/sling:test/cfgCol/appsGlobal")
+            .resource("/libs/conf/sling:test/cfgCol/libsGlobal");
+        
+        Resource level1_2 = context.resourceResolver().getResource("/content/level1/level2");
+
+        assertThat(underTest.getResourceCollection(level1_2, BUCKET, "cfgCol"), ResourceCollectionMatchers.paths( 
+                "/conf/b1/b2/sling:test/cfgCol/b1_b2", 
+                "/conf/b1/sling:test/cfgCol/b1", 
+                "/conf/a1/a2/sling:test/cfgCol/a1_a2", 
+                "/conf/a1/sling:test/cfgCol/a1", 
+                "/conf/global/sling:test/cfgCol/confGlobal", 
+                "/apps/conf/sling:test/cfgCol/appsGlobal", 
+                "/libs/conf/sling:test/cfgCol/libsGlobal"));
+    }
+    
 }

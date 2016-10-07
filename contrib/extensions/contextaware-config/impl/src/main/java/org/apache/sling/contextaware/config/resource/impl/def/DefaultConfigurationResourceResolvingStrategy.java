@@ -39,6 +39,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.contextaware.config.resource.impl.util.PathEliminateDuplicatesIterator;
+import org.apache.sling.contextaware.config.resource.impl.util.PathParentExpandIterator;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -122,14 +124,19 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
      */
     @SuppressWarnings("unchecked")
     private Iterator<String> findConfigRefs(final Resource startResource) {
+        // collect all context path resources
         Iterator<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
+        
         // get config resource path for each context resource, filter out items where not reference could be resolved
-        return new FilterIterator(new TransformIterator(contextResources, new Transformer() {
+        Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
                 @Override
                 public Object transform(Object input) {
                     return getReference((Resource)input);
                 }
             }), PredicateUtils.notNullPredicate());
+        
+        // expand paths and eliminate duplicates
+        return new PathEliminateDuplicatesIterator(new PathParentExpandIterator("/conf", configPaths));
     }
 
     private String getReference(final Resource resource) {
