@@ -73,7 +73,7 @@ public class PathPipe extends BasePipe {
                                 transientChange = true;
                             } catch (RepositoryException re) {
                                 // we ignore this as this folder might be created from a different task
-                                node.refresh(false);
+                                node.getSession().refresh(false);
                             }
                         }
                         node = node.getNode(token);
