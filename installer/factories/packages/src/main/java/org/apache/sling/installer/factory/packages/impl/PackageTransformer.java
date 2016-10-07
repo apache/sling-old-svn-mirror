@@ -48,6 +48,7 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Version;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -83,6 +84,13 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
 
     @Reference
     private RetryHandler retryHandler;
+
+    private PackageTransformerConfiguration configuration;
+
+    @Activate
+    private void activate(final PackageTransformerConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
     /**
      * @see org.apache.sling.installer.api.tasks.ResourceTransformer#transform(org.apache.sling.installer.api.tasks.RegisteredResource)
@@ -222,10 +230,15 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
 
                 // finally, install package
                 final ImportOptions opts = new ImportOptions();
+                if (configuration.shouldCreateSnapshots()) {
+                    pkg.install(opts);
+                    ctx.log("Content package installed: {}", resource);
+                } else {
+                    pkg.extract(opts);
+                    ctx.log("Content package extracted: {}", resource);
+                }
 
-                pkg.install(opts);
-
-                ctx.log("Content package installed: {}", resource);
+                
                 setFinishedState(ResourceState.INSTALLED);
 
                 // notify retry handler to install dependend packages.
