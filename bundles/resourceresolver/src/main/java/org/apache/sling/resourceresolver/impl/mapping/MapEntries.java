@@ -456,14 +456,17 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     private void doAddVanity(String path) {
         Resource resource = resolver.getResource(path);
+        boolean needsUpdate = false;
         if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
             // fill up the cache and the bloom filter
-            loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
+            needsUpdate = loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
         } else {
             // fill up the bloom filter
-            loadVanityPath(resource, resolveMapsMap, vanityTargets, false, true);
+            needsUpdate = loadVanityPath(resource, resolveMapsMap, vanityTargets, false, true);
         }
-        updateBloomFilterFile = true;
+        if ( needsUpdate ) {
+            updateBloomFilterFile = true;
+        }
     }
 
     private void doUpdateVanity(String path) {
@@ -473,7 +476,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     private void doRemoveVanity(String path) {
         String actualContentPath = getActualContentPath(path);
-        List <String> l = vanityTargets.get(actualContentPath);
+        List <String> l = vanityTargets.remove(actualContentPath);
         if (l != null){
             for (String s : l){
                 List<MapEntry> entries = this.resolveMapsMap.get(s);
@@ -490,10 +493,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     this.resolveMapsMap.remove(s);
                 }
             }
-        }
-        vanityTargets.remove(actualContentPath);
-        if (vanityCounter.longValue() > 0) {
-            vanityCounter.addAndGet(-2);
+            if (vanityCounter.longValue() > 0) {
+                vanityCounter.addAndGet(-2);
+            }
         }
     }
 
@@ -1160,10 +1162,10 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     /**
      * Load vanity path given a resource
      */
-    private void loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Map <String, List<String>> targetPaths, boolean addToCache, boolean newVanity) {
+    private boolean loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Map <String, List<String>> targetPaths, boolean addToCache, boolean newVanity) {
 
         if (!isValidVanityPath(resource)) {
-            return;
+            return false;
         }
 
         final ValueMap props = resource.adaptTo(ValueMap.class);
@@ -1174,10 +1176,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
         // url is ignoring scheme and host.port and the path is
         // what is stored in the sling:vanityPath property
+        boolean hasVanityPath = false;
         final String[] pVanityPaths = props.get(PROP_VANITY_PATH, new String[0]);
         for (final String pVanityPath : pVanityPaths) {
             final String[] result = this.getVanityPathDefinition(pVanityPath);
             if (result != null) {
+                hasVanityPath = true;
                 final String url = result[0] + result[1];
                 // redirect target is the node providing the
                 // sling:vanityPath
@@ -1240,6 +1244,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 }
             }
         }
+        return hasVanityPath;
     }
 
     private void updateTargetPaths(final Map<String, List<String>> targetPaths, final String key, final String entry) {
