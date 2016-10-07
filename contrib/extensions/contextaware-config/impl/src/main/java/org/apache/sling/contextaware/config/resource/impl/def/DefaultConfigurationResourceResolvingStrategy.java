@@ -178,8 +178,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isFallbackConfigPath(final String ref) {
-        for(final String name : this.config.fallbackPaths()) {
-            if ( name.equals(ref) ) {
+        for(final String path : this.config.fallbackPaths()) {
+            if (StringUtils.equals(ref, path) || StringUtils.startsWith(ref, path + "/")) {
                 return true;
             }
         }
