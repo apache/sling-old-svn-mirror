@@ -18,6 +18,7 @@
  */
 package org.apache.sling.contextaware.config.impl;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.sling.api.resource.Resource;
@@ -47,7 +48,7 @@ public class ConfigurationBuilderAdapterFactoryTest {
                 "boolParam", true);
 
         // content resources
-        context.build().resource("/content/site1", "sling:config-ref", "/conf/content/site1");
+        context.build().resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/content/site1");
         site1Page1 = context.create().resource("/content/site1/page1");
     }
 

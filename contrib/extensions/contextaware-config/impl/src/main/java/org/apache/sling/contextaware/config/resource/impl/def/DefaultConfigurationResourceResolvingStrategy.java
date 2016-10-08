@@ -18,7 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 
 import java.util.ArrayList;
@@ -246,7 +246,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             if (item != null) {
 
                 // check inheritance mode on current level
-                listMergingEnabled = item.getValueMap().get(PROPERTY_CONFIG_INHERIT, listMergingEnabled);
+                listMergingEnabled = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, listMergingEnabled);
 
                 // in inheritance is enabled on this level and candidates where collected on previous levels add them now
                 if (listMergingEnabled == Boolean.TRUE && !resultCandidates.isEmpty()) {

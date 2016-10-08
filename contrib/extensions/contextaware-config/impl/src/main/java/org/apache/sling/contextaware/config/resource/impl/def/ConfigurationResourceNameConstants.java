@@ -34,6 +34,6 @@ public final class ConfigurationResourceNameConstants {
      * Boolean property that controls whether config resource collections should be merged on inheritance or not.
      * Merging means merging the lists, not the list items (properties of the resources) itself.
      */
-    public static final String PROPERTY_CONFIG_INHERIT = "sling:config-inherit";
+    public static final String PROPERTY_CONFIG_COLLECTION_INHERIT = "sling:config-collection-inherit";
 
 }
