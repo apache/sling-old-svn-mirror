@@ -18,14 +18,14 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
-import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,7 +64,7 @@ public class ConfigurationResourceResolverImplTest {
             .resource("/conf/site2/sling:test/feature/d")
             .resource("/apps/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/test")
-            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
             .resource("/libs/conf/sling:test/feature/b");
     }
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.contextaware.config.resource.impl;
 
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
@@ -26,9 +27,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
+import org.apache.sling.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,10 +51,10 @@ public class ContextPathStrategyMultiplexerTest {
 
         // content resources that form a deeper hierarchy
         context.build()
-            .resource("/content/tenant1", "sling:config-ref", "/conf/tenant1")
-            .resource("/content/tenant1/region1", "sling:config-ref", "/conf/tenant1/region1")
-            .resource("/content/tenant1/region1/site1", "sling:config-ref", "/conf/tenant1/region1/site1")
-            .resource("/content/tenant1/region1/site2", "sling:config-ref", "/conf/tenant1/region1/site2");
+            .resource("/content/tenant1", PROPERTY_CONFIG_REF, "/conf/tenant1")
+            .resource("/content/tenant1/region1", PROPERTY_CONFIG_REF, "/conf/tenant1/region1")
+            .resource("/content/tenant1/region1/site1", PROPERTY_CONFIG_REF, "/conf/tenant1/region1/site1")
+            .resource("/content/tenant1/region1/site2", PROPERTY_CONFIG_REF, "/conf/tenant1/region1/site2");
         site1Page1 = context.create().resource("/content/tenant1/region1/site1/page1");
         site2Page1 = context.create().resource("/content/tenant1/region1/site2/page1");
     }

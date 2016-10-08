@@ -16,23 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.impl;
+package org.apache.sling.contextaware.config.resource.impl.util;
 
-public final class ConfigurationNameConstants {
+import static org.junit.Assert.assertEquals;
 
-    private ConfigurationNameConstants() {
-        // constants only
+import java.util.List;
+
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+
+public class PathEliminateDuplicatesIteratorTest {
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testIterator() {
+        List<String> paths = ImmutableList.of(
+                "/conf/a", 
+                "/conf/a/b",
+                "/conf/a",
+                "/conf/a/b/c");
+        
+        List<String> result = ImmutableList.copyOf(new PathEliminateDuplicatesIterator(paths.iterator()));
+        assertEquals(ImmutableList.of(
+                "/conf/a",
+                "/conf/a/b",
+                "/conf/a/b/c"), result);
     }
-
-    /**
-     * Resource name for configuration data (configuration with key/value pairs).
-     */
-    public static final String CONFIGS_PARENT_NAME = "sling:configs";
-
-    /**
-     * Boolean property that controls whether the properties (key/value pairs) of configuration resources
-     * should be inherited from the configuration hierarchy and merged.
-     */
-    public static final String PROPERTY_CONFIG_PROPERTY_MERGING = "sling:config-property-inherit";
 
 }

@@ -18,33 +18,43 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.hamcrest.ResourceIteratorMatchers;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class PathParentExpandIteratorTest {
+public class ResourceEliminateDuplicatesIteratorTest {
+    
+    @Rule
+    public SlingContext context = new SlingContext();
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testIterator() {
-        List<String> list = ImmutableList.of(
-                "/conf/a/b/c", 
-                "/conf/a/b",
-                "/conf/x/y/z");
+        context.build()
+            .resource("/conf/a")
+            .resource("/conf/a/b")
+            .resource("/conf/a/b/c");
         
-        List<String> result = ImmutableList.copyOf(new PathParentExpandIterator("/conf", list.iterator()));
-        assertEquals(ImmutableList.of(
-                "/conf/a/b/c",
-                "/conf/a/b",
+        List<Resource> list = ImmutableList.of(
+                context.resourceResolver().getResource("/conf/a"), 
+                context.resourceResolver().getResource("/conf/a/b"),
+                context.resourceResolver().getResource("/conf/a"),
+                context.resourceResolver().getResource("/conf/a/b/c"));
+        
+        Iterator<Resource> result = new ResourceEliminateDuplicatesIterator(list.iterator());
+        assertThat(result, ResourceIteratorMatchers.paths(
                 "/conf/a",
                 "/conf/a/b",
-                "/conf/a",
-                "/conf/x/y/z",
-                "/conf/x/y",
-                "/conf/x"), result);
+                "/conf/a/b/c"));
     }
 
 }

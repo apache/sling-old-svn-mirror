@@ -18,16 +18,16 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
-import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.contextaware.config.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
+import org.apache.sling.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -110,7 +110,7 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/conf/brand1/sling:test/cfgCol/brand1")
             .resource("/conf/global/sling:test/cfgCol/confGlobal")
             .resource("/apps/conf/sling:test/cfgCol/appsGlobal")
-            .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal1")
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal2");
 
@@ -145,7 +145,7 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/conf/b1/sling:test/cfgCol/b1")
             .resource("/conf/b1/b2/sling:test/cfgCol/b1_b2")
             .resource("/conf/global/sling:test/cfgCol/confGlobal")
-            .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_INHERIT, true)
+            .resource("/libs/conf/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
             .resource("/apps/conf/sling:test/cfgCol/appsGlobal")
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal");
         
