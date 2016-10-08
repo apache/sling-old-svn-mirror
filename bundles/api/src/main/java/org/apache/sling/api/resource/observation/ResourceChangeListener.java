@@ -94,7 +94,11 @@ public interface ResourceChangeListener {
 
     /**
      * Report resource changes based on the filter properties of this listener.
-     * @param changes The changes.
+     * <p>
+     * Starting with version 1.2 of this API, an instance of {@code ResoureChangeList} is passed
+     * as the parameter to allow passing additional information.
+     *
+     * @param changes The changes list. This list is immutable.
      */
     void onChange(@Nonnull List<ResourceChange> changes);
 }
