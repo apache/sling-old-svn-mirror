@@ -431,6 +431,8 @@ public class LogTracer {
                 return FilterReply.NEUTRAL;
             }
 
+            tracer.recordCategory(logger.getName());
+
             TracerConfig tc = tracer.findMatchingConfig(logger.getName(), level);
             if (tc != null) {
                 if (format == null) {

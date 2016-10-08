@@ -103,6 +103,10 @@ class TracerContext {
         return tuple != null;
     }
 
+    public void recordCategory(String loggerName) {
+        recording.recordCategory(loggerName);
+    }
+
     public void done() {
         if (queryCount > 0) {
             progressTracker.log("JCR Query Count {0}", queryCount);

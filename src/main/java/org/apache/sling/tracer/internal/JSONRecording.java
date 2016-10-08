@@ -33,8 +33,10 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -70,6 +72,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     private final boolean compress;
     private final List<QueryEntry> queries = new ArrayList<QueryEntry>();
     private final List<LogEntry> logs = new ArrayList<LogEntry>();
+    private final Set<String> loggerNames = new HashSet<String>();
     private RequestProgressTracker tracker;
     private byte[] json;
     private final long start = System.currentTimeMillis();
@@ -139,6 +142,11 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         this.tracker = tracker;
     }
 
+    @Override
+    public void recordCategory(String loggerName) {
+        loggerNames.add(loggerName);
+    }
+
     public void done() {
         try {
             if (json == null) {
@@ -181,10 +189,22 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         addJson(jw, "queries", queries);
 
         addJson(jw, "logs", logs);
+        addLoggerNames(jw);
         jw.endObject();
         osw.flush();
         os.close();
         return baos.toByteArray();
+    }
+
+    private void addLoggerNames(JSONWriter jw) throws JSONException {
+        List<String> sortedNames = new ArrayList<String>(loggerNames);
+        Collections.sort(sortedNames);
+        jw.key("loggerNames");
+        jw.array();
+        for (String o : sortedNames) {
+            jw.value(o);
+        }
+        jw.endArray();
     }
 
     private void addRequestProgressLogs(JSONWriter jw) throws JSONException {
