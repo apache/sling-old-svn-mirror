@@ -58,6 +58,8 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
+import static org.apache.sling.tracer.internal.Util.trimToNull;
+
 /**
  * Tracer provides support for enabling the logs for specific category at specific level and
  * only for specific request. It provides a very fine level of control via config provided
@@ -224,6 +226,9 @@ public class LogTracer {
 
     TracerContext getTracerContext(String tracerSetNames, String tracerConfig, Recording recording) {
         //No config or tracer set name provided. So tracing not required
+        tracerConfig = trimToNull(tracerConfig);
+        tracerSetNames = trimToNull(tracerSetNames);
+
         if (tracerSetNames == null && tracerConfig == null) {
             return null;
         }

@@ -53,6 +53,8 @@ import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.sling.tracer.internal.Util.nullSafeString;
+import static org.apache.sling.tracer.internal.Util.nullSafeTrim;
 
 class JSONRecording implements Recording, Comparable<JSONRecording> {
     private static final String[] QUERY_API_PKGS = {
@@ -387,20 +389,6 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             //Push any last pending entry i.e. last query
             attemptQueryEntry();
         }
-    }
-
-    private static String nullSafeTrim(String s){
-        if(s == null){
-            return "";
-        }
-        return s.trim();
-    }
-
-    private static String nullSafeString(Object o){
-        if (o != null){
-            return o.toString();
-        }
-        return null;
     }
 
 }
