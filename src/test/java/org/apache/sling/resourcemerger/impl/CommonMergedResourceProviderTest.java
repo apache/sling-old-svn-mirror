@@ -133,8 +133,8 @@ public class CommonMergedResourceProviderTest {
         
         // all overlay resource are still exposed, because hiding children by wildcard only hides children from underlying resources
         Assert.assertThat(iterable, Matchers.containsInAnyOrder(
-                ResourceMatchers.resourceWithNameAndProps("child1", Collections.singletonMap("property1", (Object)"fromoverlay")),
-                ResourceMatchers.resourceWithNameAndProps("child3", Collections.singletonMap("property1", (Object)"fromoverlay"))
+                ResourceMatchers.withNameAndProps("child1", Collections.singletonMap("property1", (Object)"fromoverlay")),
+                ResourceMatchers.withNameAndProps("child3", Collections.singletonMap("property1", (Object)"fromoverlay"))
         ));
         
         // now hide by explicit value
@@ -144,8 +144,8 @@ public class CommonMergedResourceProviderTest {
         // child1 is no longer exposed from overlay, because hiding children by name hides children from underlying as well as from local resources, child2 is exposed from base
         iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         Assert.assertThat(iterable, Matchers.containsInAnyOrder(
-                ResourceMatchers.resourceWithName("child2"),
-                ResourceMatchers.resourceWithName("child3")));
+                ResourceMatchers.withName("child2"),
+                ResourceMatchers.withName("child3")));
         
         // now hide by negated value (hide all underlying children except for the one with name child2)
         properties.put(MergedResourceConstants.PN_HIDE_CHILDREN, new String[]{"!child2", "*", "child3"});
@@ -153,8 +153,8 @@ public class CommonMergedResourceProviderTest {
         
         iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         Assert.assertThat(iterable, Matchers.containsInAnyOrder(
-                ResourceMatchers.resourceWithName("child2"), 
-                ResourceMatchers.resourceWithNameAndProps("child1", Collections.singletonMap("property1", (Object)"fromoverlay"))
+                ResourceMatchers.withName("child2"), 
+                ResourceMatchers.withNameAndProps("child1", Collections.singletonMap("property1", (Object)"fromoverlay"))
         ));
     }
 
@@ -177,7 +177,7 @@ public class CommonMergedResourceProviderTest {
         IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         
         // the resource named "!child3" should be hidden
-        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithNameAndProps("!child1", Collections.singletonMap("property1", (Object)"fromoverlay"))));
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.withNameAndProps("!child1", Collections.singletonMap("property1", (Object)"fromoverlay"))));
     }
 
     @Test
@@ -196,7 +196,7 @@ public class CommonMergedResourceProviderTest {
         Resource mergedResource = this.provider.getResource(ctx, "/merged", ResourceContext.EMPTY_CONTEXT, null);
         
         // the child was hidden on the parent (but only for the underlying resource), the local child from the overlay is still exposed
-        Assert.assertThat(provider.getResource(ctx, "/merged/child", ResourceContext.EMPTY_CONTEXT, mergedResource), ResourceMatchers.resourceWithNameAndProps("child", Collections.singletonMap("property1", (Object)"fromoverlay")));
+        Assert.assertThat(provider.getResource(ctx, "/merged/child", ResourceContext.EMPTY_CONTEXT, mergedResource), ResourceMatchers.withNameAndProps("child", Collections.singletonMap("property1", (Object)"fromoverlay")));
     }
 
     @Test
@@ -217,9 +217,9 @@ public class CommonMergedResourceProviderTest {
         
         Resource mergedResource = this.provider.getResource(ctx, "/merged", ResourceContext.EMPTY_CONTEXT, null);
         // property1 is still exposed from overlay, because hiding properties by wildcard only hides children from underlying resources
-        Assert.assertThat(mergedResource, ResourceMatchers.resourceWithProps(expectedProperties));
+        Assert.assertThat(mergedResource, ResourceMatchers.withProps(expectedProperties));
         // all properties from underlying resource are hidden!
-        Assert.assertThat(mergedResource, Matchers.not(ResourceMatchers.resourceWithProps(properties)));
+        Assert.assertThat(mergedResource, Matchers.not(ResourceMatchers.withProps(properties)));
         // make sure no special properties are exposed
         Assert.assertFalse(mergedResource.getValueMap().containsKey(MergedResourceConstants.PN_HIDE_CHILDREN));
         Assert.assertFalse(mergedResource.getValueMap().containsKey(MergedResourceConstants.PN_HIDE_PROPERTIES));
@@ -230,9 +230,9 @@ public class CommonMergedResourceProviderTest {
         expectedProperties.put("property2", "frombase");
         expectedProperties.remove("property1");
         // property2 and property 3 are still exposed
-        Assert.assertThat(mergedResource, ResourceMatchers.resourceWithProps(expectedProperties));
+        Assert.assertThat(mergedResource, ResourceMatchers.withProps(expectedProperties));
         // property1 is no longer exposed from overlay nor base, because hiding properties by name also hides local properties
-        Assert.assertThat(mergedResource, Matchers.not(ResourceMatchers.resourceWithProps(Collections.singletonMap("property1", (Object)"fromoverlay"))));
+        Assert.assertThat(mergedResource, Matchers.not(ResourceMatchers.withProps(Collections.singletonMap("property1", (Object)"fromoverlay"))));
         
         // make sure no special properties are exposed
         Assert.assertFalse(mergedResource.getValueMap().containsKey(MergedResourceConstants.PN_HIDE_CHILDREN));
@@ -257,7 +257,7 @@ public class CommonMergedResourceProviderTest {
         // convert the iterator returned by list children into an iterable (to be able to perform some tests)
         IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         
-        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child4"), ResourceMatchers.resourceWithName("child2"), ResourceMatchers.resourceWithName("child3")));
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.withName("child1"),ResourceMatchers.withName("child4"), ResourceMatchers.withName("child2"), ResourceMatchers.withName("child3")));
     }
 
     @Test
@@ -273,7 +273,7 @@ public class CommonMergedResourceProviderTest {
         // convert the iterator returned by list children into an iterable (to be able to perform some tests)
         IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         
-        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child2"), ResourceMatchers.resourceWithName("child3"), ResourceMatchers.resourceWithName("child4")));
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.withName("child1"),ResourceMatchers.withName("child2"), ResourceMatchers.withName("child3"), ResourceMatchers.withName("child4")));
     }
 
     @Test
@@ -288,6 +288,6 @@ public class CommonMergedResourceProviderTest {
         // convert the iterator returned by list children into an iterable (to be able to perform some tests)
         IteratorIterable<Resource> iterable = new IteratorIterable<Resource>(provider.listChildren(ctx, mergedResource), true);
         
-        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.resourceWithName("child1"),ResourceMatchers.resourceWithName("child3"), ResourceMatchers.resourceWithName("child2")));
+        Assert.assertThat(iterable, Matchers.contains(ResourceMatchers.withName("child1"),ResourceMatchers.withName("child3"), ResourceMatchers.withName("child2")));
     }
 }
