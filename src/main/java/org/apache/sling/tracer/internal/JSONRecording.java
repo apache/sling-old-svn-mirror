@@ -241,6 +241,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         final Level level;
         final String logger;
         final FormattingTuple tuple;
+        final String[] params;
         final long timestamp = System.currentTimeMillis();
         final List<StackTraceElement> caller;
 
@@ -248,6 +249,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             this.level = level != null ? level : Level.INFO;
             this.logger = logger;
             this.tuple = tuple;
+            this.params = getParams(tuple);
             this.caller = getCallerData(tc);
         }
 
@@ -256,6 +258,20 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                 return tc.getCallerReporter().report();
             }
             return Collections.emptyList();
+        }
+
+        private static String[] getParams(FormattingTuple tuple) {
+            //Eagerly convert arg to string so that if arg is bound by context like
+            //session then it gets evaluated when that is valid i.e. at time of call itself
+            Object[] params = tuple.getArgArray();
+            String[] strParams = null;
+            if (params != null){
+                strParams = new String[params.length];
+                for (int i = 0; i < params.length; i++) {
+                    strParams[i] = toString(params[i]);
+                }
+            }
+            return strParams;
         }
 
         private static String toString(Object o) {
@@ -276,12 +292,11 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             jw.key("logger").value(logger);
             jw.key("message").value(tuple.getMessage());
 
-            Object[] params = tuple.getArgArray();
             if (params != null) {
                 jw.key("params");
                 jw.array();
-                for (Object o : params) {
-                    jw.value(toString(o));
+                for (String o : params) {
+                    jw.value(o);
                 }
                 jw.endArray();
             }
