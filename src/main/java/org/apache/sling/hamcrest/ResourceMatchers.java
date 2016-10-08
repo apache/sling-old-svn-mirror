@@ -90,7 +90,7 @@ public final class ResourceMatchers {
      * @param path the resources path, not <code>null</code> or empty
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceWithPath(String path) {
+    public static Matcher<Resource> withPath(String path) {
         return new ResourcePathMatcher(path);
     }
 
@@ -104,7 +104,7 @@ public final class ResourceMatchers {
      * @param name the resources name, not <code>null</code> or empty
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceWithName(String name) {
+    public static Matcher<Resource> withName(String name) {
         return new ResourceNameMatcher(name);
     }
 
@@ -117,7 +117,7 @@ public final class ResourceMatchers {
      * @param resourceType the resource type to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceOfType(String resourceType) {
+    public static Matcher<Resource> ofType(String resourceType) {
         return new ResourcePropertiesMatcher(Collections.<String, Object> singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, resourceType));
     }
 
@@ -136,8 +136,27 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */    
-    public static Matcher<Resource> resourceWithProps(Map<String, Object> properties) {
+    public static Matcher<Resource> withProps(Map<String, Object> properties) {
         return new ResourcePropertiesMatcher(properties);
+    }
+
+    /**
+     * Matches resources which has at least the specified <tt>properties</tt> defined with matching values
+     * 
+     * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
+     * <pre>
+     * Map<String, Object> expectedProperties = new HashMap<>();
+     * expectedProperties.put("jcr:title", "Node title");
+     * expectedProperties.put("jcr:text",  "Some long text");
+     * 
+     * assertThat(resource, resourceWithProps(expectedProperties));
+     * </pre>
+     * 
+     * @param properties the properties to match
+     * @return a matcher instance
+     */    
+    public static Matcher<Resource> withProps(Object... properties) {
+        return withProps(MapUtil.toMap(properties));
     }
 
     /**
@@ -156,8 +175,28 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceWithNameAndProps(String name, Map<String, Object> properties) {
+    public static Matcher<Resource> withNameAndProps(String name, Map<String, Object> properties) {
         return Matchers.allOf(new ResourceNameMatcher(name), new ResourcePropertiesMatcher(properties));
+    }
+
+    /**
+     * Matches resources which has the given name and at least the specified <tt>properties</tt> defined with matching values
+     * 
+     * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
+     * <pre>
+     * Map<String, Object> expectedProperties = new HashMap<>();
+     * expectedProperties.put("jcr:title", "Node title");
+     * expectedProperties.put("jcr:text",  "Some long text");
+     * 
+     * assertThat(resource, resourceWithProps(expectedProperties));
+     * </pre>
+     * 
+     * @param name the expected name of the resource
+     * @param properties the properties to match
+     * @return a matcher instance
+     */
+    public static Matcher<Resource> withNameAndProps(String name, Object... properties) {
+        return withNameAndProps(name, MapUtil.toMap(properties));
     }
 
     private ResourceMatchers() {
