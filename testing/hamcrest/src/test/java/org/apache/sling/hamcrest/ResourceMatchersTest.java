@@ -19,13 +19,9 @@ package org.apache.sling.hamcrest;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.apache.sling.testing.resourceresolver.MockHelper;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -37,9 +33,10 @@ public class ResourceMatchersTest {
     public final SlingContext context = new SlingContext();
 
     @Test
-    public void testResourceOfType() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-        .resource("/resource").p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "some/type").p("some other key", "some other value").commit();
+    public void testResourceOfType() {
+        context.build().resource("/resource", 
+                ResourceResolver.PROPERTY_RESOURCE_TYPE, "some/type",
+                "some other key", "some other value");
         
         Resource resource = context.resourceResolver().getResource("/resource");
         Assert.assertThat(resource, ResourceMatchers.resourceOfType("some/type"));
@@ -47,9 +44,8 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testResourceWithPath() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-        .resource("/resource").commit();
+    public void testResourceWithPath() {
+        context.build().resource("/resource");
         
         Resource resource = context.resourceResolver().getResource("/resource");
         Assert.assertThat(resource, ResourceMatchers.resourceWithPath("/resource"));
@@ -57,9 +53,8 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testResourceWithName() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-        .resource("/resource").commit();
+    public void testResourceWithName() {
+        context.build().resource("/resource");
         
         Resource resource = context.resourceResolver().getResource("/resource");
         Assert.assertThat(resource, ResourceMatchers.resourceWithName("resource"));
@@ -67,9 +62,11 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testResourceWithProps() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-        .resource("/resource").p("key1", "value1").p("key2", "value2").p("key3", "value3").commit();
+    public void testResourceWithProps() {
+        context.build().resource("/resource",
+                "key1", "value1",
+                "key2", "value2",
+                "key3", "value3");
         
         Map<String, Object> expectedProperties = new HashMap<String, Object>();
         expectedProperties.put("key1", "value1");
@@ -88,19 +85,21 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testHasChildren() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-          .resource("/parent").resource("child1")
-          .resource("/parent/child2").commit();
+    public void testHasChildren() {
+        context.build()
+            .resource("/parent").resource("child1")
+            .resource("/parent/child2");
         
         Resource resource = context.resourceResolver().getResource("/parent");
         Assert.assertThat(resource, ResourceMatchers.hasChildren("child1"));
     }
     
     @Test
-    public void testResourceWithNameAndProps() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-        .resource("/resource").p("key1", "value1").p("key2", "value2").p("key3", "value3").commit();
+    public void testResourceWithNameAndProps() {
+        context.build().resource("/resource",
+                "key1", "value1",
+                "key2", "value2",
+                "key3", "value3");
         
         Map<String, Object> expectedProperties = new HashMap<String, Object>();
         expectedProperties.put("key1", "value1");
@@ -118,10 +117,10 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testContainsChildrenInAnyOrder() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-          .resource("/parent").resource("child1")
-          .resource("/parent/child2").commit();
+    public void testContainsChildrenInAnyOrder() {
+        context.build()
+            .resource("/parent").resource("child1")
+            .resource("/parent/child2");
         
         Resource resource = context.resourceResolver().getResource("/parent");
         Assert.assertThat(resource, ResourceMatchers.containsChildrenInAnyOrder("child2", "child1"));
@@ -130,10 +129,10 @@ public class ResourceMatchersTest {
     }
 
     @Test
-    public void testContainsChildren() throws PersistenceException {
-        MockHelper.create(context.resourceResolver())
-          .resource("/parent").resource("child1")
-          .resource("/parent/child2").commit();
+    public void testContainsChildren() {
+        context.build()
+            .resource("/parent").resource("child1")
+            .resource("/parent/child2");
         
         Resource resource = context.resourceResolver().getResource("/parent");
         Assert.assertThat(resource, ResourceMatchers.containsChildren("child1", "child2"));
