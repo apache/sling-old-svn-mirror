@@ -45,11 +45,16 @@ public class BasicObservationReporter implements ObservationReporter {
 
     private final Map<ListenerConfig, List<ResourceChangeListenerInfo>> listeners = new HashMap<BasicObservationReporter.ListenerConfig, List<ResourceChangeListenerInfo>>();;
 
+    private final String[] searchPath;
+
     /**
      * Create a reporter listening for resource provider changes
      * @param infos The listeners map
      */
-    public BasicObservationReporter(final Collection<ResourceChangeListenerInfo> infos) {
+    public BasicObservationReporter(
+            final String[] searchPath,
+            final Collection<ResourceChangeListenerInfo> infos) {
+        this.searchPath = searchPath;
         final Set<String> paths = new HashSet<String>();
         for(final ResourceChangeListenerInfo info : infos) {
             if ( !info.getProviderChangeTypes().isEmpty() ) {
@@ -69,8 +74,12 @@ public class BasicObservationReporter implements ObservationReporter {
      * @param providerPath The mount point of the provider
      * @param excludePaths Excluded paths for that provider
      */
-    public BasicObservationReporter(final Collection<ResourceChangeListenerInfo> infos,
+    public BasicObservationReporter(
+            final String[] searchPath,
+            final Collection<ResourceChangeListenerInfo> infos,
             final Path providerPath, final PathSet excludePaths) {
+        this.searchPath = searchPath;
+
         final Map<String, ObserverConfig> configMap = new HashMap<String, ObserverConfig>();
         for(final ResourceChangeListenerInfo info : infos) {
             if ( !info.getResourceChangeTypes().isEmpty() ) {
@@ -138,12 +147,13 @@ public class BasicObservationReporter implements ObservationReporter {
      * @return The filtered list.
      */
     private List<ResourceChange> filterChanges(final Iterable<ResourceChange> changes, final ListenerConfig config) {
-        final List<ResourceChange> filtered = new ArrayList<ResourceChange>();
+        final ResourceChangeListImpl filtered = new ResourceChangeListImpl(this.searchPath);
         for (final ResourceChange c : changes) {
             if (matches(c, config)) {
                 filtered.add(c);
             }
         }
+        filtered.lock();
         return filtered;
     }
 
