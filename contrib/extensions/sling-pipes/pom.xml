@@ -30,7 +30,7 @@
 
   <artifactId>org.apache.sling.pipes</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.10</version>
+  <version>0.0.11-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
@@ -40,9 +40,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.pipes-0.0.10</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.pipes-0.0.10</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.pipes-0.0.10</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/sling-pipes</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/sling-pipes</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/sling-pipes</url>
   </scm>
 
   <build>
