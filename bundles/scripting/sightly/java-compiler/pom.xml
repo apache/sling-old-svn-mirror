@@ -58,25 +58,23 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>javax.jcr</groupId>
-                        <artifactId>jcr</artifactId>
-                        <version>2.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>scr-metadata</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <exportScr>true</exportScr>
                     <instructions>
                         <Provide-Capability>
-                            io.sightly.java; version:Version=1.0,
-                            io.sightly.java; version:Version=1.1,
-                            io.sightly.java; version:Version=1.2
+                            io.sightly.compiler.java; version:Version=1.0,
+                            io.sightly.compiler.java; version:Version=1.1,
+                            io.sightly.compiler.java; version:Version=1.2
                         </Provide-Capability>
                     </instructions>
                 </configuration>
@@ -120,7 +118,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -149,23 +147,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>1.5.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

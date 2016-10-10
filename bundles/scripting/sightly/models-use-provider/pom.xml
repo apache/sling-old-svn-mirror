@@ -56,12 +56,22 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>scr-metadata</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <exportScr>true</exportScr>
+                    <instructions>
+                        <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
+                    </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

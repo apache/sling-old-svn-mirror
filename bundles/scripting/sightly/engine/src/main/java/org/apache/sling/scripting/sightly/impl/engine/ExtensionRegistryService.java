@@ -22,35 +22,33 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Aggregator for all runtime extensions.
  */
-@Component
-@Service(ExtensionRegistryService.class)
-@Reference(
-        policy = ReferencePolicy.DYNAMIC,
-        referenceInterface = RuntimeExtension.class,
-        name = "extensionService",
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
-)
+@Component(service = ExtensionRegistryService.class)
 public class ExtensionRegistryService {
 
-    private volatile Map<String, RuntimeExtension> mapping = new HashMap<String, RuntimeExtension>();
-    private Map<String, Integer> mappingPriorities = new HashMap<String, Integer>(10, 0.9f);
+    private volatile Map<String, RuntimeExtension> mapping = new HashMap<>();
+    private Map<String, Integer> mappingPriorities = new HashMap<>(10, 0.9f);
 
     public Map<String, RuntimeExtension> extensions() {
         return mapping;
     }
 
+    @Reference(
+            policy = ReferencePolicy.DYNAMIC,
+            service = RuntimeExtension.class,
+            cardinality = ReferenceCardinality.MULTIPLE
+            )
+    @SuppressWarnings("unused")
     protected synchronized void bindExtensionService(RuntimeExtension extension, Map<String, Object> properties) {
         Integer newPriority = PropertiesUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
         String extensionName = PropertiesUtil.toString(properties.get(RuntimeExtension.NAME), "");
@@ -67,6 +65,7 @@ public class ExtensionRegistryService {
 
     }
 
+    @SuppressWarnings("unused")
     protected synchronized void unbindExtensionService(RuntimeExtension extension, Map<String, Object> properties) {
         String extensionName = PropertiesUtil.toString(properties.get(RuntimeExtension.NAME), "");
         mappingPriorities.remove(extensionName);
@@ -74,13 +73,13 @@ public class ExtensionRegistryService {
     }
 
     private Map<String, RuntimeExtension> add(Map<String, RuntimeExtension> oldMap, RuntimeExtension extension, String extensionName) {
-        HashMap<String, RuntimeExtension> newMap = new HashMap<String, RuntimeExtension>(oldMap);
+        HashMap<String, RuntimeExtension> newMap = new HashMap<>(oldMap);
         newMap.put(extensionName, extension);
         return newMap;
     }
 
     private Map<String, RuntimeExtension> remove(Map<String, RuntimeExtension> oldMap, String extensionName) {
-        HashMap<String, RuntimeExtension> newMap = new HashMap<String, RuntimeExtension>(oldMap);
+        HashMap<String, RuntimeExtension> newMap = new HashMap<>(oldMap);
         newMap.remove(extensionName);
         return newMap;
     }

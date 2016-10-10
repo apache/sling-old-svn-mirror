@@ -20,10 +20,6 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
 import javax.script.Bindings;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -32,24 +28,36 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Component(
-        metatype = true,
-        label = "Apache Sling Scripting HTL Resource Use Provider",
-        description = "The Java Use Provider is responsible for instantiating resource objects."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.impl.engine.extension.use.ResourceUseProvider",
+        property = {
+                Constants.SERVICE_RANKING + ":Integer=-10"
+        }
 )
-@Service(UseProvider.class)
-@Properties({
-        @Property(
-                name = Constants.SERVICE_RANKING,
-                label = "Service Ranking",
-                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
-                        "Use-object. A higher value represents a higher priority.",
-                intValue = -10,
-                propertyPrivate = false
-        )
-})
+@Designate(
+        ocd = ResourceUseProvider.Configuration.class
+)
 public class ResourceUseProvider implements UseProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL Resource Use Provider Configuration",
+            description = "HTL Resource Use Provider configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default -10;
+    }
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {

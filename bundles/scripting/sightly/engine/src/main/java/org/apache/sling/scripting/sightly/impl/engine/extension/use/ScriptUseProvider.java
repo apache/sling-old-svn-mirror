@@ -22,10 +22,6 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 import javax.script.Bindings;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
@@ -36,6 +32,10 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,23 +47,32 @@ import org.slf4j.LoggerFactory;
  * implementation of the {@link SlingScript#eval(SlingBindings)} method for the available script engines from your platform.
  */
 @Component(
-        metatype = true,
-        label = "Apache Sling Scripting HTL Script Use Provider",
-        description = "The Script Use Provider is responsible for instantiating objects from scripts evaluated by other Sling Scripting " +
-                "Engines."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.impl.engine.extension.use.ScriptUseProvider",
+        property = {
+                Constants.SERVICE_RANKING + ":Integer=0"
+        }
 )
-@Service(UseProvider.class)
-@Properties({
-        @Property(
-                name = Constants.SERVICE_RANKING,
-                label = "Service Ranking",
-                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
-                        "Use-object. A higher value represents a higher priority.",
-                intValue = 0,
-                propertyPrivate = false
-        )
-})
+@Designate(
+        ocd = ScriptUseProvider.Configuration.class
+)
 public class ScriptUseProvider implements UseProvider {
+
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL Script Use Provider Configuration",
+            description = "HTL Script Use Provider configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default 0;
+
+    }
 
     private static final Logger log = LoggerFactory.getLogger(ScriptUseProvider.class);
 

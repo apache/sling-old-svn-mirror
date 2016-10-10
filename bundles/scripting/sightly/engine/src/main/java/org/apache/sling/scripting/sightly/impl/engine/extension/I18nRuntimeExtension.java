@@ -26,10 +26,6 @@ import javax.script.Bindings;
 
 import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.i18n.ResourceBundleProvider;
@@ -38,14 +34,16 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-@Service(RuntimeExtension.class)
-@Properties({
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.I18N)
-})
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.I18N
+        }
+)
 public class I18nRuntimeExtension implements RuntimeExtension {
 
     private static final Logger LOG = LoggerFactory.getLogger(I18nRuntimeExtension.class);
@@ -97,7 +95,7 @@ public class I18nRuntimeExtension implements RuntimeExtension {
             }
         }
         LOG.warn("No translation found for string '{}' using expression provided locale '{}' or default locale '{}'",
-                new String[] {text, locale, request.getLocale().getLanguage()});
+                text, locale, request.getLocale().getLanguage());
         return text;
     }
 

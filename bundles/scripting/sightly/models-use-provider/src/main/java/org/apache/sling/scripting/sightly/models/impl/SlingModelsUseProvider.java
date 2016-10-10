@@ -22,11 +22,6 @@ import java.util.regex.Pattern;
 import javax.script.Bindings;
 import javax.servlet.ServletRequest;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -36,6 +31,11 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,28 +58,35 @@ import org.slf4j.LoggerFactory;
  * </p>
  */
 @Component(
-    metatype = true,
-    label = "Apache Sling Scripting HTL Sling Models Use Provider",
-    description = "The Sling Models Use Provider is responsible for instantiating Sling Models to be used with Sightly's Use-API."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.models.impl.SlingModelsUseProvider",
+        property = {
+                /**
+                 * Must have a higher priority than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.JavaUseProvider} but lower
+                 * than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.RenderUnitProvider} to kick in before the
+                 * JavaUseProvider but after the RenderUnitProvider.
+                 */
+                Constants.SERVICE_RANKING + ":Integer=95"
+        }
 )
-@Service
-@Properties({
-    @Property(
-        name = Constants.SERVICE_RANKING,
-        label = "Service Ranking",
-        description =
-            "The Service Ranking value acts as the priority with which this Use Provider is queried to return an Use-object. A higher " +
-                "value represents a higher priority.",
-        /**
-         * Must have a higher priority than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.JavaUseProvider} but lower
-         * than {@link org.apache.sling.scripting.sightly.impl.engine.extension.use.RenderUnitProvider} to kick in before the
-         * JavaUseProvider but after the RenderUnitProvider.
-         */
-        intValue = 95,
-        propertyPrivate = false
-    )
-})
+@Designate(
+        ocd = SlingModelsUseProvider.Configuration.class
+)
 public class SlingModelsUseProvider implements UseProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL Sling Models Use Provider Configuration",
+            description = "HTL Sling Models Use Provider configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default 95;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlingModelsUseProvider.class);
     private static final Pattern JAVA_PATTERN = Pattern.compile(
@@ -145,7 +152,7 @@ public class SlingModelsUseProvider implements UseProvider {
     }
 
     private Map<String, Object> setRequestAttributes(final ServletRequest request, final Bindings arguments) {
-        Map<String, Object> overrides = new HashMap<String, Object>();
+        Map<String, Object> overrides = new HashMap<>();
         for (Map.Entry<String, Object> entry : arguments.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();

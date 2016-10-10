@@ -25,24 +25,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-@Service({ResourceBackedPojoChangeMonitor.class, ResourceChangeListener.class})
-@Properties({
-    @Property(name = ResourceChangeListener.PATHS, value = "glob:**/*.java"),
-    @Property(name = ResourceChangeListener.CHANGES, value = {"ADDED", "CHANGED", "REMOVED"})
-})
-public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener {
+@Component(
+        service = {ResourceBackedPojoChangeMonitor.class, ResourceChangeListener.class},
+        property = {
+                ResourceChangeListener.PATHS + "=glob:**/*.java",
+                ResourceChangeListener.CHANGES + "=ADDED",
+                ResourceChangeListener.CHANGES + "=CHANGED",
+                ResourceChangeListener.CHANGES + "=REMOVED",
+        }
+)
+public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceBackedPojoChangeMonitor.class);
 

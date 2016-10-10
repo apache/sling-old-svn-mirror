@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
@@ -32,14 +31,6 @@ import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -62,30 +53,44 @@ import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Provides the {@code sightly} namespace for usage in HTL &amp; JS scripts called from Sightly
  */
-@Component(metatype = true, label = "Apache Sling Scripting HTL JavaScript Bindings Provider",
-        description = "The Apache Sling Scripting HTL JavaScript Bindings Provider loads the JS Use-API and makes it available in the" +
-                " bindings map.")
-@Service(SlyBindingsValuesProvider.class)
-@Properties({
-        @Property(
-                name = SlyBindingsValuesProvider.SCR_PROP_JS_BINDING_IMPLEMENTATIONS,
-                value = {
-                    "sightly:" + SlyBindingsValuesProvider.SLING_NS_PATH
-                },
-                unbounded = PropertyUnbounded.ARRAY,
-                label = "Script Factories",
-                description = "Script factories to load in the bindings map. The entries should be in the form " +
-                        "'namespace:/path/from/repository'."
-        )
-})
+@Component(
+        service = SlyBindingsValuesProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.js.impl.jsapi.SlyBindingsValuesProvider"
+)
+@Designate(
+        ocd = SlyBindingsValuesProvider.Configuration.class
+)
 @SuppressWarnings("unused")
 public class SlyBindingsValuesProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL JavaScript Use-API Factories Configuration",
+            description = "HTL JavaScript Use-API Factories configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Script Factories",
+                description = "Script factories to load in the bindings map. The entries should be in the form " +
+                        "'namespace:/path/from/repository'."
+
+        )
+        String[] org_apache_sling_scripting_sightly_js_bindings() default "sightly:" + SlyBindingsValuesProvider.SLING_NS_PATH;
+
+    }
 
     public static final String SCR_PROP_JS_BINDING_IMPLEMENTATIONS = "org.apache.sling.scripting.sightly.js.bindings";
 
@@ -144,9 +149,11 @@ public class SlyBindingsValuesProvider {
     }
 
     @Activate
-    protected void activate(ComponentContext componentContext) {
-        Dictionary properties = componentContext.getProperties();
-        String[] factories = PropertiesUtil.toStringArray(properties.get(SCR_PROP_JS_BINDING_IMPLEMENTATIONS), new String[]{SLING_NS_PATH});
+    protected void activate(Configuration configuration) {
+        String[] factories = PropertiesUtil.toStringArray(
+                configuration.org_apache_sling_scripting_sightly_js_bindings(),
+                new String[]{SLING_NS_PATH}
+        );
         scriptPaths = new HashMap<>(factories.length);
         for (String f : factories) {
             String[] parts = f.split(":");

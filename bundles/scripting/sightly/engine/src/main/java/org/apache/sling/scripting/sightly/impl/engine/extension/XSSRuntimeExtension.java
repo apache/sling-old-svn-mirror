@@ -23,10 +23,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.script.Bindings;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
@@ -35,20 +31,22 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.xss.XSSAPI;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Runtime support for XSS filtering
  */
-@Component
-@Service(RuntimeExtension.class)
-@Properties(
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.XSS)
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.XSS
+        }
 )
 public class XSSRuntimeExtension implements RuntimeExtension {
 
-    private static final Set<String> elementNameWhiteList = new HashSet<String>();
+    private static final Set<String> elementNameWhiteList = new HashSet<>();
     private static final Logger LOG = LoggerFactory.getLogger(XSSRuntimeExtension.class);
     private static final Pattern VALID_ATTRIBUTE = Pattern.compile("^[a-zA-Z_:][\\-a-zA-Z0-9_:\\.]*$");
     private static final Pattern ATTRIBUTE_BLACKLIST = Pattern.compile("^(style|(on.*))$", Pattern.CASE_INSENSITIVE);

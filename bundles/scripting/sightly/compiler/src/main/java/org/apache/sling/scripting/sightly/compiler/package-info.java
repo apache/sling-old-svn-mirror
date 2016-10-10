@@ -21,7 +21,7 @@
  * The {@code org.apache.sling.scripting.sightly.compiler} package defines the API exposed by the
  * {@link org.apache.sling.scripting.sightly.compiler.SightlyCompiler}.
  */
-@Version("1.0.0")
+@Version("1.0.1")
 package org.apache.sling.scripting.sightly.compiler;
 
 import org.osgi.annotation.versioning.Version;

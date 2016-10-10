@@ -21,40 +21,41 @@ package org.apache.sling.scripting.sightly.impl.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Dictionary;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * Holds various HTL engine global configurations.
  */
 @Component(
-        metatype = true,
-        label = "Apache Sling Scripting HTL Engine Configuration",
-        description = "HTL Engine Configuration Options"
+        service = SightlyEngineConfiguration.class,
+        configurationPid = "org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration"
 )
-@Service(SightlyEngineConfiguration.class)
-@Properties({
-        @Property(
-                name = SightlyEngineConfiguration.SCR_PROP_NAME_KEEPGENERATED,
-                boolValue = SightlyEngineConfiguration.SCR_PROP_DEFAULT_KEEPGENERATED,
-                label = "Keep Generated Java Source Code",
-                description = "If enabled, the Java source code generated during HTL template files compilation will be stored. " +
-                        "Its location is dependent on the available org.apache.sling.commons.classloader.ClassLoaderWriter."
-        )
-})
+@Designate(ocd = SightlyEngineConfiguration.Configuration.class)
 public class SightlyEngineConfiguration {
 
-    public static final String SCR_PROP_NAME_KEEPGENERATED = "org.apache.sling.scripting.sightly.keepgenerated";
-    public static final boolean SCR_PROP_DEFAULT_KEEPGENERATED = true;
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL Engine Configuration",
+            description = "HTL Engine Configuration Options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Keep Generated Java Source Code",
+                description = "If enabled, the Java source code generated during HTL template files compilation will be stored. " +
+                        "Its location is dependent on the available org.apache.sling.commons.classloader.ClassLoaderWriter."
+
+        )
+        boolean keepGenerated() default true;
+
+    }
 
     private String engineVersion = "0";
     private boolean keepGenerated;
@@ -76,7 +77,8 @@ public class SightlyEngineConfiguration {
         return keepGenerated;
     }
 
-    protected void activate(ComponentContext componentContext) {
+    @Activate
+    protected void activate(Configuration configuration) {
         InputStream ins = null;
         try {
             ins = getClass().getResourceAsStream("/META-INF/MANIFEST.MF");
@@ -101,7 +103,6 @@ public class SightlyEngineConfiguration {
                 }
             }
         }
-        Dictionary properties = componentContext.getProperties();
-        keepGenerated = PropertiesUtil.toBoolean(properties.get(SCR_PROP_NAME_KEEPGENERATED), SCR_PROP_DEFAULT_KEEPGENERATED);
+        keepGenerated = configuration.keepGenerated();
     }
 }

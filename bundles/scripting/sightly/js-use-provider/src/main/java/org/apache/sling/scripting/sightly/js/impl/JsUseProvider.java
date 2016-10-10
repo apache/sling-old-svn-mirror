@@ -22,13 +22,7 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
@@ -39,27 +33,41 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * Use provider for JavaScript Use-API objects.
  */
 @Component(
-    metatype = true,
-    label = "Apache Sling Scripting HTL JavaScript Use Provider",
-    description = "The JavaScript Use Provider is responsible for instantiating JavaScript Use-API objects."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.js.impl.JsUseProvider",
+        property = {
+                Constants.SERVICE_RANKING + ":Integer=80"
+        }
 )
-@Service(UseProvider.class)
-@Properties({
-                @Property(
-                    name = Constants.SERVICE_RANKING,
-                    label = "Service Ranking",
-                    description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
-                        "Use-object. A higher value represents a higher priority.",
-                    intValue = 80,
-                    propertyPrivate = false
-                )
-            })
+@Designate(
+        ocd = JsUseProvider.Configuration.class
+)
 public class JsUseProvider implements UseProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL JavaScript Use Provider Configuration",
+            description = "HTL JavaScript Use Provider configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default 80;
+
+    }
 
     private static final String JS_ENGINE_NAME = "javascript";
     private static final JsValueAdapter jsValueAdapter = new JsValueAdapter(new AsyncExtractor());

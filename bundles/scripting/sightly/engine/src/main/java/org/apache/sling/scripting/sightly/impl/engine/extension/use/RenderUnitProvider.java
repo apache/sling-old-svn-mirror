@@ -26,11 +26,6 @@ import javax.script.CompiledScript;
 import javax.script.ScriptEngineManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -48,27 +43,40 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * Interprets identifiers as paths to other HTL templates
  */
 @Component(
-        metatype = true,
-        label = "Apache Sling Scripting HTL Render Unit Use Provider",
-        description = "The Render Unit Use Provider is responsible for instantiating HTL templates through the Use-API."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.impl.engine.extension.use.RenderUnitProvider",
+        property = {
+                Constants.SERVICE_RANKING + ":Integer=100"
+        }
 )
-@Service(UseProvider.class)
-@Properties({
-        @Property(
-                name = Constants.SERVICE_RANKING,
-                label = "Service Ranking",
-                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
-                        "Use-object. A higher value represents a higher priority.",
-                intValue = 100,
-                propertyPrivate = false
-        )
-})
+@Designate(
+        ocd = RenderUnitProvider.Configuration.class
+)
 public class RenderUnitProvider implements UseProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL Render Unit Use Provider Configuration",
+            description = "HTL Render Unit Use Provider configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default 100;
+    }
 
     @Reference
     private ScriptCache scriptCache;

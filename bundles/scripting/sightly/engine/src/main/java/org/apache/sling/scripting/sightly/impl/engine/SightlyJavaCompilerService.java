@@ -28,10 +28,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
@@ -44,6 +40,9 @@ import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,9 @@ import org.slf4j.LoggerFactory;
  * or in regular OSGi bundles. It also compiles Java sources on-the-fly and can discover class' source files based on
  * {@link Resource}s (typically Sling components). It supports Sling Resource type inheritance.
  */
-@Component
-@Service(SightlyJavaCompilerService.class)
+@Component(
+        service = SightlyJavaCompilerService.class
+)
 public class SightlyJavaCompilerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SightlyJavaCompilerService.class);

@@ -27,13 +27,6 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
@@ -44,20 +37,19 @@ import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Runtime extension for the USE plugin
  */
-@Component
-@Service(RuntimeExtension.class)
-@Properties(
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.USE)
-)
-@Reference(
-        policy = ReferencePolicy.DYNAMIC,
-        referenceInterface = UseProvider.class,
-        name = "useProvider",
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.USE
+        }
 )
 public class UseRuntimeExtension implements RuntimeExtension {
 
@@ -89,6 +81,11 @@ public class UseRuntimeExtension implements RuntimeExtension {
     }
 
     // OSGi ################################################################################################################################
+    @Reference(
+            policy = ReferencePolicy.DYNAMIC,
+            service = UseProvider.class,
+            cardinality = ReferenceCardinality.MULTIPLE
+    )
     private void bindUseProvider(ServiceReference serviceReference) {
         BundleContext bundleContext = serviceReference.getBundle().getBundleContext();
         providersMap.put(serviceReference, (UseProvider) bundleContext.getService(serviceReference));
