@@ -20,24 +20,20 @@ package org.apache.sling.scripting.sightly.impl.engine;
 
 import javax.script.Bindings;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * HTL specific {@code BindingsValuesProvider}.
  */
-@Component()
-@Service(BindingsValuesProvider.class)
-@Properties({
-        @Property(name = "javax.script.name", value = "sightly")
-})
+@Component(
+        property = {
+                "javax.script.name=sightly"
+        }
+)
 public class SightlyBindingsValuesProvider implements BindingsValuesProvider {
 
     public static final String PROPERTIES = "properties";

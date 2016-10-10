@@ -26,28 +26,27 @@ import javax.script.ScriptEngineFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * HTL template engine factory
  */
-@Component()
-@Service(ScriptEngineFactory.class)
-@Properties({
-        @Property(name = "service.description", value = "HTL Templating Engine"),
-        @Property(name = "compatible.javax.script.name", value = "sly")
-})
+@Component(
+        service = ScriptEngineFactory.class,
+        property = {
+                Constants.SERVICE_DESCRIPTION + "=HTL Templating Engine",
+                "compatible.javax.script.name=sly"
+        }
+)
 public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SightlyScriptEngineFactory.class);

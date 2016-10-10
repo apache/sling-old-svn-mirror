@@ -30,21 +30,19 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
+import org.osgi.service.component.annotations.Component;
 
-@Component
-@Service(RuntimeExtension.class)
-@Properties({
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.URI_MANIPULATION)
-})
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.URI_MANIPULATION
+        }
+)
 public class URIManipulationFilterExtension implements RuntimeExtension {
 
     public static final String SCHEME = "scheme";
@@ -390,8 +388,8 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             String query = uri.getQuery();
             if (StringUtils.isNotEmpty(query)) {
                 String[] keyValuePairs = query.split("&");
-                for (int i = 0; i < keyValuePairs.length; i++) {
-                    String[] pair = keyValuePairs[i].split("=");
+                for (String keyValuePair : keyValuePairs) {
+                    String[] pair = keyValuePair.split("=");
                     if (pair.length == 2) {
                         String param = pair[0];
                         String value = pair[1];

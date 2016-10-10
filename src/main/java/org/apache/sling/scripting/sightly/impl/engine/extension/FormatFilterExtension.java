@@ -21,20 +21,18 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
+import org.osgi.service.component.annotations.Component;
 
-@Component
-@Service(RuntimeExtension.class)
-@Properties({
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.FORMAT)
-})
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.FORMAT
+        }
+)
 public class FormatFilterExtension implements RuntimeExtension {
 
     private static final Pattern PLACEHOLDER_REGEX = Pattern.compile("\\{\\d+}");
