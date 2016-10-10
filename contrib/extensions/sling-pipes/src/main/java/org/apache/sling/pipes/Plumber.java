@@ -32,8 +32,8 @@ public interface Plumber {
 
     /**
      * Instantiate a pipe from the given resource and returns it
-     * @param resource
-     * @return
+     * @param resource configuration resource
+     * @return pipe instantiated from the resource, null otherwise
      */
     Pipe getPipe(Resource resource);
 
@@ -43,8 +43,8 @@ public interface Plumber {
      * @param path path of a valid pipe configuration
      * @param bindings bindings to add to the execution of the pipe, can be null
      * @param save in case that pipe writes anything, wether the plumber should save changes or not
-     *
-     * @return
+     * @throws Exception in case execution fails
+     * @return set of paths of output resources
      */
     Set<String> execute(ResourceResolver resolver, String path, Map bindings, boolean save) throws Exception;
 
@@ -54,23 +54,25 @@ public interface Plumber {
      * @param pipe pipe to execute
      * @param bindings bindings to add to the execution of the pipe, can be null
      * @param save in case that pipe writes anything, wether the plumber should save changes or not
-     *
-     * @return
+     * @throws Exception in case execution fails
+     * @return set of paths of output resources
      */
     Set<String> execute(ResourceResolver resolver, Pipe pipe, Map bindings, boolean save) throws Exception;
 
     /**
      * Persist some pipe changes, and eventually distribute changes
-     * @param resolver
+     * @param resolver resolver with which changes will be persisted
      * @param pipe pipe from which the change occurred
      * @param paths set of changed paths
+     * @throws PersistenceException in case persisting fails
      */
+
     void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths) throws PersistenceException;
 
     /**
      * Registers
-     * @param type
-     * @param pipeClass
+     * @param type resource type of the pipe to register
+     * @param pipeClass class of the pipe to register
      */
     void registerPipe(String type, Class<? extends BasePipe> pipeClass);
 

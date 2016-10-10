@@ -42,6 +42,12 @@ public class ContainerPipe extends BasePipe {
 
     List<Pipe> reversePipeList = new ArrayList<>();
 
+    /**
+     * Constructor
+     * @param plumber plumber
+     * @param resource container's configuration resource
+     * @throws Exception bad configuration handling
+     */
     public ContainerPipe(Plumber plumber, Resource resource) throws Exception{
         super(plumber, resource);
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
@@ -77,8 +83,8 @@ public class ContainerPipe extends BasePipe {
 
     /**
      * Returns the pipe immediately before the given pipe, null if it's the first
-     * @param pipe
-     * @return
+     * @param pipe given pipe
+     * @return previous pipe of the param
      */
     public Pipe getPreviousPipe(Pipe pipe){
         Pipe previousPipe = null;
@@ -93,7 +99,7 @@ public class ContainerPipe extends BasePipe {
 
     /**
      * Return the first pipe in the container
-     * @return
+     * @return first pipe of the container
      */
     public Pipe getFirstPipe() {
         return pipeList.iterator().next();
@@ -101,13 +107,17 @@ public class ContainerPipe extends BasePipe {
 
     /**
      * Return the last pipe in the container
-     * @return
+     * @return pipe in the last position of the container's pipes
      */
     public Pipe getLastPipe() {
         return reversePipeList.iterator().next();
     }
 
-    public Resource getOuputResource() {
+    /**
+     * output resource of the container pipe
+     * @return output resource of the last pipe of the container
+     */
+    public Resource getOutputResource() {
         return bindings.getExecutedResource(getLastPipe().getName());
     }
 
@@ -132,6 +142,10 @@ public class ContainerPipe extends BasePipe {
         boolean hasNext = false;
         int cursor = 0;
 
+        /**
+         * Constructor
+         * @param containerPipe corresponding container pipe
+         */
         ContainerResourceIterator(ContainerPipe containerPipe) {
             container = containerPipe;
             bindings = container.bindings;
@@ -144,7 +158,7 @@ public class ContainerPipe extends BasePipe {
         /**
          * go up and down the container iterators until cursor is at 0 (first pipe) with no
          * more resources, or at length - 1 (last pipe) with a next one
-         * @return
+         * @return true if cursor has been updated
          */
         private boolean updateCursor(){
             Pipe currentPipe = container.pipeList.get(cursor);

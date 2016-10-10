@@ -76,8 +76,8 @@ public class JsonPipe extends BasePipe {
     }
 
     /**
-     * Retrieve remote JSON String, or null if any problem occurs
-     * @return
+     * Retrieve remote / expression JSON String, or null if any problem occurs
+     * @return JSON serialization of the result
      */
     private String retrieveJSONString()  {
         String json = null;
@@ -119,7 +119,8 @@ public class JsonPipe extends BasePipe {
 
     /**
      * in case there is no successful retrieval of some JSON data, we cut the pipe here
-     * @return
+     * @return input resource of the pipe, can be reouputed N times in case output json binding is an array of
+     * N element (output binding would be here each time the Nth element of the array)
      */
     public Iterator<Resource> getOutput() {
         Iterator<Resource> output = EMPTY_ITERATOR;

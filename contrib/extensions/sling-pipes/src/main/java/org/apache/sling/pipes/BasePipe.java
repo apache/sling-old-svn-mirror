@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * provides generic utilities for a pipe
+ * provides generic utilities for a pipe, is also a dummy pipe (outputs its input, without changing anything)
  */
 public class BasePipe implements Pipe {
 
@@ -67,6 +67,12 @@ public class BasePipe implements Pipe {
 
     private String name;
 
+    /**
+     * Pipe Constructor
+     * @param plumber plumber
+     * @param resource configuration resource
+     * @throws Exception in case configuration is not working
+     */
     public BasePipe(Plumber plumber, Resource resource) throws Exception {
         this.resource = resource;
         properties = resource.adaptTo(ValueMap.class);
@@ -77,6 +83,7 @@ public class BasePipe implements Pipe {
         bindings = new PipeBindings(resource);
     }
 
+    @Override
     public boolean isDryRun() {
         if (dryRunObject == null) {
             Object run =  bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
@@ -86,6 +93,7 @@ public class BasePipe implements Pipe {
         return dryRun;
     }
 
+    @Override
     public String toString() {
         return name + " " + "(path: " + resource.getPath() + ", dryRun: " + isDryRun() + ", modifiesContent: " + modifiesContent() + ")";
     }
@@ -95,13 +103,14 @@ public class BasePipe implements Pipe {
         return false;
     }
 
+    @Override
     public String getName(){
         return name;
     }
 
     /**
      * Get pipe's expression, instanciated or not
-     * @return
+     * @return configured expression
      */
     public String getExpr(){
         String rawExpression = properties.get(PN_EXPR, "");
@@ -110,7 +119,7 @@ public class BasePipe implements Pipe {
 
     /**
      * Get pipe's path, instanciated or not
-     * @return
+     * @return configured path (can be empty)
      */
     public String getPath() {
         String rawPath = properties.get(PN_PATH, "");
@@ -130,8 +139,12 @@ public class BasePipe implements Pipe {
         return configuredInput;
     }
 
+    /**
+     * Retrieves previous pipe if contained by a parent, or referrer's
+     * @return pipe before this one or the referrer's can be null in case there is no parent
+     */
     protected Pipe getPreviousPipe(){
-        return referrer == null ? parent.getPreviousPipe(this) : referrer.getPreviousPipe();
+        return referrer == null ? (parent != null ? parent.getPreviousPipe(this) : null) : referrer.getPreviousPipe();
     }
 
     @Override
@@ -170,7 +183,7 @@ public class BasePipe implements Pipe {
 
     /**
      * default execution, just returns current resource
-     * @return
+     * @return output of this pipe, which is here the input resource
      */
     public Iterator<Resource> getOutput(){
         Resource resource = getInput();
@@ -182,7 +195,7 @@ public class BasePipe implements Pipe {
 
     /**
      * Get configuration node
-     * @return
+     * @return configuration node if any
      */
     public Resource getConfiguration() {
         return resource.getChild(NN_CONF);
@@ -198,5 +211,8 @@ public class BasePipe implements Pipe {
         referrer = pipe;
     }
 
+    /**
+     * Empty resource iterator
+     */
     public static final Iterator<Resource> EMPTY_ITERATOR = Collections.emptyIterator();
 }
