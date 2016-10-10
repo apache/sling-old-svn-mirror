@@ -226,9 +226,6 @@ def modules = [
         location: 'bundles/jcr/davex'
     ],
     [
-        location: 'bundles/jcr/it-jackrabbit-oak'
-    ],
-    [
         location: 'bundles/jcr/it-resource-versioning'
     ],
     [
