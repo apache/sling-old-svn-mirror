@@ -133,8 +133,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         authenticationInfo.put(ResourceProvider.AUTH_ADMIN, Boolean.TRUE);
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
-            // make sure there is no leaking of service bundle and info props
-            authenticationInfo.remove(ResourceProvider.AUTH_SERVICE_BUNDLE);
+            // make sure there is no leaking of service info props
+            // (but the bundle info is passed on as we need it downstream)
             authenticationInfo.remove(SUBSERVICE);
         }
 

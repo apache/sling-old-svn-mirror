@@ -73,7 +73,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
 
     /** The bundle using this repository instance. */
     private final Bundle usingBundle;
-
+    
     /**
      * Sets up this abstract SlingRepository implementation.
      *
@@ -87,7 +87,11 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     protected AbstractSlingRepository2(final AbstractSlingRepositoryManager manager, final Bundle usingBundle) {
         this.manager = manager;
         this.usingBundle = usingBundle;
-    }
+
+        if(usingBundle == null) {
+            throw new IllegalArgumentException("usingBundle is null");
+        }
+     }
 
     /**
      * @return The {@link AbstractSlingRepositoryManager} controlling this
@@ -367,7 +371,12 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      */
     @Override
     public final Session loginAdministrative(final String workspace) throws RepositoryException {
-        if (this.getSlingRepositoryManager().isDisableLoginAdministrative()) {
+        final boolean whitelisted = getSlingRepositoryManager().getLoginAdminWhitelist().allowLoginAdministrative(usingBundle);
+
+        if(!whitelisted) {
+            logger.error("Bundle {} is NOT whitelisted to use SlingRepository.loginAdministrative", usingBundle.getSymbolicName());
+            throw new LoginException();
+        } else if (this.getSlingRepositoryManager().isDisableLoginAdministrative()) {
             logger.error("SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
             throw new LoginException();
         }
