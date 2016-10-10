@@ -90,7 +90,7 @@ public final class ResourceMatchers {
      * @param path the resources path, not <code>null</code> or empty
      * @return a matcher instance
      */
-    public static Matcher<Resource> withPath(String path) {
+    public static Matcher<Resource> path(String path) {
         return new ResourcePathMatcher(path);
     }
 
@@ -104,7 +104,7 @@ public final class ResourceMatchers {
      * @param name the resources name, not <code>null</code> or empty
      * @return a matcher instance
      */
-    public static Matcher<Resource> withName(String name) {
+    public static Matcher<Resource> name(String name) {
         return new ResourceNameMatcher(name);
     }
 
@@ -117,7 +117,7 @@ public final class ResourceMatchers {
      * @param resourceType the resource type to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> ofType(String resourceType) {
+    public static Matcher<Resource> resourceType(String resourceType) {
         return new ResourcePropertiesMatcher(Collections.<String, Object> singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, resourceType));
     }
 
@@ -136,7 +136,7 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */    
-    public static Matcher<Resource> withProps(Map<String, Object> properties) {
+    public static Matcher<Resource> props(Map<String, Object> properties) {
         return new ResourcePropertiesMatcher(properties);
     }
 
@@ -155,8 +155,8 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */    
-    public static Matcher<Resource> withProps(Object... properties) {
-        return withProps(MapUtil.toMap(properties));
+    public static Matcher<Resource> props(Object... properties) {
+        return props(MapUtil.toMap(properties));
     }
 
     /**
@@ -175,7 +175,7 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> withNameAndProps(String name, Map<String, Object> properties) {
+    public static Matcher<Resource> nameAndProps(String name, Map<String, Object> properties) {
         return Matchers.allOf(new ResourceNameMatcher(name), new ResourcePropertiesMatcher(properties));
     }
 
@@ -195,8 +195,8 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> withNameAndProps(String name, Object... properties) {
-        return withNameAndProps(name, MapUtil.toMap(properties));
+    public static Matcher<Resource> nameAndProps(String name, Object... properties) {
+        return nameAndProps(name, MapUtil.toMap(properties));
     }
 
     private ResourceMatchers() {

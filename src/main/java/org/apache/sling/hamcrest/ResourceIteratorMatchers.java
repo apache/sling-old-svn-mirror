@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.hamcrest.matchers.ResourceIteratorMatcher;
+import org.apache.sling.hamcrest.matchers.ResourceIteratorPathMatcher;
 import org.hamcrest.Matcher;
 
 /**
@@ -38,7 +38,7 @@ public final class ResourceIteratorMatchers {
      * @return a matcher instance
      */
     public static Matcher<Iterator<Resource>> paths(String... paths) {
-        return new ResourceIteratorMatcher(Arrays.asList(paths));
+        return new ResourceIteratorPathMatcher(Arrays.asList(paths));
     }
     
 }
