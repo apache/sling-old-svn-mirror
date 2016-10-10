@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.hamcrest.matchers.ResourceCollectionMatcher;
+import org.apache.sling.hamcrest.matchers.ResourceCollectionPathMatcher;
 import org.hamcrest.Matcher;
 
 /**
@@ -38,7 +38,7 @@ public final class ResourceCollectionMatchers {
      * @return a matcher instance
      */
     public static Matcher<Collection<Resource>> paths(String... paths) {
-        return new ResourceCollectionMatcher(Arrays.asList(paths));
+        return new ResourceCollectionPathMatcher(Arrays.asList(paths));
     }
     
 }

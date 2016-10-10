@@ -17,7 +17,7 @@
 package org.apache.sling.hamcrest.matchers;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
@@ -26,14 +26,14 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 /**
- * Ensures a collection of resources has exactly the given list of paths in the given order.
+ * Ensures an iterator of resources has exactly the given list of paths in the given order.
  */
-public class ResourceCollectionMatcher extends TypeSafeMatcher<Collection<Resource>> {
+public class ResourceIteratorPathMatcher extends TypeSafeMatcher<Iterator<Resource>> {
 
     // this should be "Iterable<? extends Resource>" instead of "?" but cannot until https://github.com/hamcrest/JavaHamcrest/issues/107 is solved
     private final Matcher<?> iterarableMatcher;
 
-    public ResourceCollectionMatcher(List<String> paths) {
+    public ResourceIteratorPathMatcher(List<String> paths) {
         if ( paths == null || paths.isEmpty() ) {
             throw new IllegalArgumentException("names is null or empty");
         }
@@ -52,13 +52,21 @@ public class ResourceCollectionMatcher extends TypeSafeMatcher<Collection<Resour
     }
 
     @Override
-    protected boolean matchesSafely(Collection<Resource> items) {
-        return iterarableMatcher.matches(items);
+    protected boolean matchesSafely(Iterator<Resource> items) {
+        return iterarableMatcher.matches(toList(items));
     }
 
     @Override
-    protected void describeMismatchSafely(Collection<Resource> items, Description mismatchDescription) {
-        iterarableMatcher.describeMismatch(items, mismatchDescription);
+    protected void describeMismatchSafely(Iterator<Resource> items, Description mismatchDescription) {
+        iterarableMatcher.describeMismatch(toList(items), mismatchDescription);
+    }
+    
+    private List<Resource> toList(Iterator<Resource> items) {
+        List<Resource> list = new ArrayList<Resource>();
+        while (items.hasNext()) {
+            list.add(items.next());
+        }
+        return list;
     }
 
 }
