@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.compiler.backend.BackendCompiler;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilationResultImpl;
@@ -61,6 +59,7 @@ import org.apache.sling.scripting.sightly.impl.plugin.TestPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.TextPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.UnwrapPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.UsePlugin;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * <p>
@@ -69,8 +68,9 @@ import org.apache.sling.scripting.sightly.impl.plugin.UsePlugin;
  * transpiling the commands to a JVM supported language or by directly executing them.
  * </p>
  */
-@Component
-@Service(SightlyCompiler.class)
+@Component(
+        service = SightlyCompiler.class
+)
 public final class SightlyCompiler {
 
     private StreamTransformer optimizer;
