@@ -153,6 +153,10 @@ public abstract class OakServerTestSupport extends TestSupport {
     }
 
     protected Option launchpad() {
+        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.base");
+        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.resource");
+        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.resourceresolver");
+        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.api");
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
         final String slingHome = String.format("%s/sling", workingDirectory());
@@ -183,5 +187,4 @@ public abstract class OakServerTestSupport extends TestSupport {
                 .asOption()
         );
     }
-
 }
