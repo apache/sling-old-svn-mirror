@@ -60,6 +60,7 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
+import org.apache.sling.jcr.base.LoginAdminWhitelist;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -109,6 +110,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Reference
     private ThreadPoolManager threadPoolManager = null;
+    
+    @Reference
+    private LoginAdminWhitelist loginAdminWhitelist;  
 
     private ThreadPool threadPool;
 
@@ -240,6 +244,11 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.oakExecutorServiceReference.unregister();
         this.oakExecutorServiceReference = null;
         ((JackrabbitRepository) repository).shutdown();
+    }
+    
+    @Override
+    protected LoginAdminWhitelist getLoginAdminWhitelist() {
+        return loginAdminWhitelist;
     }
 
     @Activate

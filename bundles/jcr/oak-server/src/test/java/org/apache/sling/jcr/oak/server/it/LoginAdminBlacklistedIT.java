@@ -23,16 +23,19 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import static org.ops4j.pax.exam.CoreOptions.composite;
 
-/** Test login admin with the test bundle whitelisted (which
- *  is a default from our base class)
+
+/** Test login admin without whitelisting the test bundle,
+ *  so both variants of getting admin session should fail.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class LoginAdminWhitelistedIT extends OakServerTestSupport {
+public class LoginAdminBlacklistedIT extends OakServerTestSupport {
 
     @Inject
     private SlingRepository repository;
@@ -40,12 +43,18 @@ public class LoginAdminWhitelistedIT extends OakServerTestSupport {
     @Inject
     private ResourceResolverFactory resolverFactory;
     
-    @Test
+    @Override
+    protected Option getWhitelistRegexpOption() {
+        // Do not whitelist this test bundle
+        return composite();
+    }
+    
+    @Test(expected = javax.jcr.LoginException.class)
     public void testLoginAdmin() throws Exception {
         repository.loginAdministrative(null);
     }
     
-    @Test
+    @Test(expected = org.apache.sling.api.resource.LoginException.class)
     public void testGetAdminResourceResolver() throws Exception {
         resolverFactory.getAdministrativeResourceResolver(null);
     }
