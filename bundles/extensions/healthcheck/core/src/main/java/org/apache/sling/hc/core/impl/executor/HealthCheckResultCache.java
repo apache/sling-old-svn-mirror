@@ -44,7 +44,7 @@ public class HealthCheckResultCache {
     /**
      * Minimal TTL value for cached item
      */
-    private final long MIN_TTL = 0;
+    private static final long MIN_TTL = 0;
 
     /**
      * The map holding the cached results.
