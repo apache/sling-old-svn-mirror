@@ -48,77 +48,80 @@ public interface Pipe {
 
     /**
      * returns true if that pipe will modify content during its execution
-     * @return
+     * @return true for write / false for read
      */
     boolean modifiesContent();
 
     /**
      * returns true if that pipe is set not to write content
-     * @return
+     * @return true if dry run, false otherwise
      */
     boolean isDryRun();
 
     /**
      * Return the name of that pipe
-     * @return
+     * @return name of the pipe
      */
     String getName();
 
     /**
-     * Set parent
+     * set the pipe parent
+     * @param parent container pipe
      */
     void setParent(ContainerPipe parent);
 
     /**
      * Return parent's pipe (can be null)
-     * @return
+     * @return pipe's container parent
      */
     ContainerPipe getParent();
 
     /**
      * Get the pipe's optional configured resource or null
-     * @return
+     * @return input if configured
      */
     Resource getConfiguredInput();
 
     /**
      * Get pipe current's resource *before* next execution, meaning either the
      * configured resource, either previous' pipe output resource
-     * @return
+     * @return input, configured or previous pipe
      */
     Resource getInput();
 
     /**
      * returns the binding output used in container pipe's expression
-     * @return
+     * @return object, either value map or something else, that will be used in nashorn for computing expressions
      */
     Object getOutputBinding();
 
     /**
      * returns the pipe's bindings
-     * @return
+     * @return PipeBindings instance containing all bindings of that pipe
      */
     PipeBindings getBindings();
 
     /**
      * set the pipe's bindings
+     * @param bindings bindings to set
      */
     void setBindings(PipeBindings bindings);
 
     /**
      * Executes the pipe, can be contained in a parent or not
-     * @return
+     * @return iterator of resource resulting from execution of this pipe
      */
     Iterator<Resource> getOutput();
 
     /**
      * Get Distribution agent
+     * @return configured distribution agent
      */
     String getDistributionAgent();
 
     /**
      * sets the reference pipe this pipe is referred by
-     * @param pipe
+     * @param pipe referrer that refers to this instance
      */
     void setReferrer(ReferencePipe pipe);
 }

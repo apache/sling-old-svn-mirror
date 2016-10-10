@@ -34,25 +34,33 @@ public interface OutputWriter {
 
     /**
      *
-     * @param request
-     * @return
+     * @param request current request
+     * @return true if this writer handles that request
      */
     boolean handleRequest(SlingHttpServletRequest request);
 
     /**
-     * Init the writer
-     * @param response
+     * Init the writer, writes beginning of the output
+     * @param request request from which writer will output
+     * @param response response on which writer will output
+     * @param pipe pipe whose output will be written
+     * @throws IOException error handling streams
+     * @throws JSONException in case invalid json is written
      */
     void init(SlingHttpServletRequest request, SlingHttpServletResponse response, Pipe pipe) throws IOException, JSONException;
 
     /**
      * Write a given resource
-     * @param resource
+     * @param resource resource that will be written
+     * @throws JSONException in case write fails
      */
     void writeItem(Resource resource) throws JSONException;
 
     /**
-     * ends write
+     * writes the end of the output
+     * @param size size of the overall result
+     * @throws JSONException in case invalid json is written
      */
+
     void ends(int size) throws JSONException;
 }

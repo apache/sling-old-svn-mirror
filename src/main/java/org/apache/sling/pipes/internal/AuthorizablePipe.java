@@ -29,7 +29,6 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -65,6 +64,12 @@ public class AuthorizablePipe extends BasePipe {
         return autoCreateGroup || StringUtils.isNotBlank(addToGroup) || StringUtils.isNotBlank(addMembers);
     }
 
+    /**
+     * public constructor
+     * @param plumber plumber instance
+     * @param resource configuration resource
+     * @throws Exception bad configuration handling
+     */
     public AuthorizablePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
         resolver = resource.getResourceResolver();
@@ -105,8 +110,7 @@ public class AuthorizablePipe extends BasePipe {
      * Returns the authorizable configured by its expression, creating it if
      * not present and if <code>autoCreateGroup</code> is set to true, or, if
      * no expression, tries to resolve getInput() as an authorizable
-     * @return
-     * @throws RepositoryException
+     * @return corresponding authorizable
      */
     protected Authorizable getAuthorizable() {
         Authorizable auth = null;
@@ -133,7 +137,7 @@ public class AuthorizablePipe extends BasePipe {
 
     /**
      * Add current authorizable to configured addToGroup expression (should resolve as a group id)
-     * @param auth
+     * @param auth authorizable to add to the group
      */
     protected void addToGroup(Authorizable auth){
         try {
@@ -154,7 +158,7 @@ public class AuthorizablePipe extends BasePipe {
 
     /**
      * Add to current authorizable (that should be a group) the configured members in addMembers expression
-     * @param auth
+     * @param auth group to which members should be added
      */
     protected void addMembers(Authorizable auth) {
         try {
@@ -184,7 +188,7 @@ public class AuthorizablePipe extends BasePipe {
 
     /**
      * add current group's members to the bindings
-     * @param auth
+     * @param auth group whose members should be bound in the pipe bindings
      */
     protected void bindMembers(Authorizable auth){
         try {

@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Execution bindings of a pipe
+ * Execution bindings of a pipe, and all expression related
  */
 public class PipeBindings {
     private static final Logger log = LoggerFactory.getLogger(PipeBindings.class);
@@ -63,7 +63,8 @@ public class PipeBindings {
     private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}");
 
     /**
-     * public constructor
+     * public constructor, built from pipe's resource
+     * @param resource pipe's configuration resource
      */
     public PipeBindings(Resource resource){
         engine.setContext(scriptContext);
@@ -93,8 +94,8 @@ public class PipeBindings {
 
     /**
      * add a script file to the engine
-     * @param resolver
-     * @param path
+     * @param resolver resolver with which the file should be read
+     * @param path path of the script file
      */
     public void addScript(ResourceResolver resolver, String path) {
         InputStream is = null;
@@ -126,21 +127,25 @@ public class PipeBindings {
 
     /**
      * adds additional bindings (global variables to use in child pipes expressions)
-     * @param bindings
+     * @param bindings key/values bindings to add to the existing bindings
      */
     public void addBindings(Map bindings) {
         log.info("Adding bindings {}", bindings);
         getBindings().putAll(bindings);
     }
 
+    /**
+     * copy bindings
+     * @param original original bindings to copy
+     */
     public void copyBindings(PipeBindings original){
         getBindings().putAll(original.getBindings());
     }
 
     /**
      * Update current resource of a given pipe, and appropriate binding
-     * @param pipe
-     * @param resource
+     * @param pipe pipe we'll extract the output binding from
+     * @param resource current resource in the pipe execution
      */
     public void updateBindings(Pipe pipe, Resource resource) {
         outputResources.put(pipe.getName(), resource);
@@ -150,23 +155,37 @@ public class PipeBindings {
         addBinding(pipe.getName(), pipe.getOutputBinding());
     }
 
+    /**
+     * add a binding
+     * @param name binding's name
+     * @param value binding's value
+     */
     public void addBinding(String name, Object value){
         log.debug("Adding binding {}={}", name, value);
         getBindings().put(name, value);
     }
 
+    /**
+     * check if a given bindings is defined or not
+     * @param name name of the binding
+     * @return true if <code>name</code> is registered
+     */
     public boolean isBindingDefined(String name){
         return getBindings().containsKey(name);
     }
 
+    /**
+     * return registered bindings
+     * @return bindings
+     */
     public Bindings getBindings() {
         return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
     }
 
     /**
      * Doesn't look like nashorn likes template strings :-(
-     * @param expr
-     * @return
+     * @param expr ECMA like expression <code>blah${'some' + 'ecma' + 'expression'}</code>
+     * @return computed expression
      */
     protected String computeECMA5Expression(String expr){
         Matcher matcher = INJECTED_SCRIPT.matcher(expr);
@@ -198,10 +217,10 @@ public class PipeBindings {
     }
 
     /**
-     *
-     * @param expr
-     * @return
-     * @throws ScriptException
+     * evaluate a given expression
+     * @param expr ecma like expression
+     * @return object that is the result of the expression
+     * @throws ScriptException in case the script fails, an exception is thrown (to let call code the opportunity to stop the execution)
      */
     protected Object evaluate(String expr) throws ScriptException {
         String computed = computeECMA5Expression(expr);
@@ -215,8 +234,8 @@ public class PipeBindings {
     /**
      * Expression is a function of variables from execution context, that
      * we implement here as a String
-     * @param expr
-     * @return
+     * @param expr ecma like expression
+     * @return String that is the result of the expression
      */
     public String instantiateExpression(String expr){
         try {
@@ -229,8 +248,8 @@ public class PipeBindings {
 
     /**
      * Instantiate object from expression
-     * @param expr
-     * @return
+     * @param expr ecma expression
+     * @return instantiated object
      */
     public Object instantiateObject(String expr){
         try {
@@ -254,9 +273,9 @@ public class PipeBindings {
     }
 
     /**
-     *
-     * @param name
-     * @return
+     * return Pipe <code>name</code>'s output binding
+     * @param name name of the pipe
+     * @return resource corresponding to that pipe output
      */
     public Resource getExecutedResource(String name) {
         return outputResources.get(name);

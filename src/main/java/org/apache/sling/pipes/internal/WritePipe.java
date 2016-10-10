@@ -49,6 +49,12 @@ public class WritePipe extends BasePipe {
     Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");
     Pattern multi = Pattern.compile("\\[(.*)\\]");
 
+    /**
+     * public constructor
+     * @param plumber plumber instance
+     * @param resource configuration resource
+     * @throws Exception bad configuration handling
+     */
     public WritePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
         if (getConfiguration() == null){
@@ -59,9 +65,13 @@ public class WritePipe extends BasePipe {
     }
 
     /**
-     * convert the configured value in an actual one
-     * @param expression
-     * @return
+     * convert the configured value (can be an expression) in a value that can be written in a resource.
+     * also handles patch for multivalue properties like <code>+[value]</code> in which case <code>value</code>
+     * is added to the MV property
+     * @param resource resource to which value will be written
+     * @param key property to which value will be written
+     * @param expression configured value to write
+     * @return actual value to write to the resource
      */
     protected Object computeValue(Resource resource, String key, Object expression) {
         if (expression instanceof String) {
@@ -98,9 +108,9 @@ public class WritePipe extends BasePipe {
      * Write properties from the configuration to the target resource,
      * instantiating both property names & values
      *
-     * @param conf
-     * @param target
-     * @throws RepositoryException
+     * @param conf configured resource that holds all properties to write (and children)
+     * @param target target resource on which configured values will be written
+     * @throws RepositoryException issues occuring when traversing nodes
      */
     private void copyProperties(Resource conf, Resource target) throws RepositoryException {
         ValueMap writeMap = conf.adaptTo(ValueMap.class);
@@ -129,7 +139,7 @@ public class WritePipe extends BasePipe {
 
     /**
      * we store all property to remove for very last moment (in order to potentially reuse their value)
-     * @param property
+     * @param property property resource that should be removed
      */
     private void addPropertyToRemove(Resource property){
         if (property != null) {
@@ -142,8 +152,8 @@ public class WritePipe extends BasePipe {
 
     /**
      * write the configured tree at the target resource, creating each node if needed, copying values.
-     * @param conf
-     * @return
+     * @param conf configuration JCR tree to write to target resource
+     * @param target target resource to write
      */
     private void writeTree(Node conf, Resource target) throws RepositoryException {
         copyProperties(resolver.getResource(conf.getPath()), target);
