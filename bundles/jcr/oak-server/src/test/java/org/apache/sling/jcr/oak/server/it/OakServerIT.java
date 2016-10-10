@@ -48,7 +48,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Ignore;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -210,7 +209,6 @@ public class OakServerIT extends OakServerTestSupport {
     }
 
     @Test
-    @Ignore("TODO: Fails with latest snapshots of resource-related bundles")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
