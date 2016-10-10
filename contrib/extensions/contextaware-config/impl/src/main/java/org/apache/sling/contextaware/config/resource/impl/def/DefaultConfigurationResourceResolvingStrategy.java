@@ -126,7 +126,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     private Iterator<String> findConfigRefs(final Resource startResource) {
         // collect all context path resources
         Iterator<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
-        
+
         // get config resource path for each context resource, filter out items where not reference could be resolved
         Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
                 @Override
@@ -134,7 +134,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                     return getReference((Resource)input);
                 }
             }), PredicateUtils.notNullPredicate());
-        
+
         // expand paths and eliminate duplicates
         return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
@@ -246,7 +246,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             if (item != null) {
 
                 // check inheritance mode on current level
-                listMergingEnabled = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, listMergingEnabled);
+                final Boolean inheritVal = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, Boolean.class);
+                if ( inheritVal != null ) {
+                    listMergingEnabled = inheritVal;
+                }
 
                 // in inheritance is enabled on this level and candidates where collected on previous levels add them now
                 if (listMergingEnabled == Boolean.TRUE && !resultCandidates.isEmpty()) {
