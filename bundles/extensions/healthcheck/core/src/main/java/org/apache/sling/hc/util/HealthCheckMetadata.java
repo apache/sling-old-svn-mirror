@@ -47,6 +47,10 @@ public class HealthCheckMetadata {
 
     private final transient ServiceReference serviceReference;
 
+    private final long ttl;
+
+    private final static long NOT_CONFIGURED_TTL = -1;
+
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
@@ -54,6 +58,8 @@ public class HealthCheckMetadata {
         this.title = getHealthCheckTitle(ref);
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
         this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
+        final Long ttlTemp = PropertiesUtil.toLong(ref.getProperty(HealthCheck.TTL), NOT_CONFIGURED_TTL);
+        this.ttl = ttlTemp != null ? ttlTemp : NOT_CONFIGURED_TTL;
         this.serviceReference = ref;
     }
 
@@ -114,6 +120,14 @@ public class HealthCheckMetadata {
      */
     public ServiceReference getServiceReference() {
         return this.serviceReference;
+    }
+
+    /**
+     * Get service {@link org.apache.sling.hc.api.Result} Time To Leave
+     * @return actual time in ms for {@link org.apache.sling.hc.api.Result} for leave in cache
+     */
+    public long getTtl() {
+        return ttl;
     }
 
     @Override
