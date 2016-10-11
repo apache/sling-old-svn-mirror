@@ -508,11 +508,77 @@ def modules = [
         jdks: ["1.7"]
     ],
     [
+        location: 'samples/accessmanager-ui'
+    ],
+    [
+        location: 'samples/custom-login-form'
+    ],
+    [
+        location: 'samples/custom-selector-login-form'
+    ],
+    [
+        location: 'samples/espblog'
+    ],
+    [
         location: 'samples/fling',
         jdks: ["1.8"]
     ],
     [
+        location: 'samples/framework-fragment'
+    ],
+    [
+        location: 'samples/inplace-integration-test'
+    ],
+    [
+        location: 'samples/installing-dependencies'
+    ],
+    [
+        location: 'samples/javashell'
+    ],
+    [
+        location: 'samples/mail-archive/james-wrapper'
+    ],
+    [
+        location: 'samples/mail-archive/server'
+    ],
+    [
+        location: 'samples/mail-archive/stats'
+    ],
+    [
+        location: 'samples/mail-archive/ui'
+    ],
+    [
+        location: 'samples/org.apache.sling.samples.jcr.contentloader'
+    ],
+    [
+        location: 'samples/path-based-rtp'
+    ],
+    [
+        location: 'samples/post-servlet-extensions'
+    ],
+    [
+        location: 'samples/simple-launchpad'
+    ],
+    [
+        location: 'samples/slingbucks'
+    ],
+    [
         location: 'samples/slingshot'
+    ],
+    [
+        location: 'samples/urlfilter'
+    ],
+    [
+        location: 'samples/usermanager-ui'
+    ],
+    [
+        location: 'samples/webloader/service'
+    ],
+    [
+        location: 'samples/webloader/ui'
+    ],
+    [
+        location: 'samples/workspacepicker'
     ],
     [
         location: 'testing/junit/core',
