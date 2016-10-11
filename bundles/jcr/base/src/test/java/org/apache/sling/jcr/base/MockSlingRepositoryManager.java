@@ -30,14 +30,17 @@ import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 
 /** Minimal AbstractSlingRepositoryManager used for testing */
-class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
+public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private final Repository repository;
+    private LoginAdminWhitelist loginAdminWhitelist; 
+    
 
-    MockSlingRepositoryManager(Repository repository) {
+    public MockSlingRepositoryManager(Repository repository) {
         this.repository = repository;
+        this.loginAdminWhitelist = new MockLoginAdminWhitelist();
     }
-
+    
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
         return null;
@@ -71,5 +74,14 @@ class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected void disposeRepository(Repository repository) {
+    }
+
+    @Override
+    protected LoginAdminWhitelist getLoginAdminWhitelist() {
+        return loginAdminWhitelist;
+    }
+    
+    public void setLoginAdminWhitelist(LoginAdminWhitelist w) {
+        loginAdminWhitelist = w;
     }
 }

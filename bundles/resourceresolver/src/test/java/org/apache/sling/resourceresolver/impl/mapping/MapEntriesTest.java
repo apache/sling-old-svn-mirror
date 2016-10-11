@@ -54,10 +54,12 @@ import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.V
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import static org.mockito.Matchers.any;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.EventAdmin;
 
@@ -72,6 +74,9 @@ public class MapEntriesTest {
 
     @Mock
     private BundleContext bundleContext;
+
+    @Mock
+    private Bundle bundle;
 
     @Mock
     private ResourceResolver resourceResolver;
@@ -98,8 +103,10 @@ public class MapEntriesTest {
 
         Collections.sort(configs);
         vanityBloomFilterFile = new File("src/main/resourcesvanityBloomFilter.txt");
+        when(bundle.getSymbolicName()).thenReturn("TESTBUNDLE");
+        when(bundleContext.getBundle()).thenReturn(bundle);
         when(bundleContext.getDataFile("vanityBloomFilter.txt")).thenReturn(vanityBloomFilterFile);
-        when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
+        when(resourceResolverFactory.getAdministrativeResourceResolver(any(Map.class))).thenReturn(resourceResolver);
         when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(true);

@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-/**
- * The {@code org.apache.sling.jcr.base} package provides basic support
- * to expose JCR repositories in Sling. The primary classes to implement are
- * {@code org.apache.sling.jcr.base.AbstractSlingRepositoryManager} to
- * manage the actual JCR repository instance and
- * {@link org.apache.sling.jcr.base.AbstractSlingRepository2} being the
- * basis for the repository service instance handed to using bundles.
- */
-@Version("3.1.0")
 package org.apache.sling.jcr.base;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.framework.Bundle;
 
+import aQute.bnd.annotation.ProviderType;
+
+/**
+ * Whitelist that defines which bundles can use the 
+ * {@link SlingRepository#loginAdministrative} method.
+ */
+@ProviderType
+public interface LoginAdminWhitelist {
+    boolean allowLoginAdministrative(Bundle b);
+}

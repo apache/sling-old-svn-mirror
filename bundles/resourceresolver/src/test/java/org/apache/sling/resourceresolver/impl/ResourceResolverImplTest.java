@@ -57,6 +57,7 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
+import org.osgi.framework.Bundle;
 
 public class ResourceResolverImplTest {
 
@@ -90,7 +91,8 @@ public class ResourceResolverImplTest {
         activator.resourceProviderTracker = resourceProviderTracker;
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
-        resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
+        final Bundle usingBundle = mock(Bundle.class);
+        resFac = new ResourceResolverFactoryImpl(commonFactory, usingBundle, null);
         resResolver = resFac.getAdministrativeResourceResolver(null);
     }
 
