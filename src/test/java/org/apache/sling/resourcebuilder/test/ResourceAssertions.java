@@ -52,7 +52,7 @@ public class ResourceAssertions {
     }
     
     public Resource assertResource(String path) {
-        final Resource result =  resourceResolver.resolve(fullPath(path));
+        final Resource result = resourceResolver.getResource(fullPath(path));
         assertNotNull("Expecting resource to exist:" + path, result);
         return result;
     }
