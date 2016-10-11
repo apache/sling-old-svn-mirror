@@ -24,14 +24,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -39,15 +37,17 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.contextaware.config.resource.impl.ConfigurationResourceResolverImpl;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.xss.XSSAPI;
-import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 // TODO: this web console plugin is currently quite broken and needs to be refactored and moved to another package
+// because of this it's disabled for now
+/*
 @Component(service=Servlet.class,
            property={"org.osgi.framework.Constants.SERVICE_DESCRIPTION=Apache Sling Web Console Plugin for configurations",
                    WebConsoleConstants.PLUGIN_LABEL + "=" + WebConsolePlugin.LABEL,
                    WebConsoleConstants.PLUGIN_TITLE + "=" + WebConsolePlugin.TITLE})
+*/
 @SuppressWarnings("serial")
 public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
