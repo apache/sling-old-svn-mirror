@@ -497,7 +497,7 @@ public class ResourceResolverFactoryActivator {
 
         // the root of the resolver mappings
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
-        observationPaths = PropertiesUtil.toStringArray(PROP_OBSERVATION_PATHS, new String[] {"/"});
+        observationPaths = PropertiesUtil.toStringArray(properties.get(PROP_OBSERVATION_PATHS), new String[] {"/"});
 
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
