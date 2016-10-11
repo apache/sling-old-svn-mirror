@@ -25,4 +25,6 @@ public @interface ListConfig {
 
     String stringParam();
     
+    int intParam();
+    
 }
