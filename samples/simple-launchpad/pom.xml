@@ -48,7 +48,7 @@
                 <configuration>
                     <defaultBundleList>
                         <!-- only need this until the next release -->
-                        <version>7-SNAPSHOT</version>
+                        <version>7</version>
                     </defaultBundleList>
                     <additionalBundles>
                         <bundle>
