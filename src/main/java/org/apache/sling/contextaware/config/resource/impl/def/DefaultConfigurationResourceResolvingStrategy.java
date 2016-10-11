@@ -19,15 +19,17 @@
 package org.apache.sling.contextaware.config.resource.impl.def;
 
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
+import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.collections.Transformer;
@@ -38,6 +40,8 @@ import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.contextaware.config.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.contextaware.config.resource.impl.util.PathParentExpandIterator;
@@ -205,21 +209,47 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         // strategy: find first item among all configured paths
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource);
+        Resource configResource = null;
+        Map<String,Object> configValueMap = null;
+        boolean propertyInheritance = false;
         while (paths.hasNext()) {
             final String path = paths.next();
             final Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
+                
+                if (propertyInheritance) {
+                    // merge property map with values from inheritance parent
+                    Map<String,Object> mergedValueMap = new HashMap<>(item.getValueMap());
+                    mergedValueMap.putAll(configValueMap);
+                    configValueMap = mergedValueMap;
+                }
+                else {
+                    configResource = item;
+                    configValueMap = item.getValueMap();
+                }
 
-                return item;
+                // check property inheritance mode on current level - should we check on next-highest level as well?
+                propertyInheritance = item.getValueMap().get(PROPERTY_CONFIG_PROPERTY_INHERIT, false);
+                if (!propertyInheritance) {
+                    break;
+                }
             }
             idx++;
         }
 
-        logger.debug("Could not resolve any config item for '{}' (or no permissions to read it)", name);
+        if (configResource == null) {
+            logger.debug("Could not resolve any config item for '{}' (or no permissions to read it)", name);
+            return null;
+        }
 
-        // nothing found
-        return null;
+        if (configValueMap instanceof ValueMap) {
+            // valuemap was not merged - return original resource with original valuemap
+            return configResource;
+        }
+        else {
+            return new ConfigurationResourceWrapper(configResource, new ValueMapDecorator(configValueMap));
+        }
     }
 
     @Override
@@ -232,11 +262,15 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             logger.trace("- searching for list '{}'", name);
         }
 
-        final Set<String> names = new HashSet<>();
-        final List<Resource> result = new ArrayList<>();
+        final Map<String,Resource> result = new LinkedHashMap<>();
+        final Map<String,Map<String,Object>> configValueMaps = new HashMap<>();
 
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource);
+        boolean inheritCollection = false;
+        boolean inheritProperties = false;
+        boolean inherit = false;
+        boolean propertyInheritanceApplied = false;
         while (paths.hasNext()) {
             final String path = paths.next();
             Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
@@ -247,15 +281,26 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 for (Resource child : item.getChildren()) {
-                    if (isValidResourceCollectionItem(child) && !names.contains(child.getName())) {
-                        result.add(child);
-                        names.add(child.getName());
+                    if (isValidResourceCollectionItem(child)) {
+                        if ((!inherit || inheritCollection) && !result.containsKey(child.getName())) {
+                            result.put(child.getName(), child);
+                            configValueMaps.put(child.getName(), child.getValueMap());
+                        }
+                        else if (inheritProperties && configValueMaps.containsKey(child.getName())) {
+                            // merge property map with values from inheritance parent
+                            Map<String,Object> mergedValueMap = new HashMap<>(child.getValueMap());
+                            mergedValueMap.putAll(configValueMaps.get(child.getName()));
+                            configValueMaps.put(child.getName(), mergedValueMap);
+                            propertyInheritanceApplied = true;
+                        }
                     }
                 }
 
-                // check inheritance mode on current level - should we check on next-highest level as well?
-                boolean inheritFromNextConfigPath = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, false);
-                if (!inheritFromNextConfigPath) {
+                // check collection and property inheritance mode on current level - should we check on next-highest level as well?
+                inheritCollection = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, false);
+                inheritProperties = item.getValueMap().get(PROPERTY_CONFIG_PROPERTY_INHERIT, false);
+                inherit = inheritCollection || inheritProperties;
+                if (!inherit) {
                     break;
                 }
             }
@@ -270,8 +315,24 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         if (logger.isTraceEnabled()) {
             logger.trace("- final list has {} items", result.size());
         }
-
-        return result;
+        
+        // replace config resources with wrappers with merged properties if property inheritance was applied
+        if (propertyInheritanceApplied) {
+            List<Resource> transformedResult = new ArrayList<>();
+            for (Map.Entry<String, Resource> entry : result.entrySet()) {
+                Map<String,Object> configValueMap = configValueMaps.get(entry.getKey());
+                if (configValueMap instanceof ValueMap) {
+                    transformedResult.add(entry.getValue());
+                }
+                else {
+                    transformedResult.add(new ConfigurationResourceWrapper(entry.getValue(), new ValueMapDecorator(configValueMap)));
+                }
+            }
+            return transformedResult;
+        }
+        else {
+            return result.values();
+        }
     }
 
     private boolean isValidResourceCollectionItem(Resource resource) {
