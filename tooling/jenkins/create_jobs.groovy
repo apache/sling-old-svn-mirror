@@ -776,9 +776,6 @@ def modules = [
         location: 'samples/mail-archive/ui'
     ],
     [
-        location: 'samples/org.apache.sling.samples.jcr.contentloader'
-    ],
-    [
         location: 'samples/path-based-rtp'
     ],
     [
