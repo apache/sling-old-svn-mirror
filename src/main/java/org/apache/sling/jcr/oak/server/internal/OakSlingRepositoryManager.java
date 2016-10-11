@@ -30,6 +30,7 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
@@ -194,10 +195,11 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
             try {
                 // TODO do we need to go via PrivilegeManager for the names? See OAK-1016 example.
                 session = repository.loginAdministrative(getDefaultWorkspace());
+                JcrUtils.getOrAddNode(session.getRootNode(), "content", "sling:Folder");
                 final String[] privileges = new String[]{Privilege.JCR_READ};
                 AccessControlUtils.addAccessControlEntry(
                     session,
-                    "/",
+                    "/content",
                     EveryonePrincipal.getInstance(),
                     privileges,
                     true);
