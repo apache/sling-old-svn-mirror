@@ -591,7 +591,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return false;
     }
 
-    private void doRemoveAlias(String path, boolean nodeDeletion) {
+    private boolean doRemoveAlias(String path, boolean nodeDeletion) {
         String resourceName = null;
         if (nodeDeletion) {
             if (!"/".equals(path)){
@@ -626,6 +626,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         if (aliasMapEntry != null && aliasMapEntry.isEmpty()) {
             this.aliasMap.remove(path);
         }
+        return aliasMap != null;
     }
 
     public boolean isOptimizeAliasResolutionEnabled() {
@@ -818,6 +819,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                             this.resolver.refresh();
                         }
                         boolean changed = doUpdateVanity(path);
+                        changed |= doRemoveAlias(path, false);
                         changed |= doUpdateAlias(path, false);
 
                         if ( changed ) {
