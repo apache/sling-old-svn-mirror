@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
-import org.apache.sling.resourcebuilder.test.ResourceAssertions;
 
 class TestEnvironment {
     
@@ -37,7 +36,6 @@ class TestEnvironment {
     final ResourceResolver resolver;
     final String testRootPath;
     final Resource parent;
-    final ResourceAssertions A;
 
     TestEnvironment(TeleporterRule teleporter) throws LoginException, PersistenceException {
         testRootPath = getClass().getSimpleName() + "-" + UUID.randomUUID().toString(); 
@@ -46,7 +44,6 @@ class TestEnvironment {
         parent = resolver.create(root, testRootPath, null);
         builderService = teleporter.getService(ResourceBuilderFactory.class); 
         builder = builderService.forParent(parent);
-        A = new ResourceAssertions(testRootPath, resolver);
     }
     
     void cleanup() throws PersistenceException {
