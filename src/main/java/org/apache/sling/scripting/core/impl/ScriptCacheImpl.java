@@ -30,9 +30,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.annotation.Nonnull;
 import javax.script.Compilable;
-import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
@@ -51,6 +51,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -93,7 +94,6 @@ import org.slf4j.LoggerFactory;
         referenceInterface = ScriptEngineFactory.class,
         policy = ReferencePolicy.DYNAMIC
 )
-@SuppressWarnings("unused")
 /**
  * The {@code ScriptCache} stores information about {@link CompiledScript} instances evaluated by various {@link ScriptEngine}s that
  * implement the {@link Compilable} interface.
@@ -108,7 +108,7 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
 
     private BundleContext bundleContext;
     private Map<String, SoftReference<CachedScript>> internalMap;
-    private ServiceRegistration resourceChangeListener = null;
+    private ServiceRegistration<ResourceChangeListener> resourceChangeListener;
     private Set<String> extensions = new HashSet<>();
     private String[] additionalExtensions = new String[]{};
     private String[] searchPaths = {};
@@ -195,8 +195,21 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
                     String path = change.getPath();
                     writeLock.lock();
                     try {
-                        internalMap.remove(path);
+                        final boolean removed = internalMap.remove(path) != null;
                         LOGGER.debug("Detected script change for {} - removed entry from the cache.", path);
+                        if ( !removed && change.getType() == ChangeType.REMOVED ) {
+                            final String prefix = path + "/";
+                            final Set<String> removal = new HashSet<>();
+                            for(final Map.Entry<String, SoftReference<CachedScript>> entry : internalMap.entrySet()) {
+                                if ( entry.getKey().startsWith(prefix) ) {
+                                    removal.add(entry.getKey());
+                                }
+                            }
+                            for(final String key : removal) {
+                                internalMap.remove(key);
+                                LOGGER.debug("Detected removal for {} - removed entry {} from the cache.", path, key);
+                            }
+                        }
                     } finally {
                         writeLock.unlock();
                     }
@@ -262,16 +275,13 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
                 for (String extension : extensions) {
                     globPatterns.add("glob:**/*." + extension);
                 }
-                Dictionary resourceChangeListenerProperties = new Hashtable();
+                Dictionary<String, Object> resourceChangeListenerProperties = new Hashtable<String, Object>();
                 resourceChangeListenerProperties.put(ResourceChangeListener.PATHS, globPatterns.toArray(new String[globPatterns.size()]));
                 resourceChangeListenerProperties.put(ResourceChangeListener.CHANGES,
                         new String[]{ResourceChange.ChangeType.CHANGED.name(), ResourceChange.ChangeType.REMOVED.name()});
                 resourceChangeListener =
                         bundleContext.registerService(
-                                new String[] {
-                                    ResourceChangeListener.class.getName(),
-                                    ExternalResourceChangeListener.class.getName()
-                                },
+                                ResourceChangeListener.class,
                                 this,
                                 resourceChangeListenerProperties
                         );
