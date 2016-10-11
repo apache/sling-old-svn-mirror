@@ -583,7 +583,8 @@ def modules = [
         location: 'contrib/launchpad/testing'
     ],
     [
-        location: 'contrib/scripting/freemarker'
+        location: 'contrib/scripting/freemarker',
+        jdks: ['1.8']
     ],
     [
         location: 'contrib/scripting/groovy'
@@ -625,7 +626,8 @@ def modules = [
         location: 'contrib/scripting/xproc'
     ],
     [
-        location: 'contrib/scripting/org.apache.sling.scripting.thymeleaf'
+        location: 'contrib/scripting/org.apache.sling.scripting.thymeleaf',
+        jdks: ['1.8']
     ],
     [
         location: "installer/console"
