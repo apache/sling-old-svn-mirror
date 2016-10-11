@@ -62,6 +62,7 @@ import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -175,7 +176,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     @SuppressWarnings({ "unchecked", "deprecation" })
     public MapEntries(final MapConfigurationProvider factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
                     throws LoginException, IOException {
-        this.resolver = factory.getAdministrativeResourceResolver(null);
+        final Map<String, Object> authInfo = new HashMap<String, Object>();
+        authInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundleContext.getBundle());
+        this.resolver = factory.getAdministrativeResourceResolver(authInfo);
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
         this.enabledVanityPaths = factory.isVanityPathEnabled();
