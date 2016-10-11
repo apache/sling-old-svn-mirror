@@ -49,7 +49,7 @@ public class ResourceBuilderIT {
     @Before
     public void setup() throws LoginException, PersistenceException {
         E = new TestEnvironment(teleporter);
-        A = new ResourceAssertions(E.testRootPath, E.resolver);
+        A = new ResourceAssertions(E.parent.getPath(), E.resolver);
     }
     
     @After
