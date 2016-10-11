@@ -331,6 +331,18 @@ def modules = [
         location: 'bundles/servlets/resolver'
     ],
     [
+        location: 'contrib/auth/org.apache.sling.auth.xing.api'
+    ],
+    [
+        location: 'contrib/auth/org.apache.sling.auth.xing.login'
+    ],
+    [
+        location: 'contrib/auth/org.apache.sling.auth.xing.oauth'
+    ],
+    [
+        location: 'contrib/commons/html'
+    ],
+    [
         location: 'contrib/commons/mom/api'
     ],
     [
@@ -353,6 +365,51 @@ def modules = [
     ],
     [
         location: 'contrib/crankstart/test-model'
+    ],
+    [
+        location: 'contrib/explorers/gwt'
+    ],
+    [
+        location: 'contrib/explorers/resourceeditor'
+    ],
+    [
+        location: 'contrib/extensions/apt/parser'
+    ],
+    [
+        location: 'contrib/extensions/apt/servlet'
+    ],
+    [
+        location: 'contrib/extensions/bgservlets/engine'
+    ],
+    [
+        location: 'contrib/extensions/bgservlets/testing'
+    ],
+    [
+        location: 'contrib/extensions/cache/api'
+    ],
+    [
+        location: 'contrib/extensions/cache/container-test'
+    ],
+    [
+        location: 'contrib/extensions/cache/ehcache'
+    ],
+    [
+        location: 'contrib/extensions/cache/impl'
+    ],
+    [
+        location: 'contrib/extensions/cache/infinispan'
+    ],
+    [
+        location: 'contrib/extensions/cache/portal'
+    ],
+    [
+        location: 'contrib/extensions/cassandra'
+    ],
+    [
+        location: 'contrib/extensions/collection'
+    ],
+    [
+        location: 'contrib/extensions/datasource'
     ],
     [
         location: "contrib/extensions/sling-pipes",
@@ -385,6 +442,84 @@ def modules = [
         location: 'contrib/extensions/hapi/client'
     ],
     [
+        location: 'contrib/extensions/dojo-sling'
+    ],
+    [
+        location: 'contrib/extensions/dojo'
+    ],
+    [
+        location: 'contrib/extensions/ftpserver'
+    ],
+    [
+        location: 'contrib/extensions/gwt/sample'
+    ],
+    [
+        location: 'contrib/extensions/gwt/servlet'
+    ],
+    [
+        location: 'contrib/extensions/jmxprovider'
+    ],
+    [
+        location: 'contrib/extensions/jolokia'
+    ],
+    [
+        location: 'contrib/extensions/leak-detector'
+    ],
+    [
+        location: 'contrib/extensions/logback-groovy-fragment'
+    ],
+    [
+        location: 'contrib/extensions/mongodb'
+    ],
+    [
+        location: 'contrib/extensions/oak-s3'
+    ],
+    [
+        location: 'contrib/extensions/obr'
+    ],
+    [
+        location: 'contrib/extensions/reqanalyzer'
+    ],
+    [
+        location: 'contrib/extensions/resource-inventory'
+    ],
+    [
+        location: 'contrib/extensions/resourcemerger'
+    ],
+    [
+        location: 'contrib/extensions/rewriter'
+    ],
+    [
+        location: 'contrib/extensions/security'
+    ],
+    [
+        location: 'contrib/extensions/slf4j-mdc'
+    ],
+    [
+        location: 'contrib/extensions/sling-query'
+    ],
+    [
+        location: 'contrib/extensions/startup-filter-disabler'
+    ],
+    [
+        location: 'contrib/extensions/startup-filter'
+    ],
+    [
+        location: 'contrib/extensions/superimposing'
+    ],
+    [
+        location: 'contrib/extensions/tenant'
+    ],
+    [
+        location: 'contrib/extensions/urlrewriter'
+    ],
+    [
+        location: 'contrib/extensions/tracer'
+    ],
+    [
+        location: 'contrib/extensions/logtail'
+    ],
+    [
         location: 'contrib/nosql/couchbase-client'
     ],
     [
@@ -398,6 +533,99 @@ def modules = [
     ],
     [
         location: 'contrib/nosql/mongodb-resourceprovider'
+    ],
+    [
+        location: 'contrib/extensions/sling-dynamic-include'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/api'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/impl'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/integration-tests'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/tooling/bnd-plugin-integration-tests'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/tooling/bnd-plugin'
+    ],
+    [
+        location: 'contrib/extensions/contextaware-config/spi'
+    ],
+    [
+        location: 'contrib/extensions/oak-restrictions'
+    ],
+    [
+        location: 'contrib/jcr/compiler'
+    ],
+    [
+        location: 'contrib/jcr/jackrabbit-client'
+    ],
+    [
+        location: 'contrib/jcr/ocm'
+    ],
+    [
+        location: 'contrib/jcr/prefs'
+    ],
+    [
+        location: 'contrib/jcr/resourcesecurity'
+    ],
+    [
+        location: 'contrib/jcr/js/nodetypes'
+    ],
+    [
+        location: 'contrib/launchpad/debian'
+    ],
+    [
+        location: 'contrib/launchpad/testing'
+    ],
+    [
+        location: 'contrib/scripting/freemarker'
+    ],
+    [
+        location: 'contrib/scripting/groovy'
+    ],
+    [
+        location: 'contrib/scripting/java'
+    ],
+    [
+        location: 'contrib/scripting/jsp-taglib-atom'
+    ],
+    [
+        location: 'contrib/scripting/jst'
+    ],
+    [
+        location: 'contrib/scripting/python'
+    ],
+    [
+        location: 'contrib/scripting/ruby'
+    ],
+    [
+        location: 'contrib/scripting/scala/config'
+    ],
+    [
+        location: 'contrib/scripting/scala/samples/forum'
+    ],
+    [
+        location: 'contrib/scripting/scala/samples/hello-world'
+    ],
+    [
+        location: 'contrib/scripting/scala/script'
+    ],
+    [
+        location: 'contrib/scripting/script-console'
+    ],
+    [
+        location: 'contrib/scripting/velocity'
+    ],
+    [
+        location: 'contrib/scripting/xproc'
+    ],
+    [
+        location: 'contrib/scripting/org.apache.sling.scripting.thymeleaf'
     ],
     [
         location: "installer/console"
