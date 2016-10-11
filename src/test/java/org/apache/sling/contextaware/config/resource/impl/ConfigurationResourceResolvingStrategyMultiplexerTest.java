@@ -66,13 +66,17 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         // configuration
         context.build()
             .resource("/conf/site1/sling:test/test")
-            .resource("/conf/site1/sling:test/feature/c")
-            .resource("/conf/site2/sling:test/feature/c")
-            .resource("/conf/site2/sling:test/feature/d")
-            .resource("/apps/conf/sling:test/feature/a")
+            .resource("/conf/site1/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .resource("c")
+            .resource("/conf/site2/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .siblingsMode()
+                .resource("c")
+                .resource("d")
+            .resource("/apps/conf/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .resource("a")
             .resource("/libs/conf/sling:test/test")
-            .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
-            .resource("/libs/conf/sling:test/feature/b");
+            .resource("/libs/conf/sling:test/feature")
+                .resource("b");
     }
     
     @Test
