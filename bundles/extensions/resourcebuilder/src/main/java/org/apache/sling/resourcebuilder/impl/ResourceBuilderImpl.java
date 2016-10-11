@@ -112,7 +112,8 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         
         final String parentPath;
         final String fullPath;
-        if (isAbsolutePath(path)) {
+        boolean absolutePath = isAbsolutePath(path);
+        if (absolutePath) {
             parentPath = ResourceUtil.getParent(path);
             fullPath = path;
         }
@@ -145,8 +146,8 @@ public class ResourceBuilderImpl implements ResourceBuilder {
         
         if (r == null) {
             throw new RuntimeException("Failed to get or create resource " + fullPath);
-        } else if(hierarchyMode) {
-            return cloneResourceBuilder(r, this.intermediatePrimaryType, this.hierarchyMode);
+        } else if (hierarchyMode || absolutePath) {
+            return cloneResourceBuilder(r, this.intermediatePrimaryType, true);
         }
         return this;
     }

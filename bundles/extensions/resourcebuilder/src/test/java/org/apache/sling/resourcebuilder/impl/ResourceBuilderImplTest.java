@@ -367,6 +367,26 @@ public class ResourceBuilderImplTest {
     }
 
     @Test
+    public void absolutePathSwitchBackToSiblingMode() throws Exception {
+        new ResourceBuilderFactoryService()
+            .forResolver(resourceResolver)
+            .resource("/a").siblingsMode().resource("a1").resource("a2")
+            .resource("/b").siblingsMode().resource("b1").resource("b2")
+            .resource("/c").resource("c1").resource("c11");
+        
+        // make sure sibling mode is switched back to hierarchy mode when absolute resources is used
+        A.assertResource("/a");
+        A.assertResource("/a/a1");
+        A.assertResource("/a/a2");
+        A.assertResource("/b");
+        A.assertResource("/b/b1");
+        A.assertResource("/b/b2");
+        A.assertResource("/c");
+        A.assertResource("/c/c1");
+        A.assertResource("/c/c1/c11");
+    }
+
+    @Test
     public void reuseInstance() throws Exception {
         ResourceBuilder content = new ResourceBuilderFactoryService()
                 .forResolver(resourceResolver)
