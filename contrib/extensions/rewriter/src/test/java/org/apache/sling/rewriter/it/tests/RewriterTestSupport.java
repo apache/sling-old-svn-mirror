@@ -19,6 +19,7 @@
 package org.apache.sling.rewriter.it.tests;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsMetrics;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingJavascript;
 import static org.ops4j.pax.exam.CoreOptions.composite;
@@ -62,6 +63,7 @@ public abstract class RewriterTestSupport extends TestSupport {
         return composite(
             slingLaunchpadOakTar(workingDirectory, httpPort),
             slingCommonsHtml(),
+            slingCommonsMetrics(),
             slingScriptingJavascript()
         );
     }
