@@ -457,7 +457,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
     }
 
-    private void doAddVanity(String path) {
+    private boolean doAddVanity(String path) {
         Resource resource = resolver.getResource(path);
         boolean needsUpdate = false;
         if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
@@ -469,15 +469,19 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
         if ( needsUpdate ) {
             updateBloomFilterFile = true;
+            return true;
         }
+        return false;
     }
 
-    private void doUpdateVanity(String path) {
-         doRemoveVanity(path);
-         doAddVanity(path);
+    private boolean doUpdateVanity(String path) {
+         boolean changed = doRemoveVanity(path);
+         changed |= doAddVanity(path);
+
+         return changed;
     }
 
-    private void doRemoveVanity(String path) {
+    private boolean doRemoveVanity(String path) {
         String actualContentPath = getActualContentPath(path);
         List <String> l = vanityTargets.remove(actualContentPath);
         if (l != null){
@@ -499,7 +503,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             if (vanityCounter.longValue() > 0) {
                 vanityCounter.addAndGet(-2);
             }
+            return true;
         }
+        return false;
     }
 
     private void doUpdateVanityOrder(String path, boolean deletion) {
@@ -546,7 +552,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         loadAlias(resource, this.aliasMap);
     }
 
-    private void doUpdateAlias(String path, boolean nodeDeletion) {
+    private boolean doUpdateAlias(String path, boolean nodeDeletion) {
         if (nodeDeletion){
             if (path.endsWith("/jcr:content")) {
                 path =  path.substring(0, path.length() - "/jcr:content".length());
@@ -556,6 +562,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     final ValueMap props = resource.adaptTo(ValueMap.class);
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
+                        return true;
                     }
                 }
             }
@@ -568,6 +575,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     final ValueMap props = parent.adaptTo(ValueMap.class);
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
+                        return true;
                     }
                 } else if (resource.getChild("jcr:content") != null) {
                     Resource jcrContent = resource.getChild("jcr:content");
@@ -575,10 +583,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     final ValueMap props = jcrContent.adaptTo(ValueMap.class);
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
 
     private void doRemoveAlias(String path, boolean nodeDeletion) {
@@ -801,10 +811,18 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 } else {
 
                     if (path.startsWith(this.mapRoot)) {
-                        doUpdateConfiguration();
+                        wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
                     } else {
-                        doUpdateVanity(path);
-                        doUpdateAlias(path, false);
+                        if ( !wasResolverRefreshed ) {
+                            wasResolverRefreshed = true;
+                            this.resolver.refresh();
+                        }
+                        boolean changed = doUpdateVanity(path);
+                        changed |= doUpdateAlias(path, false);
+
+                        if ( changed ) {
+                            this.sendChangeEvent();
+                        }
                     }
                 }
 
