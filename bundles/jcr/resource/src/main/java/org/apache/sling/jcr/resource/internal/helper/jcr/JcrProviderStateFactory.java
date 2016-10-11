@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.base.LoginAdminWhitelist;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -55,15 +56,42 @@ public class JcrProviderStateFactory {
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
     private final PathMapper pathMapper;
+    
+    private final LoginAdminWhitelist loginAdminWhitelist;
 
     public JcrProviderStateFactory(final ServiceReference repositoryReference,
             final SlingRepository repository,
             final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
-            final PathMapper pathMapper) {
+            final PathMapper pathMapper,
+            final LoginAdminWhitelist loginAdminWhitelist) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
         this.pathMapper = pathMapper;
+        this.loginAdminWhitelist = loginAdminWhitelist;
+    }
+    
+    /** Get the calling Bundle from auth info, fail if not provided 
+     *  @throws LoginException if no calling bundle info provided
+     */
+    private Bundle requireCallingBundle(@Nonnull Map<String, Object> authenticationInfo) throws LoginException {
+        final Object obj = authenticationInfo.get(ResourceProvider.AUTH_SERVICE_BUNDLE);
+        if(obj == null) {
+            throw new LoginException("Calling bundle missing in authentication info");
+        } else if(!(obj instanceof Bundle)) {
+            throw new LoginException("Invalid calling bundle object in authentication info");
+        }
+        return (Bundle)obj;
+    }
+    
+    /** Fail if the calling bundle is not whitelisted for loginAdministrative 
+     *  @throws LoginException if bundle not whitelisted or no calling bundle info provided
+     */
+    private void checkLoginAdminWhitelist(@Nonnull Map<String, Object> authenticationInfo) throws LoginException {
+        final Bundle b = requireCallingBundle(authenticationInfo);
+        if(!loginAdminWhitelist.allowLoginAdministrative(b)) {
+            throw new LoginException("Bundle is not whitelisted for loginAdministrative:" + b.getSymbolicName());
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -77,6 +105,10 @@ public class JcrProviderStateFactory {
         BundleContext bc = null;
         try {
             if (Boolean.TRUE.equals(authenticationInfo.get(ResourceProvider.AUTH_ADMIN))) {
+                // We need to do our own whitelist check here as the repository
+                // considers this bundle as the calling bundle but we want to whitelist
+                // according to the bundle that's calling us.
+                checkLoginAdminWhitelist(authenticationInfo);
                 session = repository.loginAdministrative(null);
             } else {
                 session = getSession(authenticationInfo);

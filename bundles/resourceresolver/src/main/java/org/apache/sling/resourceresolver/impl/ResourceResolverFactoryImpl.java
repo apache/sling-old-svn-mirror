@@ -27,6 +27,8 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceResolverFactoryImpl</code> is the {@link ResourceResolverFactory} service
@@ -45,6 +47,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     private final ServiceUserMapper serviceUserMapper;
 
     private final Bundle usingBundle;
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public ResourceResolverFactoryImpl(
             final CommonResourceResolverFactoryImpl commonFactory,
@@ -107,7 +111,15 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     @Override
     @SuppressWarnings("deprecation")
     public ResourceResolver getAdministrativeResourceResolver(
-            final Map<String, Object> authenticationInfo) throws LoginException {
+            Map<String, Object> authenticationInfo) throws LoginException {
+        // usingBundle is required as bundles must now be whitelisted to use this method
+        if(usingBundle == null) {
+            throw new LoginException("usingBundle is null");
+        }
+        if(authenticationInfo == null) {
+            authenticationInfo = new HashMap<String, Object>();
+        }
+        authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, this.usingBundle);
         return commonFactory.getAdministrativeResourceResolver(authenticationInfo);
     }
 
