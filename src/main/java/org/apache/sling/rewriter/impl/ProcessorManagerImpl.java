@@ -441,8 +441,18 @@ public class ProcessorManagerImpl
     }
 
     private synchronized void checkRemoval(final String path) {
-        // TODO Auto-generated method stub
-
+        final String prefix = path + "/";
+        final List<ConfigEntry> toRemove = new ArrayList<>();
+        for(final Map.Entry<String, ConfigEntry[]> entry : this.processors.entrySet()) {
+            for(final ConfigEntry config : entry.getValue()) {
+                if ( config.path != null && config.path.startsWith(prefix) ) {
+                    toRemove.add(config);
+                }
+            }
+        }
+        for(final ConfigEntry entry : toRemove) {
+            this.removeProcessor(entry.path);
+        }
     }
 
     /**
