@@ -151,6 +151,13 @@
             <version>1.8.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- this dependency can be removed when updated to sling-mock 1.8.2 or higher -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.resourcebuilder</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.hamcrest</artifactId>

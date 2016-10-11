@@ -234,59 +234,28 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         final Set<String> names = new HashSet<>();
         final List<Resource> result = new ArrayList<>();
-        final Set<String> nameCandidates = new HashSet<>();
-        final List<Resource> resultCandidates = new ArrayList<>();
 
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource);
-        Boolean listMergingEnabled = null;
         while (paths.hasNext()) {
             final String path = paths.next();
             Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
 
-                // check inheritance mode on current level
-                final Boolean inheritVal = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, Boolean.class);
-                if ( inheritVal != null ) {
-                    listMergingEnabled = inheritVal;
-                }
-
-                // in inheritance is enabled on this level and candidates where collected on previous levels add them now
-                if (listMergingEnabled == Boolean.TRUE && !resultCandidates.isEmpty()) {
-                    result.addAll(resultCandidates);
-                    names.addAll(nameCandidates);
-                    resultCandidates.clear();
-                    nameCandidates.clear();
-                }
-
                 if (logger.isTraceEnabled()) {
                     logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
                 }
 
-                // add resource items only if none found yet, or inheritance is enabled
-                if (result.isEmpty() || listMergingEnabled == Boolean.TRUE) {
-                    for (Resource child : item.getChildren()) {
-                        if (isValidResourceCollectionItem(child)
-                                && !names.contains(child.getName())) {
-                            result.add(child);
-                            names.add(child.getName());
-                        }
-                    }
-                }
-                // if resources are skipped due to inheritance restrictions collect them in candidate list
-                // they may be added later if inheritance is enabled on a parent level
-                else {
-                    for (Resource child : item.getChildren()) {
-                        if (isValidResourceCollectionItem(child)
-                                && !names.contains(child.getName()) && !nameCandidates.contains(child.getName())) {
-                            resultCandidates.add(child);
-                            nameCandidates.add(child.getName());
-                        }
+                for (Resource child : item.getChildren()) {
+                    if (isValidResourceCollectionItem(child) && !names.contains(child.getName())) {
+                        result.add(child);
+                        names.add(child.getName());
                     }
                 }
 
-                // do not go further upwards in level is inheritance is broken here
-                if (listMergingEnabled == Boolean.FALSE) {
+                // check inheritance mode on current level - should we check on next-highest level as well?
+                boolean inheritFromNextConfigPath = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, false);
+                if (!inheritFromNextConfigPath) {
                     break;
                 }
             }
