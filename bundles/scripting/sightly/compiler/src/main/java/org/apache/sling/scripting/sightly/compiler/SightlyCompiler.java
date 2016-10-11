@@ -46,6 +46,7 @@ import org.apache.sling.scripting.sightly.impl.filter.I18nFilter;
 import org.apache.sling.scripting.sightly.impl.filter.JoinFilter;
 import org.apache.sling.scripting.sightly.impl.filter.URIManipulationFilter;
 import org.apache.sling.scripting.sightly.impl.filter.XSSFilter;
+import org.apache.sling.scripting.sightly.impl.filter.DateFormatFilter;
 import org.apache.sling.scripting.sightly.impl.plugin.AttributePlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.CallPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.ElementPlugin;
@@ -102,12 +103,13 @@ public final class SightlyCompiler {
         Collections.sort(plugins);
 
         // register filters
-        final List<Filter> filters = new ArrayList<>(5);
+        final List<Filter> filters = new ArrayList<>(6);
         filters.add(FormatFilter.getInstance());
         filters.add(I18nFilter.getInstance());
         filters.add(JoinFilter.getInstance());
         filters.add(URIManipulationFilter.getInstance());
         filters.add(XSSFilter.getInstance());
+        filters.add(DateFormatFilter.getInstance());
         Collections.sort(filters);
 
         frontend = new SimpleFrontend(plugins, filters);
