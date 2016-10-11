@@ -47,7 +47,6 @@ public class ConfigurationResolverAdaptableTest {
     private ConfigurationResolver underTest;
 
     private Resource site1Page1;
-    private Resource site2Page1;
 
     @Before
     public void setUp() {
@@ -55,23 +54,9 @@ public class ConfigurationResolverAdaptableTest {
 
         context.addModelsForPackage("org.apache.sling.contextaware.config.example");
         
-        // config resources
-        context.build().resource("/conf/content/site2/sling:configs/sampleName",
-                "stringParam", "configValue1",
-                "intParam", 111,
-                "boolParam", true);
-
-        context.build().resource("/conf/content/site2/sling:configs/sampleList")
-                .siblingsMode()
-                .resource("1", "stringParam", "configValue1.1")
-                .resource("2", "stringParam", "configValue1.2")
-                .resource("3", "stringParam", "configValue1.3");
-
         // content resources
         context.build().resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/content/site1");
-        context.build().resource("/content/site2", PROPERTY_CONFIG_REF, "/conf/content/site2");
         site1Page1 = context.create().resource("/content/site1/page1");
-        site2Page1 = context.create().resource("/content/site2/page1");   
     }
 
     @Test
@@ -88,13 +73,24 @@ public class ConfigurationResolverAdaptableTest {
 
     @Test
     public void testConfig() {
-        SimpleSlingModel model = underTest.get(site2Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
+        context.build().resource("/conf/content/site1/sling:configs/sampleName",
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
+
+        SimpleSlingModel model = underTest.get(site1Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
         assertEquals("configValue1", model.getStringParam());
     }
 
     @Test
     public void testConfig_ValueMapCollection() {
-        Collection<SimpleSlingModel> propsList = underTest.get(site2Page1).name("sampleList").asAdaptableCollection(SimpleSlingModel.class);
+        context.build().resource("/conf/content/site1/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
+
+        Collection<SimpleSlingModel> propsList = underTest.get(site1Page1).name("sampleList").asAdaptableCollection(SimpleSlingModel.class);
 
         Iterator<SimpleSlingModel> propsIterator = propsList.iterator();
         assertEquals("configValue1.1", propsIterator.next().getStringParam());
@@ -116,23 +112,25 @@ public class ConfigurationResolverAdaptableTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void testNullConfigName() {
-        underTest.get(site2Page1).name(null).asAdaptable(SimpleSlingModel.class);
+        underTest.get(site1Page1).name(null).asAdaptable(SimpleSlingModel.class);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConfigName() {
-        underTest.get(site2Page1).name("/a/b/c").asAdaptable(SimpleSlingModel.class);
+        underTest.get(site1Page1).name("/a/b/c").asAdaptable(SimpleSlingModel.class);
     }
 
     @Test(expected=ConfigurationResolveException.class)
     public void testWithoutConfigName() {
-        underTest.get(site2Page1).asAdaptable(SimpleSlingModel.class);
+        underTest.get(site1Page1).asAdaptable(SimpleSlingModel.class);
     }
 
     @Test
     public void testAdaptToConfigurationBuilder() {
+        context.build().resource("/conf/content/site1/sling:configs/sampleName");
+
         // make sure not endless loop occurs
-        ConfigurationBuilder model = underTest.get(site2Page1).name("sampleName").asAdaptable(ConfigurationBuilder.class);
+        ConfigurationBuilder model = underTest.get(site1Page1).name("sampleName").asAdaptable(ConfigurationBuilder.class);
         assertNull(model);
     }
 

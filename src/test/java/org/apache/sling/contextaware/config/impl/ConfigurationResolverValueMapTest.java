@@ -46,29 +46,14 @@ public class ConfigurationResolverValueMapTest {
     private ConfigurationResolver underTest;
 
     private Resource site1Page1;
-    private Resource site2Page1;
 
     @Before
     public void setUp() {
         underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
 
-        // config resources
-        context.build().resource("/conf/content/site2/sling:configs/sampleName", 
-                "stringParam", "configValue1",
-                "intParam", 111,
-                "boolParam", true);
-
-        context.build().resource("/conf/content/site2/sling:configs/sampleList")
-            .siblingsMode()
-            .resource("1", "stringParam", "configValue1.1")
-            .resource("2", "stringParam", "configValue1.2")
-            .resource("3", "stringParam", "configValue1.3");
-
         // content resources
-        context.build().resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/content/site1")
-            .resource("/content/site2", PROPERTY_CONFIG_REF, "/conf/content/site2");
+        context.build().resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/content/site1");
         site1Page1 = context.create().resource("/content/site1/page1");
-        site2Page1 = context.create().resource("/content/site2/page1");
     }
 
     @Test
@@ -88,7 +73,12 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testConfig() {
-        ValueMap props = underTest.get(site2Page1).name("sampleName").asValueMap();
+        context.build().resource("/conf/content/site1/sling:configs/sampleName", 
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
+
+        ValueMap props = underTest.get(site1Page1).name("sampleName").asValueMap();
 
         assertEquals("configValue1", props.get("stringParam", String.class));
         assertEquals(111, (int)props.get("intParam", 0));
@@ -97,7 +87,13 @@ public class ConfigurationResolverValueMapTest {
 
     @Test
     public void testConfigCollection() {
-        Collection<ValueMap> propsList = underTest.get(site2Page1).name("sampleList").asValueMapCollection();
+        context.build().resource("/conf/content/site1/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
+
+        Collection<ValueMap> propsList = underTest.get(site1Page1).name("sampleList").asValueMapCollection();
 
         Iterator<ValueMap> propsIterator = propsList.iterator();
         assertEquals("configValue1.1", propsIterator.next().get("stringParam", String.class));
@@ -122,22 +118,22 @@ public class ConfigurationResolverValueMapTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void testNullConfigName() {
-        underTest.get(site2Page1).name(null).asValueMap();
+        underTest.get(site1Page1).name(null).asValueMap();
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConfigName() {
-        underTest.get(site2Page1).name("/a/b/c").asValueMap();
+        underTest.get(site1Page1).name("/a/b/c").asValueMap();
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConfigName2() {
-        underTest.get(site2Page1).name("../a/b/c").asValueMap();
+        underTest.get(site1Page1).name("../a/b/c").asValueMap();
     }
 
     @Test(expected=ConfigurationResolveException.class)
     public void testWithoutConfigName() {
-        underTest.get(site2Page1).asValueMap();
+        underTest.get(site1Page1).asValueMap();
     }
 
 }
