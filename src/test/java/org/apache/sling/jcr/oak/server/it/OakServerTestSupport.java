@@ -21,7 +21,6 @@ package org.apache.sling.jcr.oak.server.it;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.inject.Inject;
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -30,26 +29,24 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.paxexam.SlingOptions;
-import org.apache.sling.testing.paxexam.TestSupport;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.Option;
-import org.osgi.framework.BundleContext;
-
 import static org.apache.sling.testing.paxexam.SlingOptions.jackrabbitSling;
 import static org.apache.sling.testing.paxexam.SlingOptions.scr;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingJcr;
 import static org.apache.sling.testing.paxexam.SlingOptions.tikaSling;
+import org.apache.sling.testing.paxexam.TestSupport;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import org.ops4j.pax.exam.Configuration;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+import org.osgi.framework.BundleContext;
 
 public abstract class OakServerTestSupport extends TestSupport {
 
@@ -191,7 +188,14 @@ public abstract class OakServerTestSupport extends TestSupport {
                 .asOption(),
             newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
                 .put("enabled", true)
-                .asOption()
+                .asOption(),
+            getWhitelistRegexpOption()
         );
+    }
+    
+    protected Option getWhitelistRegexpOption() {
+        return newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl")
+            .put("whitelist.regexp", "PAXEXAM-PROBE-.*")
+            .asOption();
     }
 }
