@@ -105,7 +105,7 @@
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
       <classifier>org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</classifier>
-      <type>config</type>
+      <type>cfg</type>
       <scope>runtime</scope>
     </dependency>
     <dependency>
