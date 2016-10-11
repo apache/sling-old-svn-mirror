@@ -76,6 +76,7 @@
                     <excludes>
                         <exclude>src/test/resources/**</exclude>
                         <exclude>sling/**</exclude>
+                        <exclude>infinitest.filters</exclude>
                     </excludes>
                 </configuration>
             </plugin>
