@@ -661,12 +661,12 @@ for more details</p>''')
                 scm('H/15 * * * *')
             }
 
-            // timeout if the job takes 3 times longer than the average
+            // timeout if the job takes 5 times longer than the average
             // duration of the last 3 jobs. Defaults to 30 minutes if
             // no previous job executions are found
             wrappers {
                 timeout {
-                    elastic(300, 3, 30)
+                    elastic(500, 3, 30)
                 }
             }
 
