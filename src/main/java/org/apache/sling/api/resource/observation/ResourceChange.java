@@ -103,6 +103,25 @@ public class ResourceChange {
     }
 
     /**
+     * Create a new change object
+     *
+     * @param changeType The change type
+     * @param path The resource path
+     * @param isExternal {code true} if the change happened on another node
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
+     */
+    public ResourceChange(final @Nonnull ChangeType changeType,
+            final @Nonnull String path,
+            final boolean isExternal) {
+        this.path = path;
+        this.changeType = changeType;
+        this.isExternal = isExternal;
+        this.addedPropertyNames = null;
+        this.changedPropertyNames = null;
+        this.removedPropertyNames = null;
+    }
+
+    /**
      * Get the resource path.
      * @return The path to the resource.
      */
