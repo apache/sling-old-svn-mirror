@@ -1479,9 +1479,8 @@ public class MapEntriesTest {
         assertFalse((Boolean)method.invoke(mapEntries, resource));
 
         when(resource.getPath()).thenReturn("/justVanityPath");
-        assertFalse((Boolean)method.invoke(mapEntries, resource));
-
         when(resource.getValueMap()).thenReturn(mock(ValueMap.class));
+
         assertTrue((Boolean)method.invoke(mapEntries, resource));
     }
 
