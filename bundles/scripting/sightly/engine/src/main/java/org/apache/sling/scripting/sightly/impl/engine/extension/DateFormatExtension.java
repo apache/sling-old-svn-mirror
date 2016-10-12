@@ -41,32 +41,44 @@ public class DateFormatExtension implements RuntimeExtension {
 		Object dateValue = arguments[0];
 
 		String dateFormat = String.valueOf(arguments[1]);
-
+		
+		String returnValue = null;
+		
 		if (dateValue instanceof GregorianCalendar) {
 
 			GregorianCalendar gregorianCal = (GregorianCalendar) dateValue;
-			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-			return formatter.format(gregorianCal.getTime());
+			returnValue = format(gregorianCal.getTime(), dateFormat);
 
 		} else if (dateValue instanceof Calendar) {
 
 			Calendar cal = (Calendar) dateValue;
-			String value = format(cal, dateFormat);
-			return value;
+			returnValue = format(cal.getTime(), dateFormat);
 
 		} else if (dateValue instanceof Date) {
 
-			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
 			Date dateAsDate = (Date) dateValue;
-			return formatter.format(dateAsDate.getTime());
+			returnValue = format(dateAsDate, dateFormat);
 
-		} else {
-			return dateValue;
 		}
+		if ( returnValue == null ) {
+			LOG.trace("Returnvalue is null, returning original value");
+			return dateValue;
+		} else {
+			return returnValue;
+		}
+		
 	}
 
-	private String format(Calendar cal, String format) {
-		SimpleDateFormat formatter = new SimpleDateFormat(format);
-		return formatter.format(cal);
+	private String format(Date date, String format) {
+		LOG.trace("Formatting date {0}, with format {1}", date, format);
+
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat(format);
+			return formatter.format(date);
+		} catch (Exception e) {
+			LOG.error("Error during formatting, date {0} with format {1]", date, format);
+			LOG.error("Error during formatting", e);
+		}
+		return null;
 	}
 }
