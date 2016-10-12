@@ -17,15 +17,13 @@
  * under the License.
  */
 
-package org.apache.sling.commons.log.logback.integration;
+package org.apache.sling.commons.log.webconsole;
 
 import javax.inject.Inject;
 import javax.servlet.Servlet;
 
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
@@ -45,11 +43,6 @@ public class ITLogWebConsolePlugin extends LogTestBase {
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;
 
-    }
-
-    @Override
-    protected Option addExtraOptions() {
-        return webSupport();
     }
 
     /**

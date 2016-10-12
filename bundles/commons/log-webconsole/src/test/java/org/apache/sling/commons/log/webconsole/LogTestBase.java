@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.commons.log.logback.integration;
+package org.apache.sling.commons.log.webconsole;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +34,7 @@ import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.osgi.framework.BundleContext;
 
 import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -41,6 +42,7 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.systemTimeout;
 import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.util.PathUtils.getBaseDir;
 
 public abstract class LogTestBase {
@@ -57,7 +59,7 @@ public abstract class LogTestBase {
     protected static final String COVERAGE_COMMAND = "coverage.command";
 
     // the default bundle jar file name
-    protected static final String BUNDLE_JAR_DEFAULT = "target/slinglogback.jar";
+    protected static final String BUNDLE_JAR_DEFAULT = "target/slinglogback-webconsole.jar";
 
     // the JVM option to set to enable remote debugging
     @SuppressWarnings("UnusedDeclaration")
@@ -85,7 +87,20 @@ public abstract class LogTestBase {
         return options(
             // the current project (the bundle under test)
             CoreOptions.bundle(bundleFile.toURI().toString()),
-            mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(), addPaxExamSpecificOptions(),
+            mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(),
+            mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice").versionAsInProject(),
+            LogTestBase.webSupport(),
+            mavenBundle("org.apache.sling", "org.apache.sling.commons.log").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.jetty").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.webconsole").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.inventory").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
+            mavenBundle("commons-io", "commons-io").versionAsInProject(),
+            wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
+            wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
+            LogTestBase.configAdmin(),
+            addPaxExamSpecificOptions(),
             addCodeCoverageOption(), addDebugOptions(), addExtraOptions(), addDefaultOptions());
     }
 
@@ -127,12 +142,13 @@ public abstract class LogTestBase {
         return mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject();
     }
 
-    protected Option addExtraOptions() {
-        return new DefaultCompositeOption();
+    protected static Option webSupport() {
+        return composite(mavenBundle("org.apache.felix", "org.apache.felix.http.bundle").versionAsInProject(),
+            systemProperty("org.osgi.service.http.port").value(getServerPort()));
     }
 
-    protected static String absolutePath(String configFileName){
-        return FilenameUtils.concat(new File(".").getAbsolutePath(), "src/test/resources/"+configFileName);
+    protected Option addExtraOptions() {
+        return new DefaultCompositeOption();
     }
 
     protected static void delay() {
@@ -141,5 +157,9 @@ public abstract class LogTestBase {
         } catch (InterruptedException ie) {
             // dont care
         }
+    }
+
+    protected static String getServerPort() {
+        return System.getProperty(HTTP_PORT_PROP, DEFAULT_PORT);
     }
 }

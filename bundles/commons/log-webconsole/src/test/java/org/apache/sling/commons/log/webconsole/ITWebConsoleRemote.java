@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.commons.log.logback.integration;
+package org.apache.sling.commons.log.webconsole;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +27,7 @@ import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.sling.commons.log.logback.integration.remote.WebConsoleTestActivator;
+import org.apache.sling.commons.log.webconsole.remote.WebConsoleTestActivator;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,9 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.provision;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
@@ -53,7 +51,7 @@ public class ITWebConsoleRemote extends LogTestBase {
 
     private static final String PLUGIN_SUFFIX = "slinglog";
 
-    private static final String PRINTER_SUFFIX = "config/slinglogs.nfo";
+    private static final String PRINTER_SUFFIX = "status-slinglogs";
 
     private static TestContainer testContainer;
 
@@ -66,16 +64,7 @@ public class ITWebConsoleRemote extends LogTestBase {
 
     @Override
     protected Option addExtraOptions() {
-        return composite(webSupport(),
-            mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.http.jetty").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.webconsole").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
-            mavenBundle("commons-io", "commons-io").versionAsInProject(),
-            wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
-            wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
-            configAdmin(),
+        return composite(
             frameworkProperty("org.apache.sling.commons.log.configurationFile").value(
                 FilenameUtils.concat(new File(".").getAbsolutePath(), "src/test/resources/test-webconsole-remote.xml")),
             createWebConsoleTestBundle()
@@ -152,6 +141,6 @@ public class ITWebConsoleRemote extends LogTestBase {
     }
 
     private static String prepareUrl(String suffix) {
-        return String.format("http://localhost:%s/system/console/%s", getServerPort(), suffix);
+        return String.format("http://localhost:%s/system/console/%s", LogTestBase.getServerPort(), suffix);
     }
 }

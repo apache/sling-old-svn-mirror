@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.log.logback.integration.remote;
+package org.apache.sling.commons.log.webconsole.remote;
 
 import java.io.StringReader;
 import java.util.ArrayList;
