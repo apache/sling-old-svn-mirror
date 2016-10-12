@@ -49,12 +49,7 @@ public class DateFormatExtension implements RuntimeExtension {
 		
 		String returnValue = null;
 		
-		if (dateValue instanceof GregorianCalendar) {
-
-			GregorianCalendar gregorianCal = (GregorianCalendar) dateValue;
-			returnValue = format(gregorianCal.getTime(), dateFormat);
-
-		} else if (dateValue instanceof Calendar) {
+		if (dateValue instanceof Calendar) {
 
 			Calendar cal = (Calendar) dateValue;
 			returnValue = format(cal.getTime(), dateFormat);
@@ -65,7 +60,7 @@ public class DateFormatExtension implements RuntimeExtension {
 			returnValue = format(dateAsDate, dateFormat);
 
 		} else {
-			throw new SightlyException("Input value is not of a date type");
+			throw new SightlyException("Input value is not of a date type, supported types java.util.Date and java.util.Calendar");
 		}
 		return returnValue;
 		
@@ -78,7 +73,8 @@ public class DateFormatExtension implements RuntimeExtension {
 			SimpleDateFormat formatter = new SimpleDateFormat(format);
 			return formatter.format(date);
 		} catch (Exception e) {
-			throw new SightlyException("Error during formatting of date", e);
+			String error = String.format("Error during formatting of date {0} with format {1}", date, format);
+			throw new SightlyException( error, e);
 		}
 	}
 }
