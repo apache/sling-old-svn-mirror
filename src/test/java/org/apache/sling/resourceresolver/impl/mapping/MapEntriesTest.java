@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -54,7 +55,6 @@ import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.V
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.mockito.Matchers.any;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
@@ -143,7 +143,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -174,13 +174,13 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         final Resource secondResult = mock(Resource.class);
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -215,26 +215,26 @@ public class MapEntriesTest {
         Resource justVanityPath = mock(Resource.class, "justVanityPath");
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         resources.add(justVanityPath);
 
         Resource badVanityPath = mock(Resource.class, "badVanityPath");
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
-        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        when(badVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
         resources.add(badVanityPath);
 
 
         Resource redirectingVanityPath = mock(Resource.class, "redirectingVanityPath");
         when(redirectingVanityPath.getPath()).thenReturn("/redirectingVanityPath");
         when(redirectingVanityPath.getName()).thenReturn("redirectingVanityPath");
-        when(redirectingVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath", "sling:redirect", true));
+        when(redirectingVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath", "sling:redirect", true));
         resources.add(redirectingVanityPath);
 
         Resource redirectingVanityPath301 = mock(Resource.class, "redirectingVanityPath301");
         when(redirectingVanityPath301.getPath()).thenReturn("/redirectingVanityPath301");
         when(redirectingVanityPath301.getName()).thenReturn("redirectingVanityPath301");
-        when(redirectingVanityPath301.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath301", "sling:redirect", true, "sling:redirectStatus", 301));
+        when(redirectingVanityPath301.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath301", "sling:redirect", true, "sling:redirectStatus", 301));
         resources.add(redirectingVanityPath301);
 
         Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
@@ -245,7 +245,7 @@ public class MapEntriesTest {
         when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
         when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
         when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
         resources.add(vanityPathOnJcrContent);
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
@@ -301,7 +301,7 @@ public class MapEntriesTest {
         Resource rsrc = mock(Resource.class);
         when(rsrc.getPath()).thenReturn(path);
         when(rsrc.getName()).thenReturn(ResourceUtil.getName(path));
-        when(rsrc.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/vanity" + path));
+        when(rsrc.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/vanity" + path));
         return rsrc;
     }
 
@@ -397,7 +397,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         method.invoke(mapEntries, "/justVanityPath");
 
@@ -414,7 +414,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/badVanityPath")).thenReturn(badVanityPath);
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
-        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        when(badVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
 
         method.invoke(mapEntries, "/badVanityPath");
 
@@ -434,7 +434,7 @@ public class MapEntriesTest {
         when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
         when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
         when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
 
         method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
 
@@ -472,7 +472,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         method.invoke(mapEntries, "/justVanityPath");
 
@@ -489,7 +489,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/badVanityPath")).thenReturn(badVanityPath);
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
-        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        when(badVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
 
         method.invoke(mapEntries, "/badVanityPath");
 
@@ -509,7 +509,7 @@ public class MapEntriesTest {
         when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
         when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
         when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
 
         method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
 
@@ -550,7 +550,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         method.invoke(mapEntries, "/justVanityPath");
 
@@ -562,7 +562,7 @@ public class MapEntriesTest {
         assertEquals("/target/justVanityPath", vanityTargets.get("/justVanityPath").get(0));
 
         //update vanity path
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPathUpdated"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPathUpdated"));
         method1.invoke(mapEntries, "/justVanityPath");
 
         assertEquals(2, resolveMapsMap.size());
@@ -582,7 +582,7 @@ public class MapEntriesTest {
         when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
         when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
         when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
 
         method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
 
@@ -594,7 +594,7 @@ public class MapEntriesTest {
         assertEquals("/target/vanityPathOnJcrContent", vanityTargets.get("/vanityPathOnJcrContent").get(0));
 
         //update vanity path
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContentUpdated"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContentUpdated"));
         method1.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
 
         assertEquals(3, resolveMapsMap.size());
@@ -628,7 +628,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         method.invoke(mapEntries, "/justVanityPath");
 
@@ -662,7 +662,7 @@ public class MapEntriesTest {
         when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
         when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
         when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
-        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        when(vanityPathOnJcrContent.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
 
         method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
 
@@ -704,7 +704,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         method.invoke(mapEntries, "/justVanityPath");
 
@@ -712,7 +712,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath2")).thenReturn(justVanityPath2);
         when(justVanityPath2.getPath()).thenReturn("/justVanityPath2");
         when(justVanityPath2.getName()).thenReturn("justVanityPath2");
-        when(justVanityPath2.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
+        when(justVanityPath2.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
 
         method.invoke(mapEntries, "/justVanityPath2");
 
@@ -727,7 +727,7 @@ public class MapEntriesTest {
         assertEquals("/justVanityPath.html", iterator.next().getRedirect()[0]);
         assertFalse(iterator.hasNext());
 
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 1000));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 1000));
         method1.invoke(mapEntries, "/justVanityPath",false);
 
         iterator = resolveMapsMap.get("/target/justVanityPath").iterator();
@@ -737,7 +737,7 @@ public class MapEntriesTest {
         assertEquals("/justVanityPath2.html", iterator.next().getRedirect()[0]);
         assertFalse(iterator.hasNext());
 
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         method1.invoke(mapEntries, "/justVanityPath",true);
 
         iterator = resolveMapsMap.get("/target/justVanityPath").iterator();
@@ -768,7 +768,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child",
                 Collections.singleton("sling:alias"), false);
@@ -797,7 +797,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child",
                 Collections.singleton("sling:alias"), false);
@@ -826,7 +826,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child",
                 Collections.singleton("sling:alias"), false, false);
@@ -855,7 +855,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child");
 
@@ -872,7 +872,7 @@ public class MapEntriesTest {
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child2");
 
@@ -889,7 +889,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
 
         method.invoke(mapEntries, "/parent/child/jcr:content");
 
@@ -922,7 +922,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent");
         when(result.getName()).thenReturn("parent");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent");
 
@@ -939,7 +939,7 @@ public class MapEntriesTest {
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent2");
         when(secondResult.getName()).thenReturn("parent2");
-        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent2");
 
@@ -956,7 +956,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
 
         method.invoke(mapEntries, "/parent/jcr:content");
 
@@ -993,7 +993,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child");
 
@@ -1005,7 +1005,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasUpdated"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasUpdated"));
 
         method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), false);
 
@@ -1023,7 +1023,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         method.invoke(mapEntries, "/parent/child/jcr:content");
@@ -1037,7 +1037,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
         method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1065,7 +1065,7 @@ public class MapEntriesTest {
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias2"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias2"));
 
         method.invoke(mapEntries, "/parent/child2");
         assertEquals(1, aliasMap.size());
@@ -1074,7 +1074,7 @@ public class MapEntriesTest {
         assertNotNull(aliasMapEntry);
         assertEquals(3, aliasMapEntry.size());
 
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
         method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1087,8 +1087,8 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
 
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", null));
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", null));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
         method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1125,7 +1125,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child");
 
@@ -1185,7 +1185,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap());
+        when(result.getValueMap()).thenReturn(buildValueMap());
 
         //testing jcr:content node removal
         final Resource jcrContentResult = mock(Resource.class);
@@ -1193,7 +1193,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         method.invoke(mapEntries, "/parent/child/jcr:content");
@@ -1254,7 +1254,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent/child");
 
@@ -1263,7 +1263,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         method.invoke(mapEntries, "/parent/child/jcr:content");
@@ -1362,7 +1362,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent");
         when(result.getName()).thenReturn("parent");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
         method.invoke(mapEntries, "/parent");
 
@@ -1422,7 +1422,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent");
         when(result.getName()).thenReturn("parent");
-        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap());
+        when(result.getValueMap()).thenReturn(buildValueMap());
 
         //testing jcr:content node removal
         final Resource jcrContentResult = mock(Resource.class);
@@ -1430,7 +1430,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         method.invoke(mapEntries, "/parent/jcr:content");
@@ -1481,7 +1481,7 @@ public class MapEntriesTest {
         when(resource.getPath()).thenReturn("/justVanityPath");
         assertFalse((Boolean)method.invoke(mapEntries, resource));
 
-        when(resource.adaptTo(ValueMap.class)).thenReturn(mock(ValueMap.class));
+        when(resource.getValueMap()).thenReturn(mock(ValueMap.class));
         assertTrue((Boolean)method.invoke(mapEntries, resource));
     }
 
@@ -1520,7 +1520,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
@@ -1552,7 +1552,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath2")).thenReturn(justVanityPath2);
         when(justVanityPath2.getPath()).thenReturn("/justVanityPath2");
         when(justVanityPath2.getName()).thenReturn("justVanityPath2");
-        when(justVanityPath2.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
+        when(justVanityPath2.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -1580,7 +1580,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
@@ -1620,7 +1620,7 @@ public class MapEntriesTest {
         final Resource badVanityPath = mock(Resource.class, "badVanityPath");
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
-        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        when(badVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
 
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
@@ -1661,7 +1661,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -1696,7 +1696,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath2")).thenReturn(justVanityPath2);
         when(justVanityPath2.getPath()).thenReturn("/justVanityPath2");
         when(justVanityPath2.getName()).thenReturn("justVanityPath2");
-        when(justVanityPath2.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
+        when(justVanityPath2.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath","sling:vanityOrder", 100));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -1727,7 +1727,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -1759,7 +1759,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -1800,7 +1800,7 @@ public class MapEntriesTest {
 
         when(justVanityPath.getName()).thenReturn("justVanityPath");
 
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath",
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath",
                 "/target/justVanityPath"));
 
         when(resourceResolver.findResources(anyString(),
@@ -1850,7 +1850,7 @@ public class MapEntriesTest {
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
-        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        when(justVanityPath.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
 
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {

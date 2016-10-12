@@ -308,7 +308,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         try {
             Resource resource = resolver.getResource(path);
             if (resource != null) {
-                final ValueMap props = resource.adaptTo(ValueMap.class);
+                final ValueMap props = resource.getValueMap();
                 if (props.containsKey(PROP_VANITY_PATH)) {
                     doAddVanity(path);
                 }
@@ -510,7 +510,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     private void doUpdateVanityOrder(String path, boolean deletion) {
         Resource resource = resolver.getResource(path);
-        final ValueMap props = resource.adaptTo(ValueMap.class);
+        final ValueMap props = resource.getValueMap();
 
         long vanityOrder;
         if (deletion) {
@@ -559,7 +559,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 final Resource resource = resolver.getResource(path);
                 if (resource != null) {
                     path =  resource.getPath();
-                    final ValueMap props = resource.adaptTo(ValueMap.class);
+                    final ValueMap props = resource.getValueMap();
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
                         return true;
@@ -572,7 +572,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 if (resource.getName().equals("jcr:content")) {
                     final Resource parent = resource.getParent();
                     path =  parent.getPath();
-                    final ValueMap props = parent.adaptTo(ValueMap.class);
+                    final ValueMap props = parent.getValueMap();
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
                         return true;
@@ -580,7 +580,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 } else if (resource.getChild("jcr:content") != null) {
                     Resource jcrContent = resource.getChild("jcr:content");
                     path =  jcrContent.getPath();
-                    final ValueMap props = jcrContent.adaptTo(ValueMap.class);
+                    final ValueMap props = jcrContent.getValueMap();
                     if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
                         doAddAlias(path);
                         return true;
@@ -969,12 +969,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             }
         }
         // require properties
-        final ValueMap props = resource.adaptTo(ValueMap.class);
-        if (props == null) {
-            log.debug("isValidVanityPath: not valid {} without properties", resource);
-            return false;
-        }
-        return true;
+        return resource.getValueMap() != null;
     }
 
     private String getActualContentPath(String path){
@@ -1235,7 +1230,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             return false;
         }
 
-        final ValueMap props = resource.adaptTo(ValueMap.class);
+        final ValueMap props = resource.getValueMap();
         long vanityOrder = 0;
         if (props.containsKey(PROP_VANITY_ORDER)) {
             vanityOrder = props.get(PROP_VANITY_ORDER, Long.class);
