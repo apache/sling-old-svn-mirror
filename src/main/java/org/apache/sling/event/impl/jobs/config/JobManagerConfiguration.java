@@ -42,9 +42,9 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.commons.InitDelayingTopologyEventListener;
-import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
@@ -103,7 +103,7 @@ public class JobManagerConfiguration {
 
     /** Default startup delay. */
     public static final long DEFAULT_STARTUP_DELAY = 30;
-    
+
     /** Default for disabling the distribution. */
     public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
 
@@ -118,7 +118,7 @@ public class JobManagerConfiguration {
 
     /** The entire job handling waits time amount of seconds until it starts - to allow avoiding reassign on restart of a cluster */
     public static final String PROPERTY_STARTUP_DELAY = "startup.delay";
-    
+
     /** Configuration switch for distributing the jobs. */
     public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
 
@@ -156,7 +156,7 @@ public class JobManagerConfiguration {
     private volatile long backgroundLoadDelay;
 
     private volatile long startupDelay;
-    
+
     private volatile InitDelayingTopologyEventListener startupDelayListener;
 
     private volatile boolean disabledDistribution;
@@ -233,7 +233,7 @@ public class JobManagerConfiguration {
             resolver.close();
         }
         this.active.set(true);
-        
+
         // SLING-5560 : use an InitDelayingTopologyEventListener
         if (this.startupDelay > 0) {
             logger.debug("activate: job manager will start in {} sec. ({})", this.startupDelay, PROPERTY_STARTUP_DELAY);
@@ -295,7 +295,7 @@ public class JobManagerConfiguration {
         final ResourceResolverFactory factory = this.resourceResolverFactory;
         if ( factory != null ) {
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
             } catch ( final LoginException le) {
                 logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
                 throw new RuntimeException(le);
@@ -566,7 +566,7 @@ public class JobManagerConfiguration {
             doHandleTopologyEvent(event);
         }
     }
-    
+
     void doHandleTopologyEvent(final TopologyEvent event) {
 
         // check if there is a change of properties which doesn't affect us

@@ -161,7 +161,16 @@ public abstract class AbstractJobHandlingTest {
                     .put("name", "Default NodeStore")
                     .asOption(),
 
-                // logging
+                ConfigurationAdminOptions.factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                    .create(true)
+                    .put("user.mapping", "org.apache.sling.event=admin")
+                    .asOption(),
+                ConfigurationAdminOptions.newConfiguration("org.apache.sling.jcr.resource.internal.JcrSystemUserValidator")
+                    .create(true)
+                    .put("allow.only.system.user", "false")
+                    .asOption(),
+
+                    // logging
                 systemProperty("pax.exam.logging").value("none"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.6"),
@@ -185,8 +194,8 @@ public abstract class AbstractJobHandlingTest {
                 // infrastructure
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"),
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.4"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.4"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.8"),
+                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.6"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.10"),
                 mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"),
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.2"),
