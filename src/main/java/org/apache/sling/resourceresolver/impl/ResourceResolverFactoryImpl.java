@@ -27,8 +27,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceResolverFactoryImpl</code> is the {@link ResourceResolverFactory} service
@@ -47,8 +45,6 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     private final ServiceUserMapper serviceUserMapper;
 
     private final Bundle usingBundle;
-    
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public ResourceResolverFactoryImpl(
             final CommonResourceResolverFactoryImpl commonFactory,
