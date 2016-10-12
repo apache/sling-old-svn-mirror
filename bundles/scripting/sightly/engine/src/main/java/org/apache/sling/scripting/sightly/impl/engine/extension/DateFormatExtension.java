@@ -67,12 +67,7 @@ public class DateFormatExtension implements RuntimeExtension {
 		} else {
 			throw new SightlyException("Input value is not of a date type");
 		}
-		if ( returnValue == null ) {
-			LOG.trace("Returnvalue is null, returning original value");
-			return dateValue;
-		} else {
-			return returnValue;
-		}
+		return returnValue;
 		
 	}
 
