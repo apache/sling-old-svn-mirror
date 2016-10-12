@@ -43,25 +43,19 @@ public abstract class Utility {
     public static volatile boolean LOG_DEPRECATION_WARNINGS = true;
 
     /**
-     * Check the job topic.
-     * @return <code>null</code> if the topic is correct, otherwise an error description is returned
+     * Check if the job topic is a valid OSGI event name (see 113.3.1 of the OSGI spec)
+     * @return <code>null</code> if the topic is syntactically correct otherwise an error description is returned
      */
     public static String checkJobTopic(final Object jobTopic) {
-        final String message;
+        String message = null;
         if ( jobTopic != null ) {
             if ( jobTopic instanceof String ) {
-                boolean topicIsCorrect = false;
                 try {
                     new Event((String)jobTopic, (Dictionary<String, Object>)null);
-                    topicIsCorrect = true;
                 } catch (final IllegalArgumentException iae) {
-                    // we just have to catch it
+                	message = String.format("Discarding job - job has an illegal job topic '%s'",jobTopic);
                 }
-                if ( !topicIsCorrect ) {
-                    message = "Discarding job - job has an illegal job topic";
-                } else {
-                    message = null;
-                }
+                
             } else {
                 message = "Discarding job - job topic is not of type string";
             }
