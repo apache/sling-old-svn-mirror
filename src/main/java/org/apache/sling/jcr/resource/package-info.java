@@ -17,8 +17,7 @@
  * under the License.
  */
 
-@Version("2.4")
+@org.osgi.annotation.versioning.Version("2.4")
 package org.apache.sling.jcr.resource;
 
-import aQute.bnd.annotation.Version;
 
