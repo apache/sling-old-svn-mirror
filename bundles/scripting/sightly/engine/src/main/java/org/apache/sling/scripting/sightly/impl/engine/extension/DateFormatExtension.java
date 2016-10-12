@@ -31,6 +31,10 @@ import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service = RuntimeExtension.class, property = { RuntimeExtension.NAME + "=" + "dateFormat" })
+/**
+ * Extension to format a date in HTL, use the following notation: ${ dateValue @ dateFormat}
+ * dateFormat used is from SimpleDateFormat
+ */
 public class DateFormatExtension implements RuntimeExtension {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DateFormatExtension.class);
