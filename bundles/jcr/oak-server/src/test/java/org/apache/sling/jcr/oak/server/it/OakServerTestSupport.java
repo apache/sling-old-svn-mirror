@@ -29,7 +29,6 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.paxexam.SlingOptions;
@@ -113,30 +112,24 @@ public abstract class OakServerTestSupport extends TestSupport {
      * @return the path of the test node that was created.
      */
     protected String assertCreateRetrieveNode(String nodeType) throws RepositoryException {
-        return assertCreateRetrieveNode(nodeType, null);
-    }
-
-    protected String assertCreateRetrieveNode(String nodeType, String relParentPath) throws RepositoryException {
-        Session session = repository.loginAdministrative(null);
+        Session s = repository.loginAdministrative(null);
         try {
-            final Node root = session.getRootNode();
+            final Node root = s.getRootNode();
             final String name = uniqueName("assertCreateRetrieveNode");
             final String propName = "PN_" + name;
             final String propValue = "PV_" + name;
-            final Node parent = relParentPath == null ? root : JcrUtils.getOrAddNode(root, relParentPath);
-            final Node child = nodeType == null ? parent.addNode(name) : parent.addNode(name, nodeType);
+            final Node child = nodeType == null ? root.addNode(name) : root.addNode(name, nodeType);
             child.setProperty(propName, propValue);
             child.setProperty("foo", child.getPath());
-            session.save();
-            session.logout();
-            session = repository.loginAdministrative(null);
-            final String path = relParentPath == null ? "/" + name : "/" + relParentPath + "/" + name;
-            final Node n = session.getNode(path);
+            s.save();
+            s.logout();
+            s = repository.loginAdministrative(null);
+            final Node n = s.getNode("/" + name);
             assertNotNull(n);
             assertEquals(propValue, n.getProperty(propName).getString());
             return n.getPath();
         } finally {
-            session.logout();
+            s.logout();
         }
     }
 

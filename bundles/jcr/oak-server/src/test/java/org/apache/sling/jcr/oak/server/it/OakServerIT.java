@@ -35,7 +35,6 @@ import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.sling.api.SlingConstants;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -106,7 +105,7 @@ public class OakServerIT extends OakServerTestSupport {
 
     @Test
     public void testAnonymousHasReadAccess() throws RepositoryException {
-        final String path = assertCreateRetrieveNode(null, "content/foo");
+        final String path = assertCreateRetrieveNode(null);
         final Session s = repository.login();
         try {
             assertTrue("Expecting anonymous to see " + path, s.itemExists(path));
@@ -115,12 +114,6 @@ public class OakServerIT extends OakServerTestSupport {
         } finally {
             s.logout();
         }
-    }
-
-    @Test
-    @Ignore
-    public void testAnonymousHasNoReadAccess() throws RepositoryException {
-        // TODO
     }
 
     @Test
