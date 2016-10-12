@@ -73,7 +73,7 @@ public class DateFormatExtension implements RuntimeExtension {
 			SimpleDateFormat formatter = new SimpleDateFormat(format);
 			return formatter.format(date);
 		} catch (Exception e) {
-			String error = String.format("Error during formatting of date {0} with format {1}", date, format);
+			String error = String.format("Error during formatting of date %s with format %s", date, format);
 			throw new SightlyException( error, e);
 		}
 	}
