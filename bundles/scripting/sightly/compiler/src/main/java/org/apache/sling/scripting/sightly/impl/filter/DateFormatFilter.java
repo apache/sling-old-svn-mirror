@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Filter providing support for the {@code dateFormat} option applied to format date.
+ * Filter providing support for the {@code dateFormat} option applied to format a date.
  */
 public class DateFormatFilter extends AbstractFilter {
 
@@ -51,7 +51,7 @@ public class DateFormatFilter extends AbstractFilter {
 
     @Override
     public Expression apply(Expression expression, ExpressionContext expressionContext) {
-    	LOG.error("in date format filter..");
+    	LOG.trace("in dateFormatFilter#apply..");
     	
     	if (!expression.containsOption(DATE_FORMAT)) {
             return expression;
