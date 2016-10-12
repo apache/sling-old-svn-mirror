@@ -132,12 +132,11 @@
               *
             </Import-Package>
             <Export-Package>
-              org.apache.sling.commons.log.logback
+              org.apache.sling.commons.log.logback,
+              org.apache.sling.commons.log.logback.webconsole
             </Export-Package>
             <DynamicImport-Package>
               org.osgi.service.cm;version=1.2,
-              javax.servlet,
-              javax.servlet.http;version=2.3,
               org.osgi.service.event;version=1.2,
               <!-- Required by WebConsole support-->
               javax.xml.transform,
@@ -155,24 +154,6 @@
       <!-- Required for pax exam-->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>reserve-network-port</id>
-            <goals>
-              <goal>reserve-network-port</goal>
-            </goals>
-            <phase>pre-integration-test</phase>
-            <configuration>
-              <portNames>
-                <portName>http.port</portName>
-              </portNames>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
         <artifactId>properties-maven-plugin</artifactId>
         <version>1.0-alpha-2</version>
         <executions>
@@ -186,10 +167,6 @@
                 <property>
                   <name>project.bundle.file</name>
                   <value>${bundle.file.name}</value>
-                </property>
-                <property>
-                  <name>http.port</name>
-                  <value>${http.port}</value>
                 </property>
               </properties>
             </configuration>
@@ -229,19 +206,15 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-           <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>src/main/resources/res/ui/jquery.autocomplete.css</exclude>
-                        <exclude>src/main/resources/res/ui/jquery.autocomplete.min.js</exclude>
-                        <exclude>src/main/resources/res/ui/prettify.css</exclude>
-                        <exclude>src/main/resources/res/ui/prettify.js</exclude>
-                        <exclude>README.md</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
+       <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <configuration>
+                <excludes>
+                    <exclude>README.md</exclude>
+                </excludes>
+            </configuration>
+        </plugin>
      </plugins>
   </build>
 
@@ -307,13 +280,6 @@
         <scope>provided</scope>
     </dependency>
 
-    <!-- servlet API for the web console plugin -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.3</version>
-    </dependency>
-
     <!--  OSGi Command Line Shell support -->
     <dependency>
       <groupId>org.apache.felix</groupId>
@@ -373,21 +339,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.http.bundle</artifactId>
-      <version>2.2.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.htmlunit</groupId>
-      <artifactId>htmlunit</artifactId>
-      <version>2.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -397,31 +351,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Required for testing WebConsole Support -->
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>3.1.8</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20070829</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <version>1.2.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.http.jetty</artifactId>
-      <version>2.2.0</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.ops4j.pax.url</groupId>
       <artifactId>pax-url-wrap</artifactId>

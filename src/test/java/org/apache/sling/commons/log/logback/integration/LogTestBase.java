@@ -127,11 +127,6 @@ public abstract class LogTestBase {
         return mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject();
     }
 
-    protected static Option webSupport() {
-        return composite(mavenBundle("org.apache.felix", "org.apache.felix.http.bundle").versionAsInProject(),
-            systemProperty("org.osgi.service.http.port").value(getServerPort()));
-    }
-
     protected Option addExtraOptions() {
         return new DefaultCompositeOption();
     }
@@ -146,9 +141,5 @@ public abstract class LogTestBase {
         } catch (InterruptedException ie) {
             // dont care
         }
-    }
-
-    protected static String getServerPort() {
-        return System.getProperty(HTTP_PORT_PROP, DEFAULT_PORT);
     }
 }
