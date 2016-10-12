@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>28</version>
         <relativePath />
     </parent>
 
@@ -32,7 +32,7 @@
 
     <name>Apache Sling JCR Resource Resolver</name>
     <description>
-        This bundle provides the JCR based ResourceResolver.
+        This bundle provides the JCR based ResourceProvider.
     </description>
 
     <scm>
@@ -80,19 +80,11 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.script.*;
-                            javax.annotation;resolution:=optional,
                             org.apache.sling.scripting.api.*;resolution:=optional,
-                            org.apache.sling.api.resource;provide:=true,
+                            org.apache.jackrabbit.api.observation;resolution:=optional,
                             org.apache.sling.commons.osgi;version="$(@)",
-                            !org.apache.jackrabbit.api.observation,
-                            org.apache.jackrabbit.oak.plugins.observation;version=0.0.0;resolution:=optional,
-                            org.apache.jackrabbit.oak.spi.commit;version=0.0.0;resolution:=optional,
                             *
                         </Import-Package>
-                        <DynamicImport-Package>
-                            org.apache.jackrabbit.api.observation
-                        </DynamicImport-Package>
 
                         <!-- Include utility classes from Jackrabbit JCR Commons -->
                         <Embed-Dependency>
@@ -127,20 +119,19 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <version>2.0</version>
         </dependency>
 
     <!-- OSGi -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.3.0</version>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.3.0</version>
+            <scope>provided</scope>
         </dependency>
-
     <!-- Jackrabbit / Oak -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -152,7 +143,7 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
             <version>${oak.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -246,7 +237,7 @@
         <!-- For the Console Plugin of the JcrResourceResolverFactoryImpl -->
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
         <!-- Testing -->
