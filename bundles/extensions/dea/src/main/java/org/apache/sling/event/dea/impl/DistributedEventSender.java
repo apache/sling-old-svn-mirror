@@ -191,7 +191,7 @@ public class DistributedEventSender
             if ( path != null && path.length() > 0 && this.running ) {
                 ResourceResolver resolver = null;
                 try {
-                    resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                    resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
                     final Resource eventResource = resolver.getResource(path);
                     if (eventResource == null) {
                         this.logger.warn("runInBackground : resource not found at "+path);

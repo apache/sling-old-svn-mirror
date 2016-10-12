@@ -136,7 +136,7 @@ public class DistributedEventReceiver
                 DistributedEventReceiver.this.serviceRegistration = reg;
 
                 try {
-                    writerResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+                    writerResolver = resourceResolverFactory.getServiceResourceResolver(null);
                     ResourceUtil.getOrCreateResource(writerResolver,
                             ownRootPath,
                             DistributedEventAdminImpl.RESOURCE_TYPE_FOLDER,
@@ -296,7 +296,7 @@ public class DistributedEventReceiver
             this.logger.debug("Checking for old instance trees for distributed events.");
             ResourceResolver resolver = null;
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
 
                 final Resource baseResource = resolver.getResource(this.rootPath);
                 // sanity check - should never be null
@@ -332,7 +332,7 @@ public class DistributedEventReceiver
 
             ResourceResolver resolver = null;
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
                 final ResourceHelper.BatchResourceRemover brr = ResourceHelper.getBatchResourceRemover(50);
 
                 final Resource baseResource = resolver.getResource(this.ownRootPath);
