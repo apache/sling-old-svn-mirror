@@ -84,10 +84,31 @@ public class ResourceChange {
      * @param changeType The change type
      * @param path The resource path
      * @param isExternal {code true} if the change happened on another node
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
+     */
+    public ResourceChange(final @Nonnull ChangeType changeType,
+            final @Nonnull String path,
+            final boolean isExternal) {
+        this.path = path;
+        this.changeType = changeType;
+        this.isExternal = isExternal;
+        this.addedPropertyNames = null;
+        this.changedPropertyNames = null;
+        this.removedPropertyNames = null;
+    }
+
+    /**
+     * Create a new change object
+     *
+     * @param changeType The change type
+     * @param path The resource path
+     * @param isExternal {code true} if the change happened on another node
      * @param addedPropertyNames set of added property names, if provided must be immutable
      * @param changedPropertyNames set of added property names, if provided must be immutable
      * @param removedPropertyNames set of added property names, if provided must be immutable
+     * @deprecated The sets of property names are not supported anymore.
      */
+    @Deprecated
     public ResourceChange(final @Nonnull ChangeType changeType,
             final @Nonnull String path,
             final boolean isExternal,
@@ -100,25 +121,6 @@ public class ResourceChange {
         this.addedPropertyNames = addedPropertyNames;
         this.changedPropertyNames = changedPropertyNames;
         this.removedPropertyNames = removedPropertyNames;
-    }
-
-    /**
-     * Create a new change object
-     *
-     * @param changeType The change type
-     * @param path The resource path
-     * @param isExternal {code true} if the change happened on another node
-     * @since 1.2.0 (Sling API Bundle 2.15.0)
-     */
-    public ResourceChange(final @Nonnull ChangeType changeType,
-            final @Nonnull String path,
-            final boolean isExternal) {
-        this.path = path;
-        this.changeType = changeType;
-        this.isExternal = isExternal;
-        this.addedPropertyNames = null;
-        this.changedPropertyNames = null;
-        this.removedPropertyNames = null;
     }
 
     /**
