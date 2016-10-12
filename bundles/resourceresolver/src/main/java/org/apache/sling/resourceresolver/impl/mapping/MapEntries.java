@@ -805,6 +805,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             } else if (rc.getType() == ResourceChange.ChangeType.ADDED ) {
                 wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
             } else {
+                @SuppressWarnings("deprecation")
                 Set<String> addedAttributes = rc.getAddedPropertyNames();
                 if (addedAttributes != null) {
                     if (log.isDebugEnabled()) {
@@ -812,6 +813,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     }
                     wasResolverRefreshed = doAddAttributes(path, addedAttributes, wasResolverRefreshed);
 
+                    @SuppressWarnings("deprecation")
                     Set<String> changedAttributes = rc.getChangedPropertyNames();
                     if (changedAttributes != null) {
                         if (log.isDebugEnabled()) {
@@ -820,6 +822,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                         wasResolverRefreshed = doUpdateAttributes(path, changedAttributes, wasResolverRefreshed);
                     }
 
+                    @SuppressWarnings("deprecation")
                     Set<String> removedAttributes = rc.getRemovedPropertyNames();
                     if (removedAttributes != null) {
                         if (log.isDebugEnabled()) {
