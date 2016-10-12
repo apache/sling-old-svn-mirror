@@ -59,7 +59,7 @@
     org.apache.sling/org.apache.sling.installer.console/1.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.19-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
-    org.apache.sling/org.apache.sling.jcr.resource/2.8.0
+    org.apache.sling/org.apache.sling.jcr.resource/2.8.1-SNAPSHOT
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
     org.apache.sling/org.apache.sling.models.api/1.2.2
     org.apache.sling/org.apache.sling.models.impl/1.2.8
@@ -104,7 +104,7 @@
 [artifacts startLevel=15]
     org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
     org.apache.sling/org.apache.sling.jcr.api/2.4.0
-    org.apache.sling/org.apache.sling.jcr.base/2.4.0
+    org.apache.sling/org.apache.sling.jcr.base/2.4.1-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.registration/1.0.2
     org.apache.jackrabbit/jackrabbit-api/${jackrabbit.version}
     org.apache.jackrabbit/jackrabbit-jcr-commons/${jackrabbit.version}
