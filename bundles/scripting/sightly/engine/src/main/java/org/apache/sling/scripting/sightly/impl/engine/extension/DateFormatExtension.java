@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
@@ -80,9 +81,7 @@ public class DateFormatExtension implements RuntimeExtension {
 			SimpleDateFormat formatter = new SimpleDateFormat(format);
 			return formatter.format(date);
 		} catch (Exception e) {
-			LOG.error("Error during formatting, date {0} with format {1]", date, format);
-			LOG.error("Error during formatting", e);
+			throw new SightlyException("Error during formatting of date", e);
 		}
-		return null;
 	}
 }
