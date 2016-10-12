@@ -65,6 +65,8 @@ public interface ResourceChangeListener {
      * <ul>
      *     <li>The {@code *} character matches zero or more characters of a name component without crossing directory boundaries.</li>
      *     <li>The {@code **} characters match zero or more characters crossing directory boundaries.</li>
+     *     <li>If the pattern is relative (does not start with a slash), the relative path will be appended to all search paths of
+     *        the resource resolver.
      * </ul>
      *
      * <p>
