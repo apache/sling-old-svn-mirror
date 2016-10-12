@@ -299,12 +299,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doNodeAdded(String path, boolean refreshed) {
-        this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
             newRefreshed = true;
         }
+        this.initializing.lock();
         try {
             Resource resource = resolver.getResource(path);
             if (resource != null) {
@@ -328,12 +328,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doAddAttributes(String path, Set<String> addedAttributes, boolean refreshed) {
-        this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
             newRefreshed = true;
         }
+        this.initializing.lock();
         try {
             for (String changedAttribute:addedAttributes){
                 if (PROP_VANITY_PATH.equals(changedAttribute)) {
@@ -360,14 +360,14 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doUpdateAttributes(String path, Set<String> changedAttributes, boolean refreshed) {
-        this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
             newRefreshed = true;
         }
+        this.initializing.lock();
         try {
-            for (String changedAttribute:changedAttributes){
+            for (String changedAttribute : changedAttributes){
                 if (PROP_VANITY_PATH.equals(changedAttribute)) {
                     doUpdateVanity(path);
                 } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
@@ -380,7 +380,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                         doRemoveAlias(path, false);
                         doAddAlias(path);
                         doUpdateAlias(path, false);
-                     }
+                    }
                 }
             }
             if (path.startsWith(this.mapRoot)) {
@@ -394,12 +394,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doRemoveAttributes(String path, Set<String> removedAttributes, boolean nodeDeletion, boolean refreshed) {
-        this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
             newRefreshed = true;
         }
+        this.initializing.lock();
         try {
             for (String changedAttribute:removedAttributes){
                 if (PROP_VANITY_PATH.equals(changedAttribute)){
@@ -427,12 +427,12 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doUpdateConfiguration(boolean refreshed){
-        this.initializing.lock();
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
             newRefreshed = true;
         }
+        this.initializing.lock();
         try {
             doUpdateConfiguration();
             sendChangeEvent();
@@ -547,9 +547,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
     }
 
-    private void doAddAlias(String path) {
+    private boolean doAddAlias(String path) {
         Resource resource = resolver.getResource(path);
-        loadAlias(resource, this.aliasMap);
+        return loadAlias(resource, this.aliasMap);
     }
 
     private boolean doUpdateAlias(String path, boolean nodeDeletion) {
@@ -607,26 +607,46 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             final Resource resource = resolver.getResource(path);
             if (resource.getName().equals("jcr:content")) {
                 final Resource containingResource = resource.getParent();
-                path = containingResource.getParent().getPath();
-                resourceName = containingResource.getName();
+                if ( containingResource != null ) {
+                    final Resource parent = containingResource.getParent();
+                    if ( parent != null ) {
+                        path = parent.getPath();
+                        resourceName = containingResource.getName();
+                    } else {
+                        log.error("HELLOWORLD Unable to get parent of {}", containingResource.getPath());
+                        path = null;
+                    }
+                } else {
+                    log.error("HELLOWORLD Unable to get parent of {}", resource.getPath());
+                    path = null;
+                }
             } else {
-                path =  resource.getParent().getPath();
-                resourceName = resource.getName();
-            }
-        }
-        Map<String, String> aliasMapEntry = aliasMap.get(path);
-        if (aliasMapEntry != null) {
-            for (Iterator<String> iterator =aliasMapEntry.keySet().iterator(); iterator.hasNext(); ) {
-                String key = iterator.next();
-                if (resourceName.equals(aliasMapEntry.get(key))){
-                    iterator.remove();
+                final Resource parent = resource.getParent();
+                if ( parent != null ) {
+                    path =  parent.getPath();
+                    resourceName = resource.getName();
+                } else {
+                    log.error("HELLOWORLD Unable to get parent of {}", resource.getPath());
+                    path = null;
                 }
             }
         }
-        if (aliasMapEntry != null && aliasMapEntry.isEmpty()) {
-            this.aliasMap.remove(path);
+        if ( path != null ) {
+            final Map<String, String> aliasMapEntry = aliasMap.get(path);
+            if (aliasMapEntry != null) {
+                for (Iterator<String> iterator =aliasMapEntry.keySet().iterator(); iterator.hasNext(); ) {
+                    String key = iterator.next();
+                    if (resourceName.equals(aliasMapEntry.get(key))){
+                        iterator.remove();
+                    }
+                }
+            }
+            if (aliasMapEntry != null && aliasMapEntry.isEmpty()) {
+                this.aliasMap.remove(path);
+            }
+            return aliasMapEntry != null;
         }
-        return aliasMap != null;
+        return false;
     }
 
     public boolean isOptimizeAliasResolutionEnabled() {
@@ -818,9 +838,18 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                             wasResolverRefreshed = true;
                             this.resolver.refresh();
                         }
-                        boolean changed = doUpdateVanity(path);
-                        changed |= doRemoveAlias(path, false);
-                        changed |= doUpdateAlias(path, false);
+                        boolean changed = false;
+                        this.initializing.lock();
+                        try {
+                            changed |= doUpdateVanity(path);
+                            if (enableOptimizeAliasResolution) {
+                                changed |= doRemoveAlias(path, false);
+                                changed |= doAddAlias(path);
+                                changed |= doUpdateAlias(path, false);
+                            }
+                        } finally {
+                            this.initializing.unlock();
+                        }
 
                         if ( changed ) {
                             this.sendChangeEvent();
@@ -1094,18 +1123,18 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     /**
      * Load alias given a resource
      */
-    private void loadAlias(final Resource resource, Map<String, Map<String, String>> map) {
+    private boolean loadAlias(final Resource resource, Map<String, Map<String, String>> map) {
         // ignore system tree
         if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
             log.debug("loadAliases: Ignoring {}", resource);
-            return;
+            return false;
         }
 
         // require properties
         final ValueMap props = resource.adaptTo(ValueMap.class);
         if (props == null) {
             log.debug("loadAliases: Ignoring {} without properties", resource);
-            return;
+            return false;
         }
 
         final String resourceName;
@@ -1118,6 +1147,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             parentPath = resource.getParent().getPath();
             resourceName = resource.getName();
         }
+        boolean hasAlias = false;
         Map<String, String> parentMap = map.get(parentPath);
         for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
             if (parentMap != null && parentMap.containsKey(alias)) {
@@ -1148,9 +1178,11 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                         map.put(parentPath, parentMap);
                     }
                     parentMap.put(alias, resourceName);
+                    hasAlias = true;
                 }
             }
         }
+        return hasAlias;
     }
 
     /**
