@@ -202,6 +202,9 @@ public class StartupFilterImplTest {
             allowing(serviceRegistration).unregister();
             will(new ChangeInteger(activeFilterCount, false));
 
+            allowing(request).getServletPath();
+            will(returnValue(""));
+
             allowing(request).getPathInfo();
             will(returnValue(getPathInfo()));
 
@@ -209,10 +212,6 @@ public class StartupFilterImplTest {
         }});
 
         filter.setup(bundleContext, props);
-    }
-
-    private String getRequestPath() {
-        return requestPath;
     }
 
     private String getPathInfo() {
