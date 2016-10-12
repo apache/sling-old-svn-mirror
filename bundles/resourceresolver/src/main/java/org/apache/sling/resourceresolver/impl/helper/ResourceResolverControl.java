@@ -68,7 +68,10 @@ public class ResourceResolverControl {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverControl.class);
 
-    private static final String FORBIDDEN_ATTRIBUTE = ResourceResolverFactory.PASSWORD;
+    private static final String[] FORBIDDEN_ATTRIBUTES = new String[] {
+            ResourceResolverFactory.PASSWORD,
+            ResourceProvider.AUTH_SERVICE_BUNDLE,
+            ResourceResolverFactory.SUBSERVICE};
 
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
@@ -329,7 +332,9 @@ public class ResourceResolverControl {
         if ( this.authenticationInfo != null ) {
             names.addAll(authenticationInfo.keySet());
         }
-        names.remove(FORBIDDEN_ATTRIBUTE);
+        for(final String key : FORBIDDEN_ATTRIBUTES) {
+            names.remove(key);
+        }
         return names;
     }
 
@@ -339,8 +344,10 @@ public class ResourceResolverControl {
      * the providers.
      */
     public Object getAttribute(final ResourceResolverContext context, final String name) {
-        if (FORBIDDEN_ATTRIBUTE.equals(name)) {
-            return null;
+        for(final String key : FORBIDDEN_ATTRIBUTES) {
+            if (key.equals(name)) {
+                return null;
+            }
         }
         for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getAttributableHandlers(), this)) {
             final Object attribute = p.getAttribute(name);
