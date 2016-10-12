@@ -613,11 +613,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                         path = parent.getPath();
                         resourceName = containingResource.getName();
                     } else {
-                        log.error("HELLOWORLD Unable to get parent of {}", containingResource.getPath());
                         path = null;
                     }
                 } else {
-                    log.error("HELLOWORLD Unable to get parent of {}", resource.getPath());
                     path = null;
                 }
             } else {
@@ -626,7 +624,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                     path =  parent.getPath();
                     resourceName = resource.getName();
                 } else {
-                    log.error("HELLOWORLD Unable to get parent of {}", resource.getPath());
                     path = null;
                 }
             }
@@ -1131,54 +1128,69 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
 
         // require properties
-        final ValueMap props = resource.adaptTo(ValueMap.class);
-        if (props == null) {
-            log.debug("loadAliases: Ignoring {} without properties", resource);
-            return false;
-        }
+        final ValueMap props = resource.getValueMap();
 
         final String resourceName;
         final String parentPath;
         if (resource.getName().equals("jcr:content")) {
             final Resource containingResource = resource.getParent();
-            parentPath = containingResource.getParent().getPath();
-            resourceName = containingResource.getName();
+            if ( containingResource != null ) {
+                final Resource parent = containingResource.getParent();
+                if ( parent != null ) {
+                    parentPath = parent.getPath();
+                    resourceName = containingResource.getName();
+                } else {
+                    parentPath = null;
+                    resourceName = null;
+                }
+            } else {
+                parentPath = null;
+                resourceName = null;
+            }
         } else {
-            parentPath = resource.getParent().getPath();
-            resourceName = resource.getName();
+            final Resource parent = resource.getParent();
+            if ( parent != null ) {
+                parentPath = parent.getPath();
+                resourceName = resource.getName();
+            } else {
+                parentPath = null;
+                resourceName = null;
+            }
         }
         boolean hasAlias = false;
-        Map<String, String> parentMap = map.get(parentPath);
-        for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-            if (parentMap != null && parentMap.containsKey(alias)) {
-                log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
-                        alias,
-                        parentPath,
-                        parentMap.get(alias),
-                        resourceName
-                });
-            } else {
-                // check alias
-                boolean invalid = alias.equals("..") || alias.equals(".");
-                if ( !invalid ) {
-                    for(final char c : alias.toCharArray()) {
-                        // invalid if / or # or a ?
-                        if ( c == '/' || c == '#' || c == '?' ) {
-                            invalid = true;
-                            break;
+        if ( parentPath != null ) {
+            Map<String, String> parentMap = map.get(parentPath);
+            for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
+                if (parentMap != null && parentMap.containsKey(alias)) {
+                    log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
+                            alias,
+                            parentPath,
+                            parentMap.get(alias),
+                            resourceName
+                    });
+                } else {
+                    // check alias
+                    boolean invalid = alias.equals("..") || alias.equals(".");
+                    if ( !invalid ) {
+                        for(final char c : alias.toCharArray()) {
+                            // invalid if / or # or a ?
+                            if ( c == '/' || c == '#' || c == '?' ) {
+                                invalid = true;
+                                break;
+                            }
                         }
                     }
-                }
-                if ( invalid ) {
-                    log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
-                            alias, parentPath);
-                } else {
-                    if (parentMap == null) {
-                        parentMap = new LinkedHashMap<String, String>();
-                        map.put(parentPath, parentMap);
+                    if ( invalid ) {
+                        log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
+                                alias, parentPath);
+                    } else {
+                        if (parentMap == null) {
+                            parentMap = new LinkedHashMap<String, String>();
+                            map.put(parentPath, parentMap);
+                        }
+                        parentMap.put(alias, resourceName);
+                        hasAlias = true;
                     }
-                    parentMap.put(alias, resourceName);
-                    hasAlias = true;
                 }
             }
         }
