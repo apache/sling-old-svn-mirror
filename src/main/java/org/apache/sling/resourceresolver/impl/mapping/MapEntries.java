@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -68,7 +69,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -199,6 +199,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(ResourceChangeListener.PATHS, factory.getObservationPaths());
+        log.info("Registering for {}", Arrays.toString(factory.getObservationPaths()));
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(ResourceChangeListener.class, this, props);
@@ -947,6 +948,11 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return entryMap;
     }
 
+    /**
+     * Check if the resoruce is a valid vanity path resource
+     * @param resource The resource to check
+     * @return {@code true} if this is valid, {@code false} otherwise
+     */
     private boolean isValidVanityPath(Resource resource){
         // ignore system tree
         if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
@@ -968,8 +974,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 return false;
             }
         }
-        // require properties
-        return resource.getValueMap() != null;
+        return true;
     }
 
     private String getActualContentPath(String path){
@@ -1122,9 +1127,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             return false;
         }
 
-        // require properties
-        final ValueMap props = resource.getValueMap();
-
         final String resourceName;
         final String parentPath;
         if (resource.getName().equals("jcr:content")) {
@@ -1154,37 +1156,43 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
         boolean hasAlias = false;
         if ( parentPath != null ) {
-            Map<String, String> parentMap = map.get(parentPath);
-            for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-                if (parentMap != null && parentMap.containsKey(alias)) {
-                    log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
-                            alias,
-                            parentPath,
-                            parentMap.get(alias),
-                            resourceName
-                    });
-                } else {
-                    // check alias
-                    boolean invalid = alias.equals("..") || alias.equals(".");
-                    if ( !invalid ) {
-                        for(final char c : alias.toCharArray()) {
-                            // invalid if / or # or a ?
-                            if ( c == '/' || c == '#' || c == '?' ) {
-                                invalid = true;
-                                break;
+            // require properties
+            final ValueMap props = resource.getValueMap();
+            final String[] aliasArray = props.get(ResourceResolverImpl.PROP_ALIAS, String[].class);
+
+            if ( aliasArray != null ) {
+                Map<String, String> parentMap = map.get(parentPath);
+                for (final String alias : aliasArray) {
+                    if (parentMap != null && parentMap.containsKey(alias)) {
+                        log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
+                                alias,
+                                parentPath,
+                                parentMap.get(alias),
+                                resourceName
+                        });
+                    } else {
+                        // check alias
+                        boolean invalid = alias.equals("..") || alias.equals(".");
+                        if ( !invalid ) {
+                            for(final char c : alias.toCharArray()) {
+                                // invalid if / or # or a ?
+                                if ( c == '/' || c == '#' || c == '?' ) {
+                                    invalid = true;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if ( invalid ) {
-                        log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
-                                alias, parentPath);
-                    } else {
-                        if (parentMap == null) {
-                            parentMap = new LinkedHashMap<String, String>();
-                            map.put(parentPath, parentMap);
+                        if ( invalid ) {
+                            log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
+                                    alias, parentPath);
+                        } else {
+                            if (parentMap == null) {
+                                parentMap = new LinkedHashMap<String, String>();
+                                map.put(parentPath, parentMap);
+                            }
+                            parentMap.put(alias, resourceName);
+                            hasAlias = true;
                         }
-                        parentMap.put(alias, resourceName);
-                        hasAlias = true;
                     }
                 }
             }
@@ -1458,38 +1466,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         if (entry!=null){
             entries.put(path, entry);
         }
-    }
-
-    /**
-     * Returns a filter which matches if any of the nodeProps (JCR properties
-     * modified) is listed in any of the eventProps (event properties listing
-     * modified JCR properties) this allows to only get events interesting for
-     * updating the internal structure
-     */
-    private static String createFilter(final boolean vanityPathEnabled) {
-        final String[] nodeProps = {
-                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, PROP_REDIRECT_EXTERNAL,
-                        ResourceResolverImpl.PROP_REDIRECT_INTERNAL, PROP_REDIRECT_EXTERNAL_STATUS,
-                        PROP_REG_EXP, ResourceResolverImpl.PROP_ALIAS };
-        final String[] eventProps = { SlingConstants.PROPERTY_ADDED_ATTRIBUTES, SlingConstants.PROPERTY_CHANGED_ATTRIBUTES, SlingConstants.PROPERTY_REMOVED_ATTRIBUTES };
-        final StringBuilder filter = new StringBuilder();
-        filter.append("(|");
-        for (final String eventProp : eventProps) {
-            filter.append("(|");
-            if (  vanityPathEnabled ) {
-                filter.append('(').append(eventProp).append('=').append(PROP_VANITY_PATH).append(')');
-                filter.append('(').append(eventProp).append('=').append(PROP_VANITY_ORDER).append(')');
-            }
-            for (final String nodeProp : nodeProps) {
-                filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
-            }
-            filter.append(")");
-        }
-        filter.append("(").append(EventConstants.EVENT_TOPIC).append("=").append(SlingConstants.TOPIC_RESOURCE_REMOVED).append(")");
-        filter.append("(").append(EventConstants.EVENT_TOPIC).append("=").append(SlingConstants.TOPIC_RESOURCE_ADDED).append(")");
-        filter.append(")");
-
-        return filter.toString();
     }
 
     private final class MapEntryIterator implements Iterator<MapEntry> {
