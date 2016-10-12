@@ -144,7 +144,10 @@ public class ResourceChange {
      * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getChangedPropertyNames() {
         return this.changedPropertyNames;
     }
@@ -159,7 +162,10 @@ public class ResourceChange {
      * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getAddedPropertyNames() {
         return this.addedPropertyNames;
     }
@@ -174,7 +180,10 @@ public class ResourceChange {
      * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getRemovedPropertyNames() {
         return this.removedPropertyNames;
     }
