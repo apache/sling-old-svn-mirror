@@ -64,6 +64,8 @@ public class DateFormatExtension implements RuntimeExtension {
 			Date dateAsDate = (Date) dateValue;
 			returnValue = format(dateAsDate, dateFormat);
 
+		} else {
+			throw new SightlyException("Input value is not of a date type");
 		}
 		if ( returnValue == null ) {
 			LOG.trace("Returnvalue is null, returning original value");
