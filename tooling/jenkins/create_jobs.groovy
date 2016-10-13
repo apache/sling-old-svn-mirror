@@ -29,6 +29,9 @@ def modules = [
         location: 'bundles/commons/log'
     ],
     [
+        location: 'bundles/commons/log-webconsole'
+    ],    
+    [
         location: 'bundles/commons/logservice'
     ],
     [
