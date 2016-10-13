@@ -42,9 +42,9 @@ public class HealthCheckResultCache {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * Minimal TTL value for cached item
+     * If no TTL value was specified for service
      */
-    private static final long MIN_TTL = 0;
+    private static final long RESULT_CACHE_TTL_UNDEFINED = -1;
 
     /**
      * The map holding the cached results.
@@ -116,14 +116,15 @@ public class HealthCheckResultCache {
 
     /**
      * Try to obtain {@link org.apache.sling.hc.api.Result} TTL from metadata if specified
-     * @param metadata for health check service
+     *
+     * @param metadata   for health check service
      * @param defaultTtl from service configuration
      * @return TTL from metadata if specified, default - otherwise
      */
-    private long getTtl(HealthCheckMetadata metadata, long defaultTtl){
+    private long getTtl(HealthCheckMetadata metadata, long defaultTtl) {
         final long ttl;
-        if(metadata != null && metadata.getTtl() >= MIN_TTL){
-            ttl = metadata.getTtl();
+        if (metadata.getResultCacheTtlInMs() != null && metadata.getResultCacheTtlInMs() > RESULT_CACHE_TTL_UNDEFINED) {
+            ttl = metadata.getResultCacheTtlInMs();
         } else {
             ttl = defaultTtl;
         }

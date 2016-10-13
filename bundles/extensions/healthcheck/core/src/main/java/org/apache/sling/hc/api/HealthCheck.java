@@ -68,10 +68,10 @@ public interface HealthCheck {
     String ASYNC_CRON_EXPRESSION = "hc.async.cronExpression";
 
     /**
-     * Optional service property: Time To Leave for health check {@link Result}.
+     * Optional service property: Time To Live for health check {@link Result}.
      * The value of this property must be of type {@link Long}.
      */
-    String TTL = "hc.ttl";
+    String RESULT_CACHE_TTL_IN_MS = "hc.resultCacheTtlInMs";
 
     /**
      * Execute this health check and return a {@link Result}

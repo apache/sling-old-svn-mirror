@@ -80,4 +80,11 @@ public @interface SlingHealthCheck {
     /** This is generally used as a description for the object described by the meta type. This name may be localized by prepending a % sign to the name. Default
      * value: %&lt;name&gt;.description */
     String description() default "";
+
+    /**
+     * Override global result TTL for Health Check.
+     * The value of this property must be of type {@link Long}.
+     * @return TTL cached result in ms
+     */
+    long resultCacheTtlInMs() default -1;
 }
