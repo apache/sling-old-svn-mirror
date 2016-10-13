@@ -957,6 +957,10 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      * @return {@code true} if this is valid, {@code false} otherwise
      */
     private boolean isValidVanityPath(Resource resource){
+        if(resource == null) {
+            throw new IllegalArgumentException("Unexpected null resource");
+        }
+        
         // ignore system tree
         if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
             log.debug("isValidVanityPath: not valid {}", resource);
