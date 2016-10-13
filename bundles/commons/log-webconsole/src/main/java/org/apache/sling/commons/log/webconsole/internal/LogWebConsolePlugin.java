@@ -34,7 +34,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 
 import static org.apache.sling.commons.log.logback.webconsole.LogPanel.APP_ROOT;
 import static org.apache.sling.commons.log.logback.webconsole.LogPanel.PARAM_APPENDER_NAME;
-import static org.apache.sling.commons.log.logback.webconsole.LogPanel.PARAM_NUM_OF_LINES;
+import static org.apache.sling.commons.log.logback.webconsole.LogPanel.PARAM_TAIL_NUM_OF_LINES;
+import static org.apache.sling.commons.log.logback.webconsole.LogPanel.PARAM_TAIL_GREP;
 import static org.apache.sling.commons.log.logback.webconsole.LogPanel.PATH_TAILER;
 
 public class LogWebConsolePlugin extends SimpleWebConsolePlugin {
@@ -62,13 +63,14 @@ public class LogWebConsolePlugin extends SimpleWebConsolePlugin {
         if (req.getPathInfo() != null) {
             if (req.getPathInfo().endsWith(PATH_TAILER)) {
                 String appenderName = req.getParameter(PARAM_APPENDER_NAME);
+                String regex = req.getParameter(PARAM_TAIL_GREP);
                 addNoSniffHeader(resp);
                 if (appenderName == null) {
                     pw.printf("Provide appender name via [%s] request parameter%n", PARAM_APPENDER_NAME);
                     return;
                 }
-                int numOfLines = PropertiesUtil.toInteger(req.getParameter(PARAM_NUM_OF_LINES), 0);
-                TailerOptions opts = new TailerOptions(numOfLines);
+                int numOfLines = PropertiesUtil.toInteger(req.getParameter(PARAM_TAIL_NUM_OF_LINES), 0);
+                TailerOptions opts = new TailerOptions(numOfLines, regex);
                 panel.tail(pw, appenderName, opts);
                 return;
             }

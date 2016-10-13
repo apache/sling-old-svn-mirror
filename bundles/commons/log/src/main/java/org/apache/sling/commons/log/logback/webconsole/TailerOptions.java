@@ -21,9 +21,11 @@ package org.apache.sling.commons.log.logback.webconsole;
 
 public final class TailerOptions {
     private final int numOfLines;
+    private final String regex;
 
-    public TailerOptions(int numOfLines) {
+    public TailerOptions(int numOfLines, String regex) {
         this.numOfLines = numOfLines;
+        this.regex = regex;
     }
 
     public boolean tailAll() {
@@ -32,5 +34,9 @@ public final class TailerOptions {
 
     public int getNumOfLines() {
         return numOfLines;
+    }
+
+    public String getRegex() {
+        return regex;
     }
 }

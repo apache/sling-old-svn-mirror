@@ -29,11 +29,16 @@ public interface LogPanel {
     /**
      * Request param name to control number of lines to include in the log
      */
-    String PARAM_NUM_OF_LINES = "tail";
+    String PARAM_TAIL_NUM_OF_LINES = "tail";
     /**
      * Request param name for appender name
      */
     String PARAM_APPENDER_NAME = "name";
+
+    /**
+     * Request param capturing the regular expression to search
+     */
+    String PARAM_TAIL_GREP = "grep";
     /**
      * Let the path end with extension. In that case WebConsole logic would by pass this request's
      * response completely
