@@ -459,6 +459,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean doAddVanity(String path) {
+        log.debug("doAddVanity getting {}", path);
         Resource resource = resolver.getResource(path);
         boolean needsUpdate = false;
         if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
