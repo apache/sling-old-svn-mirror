@@ -104,6 +104,7 @@
         <module>bundles/commons/compiler</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
+        <module>bundles/commons/log-webconsole</module>
         <module>bundles/commons/logservice</module>
         <module>bundles/commons/mime</module>
         <module>bundles/commons/contentdetection</module>
