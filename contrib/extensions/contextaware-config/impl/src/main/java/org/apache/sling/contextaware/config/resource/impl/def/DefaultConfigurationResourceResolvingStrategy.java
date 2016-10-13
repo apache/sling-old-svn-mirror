@@ -75,6 +75,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
         String[] fallbackPaths() default {"/conf/global", "/apps/conf", "/libs/conf"};
+
+        @AttributeDefinition(name="Config ref. resource names",
+                description = "Names of resource to try to look up sling:config-ref property in. '.' is also supported as current resource.")
+        String[] configRefResourceNames() default { "." };
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -144,7 +148,18 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private String getReference(final Resource resource) {
-        String ref = resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+        
+        // lookup reference string in any of the configured lookup resource names
+        String ref = null;
+        for (String name : config.configRefResourceNames()) {
+            Resource lookupResource = resource.getChild(name);
+            if (lookupResource != null) {
+                ref = lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+                if (ref != null) {
+                    break;
+                }
+            }
+        }
 
         if (ref != null) {
             // if absolute path found we are (probably) done
