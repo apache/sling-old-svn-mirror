@@ -118,9 +118,8 @@ public class ProcessorManagerImpl
         WebConsoleConfigPrinter.register(this.bundleContext, this);
     }
 
-    @SuppressWarnings("deprecation")
     private ResourceResolver createResourceResolver() throws LoginException {
-        return this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return this.resourceResolverFactory.getServiceResourceResolver(null);
     }
 
     /**
