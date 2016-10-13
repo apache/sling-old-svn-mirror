@@ -45,7 +45,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class ITConfigFragments extends LogTestBase {
-    private static final String RESET_EVENT_TOPIC = "org/apache/sling/commons/log/RESET";
+    static final String RESET_EVENT_TOPIC = "org/apache/sling/commons/log/RESET";
 
     @Inject
     private BundleContext bundleContext;
