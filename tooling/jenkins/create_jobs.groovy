@@ -897,7 +897,7 @@ def modules = [
 // deployed for maximum compatibility
 def defaultJdks = ["1.7", "1.8"]
 def defaultMvn = "Maven 3.3.9"
-def defaultSlave = "Ubuntu&&!ubuntu3&&!ubuntu-eu2"
+def defaultSlave = "Ubuntu&&!ubuntu3"
 
 def jdkMapping = [
     "1.7": "JDK 1.7 (latest)",
