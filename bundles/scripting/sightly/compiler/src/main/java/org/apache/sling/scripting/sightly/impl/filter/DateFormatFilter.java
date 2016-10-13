@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.impl.filter;
 
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.compiler.expression.nodes.MapLiteral;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
 public class DateFormatFilter extends AbstractFilter {
 
     public static final String DATE_FORMAT = "dateFormat";
+    
+    public static final String LOCALE_OPTION = "locale";
 
     private static final Logger LOG = LoggerFactory.getLogger(DateFormatFilter.class);
 
@@ -57,7 +60,8 @@ public class DateFormatFilter extends AbstractFilter {
             return expression;
         }
         ExpressionNode translation =
-                new RuntimeCall(DATE_FORMAT, expression.getRoot(), expression.removeOption(DATE_FORMAT));
+                new RuntimeCall(DATE_FORMAT, expression.getRoot(), new MapLiteral
+        (getFilterOptions(expression, DATE_FORMAT, LOCALE_OPTION)));
         return expression.withNode(translation);
     }
 }

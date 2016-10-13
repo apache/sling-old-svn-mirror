@@ -22,14 +22,20 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.Locale;
+import java.util.Map;
 
+import org.apache.commons.lang.LocaleUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
+import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.osgi.service.component.annotations.Component;
 
 @Component(service = RuntimeExtension.class, property = { RuntimeExtension.NAME + "=" + "dateFormat" })
 /**
@@ -40,24 +46,37 @@ public class DateFormatExtension implements RuntimeExtension {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DateFormatExtension.class);
 
+	private static final String DATE_FORMAT = "dateFormat";
+	
+	private static final String LOCALE_OPTION = "locale";
+	
 	@Override
 	public Object call(final RenderContext renderContext, Object... arguments) {
-		ExtensionUtils.checkArgumentCount("dateFormat", arguments, 2);
-		Object dateValue = arguments[0];
+		ExtensionUtils.checkArgumentCount(DATE_FORMAT, arguments, 2);
+		
+        Map<String, Object> options = (Map<String, Object>) arguments[1];
+        RuntimeObjectModel runtimeObjectModel = renderContext.getObjectModel();
+        Object dateValue = arguments[0];
+		String dateFormat = runtimeObjectModel.toString(options.get(DATE_FORMAT));
 
-		String dateFormat = String.valueOf(arguments[1]);
+		String localeOption = null;
+		if ( options.containsKey(LOCALE_OPTION)) {
+			localeOption =  runtimeObjectModel.toString(options.get(LOCALE_OPTION));
+		}
+
+		Locale locale = getLocale( renderContext, localeOption);
 		
 		String returnValue = null;
 		
 		if (dateValue instanceof Calendar) {
 
 			Calendar cal = (Calendar) dateValue;
-			returnValue = format(cal.getTime(), dateFormat);
+			returnValue = format(cal.getTime(), dateFormat, locale);
 
 		} else if (dateValue instanceof Date) {
 
 			Date dateAsDate = (Date) dateValue;
-			returnValue = format(dateAsDate, dateFormat);
+			returnValue = format(dateAsDate, dateFormat, locale);
 
 		} else {
 			throw new SightlyException("Input value is not of a date type, supported types java.util.Date and java.util.Calendar");
@@ -65,15 +84,29 @@ public class DateFormatExtension implements RuntimeExtension {
 		return returnValue;
 		
 	}
+	
+	private Locale getLocale(RenderContext renderContext, String specifiedLocale) {
+		
+		if ( StringUtils.isNotBlank(specifiedLocale)) {
+			Locale l = LocaleUtils.toLocale(specifiedLocale);
+			if ( l != null) {
+				return l;
+			}
+		}
+		
+        final SlingHttpServletRequest request = BindingsUtils.getRequest(renderContext.getBindings());
+        return request.getLocale();
+		
+	}
 
-	private String format(Date date, String format) {
-		LOG.trace("Formatting date {0}, with format {1}", date, format);
+	private String format(Date date, String format, Locale locale) {
+		LOG.trace("Formatting date {0}, with format {1} and locale {2}", date, format, locale);
 
 		try {
-			SimpleDateFormat formatter = new SimpleDateFormat(format);
+			SimpleDateFormat formatter = new SimpleDateFormat(format, locale);
 			return formatter.format(date);
 		} catch (Exception e) {
-			String error = String.format("Error during formatting of date %s with format %s", date, format);
+			String error = String.format("Error during formatting of date %s with format %s and locale %s", date, format, locale);
 			throw new SightlyException( error, e);
 		}
 	}
