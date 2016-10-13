@@ -46,6 +46,10 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
                       description = "Enable this context path strategy.")
         boolean enabled() default true;
 
+        @AttributeDefinition(name="Config ref. resource names",
+                description = "Names of resource to try to look up sling:config-ref property in. '.' is also supported as current resource.")
+        String[] configRefResourceNames() default { "." };
+
     }
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -119,7 +123,13 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         }
 
         private boolean hasConfigRef(final Resource resource) {
-            return resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class) != null;
+            for (String name : config.configRefResourceNames()) {
+                Resource lookupResource = resource.getChild(name);
+                if (lookupResource != null && lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class) != null) {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }
