@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
+import static org.apache.sling.contextaware.config.impl.ConfigurationNameConstants.CONFIGURATION_CLASSES_HEADER;
+
 import java.util.Dictionary;
 
 import org.osgi.framework.Bundle;
@@ -29,8 +31,6 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  */
 class ConfigClassBundleTackerCustomizer implements BundleTrackerCustomizer<BundleConfigurationMapping> {
 
-    static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
-    
     private final AnnotationClassConfigurationMetadataProvider metadataProvider;
     
     public ConfigClassBundleTackerCustomizer(AnnotationClassConfigurationMetadataProvider metadataProvider) {
