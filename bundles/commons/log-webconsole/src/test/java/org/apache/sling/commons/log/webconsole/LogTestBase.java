@@ -34,11 +34,11 @@ import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.osgi.framework.BundleContext;
 
 import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.keepCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.systemTimeout;
 import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
@@ -87,6 +87,7 @@ public abstract class LogTestBase {
         return options(
             // the current project (the bundle under test)
             CoreOptions.bundle(bundleFile.toURI().toString()),
+            repository("https://repository.apache.org/snapshots/").id("apache-snapshots").allowSnapshots(),
             mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(),
             mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice").versionAsInProject(),
             LogTestBase.webSupport(),
