@@ -18,6 +18,9 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.def;
 
+// TODO: this web console plugin is currently quite broken and needs to be refactored and moved to another package
+// because of this it's disabled for now
+/*
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -40,14 +43,10 @@ import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
-// TODO: this web console plugin is currently quite broken and needs to be refactored and moved to another package
-// because of this it's disabled for now
-/*
 @Component(service=Servlet.class,
            property={"org.osgi.framework.Constants.SERVICE_DESCRIPTION=Apache Sling Web Console Plugin for configurations",
                    WebConsoleConstants.PLUGIN_LABEL + "=" + WebConsolePlugin.LABEL,
                    WebConsoleConstants.PLUGIN_TITLE + "=" + WebConsolePlugin.TITLE})
-*/
 @SuppressWarnings("serial")
 public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
@@ -285,3 +284,4 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
         }
     }
 }
+*/
