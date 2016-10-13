@@ -127,6 +127,11 @@ public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker
         }
 
         @Override
+        public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes, boolean distribute) {
+            // ignore
+        }
+
+        @Override
         public List<ObserverConfiguration> getObserverConfigurations() {
             return Collections.emptyList();
         }

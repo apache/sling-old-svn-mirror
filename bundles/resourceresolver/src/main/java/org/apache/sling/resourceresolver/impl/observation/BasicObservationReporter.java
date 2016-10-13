@@ -140,6 +140,12 @@ public class BasicObservationReporter implements ObservationReporter {
         // TODO implement distribute
     }
 
+    @Override
+    public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes, boolean distribute) {
+        // TODO Auto-generated method stub
+        this.reportChanges(changes, distribute);
+    }
+
     /**
      * Filter the change list based on the configuration
      * @param changes The list of changes
