@@ -93,7 +93,7 @@ public class JavaEscapeUtils {
         }
         for (int i = 0; i < identifier.length(); i++) {
             char ch = identifier.charAt(i);
-            if (Character.isJavaIdentifierPart(ch) && ch != '_') {
+            if (Character.isJavaIdentifierPart(ch)) {
                 modifiedIdentifier.append(ch);
             } else if (ch == '.') {
                 modifiedIdentifier.append('_');
