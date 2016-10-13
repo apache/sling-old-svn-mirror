@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -36,6 +37,7 @@ import ch.qos.logback.core.spi.FilterReply;
 import org.apache.sling.commons.log.logback.ConfigProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.xml.sax.InputSource;
 
@@ -44,6 +46,10 @@ import org.xml.sax.InputSource;
  * Used by ITWebConsoleRemote to assert output of the WebConsole Plugin
  */
 public class WebConsoleTestActivator implements BundleActivator {
+    private final org.slf4j.Logger log = LoggerFactory.getLogger(getClass());
+    public static final String FOO_LOG = "WebConsoleTestActivator-Foo";
+    public static final String BAR_LOG = "WebConsoleTestActivator-BAR";
+
     public static Class[] BUNDLE_CLASS_NAMES = {
         WebConsoleTestActivator.class,
         WebConsoleTestTurboFilter.class,
@@ -54,7 +60,6 @@ public class WebConsoleTestActivator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-
         context.registerService(TurboFilter.class.getName(),new WebConsoleTestTurboFilter(),null);
         context.registerService(ConfigProvider.class.getName(),new WebConsoleTestConfigProvider(),null);
 
@@ -74,6 +79,15 @@ public class WebConsoleTestActivator implements BundleActivator {
 
         String configAsString = "<included> <!-- WebConsoleTestComment --></included>";
         context.registerService(String.class.getName(), configAsString, props);
+
+        emitLogs();
+    }
+
+    private void emitLogs() throws InterruptedException {
+        //Let system stabalize so that log statement gets logged to file instead of console
+        TimeUnit.SECONDS.sleep(2);
+        log.info(FOO_LOG);
+        log.info(BAR_LOG);
     }
 
     @Override

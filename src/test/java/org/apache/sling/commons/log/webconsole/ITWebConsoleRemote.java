@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.TextPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.apache.commons.io.FilenameUtils;
@@ -39,7 +40,10 @@ import org.ops4j.pax.exam.spi.PaxExamRuntime;
 import org.ops4j.pax.tinybundles.core.TinyBundle;
 import org.osgi.framework.Constants;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
@@ -130,6 +134,22 @@ public class ITWebConsoleRemote extends LogTestBase {
         Page page = webClient.getPage(prepareUrl("slinglog/tailer.txt?name=webconsoletest1.log"));
         String nosniffHeader = page.getWebResponse().getResponseHeaderValue("X-Content-Type-Options");
         assertEquals("nosniff", nosniffHeader);
+    }
+
+    @Test
+    public void tailerGrep() throws Exception{
+        TextPage page  = webClient.getPage(prepareUrl("slinglog/tailer.txt?name=FILE&tail=-1"));
+        String text = page.getContent();
+
+        assertThat(text, containsString(WebConsoleTestActivator.FOO_LOG));
+        assertThat(text, containsString(WebConsoleTestActivator.BAR_LOG));
+
+        page  = webClient.getPage(prepareUrl("slinglog/tailer.txt?name=FILE&tail=1000&grep="+WebConsoleTestActivator.FOO_LOG));
+        text = page.getContent();
+
+        //With grep pattern specified we should only see foo and not bar
+        assertThat(text, containsString(WebConsoleTestActivator.FOO_LOG));
+        assertThat(text, not(containsString(WebConsoleTestActivator.BAR_LOG)));
     }
 
     @AfterClass
