@@ -490,7 +490,8 @@ def modules = [
         location: 'contrib/extensions/resourcemerger'
     ],
     [
-        location: 'contrib/extensions/rewriter'
+        location: 'contrib/extensions/rewriter',
+        jdks: ['1.8']
     ],
     [
         location: 'contrib/extensions/security'
