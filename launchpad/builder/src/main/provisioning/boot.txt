@@ -29,12 +29,15 @@
     repository.home=${sling.home}/repository
     localIndexDir=${sling.home}/repository/index
 
+[variables]
+    slf4j.version=1.7.21
+
 [artifacts]
-    org.slf4j/slf4j-api/1.7.6
-    org.apache.sling/org.apache.sling.commons.log/4.0.6
+    org.slf4j/slf4j-api/${slf4j.version}
+    org.apache.sling/org.apache.sling.commons.log/4.0.7-SNAPSHOT
     org.apache.sling/org.apache.sling.commons.logservice/1.0.6
-    org.slf4j/jcl-over-slf4j/1.7.6
-    org.slf4j/log4j-over-slf4j/1.7.6
+    org.slf4j/jcl-over-slf4j/${slf4j.version}
+    org.slf4j/log4j-over-slf4j/${slf4j.version}
     org.apache.sling/org.apache.sling.settings/1.3.8
     org.apache.sling/org.apache.sling.fragment.xml/1.0.2
     org.apache.sling/org.apache.sling.fragment.transaction/1.0.0
