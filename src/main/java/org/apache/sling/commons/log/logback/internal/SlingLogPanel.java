@@ -90,17 +90,11 @@ public class SlingLogPanel implements LogPanel {
     private final LogbackManager logbackManager;
     private final BundleContext bundleContext;
 
-    private final String labelRes;
-
-    private final int labelResLen;
-
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(SlingLogPanel.class);
 
     public SlingLogPanel(final LogbackManager logbackManager, final BundleContext bundleContext) {
         this.logbackManager = logbackManager;
         this.bundleContext = bundleContext;
-        this.labelRes = '/' + APP_ROOT + '/';
-        this.labelResLen = labelRes.length() - 1;
     }
 
     @Override
@@ -572,7 +566,7 @@ public class SlingLogPanel implements LogPanel {
                         if (numOfLines == 0){
                             numOfLines = logbackManager.getLogConfigManager().getNumOfLines();
                         }
-                        new Tailer(pw, numOfLines).tail(file);
+                        new Tailer(new FilteringListener(pw, opts.getRegex()), numOfLines).tail(file);
                     }
                 }
                 return;
@@ -584,11 +578,13 @@ public class SlingLogPanel implements LogPanel {
     private String getLinkedName(FileAppender<ILoggingEvent> appender) throws UnsupportedEncodingException {
         String fileName = appender.getFile();
         String name = appender.getName();
-        return String.format("File : [<a href=\"%s/%s?%s=%d&%s=%s\">%s</a>] %s",
+        return String.format("File : [<a href=\"%s/%s?%s=%d&%s=%s&%s=%s\">%s</a>] %s",
                 APP_ROOT,
                 PATH_TAILER,
-                PARAM_NUM_OF_LINES,
+                PARAM_TAIL_NUM_OF_LINES,
                 logbackManager.getLogConfigManager().getNumOfLines(),
+                PARAM_TAIL_GREP,
+                FilteringListener.MATCH_ALL,
                 PARAM_APPENDER_NAME,
                 URLEncoder.encode(name, "UTF-8"),
                 XmlUtil.escapeXml(name),
