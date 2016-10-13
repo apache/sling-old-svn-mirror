@@ -179,17 +179,16 @@ public class SightlyJavaCompilerService {
     }
 
     private Object compileRepositoryJavaClass(ResourceResolver resolver, String className) {
-        String pojoPath = SourceIdentifier.getScriptName(sightlyEngineConfiguration.getBundleSymbolicName(), className) + ".java";
-        Resource pojoResource = resolver.getResource(pojoPath);
+        Resource pojoResource = SourceIdentifier.getPOJOFromFQCN(resolver, sightlyEngineConfiguration.getBundleSymbolicName(), className);
         if (pojoResource != null) {
             try {
                 SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, pojoResource.getPath());
                 return compileSource(sourceIdentifier, IOUtils.toString(pojoResource.adaptTo(InputStream.class), "UTF-8"));
             } catch (IOException e) {
-                throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoPath), e);
+                throw new SightlyException(String.format("Unable to compile class %s from %s.", className, pojoResource.getPath()), e);
             }
         }
-        throw new SightlyException("Cannot find a a file corresponding to class " + className + " in the repository.");
+        throw new SightlyException("Cannot find a file corresponding to class " + className + " in the repository.");
     }
 
     @Activate

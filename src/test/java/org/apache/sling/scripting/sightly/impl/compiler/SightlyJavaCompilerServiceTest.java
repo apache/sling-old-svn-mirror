@@ -91,7 +91,7 @@ public class SightlyJavaCompilerServiceTest {
     @Test
     public void testGetInstanceForCachedPojoFromRepo() throws Exception {
         final String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
-        final String className = "apps.my__002d__project.test__005f__components.a.Pojo";
+        final String className = "apps.my_project.test_components.a.Pojo";
         Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
             put(className, System.currentTimeMillis());
         }};
