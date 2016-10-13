@@ -566,7 +566,7 @@ public class LogbackManager extends LoggerContextAwareBase {
                         GenericConfigurator.informContextOfURLUsedForConfiguration(context, mainURL);
                         configurator.doConfigure(eventList);
                         addInfo("Re-registering previous fallback configuration once more as a fallback configuration point");
-                        configurator.registerSafeConfiguration();
+                        configurator.registerSafeConfiguration(eventList);
                     } catch (JoranException e) {
                         addError("Unexpected exception thrown by a configuration considered safe.", e);
                     }
