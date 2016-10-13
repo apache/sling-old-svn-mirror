@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.impl.metadata;
 
+import static org.apache.sling.contextaware.config.impl.ConfigurationNameConstants.CONFIGURATION_CLASSES_HEADER;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -103,7 +105,7 @@ final class BundleEventUtil {
         @Override
         public Dictionary<String,String> getHeaders() {
             Dictionary<String,String> headers = new Hashtable<>();
-            headers.put(ConfigClassBundleTackerCustomizer.CONFIGURATION_CLASSES_HEADER, classNames);
+            headers.put(CONFIGURATION_CLASSES_HEADER, classNames);
             return headers;
         }
 
