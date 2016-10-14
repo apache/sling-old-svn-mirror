@@ -27,9 +27,9 @@
         <relativePath/>
     </parent>
   
-    <artifactId>org.apache.sling.contextaware-config.reactor</artifactId>
+    <artifactId>org.apache.sling.caconfig.reactor</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration Reactor</name>
     <description>Sling Context-Aware Configuration handling</description>
   

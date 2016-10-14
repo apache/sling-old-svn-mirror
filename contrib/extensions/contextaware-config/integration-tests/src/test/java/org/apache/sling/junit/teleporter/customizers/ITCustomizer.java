@@ -29,12 +29,12 @@ public class ITCustomizer implements TeleporterRule.Customizer {
         final ClientSideTeleporter cst = (ClientSideTeleporter)t;
         cst.setBaseUrl(System.getProperty(BASE_URL_PROP, BASE_URL_PROP + "_IS_NOT_SET"));
         cst.setServerCredentials("admin", "admin");
-        cst.includeDependencyPrefix("org.apache.sling.contextaware.config.it");
+        cst.includeDependencyPrefix("org.apache.sling.caconfig.it");
         cst.setTestReadyTimeoutSeconds(TimeoutsProvider.getInstance().getTimeout(10));
         
         // list all configuration annotation classes here (separated by ",")
         cst.getAdditionalBundleHeaders().put("Sling-ContextAware-Configuration-Classes",
-                "org.apache.sling.contextaware.config.it.example.SimpleConfig");
+                "org.apache.sling.caconfig.it.example.SimpleConfig");
     }
 
 }

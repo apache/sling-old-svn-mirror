@@ -26,12 +26,12 @@
   org.apache.sling/org.apache.sling.junit.core
   org.apache.sling/org.apache.sling.testing.tools
   org.apache.sling/org.apache.sling.resourcebuilder
-  org.apache.sling/org.apache.sling.contextaware.config.api
-  org.apache.sling/org.apache.sling.contextaware.config.spi
-  org.apache.sling/org.apache.sling.contextaware.config.impl
+  org.apache.sling/org.apache.sling.caconfig.api
+  org.apache.sling/org.apache.sling.caconfig.spi
+  org.apache.sling/org.apache.sling.caconfig.impl
     
 [configurations]
   org.apache.sling.commons.log.LogManager.factory.config-slingconfig.log
-    org.apache.sling.commons.log.names=["org.apache.sling.contextaware.config"]
+    org.apache.sling.commons.log.names=["org.apache.sling.caconfig"]
     org.apache.sling.commons.log.file="logs/sling-contextaware-config.log"
     org.apache.sling.commons.log.level="debug"
