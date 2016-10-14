@@ -745,19 +745,15 @@ public class MapEntriesTest {
         assertEquals("/justVanityPath.html", iterator.next().getRedirect()[0]);
         assertFalse(iterator.hasNext());
     }
-*/
 
     //SLING-3727
     @Test
     public void test_doAddAliasAttributesWithDisableAliasOptimization() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doAddAttributes", String.class, Set.class, boolean.class);
-        method.setAccessible(true);
+        final Method addResource = MapEntries.class.getDeclaredMethod("addResource", String.class, AtomicBoolean.class);
+        addResource.setAccessible(true);
 
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
-        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
-        field0.setAccessible(true);
-        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
 
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
@@ -769,8 +765,7 @@ public class MapEntriesTest {
         when(result.getName()).thenReturn("child");
         when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
-        method.invoke(mapEntries, "/parent/child",
-                Collections.singleton("sling:alias"), false);
+        addResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
@@ -780,14 +775,11 @@ public class MapEntriesTest {
     //SLING-3727
     @Test
     public void test_doUpdateAttributesWithDisableAliasOptimization() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doUpdateAttributes", String.class, Set.class, boolean.class);
-        method.setAccessible(true);
+        final Method addResource = MapEntries.class.getDeclaredMethod("addResource", String.class, AtomicBoolean.class);
+        addResource.setAccessible(true);
 
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
-        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
-        field0.setAccessible(true);
-        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
 
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
@@ -799,12 +791,12 @@ public class MapEntriesTest {
         when(result.getName()).thenReturn("child");
         when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
-        method.invoke(mapEntries, "/parent/child",
-                Collections.singleton("sling:alias"), false);
+        addResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
     }
+*/
 
     //SLING-3727
     @Test
