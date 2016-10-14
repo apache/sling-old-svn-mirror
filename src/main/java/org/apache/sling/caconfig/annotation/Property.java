@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.annotation;
+package org.apache.sling.caconfig.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,24 +24,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks an annotation class to be useable with Sling context-aware configuration. 
+ * Adds further metadata for properties of context-aware configuration annotation classes.
  */
-@Target(ElementType.ANNOTATION_TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Configuration {
+public @interface Property {
 
     /**
-     * @return Allows to overwrite the configuration name. If not set the class name of the annotation is used.
-     */
-    String name() default "";
-    
-    /**
-     * @return Label for the resource (e.g. for configuration editor GUIs).
+     * @return Label for the property (e.g. for configuration editor GUIs).
      */
     String label() default "";
     
     /**
-     * @return Description for the resource (e.g. for configuration editor GUIs).
+     * @return Description for the property (e.g. for configuration editor GUIs).
      */
     String description() default "";
     

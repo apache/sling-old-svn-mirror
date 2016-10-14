@@ -16,33 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.annotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * Adds further metadata for properties of context-aware configuration annotation classes.
+ * Annotations for context-aware configurations.
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Property {
-
-    /**
-     * @return Label for the property (e.g. for configuration editor GUIs).
-     */
-    String label() default "";
-    
-    /**
-     * @return Description for the property (e.g. for configuration editor GUIs).
-     */
-    String description() default "";
-    
-    /**
-     * @return Further properties e.g. for configuration editor GUIs.
-     */
-    String[] property() default {};
-    
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.caconfig.annotation;

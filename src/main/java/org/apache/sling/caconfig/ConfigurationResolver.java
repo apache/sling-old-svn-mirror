@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config;
+package org.apache.sling.caconfig;
 
 import javax.annotation.Nonnull;
 
@@ -28,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * Context-specific configuration may be different for different parts of the resource
  * hierarchy, and configuration parameter inheritance may take place.
  *
- * This service builds on top of the {@link org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver}
+ * This service builds on top of the {@link org.apache.sling.caconfig.resource.ConfigurationResourceResolver}
  * and uses that service to resolve configuration resources. These resources
  * can then be converted into application specific configuration objects
  * using the {@link ConfigurationBuilder}.

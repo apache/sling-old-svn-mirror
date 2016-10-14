@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config;
+package org.apache.sling.caconfig;
 
 import java.util.Collection;
 

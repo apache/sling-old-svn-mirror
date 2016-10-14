@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource;
+package org.apache.sling.caconfig.resource;
 
 import java.util.Collection;
 
@@ -29,7 +29,7 @@ import org.osgi.annotation.versioning.ProviderType;
 /**
  * Getting context-aware configuration resources for a given resource context.
  * This is a low-level interface for supporting advanced use cases. If you just want to fetch
- * some configuration parameters {@link org.apache.sling.contextaware.config.ConfigurationResolver}
+ * some configuration parameters {@link org.apache.sling.caconfig.ConfigurationResolver}
  * is the right place.
  */
 @ProviderType

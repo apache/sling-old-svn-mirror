@@ -16,8 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.caconfig;
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * Annotations for context-aware configurations.
+ * Is thrown when configuration cannot be resolved.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.config.annotation;
+@ProviderType
+public final class ConfigurationResolveException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    public ConfigurationResolveException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConfigurationResolveException(String message) {
+        super(message);
+    }
+
+}
