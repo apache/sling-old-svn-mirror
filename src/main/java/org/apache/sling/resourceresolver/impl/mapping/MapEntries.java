@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -328,7 +327,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return newRefreshed;
     }
 
-    private boolean doAddAttributes(String path, Set<String> addedAttributes, boolean refreshed) {
+    private boolean doRemoveAttributes(String path, String removedAttribute, boolean refreshed) {
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
             resolver.refresh();
@@ -336,87 +335,17 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
         this.initializing.lock();
         try {
-            for (String changedAttribute:addedAttributes){
-                if (PROP_VANITY_PATH.equals(changedAttribute)) {
-                    doAddVanity(path);
-                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
-                    doUpdateVanityOrder(path, false);
-                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute)
-                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
-                    doUpdateRedirectStatus(path);
-                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
-                    if (enableOptimizeAliasResolution) {
-                       doAddAlias(path);
+            if (PROP_VANITY_PATH.equals(removedAttribute)){
+                doRemoveVanity(path);
+            } else if (ResourceResolverImpl.PROP_ALIAS.equals(removedAttribute)) {
+                if (enableOptimizeAliasResolution) {
+                    doRemoveAlias(path, true);
+                    if ( path.endsWith("/jcr:content") ) {
+                        doAddAlias(ResourceUtil.getParent(path));
                     }
                 }
             }
-            if (path.startsWith(this.mapRoot)) {
-                doUpdateConfiguration();
-            }
-            sendChangeEvent();
-        } finally {
-            this.initializing.unlock();
-        }
-        return newRefreshed;
-    }
 
-    private boolean doUpdateAttributes(String path, Set<String> changedAttributes, boolean refreshed) {
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
-        this.initializing.lock();
-        try {
-            for (String changedAttribute : changedAttributes){
-                if (PROP_VANITY_PATH.equals(changedAttribute)) {
-                    doUpdateVanity(path);
-                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
-                    doUpdateVanityOrder(path, false);
-                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute)
-                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
-                    doUpdateRedirectStatus(path);
-                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
-                    if (enableOptimizeAliasResolution) {
-                        doRemoveAlias(path, false);
-                        doAddAlias(path);
-                        doUpdateAlias(path, false);
-                    }
-                }
-            }
-            if (path.startsWith(this.mapRoot)) {
-                doUpdateConfiguration();
-            }
-            sendChangeEvent();
-        } finally {
-            this.initializing.unlock();
-        }
-        return newRefreshed;
-    }
-
-    private boolean doRemoveAttributes(String path, Set<String> removedAttributes, boolean nodeDeletion, boolean refreshed) {
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
-        this.initializing.lock();
-        try {
-            for (String changedAttribute:removedAttributes){
-                if (PROP_VANITY_PATH.equals(changedAttribute)){
-                    doRemoveVanity(path);
-                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
-                    doUpdateVanityOrder(path, true);
-                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute)
-                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
-                    doUpdateRedirectStatus(path);
-                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
-                    if (enableOptimizeAliasResolution) {
-                        doRemoveAlias(path, nodeDeletion);
-                        doUpdateAlias(path, nodeDeletion);
-                    }
-                }
-            }
             if (path.startsWith(this.mapRoot)) {
                 doUpdateConfiguration();
             }
@@ -510,45 +439,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return false;
     }
 
-    private void doUpdateVanityOrder(String path, boolean deletion) {
-        Resource resource = resolver.getResource(path);
-        final ValueMap props = resource.getValueMap();
-
-        long vanityOrder;
-        if (deletion) {
-            vanityOrder = 0;
-        } else {
-            vanityOrder = props.get(PROP_VANITY_ORDER, Long.class);
-        }
-
-        String actualContentPath = getActualContentPath(path);
-        List<String> vanityPaths = vanityTargets.get(actualContentPath);
-        if (vanityPaths != null) {
-            boolean updatedOrder = false;
-            for (String vanityTarget : vanityPaths) {
-                List<MapEntry> entries = this.resolveMapsMap.get(vanityTarget);
-                for (MapEntry entry : entries) {
-                    String redirect = getMapEntryRedirect(entry);
-                    if (redirect != null && redirect.equals(actualContentPath)) {
-                        entry.setOrder(vanityOrder);
-                        updatedOrder = true;
-                    }
-                }
-                if (updatedOrder) {
-                    Collections.sort(entries);
-                }
-            }
-        }
-    }
-
-    private void doUpdateRedirectStatus(String path) {
-        String actualContentPath = getActualContentPath(path);
-        List<String> vanityPaths = vanityTargets.get(actualContentPath);
-        if (vanityPaths != null) {
-            doUpdateVanity(path);
-        }
-    }
-
     private boolean doAddAlias(String path) {
         Resource resource = resolver.getResource(path);
         return loadAlias(resource, this.aliasMap);
@@ -598,9 +488,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         if (nodeDeletion) {
             if (!"/".equals(path)){
                 if (path.endsWith("/jcr:content")) {
-                    path =  path.substring(0, path.length() - "/jcr:content".length());
+                    path = ResourceUtil.getParent(path);
                 }
-                resourceName = path.substring(path.lastIndexOf("/") + 1);
+                resourceName = ResourceUtil.getName(path);
                 path = ResourceUtil.getParent(path);
             } else {
                 resourceName = "";
@@ -788,14 +678,16 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             // removal of a resource is handled differently
             if (rc.getType() == ResourceChange.ChangeType.REMOVED) {
                 final String actualContentPath = getActualContentPath(path);
+                final String prefix = getActualContentPath(path) + "/";
+
                 for (final String target : this.vanityTargets.keySet()) {
-                    if (target.startsWith(actualContentPath)) {
-                        wasResolverRefreshed = doRemoveAttributes(path, Collections.singleton(PROP_VANITY_PATH), true, wasResolverRefreshed);
+                    if (target.startsWith(prefix) || target.equals(actualContentPath)) {
+                        wasResolverRefreshed = doRemoveAttributes(target, PROP_VANITY_PATH, wasResolverRefreshed);
                     }
                 }
                 for (final String target : this.aliasMap.keySet()) {
-                    if (actualContentPath.startsWith(target)) {
-                        wasResolverRefreshed = doRemoveAttributes(path, Collections.singleton(ResourceResolverImpl.PROP_ALIAS), true, wasResolverRefreshed);
+                    if (actualContentPath.startsWith(target + "/") || actualContentPath.equals(target)) {
+                        wasResolverRefreshed = doRemoveAttributes(actualContentPath, ResourceResolverImpl.PROP_ALIAS, wasResolverRefreshed);
                     }
                 }
                 if (path.startsWith(this.mapRoot)) {
@@ -806,56 +698,28 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             } else if (rc.getType() == ResourceChange.ChangeType.ADDED ) {
                 wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
             } else {
-                @SuppressWarnings("deprecation")
-                Set<String> addedAttributes = rc.getAddedPropertyNames();
-                if (addedAttributes != null) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("found added attributes {}", addedAttributes);
-                    }
-                    wasResolverRefreshed = doAddAttributes(path, addedAttributes, wasResolverRefreshed);
-
-                    @SuppressWarnings("deprecation")
-                    Set<String> changedAttributes = rc.getChangedPropertyNames();
-                    if (changedAttributes != null) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("found changed attributes {}", changedAttributes);
-                        }
-                        wasResolverRefreshed = doUpdateAttributes(path, changedAttributes, wasResolverRefreshed);
-                    }
-
-                    @SuppressWarnings("deprecation")
-                    Set<String> removedAttributes = rc.getRemovedPropertyNames();
-                    if (removedAttributes != null) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("found removed attributes {}", removedAttributes);
-                        }
-                        wasResolverRefreshed = doRemoveAttributes(path, removedAttributes, false, wasResolverRefreshed);
-                    }
+                if (path.startsWith(this.mapRoot)) {
+                    wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
                 } else {
+                    if ( !wasResolverRefreshed ) {
+                        wasResolverRefreshed = true;
+                        this.resolver.refresh();
+                    }
+                    boolean changed = false;
+                    this.initializing.lock();
+                    try {
+                        changed |= doUpdateVanity(path);
+                        if (enableOptimizeAliasResolution) {
+                            changed |= doRemoveAlias(path, false);
+                            changed |= doAddAlias(path);
+                            changed |= doUpdateAlias(path, false);
+                        }
+                    } finally {
+                        this.initializing.unlock();
+                    }
 
-                    if (path.startsWith(this.mapRoot)) {
-                        wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
-                    } else {
-                        if ( !wasResolverRefreshed ) {
-                            wasResolverRefreshed = true;
-                            this.resolver.refresh();
-                        }
-                        boolean changed = false;
-                        this.initializing.lock();
-                        try {
-                            changed |= doUpdateVanity(path);
-                            if (enableOptimizeAliasResolution) {
-                                changed |= doRemoveAlias(path, false);
-                                changed |= doAddAlias(path);
-                                changed |= doUpdateAlias(path, false);
-                            }
-                        } finally {
-                            this.initializing.unlock();
-                        }
-
-                        if ( changed ) {
-                            this.sendChangeEvent();
-                        }
+                    if ( changed ) {
+                        this.sendChangeEvent();
                     }
                 }
 
@@ -961,7 +825,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         if(resource == null) {
             throw new IllegalArgumentException("Unexpected null resource");
         }
-        
+
         // ignore system tree
         if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
             log.debug("isValidVanityPath: not valid {}", resource);
@@ -985,7 +849,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return true;
     }
 
-    private String getActualContentPath(String path){
+    private String getActualContentPath(final String path){
         final String checkPath;
         if ( path.endsWith("/jcr:content") ) {
             checkPath = path.substring(0, path.length() - "/jcr:content".length());
