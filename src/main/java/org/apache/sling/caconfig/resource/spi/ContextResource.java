@@ -39,7 +39,7 @@ public final class ContextResource {
     /**
      * @param resource Context root resource
      * @param configRef Config reference (normally a resource path).
-     *    May be null if the {@link ConfigurationResourceResolvingStrategy has it's own concept of detecting the matching configuration.
+     *    May be null if the {@link ConfigurationResourceResolvingStrategy} has it's own concept of detecting the matching configuration.
      */
     public ContextResource(@Nonnull Resource resource, String configRef) {
         this.resource = resource;
@@ -56,7 +56,7 @@ public final class ContextResource {
 
     /**
      * @return Config reference (normally a resource path).
-     *    May be null if the {@link ConfigurationResourceResolvingStrategy has it's own concept of detecting the matching configuration.
+     *    May be null if the {@link ConfigurationResourceResolvingStrategy} has it's own concept of detecting the matching configuration.
      */
     public @CheckForNull String getConfigRef() {
         return configRef;
