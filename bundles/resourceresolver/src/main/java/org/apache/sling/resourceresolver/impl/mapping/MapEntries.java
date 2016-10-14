@@ -73,6 +73,12 @@ import org.slf4j.LoggerFactory;
 
 public class MapEntries implements ResourceChangeListener, ExternalResourceChangeListener {
 
+    public static final String JCR_CONTENT = "jcr:content";
+
+    public static final String JCR_CONTENT_PREFIX = "jcr:content/";
+
+    public static final String JCR_CONTENT_SUFFIX = "/jcr:content";
+
     public static final MapEntries EMPTY = new MapEntries();
 
     private static final String PROP_REG_EXP = "sling:match";
@@ -327,6 +333,66 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return newRefreshed;
     }
 
+    /**
+     * Remove all aliases for the vanity path
+     * @param vanityPath The vanity path
+     * @param refreshed Flag if session needs refresh
+     * @param path Optional sub path of the vanity path
+     * @return
+     */
+    private boolean doRemoveAllAliases(final String vanityPath, boolean refreshed, final String path) {
+        // if path is specified we first need to find out if it is
+        // a direct child of vanity path but not jcr:content, or a jcr:content child of a direct child
+        // otherwise we can discard the event
+        boolean handle = true;
+        if ( path != null ) {
+            final String subPath = path.substring(vanityPath.length() + 1);
+            final int firstSlash = subPath.indexOf('/');
+            if ( firstSlash == -1 ) {
+                if ( subPath.equals(JCR_CONTENT) ) {
+                    handle = false;
+                }
+            } else if ( subPath.lastIndexOf('/') == firstSlash) {
+                if ( subPath.startsWith(JCR_CONTENT_PREFIX) || !subPath.endsWith(JCR_CONTENT_SUFFIX) ) {
+                    handle = false;
+                }
+            } else {
+                handle = false;
+            }
+        }
+        if ( !handle ) {
+            return false;
+        }
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
+        this.initializing.lock();
+        try {
+            if (enableOptimizeAliasResolution) {
+                final Map<String, String> aliasMapEntry = aliasMap.remove(vanityPath);
+                if (aliasMapEntry != null && path != null && path.endsWith(JCR_CONTENT_SUFFIX) ) {
+                    // we need to re-add
+                    // from a potential parent
+                    doAddAlias(ResourceUtil.getParent(path));
+                }
+                if ( aliasMapEntry != null ) {
+                    sendChangeEvent();
+                }
+            }
+
+            // TODO we should not handle this here
+            if (vanityPath.startsWith(this.mapRoot)) {
+                doUpdateConfiguration();
+                sendChangeEvent();
+            }
+        } finally {
+            this.initializing.unlock();
+        }
+        return newRefreshed;
+    }
+
     private boolean doRemoveAttributes(String path, String removedAttribute, boolean refreshed) {
         boolean newRefreshed = refreshed;
         if (!newRefreshed) {
@@ -341,6 +407,8 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 if (enableOptimizeAliasResolution) {
                     doRemoveAlias(path, true);
                     if ( path.endsWith("/jcr:content") ) {
+                        // as doRemoveAlias removes all aliases we need to re-add
+                        // from a potential parent
                         doAddAlias(ResourceUtil.getParent(path));
                     }
                 }
@@ -662,7 +730,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      * appropriate events.
      */
     @Override
-    public void onChange(List<ResourceChange> changes) {
+    public void onChange(final List<ResourceChange> changes) {
         boolean wasResolverRefreshed = false;
 
         for(final ResourceChange rc : changes) {
@@ -678,16 +746,18 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             // removal of a resource is handled differently
             if (rc.getType() == ResourceChange.ChangeType.REMOVED) {
                 final String actualContentPath = getActualContentPath(path);
-                final String prefix = getActualContentPath(path) + "/";
+                final String actualContentPathPrefix = actualContentPath + "/";
 
                 for (final String target : this.vanityTargets.keySet()) {
-                    if (target.startsWith(prefix) || target.equals(actualContentPath)) {
+                    if (target.startsWith(actualContentPathPrefix) || target.equals(actualContentPath)) {
                         wasResolverRefreshed = doRemoveAttributes(target, PROP_VANITY_PATH, wasResolverRefreshed);
                     }
                 }
                 for (final String target : this.aliasMap.keySet()) {
-                    if (actualContentPath.startsWith(target + "/") || actualContentPath.equals(target)) {
-                        wasResolverRefreshed = doRemoveAttributes(actualContentPath, ResourceResolverImpl.PROP_ALIAS, wasResolverRefreshed);
+                    if (path.startsWith(target + "/") || path.equals(target)) {
+                        wasResolverRefreshed = doRemoveAllAliases(target, wasResolverRefreshed, null);
+                    } else if ( target.startsWith(actualContentPathPrefix) ) {
+                        wasResolverRefreshed = doRemoveAllAliases(target, wasResolverRefreshed, path);
                     }
                 }
                 if (path.startsWith(this.mapRoot)) {
