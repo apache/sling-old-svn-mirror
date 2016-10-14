@@ -32,6 +32,8 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     String getMapRoot();
 
+    boolean isMapConfiguration(String path);
+
     String[] getObservationPaths();
 
     Map<?, ?> getVirtualURLMap();

@@ -45,6 +45,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -71,15 +72,16 @@ import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MapEntries implements ResourceChangeListener, ExternalResourceChangeListener {
+public class MapEntries implements
+    MapEntriesHandler,
+    ResourceChangeListener,
+    ExternalResourceChangeListener {
 
     public static final String JCR_CONTENT = "jcr:content";
 
     public static final String JCR_CONTENT_PREFIX = "jcr:content/";
 
     public static final String JCR_CONTENT_SUFFIX = "/jcr:content";
-
-    public static final MapEntries EMPTY = new MapEntries();
 
     private static final String PROP_REG_EXP = "sling:match";
 
@@ -111,11 +113,13 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private MapConfigurationProvider factory;
+    private volatile MapConfigurationProvider factory;
 
     private volatile ResourceResolver resolver;
 
-    private final String mapRoot;
+    private volatile EventAdmin eventAdmin;
+
+    private volatile ServiceRegistration<ResourceChangeListener> registration;
 
     private Map<String, List<MapEntry>> resolveMapsMap;
 
@@ -125,25 +129,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     private Map<String, Map<String, String>> aliasMap;
 
-    private ServiceRegistration<ResourceChangeListener> registration;
-
-    private EventAdmin eventAdmin;
-
     private final ReentrantLock initializing = new ReentrantLock();
-
-    private final boolean enabledVanityPaths;
-
-    private final long maxCachedVanityPathEntries;
-
-    private final boolean maxCachedVanityPathEntriesStartup;
-
-    private final int vanityBloomFilterMaxBytes;
-
-    private final boolean enableOptimizeAliasResolution;
-
-    private final boolean vanityPathPrecedence;
-
-    private final List<VanityPathConfig> vanityPathConfig;
 
     private final AtomicLong vanityCounter;
 
@@ -155,44 +141,14 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     private boolean updateBloomFilterFile = false;
 
-    @SuppressWarnings("unchecked")
-    private MapEntries() {
-        this.factory = null;
-        this.resolver = null;
-        this.mapRoot = DEFAULT_MAP_ROOT;
-
-        this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
-        this.mapMaps = Collections.<MapEntry> emptyList();
-        this.vanityTargets = Collections.<String,List <String>>emptyMap();
-        this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
-        this.registration = null;
-        this.eventAdmin = null;
-        this.enabledVanityPaths = true;
-        this.maxCachedVanityPathEntries = -1;
-        this.maxCachedVanityPathEntriesStartup = true;
-        this.vanityBloomFilterMaxBytes = 0;
-        this.enableOptimizeAliasResolution = true;
-        this.vanityPathConfig = null;
-        this.vanityPathPrecedence = false;
-        this.vanityCounter = new AtomicLong(0);
-        this.vanityBloomFilterFile = null;
-    }
-
     @SuppressWarnings({ "unchecked", "deprecation" })
     public MapEntries(final MapConfigurationProvider factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
-                    throws LoginException, IOException {
+        throws LoginException, IOException {
+
         final Map<String, Object> authInfo = new HashMap<String, Object>();
         authInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundleContext.getBundle());
         this.resolver = factory.getAdministrativeResourceResolver(authInfo);
         this.factory = factory;
-        this.mapRoot = factory.getMapRoot();
-        this.enabledVanityPaths = factory.isVanityPathEnabled();
-        this.maxCachedVanityPathEntries = factory.getMaxCachedVanityPathEntries();
-        this.maxCachedVanityPathEntriesStartup = factory.isMaxCachedVanityPathEntriesStartup();
-        this.vanityBloomFilterMaxBytes = factory.getVanityBloomFilterMaxBytes();
-        this.vanityPathConfig = factory.getVanityPathConfig();
-        this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
-        this.vanityPathPrecedence = factory.hasVanityPathPrecedence();
         this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
@@ -232,7 +188,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             final Map<String, List<MapEntry>> newResolveMapsMap = new ConcurrentHashMap<String, List<MapEntry>>();
 
             //optimization made in SLING-2521
-            if (enableOptimizeAliasResolution){
+            if (this.factory.isOptimizeAliasResolutionEnabled()){
                 final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
                 this.aliasMap = aliasMap;
             }
@@ -263,7 +219,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     protected void initializeVanityPaths() throws IOException {
         this.initializing.lock();
         try {
-            if (this.enabledVanityPaths) {
+            if (this.factory.isVanityPathEnabled()) {
 
                 if (vanityBloomFilterFile == null) {
                     throw new RuntimeException(
@@ -304,12 +260,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
     }
 
-    private boolean doNodeAdded(String path, boolean refreshed) {
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
+    private void doNodeAdded(String path, final AtomicBoolean resolverRefreshed) {
+        this.refreshResolverIfNecessary(resolverRefreshed);
+
         this.initializing.lock();
         try {
             Resource resource = resolver.getResource(path);
@@ -321,7 +274,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
                     doAddAlias(path);
                 }
-                if (path.startsWith(this.mapRoot)) {
+                if (path.startsWith(this.factory.getMapRoot())) {
                     doUpdateConfiguration();
                 }
             }
@@ -330,7 +283,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         } finally {
             this.initializing.unlock();
         }
-        return newRefreshed;
     }
 
     /**
@@ -340,7 +292,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      * @param path Optional sub path of the vanity path
      * @return
      */
-    private boolean doRemoveAllAliases(final String vanityPath, boolean refreshed, final String path) {
+    private boolean doRemoveAllAliases(final String vanityPath, AtomicBoolean resolverRefreshed, final String path) {
         // if path is specified we first need to find out if it is
         // a direct child of vanity path but not jcr:content, or a jcr:content child of a direct child
         // otherwise we can discard the event
@@ -363,48 +315,34 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         if ( !handle ) {
             return false;
         }
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
+
         this.initializing.lock();
         try {
-            if (enableOptimizeAliasResolution) {
+            if (this.factory.isOptimizeAliasResolutionEnabled()) {
                 final Map<String, String> aliasMapEntry = aliasMap.remove(vanityPath);
                 if (aliasMapEntry != null && path != null && path.endsWith(JCR_CONTENT_SUFFIX) ) {
+                    this.refreshResolverIfNecessary(resolverRefreshed);
                     // we need to re-add
                     // from a potential parent
                     doAddAlias(ResourceUtil.getParent(path));
                 }
-                if ( aliasMapEntry != null ) {
-                    sendChangeEvent();
-                }
+                return aliasMapEntry != null;
             }
 
-            // TODO we should not handle this here
-            if (vanityPath.startsWith(this.mapRoot)) {
-                doUpdateConfiguration();
-                sendChangeEvent();
-            }
         } finally {
             this.initializing.unlock();
         }
-        return newRefreshed;
+        return false;
     }
 
-    private boolean doRemoveAttributes(String path, String removedAttribute, boolean refreshed) {
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
+    private void doRemoveAttributes(String path, String removedAttribute, final AtomicBoolean resolverRefreshed) {
+        this.refreshResolverIfNecessary(resolverRefreshed);
         this.initializing.lock();
         try {
             if (PROP_VANITY_PATH.equals(removedAttribute)){
                 doRemoveVanity(path);
             } else if (ResourceResolverImpl.PROP_ALIAS.equals(removedAttribute)) {
-                if (enableOptimizeAliasResolution) {
+                if (this.factory.isOptimizeAliasResolutionEnabled()) {
                     doRemoveAlias(path, true);
                     if ( path.endsWith("/jcr:content") ) {
                         // as doRemoveAlias removes all aliases we need to re-add
@@ -414,22 +352,17 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
                 }
             }
 
-            if (path.startsWith(this.mapRoot)) {
+            if (path.startsWith(this.factory.getMapRoot())) {
                 doUpdateConfiguration();
             }
             sendChangeEvent();
         } finally {
             this.initializing.unlock();
         }
-        return newRefreshed;
     }
 
-    private boolean doUpdateConfiguration(boolean refreshed){
-        boolean newRefreshed = refreshed;
-        if (!newRefreshed) {
-            resolver.refresh();
-            newRefreshed = true;
-        }
+    private void doUpdateConfiguration(final AtomicBoolean resolverRefreshed) {
+        this.refreshResolverIfNecessary(resolverRefreshed);
         this.initializing.lock();
         try {
             doUpdateConfiguration();
@@ -437,10 +370,13 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         } finally {
             this.initializing.unlock();
         }
-        return newRefreshed;
     }
 
-    private void doUpdateConfiguration(){
+    /**
+     * Update the configuration.
+     * Does no locking and does not send an event at the end
+     */
+    private void doUpdateConfiguration() {
         final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
         final SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
         // load the /etc/map entries into the maps
@@ -459,7 +395,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         log.debug("doAddVanity getting {}", path);
         Resource resource = resolver.getResource(path);
         boolean needsUpdate = false;
-        if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
+        if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
             // fill up the cache and the bloom filter
             needsUpdate = loadVanityPath(resource, resolveMapsMap, vanityTargets, true, true);
         } else {
@@ -606,10 +542,6 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return false;
     }
 
-    public boolean isOptimizeAliasResolutionEnabled() {
-        return this.enableOptimizeAliasResolution;
-    }
-
     /**
      * Cleans up this class.
      */
@@ -672,6 +604,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     /**
      * This is for the web console plugin
      */
+    @Override
     public List<MapEntry> getResolveMaps() {
         final List<MapEntry> entries = new ArrayList<MapEntry>();
         for (final List<MapEntry> list : this.resolveMapsMap.values()) {
@@ -685,6 +618,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      * Calculate the resolve maps. As the entries have to be sorted by pattern
      * length, we have to create a new list containing all relevant entries.
      */
+    @Override
     public Iterator<MapEntry> getResolveMapsIterator(final String requestPath) {
         String key = null;
         final int firstIndex = requestPath.indexOf('/');
@@ -693,13 +627,15 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             key = requestPath.substring(secondIndex);
         }
 
-        return new MapEntryIterator(key, resolveMapsMap, vanityPathPrecedence);
+        return new MapEntryIterator(key, resolveMapsMap, this.factory.hasVanityPathPrecedence());
     }
 
+    @Override
     public Collection<MapEntry> getMapMaps() {
         return mapMaps;
     }
 
+    @Override
     public Map<String, String> getAliasMap(final String parentPath) {
         return aliasMap.get(parentPath);
     }
@@ -721,6 +657,23 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         return mapEntries;
     }
 
+    private void refreshResolverIfNecessary(final AtomicBoolean resolverRefreshed) {
+        if ( resolverRefreshed.compareAndSet(false, true) ) {
+            this.resolver.refresh();
+        }
+    }
+
+    private boolean handleConfigurationUpdate(final String path, final AtomicBoolean resolverRefreshed) {
+        if ( this.factory.isMapConfiguration(path) ) {
+            refreshResolverIfNecessary(resolverRefreshed);
+
+            doUpdateConfiguration();
+
+            return true;
+        }
+        return false;
+    }
+
     // ---------- ResourceChangeListener interface
 
     /**
@@ -731,10 +684,10 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      */
     @Override
     public void onChange(final List<ResourceChange> changes) {
-        boolean wasResolverRefreshed = false;
+        final AtomicBoolean resolverRefreshed = new AtomicBoolean(false);
+        boolean changed = false;
 
         for(final ResourceChange rc : changes) {
-            // check for path (used for some tests below
             final String path = rc.getPath();
             log.debug("onChange, type={}, path={}", rc.getType(), path);
 
@@ -745,41 +698,43 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
             // removal of a resource is handled differently
             if (rc.getType() == ResourceChange.ChangeType.REMOVED) {
-                final String actualContentPath = getActualContentPath(path);
-                final String actualContentPathPrefix = actualContentPath + "/";
 
-                for (final String target : this.vanityTargets.keySet()) {
-                    if (target.startsWith(actualContentPathPrefix) || target.equals(actualContentPath)) {
-                        wasResolverRefreshed = doRemoveAttributes(target, PROP_VANITY_PATH, wasResolverRefreshed);
+                if ( handleConfigurationUpdate(path, resolverRefreshed) ) {
+                    changed = true;
+                } else {
+
+                    final String actualContentPath = getActualContentPath(path);
+                    final String actualContentPathPrefix = actualContentPath + "/";
+
+                    for (final String target : this.vanityTargets.keySet()) {
+                        if (target.startsWith(actualContentPathPrefix) || target.equals(actualContentPath)) {
+                            doRemoveAttributes(target, PROP_VANITY_PATH, resolverRefreshed);
+                        }
                     }
-                }
-                for (final String target : this.aliasMap.keySet()) {
-                    if (path.startsWith(target + "/") || path.equals(target)) {
-                        wasResolverRefreshed = doRemoveAllAliases(target, wasResolverRefreshed, null);
-                    } else if ( target.startsWith(actualContentPathPrefix) ) {
-                        wasResolverRefreshed = doRemoveAllAliases(target, wasResolverRefreshed, path);
+                    for (final String target : this.aliasMap.keySet()) {
+                        if (path.startsWith(target + "/") || path.equals(target)) {
+                            changed |= doRemoveAllAliases(target, resolverRefreshed, null);
+                        } else if ( target.startsWith(actualContentPathPrefix) ) {
+                            changed |= doRemoveAllAliases(target, resolverRefreshed, path);
+                        }
                     }
-                }
-                if (path.startsWith(this.mapRoot)) {
-                    //need to update the configuration
-                    wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
+                    if (path.startsWith(this.factory.getMapRoot())) {
+                        //need to update the configuration
+                        doUpdateConfiguration(resolverRefreshed);
+                    }
                 }
             //session.move() is handled differently see also SLING-3713 and
             } else if (rc.getType() == ResourceChange.ChangeType.ADDED ) {
-                wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
+               doNodeAdded(path, resolverRefreshed);
             } else {
-                if (path.startsWith(this.mapRoot)) {
-                    wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
+                if (handleConfigurationUpdate(path, resolverRefreshed)) {
+                    changed = true;
                 } else {
-                    if ( !wasResolverRefreshed ) {
-                        wasResolverRefreshed = true;
-                        this.resolver.refresh();
-                    }
-                    boolean changed = false;
+                    this.refreshResolverIfNecessary(resolverRefreshed);
                     this.initializing.lock();
                     try {
                         changed |= doUpdateVanity(path);
-                        if (enableOptimizeAliasResolution) {
+                        if (this.factory.isOptimizeAliasResolutionEnabled()) {
                             changed |= doRemoveAlias(path, false);
                             changed |= doAddAlias(path);
                             changed |= doUpdateAlias(path, false);
@@ -795,6 +750,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
 
             }
         }
+        if ( changed ) {
+            this.sendChangeEvent();
+        }
     }
 
     // ---------- internal
@@ -802,7 +760,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     private byte[] createVanityBloomFilter() throws IOException {
         byte bloomFilter[] = null;
         if (vanityBloomFilter == null) {
-            bloomFilter = BloomFilterUtils.createFilter(VANITY_BLOOM_FILTER_MAX_ENTRIES, this.vanityBloomFilterMaxBytes);
+            bloomFilter = BloomFilterUtils.createFilter(VANITY_BLOOM_FILTER_MAX_ENTRIES, this.factory.getVanityBloomFilterMaxBytes());
         }
         return bloomFilter;
     }
@@ -819,7 +777,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     private boolean isAllVanityPathEntriesCached() {
-        return maxCachedVanityPathEntries == -1;
+        return this.factory.getMaxCachedVanityPathEntries() == -1;
     }
 
     /**
@@ -868,7 +826,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
             final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
             while (i.hasNext()) {
                 final Resource resource = i.next();
-                if (maxCachedVanityPathEntriesStartup || vanityCounter.longValue() < maxCachedVanityPathEntries) {
+                if (this.factory.isMaxCachedVanityPathEntriesStartup() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
                     loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
                     entryMap = resolveMapsMap;
                 } else {
@@ -887,7 +845,7 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
     }
 
     /**
-     * Check if the resoruce is a valid vanity path resource
+     * Check if the resource is a valid vanity path resource
      * @param resource The resource to check
      * @return {@code true} if this is valid, {@code false} otherwise
      */
@@ -903,9 +861,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         }
 
         // check white list
-        if ( this.vanityPathConfig != null ) {
+        if ( this.factory.getVanityPathConfig() != null ) {
             boolean allowed = false;
-            for(final VanityPathConfig config : this.vanityPathConfig) {
+            for(final VanityPathConfig config : this.factory.getVanityPathConfig()) {
                 if ( resource.getPath().startsWith(config.prefix) ) {
                     allowed = !config.isExclude;
                     break;
@@ -950,16 +908,17 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
      * Send an OSGi event
      */
     private void sendChangeEvent() {
-        if (this.eventAdmin != null) {
+        final EventAdmin local = this.eventAdmin;
+        if (local != null) {
             final Event event = new Event(SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED,
                             (Dictionary<String, ?>) null);
-            this.eventAdmin.postEvent(event);
+            local.postEvent(event);
         }
     }
 
     private void loadResolverMap(final ResourceResolver resolver, final List<MapEntry> entries, final Map<String, MapEntry> mapEntries) {
         // the standard map configuration
-        final Resource res = resolver.getResource(mapRoot);
+        final Resource res = resolver.getResource(this.factory.getMapRoot());
         if (res != null) {
             gather(resolver, entries, mapEntries, res, "");
         }
@@ -1153,9 +1112,9 @@ public class MapEntries implements ResourceChangeListener, ExternalResourceChang
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
-        while (i.hasNext() && (createVanityBloomFilter || isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries)) {
+        while (i.hasNext() && (createVanityBloomFilter || isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries())) {
             final Resource resource = i.next();
-            if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < maxCachedVanityPathEntries) {
+            if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
                 // fill up the cache and the bloom filter
                 loadVanityPath(resource, resolveMapsMap, targetPaths, true,
                         createVanityBloomFilter);

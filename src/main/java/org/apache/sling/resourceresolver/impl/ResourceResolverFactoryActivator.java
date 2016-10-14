@@ -291,6 +291,8 @@ public class ResourceResolverFactoryActivator {
     /** the root location of the /etc/map entries */
     private volatile String mapRoot;
 
+    private volatile String mapRootPrefix;
+
     /** whether to mangle paths with namespaces or not */
     private volatile boolean mangleNamespacePrefixes;
 
@@ -392,6 +394,10 @@ public class ResourceResolverFactoryActivator {
 
     public String getMapRoot() {
         return mapRoot;
+    }
+
+    public boolean isMapConfiguration(String path) {
+        return path.equals(this.mapRoot) || path.startsWith(this.mapRootPrefix);
     }
 
     public int getDefaultVanityPathRedirectStatus() {
@@ -497,6 +503,8 @@ public class ResourceResolverFactoryActivator {
 
         // the root of the resolver mappings
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
+        mapRootPrefix = mapRoot + '/';
+
         observationPaths = PropertiesUtil.toStringArray(properties.get(PROP_OBSERVATION_PATHS), new String[] {"/"});
 
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),

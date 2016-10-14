@@ -39,6 +39,7 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntriesHandler;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -54,7 +55,7 @@ import org.slf4j.LoggerFactory;
 public class CommonResourceResolverFactoryImpl implements ResourceResolverFactory, MapConfigurationProvider {
 
     /** Helper for the resource resolver. */
-    private MapEntries mapEntries = MapEntries.EMPTY;
+    private MapEntriesHandler mapEntries = MapEntriesHandler.EMPTY;
 
     /** The web console plugin. */
     private ResourceResolverWebConsolePlugin plugin;
@@ -258,7 +259,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
     }
 
-    public MapEntries getMapEntries() {
+    public MapEntriesHandler getMapEntries() {
         return mapEntries;
     }
 
@@ -291,8 +292,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             plugin = null;
         }
 
-        if (mapEntries != null) {
-            mapEntries.dispose();
+        if (mapEntries instanceof MapEntries ) {
+            ((MapEntries)mapEntries).dispose();
             mapEntries = MapEntries.EMPTY;
         }
         resolverStackHolder = null;
@@ -313,6 +314,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public String getMapRoot() {
         return this.activator.getMapRoot();
+    }
+
+    @Override
+    public boolean isMapConfiguration(String path) {
+        return this.activator.isMapConfiguration(path);
     }
 
     @Override
