@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
+import java.util.ArrayList;
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -37,12 +38,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.runtime.dto.AuthType;
@@ -59,6 +62,9 @@ import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.hamcrest.Matchers;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -66,6 +72,16 @@ import org.osgi.framework.BundleContext;
 
 @SuppressWarnings("unchecked")
 public class ResourceResolverControlTest {
+
+    private static final String TEST_ATTRIBUTE = "some.test.attribute";
+    
+    private static final List<String> TEST_FORBIDDEN_ATTRIBUTES = new ArrayList<String>();
+    
+    static {
+            TEST_FORBIDDEN_ATTRIBUTES.add(ResourceResolverFactory.PASSWORD);
+            TEST_FORBIDDEN_ATTRIBUTES.add(ResourceProvider.AUTH_SERVICE_BUNDLE);
+            TEST_FORBIDDEN_ATTRIBUTES.add(ResourceResolverFactory.SUBSERVICE);
+    }
 
     // query language names
     private static final String QL_MOCK = "MockQueryLanguage";
@@ -136,7 +152,7 @@ public class ResourceResolverControlTest {
 
         ResourceResolver rr = mock(ResourceResolver.class);
         ResourceAccessSecurityTracker securityTracker = Mockito.mock(ResourceAccessSecurityTracker.class);
-        authInfo = Collections.emptyMap();
+        authInfo = getAuthInfo();
 
         handlers = Arrays.asList(rootHandler, handler);
         final ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
@@ -149,6 +165,21 @@ public class ResourceResolverControlTest {
             }
         });
         context = new ResourceResolverContext(rr, securityTracker);
+    }
+    
+    /** Return test auth info */
+    private Map<String, Object> getAuthInfo() {
+        final Map<String, Object> result = new HashMap<String, Object>();
+        
+        // Add all forbidden attributes to be able to verify that
+        // they are masked
+        for(String str : TEST_FORBIDDEN_ATTRIBUTES) {
+            result.put(str, "should be hidden");
+        }
+        
+        result.put(TEST_ATTRIBUTE, "is " + TEST_ATTRIBUTE);
+        
+        return result;
     }
 
     /**
@@ -424,6 +455,24 @@ public class ResourceResolverControlTest {
         }
 
         assertThat("query result count", count, Matchers.equalTo(1));
+    }
+    
+    @Test
+    public void forbiddenAttributeNames() {
+        for(String name : crp.getAttributeNames(context)) {
+            if(TEST_FORBIDDEN_ATTRIBUTES.contains(name)) {
+                fail("Attribute " + name + " should not be accessible");
+            }
+        }
+        assertTrue("Expecting non-forbidden attribute", crp.getAttributeNames(context).contains(TEST_ATTRIBUTE));
+    }
+    
+    @Test
+    public void forbiddenAttributeValues() {
+        for(String name : TEST_FORBIDDEN_ATTRIBUTES) {
+            assertNull("Expecting " + name + " to be hidden", crp.getAttribute(context, name));
+        }
+        assertEquals("is " + TEST_ATTRIBUTE, crp.getAttribute(context, TEST_ATTRIBUTE));
     }
 
     /**
