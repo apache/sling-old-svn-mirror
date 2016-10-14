@@ -77,11 +77,11 @@ public class MapEntries implements
     ResourceChangeListener,
     ExternalResourceChangeListener {
 
-    public static final String JCR_CONTENT = "jcr:content";
+    private static final String JCR_CONTENT = "jcr:content";
 
-    public static final String JCR_CONTENT_PREFIX = "jcr:content/";
+    private static final String JCR_CONTENT_PREFIX = "jcr:content/";
 
-    public static final String JCR_CONTENT_SUFFIX = "/jcr:content";
+    private static final String JCR_CONTENT_SUFFIX = "/jcr:content";
 
     private static final String PROP_REG_EXP = "sling:match";
 
@@ -300,21 +300,7 @@ public class MapEntries implements
                 }
 
                 if (this.factory.isOptimizeAliasResolutionEnabled()) {
-                    changed |= doRemoveAlias(path, resource);
-                    if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
-                        changed |= doAddAlias(resource);
-                    }
-                    if ( JCR_CONTENT.equals(resource.getName()) ) {
-                        final Resource parent = resource.getParent();
-                        if ( parent.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
-                            changed |= doAddAlias(parent);
-                        }
-                    } else {
-                        final Resource child = resource.getChild(JCR_CONTENT);
-                        if ( child != null && child.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
-                            changed |= doAddAlias(child);
-                        }
-                    }
+                    changed |= doUpdateAlias(resource);
                 }
 
                 return changed;
@@ -324,6 +310,28 @@ public class MapEntries implements
         } finally {
             this.initializing.unlock();
         }
+    }
+
+    private boolean removeResource(final String path, final AtomicBoolean resolverRefreshed) {
+        boolean changed = false;
+        final String actualContentPath = getActualContentPath(path);
+        final String actualContentPathPrefix = actualContentPath + "/";
+
+        for (final String target : this.vanityTargets.keySet()) {
+            if (target.startsWith(actualContentPathPrefix) || target.equals(actualContentPath)) {
+                changed |= removeVanityPath(target);
+            }
+        }
+        if (this.factory.isOptimizeAliasResolutionEnabled()) {
+            for (final String contentPath : this.aliasMap.keySet()) {
+                if (path.startsWith(contentPath + "/") || path.equals(contentPath)) {
+                    changed |= removeAlias(contentPath, null, resolverRefreshed);
+                } else if ( contentPath.startsWith(actualContentPathPrefix) ) {
+                    changed |= removeAlias(contentPath, path, resolverRefreshed);
+                }
+            }
+        }
+        return changed;
     }
 
     /**
@@ -454,46 +462,48 @@ public class MapEntries implements
         return loadAlias(resource, this.aliasMap);
     }
 
-
-    private boolean doRemoveAlias(String path, final Resource resource) {
-        String resourceName = null;
-        if (resource.getName().equals(JCR_CONTENT)) {
-            final Resource containingResource = resource.getParent();
-            if ( containingResource != null ) {
-                final Resource parent = containingResource.getParent();
-                if ( parent != null ) {
-                    path = parent.getPath();
-                    resourceName = containingResource.getName();
-                } else {
-                    path = null;
-                }
-            } else {
-                path = null;
-            }
+    /**
+     * Update alias from a resource
+     * @param resource The resource
+     * @return {@code true} if any change
+     */
+    private boolean doUpdateAlias(final Resource resource) {
+        final Resource containingResource;
+        if (JCR_CONTENT.equals(resource.getName())) {
+            containingResource = resource.getParent();
         } else {
-            final Resource parent = resource.getParent();
-            if ( parent != null ) {
-                path =  parent.getPath();
-                resourceName = resource.getName();
-            } else {
-                path = null;
-            }
+            containingResource = resource;
         }
 
-        if ( path != null ) {
-            final Map<String, String> aliasMapEntry = aliasMap.get(path);
+        if ( containingResource != null ) {
+            final String containingResourceName = containingResource.getName();
+            final String parentPath = ResourceUtil.getParent(containingResource.getPath());
+
+            final Map<String, String> aliasMapEntry = aliasMap.get(parentPath);
             if (aliasMapEntry != null) {
-                for (Iterator<String> iterator =aliasMapEntry.keySet().iterator(); iterator.hasNext(); ) {
-                    String key = iterator.next();
-                    if (resourceName.equals(aliasMapEntry.get(key))){
+                for (Iterator<Map.Entry<String, String>> iterator = aliasMapEntry.entrySet().iterator(); iterator.hasNext(); ) {
+                    final Map.Entry<String, String> entry = iterator.next();
+                    if (containingResourceName.equals(entry.getValue())){
                         iterator.remove();
                     }
                 }
             }
+
             if (aliasMapEntry != null && aliasMapEntry.isEmpty()) {
-                this.aliasMap.remove(path);
+                this.aliasMap.remove(parentPath);
             }
-            return aliasMapEntry != null;
+
+            boolean changed = aliasMapEntry != null;
+
+            if ( containingResource.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
+                changed |= doAddAlias(containingResource);
+            }
+            final Resource child = containingResource.getChild(JCR_CONTENT);
+            if ( child != null && child.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
+                changed |= doAddAlias(child);
+            }
+
+            return changed;
         }
         return false;
     }
@@ -672,29 +682,12 @@ public class MapEntries implements
 
             boolean changed = false;
             // removal of a resource is handled differently
-            if (rc.getType() == ResourceChange.ChangeType.REMOVED) {
+            if (rc.getType() == ResourceChange.ChangeType.REMOVED ) {
 
                 if ( handleConfigurationUpdate(path, resolverRefreshed) ) {
                     changed = true;
                 } else {
-
-                    final String actualContentPath = getActualContentPath(path);
-                    final String actualContentPathPrefix = actualContentPath + "/";
-
-                    for (final String target : this.vanityTargets.keySet()) {
-                        if (target.startsWith(actualContentPathPrefix) || target.equals(actualContentPath)) {
-                            changed |= removeVanityPath(target);
-                        }
-                    }
-                    if (this.factory.isOptimizeAliasResolutionEnabled()) {
-                        for (final String contentPath : this.aliasMap.keySet()) {
-                            if (path.startsWith(contentPath + "/") || path.equals(contentPath)) {
-                                changed |= removeAlias(contentPath, null, resolverRefreshed);
-                            } else if ( contentPath.startsWith(actualContentPathPrefix) ) {
-                                changed |= removeAlias(contentPath, path, resolverRefreshed);
-                            }
-                        }
-                    }
+                    changed |= removeResource(path, resolverRefreshed);
                 }
 
             //session.move() is handled differently see also SLING-3713 and
@@ -706,7 +699,7 @@ public class MapEntries implements
                     changed |= addResource(path, resolverRefreshed);
                 }
 
-            } else {
+            } else if (rc.getType() == ResourceChange.ChangeType.CHANGED ) {
                 if (handleConfigurationUpdate(path, resolverRefreshed)) {
                     changed = true;
                 } else {
@@ -845,8 +838,8 @@ public class MapEntries implements
 
     private String getActualContentPath(final String path){
         final String checkPath;
-        if ( path.endsWith("/jcr:content") ) {
-            checkPath = path.substring(0, path.length() - "/jcr:content".length());
+        if ( path.endsWith(JCR_CONTENT_SUFFIX) ) {
+            checkPath = ResourceUtil.getParent(path);
         } else {
             checkPath = path;
         }
@@ -996,7 +989,7 @@ public class MapEntries implements
 
         final String resourceName;
         final String parentPath;
-        if (resource.getName().equals("jcr:content")) {
+        if (JCR_CONTENT.equals(resource.getName())) {
             final Resource containingResource = resource.getParent();
             if ( containingResource != null ) {
                 final Resource parent = containingResource.getParent();
@@ -1125,7 +1118,7 @@ public class MapEntries implements
                 // property (or its parent if the node is called
                 // jcr:content)
                 final Resource redirectTarget;
-                if (resource.getName().equals("jcr:content")) {
+                if (JCR_CONTENT.equals(resource.getName())) {
                     redirectTarget = resource.getParent();
                 } else {
                     redirectTarget = resource;
