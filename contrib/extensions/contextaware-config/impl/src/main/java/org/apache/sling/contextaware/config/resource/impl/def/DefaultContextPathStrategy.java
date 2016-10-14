@@ -49,7 +49,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         boolean enabled() default true;
 
         @AttributeDefinition(name="Config ref. resource names",
-                description = "Names of resource to try to look up sling:config-ref property in. If list is empty only current resource is checked.")
+                description = "Names of resource to try to look up sling:configRef property in. If list is empty only current resource is checked.")
         String[] configRefResourceNames();
 
     }
@@ -105,7 +105,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         /**
          * Find next configuration context root for given resource.
          * @param startResource Resource to start searching
-         * @return Next resource with sling:config-ref property or null if none found.
+         * @return Next resource with sling:configRef property or null if none found.
          */
         private ContextResource findNextContextResource(Resource startResource) {
             // start at resource, go up

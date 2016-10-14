@@ -70,7 +70,7 @@ public class ConfigurationManagerIT {
         configManager = teleporter.getService(ConfigurationManager.class);
         configResolver = teleporter.getService(ConfigurationResolver.class);
         
-        resourcePage1 = resourceBuilder.resource(PAGE_PATH, "sling:config-ref", CONFIG_PATH).getCurrentParent();
+        resourcePage1 = resourceBuilder.resource(PAGE_PATH, "sling:configRef", CONFIG_PATH).getCurrentParent();
     }
     
     @After

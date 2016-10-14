@@ -79,7 +79,7 @@ public class ConfigurationResolverValueMapIT {
                 "stringParam", "value1",
                 "intParam", 123,
                 "boolParam", true)
-            .resource(PAGE_PATH, "sling:config-ref", CONFIG_PATH);
+            .resource(PAGE_PATH, "sling:configRef", CONFIG_PATH);
         
         Resource resourcePage1 = resourceResolver.getResource(PAGE_PATH);
         
