@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -138,6 +138,7 @@ public class JcrResourceListener implements EventListener, Closeable {
         final Map<String, Builder> changedEvents = new HashMap<String, Builder>();
         final Map<String, Builder> removedEvents = new HashMap<String, Builder>();
 
+        AtomicBoolean refreshedSession = new AtomicBoolean(false);
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
             if (isExternal(event) && !includeExternal) {
@@ -147,51 +148,46 @@ public class JcrResourceListener implements EventListener, Closeable {
             try {
                 final String eventPath = event.getPath();
                 final int type = event.getType();
+
                 if ( type == PROPERTY_ADDED
                      || type == PROPERTY_REMOVED
                      || type == PROPERTY_CHANGED ) {
                     final int lastSlash = eventPath.lastIndexOf('/');
-                    final String nodePath = eventPath.substring(0, lastSlash);
-                    Builder builder = changedEvents.get(nodePath);
-                    if (builder == null) {
-                        changedEvents.put(nodePath, createResourceChange(event, nodePath, ChangeType.CHANGED));
+                    final String rsrcPath = stripNtFilePath(eventPath.substring(0, lastSlash), refreshedSession);
+                    if ( !addedEvents.containsKey(rsrcPath)
+                      && !removedEvents.containsKey(rsrcPath)
+                      && !changedEvents.containsKey(rsrcPath)
+                      && ctx.getExcludedPaths().matches(rsrcPath) == null) {
+
+                        changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
                     }
-                } else if ( type == NODE_ADDED ) {
-                    addedEvents.put(eventPath, createResourceChange(event, ChangeType.ADDED));
-                } else if ( type == NODE_REMOVED) {
-                    removedEvents.put(eventPath, createResourceChange(event, ChangeType.REMOVED));
+                } else {
+                    final String rsrcPath = (type == NODE_REMOVED ? eventPath : stripNtFilePath(eventPath, refreshedSession));
+
+                    if ( ctx.getExcludedPaths().matches(rsrcPath) == null ) {
+                        if ( type == NODE_ADDED ) {
+                            // add is stronger than update
+                            changedEvents.remove(rsrcPath);
+                            addedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.ADDED));
+                        } else if ( type == NODE_REMOVED) {
+                            // remove is stronger than add and change
+                            addedEvents.remove(rsrcPath);
+                            changedEvents.remove(rsrcPath);
+                            removedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.REMOVED));
+                        }
+                    }
                 }
             } catch (final RepositoryException e) {
                 logger.error("Error during modification: {}", e);
             }
         }
 
-        // remove is the strongest operation, therefore remove all removed
-        // paths from added and changed
-        for(final String path : removedEvents.keySet()) {
-            addedEvents.remove(path);
-            changedEvents.remove(path);
-        }
-        // add is stronger than update
-        for(final String path : addedEvents.keySet()) {
-            changedEvents.remove(path);
-        }
-
         final List<ResourceChange> changes = new ArrayList<ResourceChange>();
-        for (Entry<String, Builder> e : addedEvents.entrySet()) {
-            String path = e.getKey();
-            if (changedEvents.containsKey(path)) {
-                Builder builder = changedEvents.remove(path);
-                builder.setChangeType(ChangeType.ADDED);
-                changes.add(builder.build());
-            } else {
-                changes.add(e.getValue().build());
-            }
-        }
+        buildResourceChanges(changes, addedEvents);
         buildResourceChanges(changes, removedEvents);
         buildResourceChanges(changes, changedEvents);
-        filterChanges(changes);
         ctx.getObservationReporter().reportChanges(changes, false);
+
     }
 
     private void buildResourceChanges(List<ResourceChange> result, Map<String, Builder> builders) {
@@ -200,15 +196,11 @@ public class JcrResourceListener implements EventListener, Closeable {
         }
     }
 
-    private Builder createResourceChange(final Event event, final String path, final ChangeType changeType) throws RepositoryException {
+    private Builder createResourceChange(final Event event,
+            final String path,
+            final ChangeType changeType) {
         Builder builder = new Builder();
-        String strippedPath;
-        if (event.getType() == Event.NODE_REMOVED) {
-            strippedPath = path;
-        } else {
-            strippedPath = stripNtFilePath(path, session);
-        }
-        String pathWithPrefix = addMountPrefix(mountPrefix, strippedPath);
+        String pathWithPrefix = addMountPrefix(mountPrefix, path);
         builder.setPath(pathMapper.mapJCRPathToResourcePath(pathWithPrefix));
         builder.setChangeType(changeType);
         boolean isExternal = this.isExternal(event);
@@ -220,10 +212,6 @@ public class JcrResourceListener implements EventListener, Closeable {
             }
         }
         return builder;
-    }
-
-    private Builder createResourceChange(final Event event, final ChangeType changeType) throws RepositoryException {
-        return createResourceChange(event, event.getPath(), changeType);
     }
 
     private boolean isExternal(final Event event) {
@@ -313,35 +301,25 @@ public class JcrResourceListener implements EventListener, Closeable {
         return result;
     }
 
-    private void filterChanges(List<ResourceChange> changes) {
-        Iterator<ResourceChange> it = changes.iterator();
-        while (it.hasNext()) {
-            String path = it.next().getPath();
-            if (ctx.getExcludedPaths().matches(path) != null) {
-                it.remove();
-            }
-        }
-    }
+    private static final String JCR_CONTENT_POSTFIX = "/" + JcrConstants.JCR_CONTENT;
 
-    static String stripNtFilePath(String path, Session session) {
-        if (!path.endsWith("/" + JcrConstants.JCR_CONTENT)) {
+    private String stripNtFilePath(final String path, final AtomicBoolean refreshedSession) {
+        if (!path.endsWith(JCR_CONTENT_POSTFIX)) {
             return path;
         }
         try {
-            Node node;
-            try {
-                node = session.getNode(path);
-            } catch(PathNotFoundException e) {
+            if ( !refreshedSession.get() ) {
                 session.refresh(false);
-                node = session.getNode(path);
+                refreshedSession.set(true);
             }
-            Node parent = node.getParent();
+            final Node node = session.getNode(path);
+            final Node parent = node.getParent();
             if (parent.isNodeType(JcrConstants.NT_FILE)) {
                 return parent.getPath();
             } else {
                 return path;
             }
-        } catch (RepositoryException e) {
+        } catch (final RepositoryException e) {
             return path;
         }
     }
