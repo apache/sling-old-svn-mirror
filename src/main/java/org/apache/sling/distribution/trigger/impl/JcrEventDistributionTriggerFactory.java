@@ -85,12 +85,11 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
     @Activate
-    public void activate(BundleContext bundleContext, Map<String, Object> config) {
+    public void activate(Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
         String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
         ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
-
 
         trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, ignoredPathsPatterns);
         trigger.enable();

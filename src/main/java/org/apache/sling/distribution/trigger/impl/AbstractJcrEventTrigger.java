@@ -26,6 +26,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,7 +71,8 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
     private final Scheduler scheduler;
 
-    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory, String path, String serviceUser) {
+    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory,
+                            String path, String serviceUser) {
         this.resolverFactory = resolverFactory;
         if (path == null || serviceUser == null) {
             throw new IllegalArgumentException("path and service are required");
@@ -107,7 +109,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
     }
 
-    private class JcrEventDistributionTriggerListener implements EventListener {
+    class JcrEventDistributionTriggerListener implements EventListener {
         private final DistributionRequestHandler requestHandler;
 
         public JcrEventDistributionTriggerListener(DistributionRequestHandler requestHandler) {
@@ -145,7 +147,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
     }
 
-    private void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
+    void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
         DistributionRequest lastRequest = requestList.isEmpty() ? null : requestList.get(requestList.size() - 1);
 
         if (lastRequest == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
@@ -157,20 +159,20 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
             allPaths.addAll(Arrays.asList(request.getPaths()));
 
-            addMissingPaths(request, allPaths);
+            addMissingPaths(allPaths);
 
             lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[allPaths.size()]));
             requestList.set(requestList.size() - 1, lastRequest);
         }
     }
 
-    private void addMissingPaths(DistributionRequest request, Set<String> allPaths) {
-        List<String> requestPaths = Arrays.asList(request.getPaths());
+    void addMissingPaths(Set<String> allPaths) {
+        Set<String> newPaths = new HashSet<String>();
 
-        for (String path : requestPaths) {
+        for (String path : allPaths) {
             for (String existingPath : allPaths) {
                 // in case a requested path is descendant of an existing path, also add its siblings
-                if (existingPath.length() > path.length() && path.startsWith(existingPath)) {
+                if (path.length() > existingPath.length() && path.startsWith(existingPath)) {
                     ResourceResolver resourceResolver = null;
                     try {
                         resourceResolver = DistributionUtils.loginService(resolverFactory, serviceUser);
@@ -179,7 +181,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                             for (Resource child : resource.getParent().getChildren()) {
                                 String childPath = child.getPath();
                                 if (!childPath.equals(path)) {
-                                    allPaths.add(childPath);
+                                    newPaths.add(childPath);
                                 }
                             }
                         } else {
@@ -194,7 +196,11 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             }
         }
 
+        if (!newPaths.isEmpty()) {
+            allPaths.addAll(newPaths);
+        }
     }
+
 
     public void enable() {
 
@@ -266,7 +272,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     }
 
 
-    private boolean hasDeepPaths(DistributionRequest distributionRequest) {
+    private static boolean hasDeepPaths(DistributionRequest distributionRequest) {
         if (!DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
             return false;
         }
