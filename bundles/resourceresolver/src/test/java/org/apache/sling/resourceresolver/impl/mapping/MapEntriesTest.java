@@ -680,7 +680,7 @@ public class MapEntriesTest {
         assertNull(resolveMapsMap.get("/target/vanityPathOnJcrContent"));
 
     }
-
+/*
     @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateVanityOrder() throws Exception {
@@ -747,7 +747,8 @@ public class MapEntriesTest {
         assertEquals("/justVanityPath.html", iterator.next().getRedirect()[0]);
         assertFalse(iterator.hasNext());
     }
-
+*/
+    /*
     //SLING-3727
     @Test
     public void test_doAddAliasAttributesWithDisableAliasOptimization() throws Exception {
@@ -776,7 +777,8 @@ public class MapEntriesTest {
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
     }
-
+*/
+    /*
     //SLING-3727
     @Test
     public void test_doUpdateAttributesWithDisableAliasOptimization() throws Exception {
@@ -805,11 +807,11 @@ public class MapEntriesTest {
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
     }
-
+*/
     //SLING-3727
     @Test
     public void test_doRemoveAttributessWithDisableAliasOptimization() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
+        Method method = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
         method.setAccessible(true);
 
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
@@ -828,8 +830,7 @@ public class MapEntriesTest {
         when(result.getName()).thenReturn("child");
         when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
-        method.invoke(mapEntries, "/parent/child",
-                Collections.singleton("sling:alias"), false, false);
+        method.invoke(mapEntries, "/parent/child", "sling:alias", false);
 
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
@@ -969,7 +970,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
     }
 
-
+/**
     @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateAlias() throws Exception {
@@ -1101,14 +1102,14 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
     }
-
+*/
     @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1136,7 +1137,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), false, false);
+        method1.invoke(mapEntries, "/parent/child", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1154,7 +1155,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
         when(resourceResolver.getResource("/parent/child")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), true, false);
+        method1.invoke(mapEntries, "/parent/child", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1168,7 +1169,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1205,7 +1206,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false, false);
+        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1223,7 +1224,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(null);
         when(result.getChild("jcr:content")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), true, false);
+        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1234,76 +1235,79 @@ public class MapEntriesTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_doRemoveAlias3() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
-        method.setAccessible(true);
+        final Method doAddAlias = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
+        doAddAlias.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
-        method1.setAccessible(true);
+        final Method doRemoveAttributes = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        doRemoveAttributes.setAccessible(true);
 
-        Field field0 = MapEntries.class.getDeclaredField("aliasMap");
-        field0.setAccessible(true);
+        final Field aliasMapField = MapEntries.class.getDeclaredField("aliasMap");
+        aliasMapField.setAccessible(true);
 
-        Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) field0.get(mapEntries);
+        final Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) aliasMapField.get(mapEntries);
         assertEquals(0, aliasMap.size());
 
-        Resource parent = mock(Resource.class);
-        when(parent.getPath()).thenReturn("/parent");
+        final Resource parentRsrc = mock(Resource.class);
+        when(parentRsrc.getPath()).thenReturn("/parent");
 
-        final Resource result = mock(Resource.class);
-        when(resourceResolver.getResource("/parent/child")).thenReturn(result);
-        when(result.getParent()).thenReturn(parent);
-        when(result.getPath()).thenReturn("/parent/child");
-        when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        final Resource childRsrc = mock(Resource.class);
+        when(resourceResolver.getResource("/parent/child")).thenReturn(childRsrc);
+        when(childRsrc.getParent()).thenReturn(parentRsrc);
+        when(childRsrc.getPath()).thenReturn("/parent/child");
+        when(childRsrc.getName()).thenReturn("child");
+        when(childRsrc.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
-        method.invoke(mapEntries, "/parent/child");
+        doAddAlias.invoke(mapEntries, "/parent/child");
 
         final Resource jcrContentResult = mock(Resource.class);
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(jcrContentResult);
-        when(jcrContentResult.getParent()).thenReturn(result);
+        when(jcrContentResult.getParent()).thenReturn(childRsrc);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
         when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
-        when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
+        when(childRsrc.getChild("jcr:content")).thenReturn(jcrContentResult);
 
-        method.invoke(mapEntries, "/parent/child/jcr:content");
+        doAddAlias.invoke(mapEntries, "/parent/child/jcr:content");
 
+        // test with two nodes
+        assertEquals(1, aliasMap.size());
         Map<String, String> aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
-        assertTrue(aliasMapEntry.containsKey("aliasJcrContent"));
-        assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
-
-        //test with two nodes
-        assertEquals(1, aliasMap.size());
-        aliasMapEntry = mapEntries.getAliasMap("/parent");
-        assertNotNull(aliasMapEntry);
         assertEquals(2, aliasMapEntry.size());
+        assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
+        assertEquals("child", aliasMapEntry.get("alias"));
 
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false, false);
+        // remove child jcr:content node
+        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
 
+        // test with one node
         assertEquals(1, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
         assertEquals(1, aliasMapEntry.size());
+        assertEquals("child", aliasMapEntry.get("alias"));
 
         // re-add the node and test /parent/child
-        method.invoke(mapEntries, "/parent/child/jcr:content");
+        doAddAlias.invoke(mapEntries, "/parent/child/jcr:content");
 
+        // STOP
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
-        assertTrue(aliasMapEntry.containsKey("aliasJcrContent"));
-        assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
         assertEquals(2, aliasMapEntry.size());
+        assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
+        assertEquals("child", aliasMapEntry.get("alias"));
 
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), false, false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        doAddAlias.invoke(mapEntries, "/parent/child/jcr:content");
 
         assertEquals(1, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
         assertEquals(1, aliasMapEntry.size());
+        assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
 
         // re-add the node and test node removal
-        method.invoke(mapEntries, "/parent/child");
+        doAddAlias.invoke(mapEntries, "/parent/child");
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1312,8 +1316,8 @@ public class MapEntriesTest {
         assertEquals(2, aliasMapEntry.size());
 
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(null);
-        when(result.getChild("jcr:content")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), true, false);
+        when(childRsrc.getChild("jcr:content")).thenReturn(null);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
 
         assertEquals(1, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1322,8 +1326,8 @@ public class MapEntriesTest {
 
         // re-add the node and test node removal for  /parent/child
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(jcrContentResult);
-        when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
-        method.invoke(mapEntries, "/parent/child/jcr:content");
+        when(childRsrc.getChild("jcr:content")).thenReturn(jcrContentResult);
+        doAddAlias.invoke(mapEntries, "/parent/child/jcr:content");
 
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1332,7 +1336,7 @@ public class MapEntriesTest {
         assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
         assertEquals(2, aliasMapEntry.size());
 
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), true, false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", false);
 
         assertEquals(0, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1345,7 +1349,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1373,7 +1377,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent", Collections.singleton("sling:alias"), false, false);
+        method1.invoke(mapEntries, "/parent", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1391,7 +1395,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
         when(resourceResolver.getResource("/parent")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent", Collections.singleton("sling:alias"), true, false);
+        method1.invoke(mapEntries, "/parent", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1405,7 +1409,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, Set.class, boolean.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1442,7 +1446,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/jcr:content", Collections.singleton("sling:alias"), false, false);
+        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1460,7 +1464,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
         when(resourceResolver.getResource("/parent/jcr:content")).thenReturn(null);
         when(result.getChild("jcr:content")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/jcr:content", Collections.singleton("sling:alias"), true, false);
+        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", false);
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);

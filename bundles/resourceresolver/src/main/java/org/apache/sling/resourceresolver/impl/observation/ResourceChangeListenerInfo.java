@@ -18,6 +18,10 @@
  */
 package org.apache.sling.resourceresolver.impl.observation;
 
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
+import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
+
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -30,10 +34,6 @@ import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.path.PathSet;
 import org.osgi.framework.ServiceReference;
-
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
-import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
 
 /**
  * Information about a resource change listener.
@@ -58,7 +58,7 @@ public class ResourceChangeListenerInfo {
 
     private static final String GLOB_PREFIX = "glob:";
 
-    public ResourceChangeListenerInfo(final ServiceReference ref, final String[] searchPaths) {
+    public ResourceChangeListenerInfo(final ServiceReference<ResourceChangeListener> ref, final String[] searchPaths) {
         boolean configValid = true;
         final Set<String> pathsSet = new HashSet<String>();
         final String paths[] = toStringArray(ref.getProperty(PATHS), null);
