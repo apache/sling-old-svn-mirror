@@ -191,10 +191,12 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     }
 
     private void registerListener(final ProviderContext ctx) {
-        try {
-            this.listener = new JcrResourceListener(ctx, root, pathMapper, repository);
-       } catch (RepositoryException e) {
-            throw new SlingException("Can't create the listener", e);
+        if ( this.repository != null ) {
+            try {
+                this.listener = new JcrResourceListener(ctx, root, pathMapper, repository);
+           } catch (RepositoryException e) {
+                throw new SlingException("Can't create the listener", e);
+            }
         }
     }
 

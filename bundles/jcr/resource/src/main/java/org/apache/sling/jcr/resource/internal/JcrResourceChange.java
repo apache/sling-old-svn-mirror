@@ -18,9 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.sling.api.resource.observation.ResourceChange;
 
 public class JcrResourceChange extends ResourceChange {
@@ -28,7 +25,7 @@ public class JcrResourceChange extends ResourceChange {
     private final String userId;
 
     private JcrResourceChange(Builder builder) {
-        super(builder.changeType, builder.path, builder.isExternal, builder.addedAttributeNames, builder.changedAttributeNames, builder.removedAttributeNames);
+        super(builder.changeType, builder.path, builder.isExternal);
         this.userId = builder.userId;
     }
 
@@ -40,17 +37,11 @@ public class JcrResourceChange extends ResourceChange {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append("ResourceChange[type=").append(this.getType()).append(", path=").append(this.getPath());
-        if (getAddedPropertyNames() != null && !getAddedPropertyNames().isEmpty()) {
-            b.append(", added=").append(getAddedPropertyNames());
-        }
-        if (getChangedPropertyNames() != null && !getChangedPropertyNames().isEmpty()) {
-            b.append(", changed=").append(getChangedPropertyNames());
-        }
-        if (getRemovedPropertyNames() != null && !getRemovedPropertyNames().isEmpty()) {
-            b.append(", removed=").append(getRemovedPropertyNames());
-        }
-        b.append("]");
+        b.append("ResourceChange[type=")
+          .append(this.getType())
+          .append(", path=")
+          .append(this.getPath())
+          .append("]");
         return b.toString();
     }
 
@@ -63,12 +54,6 @@ public class JcrResourceChange extends ResourceChange {
         private boolean isExternal;
 
         private String userId;
-
-        private Set<String> changedAttributeNames;
-
-        private Set<String> addedAttributeNames;
-
-        private Set<String> removedAttributeNames;
 
         public String getPath() {
             return path;
@@ -100,45 +85,6 @@ public class JcrResourceChange extends ResourceChange {
 
         public void setUserId(String userId) {
             this.userId = userId;
-        }
-
-        public Set<String> getChangedAttributeNames() {
-            return changedAttributeNames;
-        }
-
-        public void addChangedAttributeName(String propName) {
-            if (changedAttributeNames == null) {
-                changedAttributeNames = new LinkedHashSet<String>();
-            }
-            if (!changedAttributeNames.contains(propName)) {
-                changedAttributeNames.add(propName);
-            }
-        }
-
-        public Set<String> getAddedAttributeNames() {
-            return addedAttributeNames;
-        }
-
-        public void addAddedAttributeName(String propName) {
-            if (addedAttributeNames == null) {
-                addedAttributeNames = new LinkedHashSet<String>();
-            }
-            if (!addedAttributeNames.contains(propName)) {
-                addedAttributeNames.add(propName);
-            }
-        }
-
-        public Set<String> getRemovedAttributeNames() {
-            return removedAttributeNames;
-        }
-
-        public void addRemovedAttributeName(String propName) {
-            if (removedAttributeNames == null) {
-                removedAttributeNames = new LinkedHashSet<String>();
-            }
-            if (!removedAttributeNames.contains(propName)) {
-                removedAttributeNames.add(propName);
-            }
         }
 
         public ResourceChange build() {

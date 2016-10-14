@@ -102,6 +102,11 @@ public class JcrResourceListenerScalabilityTest {
                 }
 
                 @Override
+                public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes,
+                        boolean distribute) {
+                }
+
+                @Override
                 public List<ObserverConfiguration> getObserverConfigurations() {
                     ObserverConfiguration config = new ObserverConfiguration() {
 

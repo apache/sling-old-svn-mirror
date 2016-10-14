@@ -67,7 +67,6 @@ public abstract class AbstractListenerTest {
                 addPaths.add(event.getPath());
             } else if (event.getType() == ChangeType.CHANGED) {
                 modifyPaths.add(event.getPath());
-                assertEquals(Collections.singleton("foo"), event.getAddedPropertyNames());
             } else if (event.getType() == ChangeType.REMOVED) {
                 removePaths.add(event.getPath());
             } else {
@@ -167,6 +166,11 @@ public abstract class AbstractListenerTest {
                 }
             };
             return Collections.singletonList(config);
+        }
+
+        @Override
+        public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes, boolean distribute) {
+            this.reportChanges(changes, distribute);
         }
     }
 
