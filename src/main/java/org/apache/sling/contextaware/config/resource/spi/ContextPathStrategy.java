@@ -26,7 +26,7 @@ import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Allows application to define a strategy to find context paths for content paths.
+ * Allows application to define a strategy to find context paths and config references for content paths.
  * A context paths is the root path of a "configuration context", which is a subtree in the resource hierarchy.
  * Each context may have it's own context-aware configuration attached to.0
  * If multiple context path strategy implementations are defined the results of them are merged.
@@ -37,10 +37,10 @@ public interface ContextPathStrategy {
     /**
      * Finds context paths for the given resource.
      * @param resource Context resource
-     * @return Root resource for each context found (in order of closest matching first).
+     * @return Root resource and config reference for each context found (in order of closest matching first).
      *      Only one of the parent resources or the resource itself may be included in the result.
      *      If none are found an empty list is returned.
      */
-    @Nonnull Iterator<Resource> findContextResources(@Nonnull Resource resource);
+    @Nonnull Iterator<ContextResource> findContextResources(@Nonnull Resource resource);
 
 }
