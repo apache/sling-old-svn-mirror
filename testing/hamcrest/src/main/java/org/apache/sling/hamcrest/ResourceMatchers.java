@@ -126,7 +126,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
@@ -145,7 +145,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
@@ -164,7 +164,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
@@ -184,7 +184,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
