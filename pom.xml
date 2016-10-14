@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.caconfig.bnd-plugin</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Apache Sling Context-Aware Configuration bnd Plugin</name>
-    <description>This bnd plugin detected all configuration annotation classes and adds a bundle header 'Sling-ContextAware-Configuration-Classes' containing their names.</description>
+    <name>Apache Sling Context-Aware Configuration BND Plugin</name>
+    <description>This BND plugin detected all configuration annotation classes and adds a bundle header 'Sling-ContextAware-Configuration-Classes' containing their names.</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/tooling/bnd-plugin</connection>
