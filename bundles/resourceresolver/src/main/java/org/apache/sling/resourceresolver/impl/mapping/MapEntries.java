@@ -188,7 +188,7 @@ public class MapEntries implements
             final Map<String, List<MapEntry>> newResolveMapsMap = new ConcurrentHashMap<String, List<MapEntry>>();
 
             //optimization made in SLING-2521
-            if (this.factory.isOptimizeAliasResolutionEnabled()){
+            if (this.factory.isOptimizeAliasResolutionEnabled()) {
                 final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
                 this.aliasMap = aliasMap;
             }
@@ -272,7 +272,7 @@ public class MapEntries implements
                 if (props.containsKey(PROP_VANITY_PATH)) {
                     changed |= doAddVanity(resource, props);
                 }
-                if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                if (this.factory.isOptimizeAliasResolutionEnabled() && props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
                     changed |= doAddAlias(resource);
                 }
                 return changed;
@@ -348,26 +348,22 @@ public class MapEntries implements
             return false;
         }
 
-        if (this.factory.isOptimizeAliasResolutionEnabled()) {
-            this.initializing.lock();
-            try {
-                final Map<String, String> aliasMapEntry = aliasMap.remove(contentPath);
-                if (aliasMapEntry != null && addParentPath != null ) {
-                    this.refreshResolverIfNecessary(resolverRefreshed);
-                    // we need to re-add
-                    // from a potential parent
-                    final Resource parent = this.resolver.getResource(addParentPath);
-                    if ( parent != null && parent.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
-                        doAddAlias(parent);
-                    }
+        this.initializing.lock();
+        try {
+            final Map<String, String> aliasMapEntry = aliasMap.remove(contentPath);
+            if (aliasMapEntry != null && addParentPath != null ) {
+                this.refreshResolverIfNecessary(resolverRefreshed);
+                // we need to re-add
+                // from a potential parent
+                final Resource parent = this.resolver.getResource(addParentPath);
+                if ( parent != null && parent.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                    doAddAlias(parent);
                 }
-                return aliasMapEntry != null;
-            } finally {
-                this.initializing.unlock();
             }
+            return aliasMapEntry != null;
+        } finally {
+            this.initializing.unlock();
         }
-
-        return false;
     }
 
     private boolean removeVanityPath(final String path) {
@@ -690,11 +686,13 @@ public class MapEntries implements
                             changed |= removeVanityPath(target);
                         }
                     }
-                    for (final String contentPath : this.aliasMap.keySet()) {
-                        if (path.startsWith(contentPath + "/") || path.equals(contentPath)) {
-                            changed |= removeAlias(contentPath, null, resolverRefreshed);
-                        } else if ( contentPath.startsWith(actualContentPathPrefix) ) {
-                            changed |= removeAlias(contentPath, path, resolverRefreshed);
+                    if (this.factory.isOptimizeAliasResolutionEnabled()) {
+                        for (final String contentPath : this.aliasMap.keySet()) {
+                            if (path.startsWith(contentPath + "/") || path.equals(contentPath)) {
+                                changed |= removeAlias(contentPath, null, resolverRefreshed);
+                            } else if ( contentPath.startsWith(actualContentPathPrefix) ) {
+                                changed |= removeAlias(contentPath, path, resolverRefreshed);
+                            }
                         }
                     }
                 }

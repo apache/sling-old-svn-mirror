@@ -745,6 +745,7 @@ public class MapEntriesTest {
         assertEquals("/justVanityPath.html", iterator.next().getRedirect()[0]);
         assertFalse(iterator.hasNext());
     }
+*/
 
     //SLING-3727
     @Test
@@ -796,7 +797,6 @@ public class MapEntriesTest {
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
     }
-*/
 
     //SLING-3727
     @Test
@@ -805,7 +805,6 @@ public class MapEntriesTest {
         removeAlias.setAccessible(true);
 
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
-        when(this.resourceResolverFactory.getMapRoot()).thenReturn(MapEntries.DEFAULT_MAP_ROOT);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
 
         Resource parent = mock(Resource.class);
