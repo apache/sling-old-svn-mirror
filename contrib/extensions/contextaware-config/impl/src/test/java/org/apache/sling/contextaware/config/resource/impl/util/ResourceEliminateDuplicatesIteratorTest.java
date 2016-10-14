@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.util;
 
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toContextResourceIterator;
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toResourceIterator;
 import static org.junit.Assert.assertThat;
 
 import java.util.Iterator;
@@ -50,7 +52,7 @@ public class ResourceEliminateDuplicatesIteratorTest {
                 context.resourceResolver().getResource("/conf/a"),
                 context.resourceResolver().getResource("/conf/a/b/c"));
         
-        Iterator<Resource> result = new ResourceEliminateDuplicatesIterator(list.iterator());
+        Iterator<Resource> result = toResourceIterator(new ResourceEliminateDuplicatesIterator(toContextResourceIterator(list.iterator())));
         assertThat(result, ResourceIteratorMatchers.paths(
                 "/conf/a",
                 "/conf/a/b",

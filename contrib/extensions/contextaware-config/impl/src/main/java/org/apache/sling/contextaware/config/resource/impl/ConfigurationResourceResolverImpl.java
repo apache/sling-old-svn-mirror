@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.ConfigurationResourceResolver;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -48,9 +49,9 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public String getContextPath(Resource resource) {
-        Iterator<Resource> it = contextPathStrategy.findContextResources(resource);
+        Iterator<ContextResource> it = contextPathStrategy.findContextResources(resource);
         if (it.hasNext()) {
-            return it.next().getPath();
+            return it.next().getResource().getPath();
         }
         else {
             return null;
@@ -60,9 +61,9 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     @Override
     public Collection<String> getAllContextPaths(Resource resource) {
         final List<String> contextPaths = new ArrayList<>();
-        Iterator<Resource> contextResources = contextPathStrategy.findContextResources(resource);
+        Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(resource);
         while (contextResources.hasNext()) {
-            contextPaths.add(contextResources.next().getPath());
+            contextPaths.add(contextResources.next().getResource().getPath());
         }
         return contextPaths;
     }

@@ -30,6 +30,7 @@ import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.contextaware.config.resource.impl.util.ResourceEliminateDuplicatesIterator;
 import org.apache.sling.contextaware.config.resource.impl.util.ResourcePathCollatingIterator;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -63,8 +64,8 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * Merges all results from the detected implementations into a single answer.
      */
     @Override
-    public Iterator<Resource> findContextResources(Resource resource) {
-        List<Iterator<Resource>> allResults = getAllResults(resource);
+    public Iterator<ContextResource> findContextResources(Resource resource) {
+        List<Iterator<ContextResource>> allResults = getAllResults(resource);
         if (allResults.isEmpty()) {
             return Collections.emptyIterator();
         }
@@ -79,10 +80,10 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * @param resource Start resource
      * @return List of all results
      */
-    private List<Iterator<Resource>> getAllResults(Resource resource) {
-        List<Iterator<Resource>> results = new ArrayList<>();
+    private List<Iterator<ContextResource>> getAllResults(Resource resource) {
+        List<Iterator<ContextResource>> results = new ArrayList<>();
         for (ContextPathStrategy item : items) {
-            Iterator<Resource> result = item.findContextResources(resource);
+            Iterator<ContextResource> result = item.findContextResources(resource);
             if (result.hasNext()) {
                 results.add(result);
             }
@@ -99,7 +100,7 @@ public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
      * @return Merged result
      */
     @SuppressWarnings("unchecked")
-    private Iterator<Resource> mergeResults(List<Iterator<Resource>> allResults) {
+    private Iterator<ContextResource> mergeResults(List<Iterator<ContextResource>> allResults) {
         return new ResourceEliminateDuplicatesIterator(
                 new ResourcePathCollatingIterator(allResults)
         );

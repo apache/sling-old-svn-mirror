@@ -24,8 +24,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -47,8 +49,8 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         boolean enabled() default true;
 
         @AttributeDefinition(name="Config ref. resource names",
-                description = "Names of resource to try to look up sling:config-ref property in. '.' is also supported as current resource.")
-        String[] configRefResourceNames() default { "." };
+                description = "Names of resource to try to look up sling:config-ref property in. If list is empty only current resource is checked.")
+        String[] configRefResourceNames();
 
     }
 
@@ -62,7 +64,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
     }
 
     @Override
-    public Iterator<Resource> findContextResources(Resource resource) {
+    public Iterator<ContextResource> findContextResources(Resource resource) {
         if (!config.enabled()) {
             return Collections.emptyIterator();
         }
@@ -72,9 +74,9 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
     /**
      * Searches the resource hierarchy upwards for all context and returns the root resource for each of them.
      */
-    private class ConfigResourceIterator implements Iterator<Resource> {
+    private class ConfigResourceIterator implements Iterator<ContextResource> {
 
-        private Resource next;
+        private ContextResource next;
 
         public ConfigResourceIterator(Resource startResource) {
             next = findNextContextResource(startResource);
@@ -86,12 +88,12 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         }
 
         @Override
-        public Resource next() {
+        public ContextResource next() {
             if (next == null) {
                 throw new NoSuchElementException();
             }
-            Resource result = next;
-            next = findNextContextResource(next.getParent());
+            ContextResource result = next;
+            next = findNextContextResource(next.getResource().getParent());
             return result;
         }
 
@@ -105,14 +107,15 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
          * @param startResource Resource to start searching
          * @return Next resource with sling:config-ref property or null if none found.
          */
-        private Resource findNextContextResource(Resource startResource) {
+        private ContextResource findNextContextResource(Resource startResource) {
             // start at resource, go up
             Resource resource = startResource;
 
             while (resource != null) {
-                if (hasConfigRef(resource)) {
+                String configRef = getConfigRef(resource);
+                if (configRef != null) {
                     log.trace("Found context path '{}'.", resource.getPath());
-                    return resource;
+                    return new ContextResource(resource, configRef);
                 }
                 // if getParent() returns null, stop
                 resource = resource.getParent();
@@ -122,14 +125,20 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             return null;
         }
 
-        private boolean hasConfigRef(final Resource resource) {
+        private String getConfigRef(final Resource resource) {
+            if (ArrayUtils.isEmpty(config.configRefResourceNames())) {
+                return resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+            }
             for (String name : config.configRefResourceNames()) {
                 Resource lookupResource = resource.getChild(name);
-                if (lookupResource != null && lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class) != null) {
-                    return true;
+                if (lookupResource != null) {
+                    String configRef = lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+                    if (configRef != null) {
+                        return configRef;
+                    }
                 }
             }
-            return false;
+            return null;
         }
 
     }

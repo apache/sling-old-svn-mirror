@@ -19,6 +19,8 @@
 package org.apache.sling.contextaware.config.resource.impl;
 
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toContextResourceIterator;
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toResourceIterator;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
@@ -29,6 +31,7 @@ import java.util.List;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.contextaware.config.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.contextaware.config.resource.spi.ContextPathStrategy;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 import org.apache.sling.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -61,20 +64,19 @@ public class ContextPathStrategyMultiplexerTest {
     
     @Test
     public void testWithNoStrategies() {
-        Iterator<Resource> resources = underTest.findContextResources(site1Page1);
-        assertFalse(resources.hasNext());
+        assertFalse(underTest.findContextResources(site1Page1).hasNext());
     }
 
     @Test
     public void testWithDefaultStrategy() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
 
-        assertThat(underTest.findContextResources(site1Page1), ResourceIteratorMatchers.paths( 
+        assertThat(toResourceIterator(underTest.findContextResources(site1Page1)), ResourceIteratorMatchers.paths( 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"));
 
-        assertThat(underTest.findContextResources(site2Page1),  ResourceIteratorMatchers.paths( 
+        assertThat(toResourceIterator(underTest.findContextResources(site2Page1)), ResourceIteratorMatchers.paths( 
                 "/content/tenant1/region1/site2",
                 "/content/tenant1/region1",
                 "/content/tenant1"));
@@ -85,7 +87,7 @@ public class ContextPathStrategyMultiplexerTest {
         registerContextPathStrategy("/content/tenant1");
         registerContextPathStrategy("/content/tenant1/region1/site1", "/content/tenant1/region1");
         
-        assertThat(underTest.findContextResources(site1Page1), ResourceIteratorMatchers.paths(
+        assertThat(toResourceIterator(underTest.findContextResources(site1Page1)), ResourceIteratorMatchers.paths(
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"));
@@ -96,7 +98,7 @@ public class ContextPathStrategyMultiplexerTest {
         registerContextPathStrategy("/content/tenant1", "/content/tenant1/region1");
         registerContextPathStrategy("/content/tenant1/region1/site1", "/content/tenant1/region1");
         
-        assertThat(underTest.findContextResources(site1Page1),  ResourceIteratorMatchers.paths( 
+        assertThat(toResourceIterator(underTest.findContextResources(site1Page1)), ResourceIteratorMatchers.paths( 
                 "/content/tenant1/region1/site1",
                 "/content/tenant1/region1",
                 "/content/tenant1"));
@@ -112,8 +114,8 @@ public class ContextPathStrategyMultiplexerTest {
         }
         context.registerService(ContextPathStrategy.class, new ContextPathStrategy() {
             @Override
-            public Iterator<Resource> findContextResources(Resource resource) {
-                return resources.iterator();
+            public Iterator<ContextResource> findContextResources(Resource resource) {
+                return toContextResourceIterator(resources.iterator());
             }
         });
     }
