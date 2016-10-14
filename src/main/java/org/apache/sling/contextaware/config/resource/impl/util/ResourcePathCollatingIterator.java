@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.collections.iterators.CollatingIterator;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 
 /**
  * Expected a list of iterators containing paths, where each path is a direct or indirect parent of the previous one
@@ -32,16 +32,16 @@ import org.apache.sling.api.resource.Resource;
  */
 public class ResourcePathCollatingIterator extends CollatingIterator {
 
-    private static Comparator<Resource> PATH_LENGTH_COMPARATOR = new Comparator<Resource>() {
+    private static Comparator<ContextResource> PATH_LENGTH_COMPARATOR = new Comparator<ContextResource>() {
         @Override
-        public int compare(Resource o1, Resource o2) {
-            Integer length1 = o1.getPath().length();
-            Integer length2 = o2.getPath().length();
+        public int compare(ContextResource o1, ContextResource o2) {
+            Integer length1 = o1.getResource().getPath().length();
+            Integer length2 = o2.getResource().getPath().length();
             return length2.compareTo(length1);
         }
     };
 
-    public ResourcePathCollatingIterator(List<Iterator<Resource>> iterator) {
+    public ResourcePathCollatingIterator(List<Iterator<ContextResource>> iterator) {
         super(PATH_LENGTH_COMPARATOR, iterator);
     }
     

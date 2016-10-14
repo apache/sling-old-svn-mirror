@@ -18,6 +18,8 @@
  */
 package org.apache.sling.contextaware.config.resource.impl.util;
 
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toContextResourceIterator;
+import static org.apache.sling.contextaware.config.resource.impl.util.ContextResourceTestUtil.toResourceIterator;
 import static org.junit.Assert.assertThat;
 
 import java.util.Iterator;
@@ -53,7 +55,8 @@ public class ResourcePathCollatingIteratorTest {
                 context.resourceResolver().getResource("/conf/a/b"),
                 context.resourceResolver().getResource("/conf/a"));
         
-        Iterator<Resource> result = new ResourcePathCollatingIterator(ImmutableList.of(list1.iterator(), list2.iterator()));
+        Iterator<Resource> result = toResourceIterator(new ResourcePathCollatingIterator(ImmutableList.of(
+                toContextResourceIterator(list1.iterator()), toContextResourceIterator(list2.iterator()))));
         assertThat(result, ResourceIteratorMatchers.paths(
                 "/conf/a/b/c/d",
                 "/conf/a/b/c",

@@ -24,20 +24,20 @@ import java.util.Set;
 
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 
 /**
  * Iterator that eliminates duplicate resources (having same path).
  */
 public class ResourceEliminateDuplicatesIterator extends FilterIterator {
 
-    public ResourceEliminateDuplicatesIterator(Iterator<Resource> iterator) {
+    public ResourceEliminateDuplicatesIterator(Iterator<ContextResource> iterator) {
         super(iterator, new Predicate() {
             private final Set<String> resourcePaths = new HashSet<>();
             
             @Override
             public boolean evaluate(Object object) {
-                return resourcePaths.add(((Resource)object).getPath());
+                return resourcePaths.add(((ContextResource)object).getResource().getPath());
             }
             
         });

@@ -20,7 +20,6 @@ package org.apache.sling.contextaware.config.resource.impl.def;
 
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
 import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
-import static org.apache.sling.contextaware.config.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +45,7 @@ import org.apache.sling.contextaware.config.resource.impl.ContextPathStrategyMul
 import org.apache.sling.contextaware.config.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.contextaware.config.resource.impl.util.PathParentExpandIterator;
 import org.apache.sling.contextaware.config.resource.spi.ConfigurationResourceResolvingStrategy;
+import org.apache.sling.contextaware.config.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -75,10 +75,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
         String[] fallbackPaths() default {"/conf/global", "/apps/conf", "/libs/conf"};
-
-        @AttributeDefinition(name="Config ref. resource names",
-                description = "Names of resource to try to look up sling:config-ref property in. '.' is also supported as current resource.")
-        String[] configRefResourceNames() default { "." };
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -133,13 +129,13 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     @SuppressWarnings("unchecked")
     private Iterator<String> findConfigRefs(final Resource startResource) {
         // collect all context path resources
-        Iterator<Resource> contextResources = contextPathStrategy.findContextResources(startResource);
+        Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(startResource);
 
         // get config resource path for each context resource, filter out items where not reference could be resolved
         Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
                 @Override
                 public Object transform(Object input) {
-                    return getReference((Resource)input);
+                    return getReference((ContextResource)input);
                 }
             }), PredicateUtils.notNullPredicate());
 
@@ -147,19 +143,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
 
-    private String getReference(final Resource resource) {
-        
-        // lookup reference string in any of the configured lookup resource names
-        String ref = null;
-        for (String name : config.configRefResourceNames()) {
-            Resource lookupResource = resource.getChild(name);
-            if (lookupResource != null) {
-                ref = lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
-                if (ref != null) {
-                    break;
-                }
-            }
-        }
+    private String getReference(final ContextResource contextResource) {
+        Resource resource = contextResource.getResource();
+        String ref = contextResource.getConfigRef();
 
         if (ref != null) {
             // if absolute path found we are (probably) done
