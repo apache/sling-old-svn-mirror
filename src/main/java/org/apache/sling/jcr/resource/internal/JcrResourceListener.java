@@ -152,23 +152,29 @@ public class JcrResourceListener implements EventListener, Closeable {
                      || type == PROPERTY_CHANGED ) {
                     final int lastSlash = eventPath.lastIndexOf('/');
                     final String nodePath = eventPath.substring(0, lastSlash);
-                    final String propName = eventPath.substring(lastSlash + 1);
                     Builder builder = changedEvents.get(nodePath);
                     if (builder == null) {
-                        changedEvents.put(nodePath, builder = createResourceChange(event, nodePath, ChangeType.CHANGED));
+                        changedEvents.put(nodePath, createResourceChange(event, nodePath, ChangeType.CHANGED));
                     }
-                    this.updateResourceChanged(builder, event.getType(), propName);
                 } else if ( type == NODE_ADDED ) {
                     addedEvents.put(eventPath, createResourceChange(event, ChangeType.ADDED));
                 } else if ( type == NODE_REMOVED) {
-                    // remove is the strongest operation, therefore remove all removed
-                    // paths from added
-                    addedEvents.remove(eventPath);
                     removedEvents.put(eventPath, createResourceChange(event, ChangeType.REMOVED));
                 }
             } catch (final RepositoryException e) {
                 logger.error("Error during modification: {}", e);
             }
+        }
+
+        // remove is the strongest operation, therefore remove all removed
+        // paths from added and changed
+        for(final String path : removedEvents.keySet()) {
+            addedEvents.remove(path);
+            changedEvents.remove(path);
+        }
+        // add is stronger than update
+        for(final String path : addedEvents.keySet()) {
+            changedEvents.remove(path);
         }
 
         final List<ResourceChange> changes = new ArrayList<ResourceChange>();
@@ -191,20 +197,6 @@ public class JcrResourceListener implements EventListener, Closeable {
     private void buildResourceChanges(List<ResourceChange> result, Map<String, Builder> builders) {
         for (Entry<String, Builder> e : builders.entrySet()) {
             result.add(e.getValue().build());
-        }
-    }
-
-    private void updateResourceChanged(Builder builder, int eventType, final String propName) {
-        switch (eventType) {
-        case Event.PROPERTY_ADDED:
-            builder.addAddedAttributeName(propName);
-            break;
-        case Event.PROPERTY_CHANGED:
-            builder.addChangedAttributeName(propName);
-            break;
-        case Event.PROPERTY_REMOVED:
-            builder.addRemovedAttributeName(propName);
-            break;
         }
     }
 
