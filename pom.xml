@@ -27,7 +27,7 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.contextaware.config.impl</artifactId>
+    <artifactId>org.apache.sling.caconfig.impl</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration Implementation</name>
@@ -78,13 +78,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.contextaware.config.api</artifactId>
+            <artifactId>org.apache.sling.caconfig.api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.contextaware.config.spi</artifactId>
+            <artifactId>org.apache.sling.caconfig.spi</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
