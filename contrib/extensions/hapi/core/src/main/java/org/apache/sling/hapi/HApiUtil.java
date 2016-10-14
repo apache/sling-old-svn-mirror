@@ -29,14 +29,23 @@ public interface HApiUtil {
 
     String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";
     String RESOURCE_TYPE = "org.apache.sling.hapi.tools.resourcetype";
+    String RESOURCE_TYPE_DESC = "The resource used for hapi types";
 
     String DEFAULT_COLLECTION_RESOURCE_TYPE = "sling/hapi/components/typescollection";
     String COLLECTION_RESOURCE_TYPE = "org.apache.sling.hapi.tools.collectionresourcetype";
+    String COLLECTION_RESOURCE_TYPE_DESC = "The resource used for hapi type collections";
 
+    String DEFAULT_SEARCH_PATH = "/libs/sling/hapi/types";
     String SEARCH_PATHS = "org.apache.sling.hapi.tools.searchpaths";
+    String SEARCH_PATHS_DESC = "The path under each hapi types can be identified by their FQDN value in addition to the type path";
 
     String DEFAULT_SERVER_URL = "http://localhost:8080";
     String EXTERNAL_URL = "org.apache.sling.hapi.tools.externalurl";
+    String EXTERNAL_URL_DESC = "The external URL of the instance. This will prefix hapi absolute URLs";
+
+    boolean DEFAULT_ENABLED = true;
+    String ENABLED = "org.apache.sling.hapi.tools.enabled";
+    String ENABLED_DESC = "Whether hapi is enabled or completely disabled (no output rendered in components)";
 
     /**
      * <p>Get a HApi type jcr node from a type identifier.</p>

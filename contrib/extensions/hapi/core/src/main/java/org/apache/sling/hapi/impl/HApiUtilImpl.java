@@ -53,26 +53,39 @@ public class HApiUtilImpl implements HApiUtil {
 
     private final Logger LOG = LoggerFactory.getLogger(HApiUtil.class);
 
-    @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE)
+    @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE,
+            description = RESOURCE_TYPE_DESC)
     public static final String HAPI_RESOURCE_TYPE = RESOURCE_TYPE;
 
-    @Property(label = "HApi Collection Resource Type", cardinality = 0, value = DEFAULT_COLLECTION_RESOURCE_TYPE)
+    @Property(label = "HApi Collection Resource Type", cardinality = 0, value = DEFAULT_COLLECTION_RESOURCE_TYPE,
+            description = COLLECTION_RESOURCE_TYPE_DESC)
     private static final String HAPI_COLLECTION_RESOURCE_TYPE = COLLECTION_RESOURCE_TYPE;
 
-    @Property(label = "HApi Types Search Paths", cardinality=50, value = {"/libs/sling/hapi/types"})
+    @Property(label = "HApi Types Search Paths", cardinality=50, value = {DEFAULT_SEARCH_PATH},
+            description = SEARCH_PATHS_DESC)
     public static final String HAPI_PATHS = SEARCH_PATHS;
 
-    @Property(label = "External server URL", cardinality = 0, value = DEFAULT_SERVER_URL)
+    @Property(label = "External server URL", cardinality = 0, value = DEFAULT_SERVER_URL,
+            description = EXTERNAL_URL_DESC)
     public static final String HAPI_EXTERNAL_URL = EXTERNAL_URL;
 
-    public static String resourceType;
+    @Property(label = "Enabled", boolValue = DEFAULT_ENABLED,
+            description = ENABLED_DESC)
+    public static final String HAPI_ENABLED = ENABLED;
+
+
+    private static String resourceType;
     private String collectionResourceType;
-    public static String[] hApiPaths;
-    public static String serverContextPath;
+    private static String[] hApiPaths;
+    private static String serverContextPath;
+    private boolean enabled;
 
 
     @Activate
     private void activate(Map<String, Object> configuration) {
+        enabled = PropertiesUtil.toBoolean(configuration.get(HAPI_ENABLED), false);
+        if (!enabled) return;
+
         resourceType = PropertiesUtil.toString(configuration.get(HAPI_RESOURCE_TYPE), DEFAULT_RESOURCE_TYPE);
         collectionResourceType = PropertiesUtil.toString(configuration.get(HAPI_COLLECTION_RESOURCE_TYPE),
                 DEFAULT_COLLECTION_RESOURCE_TYPE);
@@ -86,6 +99,9 @@ public class HApiUtilImpl implements HApiUtil {
     @Override
     @Deprecated
     public Node getTypeNode(ResourceResolver resolver, String type) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         return getTypeResource(resolver, type).adaptTo(Node.class);
     }
 
@@ -94,6 +110,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public Resource getTypeResource(ResourceResolver resolver, String type) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         return getFqdnResource(resolver, type, resourceType);
     }
 
@@ -102,6 +121,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public Resource getTypeCollectionResource(ResourceResolver resolver, String collection) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         return getFqdnResource(resolver, collection, collectionResourceType);
     }
 
@@ -152,6 +174,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public HApiType fromPath(ResourceResolver resolver, String type) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         Resource typeResource = this.getTypeResource(resolver, type);
         LOG.debug("typeResource=" + typeResource);
         if (null == typeResource) {
@@ -167,6 +192,9 @@ public class HApiUtilImpl implements HApiUtil {
     @Override
     @Deprecated
     public HApiType fromNode(ResourceResolver resolver, Node typeNode) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         if (null == typeNode) return null;
         Resource resource = resolver.getResource(typeNode.getPath());
         return fromResource(resolver, resource);
@@ -176,6 +204,9 @@ public class HApiUtilImpl implements HApiUtil {
      * {@inheritDoc}
      */
     public HApiType fromResource(ResourceResolver resolver, Resource typeResource) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         if (null == typeResource) return null;
 
         ValueMap resProps = typeResource.adaptTo(ValueMap.class);
@@ -244,6 +275,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public HApiTypesCollection collectionFromResource(ResourceResolver resolver, Resource collectionResource) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         if (null == collectionResource) return null;
         ValueMap resProps = collectionResource.adaptTo(ValueMap.class);
         String name = resProps.get("name", (String) null);
@@ -271,6 +305,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public HApiTypesCollection collectionFromPath(ResourceResolver resolver, String collectionPath) throws RepositoryException {
+        if (!enabled) {
+            return null;
+        }
         return collectionFromResource(resolver, this.getTypeCollectionResource(resolver, collectionPath));
     }
 
@@ -279,6 +316,9 @@ public class HApiUtilImpl implements HApiUtil {
      */
     @Override
     public MicrodataAttributeHelper getHelper(ResourceResolver resolver, String type) throws RepositoryException {
+        if (!enabled) {
+            return new EmptyAttributeHelperImpl();
+        }
         return new MicrodataAttributeHelperImpl(resolver, TypesCache.getInstance(this).getType(resolver, getTypeResource(resolver, type)));
     }
 }
