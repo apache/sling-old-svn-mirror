@@ -28,18 +28,18 @@ public final class ConfigurationResourceNameConstants {
      * Property that points to the configuration path to be used.
      * Additionally each resource having this property marks the beginning of a new context sub-tree.
      */
-    public static final String PROPERTY_CONFIG_REF = "sling:config-ref";
+    public static final String PROPERTY_CONFIG_REF = "sling:configRef";
    
     /**
      * Boolean property that controls whether config resource collections should be merged on inheritance or not.
      * Merging means merging the lists, not the list items (properties of the resources) itself.
      */
-    public static final String PROPERTY_CONFIG_COLLECTION_INHERIT = "sling:config-collection-inherit";
+    public static final String PROPERTY_CONFIG_COLLECTION_INHERIT = "sling:configCollectionInherit";
 
     /**
      * Boolean property that controls whether the properties (key/value pairs) of configuration resources
      * should be inherited from the configuration hierarchy and merged.
      */
-    public static final String PROPERTY_CONFIG_PROPERTY_INHERIT = "sling:config-property-inherit";
+    public static final String PROPERTY_CONFIG_PROPERTY_INHERIT = "sling:configPropertyInherit";
 
 }
