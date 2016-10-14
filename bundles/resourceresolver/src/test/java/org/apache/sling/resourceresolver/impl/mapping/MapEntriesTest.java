@@ -44,6 +44,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.api.resource.Resource;
@@ -111,22 +112,13 @@ public class MapEntriesTest {
         when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(true);
         when(resourceResolverFactory.getObservationPaths()).thenReturn(new String[] {"/"});
+        when(resourceResolverFactory.getMapRoot()).thenReturn(MapEntries.DEFAULT_MAP_ROOT);
+        when(resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(-1L);
+        when(resourceResolverFactory.isMaxCachedVanityPathEntriesStartup()).thenReturn(true);
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenReturn(
                 Collections.<Resource> emptySet().iterator());
 
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
-        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
-        field0.setAccessible(true);
-        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
-
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, -1);
-
-        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
-        field2.setAccessible(true);
-        field2.set(mapEntries, true);
-
     }
 
     @After
@@ -454,9 +446,7 @@ public class MapEntriesTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_doAddVanity_1() throws Exception {
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 10);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(10L);
 
         List<MapEntry> entries = mapEntries.getResolveMaps();
         assertEquals(0, entries.size());
@@ -811,14 +801,12 @@ public class MapEntriesTest {
     //SLING-3727
     @Test
     public void test_doRemoveAttributessWithDisableAliasOptimization() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        Method method = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         method.setAccessible(true);
 
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
+        when(this.resourceResolverFactory.getMapRoot()).thenReturn(MapEntries.DEFAULT_MAP_ROOT);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
-        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
-        field0.setAccessible(true);
-        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
 
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
@@ -830,7 +818,7 @@ public class MapEntriesTest {
         when(result.getName()).thenReturn("child");
         when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
 
-        method.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        method.invoke(mapEntries, "/parent/child", "sling:alias", new AtomicBoolean());
 
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
@@ -1109,7 +1097,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1137,7 +1125,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/child", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1155,7 +1143,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
         when(resourceResolver.getResource("/parent/child")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/child", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1169,7 +1157,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1206,7 +1194,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1224,7 +1212,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(null);
         when(result.getChild("jcr:content")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
@@ -1238,7 +1226,7 @@ public class MapEntriesTest {
         final Method doAddAlias = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         doAddAlias.setAccessible(true);
 
-        final Method doRemoveAttributes = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        final Method doRemoveAttributes = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         doRemoveAttributes.setAccessible(true);
 
         final Field aliasMapField = MapEntries.class.getDeclaredField("aliasMap");
@@ -1278,7 +1266,7 @@ public class MapEntriesTest {
         assertEquals("child", aliasMapEntry.get("alias"));
 
         // remove child jcr:content node
-        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", new AtomicBoolean());
 
         // test with one node
         assertEquals(1, aliasMap.size());
@@ -1297,7 +1285,7 @@ public class MapEntriesTest {
         assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
         assertEquals("child", aliasMapEntry.get("alias"));
 
-        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", new AtomicBoolean());
         doAddAlias.invoke(mapEntries, "/parent/child/jcr:content");
 
         assertEquals(1, aliasMap.size());
@@ -1317,7 +1305,7 @@ public class MapEntriesTest {
 
         when(resourceResolver.getResource("/parent/child/jcr:content")).thenReturn(null);
         when(childRsrc.getChild("jcr:content")).thenReturn(null);
-        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child/jcr:content", "sling:alias", new AtomicBoolean());
 
         assertEquals(1, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1336,7 +1324,7 @@ public class MapEntriesTest {
         assertEquals("child", aliasMapEntry.get("aliasJcrContent"));
         assertEquals(2, aliasMapEntry.size());
 
-        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", false);
+        doRemoveAttributes.invoke(mapEntries, "/parent/child", "sling:alias", new AtomicBoolean());
 
         assertEquals(0, aliasMap.size());
         aliasMapEntry = mapEntries.getAliasMap("/parent");
@@ -1349,7 +1337,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1377,7 +1365,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1395,7 +1383,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
         when(resourceResolver.getResource("/parent")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1409,7 +1397,7 @@ public class MapEntriesTest {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, boolean.class);
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String.class, AtomicBoolean.class);
         method1.setAccessible(true);
 
         Field field0 = MapEntries.class.getDeclaredField("aliasMap");
@@ -1446,7 +1434,7 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1464,7 +1452,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
         when(resourceResolver.getResource("/parent/jcr:content")).thenReturn(null);
         when(result.getChild("jcr:content")).thenReturn(null);
-        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", false);
+        method1.invoke(mapEntries, "/parent/jcr:content", "sling:alias", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/");
         assertNull(aliasMapEntry);
@@ -1491,19 +1479,18 @@ public class MapEntriesTest {
     @Test
     //SLING-4847
     public void test_doNodeAdded1() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doNodeAdded", String.class, boolean.class);
+        Method method = MapEntries.class.getDeclaredMethod("doNodeAdded", String.class, AtomicBoolean.class);
         method.setAccessible(true);
-        Boolean resfreshed = (Boolean ) method.invoke(mapEntries, "/node", true);
-        assertTrue(resfreshed.booleanValue());
+        final AtomicBoolean refreshed = new AtomicBoolean(true);
+        method.invoke(mapEntries, "/node", refreshed);
+        assertTrue(refreshed.get());
     }
 
     @Test
     //SLING-4891
     public void test_getVanityPaths_1() throws Exception {
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 0);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(0L);
 
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1538,9 +1525,7 @@ public class MapEntriesTest {
             }
         });
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 0);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(0L);
 
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1598,13 +1583,8 @@ public class MapEntriesTest {
             }
         });
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 0);
-
-        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
-        field2.setAccessible(true);
-        field2.set(mapEntries, false);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(0L);
+        when(this.resourceResolverFactory.isMaxCachedVanityPathEntriesStartup()).thenReturn(false);
 
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1638,13 +1618,8 @@ public class MapEntriesTest {
             }
         });
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 0);
-
-        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
-        field2.setAccessible(true);
-        field2.set(mapEntries, true);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(0L);
+        when(this.resourceResolverFactory.isMaxCachedVanityPathEntriesStartup()).thenReturn(true);
 
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1678,13 +1653,8 @@ public class MapEntriesTest {
             }
         });
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 2);
-
-        Field field2 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntriesStartup");
-        field2.setAccessible(true);
-        field2.set(mapEntries, false);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(2L);
+        when(this.resourceResolverFactory.isMaxCachedVanityPathEntriesStartup()).thenReturn(false);
 
         Method method = MapEntries.class.getDeclaredMethod("getVanityPaths", String.class);
         method.setAccessible(true);
@@ -1722,9 +1692,7 @@ public class MapEntriesTest {
     @Test
     //SLING-4891
     public void test_loadVanityPaths() throws Exception {
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 2);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(2L);
 
         final Resource justVanityPath = mock(Resource.class, "justVanityPath");
         when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
@@ -1869,9 +1837,7 @@ public class MapEntriesTest {
         });
 
 
-        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
-        field1.setAccessible(true);
-        field1.set(mapEntries, 2);
+        when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(2L);
 
         ArrayList<DataFuture> list = new ArrayList<DataFuture>();
         for (int i =0;i<10;i++) {
