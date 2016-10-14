@@ -16,23 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.spi;
+package org.apache.sling.caconfig.spi;
 
-import org.osgi.annotation.versioning.ProviderType;
+import java.util.SortedSet;
+
+import javax.annotation.Nonnull;
+
+import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Is thrown when configuration cannot be persisted.
+ * Allows application to provide the necessary metadata for configurations.
  */
-@ProviderType
-public final class ConfigurationPersistenceException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+@ConsumerType
+public interface ConfigurationMetadataProvider {
 
-    public ConfigurationPersistenceException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    /**
+     * Get all configuration names.
+     * @return Configuration names
+     */
+    @Nonnull SortedSet<String> getConfigurationNames();
 
-    public ConfigurationPersistenceException(String message) {
-        super(message);
-    }
+    /**
+     * Get configuration metadata.
+     * @param configName Configuration name
+     * @return Configuration metadata or null if none exists for the given name.
+     */
+    ConfigurationMetadata getConfigurationMetadata(String configName);
 
 }

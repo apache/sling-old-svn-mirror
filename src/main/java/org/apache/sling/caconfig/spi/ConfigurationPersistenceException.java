@@ -16,8 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.caconfig.spi;
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * Defining configuration and parameter metadata for the SPI.
+ * Is thrown when configuration cannot be persisted.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.config.spi.metadata;
+@ProviderType
+public final class ConfigurationPersistenceException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    public ConfigurationPersistenceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConfigurationPersistenceException(String message) {
+        super(message);
+    }
+
+}

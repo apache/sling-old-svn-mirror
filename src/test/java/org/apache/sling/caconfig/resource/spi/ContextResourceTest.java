@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.spi;
+package org.apache.sling.caconfig.resource.spi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

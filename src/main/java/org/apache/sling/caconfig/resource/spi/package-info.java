@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * SPI for applications hooking into the configuration infrastructure for parameterizing and customizing.
+ * SPI for applications hooking into the configuration resource infrastructure for parameterizing and customizing.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.contextaware.config.spi;
+package org.apache.sling.caconfig.resource.spi;

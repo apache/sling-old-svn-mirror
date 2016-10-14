@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.resource.spi;
+package org.apache.sling.caconfig.resource.spi;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
