@@ -548,7 +548,8 @@ def modules = [
         location: 'contrib/extensions/contextaware-config/impl'
     ],
     [
-        location: 'contrib/extensions/contextaware-config/integration-tests'
+        location: 'contrib/extensions/contextaware-config/integration-tests',
+        jdks: ["1.8"]
     ],
     [
         location: 'contrib/extensions/contextaware-config/tooling/bnd-plugin-integration-tests'
