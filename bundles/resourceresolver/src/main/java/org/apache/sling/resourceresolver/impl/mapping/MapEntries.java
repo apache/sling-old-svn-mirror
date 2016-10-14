@@ -300,9 +300,20 @@ public class MapEntries implements
                 }
 
                 if (this.factory.isOptimizeAliasResolutionEnabled()) {
-                    changed |= doRemoveAlias(path, resource, props);
+                    changed |= doRemoveAlias(path, resource);
                     if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
                         changed |= doAddAlias(resource);
+                    }
+                    if ( JCR_CONTENT.equals(resource.getName()) ) {
+                        final Resource parent = resource.getParent();
+                        if ( parent.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
+                            changed |= doAddAlias(parent);
+                        }
+                    } else {
+                        final Resource child = resource.getChild(JCR_CONTENT);
+                        if ( child != null && child.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS) ) {
+                            changed |= doAddAlias(child);
+                        }
                     }
                 }
 
@@ -444,42 +455,31 @@ public class MapEntries implements
     }
 
 
-    private boolean doRemoveAlias(String path, final Resource resource, final ValueMap props) {
+    private boolean doRemoveAlias(String path, final Resource resource) {
         String resourceName = null;
-        if (resource == null) {
-            if (!"/".equals(path)){
-                if (path.endsWith("/jcr:content")) {
-                    path = ResourceUtil.getParent(path);
+        if (resource.getName().equals(JCR_CONTENT)) {
+            final Resource containingResource = resource.getParent();
+            if ( containingResource != null ) {
+                final Resource parent = containingResource.getParent();
+                if ( parent != null ) {
+                    path = parent.getPath();
+                    resourceName = containingResource.getName();
+                } else {
+                    path = null;
                 }
-                resourceName = ResourceUtil.getName(path);
-                path = ResourceUtil.getParent(path);
             } else {
-                resourceName = "";
+                path = null;
             }
         } else {
-            if (resource.getName().equals("jcr:content")) {
-                final Resource containingResource = resource.getParent();
-                if ( containingResource != null ) {
-                    final Resource parent = containingResource.getParent();
-                    if ( parent != null ) {
-                        path = parent.getPath();
-                        resourceName = containingResource.getName();
-                    } else {
-                        path = null;
-                    }
-                } else {
-                    path = null;
-                }
+            final Resource parent = resource.getParent();
+            if ( parent != null ) {
+                path =  parent.getPath();
+                resourceName = resource.getName();
             } else {
-                final Resource parent = resource.getParent();
-                if ( parent != null ) {
-                    path =  parent.getPath();
-                    resourceName = resource.getName();
-                } else {
-                    path = null;
-                }
+                path = null;
             }
         }
+
         if ( path != null ) {
             final Map<String, String> aliasMapEntry = aliasMap.get(path);
             if (aliasMapEntry != null) {

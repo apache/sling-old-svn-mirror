@@ -143,13 +143,13 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
             @Override
             public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
-                if (invocation.getArguments()[0].toString().contains("sling:alias")) {
+                if (invocation.getArguments()[0].toString().contains(ResourceResolverImpl.PROP_ALIAS)) {
                     return Collections.singleton(result).iterator();
                 } else {
                     return Collections.<Resource> emptySet().iterator();
@@ -174,19 +174,19 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         final Resource secondResult = mock(Resource.class);
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
             @Override
             public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
-                if (invocation.getArguments()[0].toString().contains("sling:alias")) {
+                if (invocation.getArguments()[0].toString().contains(ResourceResolverImpl.PROP_ALIAS)) {
                     return Arrays.asList(result, secondResult).iterator();
                 } else {
                     return Collections.<Resource> emptySet().iterator();
@@ -574,6 +574,7 @@ public class MapEntriesTest {
         Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
         when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
         when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
+        when(vanityPathOnJcrContentParent.getValueMap()).thenReturn(buildValueMap());
 
         Resource vanityPathOnJcrContent = mock(Resource.class, "vanityPathOnJcrContent");
         when(resourceResolver.getResource("/vanityPathOnJcrContent/jcr:content")).thenReturn(vanityPathOnJcrContent);
@@ -764,14 +765,13 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
     }
-
 
     //SLING-3727
     @Test
@@ -790,7 +790,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
@@ -815,7 +815,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         removeAlias.invoke(mapEntries, "/parent", "/parent/child", new AtomicBoolean());
 
@@ -900,7 +900,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent");
         when(result.getName()).thenReturn("parent");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent", new AtomicBoolean());
 
@@ -917,7 +917,7 @@ public class MapEntriesTest {
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent2");
         when(secondResult.getName()).thenReturn("parent2");
-        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent2", new AtomicBoolean());
 
@@ -934,7 +934,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContent"));
 
         addResource.invoke(mapEntries, "/parent/jcr:content", new AtomicBoolean());
 
@@ -947,20 +947,11 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
     }
 
-/**
-    @SuppressWarnings("unchecked")
     @Test
     public void test_doUpdateAlias() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
-        method.setAccessible(true);
+        final Method updateResource = MapEntries.class.getDeclaredMethod("updateResource", String.class, AtomicBoolean.class);
+        updateResource.setAccessible(true);
 
-        Method method1 = MapEntries.class.getDeclaredMethod("doUpdateAttributes", String.class , Set.class, boolean.class);
-        method1.setAccessible(true);
-
-        Field field0 = MapEntries.class.getDeclaredField("aliasMap");
-        field0.setAccessible(true);
-
-        Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) field0.get(mapEntries);
         assertEquals(0, aliasMap.size());
 
         Resource parent = mock(Resource.class);
@@ -971,9 +962,9 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
-        method.invoke(mapEntries, "/parent/child");
+        updateResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         Map<String, String> aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -983,9 +974,9 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasUpdated"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasUpdated"));
 
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), false);
+        updateResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1001,10 +992,10 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
-        method.invoke(mapEntries, "/parent/child/jcr:content");
+        updateResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1015,8 +1006,8 @@ public class MapEntriesTest {
 
         assertEquals(1, aliasMap.size());
 
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContentUpdated"));
+        updateResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1028,7 +1019,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
         //re-update alias
-        method1.invoke(mapEntries, "/parent/child", Collections.singleton("sling:alias"), false);
+        updateResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1043,17 +1034,17 @@ public class MapEntriesTest {
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias2"));
+        when(secondResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias2"));
 
-        method.invoke(mapEntries, "/parent/child2");
+        updateResource.invoke(mapEntries, "/parent/child2", new AtomicBoolean());
         assertEquals(1, aliasMap.size());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
         assertEquals(3, aliasMapEntry.size());
 
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContentUpdated"));
+        updateResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1065,9 +1056,9 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
 
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", null));
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContentUpdated"));
-        method1.invoke(mapEntries, "/parent/child/jcr:content", Collections.singleton("sling:alias"), false);
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, null));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContentUpdated"));
+        updateResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNotNull(aliasMapEntry);
@@ -1079,7 +1070,7 @@ public class MapEntriesTest {
         assertEquals(1, aliasMap.size());
 
     }
-*/
+
     @Test
     public void test_doRemoveAlias() throws Exception {
         final Method addResource = MapEntries.class.getDeclaredMethod("addResource", String.class, AtomicBoolean.class);
@@ -1162,7 +1153,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         addResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
@@ -1218,7 +1209,7 @@ public class MapEntriesTest {
         when(childRsrc.getParent()).thenReturn(parentRsrc);
         when(childRsrc.getPath()).thenReturn("/parent/child");
         when(childRsrc.getName()).thenReturn("child");
-        when(childRsrc.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(childRsrc.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent/child", new AtomicBoolean());
 
@@ -1227,7 +1218,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(childRsrc);
         when(jcrContentResult.getPath()).thenReturn("/parent/child/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContent"));
         when(childRsrc.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         addResource.invoke(mapEntries, "/parent/child/jcr:content", new AtomicBoolean());
@@ -1324,7 +1315,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent");
         when(result.getName()).thenReturn("parent");
-        when(result.getValueMap()).thenReturn(buildValueMap("sling:alias", "alias"));
+        when(result.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "alias"));
 
         addResource.invoke(mapEntries, "/parent", new AtomicBoolean());
 
@@ -1387,7 +1378,7 @@ public class MapEntriesTest {
         when(jcrContentResult.getParent()).thenReturn(result);
         when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
         when(jcrContentResult.getName()).thenReturn("jcr:content");
-        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(jcrContentResult.getValueMap()).thenReturn(buildValueMap(ResourceResolverImpl.PROP_ALIAS, "aliasJcrContent"));
         when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
 
         addResource.invoke(mapEntries, "/parent/jcr:content", new AtomicBoolean());
