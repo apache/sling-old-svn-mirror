@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.contextaware.config.bndplugin;
+package org.apache.sling.caconfig.bndplugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +40,7 @@ import aQute.service.reporter.Reporter;
  */
 public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
     
-    private static final String CONFIGURATION_ANNOTATION_CLASS = "org.apache.sling.contextaware.config.annotation.Configuration";
+    private static final String CONFIGURATION_ANNOTATION_CLASS = "org.apache.sling.caconfig.annotation.Configuration";
     
     private static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
     

@@ -27,7 +27,7 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.contextaware.config.bnd-plugin</artifactId>
+    <artifactId>org.apache.sling.caconfig.bnd-plugin</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration bnd Plugin</name>
