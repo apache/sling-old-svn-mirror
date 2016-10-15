@@ -397,7 +397,8 @@ public class ResourceResolverFactoryActivator {
     }
 
     public boolean isMapConfiguration(String path) {
-        return path.equals(this.mapRoot) || path.startsWith(this.mapRootPrefix);
+        return path.equals(this.mapRoot)
+               || path.startsWith(this.mapRootPrefix);
     }
 
     public int getDefaultVanityPathRedirectStatus() {
