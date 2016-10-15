@@ -639,21 +639,31 @@ public class MapEntries implements
      * Checks if the path affects the map configuration. If it does
      * the configuration is updated.
      * @param path The changed path (could be add/remove/update)
+     * @param hasReloadedConfig If this is already true, the config will not be reloaded
      * @param resolverRefreshed Boolean flag handling resolver refresh
-     * @return {@code true} if the configuration has been updated.
+     * @param isDelete If this is a delete event
+     * @return {@code true} if the configuration has been updated, {@code false} if
+     *         the path does not affect a config change, {@code null} if the config has already
+     *         been reloaded.
      */
-    private boolean handleConfigurationUpdate(final String path, final AtomicBoolean resolverRefreshed) {
-        if ( this.factory.isMapConfiguration(path) ) {
-            refreshResolverIfNecessary(resolverRefreshed);
+    private Boolean handleConfigurationUpdate(final String path,
+            final AtomicBoolean hasReloadedConfig,
+            final AtomicBoolean resolverRefreshed,
+            final boolean isDelete) {
+        if ( this.factory.isMapConfiguration(path)
+             || (isDelete && this.factory.getMapRoot().startsWith(path + "/")) ) {
+            if ( hasReloadedConfig.compareAndSet(false, true) ) {
+                refreshResolverIfNecessary(resolverRefreshed);
 
-            this.initializing.lock();
-            try {
-                doUpdateConfiguration();
-            } finally {
-                this.initializing.unlock();
+                this.initializing.lock();
+                try {
+                    doUpdateConfiguration();
+                } finally {
+                    this.initializing.unlock();
+                }
+                return true;
             }
-
-            return true;
+            return null;
         }
         return false;
     }
@@ -670,6 +680,8 @@ public class MapEntries implements
     public void onChange(final List<ResourceChange> changes) {
         final AtomicBoolean resolverRefreshed = new AtomicBoolean(false);
 
+        // the config needs to be reloaded only once
+        final AtomicBoolean hasReloadedConfig = new AtomicBoolean(false);
         for(final ResourceChange rc : changes) {
 
             final String path = rc.getPath();
@@ -684,26 +696,36 @@ public class MapEntries implements
             // removal of a resource is handled differently
             if (rc.getType() == ResourceChange.ChangeType.REMOVED ) {
 
-                if ( handleConfigurationUpdate(path, resolverRefreshed) ) {
-                    changed = true;
-                } else {
-                    changed |= removeResource(path, resolverRefreshed);
+                final Boolean result = handleConfigurationUpdate(path, hasReloadedConfig, resolverRefreshed, true);
+                if ( result != null ) {
+                    if ( result ) {
+                        changed = true;
+                    } else {
+                        changed |= removeResource(path, resolverRefreshed);
+                    }
                 }
 
             //session.move() is handled differently see also SLING-3713 and
             } else if (rc.getType() == ResourceChange.ChangeType.ADDED ) {
 
-                if ( handleConfigurationUpdate(path, resolverRefreshed) ) {
-                    changed = true;
-                } else {
-                    changed |= addResource(path, resolverRefreshed);
+                final Boolean result = handleConfigurationUpdate(path, hasReloadedConfig, resolverRefreshed, false);
+                if ( result != null ) {
+                    if ( result ) {
+                        changed = true;
+                    } else {
+                        changed |= addResource(path, resolverRefreshed);
+                    }
                 }
 
             } else if (rc.getType() == ResourceChange.ChangeType.CHANGED ) {
-                if (handleConfigurationUpdate(path, resolverRefreshed)) {
-                    changed = true;
-                } else {
-                    changed |= updateResource(path, resolverRefreshed);
+
+                final Boolean result = handleConfigurationUpdate(path, hasReloadedConfig, resolverRefreshed, false);
+                if ( result != null ) {
+                    if ( result ) {
+                        changed = true;
+                    } else {
+                        changed |= updateResource(path, resolverRefreshed);
+                    }
                 }
 
             }
