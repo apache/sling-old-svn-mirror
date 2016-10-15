@@ -19,6 +19,7 @@
 package org.apache.sling.api.resource.path;
 
 import java.util.regex.Pattern;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -48,7 +49,13 @@ public class Path implements Comparable<Path> {
      * @param path the resource path or a glob pattern.
      */
     public Path(@Nonnull final String path) {
-        this.path = path;
+        if ( path.equals("/") ) {
+            this.path = "/";
+        } else if ( path.endsWith("/") ) {
+            this.path = path.substring(0, path.length() - 1);
+        } else {
+            this.path = path;
+        }
         if (path.startsWith(GLOB_PREFIX)) {
             isPattern = true;
             regexPattern = Pattern.compile(toRegexPattern(path.substring(5)));
