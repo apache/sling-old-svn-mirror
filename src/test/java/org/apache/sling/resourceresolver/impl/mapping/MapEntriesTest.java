@@ -51,6 +51,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
@@ -114,7 +115,7 @@ public class MapEntriesTest {
         when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(true);
-        when(resourceResolverFactory.getObservationPaths()).thenReturn(new String[] {"/"});
+        when(resourceResolverFactory.getObservationPaths()).thenReturn(new Path[] {new Path("/")});
         when(resourceResolverFactory.getMapRoot()).thenReturn(MapEntries.DEFAULT_MAP_ROOT);
         when(resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(-1L);
         when(resourceResolverFactory.isMaxCachedVanityPathEntriesStartup()).thenReturn(true);

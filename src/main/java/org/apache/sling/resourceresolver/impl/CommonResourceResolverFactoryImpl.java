@@ -34,6 +34,7 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
@@ -380,7 +381,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     @Override
-    public String[] getObservationPaths() {
+    public Path[] getObservationPaths() {
         return this.activator.getObservationPaths();
     }
 
