@@ -21,8 +21,8 @@
 
 [artifacts]
      # TODO - use SNAPSHOT until release is out
-    org.apache.sling/org.apache.sling.event/4.2.1-SNAPSHOT
-    org.apache.sling/org.apache.sling.event.dea/1.1.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.event/4.2.0
+    org.apache.sling/org.apache.sling.event.dea/1.1.0
 
 [:repoinit]
     create path (sling:Folder) /var
