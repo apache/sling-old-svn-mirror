@@ -18,10 +18,10 @@
  */
 package org.apache.sling.api.resource.path;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 public class PathTest {
 
@@ -72,5 +72,12 @@ public class PathTest {
         final Path path = new Path("/");
         assertTrue(path.matches("glob:/apps/myproject/components/**/*.html"));
         assertTrue(path.matches("glob:/apps/**/*.html"));
+    }
+
+    @Test public void testPathMatchingTrailingSlash() {
+        final Path path = new Path("/libs/");
+        assertTrue(path.matches("/libs"));
+        assertTrue(path.matches("/libs/foo"));
+        assertFalse(path.matches("/lib"));
     }
 }
