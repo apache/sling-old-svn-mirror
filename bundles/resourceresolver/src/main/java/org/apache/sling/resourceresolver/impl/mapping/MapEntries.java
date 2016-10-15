@@ -60,6 +60,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
@@ -159,7 +160,11 @@ public class MapEntries implements
         doInit();
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ResourceChangeListener.PATHS, factory.getObservationPaths());
+        final String[] paths = new String[factory.getObservationPaths().length];
+        for(int i=0 ; i < paths.length; i++) {
+            paths[i] = factory.getObservationPaths()[i].getPath();
+        }
+        props.put(ResourceChangeListener.PATHS, paths);
         log.info("Registering for {}", Arrays.toString(factory.getObservationPaths()));
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -795,9 +800,8 @@ public class MapEntries implements
 
         Map<String, List<MapEntry>> entryMap = new HashMap<String, List<MapEntry>>();
 
-        // sling:VanityPath (uppercase V) is the mixin name
-        // sling:vanityPath (lowercase) is the property name
-        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath ="
+                // sling:vanityPath (lowercase) is the property name
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM nt:base WHERE sling:vanityPath ="
                 + "'"+escapeIllegalXpathSearchChars(vanityPath).replaceAll("'", "''")+"' OR sling:vanityPath ="+ "'"+escapeIllegalXpathSearchChars(vanityPath.substring(1)).replaceAll("'", "''")+"' ORDER BY sling:vanityOrder DESC";
 
         ResourceResolver queryResolver = null;
@@ -807,12 +811,21 @@ public class MapEntries implements
             final Iterator<Resource> i = queryResolver.findResources(queryString, "sql");
             while (i.hasNext()) {
                 final Resource resource = i.next();
-                if (this.factory.isMaxCachedVanityPathEntriesStartup() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
-                    loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
-                    entryMap = resolveMapsMap;
-                } else {
-                    final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
-                    loadVanityPath(resource, entryMap, targetPaths, true, false);
+                boolean isValid = false;
+                for(final Path sPath : this.factory.getObservationPaths()) {
+                    if ( sPath.matches(resource.getPath())) {
+                        isValid = true;
+                        break;
+                    }
+                }
+                if ( isValid ) {
+                    if (this.factory.isMaxCachedVanityPathEntriesStartup() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
+                        loadVanityPath(resource, resolveMapsMap, vanityTargets, true, false);
+                        entryMap = resolveMapsMap;
+                    } else {
+                        final Map <String, List<String>> targetPaths = new HashMap <String, List<String>>();
+                        loadVanityPath(resource, entryMap, targetPaths, true, false);
+                    }
                 }
             }
         } catch (LoginException e) {
@@ -1087,22 +1100,30 @@ public class MapEntries implements
      * mixin
      */
     private Map <String, List<String>> loadVanityPaths(boolean createVanityBloomFilter) {
-        // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Map <String, List<String>> targetPaths = new ConcurrentHashMap <String, List<String>>();
-        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM nt:base WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
         while (i.hasNext() && (createVanityBloomFilter || isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries())) {
             final Resource resource = i.next();
-            if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
-                // fill up the cache and the bloom filter
-                loadVanityPath(resource, resolveMapsMap, targetPaths, true,
-                        createVanityBloomFilter);
-            } else {
-                // fill up the bloom filter
-                loadVanityPath(resource, resolveMapsMap, targetPaths, false,
-                        createVanityBloomFilter);
+            boolean isValid = false;
+            for(final Path sPath : this.factory.getObservationPaths()) {
+                if ( sPath.matches(resource.getPath())) {
+                    isValid = true;
+                    break;
+                }
+            }
+            if ( isValid ) {
+                if (isAllVanityPathEntriesCached() || vanityCounter.longValue() < this.factory.getMaxCachedVanityPathEntries()) {
+                    // fill up the cache and the bloom filter
+                    loadVanityPath(resource, resolveMapsMap, targetPaths, true,
+                            createVanityBloomFilter);
+                } else {
+                    // fill up the bloom filter
+                    loadVanityPath(resource, resolveMapsMap, targetPaths, false,
+                            createVanityBloomFilter);
+                }
             }
 
         }

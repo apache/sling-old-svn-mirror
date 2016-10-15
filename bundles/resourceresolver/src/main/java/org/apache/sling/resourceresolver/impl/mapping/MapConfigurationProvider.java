@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 
 /**
  * Internal interface representing the additional methods
@@ -34,7 +35,7 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     boolean isMapConfiguration(String path);
 
-    String[] getObservationPaths();
+    Path[] getObservationPaths();
 
     Map<?, ?> getVirtualURLMap();
 

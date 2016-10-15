@@ -40,6 +40,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
@@ -347,7 +348,7 @@ public class ResourceResolverFactoryActivator {
     private volatile String[] vanityPathBlackList;
 
     /** Observation paths */
-    private volatile String[] observationPaths;
+    private volatile Path[] observationPaths;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -441,7 +442,7 @@ public class ResourceResolverFactoryActivator {
         return logResourceResolverClosing;
     }
 
-    public String[] getObservationPaths() {
+    public Path[] getObservationPaths() {
         return this.observationPaths;
     }
 
@@ -506,7 +507,11 @@ public class ResourceResolverFactoryActivator {
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
         mapRootPrefix = mapRoot + '/';
 
-        observationPaths = PropertiesUtil.toStringArray(properties.get(PROP_OBSERVATION_PATHS), new String[] {"/"});
+        final String[] paths = PropertiesUtil.toStringArray(properties.get(PROP_OBSERVATION_PATHS), new String[] {"/"});
+        this.observationPaths = new Path[paths.length];
+        for(int i=0;i<paths.length;i++) {
+            this.observationPaths[i] = new Path(paths[i]);
+        }
 
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
