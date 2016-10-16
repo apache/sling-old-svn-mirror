@@ -142,7 +142,7 @@ public class PersistentResourceList {
      */
     private void updateCache() {
         for(final EntityResourceList group : this.data.values()) {
-            for(final RegisteredResource rr : group.getResources()) {
+            for(final RegisteredResource rr : group.listResources()) {
                 if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
                     FileDataStore.SHARED.updateDigestCache(rr.getURL(), ((RegisteredResourceImpl)rr).getDataFile(), rr.getDigest());
                 }
@@ -193,7 +193,7 @@ public class PersistentResourceList {
         }
         // installed resources are next
         for(final EntityResourceList group : this.data.values()) {
-            for(final RegisteredResource rr : group.getResources()) {
+            for(final RegisteredResource rr : group.listResources()) {
                 if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {
                     // if we found the resource we can return after updating
                     ((RegisteredResourceImpl)rr).update(input);

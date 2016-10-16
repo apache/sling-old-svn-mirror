@@ -237,6 +237,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /**
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
         logger.debug("Main background thread starts");
         try {
@@ -380,6 +381,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /**
      * @see org.apache.sling.installer.api.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[], java.lang.String[])
      */
+    @Override
     public void updateResources(final String scheme,
             final InstallableResource[] resources,
             final String[] ids) {
@@ -434,6 +436,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /**
      * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
+    @Override
     public void registerResources(final String scheme, final InstallableResource[] resources) {
         this.listener.start();
         try {
@@ -503,7 +506,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
                     final List<TaskResource> toRemove = new ArrayList<TaskResource>();
                     boolean first = true;
-                    for(final TaskResource r : group.getResources()) {
+                    for(final TaskResource r : group.listResources()) {
                         if ( r.getScheme().equals(scheme) ) {
                             logger.debug("Checking {}", r);
                             // search if we have a new entry with the same url
@@ -583,7 +586,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             sb.append(id);
             sb.append("\n    RegisteredResource.info=[");
             String sep = "";
-            for(final RegisteredResource rr : this.persistentList.getEntityResourceList(id).getResources()) {
+            for(final RegisteredResource rr : this.persistentList.getEntityResourceList(id).listResources()) {
                 sb.append(sep);
                 sep=", ";
                 sb.append(rr);
@@ -745,6 +748,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
             final InstallationContext ctx = new InstallationContext() {
 
+                @Override
                 public void addTaskToNextCycle(final InstallTask t) {
                     logger.warn("Deprecated method addTaskToNextCycle was called. Task will be executed in this cycle instead: {}", t);
                     synchronized ( tasks ) {
@@ -752,6 +756,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
 
+                @Override
                 public void addTaskToCurrentCycle(final InstallTask t) {
                     logger.debug("Adding {}task to current cycle: {}", t.isAsynchronousTask() ? "async " : "", t);
                     synchronized ( tasks ) {
@@ -759,6 +764,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
 
+                @Override
                 public void addAsyncTask(final InstallTask t) {
                     if ( t.isAsynchronousTask() ) {
                         logger.warn("Deprecated method addAsyncTask was called: {}", t);
@@ -769,10 +775,12 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
 
+                @Override
                 public void log(final String message, final Object... args) {
                     auditLogger.info(message, args);
                 }
 
+                @Override
                 public void asyncTaskFailed(final InstallTask t) {
                     // persist all changes and retry restart
                     // remove attribute
@@ -926,6 +934,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /**
      * @see org.apache.sling.installer.api.tasks.RetryHandler#scheduleRetry()
      */
+    @Override
     public void scheduleRetry() {
         logger.debug("scheduleRetry called");
         this.listener.start();
@@ -947,6 +956,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * Store the changes in an internal queue, the queue is processed in {@link #processUpdateInfos()}.
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
      */
+    @Override
     public void resourceAddedOrUpdated(final String resourceType,
             final String entityId,
             final InputStream is,
@@ -982,6 +992,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * Store the changes in an internal queue, the queue is processed in {@link #processUpdateInfos()}.
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
      */
+    @Override
     public void resourceRemoved(final String resourceType, String resourceId) {
         final UpdateInfo ui = new UpdateInfo();
         ui.resourceType = resourceType;
@@ -1273,6 +1284,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /**
      * @see org.apache.sling.installer.api.info.InfoProvider#getInstallationState()
      */
+    @Override
     public InstallationState getInstallationState() {
         synchronized ( this.resourcesLock ) {
             final InstallationState state = new InstallationState() {
@@ -1281,14 +1293,17 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 private final List<ResourceGroup> installedResources = new ArrayList<ResourceGroup>();
                 private final List<RegisteredResource> untransformedResources = new ArrayList<RegisteredResource>();
 
+                @Override
                 public List<ResourceGroup> getActiveResources() {
                     return activeResources;
                 }
 
+                @Override
                 public List<ResourceGroup> getInstalledResources() {
                     return installedResources;
                 }
 
+                @Override
                 public List<RegisteredResource> getUntransformedResources() {
                     return untransformedResources;
                 }
@@ -1310,50 +1325,62 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     for(final TaskResource tr : group.getResources()) {
                         resources.add(new Resource() {
 
+                            @Override
                             public String getScheme() {
                                 return tr.getScheme();
                             }
 
+                            @Override
                             public String getURL() {
                                 return tr.getURL();
                             }
 
+                            @Override
                             public String getType() {
                                 return tr.getType();
                             }
 
+                            @Override
                             public InputStream getInputStream() throws IOException {
                                 return tr.getInputStream();
                             }
 
+                            @Override
                             public Dictionary<String, Object> getDictionary() {
                                 return tr.getDictionary();
                             }
 
+                            @Override
                             public String getDigest() {
                                 return tr.getDigest();
                             }
 
+                            @Override
                             public int getPriority() {
                                 return tr.getPriority();
                             }
 
+                            @Override
                             public String getEntityId() {
                                 return tr.getEntityId();
                             }
 
+                            @Override
                             public ResourceState getState() {
                                 return tr.getState();
                             }
 
+                            @Override
                             public Version getVersion() {
                                 return tr.getVersion();
                             }
 
+                            @Override
                             public long getLastChange() {
                                 return ((RegisteredResourceImpl)tr).getLastChange();
                             }
 
+                            @Override
                             public Object getAttribute(final String key) {
                                 return tr.getAttribute(key);
                             }
@@ -1375,10 +1402,12 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                     final ResourceGroup rg = new ResourceGroup() {
 
+                        @Override
                         public List<Resource> getResources() {
                             return resources;
                         }
 
+                        @Override
                         public String getAlias() {
                             return alias;
                         }
@@ -1407,6 +1436,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
     private static final Comparator<ResourceGroup> COMPARATOR = new Comparator<ResourceGroup>() {
 
+        @Override
         public int compare(ResourceGroup o1, ResourceGroup o2) {
             RegisteredResource r1 = null;
             RegisteredResource r2 = null;
