@@ -160,18 +160,16 @@ public class JcrResourceListener implements EventListener, Closeable {
                         changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
                     }
                 } else {
-                    final String rsrcPath = (type == NODE_REMOVED ? eventPath : stripNtFilePath(eventPath, refreshedSession));
-
-                    if ( ctx.getExcludedPaths().matches(rsrcPath) == null ) {
+                    if ( ctx.getExcludedPaths().matches(eventPath) == null ) {
                         if ( type == NODE_ADDED ) {
                             // add is stronger than update
-                            changedEvents.remove(rsrcPath);
-                            addedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.ADDED));
+                            changedEvents.remove(eventPath);
+                            addedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.ADDED));
                         } else if ( type == NODE_REMOVED) {
                             // remove is stronger than add and change
-                            addedEvents.remove(rsrcPath);
-                            changedEvents.remove(rsrcPath);
-                            removedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.REMOVED));
+                            addedEvents.remove(eventPath);
+                            changedEvents.remove(eventPath);
+                            removedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.REMOVED));
                         }
                     }
                 }
