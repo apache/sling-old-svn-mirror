@@ -20,76 +20,23 @@ package org.apache.sling.jcr.resource.internal;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 
+/**
+ * Extension of {@code ResourceChange} to support user id (if available)
+ */
 public class JcrResourceChange extends ResourceChange {
 
     private final String userId;
 
-    private JcrResourceChange(Builder builder) {
-        super(builder.changeType, builder.path, builder.isExternal);
-        this.userId = builder.userId;
+    public JcrResourceChange(final ResourceChange.ChangeType changeType,
+            final String path,
+            final boolean isExternal,
+            final String userId) {
+        super(changeType, path, isExternal);
+        this.userId = userId;
     }
 
     @Override
     public String getUserId() {
         return userId;
     }
-
-    @Override
-    public String toString() {
-        StringBuilder b = new StringBuilder();
-        b.append("ResourceChange[type=")
-          .append(this.getType())
-          .append(", path=")
-          .append(this.getPath())
-          .append("]");
-        return b.toString();
-    }
-
-    public static class Builder {
-
-        private String path;
-
-        private ChangeType changeType;
-
-        private boolean isExternal;
-
-        private String userId;
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        public ChangeType getChangeType() {
-            return changeType;
-        }
-
-        public void setChangeType(ChangeType changeType) {
-            this.changeType = changeType;
-        }
-
-        public boolean isExternal() {
-            return isExternal;
-        }
-
-        public void setExternal(boolean isExternal) {
-            this.isExternal = isExternal;
-        }
-
-        public String getUserId() {
-            return userId;
-        }
-
-        public void setUserId(String userId) {
-            this.userId = userId;
-        }
-
-        public ResourceChange build() {
-            return new JcrResourceChange(this);
-        }
-    }
-
 }
