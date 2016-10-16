@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -50,7 +49,6 @@ import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.JcrResourceChange.Builder;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.apache.sling.spi.resource.provider.ProviderContext;
@@ -134,9 +132,9 @@ public class JcrResourceListener implements EventListener, Closeable {
      */
     @Override
     public void onEvent(final EventIterator events) {
-        final Map<String, Builder> addedEvents = new HashMap<String, Builder>();
-        final Map<String, Builder> changedEvents = new HashMap<String, Builder>();
-        final Map<String, Builder> removedEvents = new HashMap<String, Builder>();
+        final Map<String, ResourceChange> addedEvents = new HashMap<String, ResourceChange>();
+        final Map<String, ResourceChange> changedEvents = new HashMap<String, ResourceChange>();
+        final Map<String, ResourceChange> removedEvents = new HashMap<String, ResourceChange>();
 
         AtomicBoolean refreshedSession = new AtomicBoolean(false);
         while ( events.hasNext() ) {
@@ -183,35 +181,26 @@ public class JcrResourceListener implements EventListener, Closeable {
         }
 
         final List<ResourceChange> changes = new ArrayList<ResourceChange>();
-        buildResourceChanges(changes, addedEvents);
-        buildResourceChanges(changes, removedEvents);
-        buildResourceChanges(changes, changedEvents);
+        changes.addAll(addedEvents.values());
+        changes.addAll(removedEvents.values());
+        changes.addAll(changedEvents.values());
         ctx.getObservationReporter().reportChanges(changes, false);
 
     }
 
-    private void buildResourceChanges(List<ResourceChange> result, Map<String, Builder> builders) {
-        for (Entry<String, Builder> e : builders.entrySet()) {
-            result.add(e.getValue().build());
-        }
-    }
-
-    private Builder createResourceChange(final Event event,
+    private ResourceChange createResourceChange(final Event event,
             final String path,
             final ChangeType changeType) {
-        Builder builder = new Builder();
-        String pathWithPrefix = addMountPrefix(mountPrefix, path);
-        builder.setPath(pathMapper.mapJCRPathToResourcePath(pathWithPrefix));
-        builder.setChangeType(changeType);
-        boolean isExternal = this.isExternal(event);
-        builder.setExternal(isExternal);
+        final String pathWithPrefix = addMountPrefix(mountPrefix, path);
+        final String fullPath = pathMapper.mapJCRPathToResourcePath(pathWithPrefix);
+        final boolean isExternal = this.isExternal(event);
+        final String userId;
         if (!isExternal) {
-            final String userID = event.getUserID();
-            if (userID != null) {
-                builder.setUserId(userID);
-            }
+            userId = event.getUserID();
+        } else {
+            userId = null;
         }
-        return builder;
+        return new JcrResourceChange(changeType, fullPath, isExternal, userId);
     }
 
     private boolean isExternal(final Event event) {
