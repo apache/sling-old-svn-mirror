@@ -1322,7 +1322,16 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
                     final String alias = group.getAlias();
                     final List<Resource> resources = new ArrayList<Resource>();
+                    boolean first = true;
+                    boolean isActive = false;
                     for(final TaskResource tr : group.getResources()) {
+                        final ResourceState resourceState = tr.getState();
+                        if ( first ) {
+                            if ( resourceState == ResourceState.INSTALL || resourceState == ResourceState.UNINSTALL ) {
+                                isActive = true;
+                            }
+                            first = false;
+                        }
                         resources.add(new Resource() {
 
                             @Override
@@ -1367,7 +1376,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
                             @Override
                             public ResourceState getState() {
-                                return tr.getState();
+                                return resourceState;
                             }
 
                             @Override
@@ -1417,7 +1426,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                             return "group[" + resources + "]";
                         }
                     };
-                    if ( group.getActiveResource() != null ) {
+                    if ( isActive ) {
                         state.getActiveResources().add(rg);
                     } else {
                         state.getInstalledResources().add(rg);
