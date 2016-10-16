@@ -35,46 +35,47 @@ import org.junit.Test;
  */
 public class ServerSideInstallerTest {
     private InfoProvider ip;
-    private InstallationState is;
-    
+
     @Rule
     public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "Launchpad");
 
     @Before
     public void setup() throws LoginException {
         ip = teleporter.getService(InfoProvider.class);
-        is = ip.getInstallationState();
     }
-    
+
     @Test
     public void noUntransformedResources() {
+        final InstallationState is = ip.getInstallationState();
         final List<?> utr = is.getUntransformedResources();
         if(utr.size() > 0) {
-            fail("Untransformed resources found: " + utr); 
+            fail("Untransformed resources found: " + utr);
         }
     }
-    
+
     @Test
     public void noActiveResources() {
+        final InstallationState is = ip.getInstallationState();
         final List<?> ar = is.getActiveResources();
         if(ar.size() > 0) {
-            fail("Active resources found: " + ar); 
+            fail("Active resources found: " + ar);
         }
     }
-    
+
     /** Optionally ignore specific resources, usually
-     *  created by other tests. 
+     *  created by other tests.
      */
     private boolean ignore(String entityId) {
         return entityId.contains("InstallManyBundlesTest");
     }
-    
+
     @Test
     public void noDuplicates() {
+        final InstallationState is = ip.getInstallationState();
         String output = "";
         final List<ResourceGroup> resources = is.getInstalledResources();
         for(final ResourceGroup group : resources) {
-            if ( group.getResources().size() > 1 ) {            
+            if ( group.getResources().size() > 1 ) {
                 boolean first = true;
                 for(final Resource rsrc : group.getResources()) {
                     if(ignore(rsrc.getEntityId())) {
@@ -96,6 +97,6 @@ public class ServerSideInstallerTest {
         if(output.length() > 0) {
             fail(output);
         }
-        
+
     }
 }
