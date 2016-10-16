@@ -208,4 +208,17 @@ public class ResourceChange {
     public @CheckForNull Set<String> getRemovedPropertyNames() {
         return this.removedPropertyNames;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("ResourceChange[type=")
+          .append(this.getType())
+          .append(", path=")
+          .append(this.getPath())
+          .append(", external=")
+          .append(this.isExternal)
+          .append("]");
+        return b.toString();
+    }
 }
