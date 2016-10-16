@@ -36,11 +36,14 @@ import org.slf4j.LoggerFactory;
  * The {@code PathMapper} allows to
  * - map path from the JCR resource tree to resource paths
  * - hide JCR nodes; however this is not a security feature
+ * @deprecated
  */
+@Deprecated
 @Service(value = PathMapper.class)
 @Component(metatype = true,
         label = "Apache Sling JCR Resource Provider Path Mapper",
         description = "This service provides path mappings for JCR nodes.")
+
 public class PathMapper {
 
     /** Logger */
@@ -82,6 +85,7 @@ public class PathMapper {
         mappings.clear();
         final String[] config = PropertiesUtil.toStringArray(props.get(PATH_MAPPING), null);
         if ( config != null ) {
+            log.warn("The Apache Sling JCR Path Mapper is deprecated.");
             for (final String mapping : config) {
                 boolean valid = false;
                 final String[] parts = mapping.split(":");
