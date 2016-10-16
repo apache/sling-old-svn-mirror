@@ -31,6 +31,9 @@
     # Set the servlet resolver's cache size to zero for testing
     servletresolver.cacheSize=I"0"
 
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl
+    whitelist.regexp="org.apache.sling.(launchpad|junit).*"
+
  # Test repository initialization from provisioning model
  # No need to test all repoinit statements, this is done
  # by the repoinit it module
