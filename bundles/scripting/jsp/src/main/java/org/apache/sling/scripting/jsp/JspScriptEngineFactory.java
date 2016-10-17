@@ -24,7 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -39,17 +40,22 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
@@ -66,10 +72,7 @@ import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +83,7 @@ import org.slf4j.LoggerFactory;
 @Component(label="%jsphandler.name",
            description="%jsphandler.description",
            metatype=true)
-@Service(value={javax.script.ScriptEngineFactory.class, EventHandler.class, Servlet.class})
+@Service(value={javax.script.ScriptEngineFactory.class,ResourceChangeListener.class,Servlet.class})
 @Properties({
    @Property(name="service.description",value="JSP Script Handler"),
    @Property(name="service.vendor",value="The Apache Software Foundation"),
@@ -94,14 +97,14 @@ import org.slf4j.LoggerFactory;
    @Property(name="jasper.mappedfile",boolValue=true),
    @Property(name="jasper.trimSpaces",boolValue=false),
    @Property(name="jasper.displaySourceFragments",boolValue=false),
-   @Property(name=EventConstants.EVENT_TOPIC, value={"org/apache/sling/api/resource/*"}, propertyPrivate=true),
+   @Property(name=ResourceChangeListener.PATHS, value={"/"}, propertyPrivate=true),
    @Property(name="felix.webconsole.label", value="slingjsp", propertyPrivate=true),
    @Property(name="felix.webconsole.title", value="JSP", propertyPrivate=true),
    @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true)
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
-    implements EventHandler, Servlet {
+    implements Servlet,ResourceChangeListener,ExternalResourceChangeListener {
 
     @Property(boolValue = true)
     private static final String PROP_DEFAULT_IS_SESSION = "default.is.session";
@@ -193,7 +196,6 @@ public class JspScriptEngineFactory
      * @param context The script context
      * @param scriptName The name of the script
      */
-    @SuppressWarnings("unchecked")
     private void callErrorPageJsp(final Bindings bindings,
                                   final SlingScriptHelper scriptHelper,
                                   final ScriptContext context,
@@ -253,7 +255,6 @@ public class JspScriptEngineFactory
      * @throws SlingServletException
      * @throws SlingIOException
      */
-    @SuppressWarnings("unchecked")
     private void callJsp(final Bindings bindings,
                          final SlingScriptHelper scriptHelper,
                          final ScriptContext context) {
@@ -329,8 +330,8 @@ public class JspScriptEngineFactory
     /**
      * Activate this component
      */
-    protected void activate(final ComponentContext componentContext) {
-        final Dictionary<?, ?> properties = componentContext.getProperties();
+    @Activate
+    protected void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
         this.defaultIsSession = PropertiesUtil.toBoolean(properties.get(PROP_DEFAULT_IS_SESSION), true);
 
         // set the current class loader as the thread context loader for
@@ -341,14 +342,14 @@ public class JspScriptEngineFactory
         try {
             this.jspFactoryHandler = JspRuntimeContext.initFactoryHandler();
 
-            this.tldLocationsCache = new SlingTldLocationsCache(componentContext.getBundleContext());
+            this.tldLocationsCache = new SlingTldLocationsCache(bundleContext);
 
             // prepare some classes
             ioProvider = new SlingIOProvider(this.classLoaderWriter, this.javaCompiler);
 
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
-                componentContext, tldLocationsCache);
+                properties, tldLocationsCache);
 
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
@@ -371,11 +372,12 @@ public class JspScriptEngineFactory
     /**
      * Activate this component
      */
-    protected void deactivate(final ComponentContext componentContext) {
+    @Deactivate
+    protected void deactivate(final BundleContext bundleContext) {
         logger.info("Deactivating Apache Sling Script Engine for JSP");
 
         if ( this.tldLocationsCache != null ) {
-            this.tldLocationsCache.deactivate(componentContext.getBundleContext());
+            this.tldLocationsCache.deactivate(bundleContext);
             this.tldLocationsCache = null;
         }
         if (jspRuntimeContext != null) {
@@ -619,18 +621,14 @@ public class JspScriptEngineFactory
 
     }
 
-    /**
-     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
-     */
     @Override
-    public void handleEvent(final Event event) {
-        final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        if ( path != null ) {
+	public void onChange(final List<ResourceChange> changes) {
+    	for(final ResourceChange change : changes){
             final JspRuntimeContext rctxt = this.jspRuntimeContext;
-            if ( rctxt != null && rctxt.handleModification(path) ) {
+            if ( rctxt != null && rctxt.handleModification(change.getPath(), change.getType() == ChangeType.REMOVED) ) {
                 renewJspRuntimeContext();
             }
-        }
+    	}
     }
 
     /**
