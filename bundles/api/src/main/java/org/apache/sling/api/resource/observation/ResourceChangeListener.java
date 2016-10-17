@@ -93,14 +93,18 @@ public interface ResourceChangeListener {
      * {@link ResourceChange.ChangeType}.
      */
     String CHANGES = "resource.change.types";
-    
+
     /**
-     * An optional hint indicating to the underlying that for
+     * An optional hint indicating to the underlying implementation that for
      * changes regarding properties (added/removed/changed) the listener
      * is only interested in those property names listed inhere.
-     * If the underlying supports this, events for property names that
+     * If the underlying implementation supports this, events for property names that
      * are not enlisted here will not be delivered, however events
-     * concerning nodes are not affected by this hint.
+     * concerning resources are not affected by this hint.
+     * This is only a hint, a change listener registering with this property
+     * must be prepared that the underlying implementation is not able to filter
+     * based on this property. In this case the listener gets all events
+     * as defined with the other properties.
      */
     String PROPERTY_NAMES_HINT = "resource.property.names.hint";
 
