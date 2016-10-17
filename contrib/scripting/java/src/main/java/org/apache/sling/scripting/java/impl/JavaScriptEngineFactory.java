@@ -71,8 +71,8 @@ import org.slf4j.LoggerFactory;
     @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
     @Property(name=JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO, boolValue=true),
     @Property(name=JavaScriptEngineFactory.PROPERTY_ENCODING, value="UTF-8"),
-    @Property(name = ResourceChangeListener.CHANGES, value = {"CHANGED","REMOVED"}),
-    @Property(name = ResourceChangeListener.PATHS, value = {"glob:."}, propertyPrivate = true)
+    @Property(name = ResourceChangeListener.CHANGES, value = {"CHANGED", "REMOVED"}),
+    @Property(name = ResourceChangeListener.PATHS, value = {"."}, propertyPrivate = true)
 })
 public class JavaScriptEngineFactory
     extends AbstractScriptEngineFactory
@@ -93,7 +93,7 @@ public class JavaScriptEngineFactory
     @Reference
     private JavaCompiler javaCompiler;
 
-    @Reference
+    @Reference(target="(name=org.apache.sling)")
     private ServletContext slingServletContext;
 
     private SlingIOProvider ioProvider;
@@ -254,7 +254,7 @@ public class JavaScriptEngineFactory
 	}
 
     private void handleModification(final String scriptName, final boolean remove) {
-        this.ioProvider.getServletCache().removeWrapper(scriptName);
+        this.ioProvider.getServletCache().removeWrapper(scriptName, remove);
     }
 
     private static class JavaScriptEngine extends AbstractSlingScriptEngine {
