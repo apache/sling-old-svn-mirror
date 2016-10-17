@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,6 @@
 
 package org.apache.sling.scripting.jsp.jasper.tagplugins.jstl;
 
-import org.apache.sling.scripting.jsp.jasper.Constants;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -35,23 +34,25 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.PageContext;
 
+import org.apache.sling.scripting.jsp.jasper.Constants;
+
 /**
  * Util contains some often used consts, static methods and embedded class
  * to support the JSTL tag plugin.
  */
 
 public class Util {
-    
-    public static final String VALID_SCHEME_CHAR = 
+
+    public static final String VALID_SCHEME_CHAR =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+.-";
-    
-    public static final String DEFAULT_ENCODING = 
+
+    public static final String DEFAULT_ENCODING =
         "ISO-8859-1";
-    
+
     public static final int HIGHEST_SPECIAL = '>';
-    
+
     public static char[][] specialCharactersRepresentation = new char[HIGHEST_SPECIAL + 1][];
-    
+
     static {
         specialCharactersRepresentation['&'] = "&amp;".toCharArray();
         specialCharactersRepresentation['<'] = "&lt;".toCharArray();
@@ -59,7 +60,7 @@ public class Util {
         specialCharactersRepresentation['"'] = "&#034;".toCharArray();
         specialCharactersRepresentation['\''] = "&#039;".toCharArray();
     }
-    
+
     /**
      * Converts the given string description of a scope to the corresponding
      * PageContext constant.
@@ -70,12 +71,12 @@ public class Util {
      * @param scope String description of scope
      *
      * @return PageContext constant corresponding to given scope description
-     * 
-     * taken from org.apache.taglibs.standard.tag.common.core.Util  
+     *
+     * taken from org.apache.taglibs.standard.tag.common.core.Util
      */
     public static int getScope(String scope){
         int ret = PageContext.PAGE_SCOPE;
-        
+
         if("request".equalsIgnoreCase(scope)){
             ret = PageContext.REQUEST_SCOPE;
         }else if("session".equalsIgnoreCase(scope)){
@@ -83,10 +84,10 @@ public class Util {
         }else if("application".equalsIgnoreCase(scope)){
             ret = PageContext.APPLICATION_SCOPE;
         }
-        
+
         return ret;
     }
-    
+
     /**
      * Returns <tt>true</tt> if our current URL is absolute,
      * <tt>false</tt> otherwise.
@@ -96,21 +97,21 @@ public class Util {
         if(url == null){
             return false;
         }
-        
+
         int colonPos = url.indexOf(":");
         if(colonPos == -1){
             return false;
         }
-        
+
         for(int i=0;i<colonPos;i++){
             if(VALID_SCHEME_CHAR.indexOf(url.charAt(i)) == -1){
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Get the value associated with a content-type attribute.
      * Syntax defined in RFC 2045, section 5.1.
@@ -126,7 +127,7 @@ public class Util {
         if (index == -1) return null;
         index += 1; // positioned after the '='
         input = input.substring(index).trim();
-        
+
         if (input.charAt(0) == '"') {
             // attribute value is a quoted string
             begin = 1;
@@ -140,13 +141,13 @@ public class Util {
         }
         return input.substring(begin, end).trim();
     }
-    
+
     /**
      * Strips a servlet session ID from <tt>url</tt>.  The session ID
      * is encoded as a URL "path parameter" beginning with "jsessionid=".
      * We thus remove anything we find between ";jsessionid=" (inclusive)
      * and either EOS or a subsequent ';' (exclusive).
-     * 
+     *
      * taken from org.apache.taglibs.standard.tag.common.core.ImportSupport
      */
     public static String stripSession(String url) {
@@ -162,8 +163,8 @@ public class Util {
         }
         return u.toString();
     }
-    
-    
+
+
     /**
      * Performs the following substring replacements
      * (to facilitate output to XML/HTML pages):
@@ -175,7 +176,7 @@ public class Util {
      *    ' -> &#039;
      *
      * See also OutSupport.writeEscapedXml().
-     * 
+     *
      * taken from org.apache.taglibs.standard.tag.common.core.Util
      */
     public static String escapeXml(String buffer) {
@@ -183,7 +184,7 @@ public class Util {
         int length = buffer.length();
         char[] arrayBuffer = buffer.toCharArray();
         StringBuffer escapedBuffer = null;
-        
+
         for (int i = 0; i < length; i++) {
             char c = arrayBuffer[i];
             if (c <= HIGHEST_SPECIAL) {
@@ -213,7 +214,7 @@ public class Util {
         }
         return escapedBuffer.toString();
     }
-    
+
     /** Utility methods
      * taken from org.apache.taglibs.standard.tag.common.core.UrlSupport
      */
@@ -223,7 +224,7 @@ public class Util {
         // don't touch absolute URLs
         if (isAbsoluteUrl(url))
             return url;
-        
+
         // normalize relative URLs against a context root
         HttpServletRequest request =
             (HttpServletRequest) pageContext.getRequest();
@@ -247,29 +248,41 @@ public class Util {
             }
         }
     }
-    
-    /** Wraps responses to allow us to retrieve results as Strings. 
-     * mainly taken from org.apache.taglibs.standard.tag.common.core.importSupport 
+
+    /** Wraps responses to allow us to retrieve results as Strings.
+     * mainly taken from org.apache.taglibs.standard.tag.common.core.importSupport
      */
     public static class ImportResponseWrapper extends HttpServletResponseWrapper{
-        
+
         private StringWriter sw = new StringWriter();
         private ByteArrayOutputStream bos = new ByteArrayOutputStream();
         private ServletOutputStream sos = new ServletOutputStream() {
+            @Override
             public void write(int b) throws IOException {
                 bos.write(b);
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
+                // ignore
             }
         };
         private boolean isWriterUsed;
         private boolean isStreamUsed;
         private int status = 200;
         private String charEncoding;
-        
+
         public ImportResponseWrapper(HttpServletResponse arg0) {
             super(arg0);
             // TODO Auto-generated constructor stub
         }
-        
+
+        @Override
         public PrintWriter getWriter() {
             if (isStreamUsed)
                 throw new IllegalStateException("Unexpected internal error during &lt;import&gt: " +
@@ -277,7 +290,8 @@ public class Util {
             isWriterUsed = true;
             return new PrintWriter(sw);
         }
-        
+
+        @Override
         public ServletOutputStream getOutputStream() {
             if (isWriterUsed)
                 throw new IllegalStateException("Unexpected internal error during &lt;import&gt: " +
@@ -285,33 +299,37 @@ public class Util {
             isStreamUsed = true;
             return sos;
         }
-        
+
         /** Has no effect. */
+        @Override
         public void setContentType(String x) {
             // ignore
         }
-        
+
         /** Has no effect. */
+        @Override
         public void setLocale(Locale x) {
             // ignore
         }
-        
+
+        @Override
         public void setStatus(int status) {
             this.status = status;
         }
-        
+
+        @Override
         public int getStatus() {
             return status;
         }
-        
+
         public String getCharEncoding(){
             return this.charEncoding;
         }
-        
+
         public void setCharEncoding(String ce){
             this.charEncoding = ce;
         }
-        
+
         public String getString() throws UnsupportedEncodingException {
             if (isWriterUsed)
                 return sw.toString();
@@ -324,5 +342,5 @@ public class Util {
                 return "";		// target didn't write anything
         }
     }
-    
+
 }
