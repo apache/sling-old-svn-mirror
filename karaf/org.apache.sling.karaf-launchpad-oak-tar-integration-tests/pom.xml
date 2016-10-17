@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>28</version>
+    <version>29</version>
     <relativePath/>
   </parent>
 
@@ -189,11 +189,6 @@
           <groupId>org.ops4j.pax.exam</groupId>
           <artifactId>exam-maven-plugin</artifactId>
           <version>${org.ops4j.pax.exam.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.18.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
