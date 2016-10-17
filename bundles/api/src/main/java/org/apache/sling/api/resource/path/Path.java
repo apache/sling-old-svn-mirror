@@ -46,7 +46,9 @@ public class Path implements Comparable<Path> {
      *     <li>The {@code **} characters match zero or more characters crossing directory boundaries.</li>
      * </ul>
      *
-     * @param path the resource path or a glob pattern.
+     * @param path The resource path or a glob pattern.
+     * @throws NullPointerException If {@code otherPath} is {@code null}
+     * @throws IllegalArgumentException If the provided path is not absolute, or if the glob pattern does not start with a slash.
      */
     public Path(@Nonnull final String path) {
         if ( path.equals("/") ) {
@@ -56,23 +58,42 @@ public class Path implements Comparable<Path> {
         } else {
             this.path = path;
         }
-        if (path.startsWith(GLOB_PREFIX)) {
-            isPattern = true;
-            regexPattern = Pattern.compile(toRegexPattern(path.substring(5)));
-            String patternPath = path.substring(GLOB_PREFIX.length());
-            this.prefix = patternPath.equals("/") ? "/" : patternPath.concat("/");
+        if (this.path.startsWith(GLOB_PREFIX)) {
+            final String patternPath = path.substring(GLOB_PREFIX.length());
+            this.isPattern = true;
+            this.regexPattern = Pattern.compile(toRegexPattern(patternPath));
+            int lastSlash = 0;
+            int pos = 1;
+            while ( patternPath.length() > pos ) {
+                final char c = patternPath.charAt(pos);
+                if ( c == '/') {
+                    lastSlash = pos;
+                } else if ( c == '*') {
+                    break;
+                }
+                pos++;
+            }
+
+            this.prefix = (pos == patternPath.length() ? patternPath : patternPath.substring(0, lastSlash + 1));
         } else {
-            isPattern = false;
-            regexPattern = null;
+            this.isPattern = false;
+            this.regexPattern = null;
             this.prefix = this.path.equals("/") ? "/" : this.path.concat("/");
+        }
+        if ( !this.prefix.startsWith("/") ) {
+            throw new IllegalArgumentException("Path must be absolute: " + path);
         }
     }
 
     /**
      * If this {@code Path} object holds a path (and not a pattern), this method
-     * check whether the provided path is equal to this path or a sub path of it.
+     * checks whether the provided path is equal to this path or a sub path of it.
+     * If a glob pattern is provided as the argument, it performs the same check
+     * and respects the provided pattern.
      * If this {@code Path} object holds a pattern, it checks whether the
-     * provided path matches the pattern.
+     * provided path matches the pattern. If this path object holds a pattern
+     * and a pattern is provided as the argument, it returns only {@code true}
+     * if the pattern is the same.
      * If the provided argument is not an absolute path (e.g. if it is a relative
      * path or a pattern), this method returns {@code false}.
      *
@@ -80,11 +101,57 @@ public class Path implements Comparable<Path> {
      * @return {@code true} If other path is within the sub tree of this path
      *         or matches the pattern.
      * @see Path#isPattern()
+     * @throws NullPointerException If {@code otherPath} is {@code null}
+     * @throws IllegalArgumentException If the provided path is not absolute, or if the glob pattern does not start with a slash.
      */
     public boolean matches(final String otherPath) {
-        if (isPattern) {
+        if ( otherPath.startsWith(GLOB_PREFIX) ) {
+            if ( this.isPattern ) {
+                // both are patterns, then they must be equal
+                final Path oPath = new Path(otherPath);
+                return this.regexPattern.equals(oPath.regexPattern);
+            }
+
+            // this is path, provided argument is a pattern
+            // simplest case - the prefix of the glob pattern matches already
+            // for example: this path = /apps
+            //              glob      = /apps/**
             final Path oPath = new Path(otherPath);
-            return this.regexPattern.equals(oPath.regexPattern) || this.regexPattern.matcher(otherPath).matches();
+            if ( this.matches(oPath.prefix) ) {
+                return true;
+            }
+            // count slashes in path
+            int count = 0;
+            for (int i=0; i < this.path.length(); i++) {
+                if (this.path.charAt(i) == '/') {
+                     count++;
+                }
+            }
+            // now create the substring of the glob pattern with the same amount of slashes
+            int start = GLOB_PREFIX.length();
+            while ( start < otherPath.length() ) {
+                if ( otherPath.charAt(start) == '/') {
+                    if ( count == 0 ) {
+                        break;
+                    }
+                    count--;
+                }
+                start++;
+            }
+            if ( count > 0 ) {
+                return false;
+            }
+            final String globPattern = otherPath.substring(0, start);
+            final Path globPatternPath = new Path(globPattern);
+            return globPatternPath.matches(this.path);
+        }
+
+        // provided argument is a path
+        if ( !otherPath.startsWith("/") ) {
+            throw new IllegalArgumentException("Path must be absolute: " + otherPath);
+        }
+        if (isPattern) {
+            return this.regexPattern.matcher(otherPath).matches();
         }
         return this.path.equals(otherPath) || otherPath.startsWith(this.prefix);
     }
@@ -92,7 +159,7 @@ public class Path implements Comparable<Path> {
     /**
      * Return the path if this {@code Path} object holds a path,
      * returns the pattern otherwise.
-     * @return The path.
+     * @return The path or pattern.
      * @see #isPattern()
      */
     public String getPath() {

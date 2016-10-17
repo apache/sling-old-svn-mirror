@@ -20,6 +20,7 @@ package org.apache.sling.api.resource.path;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -70,8 +71,33 @@ public class PathTest {
 
     @Test public void testPatternRootMatching() {
         final Path path = new Path("/");
-        assertFalse(path.matches("glob:/apps/myproject/components/**/*.html"));
-        assertFalse(path.matches("glob:/apps/**/*.html"));
+        assertTrue(path.matches("glob:/apps/myproject/components/**/*.html"));
+        assertTrue(path.matches("glob:/apps/**/*.html"));
+    }
+
+    @Test public void testMatchesWithGlobPattern() {
+        final Path path = new Path("/apps/myproject");
+        assertTrue(path.matches("glob:/apps/myproject/components/**/*.html"));
+        assertTrue(path.matches("glob:/apps/**/components/**/*.html"));
+        assertFalse(path.matches("glob:/*/foo"));
+        assertTrue(path.matches("glob:/*/myproject"));
+        assertTrue(path.matches("glob:/*/*project"));
+        assertTrue(path.matches("glob:/*/*project/**.html"));
+    }
+
+    @Test public void testIllegalArgumentException() {
+        try {
+            new Path("foo");
+            fail();
+        } catch ( final IllegalArgumentException iae) {
+            // this should happen!
+        }
+        try {
+            new Path("glob:foo");
+            fail();
+        } catch ( final IllegalArgumentException iae) {
+            // this should happen!
+        }
     }
 
     @Test public void testPathMatchingTrailingSlash() {
