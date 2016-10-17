@@ -70,8 +70,8 @@ public class PathTest {
 
     @Test public void testPatternRootMatching() {
         final Path path = new Path("/");
-        assertTrue(path.matches("glob:/apps/myproject/components/**/*.html"));
-        assertTrue(path.matches("glob:/apps/**/*.html"));
+        assertFalse(path.matches("glob:/apps/myproject/components/**/*.html"));
+        assertFalse(path.matches("glob:/apps/**/*.html"));
     }
 
     @Test public void testPathMatchingTrailingSlash() {
