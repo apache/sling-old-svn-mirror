@@ -67,7 +67,11 @@ public class JcrResourceListenerScalabilityTest {
         SlingRepository repository = mock(SlingRepository.class);
         when(repository.loginAdministrative(null)).thenReturn(session);
 
-        jcrResourceListener = new JcrResourceListener(new SimpleProviderContext(), "/", new PathMapperImpl(), RepositoryUtil.getRepository());
+        final ProviderContext ctx = new SimpleProviderContext();
+        jcrResourceListener = new JcrResourceListener(ctx.getObservationReporter(),
+                ctx.getObservationReporter().getObserverConfigurations(),
+                ctx.getExcludedPaths(),
+                "/", new PathMapperImpl(), RepositoryUtil.getRepository());
 
         Event event = mock(MockEvent.class);
         events = mock(EventIterator.class);

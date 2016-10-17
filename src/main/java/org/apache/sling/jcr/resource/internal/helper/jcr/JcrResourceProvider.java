@@ -24,6 +24,7 @@ import java.security.Principal;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -63,6 +64,7 @@ import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
+import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -192,10 +194,16 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     private void registerListener(final ProviderContext ctx) {
         if ( this.repository != null ) {
-            try {
-                this.listener = new JcrResourceListener(ctx, root, pathMapper, repository);
-           } catch (RepositoryException e) {
-                throw new SlingException("Can't create the listener", e);
+            final List<ObserverConfiguration> configs = ctx.getObservationReporter().getObserverConfigurations();
+            if ( !configs.isEmpty() ) {
+                try {
+                    this.listener = new JcrResourceListener(ctx.getObservationReporter(),
+                            configs,
+                            ctx.getExcludedPaths(),
+                            root, pathMapper, repository);
+                } catch (RepositoryException e) {
+                    throw new SlingException("Can't create the listener", e);
+                }
             }
         }
     }
