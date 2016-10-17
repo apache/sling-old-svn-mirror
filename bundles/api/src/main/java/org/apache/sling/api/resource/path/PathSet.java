@@ -200,4 +200,9 @@ public class PathSet implements Iterable<Path> {
         }
         return this.paths.equals(((PathSet)obj).paths);
     }
+
+    @Override
+    public String toString() {
+        return "PathSet [paths=" + paths + "]";
+    }
 }
