@@ -33,6 +33,8 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
     private final PathSet paths;
 
     private final PathSet excludedPaths;
+    
+    private final Set<String> propertyNamesHint = new HashSet<String>();
 
     private final Set<ChangeType> changeTypes;
 
@@ -80,5 +82,10 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public Set<String> getPropertyNamesHint() {
+        return propertyNamesHint;
     }
 }
