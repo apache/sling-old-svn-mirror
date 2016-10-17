@@ -90,8 +90,10 @@ public class Path implements Comparable<Path> {
     }
 
     /**
-     * Return the path.
+     * Return the path if this {@code Path} object holds a path,
+     * returns the pattern otherwise.
      * @return The path.
+     * @see #isPattern()
      */
     public String getPath() {
         return this.path;
