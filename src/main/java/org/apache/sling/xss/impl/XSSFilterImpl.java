@@ -19,6 +19,7 @@ package org.apache.sling.xss.impl;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,6 +72,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
     public static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
     private static final String EMBEDDED_POLICY_PATH = "SLING-INF/content/config.xml";
+    private static final String SLING_XSS_USER = "sling-xss";
     private static final int DEFAULT_POLICY_CACHE_SIZE = 128;
     private PolicyHandler defaultHandler;
     private Attribute hrefAttribute;
@@ -119,10 +121,13 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
     private synchronized void updateDefaultHandler() {
         this.defaultHandler = null;
-        ResourceResolver adminResolver = null;
+        ResourceResolver xssResourceResolver = null;
         try {
-            adminResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-            Resource policyResource = adminResolver.getResource(DEFAULT_POLICY_PATH);
+            Map<String, Object> authenticationInfo = new HashMap<String, Object>() {{
+                put(ResourceResolverFactory.SUBSERVICE, SLING_XSS_USER);
+            }};
+            xssResourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+            Resource policyResource = xssResourceResolver.getResource(DEFAULT_POLICY_PATH);
             if (policyResource != null) {
                 try (InputStream policyStream = policyResource.adaptTo(InputStream.class)) {
                     setDefaultHandler(new PolicyHandler(policyStream));
@@ -159,8 +164,8 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
         } catch (LoginException e) {
             LOGGER.error("Unable to load the default policy file.", e);
         } finally {
-            if (adminResolver != null) {
-                adminResolver.close();
+            if (xssResourceResolver != null) {
+                xssResourceResolver.close();
             }
         }
     }
