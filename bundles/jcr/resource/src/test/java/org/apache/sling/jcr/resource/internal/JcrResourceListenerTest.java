@@ -21,8 +21,6 @@ import javax.jcr.Session;
 import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.spi.resource.provider.ObservationReporter;
-import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.junit.After;
 import org.junit.Before;
 
@@ -54,17 +52,11 @@ public class JcrResourceListenerTest extends AbstractListenerTest {
         RepositoryUtil.startRepository();
         this.adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
         RepositoryUtil.registerSlingNodeTypes(adminSession);
-        this.listener = new JcrResourceListener(new ProviderContext() {
-            @Override
-            public ObservationReporter getObservationReporter() {
-                return JcrResourceListenerTest.this.getObservationReporter();
-            }
-
-            @Override
-            public PathSet getExcludedPaths() {
-                return PathSet.fromPaths();
-            }
-        }, "/", new PathMapperImpl(), RepositoryUtil.getRepository());
+        this.listener = new JcrResourceListener(
+                JcrResourceListenerTest.this.getObservationReporter(),
+                JcrResourceListenerTest.this.getObservationReporter().getObserverConfigurations(),
+                PathSet.fromPaths(),
+                "/", new PathMapperImpl(), RepositoryUtil.getRepository());
     }
 
     @Override

@@ -48,10 +48,11 @@ import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
+import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
-import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,21 +76,26 @@ public class JcrResourceListener implements EventListener, Closeable {
 
     private final PathMapper pathMapper;
 
-    private final ProviderContext ctx;
-
     private final boolean includeExternal;
+
+    private final PathSet excludedPaths;
+
+    private final ObservationReporter reporter;
 
     @SuppressWarnings("deprecation")
     public JcrResourceListener(
-                    final ProviderContext ctx,
+                    final ObservationReporter reporter,
+                    final List<ObserverConfiguration> configs,
+                    final PathSet excludedPaths,
                     final String mountPrefix,
                     final PathMapper pathMapper,
                     final SlingRepository repository)
     throws RepositoryException {
-        this.includeExternal = isIncludeExternal(ctx);
+        this.includeExternal = isIncludeExternal(configs);
+        this.excludedPaths = excludedPaths;
         this.pathMapper = pathMapper;
         this.mountPrefix = mountPrefix;
-        this.ctx = ctx;
+        this.reporter = reporter;
         boolean foundClass = false;
         try {
             this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
@@ -99,13 +105,15 @@ public class JcrResourceListener implements EventListener, Closeable {
         }
         this.hasJackrabbitEventClass = foundClass;
         this.session = repository.loginAdministrative(repository.getDefaultWorkspace());
-        final String absPath = getAbsPath(pathMapper, ctx);
-        final int types = getTypes(ctx);
+        // TODO - as paths can have glob patterns, we need to update the algorithm
+        // final String absPath = getAbsPath(pathMapper, configs, excludedPaths);
+        final String absPath = "/";
+        final int types = getTypes(configs);
         this.session.getWorkspace().getObservationManager().addEventListener(this, types, absPath, true, null, null, false);
     }
 
-    private boolean isIncludeExternal(ProviderContext ctx) {
-        for (ObserverConfiguration c : ctx.getObservationReporter().getObserverConfigurations()) {
+    private boolean isIncludeExternal(final List<ObserverConfiguration> configs) {
+        for (ObserverConfiguration c : configs) {
             if (c.includeExternal()) {
                 return true;
             }
@@ -155,12 +163,12 @@ public class JcrResourceListener implements EventListener, Closeable {
                     if ( !addedEvents.containsKey(rsrcPath)
                       && !removedEvents.containsKey(rsrcPath)
                       && !changedEvents.containsKey(rsrcPath)
-                      && ctx.getExcludedPaths().matches(rsrcPath) == null) {
+                      && this.excludedPaths.matches(rsrcPath) == null) {
 
                         changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
                     }
                 } else {
-                    if ( ctx.getExcludedPaths().matches(eventPath) == null ) {
+                    if ( this.excludedPaths.matches(eventPath) == null ) {
                         if ( type == NODE_ADDED ) {
                             // add is stronger than update
                             changedEvents.remove(eventPath);
@@ -182,7 +190,7 @@ public class JcrResourceListener implements EventListener, Closeable {
         changes.addAll(addedEvents.values());
         changes.addAll(removedEvents.values());
         changes.addAll(changedEvents.values());
-        ctx.getObservationReporter().reportChanges(changes, false);
+        this.reporter.reportChanges(changes, false);
 
     }
 
@@ -209,9 +217,11 @@ public class JcrResourceListener implements EventListener, Closeable {
         return false;
     }
 
-    static String getAbsPath(PathMapper pathMapper, ProviderContext ctx) {
+    static String getAbsPath(PathMapper pathMapper,
+            final List<ObserverConfiguration> configs,
+            final PathSet excludedPaths) {
         final Set<String> paths = new HashSet<String>();
-        for (ObserverConfiguration c : ctx.getObservationReporter().getObserverConfigurations()) {
+        for (final ObserverConfiguration c : configs) {
             final Set<String> includePaths = new HashSet<String>();
             final Set<String> excludePaths = new HashSet<String>();
             for (Path p : c.getExcludedPaths()) {
@@ -223,7 +233,7 @@ public class JcrResourceListener implements EventListener, Closeable {
             includePaths.removeAll(excludePaths);
             paths.addAll(includePaths);
         }
-        for (Path p : ctx.getExcludedPaths()) {
+        for (Path p : excludedPaths) {
             paths.remove(pathMapper.mapResourcePathToJCRPath(p.getPath()));
         }
         return getLongestCommonPrefix(paths);
@@ -254,9 +264,9 @@ public class JcrResourceListener implements EventListener, Closeable {
         return prefix.toString();
     }
 
-    private int getTypes(ProviderContext ctx) {
+    private int getTypes(final List<ObserverConfiguration> configs) {
         int result = 0;
-        for (ObserverConfiguration c : ctx.getObservationReporter().getObserverConfigurations()) {
+        for (ObserverConfiguration c : configs) {
             for (ChangeType t : c.getChangeTypes()) {
                 switch (t) {
                 case ADDED:
@@ -295,9 +305,8 @@ public class JcrResourceListener implements EventListener, Closeable {
             return path;
         }
         try {
-            if ( !refreshedSession.get() ) {
+            if ( refreshedSession.compareAndSet(false, true) ) {
                 session.refresh(false);
-                refreshedSession.set(true);
             }
             final Node node = session.getNode(path);
             final Node parent = node.getParent();
