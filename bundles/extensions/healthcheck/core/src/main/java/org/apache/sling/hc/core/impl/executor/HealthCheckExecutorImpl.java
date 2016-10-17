@@ -92,7 +92,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private static final long RESULT_CACHE_TTL_DEFAULT_MS = 1000 * 2;
     public static final String PROP_RESULT_CACHE_TTL_MS = "resultCacheTtlInMs";
-    @Property(name = PROP_RESULT_CACHE_TTL_MS, label = "Results Cache TTL in Ms",
+    @Property(name = PROP_RESULT_CACHE_TTL_MS, label = "Results Cache RESULT_CACHE_TTL_IN_MS in Ms",
             description = "Result Cache time to live - results will be cached for the given time",
             longValue = RESULT_CACHE_TTL_DEFAULT_MS)
 
@@ -454,7 +454,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                         + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")");
             }
 
-            // add logs from previous, cached result if exists (using a 1 year TTL)
+            // add logs from previous, cached result if exists (using a 1 year RESULT_CACHE_TTL_IN_MS)
             HealthCheckExecutionResult lastCachedResult = healthCheckResultCache.getValidCacheResult(hcMetadata, 1000 * 60 * 60 * 24 * 365);
             if (lastCachedResult != null) {
                 DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");

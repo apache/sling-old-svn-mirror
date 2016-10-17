@@ -90,6 +90,7 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
         generateStringPropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, "Tags", "Tags", true);
         generateStringPropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, "MBean", "MBean name (leave empty for not using JMX)", false);
         generateStringPropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression", "hc.async.cronExpression" /* use constant once API is released */ , "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "resultCacheTtlInMs", "hc.resultCacheTtlInMs" /* use constant once API is released */ , "Result Cache TTL", "Result Cache TTL which will override global configured value for this service", false);
     }
 
     /** Generates a property descriptor of type {@link PropertyType#String[]} */
