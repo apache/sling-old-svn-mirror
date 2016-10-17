@@ -45,6 +45,7 @@ import javax.servlet.jsp.PageContext;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -257,13 +258,36 @@ public final class JspRuntimeContext {
     /**
      * Handle jsp modifications
      */
-    public boolean handleModification(final String scriptName) {
+    public boolean handleModification(final String scriptName, final boolean isRemove) {
         if ( log.isDebugEnabled() ) {
             log.debug("Handling modification " + scriptName);
         }
 
-        JspServletWrapper wrapper = jsps.remove(scriptName);
+        final JspServletWrapper wrapper = jsps.remove(scriptName);
+        if ( wrapper == null && isRemove ) {
+            boolean removed = false;
+            final Path path = new Path(scriptName);
+            final Iterator<Map.Entry<String, JspServletWrapper>> iter = jsps.entrySet().iterator();
+            while ( iter.hasNext() ) {
+                final Map.Entry<String, JspServletWrapper> entry = iter.next();
+                if ( path.matches(entry.getKey()) ) {
+                    iter.remove();
+                    removed |= handleModification(entry.getKey(), entry.getValue());
+                }
+            }
+            return removed;
+        } else {
+            return handleModification(scriptName, wrapper);
+        }
+    }
 
+    /**
+     * Handle modification for a single script
+     * @param scriptName The script name
+     * @param wrapper The jsp wrapper
+     * @return {@code true} if changed
+     */
+    private boolean handleModification(final String scriptName, final JspServletWrapper wrapper) {
         // first check if jsps contains this
         boolean removed = this.invalidate(wrapper);
 
@@ -273,8 +297,7 @@ public final class JspRuntimeContext {
         }
         if ( deps != null ) {
             for(final String dep : deps) {
-                wrapper = jsps.remove(dep);
-                removed |= this.invalidate(wrapper);
+                removed |= this.invalidate(jsps.remove(dep));
             }
         }
         return removed;
