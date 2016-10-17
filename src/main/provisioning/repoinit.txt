@@ -22,3 +22,12 @@
   org.apache.sling/org.apache.sling.repoinit.parser/1.0.4
   org.apache.sling/org.apache.sling.jcr.repoinit/1.0.2
   org.apache.sling/org.apache.sling.provisioning.model/1.4.4
+
+[:repoinit]
+    create path (sling:Folder) /libs/sling/xss
+    create path (sling:Folder) /apps/sling/xss
+    create service user sling-xss
+    set ACL for sling-xss
+        deny    jcr:all     on /
+        allow   jcr:read    on /libs/sling/xss,/apps/sling/xss
+    end
