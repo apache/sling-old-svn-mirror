@@ -61,6 +61,15 @@ public interface ObserverConfiguration {
     @Nonnull Set<ResourceChange.ChangeType> getChangeTypes();
 
     /**
+     * Set containing the set of property names which
+     * serves as an optional hint for the underlying to 
+     * only report property changes enlisted, ie the
+     * underlying might ignore this.
+     * @return set containing the set of property names
+     */
+    @Nonnull Set<String> getPropertyNamesHint();
+    
+    /**
      * Checks whether a path matches one of the paths of this configuration
      * but is not in the excluded paths set.
      * @param path The path to check
