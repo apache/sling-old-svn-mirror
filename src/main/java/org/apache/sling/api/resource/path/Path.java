@@ -236,4 +236,8 @@ public class Path implements Comparable<Path> {
         return "<([{\\^-=$!|]})?*+.>".indexOf(character) != -1;
     }
 
+    @Override
+    public String toString() {
+        return "Path [path=" + path + "]";
+    }
 }
