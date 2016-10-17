@@ -164,6 +164,11 @@ public abstract class AbstractListenerTest {
                 public boolean matches(String path) {
                     return true;
                 }
+
+                @Override
+                public Set<String> getPropertyNamesHint() {
+                    return new HashSet<String>();
+                }
             };
             return Collections.singletonList(config);
         }

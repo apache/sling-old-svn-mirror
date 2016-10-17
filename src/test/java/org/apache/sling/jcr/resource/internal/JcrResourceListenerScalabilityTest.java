@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -137,6 +138,11 @@ public class JcrResourceListenerScalabilityTest {
                         @Override
                         public boolean matches(String path) {
                             return true;
+                        }
+
+                        @Override
+                        public Set<String> getPropertyNamesHint() {
+                            return new HashSet<String>();
                         }
                     };
                     return Collections.singletonList(config);
