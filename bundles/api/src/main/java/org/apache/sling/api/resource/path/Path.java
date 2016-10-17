@@ -69,16 +69,24 @@ public class Path implements Comparable<Path> {
     }
 
     /**
-     * Check whether the provided path is equal to this path or a sub path of it.
-     * @param otherPath Path to check
-     * @return {@code true} If other path is within the sub tree of this path.
+     * If this {@code Path} object holds a path (and not a pattern), this method
+     * check whether the provided path is equal to this path or a sub path of it.
+     * If this {@code Path} object holds a pattern, it checks whether the
+     * provided path matches the pattern.
+     * If the provided argument is not an absolute path (e.g. if it is a relative
+     * path or a pattern), this method returns {@code false}.
+     *
+     * @param otherPath Absolute path to check.
+     * @return {@code true} If other path is within the sub tree of this path
+     *         or matches the pattern.
+     * @see Path#isPattern()
      */
     public boolean matches(final String otherPath) {
-        Path oPath = new Path(otherPath);
         if (isPattern) {
+            final Path oPath = new Path(otherPath);
             return this.regexPattern.equals(oPath.regexPattern) || this.regexPattern.matcher(otherPath).matches();
         }
-        return this.path.equals(otherPath) || oPath.prefix.startsWith(this.prefix);
+        return this.path.equals(otherPath) || otherPath.startsWith(this.prefix);
     }
 
     /**
@@ -87,6 +95,15 @@ public class Path implements Comparable<Path> {
      */
     public String getPath() {
         return this.path;
+    }
+
+    /**
+     * Returns {code true} if this {@code Path} object is holding a pattern
+     * @return {code true} for a pattern, {@code false} for a path.
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
+     */
+    public boolean isPattern() {
+        return this.isPattern;
     }
 
     @Override
