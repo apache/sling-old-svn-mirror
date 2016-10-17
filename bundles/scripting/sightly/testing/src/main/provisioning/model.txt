@@ -21,8 +21,8 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.3-SNAPSHOT
-  org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.3-SNAPSHOT
-  org.apache.sling/org.apache.sling.scripting.sightly/1.0.23-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.5-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.sightly/1.0.25-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.15-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.5-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.repl/1.0.5-SNAPSHOT
@@ -31,9 +31,6 @@
 
 # additional configuration for testing
 [configurations]
-
-  org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet
-    dav.root="/dav"
 
   org.apache.sling.commons.log.LogManager.factory.config-2ef75700-a318-4eae-bed4-86777e1bdfd2
     org.apache.sling.commons.log.pattern="{0,date,dd.MM.yyyy\ HH:mm:ss.SSS}\ *{4}*\ [{2}]\ {3}\ {5}"
@@ -49,7 +46,3 @@
   set ACL for sling-scripting
     allow   jcr:read    on /sightlytck/scripts
   end
-
-[settings]
-  sling.system.packages.class.com.vladium.emma.rt.RT=com.vladium.emma.rt
-  org.apache.sling.commons.log.julenabled=true
