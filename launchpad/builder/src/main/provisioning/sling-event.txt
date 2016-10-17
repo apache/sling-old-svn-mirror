@@ -20,7 +20,6 @@
 [feature name=sling-event]
 
 [artifacts]
-     # TODO - use SNAPSHOT until release is out
     org.apache.sling/org.apache.sling.event/4.2.0
     org.apache.sling/org.apache.sling.event.dea/1.1.0
 
