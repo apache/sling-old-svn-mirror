@@ -29,7 +29,11 @@ import javax.annotation.Nonnull;
  */
 public class Path implements Comparable<Path> {
 
-    private static final String GLOB_PREFIX = "glob:";
+    /**
+     * The prefix to be used for glob patterns
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
+     */
+    public static final String GLOB_PREFIX = "glob:";
 
     private final String path;
     private final String prefix;
