@@ -163,7 +163,7 @@ public class SlingServletResolver
 
     private static final String[] DEFAULT_DEFAULT_EXTENSIONS = new String[] {"html"};
 
-    @Reference
+    @Reference(target="(name=org.apache.sling)")
     private ServletContext servletContext;
 
     @Reference
