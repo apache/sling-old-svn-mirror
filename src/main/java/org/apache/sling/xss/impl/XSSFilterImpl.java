@@ -51,8 +51,8 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = true)
 @Service(value = {ResourceChangeListener.class, XSSFilter.class})
 @Properties({
-	@Property(name = ResourceChangeListener.CHANGES, value = {"ADDED","CHANGED", "REMOVED"}),
-    @Property(name = ResourceChangeListener.PATHS, value = {"glob:/**/sling/xss/config.xml", "glob:/sling/xss/config.xml"})
+    @Property(name = ResourceChangeListener.CHANGES, value = {"ADDED", "CHANGED", "REMOVED"}),
+    @Property(name = ResourceChangeListener.PATHS, value = XSSFilterImpl.DEFAULT_POLICY_PATH)
 })
 public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, ExternalResourceChangeListener {
 
@@ -69,7 +69,8 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
             "removeAttribute", ""
     );
 
-    private static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
+    public static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
+    private static final String EMBEDDED_POLICY_PATH = "SLING-INF/content/config.xml";
     private static final int DEFAULT_POLICY_CACHE_SIZE = 128;
     private PolicyHandler defaultHandler;
     private Attribute hrefAttribute;
@@ -85,13 +86,14 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     private ResourceResolverFactory resourceResolverFactory = null;
 
     @Override
-	public void onChange(List<ResourceChange> resourceChanges) {
-		for(ResourceChange change : resourceChanges){
-			LOGGER.debug("Detected policy file change at {}. Updating default handler.", change.getPath());
-			updateDefaultHandler();
-		}
-
-	}
+    public void onChange(List<ResourceChange> resourceChanges) {
+        for (ResourceChange change : resourceChanges) {
+            if (change.getPath().endsWith(DEFAULT_POLICY_PATH)) {
+                LOGGER.info("Detected policy file change ({}) at {}. Updating default handler.", change.getType().name(), change.getPath());
+                updateDefaultHandler();
+            }
+        }
+    }
 
     @Override
     public boolean check(final ProtectionContext context, final String src) {
@@ -115,37 +117,40 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
         updateDefaultHandler();
     }
 
-    private void updateDefaultHandler() {
+    private synchronized void updateDefaultHandler() {
+        this.defaultHandler = null;
         ResourceResolver adminResolver = null;
         try {
             adminResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
             Resource policyResource = adminResolver.getResource(DEFAULT_POLICY_PATH);
             if (policyResource != null) {
-                InputStream policyStream = policyResource.adaptTo(InputStream.class);
-                if (policyStream != null) {
-                    try {
-                        if (defaultHandler == null) {
-                            setDefaultHandler(new PolicyHandler(policyStream));
-                            policyStream.close();
+                try (InputStream policyStream = policyResource.adaptTo(InputStream.class)) {
+                    setDefaultHandler(new PolicyHandler(policyStream));
+                    LOGGER.info("Installed default policy from {}.", policyResource.getPath());
+                } catch (Exception e) {
+                    Throwable[] suppressed = e.getSuppressed();
+                    if (suppressed.length > 0) {
+                        for (Throwable t : suppressed) {
+                            LOGGER.error("Unable to load policy from " + policyResource.getPath(), t);
                         }
-                    } catch (Exception e) {
-                        LOGGER.error("Unable to load policy from " + policyResource.getPath(), e);
                     }
+                    LOGGER.error("Unable to load policy from " + policyResource.getPath(), e);
                 }
             } else {
                 // the content was not installed but the service is active; let's use the embedded file for the default handler
-                LOGGER.debug("Could not find a policy file at the default location {}. Attempting to use the default resource embedded in" +
+                LOGGER.warn("Could not find a policy file at the default location {}. Attempting to use the default resource embedded in" +
                         " the bundle.", DEFAULT_POLICY_PATH);
-                InputStream policyStream = this.getClass().getClassLoader().getResourceAsStream("SLING-INF/content/config.xml");
-                if (policyStream != null) {
-                    try {
-                        if (defaultHandler == null) {
-                            setDefaultHandler(new PolicyHandler(policyStream));
-                            policyStream.close();
+                try (InputStream policyStream = this.getClass().getClassLoader().getResourceAsStream(EMBEDDED_POLICY_PATH)) {
+                    setDefaultHandler(new PolicyHandler(policyStream));
+                    LOGGER.info("Installed default policy from the embedded {} file from the bundle.", EMBEDDED_POLICY_PATH);
+                } catch (Exception e) {
+                    Throwable[] suppressed = e.getSuppressed();
+                    if (suppressed.length > 0) {
+                        for (Throwable t : suppressed) {
+                            LOGGER.error("Unable to load policy from embedded policy file.", t);
                         }
-                    } catch (Exception e) {
-                        LOGGER.error("Unable to load policy from embedded policy file.", e);
                     }
+                    LOGGER.error("Unable to load policy from embedded policy file.", e);
                 }
             }
             if (defaultHandler == null) {
