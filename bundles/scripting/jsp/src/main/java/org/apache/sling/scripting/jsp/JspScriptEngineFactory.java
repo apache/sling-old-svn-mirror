@@ -112,7 +112,7 @@ public class JspScriptEngineFactory
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
-    @Reference(unbind="unbindSlingServletContext")
+    @Reference(unbind="unbindSlingServletContext", target="(name=org.apache.sling)")
     private ServletContext slingServletContext;
 
     @Reference
