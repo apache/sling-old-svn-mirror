@@ -38,10 +38,10 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
 
     @Override
     public void process(final ScannedClass scannedClass, final ClassDescription classDescription) throws SCRDescriptorException, SCRDescriptorFailureException {
-        final List<ClassAnnotation> servlets = scannedClass.getClassAnnotations(SlingHealthCheck.class.getName());
-        scannedClass.processed(servlets);
+        final List<ClassAnnotation> healthChecks = scannedClass.getClassAnnotations(SlingHealthCheck.class.getName());
+        scannedClass.processed(healthChecks);
 
-        for (final ClassAnnotation cad : servlets) {
+        for (final ClassAnnotation cad : healthChecks) {
             processHealthCheck(cad, classDescription);
         }
     }
@@ -86,22 +86,22 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
         }
 
         // generate HC PropertyDescriptions
-        generateStringPropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME, "Name", "Name", false);
-        generateStringPropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, "Tags", "Tags", true);
-        generateStringPropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, "MBean", "MBean name (leave empty for not using JMX)", false);
-        generateStringPropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression", "hc.async.cronExpression" /* use constant once API is released */ , "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME, PropertyType.String, "Name", "Name of the Health Check", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, PropertyType.String, "Tags", "List of tags", true);
+        generatePropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, PropertyType.String, "MBean", "MBean name (leave empty for not using JMX)", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression",  HealthCheck.ASYNC_CRON_EXPRESSION, PropertyType.String, "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "resultCacheTtlInMs", "hc.resultCacheTtlInMs" /* use constant once API is released */, PropertyType.Long , "Result Cache TTL", "TTL for results. The value -1 (default) uses the global configuration in health check executor. Redeployment of a HC always invalidates its cached result.", false);
     }
 
-    /** Generates a property descriptor of type {@link PropertyType#String[]} */
-    private void generateStringPropertyDescriptor(final ClassAnnotation cad, final ClassDescription classDescription,
-            final boolean metatype, final String propertyName, final String propertyDescriptorName, String label, String description, boolean isArray) {
-
+    /** Generates a property descriptor of type {@link PropertyType} */
+    private void generatePropertyDescriptor(final ClassAnnotation cad, final ClassDescription classDescription,
+            final boolean metatype, final String propertyName, final String propertyDescriptorName, PropertyType propertyType, String label, String description, boolean isArray) {
 
         final PropertyDescription pd = new PropertyDescription(cad);
         pd.setName(propertyDescriptorName);
         pd.setLabel(label);
         pd.setDescription(description);
-        pd.setType(PropertyType.String);
+        pd.setType(propertyType);
 
         if(isArray) {
             final String[] values = (String[]) cad.getValue(propertyName);
@@ -109,8 +109,10 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
             pd.setUnbounded(PropertyUnbounded.ARRAY);
             pd.setCardinality(Integer.MAX_VALUE);
         } else {
-            final String propertyVal = (String) cad.getValue(propertyName);
-            pd.setValue(propertyVal);
+            final Object propertyVal = cad.getValue(propertyName);
+            String pdValue = (propertyVal instanceof String) ? (String) propertyVal :
+                propertyVal!=null ? propertyVal.toString() : null;
+            pd.setValue(pdValue);
             pd.setUnbounded(PropertyUnbounded.DEFAULT);
         }
         
@@ -119,7 +121,6 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
         }
         classDescription.add(pd);
     }
-
     
     @Override
     public int getRanking() {
