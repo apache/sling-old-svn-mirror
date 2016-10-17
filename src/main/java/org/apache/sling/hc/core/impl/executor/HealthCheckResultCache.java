@@ -82,7 +82,7 @@ public class HealthCheckResultCache {
         return get(metadata, resultCacheTtlInMs);
     }
 
-    private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long resultCacheTtlInMs) {
+    private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long globalResultCacheTtlInMs) {
         final Long key = metadata.getServiceId();
         final HealthCheckExecutionResult cachedResult = cache.get(key);
         if (cachedResult != null) {
@@ -93,8 +93,12 @@ public class HealthCheckResultCache {
                 return null;
             }
 
-            // Option: add resultCacheTtlInMs as property to health check to make it configurable per check
-            Date validUntil = new Date(finishedAt.getTime() + resultCacheTtlInMs);
+            long effectiveTtl = getEffectiveTtl(metadata, globalResultCacheTtlInMs);
+            long validUntilLong = finishedAt.getTime() + effectiveTtl;
+            if(validUntilLong < 0) { // if Long.MAX_VALUE is configured, this can become negative
+                validUntilLong = Long.MAX_VALUE;
+            }
+            Date validUntil = new Date(validUntilLong);
             Date now = new Date();
             if (validUntil.after(now)) {
                 logger.debug("Cache hit: validUntil={} cachedResult={}", validUntil, cachedResult);
@@ -107,6 +111,24 @@ public class HealthCheckResultCache {
 
         // null => no cache hit
         return null;
+    }
+
+    /**
+     * Obtains the effective TTL for a given Metadata descriptor.
+     *
+     * @param metadata Metadata descriptor of health check 
+     * @param globalTtl TTL from service configuration of health check executor (used as default)
+     * @return effective TTL
+     */
+    private long getEffectiveTtl(HealthCheckMetadata metadata, long globalTtl) {
+        final long ttl;
+        Long hcTtl = metadata.getResultCacheTtlInMs();
+        if (hcTtl != null && hcTtl > 0) {
+            ttl = hcTtl;
+        } else {
+            ttl = globalTtl;
+        }
+        return ttl;
     }
 
     /**
