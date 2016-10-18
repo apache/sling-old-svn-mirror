@@ -647,6 +647,9 @@ def modules = [
         location: 'installer/factories/deploymentpck'
     ],
     [
+        location: 'installer/factories/packages'
+    ],
+    [
         location: 'installer/factories/subsystems'
     ],
     [
