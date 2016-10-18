@@ -27,6 +27,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
@@ -40,7 +41,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * Information about a resource change listener.
  */
-public class ResourceChangeListenerInfo {
+public class ResourceChangeListenerInfo implements Comparable<ResourceChangeListenerInfo> {
 
     private static final Set<ChangeType> DEFAULT_CHANGE_RESOURCE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
 
@@ -195,6 +196,63 @@ public class ResourceChangeListenerInfo {
     public void setListener(final ResourceChangeListener listener) {
         this.listener = listener;
         this.external = listener instanceof ExternalResourceChangeListener;
+    }
+
+    private int compareSet(final Set<String> t, final Set<String> o) {
+        if ( t == null && o == null ) {
+            return 0;
+        }
+        if ( t == null ) {
+            return -1;
+        }
+        if ( o == null ) {
+            return 1;
+        }
+        final Set<String> tPaths = new TreeSet<>(t);
+        final Set<String> oPaths = new TreeSet<>(o);
+
+        int result = tPaths.size() - oPaths.size();
+        if ( result == 0 ) {
+            final Iterator<String> tPathsIter = tPaths.iterator();
+            final Iterator<String> oPathsIter = oPaths.iterator();
+            while ( result == 0 && tPathsIter.hasNext() ) {
+                result = tPathsIter.next().compareTo(oPathsIter.next());
+            }
+        }
+        return result;
+    }
+
+    private int compareChangeTypes(final Set<ChangeType> t, final Set<ChangeType> o) {
+        int result = t.size() - o.size();
+        if ( result == 0 ) {
+            final Iterator<ChangeType> tIter = t.iterator();
+            final Iterator<ChangeType> oIter = o.iterator();
+            while ( result == 0 && tIter.hasNext() ) {
+                result = tIter.next().compareTo(oIter.next());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int compareTo(final ResourceChangeListenerInfo o) {
+        // paths first
+        int result = compareSet(this.paths.toStringSet(), o.paths.toStringSet());
+        if ( result == 0 ) {
+            // hints
+            result = compareSet(this.propertyNamesHint, o.propertyNamesHint);
+            if ( result == 0 ) {
+                // external next
+                result = Boolean.valueOf(this.external).compareTo(o.external);
+                if ( result == 0 ) {
+                    result = compareChangeTypes(this.resourceChangeTypes, o.resourceChangeTypes);
+                    if ( result == 0 ) {
+                        result = compareChangeTypes(this.providerChangeTypes, o.providerChangeTypes);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
