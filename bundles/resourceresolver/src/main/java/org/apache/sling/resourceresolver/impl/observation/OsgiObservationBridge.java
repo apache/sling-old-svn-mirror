@@ -26,12 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
@@ -41,19 +35,27 @@ import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(policy = ConfigurationPolicy.REQUIRE, metatype = true,
-        label="Apache Sling OSGi Observation Bridge", description="Legacy bridge which converts resource change events to OSGi events")
-@Service(ResourceChangeListener.class)
-@Properties({ @Property(name = ResourceChangeListener.CHANGES, value = { "ADDED", "CHANGED", "REMOVED" }),
-        @Property(name = ResourceChangeListener.PATHS, value = "/") })
+@Component(service = ResourceChangeListener.class,
+           configurationPolicy = ConfigurationPolicy.IGNORE,
+           property = {
+                  ResourceChangeListener.PATHS + "=/",
+                  ResourceChangeListener.CHANGES + "=ADDED",
+                  ResourceChangeListener.CHANGES + "=CHANGED",
+                  ResourceChangeListener.CHANGES + "=REMOVED"
+           })
 public class OsgiObservationBridge implements ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(OsgiObservationBridge.class);
+    private final Logger logger = LoggerFactory.getLogger(OsgiObservationBridge.class);
 
     @Reference
     private EventAdmin eventAdmin;
@@ -73,6 +75,14 @@ public class OsgiObservationBridge implements ResourceChangeListener, ExternalRe
         changesQueue = new LinkedBlockingQueue<ResourceChange>();
         job = new EventSendingJob(changesQueue);
         Executors.newSingleThreadExecutor().submit(job);
+    }
+
+    @Reference(name = "handlers",
+            cardinality=ReferenceCardinality.AT_LEAST_ONE,
+            service=EventHandler.class,
+            target="(event.topics=org/apache/sling/api/resource/*)")
+    private void bindEventHandler(final EventHandler handler) {
+        logger.warn("Found OSGi Event Handler for deprecated resource bridge: {}", handler);
     }
 
     protected void deactivate() {
