@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
@@ -252,6 +251,8 @@ public abstract class ResourceProvider<T> {
      * This method is only called while the provider is used in the resource
      * tree.
      * @param changeSet A bit set of provider info that has changed.
+     * @see ProviderContext#OBSERVATION_LISTENER_CHANGED
+     * @see ProviderContext#EXCLUDED_PATHS_CHANGED
      */
     public void update(final long changeSet) {
         this.ctx = ctx;
