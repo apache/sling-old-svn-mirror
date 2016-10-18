@@ -27,8 +27,6 @@ import static org.junit.Assert.fail;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.api.resource.path.Path;
-import org.apache.sling.api.resource.path.PathSet;
 import org.junit.Test;
 
 public class PathSetTest {
@@ -123,5 +121,13 @@ public class PathSetTest {
         } catch ( final UnsupportedOperationException uoe) {
             // expected
         }
+    }
+
+    @Test public void testSubsetByPathSet() {
+        final PathSet set = PathSet.fromStrings("/libs/foo/bar", "/apps/foo/bar", "/content");
+        final PathSet filter = PathSet.fromStrings("/libs", "/apps");
+
+        final PathSet result = set.getSubset(filter);
+        assertEqualSets(result, "/libs/foo/bar", "/apps/foo/bar");
     }
 }
