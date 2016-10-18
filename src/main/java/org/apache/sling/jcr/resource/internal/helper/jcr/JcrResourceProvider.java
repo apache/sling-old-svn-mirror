@@ -249,6 +249,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                     Closeable listener = oldMap.remove(config);
                     if ( listener == null ) {
                         listener = new JcrResourceListener(this.listenerConfig, config);
+                    } else {
+                        ((JcrResourceListener)listener).update(config);
                     }
                     this.listeners.put(config, listener);
                 }
