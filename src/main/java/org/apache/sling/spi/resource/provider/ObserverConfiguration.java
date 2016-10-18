@@ -29,6 +29,10 @@ import org.osgi.annotation.versioning.ProviderType;
 /**
  * A observer configuration describes active configurations from registered listeners.
  *
+ * All implementations of {@code ObserverConfiguration} are comparable using the
+ * {@link Object#equals(Object)} method. Two configurations are equal, if they
+ * have exactly the same parameters.
+ *
  * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
