@@ -25,10 +25,13 @@ import java.util.Set;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEventFilter;
 import org.apache.jackrabbit.api.observation.JackrabbitObservationManager;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -83,11 +86,93 @@ public class JcrListenerBaseConfig implements Closeable {
             final String[] pathArray = new String[paths.size()];
             int i=0;
             // remove global prefix
+            boolean hasGlob = false;
             for(final String p : paths) {
+                if ( p.startsWith(Path.GLOB_PREFIX )) {
+                    hasGlob = true;
+                }
                 pathArray[i] = (p.startsWith(Path.GLOB_PREFIX) ? p.substring(Path.GLOB_PREFIX.length()) : p);
                 i++;
             }
-            filter.setAdditionalPaths(pathArray);
+            final EventListener regListener;
+            if ( hasGlob ) {
+                // TODO we can't use glob patterns directly here
+                filter.setAbsPath("/");
+                regListener = new EventListener() {
+
+                    @Override
+                    public void onEvent(final EventIterator events) {
+                        listener.onEvent(new EventIterator() {
+
+                            Event next = seek();
+
+                            private Event seek() {
+                                while ( events.hasNext() ) {
+                                    final Event e = events.nextEvent();
+                                    String path = null;
+                                    try {
+                                        path = e.getPath();
+                                        if ( e.getType() == Event.PROPERTY_ADDED
+                                                || e.getType() == Event.PROPERTY_CHANGED
+                                                || e.getType() == Event.PROPERTY_REMOVED ) {
+                                                  path = ResourceUtil.getParent(path);
+                                        }
+                                        if ( config.getPaths().matches(path) != null ) {
+                                            return e;
+                                        }
+                                    } catch (RepositoryException e1) {
+                                        // ignore
+                                    }
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            public void remove() {
+                                // we don't support this -> NOP
+                            }
+
+                            @Override
+                            public Object next() {
+                                return nextEvent();
+                            }
+
+                            @Override
+                            public boolean hasNext() {
+                                return next != null;
+                            }
+
+                            @Override
+                            public void skip(long skipNum) {
+                                // we don't support this -> NOP
+                            }
+
+                            @Override
+                            public long getSize() {
+                                // we don't support this -> 0
+                                return 0;
+                            }
+
+                            @Override
+                            public long getPosition() {
+                                // we don't support this -> 0
+                                return 0;
+                            }
+
+                            @Override
+                            public Event nextEvent() {
+                                final Event result = next;
+                                next = seek();
+                                return result;
+                            }
+                        });
+                    }
+                };
+
+            } else {
+                filter.setAdditionalPaths(pathArray);
+                regListener = listener;
+            }
             filter.setIsDeep(true);
 
             // exclude paths
@@ -102,7 +187,7 @@ public class JcrListenerBaseConfig implements Closeable {
             // types
             filter.setEventTypes(this.getTypes(config));
 
-            ((JackrabbitObservationManager)mgr).addEventListener(listener, filter);
+            ((JackrabbitObservationManager)mgr).addEventListener(regListener, filter);
         } else {
             throw new RepositoryException("Observation manager is not a JackrabbitObservationManager");
         }
