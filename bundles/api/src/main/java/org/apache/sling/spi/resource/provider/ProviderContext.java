@@ -39,12 +39,22 @@ public interface ProviderContext {
 
     /**
      * Get the observation reporter for this instance.
+     * If anything related to observation configuration changes,
+     * {@link ResourceProvider#update(long)} is called. From that point on
+     * this method needs to be called to get the updated/new observation
+     * reporter. The instance previously returned (before update was called)
+     * becomes invalid and must not be used anymore.
+     *
      * @return The observation reporter.
      */
     @Nonnull ObservationReporter getObservationReporter();
 
     /**
      * Set of paths which are "hidden" by other resource providers.
+     * If anything related to observation configuration changes,
+     * {@link ResourceProvider#update(long)} is called. From that point on
+     * this method will return a new path set with the updated/changed
+     * exclude paths.
      * @return A set of paths. The set might be empty
      */
     PathSet getExcludedPaths();
