@@ -142,7 +142,7 @@ public class PathSet implements Iterable<Path> {
      * Generate a path set of paths from this set which
      * are in the sub tree of the provided path
      * @param path The base path
-     * @return Path set
+     * @return Path set, might be empty
      */
     public PathSet getSubset(final String path) {
         return getSubset(new Path(path));
@@ -152,12 +152,29 @@ public class PathSet implements Iterable<Path> {
      * Generate a path set of paths from this set which
      * are in the sub tree of the provided path
      * @param path The base path
-     * @return Path set
+     * @return Path set, might be empty
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
      */
     public PathSet getSubset(final Path path) {
         final Set<Path> result = new HashSet<Path>();
         for(final Path p : this.paths) {
             if ( path.matches(p.getPath()) ) {
+                result.add(p);
+            }
+        }
+        return new PathSet(result);
+    }
+
+    /**
+     * Generate a path set of paths from this set which
+     * are in at least one of the sub tree of the provided path set.
+     * @param path The base path
+     * @return Path set
+     */
+    public PathSet getSubset(final PathSet set) {
+        final Set<Path> result = new HashSet<Path>();
+        for(final Path p : this.paths) {
+            if ( set.matches(p.getPath()) != null ) {
                 result.add(p);
             }
         }
