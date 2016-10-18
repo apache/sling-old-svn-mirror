@@ -52,7 +52,7 @@ import org.apache.sling.spi.resource.provider.ObserverConfiguration;
  */
 public class JcrResourceListener implements EventListener, Closeable {
 
-    private final ObserverConfiguration config;
+    private volatile ObserverConfiguration config;
 
     private final JcrListenerBaseConfig baseConfig;
 
@@ -62,6 +62,10 @@ public class JcrResourceListener implements EventListener, Closeable {
         this.baseConfig = listenerConfig;
         this.config = config;
         this.baseConfig.register(this, config);
+    }
+
+    public void update(final ObserverConfiguration cfg) {
+        this.config = cfg;
     }
 
     /**
@@ -174,4 +178,5 @@ public class JcrResourceListener implements EventListener, Closeable {
     public String toString() {
         return "JcrResourceListener [" + config + "]";
     }
+
 }
