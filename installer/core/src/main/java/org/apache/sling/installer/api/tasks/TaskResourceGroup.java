@@ -18,6 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import java.util.Iterator;
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -39,6 +40,11 @@ public interface TaskResourceGroup {
      * @since 1.1
      */
     TaskResource getNextActiveResource();
+    
+    /**
+     * Return an iterator containing all active resources in the group
+     */
+    Iterator<TaskResource> getActiveResourceIterator();
 
     /**
      * Set the finish state for the active resource.

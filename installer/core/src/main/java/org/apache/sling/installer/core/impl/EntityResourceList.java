@@ -21,10 +21,12 @@ package org.apache.sling.installer.core.impl;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -158,6 +160,22 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         }
         return null;
     }
+    
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#getActiveResourceIterator()
+     */
+    public Iterator<TaskResource> getActiveResourceIterator(){
+        if ( this.getActiveResource() != null ) {
+            if ( this.resources.size() > 1 ) {
+                Collections.sort(this.resources);
+                // to get the second item in the set we have to use an iterator!
+                List<TaskResource> taskResourceList = new LinkedList<TaskResource>(this.resources);
+                 return taskResourceList.iterator();
+            }
+        }
+        return null;
+    }
+    
     /**
      * Return the first resource or null
      */
