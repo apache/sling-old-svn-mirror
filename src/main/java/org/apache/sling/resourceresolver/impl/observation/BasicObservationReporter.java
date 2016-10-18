@@ -130,7 +130,7 @@ public class BasicObservationReporter implements ObservationReporter {
                             types.addAll(info.getResourceChangeTypes());
                             config = new BasicObserverConfiguration(pathSet,
                                 types,
-                                info.isExternal() && found.includeExternal(),
+                                info.isExternal() || found.includeExternal(),
                                 found.getExcludedPaths(),
                                 found.getPropertyNamesHint());
                             observerConfigs.add(config);

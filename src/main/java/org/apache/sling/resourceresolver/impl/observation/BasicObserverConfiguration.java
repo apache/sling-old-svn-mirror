@@ -74,6 +74,7 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
      */
     public void addListener(final ResourceChangeListenerInfo listener) {
         this.listeners.add(listener);
+        Collections.sort(this.listeners);
     }
 
     /**
