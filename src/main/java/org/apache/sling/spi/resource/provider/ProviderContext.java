@@ -21,7 +21,6 @@ package org.apache.sling.spi.resource.provider;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.path.PathSet;
-
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -32,7 +31,10 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProviderContext {
 
+    /** This bit is set in {@link ResourceProvider#update(long)} if observation listeners changed. */
     long OBSERVATION_LISTENER_CHANGED = 1;
+
+    /** This bit is set in {@link ResourceProvider#update(long)} if exclude paths changed. */
     long EXCLUDED_PATHS_CHANGED       = 2;
 
     /**
