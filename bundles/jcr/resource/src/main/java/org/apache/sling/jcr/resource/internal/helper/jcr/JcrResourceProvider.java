@@ -241,9 +241,27 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             this.unregisterListeners();
             this.registerListeners();
         } else {
-            // TODO this can be optimized
-            this.unregisterListeners();
-            this.registerListeners();
+            final Map<ObserverConfiguration, Closeable> oldMap = new HashMap<>(this.listeners);
+            this.listeners.clear();
+            try {
+                for(final ObserverConfiguration config : this.getProviderContext().getObservationReporter().getObserverConfigurations()) {
+                    // check if such a listener already exists
+                    Closeable listener = oldMap.remove(config);
+                    if ( listener == null ) {
+                        listener = new JcrResourceListener(this.listenerConfig, config);
+                    }
+                    this.listeners.put(config, listener);
+                }
+            } catch (final RepositoryException e) {
+                throw new SlingException("Can't create the JCR event listener.", e);
+            }
+            for(final Closeable c : oldMap.values()) {
+                try {
+                    c.close();
+                } catch (final IOException e) {
+                    // ignore this as the method above does not throw it
+                }
+            }
         }
     }
 
