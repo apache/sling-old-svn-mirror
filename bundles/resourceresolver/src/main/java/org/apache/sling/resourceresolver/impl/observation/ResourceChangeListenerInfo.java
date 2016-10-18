@@ -32,7 +32,9 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.path.PathSet;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -50,13 +52,13 @@ public class ResourceChangeListenerInfo {
 
     private final Set<ChangeType> providerChangeTypes;
 
+    private final Set<String> propertyNamesHint;
+
     private final boolean valid;
 
     private volatile boolean external = false;
 
     private volatile ResourceChangeListener listener;
-
-    private static final String GLOB_PREFIX = "glob:";
 
     public ResourceChangeListenerInfo(final ServiceReference<ResourceChangeListener> ref, final String[] searchPaths) {
         boolean configValid = true;
@@ -66,23 +68,23 @@ public class ResourceChangeListenerInfo {
             for(final String p : paths) {
                 boolean isGlobPattern = false;
                 String normalisedPath = ResourceUtil.normalize(p);
-                if (p.startsWith(GLOB_PREFIX)) {
+                if (p.startsWith(Path.GLOB_PREFIX)) {
                     isGlobPattern = true;
-                    normalisedPath =  ResourceUtil.normalize(p.substring(GLOB_PREFIX.length()));
+                    normalisedPath =  ResourceUtil.normalize(p.substring(Path.GLOB_PREFIX.length()));
                 }
                 if (!".".equals(p) && normalisedPath.isEmpty()) {
                     configValid = false;
                 } else if ( normalisedPath.startsWith("/") && !isGlobPattern ) {
                     pathsSet.add(normalisedPath);
                 } else if (normalisedPath.startsWith("/") && isGlobPattern) {
-                    pathsSet.add(GLOB_PREFIX + normalisedPath);
+                    pathsSet.add(Path.GLOB_PREFIX + normalisedPath);
                 } else {
                     for(final String sp : searchPaths) {
                         if ( p.equals(".") ) {
                             pathsSet.add(sp);
                         } else {
                             if (isGlobPattern) {
-                                pathsSet.add(GLOB_PREFIX + ResourceUtil.normalize(sp + normalisedPath));
+                                pathsSet.add(Path.GLOB_PREFIX + ResourceUtil.normalize(sp + normalisedPath));
                             } else {
                                 pathsSet.add(ResourceUtil.normalize(sp + normalisedPath));
                             }
@@ -147,6 +149,14 @@ public class ResourceChangeListenerInfo {
             this.providerChangeTypes = DEFAULT_CHANGE_PROVIDER_TYPES;
         }
 
+        if ( ref.getProperty(ResourceChangeListener.PROPERTY_NAMES_HINT) != null ) {
+            this.propertyNamesHint = new HashSet<String>();
+            for(final String val : PropertiesUtil.toStringArray(ref.getProperty(ResourceChangeListener.PROPERTY_NAMES_HINT)) ) {
+                this.propertyNamesHint.add(val);
+            }
+        } else {
+            this.propertyNamesHint = null;
+        }
         this.valid = configValid;
     }
 
@@ -166,6 +176,14 @@ public class ResourceChangeListenerInfo {
         return this.paths;
     }
 
+    /**
+     * Return a set of property name hints
+     * @return The set of names or {@code null}.
+     */
+    public Set<String> getPropertyNamesHint() {
+        return this.propertyNamesHint;
+    }
+
     public boolean isExternal() {
         return this.external;
     }
@@ -177,5 +195,12 @@ public class ResourceChangeListenerInfo {
     public void setListener(final ResourceChangeListener listener) {
         this.listener = listener;
         this.external = listener instanceof ExternalResourceChangeListener;
+    }
+
+    @Override
+    public String toString() {
+        return "ResourceChangeListenerInfo [paths=" + paths + ", resourceChangeTypes=" + resourceChangeTypes
+                + ", providerChangeTypes=" + providerChangeTypes + ", propertyNamesHint=" + propertyNamesHint
+                + ", valid=" + valid + ", external=" + external + ", listener=" + listener + "]";
     }
 }
