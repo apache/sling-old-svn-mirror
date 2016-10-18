@@ -22,9 +22,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -57,10 +57,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.LoginAdminWhitelist;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.JcrListenerBaseConfig;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
@@ -116,12 +116,13 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private Executor executor;
 
-    /** The JCR observation listener. */
-    private volatile Closeable listener;
+    /** The JCR listener base configuration. */
+    private volatile JcrListenerBaseConfig listenerConfig;
+
+    /** The JCR observation listeners. */
+    private volatile Map<ObserverConfiguration, Closeable> listeners = new HashMap<>();
 
     private volatile SlingRepository repository;
-
-    private volatile String root;
 
     private volatile JcrProviderStateFactory stateFactory;
 
@@ -140,7 +141,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
 
         this.repository = repository;
-        this.root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.PROPERTY_ROOT), "/");
 
         this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository,
                 classLoaderManagerReference, pathMapper, loginAdminWhitelist);
@@ -162,20 +162,19 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Override
     public void start(final ProviderContext ctx) {
         super.start(ctx);
-        registerListener(ctx);
+        this.registerListeners();
     }
 
     @Override
     public void stop() {
-        unregisterListener();
+        this.unregisterListeners();
         super.stop();
     }
 
     @Override
-    public void update(long changeSet) {
+    public void update(final long changeSet) {
         super.update(changeSet);
-        unregisterListener();
-        registerListener(getProviderContext());
+        this.updateListeners();
     }
 
     @SuppressWarnings("unused")
@@ -192,30 +191,59 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         }
     }
 
-    private void registerListener(final ProviderContext ctx) {
+    /**
+     * Register all observation listeners.
+     */
+    private void registerListeners() {
         if ( this.repository != null ) {
-            final List<ObserverConfiguration> configs = ctx.getObservationReporter().getObserverConfigurations();
-            if ( !configs.isEmpty() ) {
-                try {
-                    this.listener = new JcrResourceListener(ctx.getObservationReporter(),
-                            configs,
-                            ctx.getExcludedPaths(),
-                            root, pathMapper, repository);
-                } catch (RepositoryException e) {
-                    throw new SlingException("Can't create the listener", e);
+            try {
+                this.listenerConfig = new JcrListenerBaseConfig(this.getProviderContext().getObservationReporter(),
+                    this.pathMapper,
+                    this.repository);
+                for(final ObserverConfiguration config : this.getProviderContext().getObservationReporter().getObserverConfigurations()) {
+                    final Closeable listener = new JcrResourceListener(this.listenerConfig,
+                            config);
+                    this.listeners.put(config, listener);
                 }
+            } catch (final RepositoryException e) {
+                throw new SlingException("Can't create the JCR event listener.", e);
             }
         }
     }
 
-    private void unregisterListener() {
-        if ( this.listener != null ) {
+    /**
+     * Unregister all observation listeners.
+     */
+    private void unregisterListeners() {
+        for(final Closeable c : this.listeners.values()) {
             try {
-                this.listener.close();
+                c.close();
             } catch (final IOException e) {
                 // ignore this as the method above does not throw it
             }
-            this.listener = null;
+        }
+        this.listeners.clear();
+        if ( this.listenerConfig != null ) {
+            try {
+                this.listenerConfig.close();
+            } catch (final IOException e) {
+                // ignore this as the method above does not throw it
+            }
+            this.listenerConfig = null;
+        }
+    }
+
+    /**
+     * Update observation listeners.
+     */
+    private void updateListeners() {
+        if ( this.listenerConfig == null ) {
+            this.unregisterListeners();
+            this.registerListeners();
+        } else {
+            // TODO this can be optimized
+            this.unregisterListeners();
+            this.registerListeners();
         }
     }
 

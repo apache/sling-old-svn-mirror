@@ -51,7 +51,10 @@ import org.osgi.framework.InvalidSyntaxException;
  */
 public class JcrResourceListenerScalabilityTest {
 
+    private JcrListenerBaseConfig config;
+
     private JcrResourceListener jcrResourceListener;
+
     private EventIterator events;
 
     @SuppressWarnings("deprecation")
@@ -69,10 +72,10 @@ public class JcrResourceListenerScalabilityTest {
         when(repository.loginAdministrative(null)).thenReturn(session);
 
         final ProviderContext ctx = new SimpleProviderContext();
-        jcrResourceListener = new JcrResourceListener(ctx.getObservationReporter(),
-                ctx.getObservationReporter().getObserverConfigurations(),
-                ctx.getExcludedPaths(),
-                "/", new PathMapperImpl(), RepositoryUtil.getRepository());
+        this.config = new JcrListenerBaseConfig(ctx.getObservationReporter(),
+                new PathMapperImpl(),
+                RepositoryUtil.getRepository());
+        jcrResourceListener = new JcrResourceListener(this.config, ctx.getObservationReporter().getObserverConfigurations().get(0));
 
         Event event = mock(MockEvent.class);
         events = mock(EventIterator.class);
