@@ -81,7 +81,6 @@
                     <instructions>
                         <Import-Package>
                             org.apache.sling.scripting.api.*;resolution:=optional,
-                            org.apache.jackrabbit.api.observation;resolution:=optional,
                             *
                         </Import-Package>
 

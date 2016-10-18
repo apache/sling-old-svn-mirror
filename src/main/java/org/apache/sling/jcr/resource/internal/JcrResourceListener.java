@@ -28,97 +28,40 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.api.resource.path.Path;
-import org.apache.sling.api.resource.path.PathSet;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceListener</code> listens for JCR observation
- * events and creates resource events which are sent through the
- * OSGi event admin.
+ * events and creates resource change events which are sent through
+ * the {@link ObservationReporter}.
  */
 public class JcrResourceListener implements EventListener, Closeable {
 
-    /** Logger */
-    private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
+    private final ObserverConfiguration config;
 
-    /** The repository is mounted under this path. */
-   private final String mountPrefix;
+    private final JcrListenerBaseConfig baseConfig;
 
-    /** Is the Jackrabbit event class available? */
-    private final boolean hasJackrabbitEventClass;
-
-    private final Session session;
-
-    private final PathMapper pathMapper;
-
-    private final boolean includeExternal;
-
-    private final PathSet excludedPaths;
-
-    private final ObservationReporter reporter;
-
-    @SuppressWarnings("deprecation")
-    public JcrResourceListener(
-                    final ObservationReporter reporter,
-                    final List<ObserverConfiguration> configs,
-                    final PathSet excludedPaths,
-                    final String mountPrefix,
-                    final PathMapper pathMapper,
-                    final SlingRepository repository)
+    public JcrResourceListener(final JcrListenerBaseConfig listenerConfig,
+                    final ObserverConfiguration config)
     throws RepositoryException {
-        this.includeExternal = isIncludeExternal(configs);
-        this.excludedPaths = excludedPaths;
-        this.pathMapper = pathMapper;
-        this.mountPrefix = mountPrefix;
-        this.reporter = reporter;
-        boolean foundClass = false;
-        try {
-            this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
-            foundClass = true;
-        } catch (final Throwable t) {
-            // we ignore this
-        }
-        this.hasJackrabbitEventClass = foundClass;
-        this.session = repository.loginAdministrative(repository.getDefaultWorkspace());
-        // TODO - as paths can have glob patterns, we need to update the algorithm
-        // final String absPath = getAbsPath(pathMapper, configs, excludedPaths);
-        final String absPath = "/";
-        final int types = getTypes(configs);
-        this.session.getWorkspace().getObservationManager().addEventListener(this, types, absPath, true, null, null, false);
-    }
-
-    private boolean isIncludeExternal(final List<ObserverConfiguration> configs) {
-        for (ObserverConfiguration c : configs) {
-            if (c.includeExternal()) {
-                return true;
-            }
-        }
-        return false;
+        this.baseConfig = listenerConfig;
+        this.config = config;
+        this.baseConfig.register(this, config);
     }
 
     /**
@@ -127,12 +70,7 @@ public class JcrResourceListener implements EventListener, Closeable {
     @Override
     public void close() throws IOException {
         // unregister from observations
-        try {
-            this.session.getWorkspace().getObservationManager().removeEventListener(this);
-        } catch (RepositoryException e) {
-            logger.warn("Unable to remove session listener: " + this, e);
-        }
-        this.session.logout();
+        this.baseConfig.unregister(this);
     }
 
     /**
@@ -147,9 +85,6 @@ public class JcrResourceListener implements EventListener, Closeable {
         AtomicBoolean refreshedSession = new AtomicBoolean(false);
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
-            if (isExternal(event) && !includeExternal) {
-                continue;
-            }
 
             try {
                 final String eventPath = event.getPath();
@@ -162,27 +97,24 @@ public class JcrResourceListener implements EventListener, Closeable {
                     final String rsrcPath = stripNtFilePath(eventPath.substring(0, lastSlash), refreshedSession);
                     if ( !addedEvents.containsKey(rsrcPath)
                       && !removedEvents.containsKey(rsrcPath)
-                      && !changedEvents.containsKey(rsrcPath)
-                      && this.excludedPaths.matches(rsrcPath) == null) {
+                      && !changedEvents.containsKey(rsrcPath) ) {
 
                         changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
                     }
                 } else {
-                    if ( this.excludedPaths.matches(eventPath) == null ) {
-                        if ( type == NODE_ADDED ) {
-                            // add is stronger than update
-                            changedEvents.remove(eventPath);
-                            addedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.ADDED));
-                        } else if ( type == NODE_REMOVED) {
-                            // remove is stronger than add and change
-                            addedEvents.remove(eventPath);
-                            changedEvents.remove(eventPath);
-                            removedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.REMOVED));
-                        }
+                    if ( type == NODE_ADDED ) {
+                        // add is stronger than update
+                        changedEvents.remove(eventPath);
+                        addedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.ADDED));
+                    } else if ( type == NODE_REMOVED) {
+                        // remove is stronger than add and change
+                        addedEvents.remove(eventPath);
+                        changedEvents.remove(eventPath);
+                        removedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.REMOVED));
                     }
                 }
             } catch (final RepositoryException e) {
-                logger.error("Error during modification: {}", e);
+                this.baseConfig.getLogger().error("Error during modification: {}", e);
             }
         }
 
@@ -190,15 +122,14 @@ public class JcrResourceListener implements EventListener, Closeable {
         changes.addAll(addedEvents.values());
         changes.addAll(removedEvents.values());
         changes.addAll(changedEvents.values());
-        this.reporter.reportChanges(changes, false);
+        this.baseConfig.getReporter().reportChanges(this.config, changes, false);
 
     }
 
     private ResourceChange createResourceChange(final Event event,
             final String path,
             final ChangeType changeType) {
-        final String pathWithPrefix = addMountPrefix(mountPrefix, path);
-        final String fullPath = pathMapper.mapJCRPathToResourcePath(pathWithPrefix);
+        final String fullPath = this.baseConfig.getPathMapper().mapJCRPathToResourcePath(path);
         final boolean isExternal = this.isExternal(event);
         final String userId;
         if (!isExternal) {
@@ -210,92 +141,11 @@ public class JcrResourceListener implements EventListener, Closeable {
     }
 
     private boolean isExternal(final Event event) {
-        if ( this.hasJackrabbitEventClass && event instanceof JackrabbitEvent) {
+        if ( event instanceof JackrabbitEvent) {
             final JackrabbitEvent jEvent = (JackrabbitEvent)event;
             return jEvent.isExternal();
         }
         return false;
-    }
-
-    static String getAbsPath(PathMapper pathMapper,
-            final List<ObserverConfiguration> configs,
-            final PathSet excludedPaths) {
-        final Set<String> paths = new HashSet<String>();
-        for (final ObserverConfiguration c : configs) {
-            final Set<String> includePaths = new HashSet<String>();
-            final Set<String> excludePaths = new HashSet<String>();
-            for (Path p : c.getExcludedPaths()) {
-                excludePaths.add(pathMapper.mapResourcePathToJCRPath(p.getPath()));
-            }
-            for (Path p : c.getPaths()) {
-                includePaths.add(pathMapper.mapResourcePathToJCRPath(p.getPath()));
-            }
-            includePaths.removeAll(excludePaths);
-            paths.addAll(includePaths);
-        }
-        for (Path p : excludedPaths) {
-            paths.remove(pathMapper.mapResourcePathToJCRPath(p.getPath()));
-        }
-        return getLongestCommonPrefix(paths);
-    }
-
-    private static String getLongestCommonPrefix(Set<String> paths) {
-        String prefix = null;
-        Iterator<String> it = paths.iterator();
-        if (it.hasNext()) {
-            prefix = it.next();
-        }
-        while (it.hasNext()) {
-            prefix = getCommonPrefix(prefix, it.next());
-        }
-        return StringUtils.defaultIfEmpty(prefix, "/");
-    }
-
-    private static String getCommonPrefix(String s1, String s2) {
-        int length = Math.min(s1.length(), s2.length());
-        StringBuilder prefix = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            if (s1.charAt(i) == s2.charAt(i)) {
-                prefix.append(s1.charAt(i));
-            } else {
-                break;
-            }
-        }
-        return prefix.toString();
-    }
-
-    private int getTypes(final List<ObserverConfiguration> configs) {
-        int result = 0;
-        for (ObserverConfiguration c : configs) {
-            for (ChangeType t : c.getChangeTypes()) {
-                switch (t) {
-                case ADDED:
-                    result = result | Event.NODE_ADDED;
-                    break;
-                case REMOVED:
-                    result = result | Event.NODE_REMOVED;
-                    break;
-                case CHANGED:
-                    result = result | Event.PROPERTY_ADDED;
-                    result = result | Event.PROPERTY_CHANGED;
-                    result = result | Event.PROPERTY_REMOVED;
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-
-    static String addMountPrefix(final String mountPrefix, final String path) {
-        final String result;
-        if (mountPrefix == null || mountPrefix.isEmpty() || "/".equals(mountPrefix)) {
-            result = path;
-        } else {
-            result = new StringBuilder(mountPrefix).append(path).toString();
-        }
-        return result;
     }
 
     private static final String JCR_CONTENT_POSTFIX = "/" + JcrConstants.JCR_CONTENT;
@@ -306,9 +156,9 @@ public class JcrResourceListener implements EventListener, Closeable {
         }
         try {
             if ( refreshedSession.compareAndSet(false, true) ) {
-                session.refresh(false);
+                baseConfig.getSession().refresh(false);
             }
-            final Node node = session.getNode(path);
+            final Node node = baseConfig.getSession().getNode(path);
             final Node parent = node.getParent();
             if (parent.isNodeType(JcrConstants.NT_FILE)) {
                 return parent.getPath();
@@ -320,4 +170,8 @@ public class JcrResourceListener implements EventListener, Closeable {
         }
     }
 
+    @Override
+    public String toString() {
+        return "JcrResourceListener [" + config + "]";
+    }
 }
