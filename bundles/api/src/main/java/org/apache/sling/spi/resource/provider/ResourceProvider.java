@@ -255,7 +255,7 @@ public abstract class ResourceProvider<T> {
      * @see ProviderContext#EXCLUDED_PATHS_CHANGED
      */
     public void update(final long changeSet) {
-        this.ctx = ctx;
+        // nothing to do here
     }
 
     /**
