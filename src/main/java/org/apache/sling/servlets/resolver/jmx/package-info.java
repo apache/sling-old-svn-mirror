@@ -17,8 +17,8 @@
  * under the License.
  */
 
-@Version("2.3.6")
+@org.osgi.annotation.versioning.Version("2.3.7")
 package org.apache.sling.servlets.resolver.jmx;
 
-import aQute.bnd.annotation.Version;
+
 

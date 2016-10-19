@@ -18,21 +18,24 @@
  */
 package org.apache.sling.servlets.resolver.jmx;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * This is the management interface for the SlingServletResolver's cache.
  */
+@ProviderType
 public interface SlingServletResolverCacheMBean {
 
     /**
      * Get the current size of the servlet resolver cache
-     * 
+     *
      * @return the cache size
      */
     int getCacheSize();
-    
+
     /**
      * Get the maximum configured size of the servlet resolver cache
-     * 
+     *
      * @return the maximum configured size
      */
     int getMaximumCacheSize();
