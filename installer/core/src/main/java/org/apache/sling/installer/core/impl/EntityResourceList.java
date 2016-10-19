@@ -162,7 +162,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
     
     /**
-     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#getActiveResourceIterator()
+     * Return an iterator containing all active resources in the group
      */
     public Iterator<TaskResource> getActiveResourceIterator(){
         if ( this.getActiveResource() != null ) {
