@@ -75,6 +75,7 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqmodel"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqmodel-reqarg"));
+        assertEquals("nt:unstructured", HTMLExtractor.innerHTML(url, pageContent, "#reqmodel-bindings"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#resmodel"));
         
     }
@@ -183,9 +184,11 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
         uploadFile("RepoPojo.java.updated", "RepoPojo.java", "/apps/sightly/scripts/use");
+        Thread.sleep(1000);
         pageContent = client.getStringContent(url, 200);
         assertEquals("updated", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
         uploadFile("RepoPojo.java.original", "RepoPojo.java", "/apps/sightly/scripts/use");
+        Thread.sleep(1000);
         pageContent = client.getStringContent(url, 200);
         assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
     }
@@ -196,9 +199,11 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("Hello world!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
         uploadFile("update.v2.html", "update.html", "/apps/sightly/scripts/update");
+        Thread.sleep(1000);
         pageContent = client.getStringContent(url, 200);
         assertEquals("Hello, John Doe!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
         uploadFile("update.html", "update.html", "/apps/sightly/scripts/update");
+        Thread.sleep(1000);
         pageContent = client.getStringContent(url, 200);
         assertEquals("Hello world!", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#update"));
     }

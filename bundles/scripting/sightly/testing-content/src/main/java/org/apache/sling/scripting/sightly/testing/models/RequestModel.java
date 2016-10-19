@@ -22,9 +22,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 
 @Model(adaptables = SlingHttpServletRequest.class)
 public class RequestModel {
@@ -36,6 +38,10 @@ public class RequestModel {
     // get it from request attributes
     private String requestArgument;
 
+    @ScriptVariable
+    private ValueMap properties;
+    private String jcrType;
+
     public String getTitle() {
         return title != null ? title : "FAILED";
     }
@@ -43,4 +49,9 @@ public class RequestModel {
     public String getRequestArgument() {
         return requestArgument != null ? requestArgument : "FAILED";
     }
+
+    public String getJCRType() {
+        return PropertiesUtil.toString(properties.get("jcr:primaryType"), "FAILED");
+    }
+
 }
