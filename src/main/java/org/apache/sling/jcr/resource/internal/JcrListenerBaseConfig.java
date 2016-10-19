@@ -120,6 +120,10 @@ public class JcrListenerBaseConfig implements Closeable {
                                         if ( config.getPaths().matches(path) != null ) {
                                             return e;
                                         }
+                                        if ( path.endsWith("/jcr:content") && config.getPaths().matches(path.substring(0, path.length() - 12)) != null ) {
+                                            return e;
+
+                                        }
                                     } catch (RepositoryException e1) {
                                         // ignore
                                     }
