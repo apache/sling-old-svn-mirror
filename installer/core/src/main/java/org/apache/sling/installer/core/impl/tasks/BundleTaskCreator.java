@@ -31,6 +31,7 @@ import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.BundleBlackList;
+import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.apache.sling.installer.core.impl.PersistentResourceList;
 import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
@@ -171,7 +172,7 @@ public class BundleTaskCreator
 		    if ( info != null ) {
 	            // if this is an uninstall, check if we have to install an older version
 	            // in this case we should do an update instead of uninstall/install (!)
-                Iterator<TaskResource> candidatesIt = resourceList.getActiveResourceIterator();
+                Iterator<TaskResource> candidatesIt = ((EntityResourceList)resourceList).getActiveResourceIterator();
                 TaskResource second = null;
                 while (candidatesIt != null && second == null && candidatesIt.hasNext()) {
                     TaskResource candidate = candidatesIt.next();
