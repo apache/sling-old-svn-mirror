@@ -180,7 +180,8 @@ public class BundleTaskCreator
                     boolean sameVersion = toActivate.getVersion().equals(candidate.getVersion());
                     if (!sameVersion) {
                         if (bundleBlacklist.isBlacklisted(symbolicName, candidate.getVersion())) {
-                            // blaklisted candidates should be uninstalled to no longer be taken into account anymore
+                            logger.info("Uninstalling blacklisted bundle {} found at {}", symbolicName, candidate.getURL());
+                            // blacklisted candidates should be uninstalled to no longer be taken into account anymore
                             ((RegisteredResourceImpl)candidate).setState(ResourceState.UNINSTALL);
                         } else {
                             second = candidate;
@@ -223,6 +224,7 @@ public class BundleTaskCreator
 		    } else {
                 final Version newVersion = new Version((String) toActivate.getAttribute(Constants.BUNDLE_VERSION));
                 if (bundleBlacklist.isBlacklisted(symbolicName, newVersion)) {
+                    logger.info("Ignoring blacklisted bundle {} found at {}", symbolicName, toActivate.getURL());
                     result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
                 } else {
 
