@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A resource that's been registered in the OSGi controller.

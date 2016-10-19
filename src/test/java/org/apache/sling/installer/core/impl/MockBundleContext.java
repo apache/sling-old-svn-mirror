@@ -34,7 +34,9 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
@@ -318,6 +320,18 @@ public class MockBundleContext implements BundleContext {
                 // TODO Auto-generated method stub
                 return null;
             }
+
+            @Override
+            public int compareTo(Bundle o) {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public File getDataFile(String filename) {
+                // TODO Auto-generated method stub
+                return null;
+            }
         };
     }
 
@@ -382,5 +396,18 @@ public class MockBundleContext implements BundleContext {
     public void addBundleListener(BundleListener listener) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory,
+            Dictionary<String, ?> properties) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

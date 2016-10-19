@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 
 /**

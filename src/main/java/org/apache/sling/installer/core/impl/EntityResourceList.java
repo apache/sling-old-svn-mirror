@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -158,6 +159,20 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         }
         return null;
     }
+
+    /**
+     * Return an iterator containing all active resources in the group
+     */
+    public Iterator<TaskResource> getActiveResourceIterator(){
+        synchronized ( lock ) {
+            if ( this.getActiveResource() != null && this.resources.size() > 1 ) {
+                final List<TaskResource> taskResourceList = new LinkedList<TaskResource>(this.resources);
+                return taskResourceList.iterator();
+            }
+        }
+        return null;
+    }
+
     /**
      * Return the first resource or null
      */

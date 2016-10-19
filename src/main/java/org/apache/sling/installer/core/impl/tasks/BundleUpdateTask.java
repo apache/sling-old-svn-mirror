@@ -24,7 +24,7 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -49,8 +49,8 @@ public class BundleUpdateTask extends AbstractBundleTask {
         if ( BundleUtil.isBundleActive(b) ) {
             return true;
         }
-        final StartLevel startLevelService = this.getStartLevel();
-        return startLevelService.isBundlePersistentlyStarted(b);
+        final BundleStartLevel startLevelService = b.adapt(BundleStartLevel.class);
+        return startLevelService.isPersistentlyStarted();
     }
 
     /**
@@ -70,7 +70,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
-    	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
+    	final Version currentVersion = new Version(b.getHeaders().get(Constants.BUNDLE_VERSION));
     	snapshot = BundleInfo.isSnapshot(newVersion);
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
@@ -95,14 +95,12 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
             // start level handling - after update to avoid starting the bundle
             // just before the update
-            final StartLevel startLevelService = this.getStartLevel();
-            if ( startLevelService != null ) {
-                final int newStartLevel = this.getBundleStartLevel();
-                final int oldStartLevel = startLevelService.getBundleStartLevel(b);
-                if ( newStartLevel != oldStartLevel && newStartLevel != 0 ) {
-                    startLevelService.setBundleStartLevel(b, newStartLevel);
-                    ctx.log("Set start level for bundle {} to {}", b, newStartLevel);
-                }
+            final BundleStartLevel startLevelService = b.adapt(BundleStartLevel.class);
+            final int newStartLevel = this.getBundleStartLevel();
+            final int oldStartLevel = startLevelService.getStartLevel();
+            if ( newStartLevel != oldStartLevel && newStartLevel != 0 ) {
+                startLevelService.setStartLevel(newStartLevel);
+                ctx.log("Set start level for bundle {} to {}", b, newStartLevel);
             }
 
             if (reactivate) {

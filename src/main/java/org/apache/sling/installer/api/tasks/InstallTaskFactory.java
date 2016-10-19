@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The install task factory creates a task for a given
