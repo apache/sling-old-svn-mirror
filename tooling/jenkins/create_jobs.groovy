@@ -1,4 +1,3 @@
-
 def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 // all modules should be listed here
 // keys:
@@ -6,6 +5,7 @@ def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 //   - jdks (optional) : override the default jdks to use for build
 //   - downstream (optional): list of downstream projects
 //   - archive (optional): list of archive patterns
+//   - extraGoalsParams (optional): additional string for the Maven goals to execute
 def modules = [
     [
         location: 'bundles/api'
@@ -361,7 +361,8 @@ def modules = [
         location: 'contrib/commons/mom/jobs/it'
     ],
     [
-        location: 'contrib/crankstart/launcher'
+        location: 'contrib/crankstart/launcher',
+        extraGoalsParams: '-Dorg.ops4j.pax.url.mvn.repositories=http://repo.maven.apache.org/maven2@id=apache-releases,http://repository.apache.org/content/groups/snapshots-group@snapshots@noreleases@id=apache-snapshots'
     ],
     [
         location: 'contrib/crankstart/test-services'
@@ -989,7 +990,8 @@ for more details</p>''')
             // job is triggered first and we may end up with a
             // mix of Java 7 and Java 8 artifacts for projects which
             // use these 2 versions
-            goals(deploy ? "-U clean deploy" : "-U clean verify");
+            def extraGoalsParams = module.extraGoalsParams ?: "" 
+            goals( (deploy ? "-U clean deploy" : "-U clean verify") + " " + extraGoalsParams)
 
             publishers {
                 if ( deploy && downstreamJobs ) {
