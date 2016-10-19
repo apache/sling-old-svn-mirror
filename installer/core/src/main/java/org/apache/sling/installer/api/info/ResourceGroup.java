@@ -20,7 +20,7 @@ package org.apache.sling.installer.api.info;
 
 import java.util.List;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This is a group of resources all pointing to the same artifact,

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import java.util.Iterator;
+
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
@@ -27,8 +29,11 @@ import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.BundleBlackList;
+import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.apache.sling.installer.core.impl.PersistentResourceList;
+import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.apache.sling.installer.core.impl.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -63,9 +68,12 @@ public class BundleTaskCreator
     /** The retry handler. */
     private RetryHandler retryHandler;
 
+    private BundleBlackList bundleBlacklist;
+
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener, RetryHandler)
      */
+    @Override
     public void init(final BundleContext bc, final ResourceChangeListener listener, final RetryHandler retryHandler) {
         this.bundleContext = bc;
         this.retryHandler = retryHandler;
@@ -74,18 +82,19 @@ public class BundleTaskCreator
         this.bundleContext.addFrameworkListener(this);
 
         this.taskSupport = new TaskSupport(bc);
+        this.bundleBlacklist = new BundleBlackList(bc);
     }
 
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#deactivate()
      */
+    @Override
     public void deactivate() {
         if ( this.bundleContext != null ) {
             this.bundleContext.removeBundleListener(this);
             this.bundleContext.removeFrameworkListener(this);
         }
         if ( this.taskSupport != null ) {
-            this.taskSupport.deactivate();
             this.taskSupport = null;
         }
     }
@@ -93,6 +102,7 @@ public class BundleTaskCreator
     /**
      * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
      */
+    @Override
     public void frameworkEvent(final FrameworkEvent event) {
         if ( event.getType() == FrameworkEvent.PACKAGES_REFRESHED ) {
             logger.debug("Received FrameworkEvent triggering a retry of the installer: {}", event);
@@ -103,6 +113,7 @@ public class BundleTaskCreator
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         final int t = event.getType();
         if (t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
@@ -114,6 +125,7 @@ public class BundleTaskCreator
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
      */
+    @Override
     public String getDescription() {
         return "Apache Sling Bundle Install Task Factory";
     }
@@ -123,7 +135,8 @@ public class BundleTaskCreator
      *
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
-	public InstallTask createTask(final TaskResourceGroup resourceList) {
+	@Override
+    public InstallTask createTask(final TaskResourceGroup resourceList) {
 	    // quick check of the resource type.
 	    final TaskResource toActivate = resourceList.getActiveResource();
 	    if ( toActivate.getType().equals(PersistentResourceList.RESTART_ACTIVE_BUNDLES_TYPE) ) {
@@ -160,7 +173,20 @@ public class BundleTaskCreator
 		    if ( info != null ) {
 	            // if this is an uninstall, check if we have to install an older version
 	            // in this case we should do an update instead of uninstall/install (!)
-	            final TaskResource second = resourceList.getNextActiveResource();
+                Iterator<TaskResource> candidatesIt = ((EntityResourceList)resourceList).getActiveResourceIterator();
+                TaskResource second = null;
+                while (candidatesIt != null && second == null && candidatesIt.hasNext()) {
+                    TaskResource candidate = candidatesIt.next();
+                    boolean sameVersion = toActivate.getVersion().equals(candidate.getVersion());
+                    if (!sameVersion) {
+                        if (bundleBlacklist.isBlacklisted(symbolicName, candidate.getVersion())) {
+                            // blaklisted candidates should be uninstalled to no longer be taken into account anymore
+                            ((RegisteredResourceImpl)candidate).setState(ResourceState.UNINSTALL);
+                        } else {
+                            second = candidate;
+                        }
+                    }
+                }
 	            if ( second != null &&
 	                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
                     second.setAttribute(FORCE_INSTALL_VERSION, info.version.toString());
@@ -195,8 +221,14 @@ public class BundleTaskCreator
                                     new String[] {InstallTask.ASYNC_ATTR_NAME});
                 }
 		    } else {
-    		    // for install and update, we want the bundle with the highest version
-    	        final BundleInfo info = this.getBundleInfo(symbolicName, null);
+                final Version newVersion = new Version((String) toActivate.getAttribute(Constants.BUNDLE_VERSION));
+                if (bundleBlacklist.isBlacklisted(symbolicName, newVersion)) {
+                    result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                } else {
+
+                    // for install and update, we want the bundle with the
+                    // highest version
+                    final BundleInfo info = this.getBundleInfo(symbolicName, null);
 
     		    // check if we should start the bundle as we installed it in the previous run
     		    if (info == null) {
@@ -207,7 +239,6 @@ public class BundleTaskCreator
     			} else {
     	            boolean doUpdate = false;
 
-    	            final Version newVersion = new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
     			    final int compare = info.version.compareTo(newVersion);
                     if (compare < 0) {
                         // installed version is lower -> update
@@ -243,6 +274,7 @@ public class BundleTaskCreator
                     } else {
                         logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
                         result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                        }
                     }
     			}
 		    }

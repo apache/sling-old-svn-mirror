@@ -23,7 +23,6 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.tasks.TaskSupport;
 import org.apache.sling.installer.core.impl.util.BundleRefresher;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +59,6 @@ public abstract class AbstractInstallTask extends InstallTask {
 
     protected BundleRefresher getBundleRefresher() {
         return this.support.getBundleRefresher();
-    }
-
-    protected StartLevel getStartLevel() {
-        return this.support.getStartLevel();
     }
 
     protected TaskSupport getTaskSupport() {

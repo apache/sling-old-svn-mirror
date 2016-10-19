@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Service for installing/updating/removing installable resources

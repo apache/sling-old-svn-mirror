@@ -19,84 +19,29 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.core.impl.util.BundleRefresher;
-import org.apache.sling.installer.core.impl.util.PABundleRefresher;
 import org.apache.sling.installer.core.impl.util.WABundleRefresher;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.FrameworkWiring;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Support class for the tasks.
  */
 public class TaskSupport {
 
-    /** Interface of the package admin */
-    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
-
-    /** Interface of the start level */
-    private static String START_LEVEL_NAME = StartLevel.class.getName();
-
-    /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
-
-    /** Tracker for the start level service. */
-    private final ServiceTracker startLevelTracker;
-
     /** The bundle context. */
     private final BundleContext bundleContext;
 
-    /** Checked for wire admin? */
-    private Boolean checkedWireAdmin;
-
     public TaskSupport(final BundleContext bc) {
         this.bundleContext = bc;
-
-        // create and start tracker
-        this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
-        this.packageAdminTracker.open();
-        this.startLevelTracker = new ServiceTracker(bc, START_LEVEL_NAME, null);
-        this.startLevelTracker.open();
-    }
-
-    /**
-     * Deactivate this helper.
-     */
-    public void deactivate() {
-        if ( this.packageAdminTracker != null ) {
-            this.packageAdminTracker.close();
-        }
-        if ( this.startLevelTracker != null ) {
-            this.startLevelTracker.close();
-        }
     }
 
     public BundleContext getBundleContext() {
         return this.bundleContext;
     }
 
-    public StartLevel getStartLevel() {
-        return (StartLevel) this.startLevelTracker.getService();
-    }
-
     public BundleRefresher getBundleRefresher() {
-        if ( checkedWireAdmin == null ) {
-            try {
-                this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class);
-                checkedWireAdmin = true;
-            } catch (final Throwable t) {
-                checkedWireAdmin = false;
-            }
-        }
-        if ( checkedWireAdmin.booleanValue() ) {
-            return new WABundleRefresher(this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class),
-                    this.bundleContext);
-        } else {
-            return new PABundleRefresher((PackageAdmin) this.packageAdminTracker.getService(),
-                    this.bundleContext);
-        }
+        return new WABundleRefresher(this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).adapt(FrameworkWiring.class),
+                this.bundleContext);
     }
-
 }

@@ -18,9 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Version;
-
-import aQute.bnd.annotation.ProviderType;
 
 
 /**

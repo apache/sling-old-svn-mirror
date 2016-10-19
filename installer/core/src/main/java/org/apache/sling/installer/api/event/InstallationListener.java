@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.event;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 /**

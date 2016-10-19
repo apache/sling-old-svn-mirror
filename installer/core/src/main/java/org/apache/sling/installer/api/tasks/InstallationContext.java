@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Context for the installation tasks.

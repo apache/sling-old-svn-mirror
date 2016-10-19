@@ -171,6 +171,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     /**
      * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
      */
+    @Override
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
             packageRefreshEventsCount++;
@@ -503,16 +504,16 @@ public class OsgiInstallerTestBase implements FrameworkListener {
                 ),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
                 provision(
-                        mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "3.0.0"),
-                        mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.6"),
 
-                        mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
-                        mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
-                        mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
+                        mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
+                        mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.5"),
+                        mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.5"),
 
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
-        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.10"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.6"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.10"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.2"),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION).startLevel(5),
                         mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION).startLevel(5)
         		)
@@ -618,6 +619,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
         private final List<BundleEvent> events = new ArrayList<BundleEvent>();
 
+        @Override
         public void bundleChanged(org.osgi.framework.BundleEvent event) {
             synchronized ( this ) {
                 events.add(new BundleEvent(event.getBundle().getSymbolicName(), event.getBundle().getVersion().toString(), event.getType()));

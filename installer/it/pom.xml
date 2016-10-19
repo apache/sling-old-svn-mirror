@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>29</version>
         <relativePath/>
     </parent>
 
@@ -54,6 +54,17 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/test/resources/blacklisttest/sling_bootstrap.txt</exclude>
+                        <exclude>src/test/resources/blacklisttestempty/sling_bootstrap.txt</exclude>
+                        <exclude>src/test/resources/sling_bootstrap.txt</exclude>
+                    </excludes>
+                </configuration>
+             </plugin>
+             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -445,17 +456,17 @@
             <scope>provided</scope>
         </dependency>          
         <dependency>
+             <groupId>org.osgi</groupId>
+             <artifactId>org.osgi.service.cm</artifactId>
+             <version>1.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.1.2</version>
             <scope>provided</scope>
         </dependency>          
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-native</artifactId>
@@ -489,7 +500,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.4.1</version>
+            <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
