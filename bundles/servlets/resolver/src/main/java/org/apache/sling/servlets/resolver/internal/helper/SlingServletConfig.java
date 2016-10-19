@@ -58,6 +58,7 @@ public class SlingServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getInitParameter(java.lang.String)
      */
+    @Override
     public String getInitParameter(String name) {
         Object prop = reference.getProperty(name);
         return (prop == null) ? null : String.valueOf(prop);
@@ -66,14 +67,16 @@ public class SlingServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getInitParameterNames()
      */
-    public Enumeration<?> getInitParameterNames() {
-        List<?> keys = Arrays.asList(reference.getPropertyKeys());
+    @Override
+    public Enumeration<String> getInitParameterNames() {
+        List<String> keys = Arrays.asList(reference.getPropertyKeys());
         return Collections.enumeration(keys);
     }
 
     /**
      * @see javax.servlet.ServletConfig#getServletContext()
      */
+    @Override
     public ServletContext getServletContext() {
         return servletContext;
     }
@@ -81,6 +84,7 @@ public class SlingServletConfig implements ServletConfig {
     /**
      * @see javax.servlet.ServletConfig#getServletName()
      */
+    @Override
     public String getServletName() {
         return this.name;
     }

@@ -52,8 +52,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
@@ -75,11 +75,14 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
@@ -110,26 +113,17 @@ import org.slf4j.LoggerFactory;
  * The resolver uses an own session to find the scripts.
  *
  */
-@Component(name="org.apache.sling.servlets.resolver.SlingServletResolver", metatype=true,
-           label="%servletresolver.name", description="%servletresolver.description")
-@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class, SlingRequestListener.class})
-@Properties({
-    @Property(name="service.description", value="Sling Servlet Resolver and Error Handler"),
-    @Property(name="event.topics", propertyPrivate=true,
-         value={"org/apache/sling/api/resource/Resource/*",
-                    "org/apache/sling/api/resource/ResourceProvider/*",
-                    "javax/script/ScriptEngineFactory/*",
-                    "org/apache/sling/api/adapter/AdapterFactory/*",
-                    "org/apache/sling/scripting/core/BindingsValuesProvider/*"})
-})
-@Reference(name="Servlet", referenceInterface=javax.servlet.Servlet.class,
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+@Component(name = "org.apache.sling.servlets.resolver.SlingServletResolver", metatype = true, label = "%servletresolver.name", description = "%servletresolver.description")
+@Service(value = { ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class, SlingRequestListener.class })
+@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Servlet Resolver and Error Handler")
+@Reference(name = "Servlet", referenceInterface = javax.servlet.Servlet.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 public class SlingServletResolver
     implements ServletResolver,
                SlingScriptResolver,
                SlingRequestListener,
                ErrorHandler,
-               EventHandler {
+               EventHandler,
+               ResourceChangeListener,ExternalResourceChangeListener {
 
     /**
      * The default servlet root is the first search path (which is usally /apps)
@@ -780,7 +774,7 @@ public class SlingServletResolver
     private Map<String, Object> createAuthenticationInfo(final Dictionary<String, Object> props) {
         final Map<String, Object> authInfo = new HashMap<String, Object>();
         // if a script user is configured we use this user to read the scripts
-        final String scriptUser = OsgiUtil.toString(props.get(PROP_SCRIPT_USER), null);
+        final String scriptUser = PropertiesUtil.toString(props.get(PROP_SCRIPT_USER), null);
         if (scriptUser != null && scriptUser.length() > 0) {
             authInfo.put(ResourceResolverFactory.USER_IMPERSONATION, scriptUser);
         }
@@ -792,7 +786,7 @@ public class SlingServletResolver
     /**
      * Activate this component.
      */
-    @SuppressWarnings("unchecked")
+    @Activate
     protected void activate(final ComponentContext context) throws LoginException {
         // from configuration if available
         final Dictionary<?, ?> properties = context.getProperties();
@@ -818,7 +812,7 @@ public class SlingServletResolver
         createAllServlets(refs);
 
         // execution paths
-        this.executionPaths = OsgiUtil.toStringArray(properties.get(PROP_PATHS), DEFAULT_PATHS);
+        this.executionPaths = PropertiesUtil.toStringArray(properties.get(PROP_PATHS), DEFAULT_PATHS);
         if ( this.executionPaths != null ) {
             // if we find a string combination that basically allows all paths,
             // we simply set the array to null
@@ -838,10 +832,10 @@ public class SlingServletResolver
                 }
             }
         }
-        this.defaultExtensions = OsgiUtil.toStringArray(properties.get(PROP_DEFAULT_EXTENSIONS), DEFAULT_DEFAULT_EXTENSIONS);
+        this.defaultExtensions = PropertiesUtil.toStringArray(properties.get(PROP_DEFAULT_EXTENSIONS), DEFAULT_DEFAULT_EXTENSIONS);
 
         // create cache - if a cache size is configured
-        this.cacheSize = OsgiUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
+        this.cacheSize = PropertiesUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
         if (this.cacheSize > 5) {
             this.cache = new ConcurrentHashMap<AbstractResourceCollector, Servlet>(cacheSize);
             this.logCacheSizeWarning = true;
@@ -853,11 +847,19 @@ public class SlingServletResolver
         this.getDefaultServlet();
 
         // and finally register as event listener
-        this.eventHandlerReg = context.getBundleContext().registerService(EventHandler.class.getName(), this,
-                properties);
+
+		final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("event.topics", new String[] {"javax/script/ScriptEngineFactory/*",
+            "org/apache/sling/api/adapter/AdapterFactory/*","org/apache/sling/scripting/core/BindingsValuesProvider/*" });
+        props.put(ResourceChangeListener.PATHS, "/");
+        props.put("service.description", "Apache Sling Servlet Resolver and Error Handler");
+        props.put("service.vendor","The Apache Software Foundation");
+
+        this.eventHandlerReg = context.getBundleContext()
+                  .registerService(new String[] {ResourceChangeListener.class.getName(), EventHandler.class.getName()}, this, props);
+
 
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
-
         if (this.cacheSize > 0) {
             try {
                 Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
@@ -1067,7 +1069,6 @@ public class SlingServletResolver
     public void handleEvent(final Event event) {
         if (this.cache != null) {
             boolean flushCache = false;
-
             // we may receive different events
             final String topic = event.getTopic();
             if (topic.startsWith("javax/script/ScriptEngineFactory/")) {
@@ -1080,21 +1081,6 @@ public class SlingServletResolver
             } else if (topic.startsWith("org/apache/sling/scripting/core/BindingsValuesProvider/")) {
                 // bindings values provide factory added or removed: we always flush
                 flushCache = true;
-            } else {
-                // this is a resource or resource provider event
-
-                // if the path of the event is a sub path of a search path
-                // we flush the whole cache
-                final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-                if ( path != null ) {
-                    int index = 0;
-                    while (!flushCache && index < searchPaths.length) {
-                        if (path.startsWith(this.searchPaths[index])) {
-                            flushCache = true;
-                        }
-                        index++;
-                    }
-                }
             }
             if (flushCache) {
                 flushCache();
@@ -1412,5 +1398,32 @@ public class SlingServletResolver
             return cacheSize;
         }
 
+    }
+
+    @Override
+	public void onChange(List<ResourceChange> changes) {
+        if (this.cache != null) {
+            boolean flushCache = false;
+            for(ResourceChange change : changes){
+                // we may receive different events
+                final String topic = change.getType().toString();
+                // this is a resource or resource provider event
+                // if the path of the event is a sub path of a search path
+                // we flush the whole cache
+                final String path = change.getPath();
+                if ( path != null ) {
+                    int index = 0;
+                    while (!flushCache && index < searchPaths.length) {
+                        if (path.startsWith(this.searchPaths[index])) {
+                            flushCache = true;
+                        }
+                        index++;
+                    }
+                }
+                if (flushCache) {
+                    flushCache();
+                }
+            }
+        }
     }
 }
