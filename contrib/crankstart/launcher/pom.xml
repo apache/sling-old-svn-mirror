@@ -33,8 +33,6 @@
     <properties>
         <pax.url.version>2.1.0</pax.url.version>
         <org.ops4j.pax.url.mvn.repositories/>
-        <org.ops4j.pax.url.mvn.settings/>
-        <org.ops4j.pax.url.mvn.localRepository/>
     </properties>
  
     <build>
@@ -108,8 +106,6 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <org.ops4j.pax.url.mvn.repositories>${org.ops4j.pax.url.mvn.repositories}</org.ops4j.pax.url.mvn.repositories>
-				<org.ops4j.pax.url.mvn.settings>${org.ops4j.pax.url.mvn.settings}</org.ops4j.pax.url.mvn.settings>
-				<org.ops4j.pax.url.mvn.localRepository>${org.ops4j.pax.url.mvn.localRepository}</org.ops4j.pax.url.mvn.localRepository>
                             </systemPropertyVariables>
                         </configuration>
                     </execution>
