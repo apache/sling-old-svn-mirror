@@ -34,7 +34,7 @@
 
 [artifacts]
     org.slf4j/slf4j-api/${slf4j.version}
-    org.apache.sling/org.apache.sling.commons.log/4.0.7-SNAPSHOT
+    org.apache.sling/org.apache.sling.commons.log/5.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.commons.logservice/1.0.6
     org.slf4j/jcl-over-slf4j/${slf4j.version}
     org.slf4j/log4j-over-slf4j/${slf4j.version}
