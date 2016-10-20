@@ -18,10 +18,6 @@
 <?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="46">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.sonatype.tycho.m2e.feature.feature.group" version="0.6.0.201207302152"/>
-<repository location="http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.6.0/N/0.6.0.201207302152/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.m2e.feature.feature.group" version="1.5.1.20150109-1820"/>
 <unit id="org.eclipse.wst.server_adapters.feature.feature.group" version="3.2.401.v201410241731"/>
 <unit id="org.eclipse.jst.server_ui.feature.feature.group" version="3.4.101.v201410241731"/>
