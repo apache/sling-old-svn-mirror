@@ -75,7 +75,7 @@ public class QuartzJobExecutor implements Job {
                         return;
                     }
                 } else {
-                    logger.error("No discovery available, therefore not executing job {} with name {} and config {}.",
+                    logger.debug("No discovery available, therefore not executing job {} with name {} and config {}.",
                             new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), runOn[0]});
                     return;
                 }
