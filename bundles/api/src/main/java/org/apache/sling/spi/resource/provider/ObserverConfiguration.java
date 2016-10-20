@@ -33,6 +33,13 @@ import org.osgi.annotation.versioning.ProviderType;
  * {@link Object#equals(Object)} method. Two configurations are equal, if they
  * have exactly the same parameters.
  *
+ * A resource provider implementation observation must support sending remove
+ * events as explained in {@link org.apache.sling.api.resource.observation.ResourceChangeListener}.
+ * If an observer configuration contains a pattern or is limited to a sub tree,
+ * removal events not matching the pattern or removing events of parents of
+ * that sub tree must be provided to the listener nevertheless - if the
+ * listener is interested in resource remove events.
+ *
  * @since 1.0.0 (Sling API Bundle 2.11.0)
  */
 @ProviderType
