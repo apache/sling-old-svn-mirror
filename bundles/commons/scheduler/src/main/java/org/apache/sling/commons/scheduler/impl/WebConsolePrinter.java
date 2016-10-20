@@ -68,6 +68,7 @@ public class WebConsolePrinter {
         final Map<String, SchedulerProxy> proxies = this.scheduler.getSchedulers();
         if ( !proxies.isEmpty() ) {
             pw.println("Status : active");
+            pw.println("Discovery : " + (QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ? "available" : "not available"));
             for(final Map.Entry<String, SchedulerProxy> entry : proxies.entrySet()) {
                 final Scheduler s = entry.getValue().getScheduler();
                 try {
