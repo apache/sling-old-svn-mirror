@@ -30,9 +30,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DateFormatFilter extends AbstractFilter {
 
-    public static final String DATE_FORMAT = "dateFormat";
+    private static final String DATE_FORMAT = "dateFormat";
     
-    public static final String LOCALE_OPTION = "locale";
+    private static final String LOCALE_OPTION = "locale";
+    
+    private static final String TIMEZONE = "timezone";
 
     private static final Logger LOG = LoggerFactory.getLogger(DateFormatFilter.class);
 
@@ -61,7 +63,7 @@ public class DateFormatFilter extends AbstractFilter {
         }
         ExpressionNode translation =
                 new RuntimeCall(DATE_FORMAT, expression.getRoot(), new MapLiteral
-        (getFilterOptions(expression, DATE_FORMAT, LOCALE_OPTION)));
+        (getFilterOptions(expression, DATE_FORMAT, LOCALE_OPTION, TIMEZONE)));
         return expression.withNode(translation);
     }
 }

@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang.StringUtils;
@@ -50,6 +51,8 @@ public class DateFormatExtension implements RuntimeExtension {
 	
 	private static final String LOCALE_OPTION = "locale";
 	
+	private static final String TIMEZONE = "timezone";
+	
 	@Override
 	public Object call(final RenderContext renderContext, Object... arguments) {
 		ExtensionUtils.checkArgumentCount(DATE_FORMAT, arguments, 2);
@@ -61,7 +64,13 @@ public class DateFormatExtension implements RuntimeExtension {
 
 		String localeOption = null;
 		if ( options.containsKey(LOCALE_OPTION)) {
-			localeOption =  runtimeObjectModel.toString(options.get(LOCALE_OPTION));
+			localeOption = runtimeObjectModel.toString(options.get(LOCALE_OPTION));
+		}
+		TimeZone timezone = null;
+		if ( options.containsKey(TIMEZONE)) {
+			timezone = TimeZone.getTimeZone(runtimeObjectModel.toString(options.get(TIMEZONE)));
+		} else {
+			timezone = TimeZone.getDefault();
 		}
 
 		Locale locale = getLocale( renderContext, localeOption);
@@ -71,12 +80,12 @@ public class DateFormatExtension implements RuntimeExtension {
 		if (dateValue instanceof Calendar) {
 
 			Calendar cal = (Calendar) dateValue;
-			returnValue = format(cal.getTime(), dateFormat, locale);
+			returnValue = format(cal.getTime(), dateFormat, locale, timezone);
 
 		} else if (dateValue instanceof Date) {
 
 			Date dateAsDate = (Date) dateValue;
-			returnValue = format(dateAsDate, dateFormat, locale);
+			returnValue = format(dateAsDate, dateFormat, locale, timezone);
 
 		} else {
 			throw new SightlyException("Input value is not of a date type, supported types java.util.Date and java.util.Calendar");
@@ -99,14 +108,15 @@ public class DateFormatExtension implements RuntimeExtension {
 		
 	}
 
-	private String format(Date date, String format, Locale locale) {
-		LOG.trace("Formatting date {0}, with format {1} and locale {2}", date, format, locale);
+	private String format(Date date, String format, Locale locale, TimeZone timezone) {
+		LOG.trace("Formatting date {0}, with format {1}, locale {2}, timezone {3}", date, format, locale, timezone);
 
 		try {
 			SimpleDateFormat formatter = new SimpleDateFormat(format, locale);
+			formatter.setTimeZone(timezone);
 			return formatter.format(date);
 		} catch (Exception e) {
-			String error = String.format("Error during formatting of date %s with format %s and locale %s", date, format, locale);
+			String error = String.format("Error during formatting of date %s with format %s, locale %s and timezone %s", date, format, locale, timezone);
 			throw new SightlyException( error, e);
 		}
 	}
