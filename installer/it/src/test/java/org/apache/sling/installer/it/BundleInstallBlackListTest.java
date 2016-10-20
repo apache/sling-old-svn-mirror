@@ -20,27 +20,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.sling.installer.api.OsgiInstaller;
-import org.apache.sling.installer.core.impl.tasks.BundleInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.FrameworkPropertyOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.Version;
 
 @RunWith(PaxExam.class)
 public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
-    
+
     final String symbolicName = "osgi-installer-testbundle";
 
     @org.ops4j.pax.exam.Configuration
@@ -48,12 +41,21 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
         return defaultConfiguration();
     }
 
+    @Override
     @Before
-    public void setUp() throws BundleException {
+    public void setup() {
+        // switch to system bundle context
+        bundleContext = bundleContext.getBundle(0).getBundleContext();
+        super.setup();
         System.setProperty("sling.launchpad",new File("src/test/resources/blacklisttest").getAbsolutePath());
-        updateInstallerBundle();
+        try {
+            updateInstallerBundle();
+        } catch ( BundleException be) {
+            throw new RuntimeException(be);
+        }
     }
 
+    @Override
     @After
     public void tearDown() {
         super.tearDown();
@@ -95,7 +97,7 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
 
     @Test
     public void testUninstallWithBlacklistedVersions() throws Exception {
-        
+
         // Reroute launchpad home containing empty blacklist for ramp up
         System.setProperty("sling.launchpad",new File("src/test/resources/blacklisttestempty").getAbsolutePath());
         updateInstallerBundle();
@@ -131,7 +133,7 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
         // configure blacklist bundle to ignore older version
         System.setProperty("sling.launchpad",new File("src/test/resources/blacklisttest").getAbsolutePath());
         updateInstallerBundle();
-        
+
         // Try to uninstall current version and verify uninstall instead of
         // downgrade to blacklisted version
         {
@@ -149,7 +151,19 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
     }
 
     private void updateInstallerBundle() throws BundleException {
+        // wait a little bit for updating bundle
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // ignore
+        }
         bundleContext.getServiceReference(OsgiInstaller.class).getBundle().update();
+        // wait a little bit after updating bundle
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // ignore
+        }
         setupInstaller();
     }
 
@@ -219,7 +233,7 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
         // configure blacklist bundle to ignore older version
         System.setProperty("sling.launchpad",new File("src/test/resources/blacklisttest").getAbsolutePath());
         updateInstallerBundle();
- 
+
         // Try to uninstall current version and verify uninstall instead of
         // downgrade to blacklisted version
         {
