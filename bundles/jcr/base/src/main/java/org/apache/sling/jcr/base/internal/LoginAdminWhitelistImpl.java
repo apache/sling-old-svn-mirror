@@ -35,9 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Whitelist that defines which bundles can use the 
+ * Whitelist that defines which bundles can use the
  * {@link SlingRepository#loginAdministrative} method.
- * 
+ *
  * The default configuration lets a few trusted Sling bundles
  * use the loginAdministrative method.
  */
@@ -50,21 +50,21 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** Need to allow for bypassing the whitelist, for backwards
-     *  compatibility with previous Sling versions which didn't 
+     *  compatibility with previous Sling versions which didn't
      *  implement it. Setting this to true is not recommended
      *  and logged as a warning.
      */
     @Property(
             label="Bypass the whitelist",
             description=
-                "Allow all bundles to use loginAdministrative(). " 
-                + "Should ONLY be used for backwards compatiblity reasons and " 
+                "Allow all bundles to use loginAdministrative(). "
+                + "Should ONLY be used for backwards compatiblity reasons and "
                 + "if you are aware of the related security risks.",
             boolValue=false)
     public static final String PROP_BYPASS_WHITELIST = "whitelist.bypass";
     public static final boolean DEFAULT_BYPASS = false;
     private boolean bypassWhitelist = DEFAULT_BYPASS;
-    
+
     @Property(
             label="Whitelist regexp",
             description="Regular expression for bundle symbolic names for which loginAdministrative() is allowed. "
@@ -72,20 +72,18 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
             value = "")
     public static final String PROP_WHITELIST_REGEXP = "whitelist.regexp";
     private Pattern whitelistRegexp;
-    
+
     @Property(
             label="Whitelisted BSNs",
             description="List of bundle symbolic names for which loginAdministrative() is allowed",
             value = {})
     public static final String PROP_WHITELISTED_BSN = "whitelisted.bundle.symbolic.names";
     private Set<String> whitelistedBsn;
-    
+
     static final String [] DEFAULT_WHITELISTED_BSN = {
             "org.apache.sling.discovery.commons",
             "org.apache.sling.discovery.base",
             "org.apache.sling.discovery.oak",
-            "org.apache.sling.event",
-            "org.apache.sling.event.dea",
             "org.apache.sling.extensions.webconsolesecurityprovider",
             "org.apache.sling.i18n",
             "org.apache.sling.installer.provider.jcr",
@@ -105,7 +103,7 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
             "org.apache.sling.servlets.resolver",
             "org.apache.sling.xss"
     };
-    
+
     public void activate(Map<String, Object> config) {
         bypassWhitelist = PropertiesUtil.toBoolean(config.get(PROP_BYPASS_WHITELIST), DEFAULT_BYPASS);
         whitelistedBsn = new TreeSet<String>();
@@ -115,7 +113,7 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
         } else {
             whitelistedBsn.addAll(Arrays.asList(PropertiesUtil.toStringArray(bsns)));
         }
-        
+
         final String regexp = PropertiesUtil.toString(config.get(PROP_WHITELIST_REGEXP), "");
         if(regexp.trim().length() > 0) {
             whitelistRegexp = Pattern.compile(regexp);
@@ -123,7 +121,7 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
         } else {
             whitelistRegexp = null;
         }
-        
+
         if(bypassWhitelist) {
             log.info("bypassWhitelist={}, whitelisted BSNs=<ALL>", bypassWhitelist);
             log.warn(
@@ -131,18 +129,18 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
                 + " of this service. This is NOT RECOMMENDED, for security reasons."
             );
         } else {
-            log.info("bypassWhitelist={}, whitelisted BSNs({})={}", 
+            log.info("bypassWhitelist={}, whitelisted BSNs({})={}",
                     new Object[] { bypassWhitelist, whitelistedBsn.size(), whitelistedBsn });
         }
     }
-    
+
     @Override
     public boolean allowLoginAdministrative(Bundle b) {
         if(bypassWhitelist) {
             log.debug("Whitelist is bypassed, all bundles allowed to use loginAdministrative");
             return true;
         }
-        
+
         final String bsn = b.getSymbolicName();
         if(whitelistRegexp != null && whitelistRegexp.matcher(bsn).matches()) {
             log.debug("{} is whitelisted to use loginAdministrative, by regexp", bsn);
