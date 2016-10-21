@@ -168,7 +168,7 @@ public class PathSet implements Iterable<Path> {
     /**
      * Generate a path set of paths from this set which
      * are in at least one of the sub tree of the provided path set.
-     * @param path The base path
+     * @param set The base path set
      * @return Path set
      */
     public PathSet getSubset(final PathSet set) {
