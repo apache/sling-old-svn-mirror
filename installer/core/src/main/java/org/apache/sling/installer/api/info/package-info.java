@@ -17,5 +17,5 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.0.3")
+@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.sling.installer.api.info;

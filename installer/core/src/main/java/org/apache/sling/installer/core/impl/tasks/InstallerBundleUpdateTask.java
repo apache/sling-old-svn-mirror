@@ -18,6 +18,7 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import java.text.MessageFormat;
 import java.util.Collections;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
@@ -54,8 +55,9 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
                 b.update(getResource().getInputStream());
                 ctx.log("Updated bundle {} from resource {}", b, getResource());
             } catch (final Exception e) {
-                getLogger().info("Removing failing tasks - unable to retry: " + this, e);
-                this.setFinishedState(ResourceState.IGNORED);
+                String message = MessageFormat.format("Removing failing tasks due to {0} - unable to retry: {1}", e.getLocalizedMessage(), this);
+                getLogger().info(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
                 ctx.asyncTaskFailed(this);
             }
         } else if ( this.count == 1 ) {
@@ -64,7 +66,7 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
         } else {
             // finished
             this.getResource().setAttribute(ASYNC_ATTR_NAME, null);
-            this.setFinishedState(ResourceState.INSTALLED);
+            this.setFinishedState(ResourceState.INSTALLED, null, null);
         }
     }
 

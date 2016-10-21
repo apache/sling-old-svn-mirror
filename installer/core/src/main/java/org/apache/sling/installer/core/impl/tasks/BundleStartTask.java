@@ -19,6 +19,7 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import java.text.DecimalFormat;
+import java.text.MessageFormat;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -56,11 +57,11 @@ public class BundleStartTask extends AbstractBundleTask {
     }
 
     @Override
-    public void setFinishedState(final ResourceState state) {
+    public void setFinishedState(final ResourceState state, String alias, String error) {
         if ( this.getResource() != null ) {
             BundleUtil.clearBundleStart(this.getResource());
         }
-        super.setFinishedState(state);
+        super.setFinishedState(state, alias, error);
     }
 
     /**
@@ -69,9 +70,10 @@ public class BundleStartTask extends AbstractBundleTask {
     public void execute(final InstallationContext ctx) {
         // this is just a sanity check which should never be reached
         if (bundleId == 0) {
-            this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");
+            String message = "Bundle 0 is the framework bundle, ignoring request to start it";
+            this.getLogger().debug(message);
             if ( this.getResource() != null ) {
-                this.setFinishedState(ResourceState.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED, null, message);
             }
             return;
         }
@@ -79,14 +81,16 @@ public class BundleStartTask extends AbstractBundleTask {
         // and another sanity check
         final Bundle b = this.getBundleContext().getBundle(bundleId);
         if (b == null) {
-            this.getLogger().debug("Cannot start bundle, id not found: {}", bundleId);
-            this.setFinishedState(ResourceState.IGNORED);
+            String message = MessageFormat.format("Cannot start bundle, id not found: {0}", bundleId);
+            this.getLogger().debug(message);
+            this.setFinishedState(ResourceState.IGNORED, null, message);
             return;
         }
 
         if (BundleUtil.isBundleActive(b) ) {
-            this.getLogger().debug("Bundle already started, no action taken: {}", b);
-            this.setFinishedState(ResourceState.INSTALLED);
+            String message = MessageFormat.format("Bundle already started, no action taken: {0}", bundleId);
+            this.getLogger().debug(message);
+            this.setFinishedState(ResourceState.INSTALLED, null, message);
         } else {
             // Try to start bundle, and if that doesn't work we'll need to retry
             try {

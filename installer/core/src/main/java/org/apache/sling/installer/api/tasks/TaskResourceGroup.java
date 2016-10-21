@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import javax.annotation.CheckForNull;
+
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -44,7 +46,9 @@ public interface TaskResourceGroup {
      * Set the finish state for the active resource.
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
+     * @deprecated rather use {@link #setFinishState(ResourceState, String, String)}
      */
+    @Deprecated
     void setFinishState(ResourceState state);
 
     /**
@@ -54,13 +58,30 @@ public interface TaskResourceGroup {
      *
      * @see #setFinishState(ResourceState)
      * @since 1.1
+     * @deprecated rather use {@link #setFinishState(ResourceState, String, String)}
      */
+    @Deprecated
     void setFinishState(ResourceState state, String alias);
+
+    /**
+     * Set the finish state for the active resource and register an alias.
+     * In addition set an error text (may be null).
+     * This method does the same as {@link #setFinishState(ResourceState)}
+     * but in addition registers an alias id for the resource and an error text.
+     *
+     * @param state The finish state.
+     * @param alias The alias for this group (may be {@code null}).
+     * @param error The error text explaining why the finish state was set (may be {@code null}) .
+     * @see #setFinishState(ResourceState)
+     * @since 1.4
+     */
+    void setFinishState(ResourceState state, String alias, String error);
 
     /**
      * Get the current alias for this group.
      * @return The alias or <code>null</code>
      * @since 1.1
      */
+    @CheckForNull
     String getAlias();
 }
