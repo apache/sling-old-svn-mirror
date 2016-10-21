@@ -20,6 +20,7 @@ package org.apache.sling.installer.factory.packages.impl;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -208,15 +209,17 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
                 // open package
                 pkg = pkgMgr.open(pkgId);
                 if (pkg == null) {
-                    logger.error("Error during installation of {}: Package {} missing.", resource, pkgId);
-                    this.setFinishedState(ResourceState.IGNORED);
+                    String message = MessageFormat.format("Error during installation of {0}: Package {1} missing.", resource, pkgId);
+                    logger.error(message);
+                    this.setFinishedState(ResourceState.IGNORED, null, message);
                     return;
                 }
 
                 // check if package was installed in the meantime
                 if (pkg.isInstalled()) {
-                    logger.info("Package {} was installed externally. Marking as installed.", pkgId);
-                    this.setFinishedState(ResourceState.INSTALLED);
+                    String message = MessageFormat.format("Package {0} was installed externally. Marking as installed.", pkgId);
+                    logger.info(message);
+                    this.setFinishedState(ResourceState.INSTALLED, null, message);
                     return;
                 }
 
@@ -245,8 +248,9 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
                 retryHandler.scheduleRetry();
 
             } catch (final Exception e) {
-                logger.error("Error while processing install task of {}.", resource, e);
-                this.setFinishedState(ResourceState.IGNORED);
+                String message = MessageFormat.format("Error while processing install task of {0} due to {1}, no retry.", resource, e.getLocalizedMessage());
+                logger.error(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
             } finally {
                 if (pkg != null) {
                     pkg.close();
