@@ -31,6 +31,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
+
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
@@ -49,7 +51,7 @@ public class RegisteredResourceImpl
     private static final long serialVersionUID = 6L;
 
     /** Serialization version. */
-    private static final int VERSION = 3;
+    private static final int VERSION = 4;
 
     /** The resource url. */
     private String url;
@@ -88,6 +90,9 @@ public class RegisteredResourceImpl
     /** When was the last status change? */
     private long lastChange = -1;
 
+    /** the potential error related to this resource */
+    private String error;
+
     /**
      * Serialize the object
      * - write version id
@@ -110,6 +115,7 @@ public class RegisteredResourceImpl
         out.writeObject(state.toString());
         out.writeLong(this.lastChange);
         out.writeObject(this.dataUri);
+        out.writeObject(error);
     }
 
     /**
@@ -146,6 +152,11 @@ public class RegisteredResourceImpl
             if ( !updatedDigest.equals(this.digest) ) {
                 this.digest = updatedDigest;
             }
+        }
+        if (version > 3) {
+            error = (String)in.readObject();
+        } else {
+            error = "";
         }
         // update file location
         if ( this.dataFile != null ) {
@@ -366,9 +377,10 @@ public class RegisteredResourceImpl
     /**
      * Set the state for the resource.
      */
-    public void setState(final ResourceState s) {
+    public void setState(final ResourceState s, String error) {
         this.lastChange = System.currentTimeMillis();
         this.state = s;
+        this.error = error;
     }
 
     /**
@@ -648,5 +660,11 @@ public class RegisteredResourceImpl
     public Version getVersion() {
         final String vInfo = (String)this.getAttribute(Constants.BUNDLE_VERSION);
         return (vInfo == null ? null : new Version(vInfo));
+    }
+
+    @Override
+    @CheckForNull
+    public String getError() {
+        return error;
     }
 }

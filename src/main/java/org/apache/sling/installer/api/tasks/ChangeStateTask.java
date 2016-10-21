@@ -35,14 +35,29 @@ public class ChangeStateTask extends InstallTask {
 
     private final Map<String, Object> addAttributes;
 
+    private final String error;
+
     /**
      * Change the state of the task
      * @param r The resource group to change.
-     * @param s The new state.,
+     * @param s The new state.
      */
     public ChangeStateTask(final TaskResourceGroup r,
                            final ResourceState s) {
-        this(r, s, null, null);
+        this(r, s, null);
+    }
+
+    /**
+     * Change the state of the task
+     * @param r The resource group to change.
+     * @param s The new state.
+     * @param error An optional description on why the state is changed.
+     * @since 1.4
+     */
+    public ChangeStateTask(final TaskResourceGroup r,
+                           final ResourceState s,
+                           final String error) {
+        this(r, s, null, null, null);
     }
 
     /**
@@ -57,10 +72,28 @@ public class ChangeStateTask extends InstallTask {
                            final ResourceState s,
                            final Map<String, Object> addAttributes,
                            final String[] removeAttributes) {
+        this(r, s, addAttributes, removeAttributes, null);
+    }
+    
+    /**
+     * Change the state of the task
+     * @param r The resource group to change.
+     * @param s The new state.,
+     * @param addAttributes    An optional map of attributes to set before the state is changed.
+     * @param removeAttributes A optional list of attributes to remove before the state is changed.
+     * @param error An optional description on why the state is changed.
+     * @since 1.4
+     */
+    public ChangeStateTask(final TaskResourceGroup r,
+                           final ResourceState s,
+                           final Map<String, Object> addAttributes,
+                           final String[] removeAttributes,
+                           String error) {
         super(r);
         this.state = s;
         this.addAttributes = addAttributes;
         this.removeAttributes = removeAttributes;
+        this.error = error;
     }
 
     /**
@@ -80,7 +113,7 @@ public class ChangeStateTask extends InstallTask {
                 }
             }
         }
-        this.setFinishedState(this.state);
+        this.setFinishedState(state, null, error);
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.sling.installer.core.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,6 +37,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.CheckForNull;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.installer.api.InstallableResource;
@@ -184,7 +187,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
             while ( this.backgroundThread != null ) {
                 // use a local variable to avoid NPEs
-                final Thread t = this.backgroundThread;
+                final Thread t = backgroundThread;
                 if ( t != null ) {
                     try {
                         t.join(50L);
@@ -289,7 +292,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 } else if ( action == ACTION.SHUTDOWN ) {
                     // stop processing
                     logger.debug("Action is SHUTDOWN, going inactive");
-                    this.active = false;
+                    active = false;
                 }
 
             }
@@ -387,7 +390,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             final String[] ids) {
         this.listener.start();
         try {
-            final List<InternalResource> updatedResources = this.createResources(scheme, resources);
+            final List<InternalResource> updatedResources = createResources(scheme, resources);
 
             synchronized ( this.resourcesLock ) {
                 if ( updatedResources != null && updatedResources.size() > 0 ) {
@@ -522,7 +525,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                 logger.debug("Resource {} seems to be removed.", r);
                                 if ( first && (r.getState() == ResourceState.INSTALLED
                                         ||  r.getState() == ResourceState.INSTALL) ) {
-                                    ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL);
+                                    ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL, null);
                                 } else {
                                     toRemove.add(r);
                                 }
@@ -1011,9 +1014,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      */
     private void processUpdateInfos() {
         final List<UpdateInfo> infos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
-        synchronized ( this.resourcesLock ) {
-            infos.addAll(this.updateInfos);
-            this.updateInfos.clear();
+        synchronized ( resourcesLock ) {
+            infos.addAll(updateInfos);
+            updateInfos.clear();
         }
         for(final UpdateInfo info : infos) {
             if ( info.data != null ) {
@@ -1034,10 +1037,10 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             // ignore
             return false;
         } else if ( tr.getState() == ResourceState.UNINSTALL ) {
-            erl.setFinishState(ResourceState.UNINSTALLED);
+            erl.setFinishState(ResourceState.UNINSTALLED, null);
             return true;
         } else {
-            erl.setForceFinishState(ResourceState.IGNORED);
+            erl.setForceFinishState(ResourceState.IGNORED, null);
             return true;
         }
     }
@@ -1071,7 +1074,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                 logger.debug("Resource did not change {}", key);
                             } else if ( tr.getState() == ResourceState.INSTALL
                                 || tr.getState() == ResourceState.IGNORED ) {
-                                erl.setForceFinishState(ResourceState.INSTALLED);
+                                erl.setForceFinishState(ResourceState.INSTALLED, null);
                                 compactAndSave = true;
                             }
                             done = true;
@@ -1123,7 +1126,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                             transRes
                                     });
                                     final EntityResourceList newGroup = this.persistentList.getEntityResourceList(key);
-                                    newGroup.setFinishState(ResourceState.INSTALLED);
+                                    newGroup.setFinishState(ResourceState.INSTALLED, null);
                                     newGroup.compact();
                                 } else {
                                     // resource has been updated or moved
@@ -1132,7 +1135,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                             data.getDigest(result.getURL(), result.getDigest()),
                                             result.getPriority(),
                                             result.getURL());
-                                    erl.setForceFinishState(ResourceState.INSTALLED);
+                                    erl.setForceFinishState(ResourceState.INSTALLED, null);
                                 }
                                 compactAndSave = true;
                             } else {
@@ -1234,26 +1237,30 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                         // but only if it is not a template
                         if ( tr.getDictionary() == null
                              || tr.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) == null ) {
-                            ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                            ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL, null);
                             this.persistentList.save();
                         }
                     } else if ( tr.getState() == ResourceState.UNINSTALLED ) {
                         // it has already been removed - nothing do to
                     } else {
-                        final UpdateHandler handler = this.findHandler(tr.getScheme());
+                        final UpdateHandler handler = findHandler(tr.getScheme());
                         if ( handler == null ) {
                             // set to ignored
-                            logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
-                            ((RegisteredResourceImpl)tr).setState(ResourceState.IGNORED);
+                            String message = MessageFormat.format("No handler found to handle resource with scheme {0}",
+                                    tr.getScheme());
+                            logger.debug(message);
+                            ((RegisteredResourceImpl) tr).setState(ResourceState.IGNORED, message);
                         } else {
                             // we don't need to check the result, we just check if a result is returned
                             if ( handler.handleRemoval(resourceType, resourceId, tr.getURL()) != null ) {
-                                erl.setForceFinishState(ResourceState.UNINSTALLED);
+                                erl.setForceFinishState(ResourceState.UNINSTALLED, null);
                                 erl.compact();
                             } else {
                                 // set to ignored
-                                logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
-                                ((RegisteredResourceImpl)tr).setState(ResourceState.IGNORED);
+                                String message = MessageFormat
+                                        .format("No handler found to handle removal of resource with scheme {0}", tr.getScheme());
+                                logger.debug(message);
+                                ((RegisteredResourceImpl) tr).setState(ResourceState.IGNORED, message);
                             }
                         }
                         this.persistentList.save();
@@ -1395,16 +1402,23 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                             }
 
                             @Override
+                            @CheckForNull
+                            public String getError() {
+                                return tr.getError();
+                            }
+
+                            @Override
                             public String toString() {
-                                return "resource[entityId=" + this.getEntityId() +
-                                        ", scheme=" + this.getScheme() +
-                                        ", url=" + this.getURL() +
-                                        ", type=" + this.getType() +
-                                        ", state=" + this.getState() +
-                                        ", version=" + this.getVersion() +
-                                        ", lastChange=" + this.getLastChange() +
-                                        ", priority=" + this.getPriority() +
-                                        ", digest=" + this.getDigest() +
+                                return "resource[entityId=" + getEntityId() +
+                                        ", scheme=" + getScheme() +
+                                        ", url=" + getURL() +
+                                        ", type=" + getType() +
+                                        ", error=" + getError() +
+                                        ", state=" + getState() +
+                                        ", version=" + getVersion() +
+                                        ", lastChange=" + getLastChange() +
+                                        ", priority=" + getPriority() +
+                                        ", digest=" + getDigest() +
                                         "]";
                             }
                         });

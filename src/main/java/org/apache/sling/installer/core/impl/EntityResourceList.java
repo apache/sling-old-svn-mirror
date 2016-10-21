@@ -20,6 +20,7 @@ package org.apache.sling.installer.core.impl;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -229,17 +230,23 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     /**
      * Force the state to be set
      */
-    public void setForceFinishState(final ResourceState state) {
+    public void setForceFinishState(final ResourceState state, String error) {
         // We first set the state of the resource to install to make setFinishState work in all cases
-        ((RegisteredResourceImpl)this.getFirstResource()).setState(ResourceState.INSTALL);
-        this.setFinishState(state);
+        ((RegisteredResourceImpl)getFirstResource()).setState(ResourceState.INSTALL, null);
+        this.setFinishState(state, error);
     }
 
     /**
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState)
      */
     @Override
+    @Deprecated
     public void setFinishState(ResourceState state) {
+        setFinishState(state, null);
+    }
+
+    @Override
+    public void setFinishState(ResourceState state, String error) {
         final TaskResource toActivate = getActiveResource();
         if ( toActivate != null ) {
             synchronized ( lock ) {
@@ -251,17 +258,21 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                     if ( second.getDictionary() != null
                          && second.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) != null ) {
                         // second resource is a template! Do not install
-                        ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED);
+                        ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED, null);
                     } else if ( state == ResourceState.UNINSTALLED ) {
                         // first resource got uninstalled, go back to second
                         if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {
                             LOGGER.debug("Reactivating for next cycle: {}", second);
-                            ((RegisteredResourceImpl)second).setState(ResourceState.INSTALL);
+                            ((RegisteredResourceImpl)second).setState(ResourceState.INSTALL, null);
                         }
                     } else {
                         // don't install as the first did not get uninstalled
                         if ( second.getState() == ResourceState.INSTALL ) {
-                            ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED);
+                            String message = MessageFormat.format(
+                                    "The first resource '{0}' did not get uninstalled, therefore ignore this secondary resource in the uninstall group",
+                                    toActivate.getEntityId());
+                            LOGGER.debug(message);
+                            ((RegisteredResourceImpl) second).setState(ResourceState.IGNORED, message);
                         }
                         // and now set resource to uninstalled
                         state = ResourceState.UNINSTALLED;
@@ -275,13 +286,13 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                         while ( i.hasNext() ) {
                             final TaskResource rsrc = i.next();
                             if ( rsrc.getState() == ResourceState.INSTALLED ) {
-                                ((RegisteredResourceImpl)rsrc).setState(ResourceState.INSTALL);
+                                ((RegisteredResourceImpl)rsrc).setState(ResourceState.INSTALL, null);
                             }
                         }
                     }
 
                 }
-                ((RegisteredResourceImpl)toActivate).setState(state);
+                ((RegisteredResourceImpl)toActivate).setState(state, error);
 
                 if ( state != ResourceState.INSTALLED ) {
                     // make sure to remove all install info attributes if the resource is not
@@ -320,9 +331,9 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState, java.lang.String)
      */
     @Override
-    public void setFinishState(final ResourceState state, final String alias) {
+    public void setFinishState(final ResourceState state, final String alias, String error) {
         this.alias = alias;
-        this.setFinishState(state);
+        this.setFinishState(state, error);
     }
 
     private void cleanup(final RegisteredResource rr) {
@@ -370,7 +381,11 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                     } else {
                         if ( first && rr.getState() == ResourceState.INSTALLED) {
                             // it's not the same, but the first one is installed, so uninstall
-                            ((RegisteredResourceImpl)rr).setState(ResourceState.UNINSTALL);
+                            String message = MessageFormat.format(
+                                    "The first resource '{0}' got installed, therefore uninstall this secondary resource in this group",
+                                    rr.getEntityId());
+                            LOGGER.debug(message);
+                            ((RegisteredResourceImpl) rr).setState(ResourceState.UNINSTALL, message);
                         } else {
                             LOGGER.debug("Cleanup obsolete resource: {}", rr);
                             taskIter.remove();
@@ -399,7 +414,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                     if ( first && (r.getState() == ResourceState.INSTALLED
                             || r.getState() == ResourceState.INSTALL)) {
                         LOGGER.debug("Marking for uninstalling: {}", r);
-                        ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL);
+                        ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL, null);
                     } else {
                         LOGGER.debug("Removing unused: {}", r);
                         i.remove();
