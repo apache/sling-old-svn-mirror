@@ -44,7 +44,7 @@
     org.apache.sling/org.apache.sling.javax.activation/0.1.0
     org.apache.sling/org.apache.sling.fragment.ws/1.0.2
     org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
-    org.apache.sling/org.apache.sling.installer.core/3.6.9-SNAPSHOT
+    org.apache.sling/org.apache.sling.installer.core/3.7.1-SNAPSHOT
     org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
     org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
     org.apache.felix/org.apache.felix.configadmin/1.8.10
