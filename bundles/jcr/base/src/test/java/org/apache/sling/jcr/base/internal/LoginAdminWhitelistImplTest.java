@@ -62,7 +62,7 @@ public class LoginAdminWhitelistImplTest {
     public void testDefaultConfig() {
         whitelist.activate(config);
         
-        for(String bsn : LoginAdminWhitelistImpl.DEFAULT_WHITELISTED_BSN) {
+        for(String bsn : DefaultWhitelist.WHITELISTED_BSN) {
             assertAdminLogin(bsn, true);
         }
         
