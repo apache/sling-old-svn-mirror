@@ -21,6 +21,8 @@ package org.apache.sling.settings;
 import java.net.URL;
 import java.util.Set;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
  * - Sling home : If the Sling launchpad is used
@@ -30,6 +32,7 @@ import java.util.Set;
  * A run mode is simply a string like "author", "test", "development",...
  * The server can have a set of active run modes.
  */
+@ProviderType
 public interface SlingSettingsService {
 
     /**

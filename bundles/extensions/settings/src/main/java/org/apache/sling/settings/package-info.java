@@ -19,10 +19,9 @@
 
 /**
  *
- * @version 1.3.0
+ * @version 1.3.1
  */
-@Version("1.3.0")
+@org.osgi.annotation.versioning.Version("1.3.1")
 package org.apache.sling.settings;
 
-import aQute.bnd.annotation.Version;
 
