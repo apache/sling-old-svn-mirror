@@ -74,22 +74,35 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
     private Pattern whitelistRegexp;
 
     @Property(
-            label="Whitelisted BSNs",
-            description="List of bundle symbolic names for which loginAdministrative() is allowed",
+            label="Default whitelisted BSNs",
+            description="Default list of bundle symbolic names for which loginAdministrative() is allowed",
             value = {})
-    public static final String PROP_WHITELISTED_BSN = "whitelisted.bundle.symbolic.names";
+    public static final String PROP_DEFAULT_WHITELISTED_BSN = "default.whitelisted.bundle.symbolic.names";
+    
+    @Property(
+            label="Additional whitelisted BSNs",
+            description="Additional list of bundle symbolic names for which loginAdministrative() is allowed",
+            value = {})
+    public static final String PROP_ADDITIONAL_WHITELISTED_BSN = "additional.whitelisted.bundle.symbolic.names";
+    
     private Set<String> whitelistedBsn;
 
     public void activate(Map<String, Object> config) {
         bypassWhitelist = PropertiesUtil.toBoolean(config.get(PROP_BYPASS_WHITELIST), DEFAULT_BYPASS);
         whitelistedBsn = new TreeSet<String>();
-        final Object bsns = config.get(PROP_WHITELISTED_BSN);
-        if(bsns == null) {
+        
+        final Object defBsns = config.get(PROP_DEFAULT_WHITELISTED_BSN);
+        if(defBsns == null) {
             whitelistedBsn.addAll(Arrays.asList(DefaultWhitelist.WHITELISTED_BSN));
         } else {
-            whitelistedBsn.addAll(Arrays.asList(PropertiesUtil.toStringArray(bsns)));
+            whitelistedBsn.addAll(Arrays.asList(PropertiesUtil.toStringArray(defBsns)));
         }
 
+        final Object addBsns = config.get(PROP_ADDITIONAL_WHITELISTED_BSN);
+        if(addBsns != null) {
+            whitelistedBsn.addAll(Arrays.asList(PropertiesUtil.toStringArray(addBsns)));
+        }
+        
         final String regexp = PropertiesUtil.toString(config.get(PROP_WHITELIST_REGEXP), "");
         if(regexp.trim().length() > 0) {
             whitelistRegexp = Pattern.compile(regexp);
