@@ -84,11 +84,11 @@ public class LoginAdminWhitelistImplTest {
     }
     
     @Test
-    public void testConfiguredWhitelist() {
+    public void testDefaultConfigOnly() {
         final String [] allowed = {
                 "bundle1", "bundle2"
         };
-        config.put(LoginAdminWhitelistImpl.PROP_WHITELISTED_BSN, allowed);
+        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, allowed);
         whitelist.activate(config);
         
         assertAdminLogin("bundle1", true);
@@ -102,11 +102,48 @@ public class LoginAdminWhitelistImplTest {
     }
     
     @Test
+    public void testAdditionalConfigOnly() {
+        final String [] allowed = {
+                "bundle5", "bundle6"
+        };
+        config.put(LoginAdminWhitelistImpl.PROP_ADDITIONAL_WHITELISTED_BSN, allowed);
+        whitelist.activate(config);
+        
+        assertAdminLogin("bundle5", true);
+        assertAdminLogin("bundle6", true);
+        assertAdminLogin("foo.1.bar", false);
+        
+        for(String bsn : DefaultWhitelist.WHITELISTED_BSN) {
+            assertAdminLogin(bsn, true);
+        }
+        
+        for(String bsn : randomBsn()) {
+            assertAdminLogin(bsn, false);
+        }
+    }
+    
+    @Test
+    public void testDefaultAndAdditionalConfig() {
+        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, new String [] { "defB"});
+        config.put(LoginAdminWhitelistImpl.PROP_ADDITIONAL_WHITELISTED_BSN, new String [] { "addB"});
+        whitelist.activate(config);
+        
+        assertAdminLogin("defB", true);
+        assertAdminLogin("addB", true);
+        assertAdminLogin("foo.1.bar", false);
+        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, false);
+        
+        for(String bsn : randomBsn()) {
+            assertAdminLogin(bsn, false);
+        }
+    }
+    
+    @Test
     public void testRegexpWhitelist() {
         final String [] allowed = {
                 "bundle3", "bundle4"
         };
-        config.put(LoginAdminWhitelistImpl.PROP_WHITELISTED_BSN, allowed);
+        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, allowed);
         config.put(LoginAdminWhitelistImpl.PROP_WHITELIST_REGEXP, "foo.*bar");
         whitelist.activate(config);
         
