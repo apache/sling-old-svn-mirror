@@ -28,7 +28,6 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 
 /** Utilities for ACL management */
@@ -38,31 +37,30 @@ public class AclUtil {
         final AccessControlManager acm = s.getAccessControlManager();
         if(!(acm instanceof JackrabbitAccessControlManager)) {
             throw new IllegalStateException(
-                "AccessControlManager is not a JackrabbitAccessControlManager:" 
+                "AccessControlManager is not a JackrabbitAccessControlManager:"
                 + acm.getClass().getName());
         }
         return (JackrabbitAccessControlManager) acm;
     }
-    
-    public static void setAcl(Session s, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow) 
+
+    public static void setAcl(Session s, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        
+
         final String [] privArray = privileges.toArray(new String[privileges.size()]);
         final Privilege[] jcrPriv = AccessControlUtils.privilegesFromNames(s, privArray);
 
-        
+
         for(String path : paths) {
             if(!s.nodeExists(path)) {
                 throw new PathNotFoundException("Cannot set ACL on non-existent path " + path);
             }
             JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(s, path);
-            for(String principal : principals) {
-                final Authorizable a = ServiceUserUtil.getAuthorizable(s, principal);
-                if(a == null) {
-                    throw new IllegalStateException("Principal not found:" + principal);
+            for (String name : principals) {
+                final Principal principal = AccessControlUtils.getPrincipal(s, name);
+                if (principal == null) {
+                    throw new IllegalStateException("Principal not found: " + name);
                 }
-                final Principal p = a.getPrincipal(); 
-                acl.addEntry(p, jcrPriv, isAllow);
+                acl.addEntry(principal, jcrPriv, isAllow);
             }
             getJACM(s).setPolicy(path, acl);
         }
