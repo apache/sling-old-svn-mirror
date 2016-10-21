@@ -201,8 +201,27 @@
    </extension>
    
    <extension
+         id="validationMarker"
+         name="Sling IDE Validation Marker"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.wst.validation.problemmarker"/>
+      <persistent value="true"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.ide.markerSupport">
+        <markerTypeCategory
+              name="Sling IDE">
+           <markerTypeReference
+               id="org.apache.sling.ide.eclipse-core.validationMarker">
+           </markerTypeReference>
+       </markerTypeCategory>
+   </extension>
+   
+   <extension
          id="bundleValidator"
          point="org.eclipse.wst.validation.validatorV2"
+         markerId="org.apache.sling.ide.eclipse-core.validationMarker"
          name="Sling Bundle Validator">
       <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator">
       	<include>
@@ -212,12 +231,18 @@
           	</facet>
           </rules>
       	</include>
+        <include>
+          <rules>
+            <file name="MANIFEST.MF" caseSensitive="true" type="file" />
+          </rules>
+        </include>
       </validator>
    </extension>
    
    <extension
          id="contentProjectValidator"
          point="org.eclipse.wst.validation.validatorV2"
+         markerId="org.apache.sling.ide.eclipse-core.validationMarker"
          name="Sling Content Project Validator">
       <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator">
       	<include>

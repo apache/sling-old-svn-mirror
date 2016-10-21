@@ -17,16 +17,14 @@
 package org.apache.sling.ide.eclipse.internal.validation;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.wst.validation.AbstractValidator;
 import org.eclipse.wst.validation.ValidationEvent;
 import org.eclipse.wst.validation.ValidationResult;
 import org.eclipse.wst.validation.ValidationState;
-import org.eclipse.wst.validation.ValidatorMessage;
 
 /**
  * The <tt>ContentProjectValidator</tt> validates that the defined content sync root of a project exists and is a
@@ -58,23 +56,20 @@ public class ContentProjectValidator extends AbstractValidator {
 
         IProject project = resource.getProject();
         IPath syncDir = ProjectUtil.getSyncDirectoryValue(project);
-
         IResource member = project.findMember(syncDir);
-        if (member == null) {
-            addValidatorMessage(res, project, "Configured sync dir " + syncDir + " does not exist");
-        } else if (member.getType() != IResource.FOLDER) {
-            addValidatorMessage(res, project, "Configured sync dir " + syncDir + " is not a directory");
+        try {
+            // we assume this is the only validator putting validation markers with that id on the project itself
+            deleteValidationMarkers(project);
+            if (member == null) {
+                addValidatorMessage(res, project, "Configured sync dir " + syncDir + " does not exist");
+            } else if (member.getType() != IResource.FOLDER) {
+                addValidatorMessage(res, project, "Configured sync dir " + syncDir + " is not a directory");
+            }
+        } catch (CoreException e) {
+            getLogger().warn("Failed validating content project " + resource.getFullPath(), e);
         }
 
         return res;
     }
 
-    private void addValidatorMessage(ValidationResult res, IProject project, String msg) {
-
-        ValidatorMessage message = ValidatorMessage.create(msg, project);
-        message.setAttribute(IMarker.LOCATION, project.getName());
-        message.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-
-        res.add(message);
-    }
 }
