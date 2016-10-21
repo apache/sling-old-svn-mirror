@@ -80,36 +80,12 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
     public static final String PROP_WHITELISTED_BSN = "whitelisted.bundle.symbolic.names";
     private Set<String> whitelistedBsn;
 
-    static final String [] DEFAULT_WHITELISTED_BSN = {
-            "org.apache.sling.discovery.commons",
-            "org.apache.sling.discovery.base",
-            "org.apache.sling.discovery.oak",
-            "org.apache.sling.extensions.webconsolesecurityprovider",
-            "org.apache.sling.i18n",
-            "org.apache.sling.installer.provider.jcr",
-            "org.apache.sling.jcr.base",
-            "org.apache.sling.jcr.contentloader",
-            "org.apache.sling.jcr.davex",
-            "org.apache.sling.jcr.jackrabbit.usermanager",
-            "org.apache.sling.jcr.oak.server",
-            "org.apache.sling.jcr.resource",
-            "org.apache.sling.jcr.webconsole",
-            "org.apache.sling.jcr.webdav",
-            "org.apache.sling.junit.core",
-            "org.apache.sling.resourceresolver",
-            "org.apache.sling.scripting.core",
-            "org.apache.sling.scripting.sightly",
-            "org.apache.sling.servlets.post",
-            "org.apache.sling.servlets.resolver",
-            "org.apache.sling.xss"
-    };
-
     public void activate(Map<String, Object> config) {
         bypassWhitelist = PropertiesUtil.toBoolean(config.get(PROP_BYPASS_WHITELIST), DEFAULT_BYPASS);
         whitelistedBsn = new TreeSet<String>();
         final Object bsns = config.get(PROP_WHITELISTED_BSN);
         if(bsns == null) {
-            whitelistedBsn.addAll(Arrays.asList(DEFAULT_WHITELISTED_BSN));
+            whitelistedBsn.addAll(Arrays.asList(DefaultWhitelist.WHITELISTED_BSN));
         } else {
             whitelistedBsn.addAll(Arrays.asList(PropertiesUtil.toStringArray(bsns)));
         }
