@@ -40,7 +40,7 @@ public class ModelReader {
 
     private enum CATEGORY {
         NONE(null, null),
-        FEATURE("feature", new String[] {"name", "type"}),
+        FEATURE("feature", new String[] {"name", "type", "version"}),
         VARIABLES("variables", null),
         ARTIFACTS("artifacts", new String[] {"runModes", "startLevel"}),
         SETTINGS("settings", new String[] {"runModes"}),
@@ -200,6 +200,7 @@ public class ModelReader {
                                    }
                                    this.feature = model.getOrCreateFeature(name);
                                    this.feature.setType(parameters.get("type"));
+                                   this.feature.setVersion(parameters.get("version"));
                                    this.init(this.feature);
                                    this.runMode = null;
                                    this.artifactGroup = null;

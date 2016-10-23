@@ -16,6 +16,14 @@
  */
 package org.apache.sling.provisioning.model;
 
+import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_RUN_MODE;
+import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_START_LEVEL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -24,14 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.provisioning.model.io.ModelReader;
-
-import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_RUN_MODE;
-import static org.apache.sling.provisioning.model.ModelConstants.DEFAULT_START_LEVEL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /** Test utilities */
 public class U {
@@ -84,7 +84,7 @@ public class U {
                 if (errors != null ) {
                     throw new Exception("Invalid model at " + name + " : " + errors);
                 }
-                ModelUtility.merge(result, current);
+                MergeUtility.merge(result, current);
             } finally {
                 reader.close();
             }
@@ -144,7 +144,7 @@ public class U {
         final RunMode defaultExampleRM = exampleFeature.getRunMode();
         final List<Configuration> configs = assertConfigurationsInRunMode(defaultExampleRM, 3);
         assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, exampleFeature.getType());
-        final Configuration cfg = assertConfiguration(configs, "org.apache.sling.another.config");
+        assertConfiguration(configs, "org.apache.sling.another.config");
     }
 
     public static Configuration assertConfiguration(final List<Configuration> configs, final String pid) {

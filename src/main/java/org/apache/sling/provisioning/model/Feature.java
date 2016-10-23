@@ -25,6 +25,7 @@ import java.util.List;
 /**
  * A feature is a collection of
  * - a name
+ * - a version
  * - variables
  * - run modes
  */
@@ -37,6 +38,9 @@ public class Feature
 
     /** The type of feature */
     private volatile String type = FeatureTypes.PLAIN;
+
+    /** The version of the feature */
+    private volatile String version;
 
     /** Variables. */
     private final KeyValueMap<String> variables = new KeyValueMap<String>();
@@ -61,6 +65,15 @@ public class Feature
      */
     public String getName() {
         return this.name;
+    }
+
+    /**
+     * Get the version of the feature.
+     * @return The version string or {@code null}
+     * @since 1.6.0
+     */
+    public String getVersion() {
+        return this.version;
     }
 
     /**
@@ -126,6 +139,15 @@ public class Feature
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Set the version.
+     * @param v The new version
+     * @since 1.6.0
+     */
+    public void setVersion(final String v) {
+        this.version = v;
     }
 
     /**
