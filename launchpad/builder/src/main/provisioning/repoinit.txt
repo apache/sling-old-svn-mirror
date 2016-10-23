@@ -24,6 +24,11 @@
   org.apache.sling/org.apache.sling.provisioning.model/1.4.4
 
 [:repoinit]
+    create path (sling:OrderedFolder) /content
+    set ACL for everyone
+        allow   jcr:read	on /
+    end
+
     create service user sling-xss
 
     create path (sling:Folder) /libs/sling/xss
