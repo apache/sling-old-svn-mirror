@@ -28,7 +28,9 @@ import java.util.Set;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.apache.sling.scripting.thymeleaf.internal.resourceresolver.RequestScopedResourceResolverProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -120,13 +122,18 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     private volatile ICacheManager cacheManager;
 
     @Reference(
-        cardinality = ReferenceCardinality.OPTIONAL,
         policy = ReferencePolicy.DYNAMIC,
         policyOption = ReferencePolicyOption.GREEDY,
         bind = "setEngineContextFactory",
         unbind = "unsetEngineContextFactory"
     )
     private volatile IEngineContextFactory engineContextFactory;
+
+    @Reference(
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY
+    )
+    private volatile RequestScopedResourceResolverProvider resourceResolverProvider;
 
     private ThymeleafScriptEngineFactoryConfiguration configuration;
 
@@ -338,6 +345,12 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
             logger.info("configuration is null, not setting up new template engine");
             return;
         }
+
+        if (!configuration.useStandardEngineContextFactory() && engineContextFactory == null) {
+            logger.info("no engine context factory available, not setting up new template engine");
+            return;
+        }
+
         // setup template engine
         final TemplateEngine templateEngine = new TemplateEngine();
         // Template Resolvers
@@ -413,6 +426,10 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
             }
             return templateEngine;
         }
+    }
+
+    ResourceResolver getRequestScopedResourceResolver() {
+        return resourceResolverProvider.getResourceResolver();
     }
 
 }
