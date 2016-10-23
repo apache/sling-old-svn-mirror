@@ -24,13 +24,9 @@ import java.util.Hashtable;
 import java.util.concurrent.Executor;
 
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
@@ -47,7 +43,6 @@ import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
 import org.apache.jackrabbit.oak.plugins.version.VersionHook;
 import org.apache.jackrabbit.oak.spi.lifecycle.RepositoryInitializer;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
-import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.oak.spi.security.user.UserConfiguration;
 import org.apache.jackrabbit.oak.spi.security.user.UserConstants;
 import org.apache.jackrabbit.oak.spi.state.NodeBuilder;
@@ -57,7 +52,6 @@ import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexEditorProvider;
 import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.jcr.base.LoginAdminWhitelist;
@@ -110,9 +104,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Reference
     private ThreadPoolManager threadPoolManager = null;
-    
+
     @Reference
-    private LoginAdminWhitelist loginAdminWhitelist;  
+    private LoginAdminWhitelist loginAdminWhitelist;
 
     private ThreadPool threadPool;
 
@@ -190,34 +184,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         return new TcclWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
     }
 
-    private void setup(final SlingRepository repository) {
-        final boolean anonymous_read_all = configuration.anonymous_read_all();
-        if (anonymous_read_all) {
-            log.warn("anonymous.read.all is true, granting anonymous user read access on /");
-            Session session = null;
-            try {
-                // TODO do we need to go via PrivilegeManager for the names? See OAK-1016 example.
-                session = repository.loginAdministrative(getDefaultWorkspace());
-                final String[] privileges = new String[]{Privilege.JCR_READ};
-                AccessControlUtils.addAccessControlEntry(
-                    session,
-                    "/",
-                    EveryonePrincipal.getInstance(),
-                    privileges,
-                    true);
-                session.save();
-            } catch (RepositoryException re) {
-                log.error("TODO: Failed setting up anonymous access", re);
-            } finally {
-                if (session != null) {
-                    session.logout();
-                }
-            }
-        } else {
-            log.warn("TODO: should disable anonymous access when anonymous.read.all becomes false");
-        }
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     protected Dictionary<String, Object> getServiceRegistrationProperties() {
@@ -227,9 +193,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     @Override
     protected AbstractSlingRepository2 create(Bundle usingBundle) {
         final String adminId = getAdminId();
-        final AbstractSlingRepository2 slingRepository = new OakSlingRepository(this, usingBundle, adminId);
-        setup(slingRepository);
-        return slingRepository;
+        return new OakSlingRepository(this, usingBundle, adminId);
     }
 
     @Override
@@ -245,7 +209,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.oakExecutorServiceReference = null;
         ((JackrabbitRepository) repository).shutdown();
     }
-    
+
     @Override
     protected LoginAdminWhitelist getLoginAdminWhitelist() {
         return loginAdminWhitelist;
