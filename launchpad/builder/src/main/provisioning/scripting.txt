@@ -34,9 +34,10 @@
 
 [:repoinit]
     #<<< SLING-5848 - Define service user and ACLs for Scripting
+    create service user sling-scripting
+
     create path (sling:Folder) /libs
     create path (sling:Folder) /apps
-    create service user sling-scripting
 
     set ACL for sling-scripting
         deny    jcr:all     on /
