@@ -38,6 +38,7 @@ import org.apache.sling.testing.paxexam.SlingOptions;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.BundleContext;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.jackrabbitSling;
@@ -166,6 +167,7 @@ public abstract class OakServerTestSupport extends TestSupport {
         SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.api");
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
+        final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
         final String slingHome = String.format("%s/sling", workingDirectory());
         final String repositoryHome = String.format("%s/repository", slingHome);
         final String localIndexDir = String.format("%s/index", repositoryHome);
@@ -182,6 +184,10 @@ public abstract class OakServerTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(SlingOptions.versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(SlingOptions.versionResolver), // TODO  make Oak Lucene optional
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
+            // repoinit (temp)
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.0.3-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.0.4"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.4.4"),
             newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
@@ -191,6 +197,9 @@ public abstract class OakServerTestSupport extends TestSupport {
                 .asOption(),
             newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
                 .put("enabled", true)
+                .asOption(),
+            newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
+                .put("references", new String[]{repoinit})
                 .asOption(),
             getWhitelistRegexpOption()
         );

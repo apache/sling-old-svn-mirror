@@ -105,7 +105,6 @@ public class OakServerIT extends OakServerTestSupport {
     }
 
     @Test
-    @Ignore
     public void testAnonymousHasReadAccess() throws RepositoryException {
         final String path = assertCreateRetrieveNode(null, "content/foo");
         final Session s = repository.login();
