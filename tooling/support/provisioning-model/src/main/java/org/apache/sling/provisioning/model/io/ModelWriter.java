@@ -93,6 +93,10 @@ public class ModelWriter {
                 pw.print(" type=");
                 pw.print(feature.getType());
             }
+            if ( feature.getVersion() != null ) {
+                pw.print(" version=");
+                pw.print(feature.getVersion());
+            }
             pw.println("]");
             pw.println();
 
