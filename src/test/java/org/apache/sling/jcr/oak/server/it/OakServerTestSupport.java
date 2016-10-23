@@ -182,7 +182,6 @@ public abstract class OakServerTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-jcr").version(SlingOptions.versionResolver),
             mavenBundle().groupId("com.google.guava").artifactId("guava").version(SlingOptions.versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(SlingOptions.versionResolver), // TODO  make Oak Lucene optional
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
             // repoinit (temp)
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.0.3-SNAPSHOT"),
@@ -191,9 +190,6 @@ public abstract class OakServerTestSupport extends TestSupport {
             newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
-                .asOption(),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
-                .put("localIndexDir", localIndexDir)
                 .asOption(),
             newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
                 .put("enabled", true)

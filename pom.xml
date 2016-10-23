@@ -65,6 +65,14 @@
               org.apache.felix.jaas.boot,
               *
             </Import-Package>
+            <Embed-Dependency>
+              oak-lucene;inline="org/apache/jackrabbit/oak/plugins/index/lucene/util/LuceneIndexHelper.*"
+            </Embed-Dependency>
+            <_removeheaders>
+              Embed-Dependency,
+              Private-Package,
+              Include-Resource
+            </_removeheaders>
           </instructions>
         </configuration>
       </plugin>
