@@ -479,6 +479,17 @@ public class SlingOptions {
         );
     }
 
+    public static Option slingJcrRepoinit() {
+        return composite(
+            sling(),
+            slingJcr(),
+            slingJcrJackrabbitSecurity(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version(versionResolver)
+        );
+    }
+
     public static Option slingLaunchpadContent() {
         return composite(
             sling(),
@@ -753,6 +764,7 @@ public class SlingOptions {
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             slingJcrOak(),
+            slingJcrRepoinit(),
             slingLaunchpadOak(),
             paxUrlClasspath(), // for reading repoinit from bundle
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
