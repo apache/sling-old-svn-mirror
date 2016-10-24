@@ -26,66 +26,66 @@ import org.eclipse.ui.navigator.IDescriptionProvider;
 /** WIP: label provider for content package view in project explorer **/
 public class JcrContentLabelProvider implements ILabelProvider, IDescriptionProvider {
 
-	@Override
-	public void addListener(ILabelProviderListener listener) {
-		// TODO Auto-generated method stub
+    @Override
+    public void addListener(ILabelProviderListener listener) {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
+    @Override
+    public void dispose() {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public boolean isLabelProperty(Object element, String property) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean isLabelProperty(Object element, String property) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public void removeListener(ILabelProviderListener listener) {
-		// TODO Auto-generated method stub
+    @Override
+    public void removeListener(ILabelProviderListener listener) {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public Image getImage(Object element) {
-		if (element instanceof JcrNode) {
-			JcrNode jcrNode = (JcrNode)element;
-			long start = System.currentTimeMillis();
-			Image image = jcrNode.getImage();
-			long end = System.currentTimeMillis();
-            Activator.getDefault().getPluginLogger()
-                    .tracePerformance("getImage for node at {0}", (end - start), jcrNode.getJcrPath());
+    @Override
+    public Image getImage(Object element) {
+        if (element instanceof JcrNode) {
+            JcrNode jcrNode = (JcrNode) element;
+            long start = System.currentTimeMillis();
+            Image image = jcrNode.getImage();
+            long end = System.currentTimeMillis();
+            Activator.getDefault().getPluginLogger().tracePerformance("getImage for node at {0}", (end - start),
+                    jcrNode.getJcrPath());
             return image;
-		} else {
-			// fallback to default
-			return null;
-		}
-	}
+        } else {
+            // fallback to default
+            return null;
+        }
+    }
 
-	@Override
-	public String getText(Object element) {
-		if (element instanceof JcrNode) {
-			JcrNode jcrNode = (JcrNode)element;
-			return jcrNode.getLabel();
-		} else {
-			// fallback to the default
-			return null;
-		}
-	}
+    @Override
+    public String getText(Object element) {
+        if (element instanceof JcrNode) {
+            JcrNode jcrNode = (JcrNode) element;
+            return jcrNode.getLabel();
+        } else {
+            // fallback to the default
+            return null;
+        }
+    }
 
-	@Override
-	public String getDescription(Object element) {
-		if (element instanceof JcrNode) {
-			JcrNode jcrNode = (JcrNode)element;
-			return jcrNode.getDescription();
-		} else {
-			// fallback to the default
-			return null;
-		}
-	}
+    @Override
+    public String getDescription(Object element) {
+        if (element instanceof JcrNode) {
+            JcrNode jcrNode = (JcrNode) element;
+            return jcrNode.getDescription();
+        } else {
+            // fallback to the default
+            return null;
+        }
+    }
 
 }
