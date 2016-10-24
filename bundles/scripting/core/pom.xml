@@ -193,11 +193,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jmock</groupId>
-            <artifactId>jmock-junit4</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
@@ -262,6 +257,13 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <version>1.6.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
 
