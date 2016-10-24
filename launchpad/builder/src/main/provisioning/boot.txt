@@ -28,7 +28,7 @@
     sling.run.mode.install.options=oak_tar,oak_mongo
     repository.home=${sling.home}/repository
     localIndexDir=${sling.home}/repository/index
-    sling.fileinstall.dir=/Users/cziegeler/Developer/workspaces/granite/sling/installer/providers/file/install
+
 [variables]
     slf4j.version=1.7.21
 
@@ -45,7 +45,7 @@
     org.apache.sling/org.apache.sling.fragment.ws/1.0.2
     org.apache.sling/org.apache.sling.launchpad.installer/1.2.2
     org.apache.sling/org.apache.sling.installer.core/3.7.1-SNAPSHOT
-    org.apache.sling/org.apache.sling.installer.provider.file/1.1.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.installer.provider.file/1.1.0
     org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2
     org.apache.felix/org.apache.felix.configadmin/1.8.10
     org.apache.felix/org.apache.felix.eventadmin/1.4.8
