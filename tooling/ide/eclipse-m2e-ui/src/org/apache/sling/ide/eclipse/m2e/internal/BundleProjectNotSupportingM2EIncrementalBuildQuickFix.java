@@ -23,6 +23,7 @@ import java.util.Collections;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.m2e.core.project.configurator.MojoExecutionKey;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -155,10 +156,11 @@ public class BundleProjectNotSupportingM2EIncrementalBuildQuickFix implements IM
             return "Install m2e-tycho extension (incompatible with maven-bundle-plugin 3.2.0 and later)";
         }
 
+        @SuppressWarnings("restriction")
         @Override
         public void run(IMarker marker) {
             org.eclipse.m2e.internal.discovery.MavenDiscovery.launchWizard(Collections.singleton("bundle"),
-                    Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+                    Collections.<MojoExecutionKey> emptyList(), Collections.<String> emptyList(), Collections.<String> emptyList());
         }
     }
 

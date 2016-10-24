@@ -50,9 +50,15 @@
         <!-- make sure this runs after the default java configurator, being provided by http://git.eclipse.org/c/m2e/m2e-core.git/tree/org.eclipse.m2e.jdt/plugin.xml#n42  -->
         <!-- the secondaryTo does only work in case the according configurator is bound to the same plugin execution -->
         <configurator
-                class="org.apache.sling.ide.eclipse.m2e.internal.BundleProjectConfigurator"
-                id="org.apache.sling.ide.eclipse.m2e.bundleconfigurator"
-                name="Sling Bundle Configurator"
+                class="org.apache.sling.ide.eclipse.m2e.internal.MavenBundlePluginProjectConfigurator"
+                id="org.apache.sling.ide.eclipse.m2e.bundlePluginProjectConfigurator"
+                name="Sling Bundle Configurator (for maven-bundle-plugin)"
+                secondaryTo="org.eclipse.m2e.jdt.javaConfigurator">
+        </configurator>
+        <configurator
+                class="org.apache.sling.ide.eclipse.m2e.internal.BndMavenPluginProjectConfigurator"
+                id="org.apache.sling.ide.eclipse.m2e.bndPluginProjectConfigurator"
+                name="Sling Bundle Configurator (for bnd-maven-plugin)"
                 secondaryTo="org.eclipse.m2e.jdt.javaConfigurator">
         </configurator>
         <configurator 
