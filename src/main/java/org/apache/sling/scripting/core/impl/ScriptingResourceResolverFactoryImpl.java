@@ -97,6 +97,7 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
             ScriptingResourceResolver scriptingResourceResolver = perThreadResourceResolver.get();
             if (scriptingResourceResolver != null) {
                 scriptingResourceResolver._close();
+                perThreadResourceResolver.remove();
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Removing per thread resource resolver for thread {}.", Thread.currentThread().getName());
