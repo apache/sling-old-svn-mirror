@@ -773,7 +773,7 @@ public class JcrNode implements IAdaptable {
 		return null;
 	}
 
-	IResource getResource() {
+	public IResource getResource() {
 		return resource;
 	}
 	
