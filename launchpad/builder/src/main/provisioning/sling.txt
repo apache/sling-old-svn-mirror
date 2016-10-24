@@ -158,9 +158,6 @@
   org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet
       alias="/server"
 
-  org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge
-      enabled=B"true"
-
   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss
     user.mapping=[
       "org.apache.sling.xss\=sling-xss"
