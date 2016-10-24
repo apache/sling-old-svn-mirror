@@ -221,9 +221,8 @@
    <extension
          id="bundleValidator"
          point="org.eclipse.wst.validation.validatorV2"
-         markerId="org.apache.sling.ide.eclipse-core.validationMarker"
          name="Sling Bundle Validator">
-      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator" markerId="org.apache.sling.ide.eclipse-core.validationMarker">
       	<include>
           <rules>
           	<facet
@@ -242,9 +241,8 @@
    <extension
          id="contentProjectValidator"
          point="org.eclipse.wst.validation.validatorV2"
-         markerId="org.apache.sling.ide.eclipse-core.validationMarker"
          name="Sling Content Project Validator">
-      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator" markerId="org.apache.sling.ide.eclipse-core.validationMarker">
       	<include>
           <rules>
           	<facet
