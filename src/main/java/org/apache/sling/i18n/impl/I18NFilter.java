@@ -72,6 +72,11 @@ import org.slf4j.LoggerFactory;
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class I18NFilter implements Filter {
 
+    /**
+     * The default server default locale if not configured <code>Locale.ENGLISH</code>.
+     */
+    private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+
     /** Logger */
     private final static Logger LOG = LoggerFactory.getLogger(I18NFilter.class.getName());
 
@@ -227,6 +232,11 @@ public class I18NFilter implements Filter {
         }
     }
 
+    private static Locale defaultLocale(ResourceBundleProvider bundleProvider) {
+        Locale defaultLocale = bundleProvider.getDefaultLocale();
+        return (defaultLocale != null) ? defaultLocale : DEFAULT_LOCALE;
+    }
+
     // ---------- internal class -----------------------------------------------
 
     private static class I18NHttpServletRequest
@@ -280,7 +290,7 @@ public class I18NFilter implements Filter {
                 List<Locale> resolved = localeResolver.resolveLocale((HttpServletRequest)this.getRequest());
                 this.localeList = (resolved != null && !resolved.isEmpty())
                         ? resolved
-                        : Collections.singletonList(this.bundleProvider.getDefaultLocale());
+                        : Collections.singletonList(defaultLocale(this.bundleProvider));
             }
 
             return localeList;
@@ -370,7 +380,7 @@ public class I18NFilter implements Filter {
                 List<Locale> resolved = localeResolver.resolveLocale(this.getSlingRequest());
                 this.localeList = (resolved != null && !resolved.isEmpty())
                         ? resolved
-                        : Collections.singletonList(this.bundleProvider.getDefaultLocale());
+                        : Collections.singletonList(defaultLocale(this.bundleProvider));
             }
 
             return localeList;
