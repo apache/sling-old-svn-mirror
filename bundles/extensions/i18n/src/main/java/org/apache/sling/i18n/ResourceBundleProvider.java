@@ -41,7 +41,7 @@ public interface ResourceBundleProvider {
 
     /**
      * Returns the default <code>Locale</code> assumed by this instance.
-     * @return The default locale
+     * @return The default locale or {@code null}.
      */
     Locale getDefaultLocale();
 
