@@ -50,14 +50,10 @@ import org.ops4j.pax.exam.cm.ConfigurationAdminOptions;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class ResourceBundleProviderIT {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String BUNDLE_JAR_SYS_PROP = "bundle.filename";
 
