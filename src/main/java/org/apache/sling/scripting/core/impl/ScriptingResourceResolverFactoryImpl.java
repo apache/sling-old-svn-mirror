@@ -43,7 +43,7 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptingResourceResolverFactoryImpl.class);
 
-    private ThreadLocal<ScriptingResourceResolver> perThreadResourceResolver = new ThreadLocal<>();
+    private static final ThreadLocal<ScriptingResourceResolver> perThreadResourceResolver = new ThreadLocal<>();
     private boolean logStackTraceOnResolverClose;
 
     @Reference
@@ -68,7 +68,23 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
 
     @Override
     public ResourceResolver getRequestScopedResourceResolver() {
-        return perThreadResourceResolver.get();
+        ScriptingResourceResolver threadResolver = perThreadResourceResolver.get();
+        if (threadResolver == null) {
+            // no per thread; need to synchronize access
+            synchronized (perThreadResourceResolver) {
+                try {
+                    ResourceResolver delegate = rrf.getServiceResourceResolver(null);
+                    threadResolver = new ScriptingResourceResolver(logStackTraceOnResolverClose, delegate);
+                    perThreadResourceResolver.set(threadResolver);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Setting per thread resource resolver for thread {}.", Thread.currentThread().getName());
+                    }
+                } catch (LoginException e) {
+                    throw new IllegalStateException("Cannot create per thread resource resolver.", e);
+                }
+            }
+        }
+        return threadResolver;
     }
 
     @Override
@@ -76,24 +92,13 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
         try {
             return rrf.getServiceResourceResolver(null);
         } catch (LoginException e) {
-            LOGGER.error("Unable to retrieve a scripting resource resolver.");
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Unable to retrieve a scripting resource resolver.", e);
         }
     }
 
     @Override
     public void onEvent(SlingRequestEvent sre) {
-        if (sre.getType().equals(SlingRequestEvent.EventType.EVENT_INIT)) {
-            try {
-                ResourceResolver delegate = rrf.getServiceResourceResolver(null);
-                this.perThreadResourceResolver.set(new ScriptingResourceResolver(logStackTraceOnResolverClose, delegate));
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Setting per thread resource resolver for thread {}.", Thread.currentThread().getName());
-                }
-            } catch (LoginException e) {
-                LOGGER.error("Cannot create per thread resource resolver.", e);
-            }
-        } else if (sre.getType().equals(SlingRequestEvent.EventType.EVENT_DESTROY)) {
+        if (sre.getType().equals(SlingRequestEvent.EventType.EVENT_DESTROY)) {
             ScriptingResourceResolver scriptingResourceResolver = perThreadResourceResolver.get();
             if (scriptingResourceResolver != null) {
                 scriptingResourceResolver._close();
