@@ -44,7 +44,6 @@ public class BundleProjectValidator extends AbstractValidator {
             if (!resource.isSynchronized(IResource.DEPTH_ZERO)) {
                 resource.refreshLocal(IResource.DEPTH_ZERO, null);
             }
-            deleteValidationMarkers(resource);
             for (IFile descriptor : scValidator.findMissingScrDescriptors((IFile)resource)) {
                 addValidatorMessage(res, resource, "No DS descriptor found at path " + descriptor.getProjectRelativePath() +".");
             }
