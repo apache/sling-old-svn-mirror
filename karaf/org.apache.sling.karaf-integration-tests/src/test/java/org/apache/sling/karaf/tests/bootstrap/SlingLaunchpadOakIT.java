@@ -19,7 +19,6 @@
 package org.apache.sling.karaf.tests.bootstrap;
 
 import org.apache.sling.karaf.testing.KarafTestSupport;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -52,7 +51,6 @@ public class SlingLaunchpadOakIT extends KarafTestSupport {
     }
 
     @Test
-    @Ignore // TODO
     public void testOrgApacheFelixWebconsolePluginsMemoryusage() {
         final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.memoryusage");
         assertNotNull(bundle);
@@ -60,7 +58,6 @@ public class SlingLaunchpadOakIT extends KarafTestSupport {
     }
 
     @Test
-    @Ignore // TODO
     public void testOrgApacheFelixWebconsolePluginsPackageadmin() {
         final Bundle bundle = findBundle("org.apache.felix.webconsole.plugins.packageadmin");
         assertNotNull(bundle);
