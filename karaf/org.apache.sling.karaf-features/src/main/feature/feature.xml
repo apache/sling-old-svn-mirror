@@ -296,6 +296,7 @@
   </feature>
   <!-- Apache Sling JCR -->
   <feature name="sling-jcr" version="${feature.version}">
+    <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.4.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.4.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.2.2</bundle>
@@ -343,6 +344,7 @@
     <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
   </feature>
   <feature name="sling-jcr-repoinit" version="${feature.version}">
+    <configfile finalname="/etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.2</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
