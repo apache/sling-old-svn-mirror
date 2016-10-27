@@ -553,4 +553,12 @@
     <feature version="${feature.version}">sling-scripting-jsp</feature>
     <feature version="${feature.version}">sling-extension-event</feature>
   </feature>
+  <!-- Pax URL (KARAF-4707) -->
+  <feature name="pax-url-classpath-sling" version="${feature.version}">
+    <bundle>mvn:org.ops4j.pax.url/pax-url-commons/2.4.7</bundle>
+    <bundle>mvn:org.ops4j.base/ops4j-base-lang/1.5.0</bundle>
+    <bundle>mvn:org.ops4j.base/ops4j-base-util-property/1.5.0</bundle>
+    <bundle>mvn:org.ops4j.pax.swissbox/pax-swissbox-property/1.8.2</bundle>
+    <bundle>mvn:org.ops4j.pax.url/pax-url-classpath/2.4.7</bundle>
+  </feature>
 </features>
