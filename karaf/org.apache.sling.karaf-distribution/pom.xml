@@ -388,6 +388,8 @@
             <feature>sling-samples-fling</feature>
             <!-- Composum -->
             <feature>composum-sling</feature>
+            <!-- Pax URL (KARAF-4707) -->
+            <feature>pax-url-classpath-sling</feature>
           </installedFeatures>
           <startupFeatures>
             <!-- <feature>eventadmin</feature> -->
