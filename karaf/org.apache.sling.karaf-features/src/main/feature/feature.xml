@@ -389,9 +389,8 @@
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
     <feature version="${feature.version}">sling-extension-discovery-oak</feature>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.prefs/1.0.6</bundle>
-    <!-- TODO both plugins do not get installed with feature -->
-    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6</bundle>
-    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
     <feature version="${feature.version}">sling-jcr-oak</feature>
