@@ -50,7 +50,8 @@ public abstract class AbstractBundleProjectConfigurator extends AbstractProjectC
         logger.trace("AbstractBundleProjectConfigurator called for POM {0} and project {1}",
                 configRequest.getPom().getFullPath(),
                 project.getName());
-        markerManager.deleteMarkers(configRequest.getPom(), MARKER_TYPE_BUNDLE_NOT_SUPPORTING_M2E);
+        // delete all previous markers on this pom.xml set by any project configurator
+        deleteMarkers(configRequest.getPom());
 
         // check for maven-sling-plugin as well (to make sure this is a Sling project)
         MavenProject mavenProject = configRequest.getMavenProject();

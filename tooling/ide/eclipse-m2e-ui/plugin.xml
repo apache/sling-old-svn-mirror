@@ -67,11 +67,19 @@
                 name="Sling Content Package Configurator" />
     </extension>
     
+    <!-- generic error marker (not bound to any quick fixes) for errors in any project configurators -->
+    <extension point="org.eclipse.core.resources.markers"
+         id="projectconfiguratorproblem" 
+         name="Project Configurator Problem">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent value="true"/>
+   </extension>
+   
     <!-- custom marker used in the BundleProjectConfigurator, see http://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2FresAdv_markers.htm -->
-   <extension point="org.eclipse.core.resources.markers"
+    <extension point="org.eclipse.core.resources.markers"
          id="bundleprojectnotsupportingm2e" 
          name="Bundle Project Not Supporting M2E">
-      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.apache.sling.ide.eclipse-m2e-ui.projectconfiguratorproblem"/>
       <persistent value="true"/>
    </extension>
     
@@ -79,6 +87,9 @@
          point="org.eclipse.ui.ide.markerSupport">
         <markerTypeCategory
               name="Sling IDE">
+           <markerTypeReference
+               id="org.apache.sling.ide.eclipse-m2e-ui.projectconfiguratorproblem">
+           </markerTypeReference>
            <markerTypeReference
                id="org.apache.sling.ide.eclipse-m2e-ui.bundleprojectnotsupportingm2e">
            </markerTypeReference>
