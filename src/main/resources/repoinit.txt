@@ -17,3 +17,41 @@
 #
 ################################################################################
 
+create service user sling-event
+create service user sling-i18n
+create service user sling-scripting
+create service user sling-xss
+
+create path (sling:Folder) /apps
+create path (sling:Folder) /apps/sling
+create path (sling:Folder) /apps/sling/xss
+create path (sling:Folder) /libs
+create path (sling:Folder) /libs/sling
+create path (sling:Folder) /libs/sling/xss
+create path (sling:Folder) /var
+create path (sling:Folder) /var/eventing
+
+set ACL for sling-event
+    allow   jcr:all     on /var/eventing
+end
+
+set ACL for sling-i18n
+    allow   jcr:read    on /apps
+    allow   jcr:read    on /libs
+end
+
+set ACL for sling-scripting
+    allow   jcr:read    on /apps
+    allow   jcr:read    on /libs
+end
+
+set ACL for sling-xss
+    allow   jcr:read    on /apps/sling/xss
+    allow   jcr:read    on /libs/sling/xss
+end
+
+create path (sling:OrderedFolder) /content
+
+set ACL for everyone
+    allow   jcr:read    on /
+end
