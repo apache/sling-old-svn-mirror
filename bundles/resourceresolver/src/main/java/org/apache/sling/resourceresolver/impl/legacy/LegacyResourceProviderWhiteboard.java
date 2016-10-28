@@ -44,11 +44,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
@@ -60,21 +55,23 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 @SuppressWarnings("deprecation")
-@Component(immediate = true)
-@References({
-        @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
+@Component
 public class LegacyResourceProviderWhiteboard {
 
     public static final String ORIGINAL_SERVICE_PID = "original.service.pid";
 
     private Map<Object, List<ServiceRegistration>> registrations = new HashMap<Object, List<ServiceRegistration>>();
 
-    protected void bindResourceProvider(final ServiceReference ref) {
+    @Reference(service = ResourceProvider.class, cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    protected void bindResourceProvider(final ServiceReference<ResourceProvider> ref) {
         final BundleContext bundleContext = ref.getBundle().getBundleContext();
-        final ResourceProvider provider = (ResourceProvider) bundleContext.getService(ref);
+        final ResourceProvider provider = bundleContext.getService(ref);
         if ( provider != null ) {
             final String[] propertyNames = ref.getPropertyKeys();
             final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
@@ -117,9 +114,10 @@ public class LegacyResourceProviderWhiteboard {
         }
     }
 
-    protected void bindResourceProviderFactory(final ServiceReference ref) {
+    @Reference(service = ResourceProviderFactory.class, cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    protected void bindResourceProviderFactory(final ServiceReference<ResourceProviderFactory> ref) {
         final BundleContext bundleContext = ref.getBundle().getBundleContext();
-        final ResourceProviderFactory factory = (ResourceProviderFactory) bundleContext.getService(ref);
+        final ResourceProviderFactory factory = bundleContext.getService(ref);
         if ( factory != null ) {
             final String[] propertyNames = ref.getPropertyKeys();
             final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
