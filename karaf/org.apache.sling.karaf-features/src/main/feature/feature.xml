@@ -20,11 +20,11 @@
 <features name="sling-${feature.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
   <!-- Apache Sling -->
   <feature name="sling" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.14.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.15.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.16</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.4.6</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.4.16</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.4.19-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.8</bundle>
     <!-- Apache Sling Commons -->
@@ -289,7 +289,7 @@
     <feature version="${feature.version}">sling-installer</feature>
   </feature>
   <feature name="sling-installer-provider-jcr" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.18</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.19-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-installer</feature>
     <feature version="${feature.version}">sling-jcr</feature>
@@ -298,13 +298,13 @@
   <feature name="sling-jcr" version="${feature.version}">
     <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.4.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.4.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.4.1-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.contentloader/2.1.10</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.3.4</bundle>
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.8.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.8.1-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.3.4</bundle>
     <!-- dependencies -->
@@ -328,30 +328,27 @@
     <feature version="${feature.version}">sling-servlets</feature>
   </feature>
   <feature name="sling-jcr-oak" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.0</bundle>
     <!-- dependencies -->
     <feature>scr</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">jackrabbit-sling</feature>
     <feature version="${feature.version}">tika-sling</feature>
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
-    <!-- TODO SLING-5796 Make Oak Lucene optional -->
-    <bundle dependency="true">mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
   </feature>
   <feature name="sling-jcr-repoinit" version="${feature.version}">
-    <configfile finalname="/etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.3-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.4</bundle>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.4.4</bundle>
+    <feature version="${feature.version}" prerequisite="true">pax-url-classpath-sling</feature>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${feature.version}">
@@ -374,22 +371,27 @@
   </feature>
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
+    <configfile finalname="/etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</configfile>
     <configfile finalname="/etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge</configfile>
     <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
     <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-GuestLoginModule.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-GuestLoginModule</configfile>
     <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl</configfile>
     <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-TokenLoginModule.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-TokenLoginModule</configfile>
     <configfile finalname="/etc/org.apache.felix.jaas.ConfigurationSpi.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.ConfigurationSpi</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider</configfile>
+    <bundle>mvn:org.apache.sling/org.apache.sling.karaf-repoinit/${project.version}</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-servlets</feature>
     <!-- ... -->
     <feature version="${feature.version}">sling-installer</feature>
+    <feature version="${feature.version}">sling-jcr-oak</feature>
+    <feature version="${feature.version}">sling-jcr-repoinit</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
     <feature version="${feature.version}">sling-extension-discovery-oak</feature>
@@ -398,18 +400,18 @@
     <bundle>mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2</bundle>
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
-    <feature version="${feature.version}">sling-jcr-oak</feature>
-    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService</configfile>
-    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</configfile>
-    <feature version="${feature.version}">sling-launchpad-oak</feature>
+    <feature version="${feature.version}" prerequisite="true">sling-launchpad-oak</feature>
+    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.1-SNAPSHOT</bundle>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${feature.version}">
-    <feature version="${feature.version}">sling-jcr-oak</feature>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/cfg/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
-    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</configfile>
-    <feature version="${feature.version}">sling-launchpad-oak</feature>
-    <bundle dependency="true">mvn:org.mongodb/mongo-java-driver/2.14.3</bundle>
+    <feature version="${feature.version}" prerequisite="true">sling-launchpad-oak</feature>
+    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.mongodb/mongo-java-driver/2.14.3</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.1-SNAPSHOT</bundle>
   </feature>
   <!-- Apache Sling NoSQL -->
   <feature name="sling-nosql-generic" version="${feature.version}">
