@@ -55,33 +55,31 @@ import org.slf4j.LoggerFactory;
 public class RepositoryInitializer implements SlingRepositoryInitializer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String DEFAULT_REFERENCE = "model@repoinit:context:/resources/provisioning/model.txt";
-    
     @Property(
-            label="Repoinit references", 
+            label="Repoinit references",
             description=
                  "References to the source text that provides repoinit statements."
                 + " format is either model@repoinit:<provisioning model URL> or raw:<raw URL>"
             ,
             cardinality=Integer.MAX_VALUE,
-            value={ DEFAULT_REFERENCE })
+            value={})
     public static final String PROP_REFERENCES = "references";
     private String [] references;
-    
+
     @Reference
     private RepoInitParser parser;
-    
+
     @Reference
     private JcrRepoInitOpsProcessor processor;
-    
+
     @Activate
     public void activate(Map<String, Object> config) {
         warnForOldConfigParameters(config);
-        references = PropertiesUtil.toStringArray(config.get(PROP_REFERENCES));
+        references = PropertiesUtil.toStringArray(config.get(PROP_REFERENCES), new String[]{});
         log.debug("Activated: {}", this.toString());
     }
-    
-    /** Some config parameters are not used anymore as of V1.0.2, this logs 
+
+    /** Some config parameters are not used anymore as of V1.0.2, this logs
      *  warnings if they are still used.
      */
     private void warnForOldConfigParameters(Map<String, Object> config) {
@@ -96,7 +94,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
             }
         }
         }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", references=" + Arrays.asList(references);
@@ -118,5 +116,5 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
         } finally {
             s.logout();
         }
-    }   
+    }
 }
