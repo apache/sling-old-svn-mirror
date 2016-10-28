@@ -38,3 +38,7 @@
         deny    jcr:all     on /
         allow   jcr:read    on /libs/sling/xss,/apps/sling/xss
     end
+
+[configurations]
+  org.apache.sling.jcr.repoinit.impl.RepositoryInitializer
+    references="model@repoinit:context:/resources/provisioning/model.txt"
