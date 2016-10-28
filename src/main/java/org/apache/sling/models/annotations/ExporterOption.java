@@ -14,7 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.4.0")
 package org.apache.sling.models.annotations;
 
-import aQute.bnd.annotation.Version;
+/**
+ * Annotation to specify options on an model's export operation.
+ */
+public @interface ExporterOption {
+
+    /**
+     * Name of the exporter option.
+     */
+    String name();
+
+    /**
+     * Value of the exporter option.
+     */
+    String value();
+}
