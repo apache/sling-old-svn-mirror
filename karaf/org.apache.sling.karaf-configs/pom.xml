@@ -118,6 +118,16 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
+                  <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
                   <classifier>org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default</classifier>
                   <file>src/main/resources/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default.config</file>
                   <type>config</type>
