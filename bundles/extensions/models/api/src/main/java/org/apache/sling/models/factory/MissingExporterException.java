@@ -14,7 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.4.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.factory;
 
-import aQute.bnd.annotation.Version;
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
+@SuppressWarnings("serial")
+public class MissingExporterException extends Exception {
+    public MissingExporterException(final String name, final Class<?> targetClass) {
+        super(String.format("No exporter named %s supports %s.", name, targetClass.getName()));
+    }
+}

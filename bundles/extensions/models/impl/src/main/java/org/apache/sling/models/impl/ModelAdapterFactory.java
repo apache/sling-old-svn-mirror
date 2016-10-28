@@ -62,10 +62,13 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
+import org.apache.sling.models.export.spi.ModelExporter;
+import org.apache.sling.models.factory.ExportException;
 import org.apache.sling.models.factory.InvalidAdaptableException;
 import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.factory.MissingElementException;
 import org.apache.sling.models.factory.MissingElementsException;
+import org.apache.sling.models.factory.MissingExporterException;
 import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.factory.PostConstructException;
@@ -172,6 +175,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     // bind the service with the highest priority (if a new one comes in this service gets restarted)
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
     private ModelValidation modelValidation = null;
+
+    @Reference(name = "modelExporter", cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,
+            referenceInterface = ModelExporter.class)
+    private final @Nonnull RankedServices<ModelExporter> modelExporters = new RankedServices<ModelExporter>();
 
     ModelPackageBundleListener listener;
 
@@ -1010,6 +1017,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
+    protected void bindModelExporter(final ModelExporter s, final Map<String, Object> props) {
+        synchronized (modelExporters) {
+            modelExporters.bind(s, props);
+        }
+    }
+
+    protected void unbindModelExporter(final ModelExporter s, final Map<String, Object> props) {
+        synchronized (modelExporters) {
+            modelExporters.unbind(s, props);
+        }
+    }
+
     @Nonnull Collection<Injector> getInjectors() {
         return sortedInjectors.get();
     }
@@ -1063,6 +1082,60 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             throw result.getThrowable();
         } else {
             return result.getValue();
+        }
+    }
+
+    @Override
+    public <T> T exportModel(Object model, String name, Class<T> targetClass, Map<String, String> options)
+            throws ExportException, MissingExporterException {
+        for (ModelExporter exporter : modelExporters) {
+            if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
+                T resultObject = exporter.export(model, targetClass, options);
+                return resultObject;
+            } else {
+                throw new MissingExporterException(name, targetClass);
+            }
+        }
+        throw new MissingExporterException(name, targetClass);
+    }
+
+    @Override
+    public <T> T exportModelForResource(Resource resource, String name, Class<T> targetClass, Map<String, String> options)
+            throws ExportException, MissingExporterException {
+        Class<?> clazz = this.adapterImplementations.getModelClassForResource(resource);
+        if (clazz == null) {
+            throw new ModelClassException("Could find model registered for resource type: " + resource.getResourceType());
+        }
+        Result<?> result = internalCreateModel(resource, clazz);
+        return handleAndExportResult(result, name, targetClass, options);
+    }
+
+    @Override
+    public <T> T exportModelForRequest(SlingHttpServletRequest request, String name, Class<T> targetClass, Map<String, String> options)
+            throws ExportException, MissingExporterException {
+        Class<?> clazz = this.adapterImplementations.getModelClassForRequest(request);
+        if (clazz == null) {
+            throw new ModelClassException("Could find model registered for request path: " + request.getServletPath());
+        }
+        Result<?> result = internalCreateModel(request, clazz);
+        handleAndExportResult(result, name, targetClass, options);
+        // unreachable
+        return null;
+    }
+
+    private <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
+        if (result.wasSuccessful()) {
+            for (ModelExporter exporter : modelExporters) {
+                if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
+                    T resultObject = exporter.export(result.getValue(), targetClass, options);
+                    return resultObject;
+                } else {
+                    throw new MissingExporterException(name, targetClass);
+                }
+            }
+            throw new MissingExporterException(name, targetClass);
+        } else {
+            throw result.getThrowable();
         }
     }
 

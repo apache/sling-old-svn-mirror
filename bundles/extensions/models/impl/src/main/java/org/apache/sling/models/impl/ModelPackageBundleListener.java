@@ -18,14 +18,22 @@ package org.apache.sling.models.impl;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.models.annotations.Exporter;
+import org.apache.sling.models.annotations.ExporterOption;
+import org.apache.sling.models.annotations.Exporters;
 import org.apache.sling.models.annotations.Model;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -36,6 +44,8 @@ import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.Servlet;
 
 public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
@@ -117,6 +127,23 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 if (StringUtils.isNotEmpty(resourceType)) {
                                     for (Class<?> adaptable : annotation.adaptables()) {
                                         adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
+                                        ExportServlet.ExportedObjectAccessor accessor = null;
+                                        if (adaptable == Resource.class) {
+                                            accessor = ExportServlet.RESOURCE;
+                                        } else if (adaptable == SlingHttpServletRequest.class) {
+                                            accessor = ExportServlet.REQUEST;
+                                        }
+                                        Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                                        if (exporterAnnotation != null) {
+                                            registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
+                                        }
+                                        Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                                        if (exportersAnnotation != null) {
+                                            for (Exporter ann : exportersAnnotation.value()) {
+                                                registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                                            }
+                                        }
+
                                     }
                                 }
                             }
@@ -142,9 +169,11 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
             for (ServiceRegistration reg : (ServiceRegistration[]) object) {
                 ServiceReference ref = reg.getReference();
                 String[] adapterTypeNames = PropertiesUtil.toStringArray(ref.getProperty(AdapterFactory.ADAPTER_CLASSES));
-                String implTypeName = PropertiesUtil.toString(ref.getProperty(PROP_IMPLEMENTATION_CLASS), null);
-                for (String adapterTypeName : adapterTypeNames) {
-                    adapterImplementations.remove(adapterTypeName, implTypeName);
+                if (adapterTypeNames != null) {
+                    String implTypeName = PropertiesUtil.toString(ref.getProperty(PROP_IMPLEMENTATION_CLASS), null);
+                    for (String adapterTypeName : adapterTypeNames) {
+                        adapterImplementations.remove(adapterTypeName, implTypeName);
+                    }
                 }
                 reg.unregister();
             }
@@ -210,5 +239,36 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         }
         return bundleContext.registerService(AdapterFactory.SERVICE_NAME, factory, registrationProps);
     }
-    
+
+
+    private void registerExporter(Bundle bundle, Class<?> implType, String resourceType, Exporter exporterAnnotation, List<ServiceRegistration> regs,
+                                  ExportServlet.ExportedObjectAccessor accessor) {
+        if (accessor != null) {
+            Map<String, String> baseOptions = getOptions(exporterAnnotation);
+            ExportServlet servlet = new ExportServlet(factory, exporterAnnotation.selector(), exporterAnnotation.name(), accessor, baseOptions);
+            Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
+            registrationProps.put("sling.servlet.resourceTypes", resourceType);
+            registrationProps.put("sling.servlet.selectors", exporterAnnotation.selector());
+            registrationProps.put("sling.servlet.extensions", exporterAnnotation.extensions());
+
+            log.info("registering servlet for {}, {}, {}", new Object[]{resourceType, exporterAnnotation.selector(), exporterAnnotation.extensions()});
+
+            ServiceRegistration reg = bundleContext.registerService(Servlet.class.getName(), servlet, registrationProps);
+            regs.add(reg);
+        }
+    }
+
+    private Map<String, String> getOptions(Exporter annotation) {
+        ExporterOption[] options = annotation.options();
+        if (options.length == 0) {
+            return Collections.emptyMap();
+        } else {
+            Map<String, String> map = new HashMap<String, String>(options.length);
+            for (ExporterOption option : options) {
+                map.put(option.name(), option.value());
+            }
+            return map;
+        }
+    }
+
 }

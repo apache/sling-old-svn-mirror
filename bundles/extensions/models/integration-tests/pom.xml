@@ -115,7 +115,8 @@
                             org.apache.sling.models.it.noclasses,
                             org.apache.sling.models.it.models,
                             org.apache.sling.models.it.rtbound,
-                            org.apache.sling.models.it.rtboundpicker
+                            org.apache.sling.models.it.rtboundpicker,
+                            org.apache.sling.models.it.exporter
                         </Sling-Model-Packages>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                         <Export-Package>org.apache.sling.models.it</Export-Package>
@@ -242,7 +243,11 @@
                         <sling.additional.bundle.2>geronimo-atinject_1.0_spec</sling.additional.bundle.2>
                         <sling.additional.bundle.10>org.apache.sling.models.api</sling.additional.bundle.10>
                         <sling.additional.bundle.11>org.apache.sling.models.impl</sling.additional.bundle.11>
-                        <sling.additional.bundle.12>${project.build.finalName}.jar</sling.additional.bundle.12>
+                        <sling.additional.bundle.12>org.apache.sling.models.jacksonexporter</sling.additional.bundle.12>
+                        <sling.additional.bundle.13>jackson-annotations</sling.additional.bundle.13>
+                        <sling.additional.bundle.14>jackson-core</sling.additional.bundle.14>
+                        <sling.additional.bundle.15>jackson-databind</sling.additional.bundle.15>
+                        <sling.additional.bundle.16>${project.build.finalName}.jar</sling.additional.bundle.16>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -281,6 +286,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.engine</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
             <version>1.3.0-SNAPSHOT</version>
             <scope>provided</scope>
@@ -291,6 +302,31 @@
             <version>1.3.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
+            <version>0.0.99-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.3.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.3.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.3.2</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- not part of launchpad 7 (see SLING-4710) -->
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>

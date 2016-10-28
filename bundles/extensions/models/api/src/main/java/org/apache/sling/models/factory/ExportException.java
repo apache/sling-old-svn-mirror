@@ -14,7 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.4.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.factory;
 
-import aQute.bnd.annotation.Version;
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
+@SuppressWarnings("serial")
+public class ExportException extends Exception {
+    public ExportException(final String message) {
+        super(message);
+    }
+
+    public ExportException(final Throwable e) {
+        super(e);
+    }
+}
