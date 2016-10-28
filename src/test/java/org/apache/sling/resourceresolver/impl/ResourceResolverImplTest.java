@@ -207,8 +207,10 @@ public class ResourceResolverImplTest {
     @SuppressWarnings("deprecation")
     @Test
     public void testCloseWithStackTraceLogging() throws Exception {
+        ResourceResolverFactoryConfig config = mock(ResourceResolverFactoryConfig.class);
+        when(config.resource_resolver_log_closing()).thenReturn(true);
         ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
-        Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
+        Whitebox.setInternalState(rrfa, "config", config);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
         final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());

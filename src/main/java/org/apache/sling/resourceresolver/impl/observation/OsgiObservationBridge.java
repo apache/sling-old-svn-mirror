@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 @Component(service = ResourceChangeListener.class,
            configurationPolicy = ConfigurationPolicy.IGNORE,
            property = {
+                  Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                   ResourceChangeListener.PATHS + "=/",
                   ResourceChangeListener.CHANGES + "=ADDED",
                   ResourceChangeListener.CHANGES + "=CHANGED",

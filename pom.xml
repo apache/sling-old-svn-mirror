@@ -55,10 +55,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-sling-plugin</artifactId>
                 <executions>
@@ -79,7 +75,6 @@
                     <instructions>
                         <Import-Package>
                             javax.annotation;resolution:=optional,
-                            org.apache.sling.api.resource;provide:=true,
                             org.apache.sling.commons.osgi;version="$(@)",
                             *
                         </Import-Package>
