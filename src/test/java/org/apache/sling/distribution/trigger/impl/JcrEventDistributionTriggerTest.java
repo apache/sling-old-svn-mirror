@@ -44,7 +44,7 @@ public class JcrEventDistributionTriggerTest {
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, null);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -58,7 +58,7 @@ public class JcrEventDistributionTriggerTest {
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, null);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
