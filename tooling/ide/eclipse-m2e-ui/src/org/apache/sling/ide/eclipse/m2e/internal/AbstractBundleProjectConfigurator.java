@@ -45,23 +45,27 @@ public abstract class AbstractBundleProjectConfigurator extends AbstractProjectC
         
         // at this point the JDT project is already created by the tycho plugin
         // we just need to setup the appropriate facets
-        Logger logger = Activator.getDefault().getPluginLogger();
         IProject project = configRequest.getProject();
-        logger.trace("AbstractBundleProjectConfigurator called for POM {0} and project {1}",
+        trace("AbstractBundleProjectConfigurator called for POM {0} and project {1}",
                 configRequest.getPom().getFullPath(),
                 project.getName());
         // delete all previous markers on this pom.xml set by any project configurator
         deleteMarkers(configRequest.getPom());
+        
+        if (!getPreferences().isBundleProjectConfiguratorEnabled()) {
+            trace("m2e project configurator for bundles was disabled through preference.");
+            return;
+        }
 
         // check for maven-sling-plugin as well (to make sure this is a Sling project)
         MavenProject mavenProject = configRequest.getMavenProject();
         if (mavenProject.getPlugin(MAVEN_SLING_PLUGIN_KEY) != null) {
-            logger.trace("Found maven-sling-plugin in build plugins for project {0}, therefore adding sling bundle facets!", project.getName());
+            trace("Found maven-sling-plugin in build plugins for project {0}, therefore adding sling bundle facets!", project.getName());
             ConfigurationHelper.convertToBundleProject(project);
         } else {
-            logger.trace("Couldn't find maven-sling-plugin in build plugins for project {0}, therefore not adding the sling bundle facets!", project.getName());
+            trace("Couldn't find maven-sling-plugin in build plugins for project {0}, therefore not adding the sling bundle facets!", project.getName());
         }
-        if (!isSupportingM2eIncrementalBuild(mavenProject, logger)) {
+        if (!isSupportingM2eIncrementalBuild(mavenProject, getLogger())) {
             markerManager.addMarker(configRequest.getPom(), MARKER_TYPE_BUNDLE_NOT_SUPPORTING_M2E, "Missing m2e incremental support for generating the bundle manifest and service definitions", -1,
                     IMarker.SEVERITY_ERROR);
         }

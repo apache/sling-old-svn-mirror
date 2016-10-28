@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.m2e.internal;
 
+import org.apache.sling.ide.eclipse.m2e.internal.preferences.Preferences;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -23,6 +25,31 @@ import org.eclipse.core.runtime.CoreException;
 public abstract class AbstractProjectConfigurator extends org.eclipse.m2e.core.project.configurator.AbstractProjectConfigurator {
 
     private static final String MARKER_TYPE_PROJECT_CONFIGURATOR = "org.apache.sling.ide.eclipse-m2e-ui.projectconfiguratorproblem";
+
+    private final Preferences preferences;
+
+    protected AbstractProjectConfigurator() {
+        preferences = new Preferences();
+    }
+
+    /**
+     * 
+     * @return the preferences bound to this plugin
+     */
+    protected Preferences getPreferences() {
+        return preferences;
+    }
+
+    protected static Logger getLogger() {
+        return Activator.getDefault().getPluginLogger();
+    }
+
+    /**
+     * @see Logger#trace(String, Object...)
+     */
+    protected static void trace(String format, Object... arguments) {
+        getLogger().trace(format, arguments);
+    }
 
     /**
      * Adds a marker with the default type to the given resource.
@@ -36,7 +63,7 @@ public abstract class AbstractProjectConfigurator extends org.eclipse.m2e.core.p
      *            {@link IMarker#SEVERITY_INFO}
      */
     @SuppressWarnings("restriction")
-    public void addMarker(IResource resource, String message, int severity) {
+    protected void addMarker(IResource resource, String message, int severity) {
         markerManager.addMarker(resource, MARKER_TYPE_PROJECT_CONFIGURATOR, message, -1, severity);
     }
 
@@ -48,7 +75,7 @@ public abstract class AbstractProjectConfigurator extends org.eclipse.m2e.core.p
      * @throws CoreException
      */
     @SuppressWarnings("restriction")
-    public void deleteMarkers(IResource resource) throws CoreException {
+    protected void deleteMarkers(IResource resource) throws CoreException {
         markerManager.deleteMarkers(resource, true, MARKER_TYPE_PROJECT_CONFIGURATOR);
     }
 

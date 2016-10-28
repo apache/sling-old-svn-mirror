@@ -25,7 +25,6 @@ import java.util.TreeSet;
 import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.log.Logger;
 import org.eclipse.aether.util.StringUtils;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -71,6 +70,12 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
         IProject project = configRequest.getProject();
         // delete all previous markers on this pom.xml set by any project configurator
         deleteMarkers(configRequest.getPom());
+
+        if (!getPreferences().isContentPackageProjectConfiguratorEnabled()) {
+            trace("M2E project configurator for packing type 'content-package' was disabled through preference.");
+            return;
+        }
+
         MavenProject mavenProject = configRequest.getMavenProject();
         boolean active = !"false".equalsIgnoreCase(mavenProject.getProperties().getProperty(M2E_ACTIVE));
         if(!active) {
@@ -78,9 +83,7 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
             return;
         }
         
-        String mavenGav = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion();
-       
-        trace("Configuring Maven project {0} with packaging 'content-package'...", mavenGav);
+        trace("Configuring {0} with packaging 'content-package'...", mavenProject);
         
         // core configuration for sling ide plugin
         
@@ -91,16 +94,14 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
         String jcrRootPath = contentSyncPath.toString();
         ConfigurationHelper.convertToContentPackageProject(project, progressMonitor, Path.fromOSString(jcrRootPath));   
         
-        new WtpProjectConfigurer(configRequest, project, jcrRootPath).configure(progressMonitor);
+        if (getPreferences().isWtpFacetsEnabledInContentPackageProjectConfigurator()) {
+            new WtpProjectConfigurer(configRequest, project, jcrRootPath).configure(progressMonitor);
+            trace("WTP facets for {0} added", mavenProject);
+        } else {
+            trace("WTP facets for packing type 'content-package' are disabled through preferences.");
+        }
         
         trace("Done converting .");
-    }
-
-    /**
-     * @see Logger#trace(String, Object...)
-     */
-    private static void trace(String format, Object... arguments) {
-        Activator.getDefault().getPluginLogger().trace(format, arguments);
     }
 
     /**
