@@ -16,10 +16,6 @@
  */
 package org.apache.sling.jcr.repoinit.impl;
 
-import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PATHS;
-import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRINCIPALS;
-import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRIVILEGES;
-
 import java.util.List;
 
 import javax.jcr.Node;
@@ -29,18 +25,17 @@ import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
-import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.repoinit.parser.operations.PathSegmentDefinition;
-import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
-import org.apache.sling.repoinit.parser.operations.RegisterNodetypes;
 import org.apache.sling.repoinit.parser.operations.SetAclPaths;
 import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PATHS;
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRINCIPALS;
+import static org.apache.sling.repoinit.parser.operations.AclLine.PROP_PRIVILEGES;
 
 /** OperationVisitor which processes only operations related to
- *  service users and ACLs. Having several such specialized visitors 
- *  makes it easy to control the execution order. 
+ *  service users and ACLs. Having several such specialized visitors
+ *  makes it easy to control the execution order.
  */
 class ServiceAndAclVisitor extends DoNothingVisitor {
 
@@ -51,7 +46,7 @@ class ServiceAndAclVisitor extends DoNothingVisitor {
     public ServiceAndAclVisitor(Session s) {
         super(s);
     }
-    
+
     @Override
     public void visitCreateServiceUser(CreateServiceUser s) {
         final String id = s.getUsername();
@@ -85,15 +80,16 @@ class ServiceAndAclVisitor extends DoNothingVisitor {
         }
         return result;
     }
-    
+
     private void setAcl(AclLine line, Session s, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow) {
         try {
+            log.info("Adding ACL '{}' entry '{}' for {} on {}", isAllow ? "allow" : "deny", privileges, principals, paths);
             AclUtil.setAcl(s, principals, paths, privileges, isAllow);
         } catch(Exception e) {
             throw new RuntimeException("Failed to set ACL (" + e.toString() + ") " + line, e);
         }
     }
-    
+
     @Override
     public void visitSetAclPrincipal(SetAclPrincipals s) {
         final List<String> principals = s.getPrincipals();
@@ -108,7 +104,7 @@ class ServiceAndAclVisitor extends DoNothingVisitor {
         final List<String> paths = s.getPaths();
         for(AclLine line : s.getLines()) {
             final boolean isAllow = line.getAction().equals(AclLine.Action.ALLOW);
-            setAcl(line, session, require(line, PROP_PRINCIPALS), paths, require(line, PROP_PRIVILEGES), isAllow); 
+            setAcl(line, session, require(line, PROP_PRINCIPALS), paths, require(line, PROP_PRIVILEGES), isAllow);
         }
     }
 
@@ -119,7 +115,7 @@ class ServiceAndAclVisitor extends DoNothingVisitor {
                 final String fullPath = parentPath + "/" + psd.getSegment();
                 try {
                     if(session.itemExists(fullPath)) {
-                        log.info("Path already exists, nothing to do (and not checking its primary type for now): {}", fullPath); 
+                        log.info("Path already exists, nothing to do (and not checking its primary type for now): {}", fullPath);
                     } else {
                         final Node n = parentPath.equals("") ? session.getRootNode() : session.getNode(parentPath);
                         log.info("Creating node {} with primary type {}", fullPath, psd.getPrimaryType());
