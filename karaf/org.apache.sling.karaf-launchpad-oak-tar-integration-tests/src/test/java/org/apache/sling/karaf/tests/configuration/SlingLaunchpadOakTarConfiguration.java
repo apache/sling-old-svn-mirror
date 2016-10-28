@@ -35,6 +35,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 
 public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
+    // TODO SLING-6136/KARAF-4760
     private Option testBundle() throws Exception {
         final String filename = System.getProperty("repoinit.filename");
         final InputStream repoinit = new FileInputStream(filename);
@@ -62,7 +63,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             // TODO PAXWEB-935 editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.cfg", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.cfg", "alias", "/server"),
             editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.cfg", "enabled", "true"),
-            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.cfg", "references", "raw:classpath://repoinit/repoinit.txt"),
+            // TODO SLING-6136/KARAF-4760 editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config", "references", "[\"raw:classpath://org.apache.sling.karaf-repoinit/repoinit.txt\", \"raw:classpath://repoinit/repoinit.txt\"]"),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
                 "sling-launchpad-content",
@@ -73,19 +74,12 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-scripting-javascript",
                 "sling-scripting-jsp",
                 "sling-installer-provider-jcr",
-                "sling-jcr-jackrabbit-security",
-                "sling-jcr-repoinit"
+                "sling-jcr-jackrabbit-security"
             ),
             // bundle for test (contains repoinit.txt)
             testBundle(),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
-            // Pax Url TODO: feature?
-            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-commons").version("2.4.7"),
-            mavenBundle().groupId("org.ops4j.pax.url").artifactId("pax-url-classpath").version("2.4.7"),
-            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-lang").version("1.5.0"),
-            mavenBundle().groupId("org.ops4j.base").artifactId("ops4j-base-util-property").version("1.5.0"),
-            mavenBundle().groupId("org.ops4j.pax.swissbox").artifactId("pax-swissbox-property").version("1.8.2"),
             // test support
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").versionAsInProject(),
