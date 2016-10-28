@@ -30,6 +30,7 @@ create path (sling:Folder) /libs/sling
 create path (sling:Folder) /libs/sling/xss
 create path (sling:Folder) /var
 create path (sling:Folder) /var/eventing
+create path (sling:Folder) /var/sling
 
 set ACL for sling-event
     allow   jcr:all     on /var/eventing
