@@ -71,6 +71,12 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     @Property(label = "Service Name", description = "The service used to listen for jcr events")
     private static final String SERVICE_NAME = "serviceName";
 
+    /**
+     * use deep distribution
+     */
+    @Property(label = "Use deep distribution", description = "Distribute entire subtree of the event node path")
+    private static final String DEEP = "deep";
+
 
     private JcrEventDistributionTrigger trigger;
 
@@ -90,8 +96,9 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
         String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
         ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
+        boolean deep = PropertiesUtil.toBoolean(config.get(DEEP), false);
 
-        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, ignoredPathsPatterns);
+        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, deep, serviceName, ignoredPathsPatterns);
         trigger.enable();
     }
 

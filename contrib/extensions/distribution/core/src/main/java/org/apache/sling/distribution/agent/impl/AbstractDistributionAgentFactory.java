@@ -144,7 +144,7 @@ abstract class AbstractDistributionAgentFactory<DistributionAgentMBeanType> {
         }
     }
 
-    void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    synchronized void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.add(distributionTrigger);
         if (agent != null && triggersEnabled) {
             agent.enableTrigger(distributionTrigger);
@@ -152,7 +152,7 @@ abstract class AbstractDistributionAgentFactory<DistributionAgentMBeanType> {
 
     }
 
-    void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+    synchronized void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.remove(distributionTrigger);
 
         if (agent != null) {

@@ -150,6 +150,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
         DistributionRequest lastRequest = requestList.isEmpty() ? null : requestList.get(requestList.size() - 1);
 
+        log.debug("adding request {} to {}", request, requestList);
         if (lastRequest == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
             requestList.add(request);
         } else if (hasDeepPaths(request) || hasDeepPaths(lastRequest)) {
@@ -164,6 +165,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[allPaths.size()]));
             requestList.set(requestList.size() - 1, lastRequest);
         }
+        log.debug("current requests {}", requestList);
     }
 
     void addMissingPaths(Set<String> allPaths) {
