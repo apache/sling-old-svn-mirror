@@ -43,6 +43,13 @@ public class SlingLaunchpadOakTarIT extends AbstractSlingLaunchpadOakTestSupport
     }
 
     @Test
+    public void testOrgApacheSlingJcrOakServer() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.oak.server");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testOrgApacheJackrabbitOakSegment() {
         final Bundle bundle = findBundle("org.apache.jackrabbit.oak-segment");
         assertNotNull(bundle);

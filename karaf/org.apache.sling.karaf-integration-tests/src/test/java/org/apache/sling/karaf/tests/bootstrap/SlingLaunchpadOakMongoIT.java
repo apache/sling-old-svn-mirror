@@ -86,6 +86,13 @@ public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSuppo
     }
 
     @Test
+    public void testOrgApacheSlingJcrOakServer() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.oak.server");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testOrgMongodbMongoJavaDriver() {
         final Bundle bundle = findBundle("org.mongodb.mongo-java-driver");
         assertNotNull(bundle);

@@ -19,6 +19,7 @@
 package org.apache.sling.karaf.tests.bootstrap;
 
 import org.apache.sling.karaf.testing.KarafTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -41,13 +42,6 @@ public class SlingJcrOakIT extends KarafTestSupport {
         return OptionUtils.combine(baseConfiguration(),
             addSlingFeatures("sling-jcr-oak")
         );
-    }
-
-    @Test
-    public void testOrgApacheSlingJcrOakServer() {
-        final Bundle bundle = findBundle("org.apache.sling.jcr.oak.server");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
     @Test
@@ -78,13 +72,6 @@ public class SlingJcrOakIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
-    @Test // TODO SLING-5796 Make Oak Lucene optional
-    public void testOrgApacheJackrabbitOakLucene() {
-        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-lucene");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
     @Test
     public void testComGoogleGuava() {
         final Bundle bundle = findBundle("com.google.guava");
@@ -93,6 +80,7 @@ public class SlingJcrOakIT extends KarafTestSupport {
     }
 
     @Test
+    @Ignore
     public void testOrgApacheFelixJaas() {
         final Bundle bundle = findBundle("org.apache.felix.jaas");
         assertNotNull(bundle);
