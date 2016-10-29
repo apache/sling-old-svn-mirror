@@ -172,8 +172,7 @@
             </Sling-Bundle-Resources>
             <Sling-Initial-Content>
               apps/fling;path:=/apps/fling;overwrite:=true;uninstall:=true,
-              content;path:=/content;overwrite:=true;uninstall:=true,
-              etc;path:=/etc;overwrite:=true;uninstall:=true
+              content;path:=/content;overwrite:=true;uninstall:=true
             </Sling-Initial-Content>
             <Sling-Model-Packages>
               org.apache.sling.samples.fling.page
@@ -193,7 +192,7 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes combine.children="append">
-            <exclude>**/etc/messaging/form/comment.txt</exclude>
+            <exclude>**/apps/fling/messaging/form/comment.txt</exclude>
           </excludes>
         </configuration>
       </plugin>
