@@ -22,11 +22,11 @@ When using _[Sling Launchpad](https://sling.apache.org/documentation/the-sling-e
 
     mvn clean install -P launchpad@localhost
 
-When using _[Apache Karaf](http://karaf.apache.org)_ with _[Sling Karaf Launchpad](https://github.com/apache/sling/tree/trunk/contrib/launchpad/karaf)_ listening on port `8181` with default admin credentials run:
+When using _[Apache Karaf](http://karaf.apache.org)_ with _[Sling's Karaf Features](https://github.com/apache/sling/tree/trunk/karaf/org.apache.sling.karaf-features)_ or _[Sling's Karaf Distribution](https://github.com/apache/sling/tree/trunk/karaf/org.apache.sling.karaf-distribution)_ listening on port `8181` with default admin credentials run:
 
     mvn clean install -P karaf@localhost
 
-This will install initial content under `/apps/fling`, `/content/fling`, `/etc/i18n/org.apache.sling.samples.fling` and `/etc/messaging`.
+This will install initial content under `/apps/fling` and `/content/fling`.
 
 Browse to [http://localhost:8080/fling.html](http://localhost:8080/fling.html) or [http://localhost:8181/fling.html](http://localhost:8181/fling.html).
 
