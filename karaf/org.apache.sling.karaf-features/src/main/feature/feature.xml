@@ -348,7 +348,7 @@
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.4</bundle>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.4.4</bundle>
-    <feature version="${feature.version}" prerequisite="true">pax-url-classpath-sling</feature>
+    <feature prerequisite="true" version="${feature.version}">pax-url-classpath-sling</feature>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${feature.version}">
@@ -569,10 +569,10 @@
   </feature>
   <!-- Pax URL (KARAF-4707) -->
   <feature name="pax-url-classpath-sling" version="${feature.version}">
-    <bundle>mvn:org.ops4j.pax.url/pax-url-commons/2.4.7</bundle>
+    <bundle>mvn:org.ops4j.pax.url/pax-url-commons/2.5.1</bundle>
     <bundle>mvn:org.ops4j.base/ops4j-base-lang/1.5.0</bundle>
     <bundle>mvn:org.ops4j.base/ops4j-base-util-property/1.5.0</bundle>
     <bundle>mvn:org.ops4j.pax.swissbox/pax-swissbox-property/1.8.2</bundle>
-    <bundle>mvn:org.ops4j.pax.url/pax-url-classpath/2.4.7</bundle>
+    <bundle>mvn:org.ops4j.pax.url/pax-url-classpath/2.5.1</bundle>
   </feature>
 </features>
