@@ -134,6 +134,15 @@ public class ModelPreprocessor {
         // process attachments
         processAttachments(env, info);
 
+        // check for setting version
+        if ( nodeBooleanValue(info.plugin, "setFeatureVersions", false) ) {
+            for(final Feature f : info.localModel.getFeatures() ) {
+                if ( f.getVersion() == null ) {
+                    f.setVersion(info.project.getVersion());
+                }
+            }
+        }
+
         // prepare resolver options
         ResolverOptions resolverOptions = new ResolverOptions();
         if (nodeBooleanValue(info.plugin, "usePomVariables", false)) {
