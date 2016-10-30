@@ -102,7 +102,11 @@ public abstract class ProjectHelper {
         Model result = (Model) project.getContextValue(RAW_MODEL_CACHE);
         if ( result == null ) {
             try {
-                final StringReader r = new StringReader((String)project.getContextValue(RAW_MODEL_TXT));
+                final String text = (String)project.getContextValue(RAW_MODEL_TXT);
+                if ( text == null ) {
+                    throw new MojoExecutionException("No provisioning model found in project.");
+                }
+                final StringReader r = new StringReader(text);
                 result = ModelReader.read(r, project.getId());
                 project.setContextValue(RAW_MODEL_CACHE, result);
             } catch ( final IOException ioe) {
