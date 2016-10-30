@@ -43,6 +43,7 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.MergeUtility;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.ModelUtility;
@@ -528,7 +529,7 @@ public class ModelPreprocessor {
                     if (errors != null ) {
                         throw new MavenExecutionException("Invalid inlined model : " + errors, (File)null);
                     }
-                    ModelUtility.merge(result, current, false);
+                    MergeUtility.merge(result, current, new MergeUtility.MergeOptions().setHandleRemoveRunMode(false));
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }
@@ -547,7 +548,7 @@ public class ModelPreprocessor {
                     if (errors != null ) {
                         throw new MavenExecutionException("Invalid model at " + name + " : " + errors, (File)null);
                     }
-                    ModelUtility.merge(result, current, false);
+                    MergeUtility.merge(result, current, new MergeUtility.MergeOptions().setHandleRemoveRunMode(false));
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }
@@ -579,6 +580,6 @@ public class ModelPreprocessor {
      * @param additional The additional model
      */
     protected void mergeModels(final Model base, final Model additional) throws MavenExecutionException {
-        ModelUtility.merge(base, additional);
+        MergeUtility.merge(base, additional);
     }
 }
