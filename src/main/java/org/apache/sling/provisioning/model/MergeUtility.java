@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Utility for merging two model.
+ * Utility for merging two models.
  *
  * @since 1.4
  */
@@ -49,10 +49,12 @@ public abstract class MergeUtility {
 
         /**
          * Set to {@code true} if the remove run mode should be respected.
-         * @param handleRemoveRunMode
+         * @param handleRemoveRunMode Whether the remove run mode should be respected.
+         * @return This instance.
          */
-        public void setHandleRemoveRunMode(boolean handleRemoveRunMode) {
+        public MergeOptions setHandleRemoveRunMode(boolean handleRemoveRunMode) {
             this.handleRemoveRunMode = handleRemoveRunMode;
+            return this;
         }
 
         /**
@@ -67,9 +69,12 @@ public abstract class MergeUtility {
         /**
          * Set to {@code true} if the latest artifact should win on a merge.
          * Set to {@code false} if the artifact with the highest version should win
+         * @param latestArtifactWins Whether the latest artifact should win
+         * @return This instance.
          */
-        public void setLatestArtifactWins(boolean latestArtifactWins) {
+        public MergeOptions setLatestArtifactWins(boolean latestArtifactWins) {
             this.latestArtifactWins = latestArtifactWins;
+            return this;
         }
     }
 
