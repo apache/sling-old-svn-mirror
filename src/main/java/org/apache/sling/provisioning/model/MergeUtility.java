@@ -92,6 +92,9 @@ public abstract class MergeUtility {
      * <p>
      * For each feature, the following actions are performed:
      * <ul>
+     *   <li>If either the base feature or the additional feature has a version, then
+     *    the one with the higher version is used, the other one is skipped. A missing
+     *    version is considered the lowest possible version.</li>
      *   <li>The feature type of the base feature is set to the type of the additional feature.</li>
      *   <li>All additional sections of the additional feature are added to the base feature.</li>
      *   <li>All variables from the additional feature are set on the base feature, overriding
@@ -107,6 +110,33 @@ public abstract class MergeUtility {
         // features
         for(final Feature feature : additional.getFeatures()) {
             final Feature baseFeature = base.getOrCreateFeature(feature.getName());
+
+            // version check first
+            boolean overwrite = false;
+            if ( baseFeature.getVersion() != null ) {
+                if ( feature.getVersion() == null ) {
+                    continue;
+                }
+                final Version baseVersion = new Version(baseFeature.getVersion());
+                final Version addVersion = new Version(feature.getVersion());
+                if ( baseVersion.compareTo(addVersion) >= 0 ) {
+                    continue;
+                }
+                overwrite = true;
+            } else {
+                if ( feature.getVersion() != null ) {
+                    overwrite = true;
+                }
+            }
+            if ( overwrite ) {
+                // set version
+                baseFeature.setVersion(feature.getVersion());
+                // remove everything from base feature
+                baseFeature.getRunModes().clear();
+                baseFeature.getAdditionalSections().clear();
+                baseFeature.getVariables().clear();
+            }
+
             baseFeature.setType(feature.getType());
 
             // additional sections

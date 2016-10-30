@@ -157,8 +157,9 @@ public abstract class ModelUtility {
 
     /**
      * Validates the model.
+     *
      * @param model The model to validate
-     * @return A map with errors or {@code null}.
+     * @return A map with errors or {@code null} if valid.
      */
     public static Map<Traceable, String> validate(final Model model) {
         final Map<Traceable, String> errors = new HashMap<Traceable, String>();
