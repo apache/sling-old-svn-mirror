@@ -168,6 +168,14 @@ public abstract class ModelUtility {
             if ( feature.getName() == null || feature.getName().isEmpty() ) {
                 errors.put(feature, "Name is required for a feature.");
             }
+            // version should be a valid version
+            if ( feature.getVersion() != null ) {
+                try {
+                    new Version(feature.getVersion());
+                } catch ( final IllegalArgumentException iae) {
+                    errors.put(feature, "Version is not a valid version");
+                }
+            }
             for(final RunMode runMode : feature.getRunModes()) {
                 final String[] rm = runMode.getNames();
                 if ( rm != null ) {
