@@ -74,12 +74,23 @@ public class ModelPreprocessor {
         public final Map<String, ProjectInfo> modelProjects = new HashMap<String, ProjectInfo>();
     }
 
+    /**
+     * Add dependencies for all projects.
+     * @param env The environment with all maven settings and projects
+     * @throws MavenExecutionException If anything goes wrong.
+     */
     public void addDependencies(final Environment env) throws MavenExecutionException {
         for(final ProjectInfo info : env.modelProjects.values()) {
             addDependencies(env, info);
         }
     }
 
+    /**
+     * Add dependencies for a single project.
+     * @param env The environment with all maven settings and projects
+     * @param info The project to process.
+     * @throws MavenExecutionException If anything goes wrong.
+     */
     private Model addDependencies(final Environment env, final ProjectInfo info)
     throws MavenExecutionException {
         if ( info.done == true ) {
@@ -93,10 +104,10 @@ public class ModelPreprocessor {
         // read local model
         final String pattern = nodeValue(info.plugin,
                 "modelPattern", AbstractSlingStartMojo.DEFAULT_MODEL_PATTERN);
-        
+
         final String inlinedModel = nodeValue(info.plugin,
                 "model", null);
-        
+
         String scope = Artifact.SCOPE_PROVIDED;
         try {
             if (hasNodeValue(info.plugin, "modelDirectory")) {
@@ -119,6 +130,9 @@ public class ModelPreprocessor {
         } catch ( final IOException ioe) {
             throw new MavenExecutionException(ioe.getMessage(), ioe);
         }
+
+        // process attachments
+        processAttachments(env, info);
 
         // prepare resolver options
         ResolverOptions resolverOptions = new ResolverOptions();
@@ -357,6 +371,10 @@ public class ModelPreprocessor {
      */
     private String nodeValue(final Plugin plugin, final String name, final String defaultValue) {
         final Xpp3Dom config = plugin == null ? null : (Xpp3Dom)plugin.getConfiguration();
+        return nodeValue(config, name, defaultValue);
+    }
+
+    private String nodeValue(final Xpp3Dom config, final String name, final String defaultValue) {
         final Xpp3Dom node = (config == null ? null : config.getChild(name));
         if (node != null) {
             return node.getValue();
@@ -364,7 +382,7 @@ public class ModelPreprocessor {
             return defaultValue;
         }
     }
-    
+
     /**
      * Checks if plugin configuration value is set in POM for a specific configuration parameter.
      * @param plugin Plugin
@@ -375,6 +393,54 @@ public class ModelPreprocessor {
         final Xpp3Dom config = plugin == null ? null : (Xpp3Dom)plugin.getConfiguration();
         final Xpp3Dom node = (config == null ? null : config.getChild(name));
         return (node != null);
+    }
+
+    private void processAttachments(final Environment env, final ProjectInfo info)
+    throws MavenExecutionException {
+        final Xpp3Dom config = info.plugin == null ? null : (Xpp3Dom)info.plugin.getConfiguration();
+        final Xpp3Dom[] nodes = (config == null ? null : config.getChildren("attach"));
+        if ( nodes != null ) {
+            for(final Xpp3Dom node : nodes) {
+                final String type = nodeValue(node, "type", null);
+                if ( type == null ) {
+                    throw new MavenExecutionException("Attachment for provisioning model has no type.", (File)null);
+                }
+                final String classifier = nodeValue(node, "classifier", null);
+                final String featureName = nodeValue(node, "feature", null);
+                int startLevel = 0;
+                final String level = nodeValue(node, "startLevel", null);
+                if ( level != null ) {
+                    startLevel = Integer.valueOf(level);
+                }
+
+                final Feature f;
+                if ( featureName != null ) {
+                    f = info.localModel.getFeature(featureName);
+                } else if ( info.localModel.getFeatures().isEmpty() ) {
+                    f = null;
+                } else {
+                    f = info.localModel.getFeatures().get(0);
+                }
+                if ( f == null ) {
+                    if ( featureName == null ) {
+                        throw new MavenExecutionException("No feature found in provisioning model for attachment.", (File)null);
+                    }
+                    throw new MavenExecutionException("Feature with name '" + featureName + "' not found in provisioning model for attachment.", (File)null);
+                }
+                final RunMode runMode = f.getOrCreateRunMode(null);
+                final ArtifactGroup group = runMode.getOrCreateArtifactGroup(startLevel);
+
+                final org.apache.sling.provisioning.model.Artifact artifact = new org.apache.sling.provisioning.model.Artifact(
+                        info.project.getGroupId(),
+                        info.project.getArtifactId(),
+                        info.project.getVersion(),
+                        classifier,
+                        type);
+
+                env.logger.debug("Attaching " + artifact + " to feature " + f.getName());
+                group.add(artifact);
+            }
+        }
     }
 
     /**
