@@ -49,8 +49,8 @@ import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet that triggers the health check executor to return results via http. 
- * 
+/** Servlet that triggers the health check executor to return results via http.
+ *
  * Parameters:
  * <ul>
  * <li>tags: The health check tags to take into account
@@ -59,15 +59,15 @@ import org.slf4j.LoggerFactory;
  * <li>callback: For jsonp, the JS callback function name (defaults to "processHealthCheckResults")
  * <li>httpStatus: health check status to http status mapping in format httpStatus=WARN:418,CRITICAL:503,HEALTH_CHECK_ERROR:500.
  * </ul>
- *  
- * For omitted health check status values the next best code will be used (e.g. for httpStatus=CRITICAL:503 a result WARN will 
+ *
+ * For omitted health check status values the next best code will be used (e.g. for httpStatus=CRITICAL:503 a result WARN will
  * return 200, CRITICAL 503 and HEALTH_CHECK_ERROR also 503). By default all requests answer with an http status of 200.
- * <p> 
+ * <p>
  * Useful in combination with load balancers.
  * <p>
  * NOTE: This servlet registers directly (low-level) at the HttpService and is not processed by sling (better performance, fewer dependencies, no authentication required, 503 can be sent without the progress tracker information). */
 @Service
-@Component(label = "Health Check Executor Servlet",
+@Component(label = "Apache Sling Health Check Executor Servlet",
         description = "Serializes health check results into html or json format",
         policy = ConfigurationPolicy.REQUIRE, metatype = true, immediate = true)
 public class HealthCheckExecutorServlet extends HttpServlet {
@@ -83,7 +83,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             description = d;
         }
     }
-    
+
     static final Param PARAM_TAGS = new Param("tags",
             "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json");
     static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
@@ -92,17 +92,17 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             + " or CRITICAL:503,HEALTH_CHECK_ERROR:500,OK:418 for more specific HTTP status");
 
     static final Param PARAM_COMBINE_TAGS_WITH_OR = new Param("combineTagsWithOr", "Combine tags with OR, active by default. Set to false to combine with AND");
-    static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution", 
+    static final Param PARAM_FORCE_INSTANT_EXECUTION = new Param("forceInstantExecution",
             "If true, forces instant execution by executing async health checks directly, circumventing the cache (2sec by default) of the HealthCheckExecutor");
-    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout", 
+    static final Param PARAM_OVERRIDE_GLOBAL_TIMEOUT = new Param("timeout",
             "(msec) a timeout status is returned for any health check still running after this period. Overrides the default HealthCheckExecutor timeout");
 
     static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
-    
+
     static final String JSONP_CALLBACK_DEFAULT = "processHealthCheckResults";
     static final Param PARAM_JSONP_CALLBACK = new Param("callback", "name of the JSONP callback function to use, defaults to " + JSONP_CALLBACK_DEFAULT);
 
-    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR, 
+    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR,
         PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG, PARAM_JSONP_CALLBACK};
 
     static final String FORMAT_HTML = "html";
@@ -120,7 +120,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final String CACHE_CONTROL_VALUE = "no-cache";
 
     private static final String SERVLET_PATH_DEFAULT = "/system/health";
-    
+
     public static final String PROPERTY_SERVLET_PATH = "servletPath";
     @Property(name = PROPERTY_SERVLET_PATH, label = "Path",
             description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + " in order to not be accessible via Apache/Internet)", value = SERVLET_PATH_DEFAULT)
@@ -142,7 +142,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     @Reference
     ResultJsonSerializer jsonSerializer;
-    
+
     @Reference
     ResultTxtSerializer txtSerializer;
 
@@ -275,7 +275,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private void sendNoCacheHeaders(final HttpServletResponse response) {
         response.setHeader(CACHE_CONTROL_KEY, CACHE_CONTROL_VALUE);
     }
-    
+
     private String getHtmlHelpText() {
         final StringBuilder sb = new StringBuilder();
         sb.append("<h3>Supported URL parameters</h3>\n");
