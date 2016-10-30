@@ -291,4 +291,90 @@ public class MergeUtilityTest {
         final List<Artifact> list = U.assertArtifactsInGroup(model.getFeature("f").getRunMode().getArtifactGroup(0), 1);
         U.assertArtifact(list.get(0), "g", "c", "1.6.0", "jar", null);
     }
+
+    @Test public void mergeBaseNoVersionWithVersionedFeature() {
+        final Model base = new Model();
+        final Feature f1 = base.getOrCreateFeature("f1");
+        f1.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "a", "0.1.0", null, null));
+        f1.getVariables().put("a", "1");
+        f1.getAdditionalSections().add(new Section("foo"));
+
+        final Model add = new Model();
+        final Feature f1Add = add.getOrCreateFeature("f1");
+        f1Add.setVersion("1.0");
+        f1Add.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "b", "1.0.0", null, null));
+
+        MergeUtility.merge(base, add);
+        final List<Artifact> list = U.assertArtifactsInGroup(base.getFeature("f1").getRunMode().getArtifactGroup(0), 1);
+        U.assertArtifact(list.get(0), "g", "b", "1.0.0", "jar", null);
+        assertTrue(f1.getVariables().isEmpty());
+        assertTrue(f1.getAdditionalSections().isEmpty());
+    }
+
+    @Test public void mergeBaseVersionedFeatureWithHigherVersionedFeature() {
+        final Model base = new Model();
+        final Feature f1 = base.getOrCreateFeature("f1");
+        f1.setVersion("0.1.0");
+        f1.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "a", "0.1.0", null, null));
+        f1.getVariables().put("a", "1");
+        f1.getAdditionalSections().add(new Section("foo"));
+
+        final Model add = new Model();
+        final Feature f1Add = add.getOrCreateFeature("f1");
+        f1Add.setVersion("1.0");
+        f1Add.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "b", "1.0.0", null, null));
+
+        MergeUtility.merge(base, add);
+        final List<Artifact> list = U.assertArtifactsInGroup(base.getFeature("f1").getRunMode().getArtifactGroup(0), 1);
+        U.assertArtifact(list.get(0), "g", "b", "1.0.0", "jar", null);
+        assertTrue(f1.getVariables().isEmpty());
+        assertTrue(f1.getAdditionalSections().isEmpty());
+    }
+
+    @Test public void mergeBaseVersionedFeatureWithNoVersion() {
+        final Model base = new Model();
+        final Feature f1 = base.getOrCreateFeature("f1");
+        f1.setVersion("1.0");
+        f1.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "a", "0.1.0", null, null));
+        f1.getVariables().put("a", "1");
+        f1.getAdditionalSections().add(new Section("foo"));
+
+        final Model add = new Model();
+        final Feature f1Add = add.getOrCreateFeature("f1");
+        f1Add.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "b", "1.0.0", null, null));
+        f1Add.getVariables().put("b", "1");
+        f1Add.getAdditionalSections().add(new Section("foo2"));
+
+        MergeUtility.merge(base, add);
+        final List<Artifact> list = U.assertArtifactsInGroup(base.getFeature("f1").getRunMode().getArtifactGroup(0), 1);
+        U.assertArtifact(list.get(0), "g", "a", "0.1.0", "jar", null);
+        assertEquals(1, f1.getVariables().size());
+        assertNotNull(f1.getVariables().get("a"));
+        assertEquals(1, f1.getAdditionalSections().size());
+        assertEquals(1, f1.getAdditionalSections("foo").size());
+    }
+
+    @Test public void mergeBaseVersionedFeatureWithLowerVersionedFeature() {
+        final Model base = new Model();
+        final Feature f1 = base.getOrCreateFeature("f1");
+        f1.setVersion("1.0");
+        f1.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "a", "0.1.0", null, null));
+        f1.getVariables().put("a", "1");
+        f1.getAdditionalSections().add(new Section("foo"));
+
+        final Model add = new Model();
+        final Feature f1Add = add.getOrCreateFeature("f1");
+        f1Add.setVersion("0.1.0");
+        f1Add.getOrCreateRunMode(null).getOrCreateArtifactGroup(0).add(new Artifact("g", "b", "1.0.0", null, null));
+        f1Add.getVariables().put("b", "1");
+        f1Add.getAdditionalSections().add(new Section("foo2"));
+
+        MergeUtility.merge(base, add);
+        final List<Artifact> list = U.assertArtifactsInGroup(base.getFeature("f1").getRunMode().getArtifactGroup(0), 1);
+        U.assertArtifact(list.get(0), "g", "a", "0.1.0", "jar", null);
+        assertEquals(1, f1.getVariables().size());
+        assertNotNull(f1.getVariables().get("a"));
+        assertEquals(1, f1.getAdditionalSections().size());
+        assertEquals(1, f1.getAdditionalSections("foo").size());
+    }
 }
