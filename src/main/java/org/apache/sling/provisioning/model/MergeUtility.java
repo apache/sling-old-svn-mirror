@@ -141,13 +141,23 @@ public abstract class MergeUtility {
                                     searchGroup.remove(found);
                                     foundStartLevel = searchGroup.getStartLevel();
                                 } else {
-                                    final Version baseVersion = new Version(found.getVersion());
-                                    final Version mergeVersion = new Version(artifact.getVersion());
-                                    if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
-                                        searchGroup.remove(found);
-                                        foundStartLevel = searchGroup.getStartLevel();
-                                    } else {
-                                        addArtifact = false;
+                                    try {
+                                        final Version baseVersion = new Version(found.getVersion());
+                                        final Version mergeVersion = new Version(artifact.getVersion());
+                                        if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
+                                            searchGroup.remove(found);
+                                            foundStartLevel = searchGroup.getStartLevel();
+                                        } else {
+                                            addArtifact = false;
+                                        }
+                                    } catch ( final IllegalArgumentException iae) {
+                                        // if at least one version is not a valid maven version
+                                        if ( found.getVersion().compareTo(artifact.getVersion()) <= 0 ) {
+                                            searchGroup.remove(found);
+                                            foundStartLevel = searchGroup.getStartLevel();
+                                        } else {
+                                            addArtifact = false;
+                                        }
                                     }
                                 }
                             }
