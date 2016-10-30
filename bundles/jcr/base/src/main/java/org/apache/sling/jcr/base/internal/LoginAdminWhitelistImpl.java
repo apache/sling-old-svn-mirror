@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 @Service(value=LoginAdminWhitelist.class)
 @Component(
-        label="Login Admin Whitelist",
+        label="Apache Sling Login Admin Whitelist",
         description="Defines which bundles can use SlingRepository.loginAdministrative()",
         metatype=true)
 public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
