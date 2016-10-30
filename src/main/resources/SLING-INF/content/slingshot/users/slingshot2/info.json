@@ -1,5 +1,6 @@
 {
     "jcr:primaryType":"sling:Folder",
     "sling:resourceType":"slingshot/Userinfo",
-    "about":"The Truth Is Out There"
+    "name":"The Truth Is Out There",
+    "about":"This is a sample account for the famous SlingShot application from Apache Sling."
 }

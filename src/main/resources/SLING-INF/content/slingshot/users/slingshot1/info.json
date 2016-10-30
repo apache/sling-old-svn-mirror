@@ -1,5 +1,6 @@
 {
     "jcr:primaryType":"sling:Folder",
     "sling:resourceType":"slingshot/Userinfo",
-    "about":"Welcome to the World of SlingShot!"
+    "name":"Welcome to the World of SlingShot!",
+    "about":"This is a sample account for the famous SlingShot application from Apache Sling."
 }
