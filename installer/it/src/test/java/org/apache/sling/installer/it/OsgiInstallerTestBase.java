@@ -19,6 +19,7 @@ package org.apache.sling.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -475,6 +476,10 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     	log.log(level, msg);
     }
 
+    protected String requiredServices() {
+        return "resourcetransformer:org.osgi.service.cm,installtaskfactory:org.osgi.service.cm";
+    }
+
     protected Option[] defaultConfiguration() {
     	String vmOpt = "-Dosgi.installer.testing";
 
@@ -503,6 +508,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
+                frameworkProperty("sling.installer.requiredservices").value(requiredServices()),
                 provision(
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.6"),
                         mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.6"),

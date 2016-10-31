@@ -36,6 +36,11 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
 
     final String symbolicName = "osgi-installer-testbundle";
 
+    @Override
+    protected String requiredServices() {
+        return "";
+    }
+
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         return defaultConfiguration();
@@ -152,18 +157,10 @@ public class BundleInstallBlackListTest extends OsgiInstallerTestBase {
 
     private void updateInstallerBundle() throws BundleException {
         // wait a little bit for updating bundle
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        sleep(2000);
         bundleContext.getServiceReference(OsgiInstaller.class).getBundle().update();
         // wait a little bit after updating bundle
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        sleep(2000);
         setupInstaller();
     }
 
