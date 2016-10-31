@@ -33,16 +33,20 @@ public class InstallListener implements InstallationListener {
     /** Start event. */
     private static final InstallationEvent START_EVENT = new InstallationEvent() {
 
+        @Override
         public TYPE getType() { return TYPE.STARTED; }
 
+        @Override
         public Object getSource() { return null; }
     };
 
     /** Suspend event. */
     private static final InstallationEvent SUSPENDED_EVENT = new InstallationEvent() {
 
+        @Override
         public TYPE getType() { return TYPE.SUSPENDED; }
 
+        @Override
         public Object getSource() { return null; }
     };
 
@@ -74,6 +78,7 @@ public class InstallListener implements InstallationListener {
     /**
      * @see org.apache.sling.installer.api.event.InstallationListener#onEvent(org.apache.sling.installer.api.event.InstallationEvent)
      */
+    @Override
     public void onEvent(final InstallationEvent event) {
         if ( this.logger.isDebugEnabled() ) {
             if ( event.getType() == InstallationEvent.TYPE.STARTED ) {
@@ -100,6 +105,7 @@ public class InstallListener implements InstallationListener {
      */
     public synchronized void start() {
         if ( ! this.started ) {
+            this.logger.debug("Starting new installer cycle");
             this.started = true;
             this.onEvent(START_EVENT);
         }

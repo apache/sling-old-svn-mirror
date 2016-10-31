@@ -240,7 +240,6 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState)
      */
     @Override
-    @Deprecated
     public void setFinishState(ResourceState state) {
         setFinishState(state, null);
     }
@@ -332,7 +331,9 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      */
     @Override
     public void setFinishState(final ResourceState state, final String alias, String error) {
-        this.alias = alias;
+        if ( this.alias == null || alias != null ) {
+            this.alias = alias;
+        }
         this.setFinishState(state, error);
     }
 
