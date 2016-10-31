@@ -25,16 +25,16 @@
     </parent>
 
     <artifactId>htl-maven-plugin</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling HTL Maven Plugin</name>
     <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/htl-maven-plugin-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/htl-maven-plugin-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/htl-maven-plugin-1.0.2</url>
     </scm>
 
     <properties>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
