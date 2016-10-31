@@ -67,7 +67,8 @@ public class ConfigTaskCreator
      *
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
-	public InstallTask createTask(final TaskResourceGroup group) {
+	@Override
+    public InstallTask createTask(final TaskResourceGroup group) {
         final TaskResource toActivate = group.getActiveResource();
         if ( !toActivate.getType().equals(InstallableResource.TYPE_CONFIG) ) {
             return null;
@@ -94,7 +95,7 @@ public class ConfigTaskCreator
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
-    @SuppressWarnings("unchecked")
+    @Override
     public void configurationEvent(final ConfigurationEvent event) {
         synchronized ( Coordinator.SHARED ) {
             final String id;
@@ -156,6 +157,7 @@ public class ConfigTaskCreator
     /**
      * @see org.apache.sling.installer.api.tasks.ResourceTransformer#transform(org.apache.sling.installer.api.tasks.RegisteredResource)
      */
+    @Override
     public TransformationResult[] transform(final RegisteredResource resource) {
         if ( resource.getType().equals(InstallableResource.TYPE_PROPERTIES) ) {
             return checkConfiguration(resource);

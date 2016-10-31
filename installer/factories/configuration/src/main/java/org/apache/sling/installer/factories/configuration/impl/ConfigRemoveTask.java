@@ -43,7 +43,6 @@ public class ConfigRemoveTask extends AbstractConfigTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public void execute(final InstallationContext ctx) {
         synchronized ( Coordinator.SHARED ) {
             try {

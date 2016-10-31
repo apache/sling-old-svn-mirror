@@ -42,7 +42,6 @@ public class ConfigInstallTask extends AbstractConfigTask {
         return CONFIG_INSTALL_ORDER + getCompositePid();
     }
 
-    @SuppressWarnings("unchecked")
 	@Override
     public void execute(final InstallationContext ctx) {
         synchronized ( Coordinator.SHARED ) {
