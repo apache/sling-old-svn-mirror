@@ -81,5 +81,6 @@ If set to `true` it will fail the build on compiler warnings.
 If set to `true` the validation will be skipped.
 * **Type:** `boolean`
 * **Required:** No
+* **User Property** `htl.skip`
 * **Default:** `false`
 
