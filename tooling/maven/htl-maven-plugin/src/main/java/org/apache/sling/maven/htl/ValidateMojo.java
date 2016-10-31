@@ -91,7 +91,7 @@ public class ValidateMojo extends AbstractMojo {
     /**
      * If set to "true" the validation will be skipped.
      */
-    @Parameter
+    @Parameter(property = "htl.skip", defaultValue = "false")
     private boolean skip;
 
     private boolean hasWarnings = false;
