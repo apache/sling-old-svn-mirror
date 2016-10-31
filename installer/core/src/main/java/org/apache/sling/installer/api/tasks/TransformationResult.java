@@ -100,6 +100,7 @@ public class TransformationResult {
 
     /**
      * Attributes include the bundle symbolic name, bundle version, etc.
+     * @return The map if attributes.
      */
     public Map<String, Object> getAttributes() {
         return this.attributes;
@@ -107,6 +108,7 @@ public class TransformationResult {
 
     /**
      * Set the new attributes.
+     * @param attr The map of attributes
      */
     public void setAttributes(final Map<String, Object> attr) {
         this.attributes = attr;

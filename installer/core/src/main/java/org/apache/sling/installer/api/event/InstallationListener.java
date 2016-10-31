@@ -32,6 +32,7 @@ public interface InstallationListener {
 
     /**
      * Receive an installation event.
+     * @param event The installation event
      */
-    void onEvent(final InstallationEvent event);
+    void onEvent(InstallationEvent event);
 }

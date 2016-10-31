@@ -32,12 +32,14 @@ public interface TaskResourceGroup {
 
     /**
      * Return the first resource if it either needs to be installed or uninstalled.
+     * @return The task resource.
      */
     TaskResource getActiveResource();
 
     /**
      * If there is more than the active resource in the group, return the second
      * resource from the group.
+     * @return The next task resource or {@code null}.
      * @since 1.1
      */
     TaskResource getNextActiveResource();
@@ -46,9 +48,8 @@ public interface TaskResourceGroup {
      * Set the finish state for the active resource.
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
-     * @deprecated rather use {@link #setFinishState(ResourceState, String, String)}
+     * @param state The finish state.
      */
-    @Deprecated
     void setFinishState(ResourceState state);
 
     /**
@@ -56,11 +57,11 @@ public interface TaskResourceGroup {
      * This method does the same as {@link #setFinishState(ResourceState)}
      * but in addition registers an alias id for the resource.
      *
+     * @param state The finish state.
+     * @param alias The alias for this group (may be {@code null}).
      * @see #setFinishState(ResourceState)
      * @since 1.1
-     * @deprecated rather use {@link #setFinishState(ResourceState, String, String)}
      */
-    @Deprecated
     void setFinishState(ResourceState state, String alias);
 
     /**
@@ -79,7 +80,7 @@ public interface TaskResourceGroup {
 
     /**
      * Get the current alias for this group.
-     * @return The alias or <code>null</code>
+     * @return The alias or {@code null}.
      * @since 1.1
      */
     @CheckForNull

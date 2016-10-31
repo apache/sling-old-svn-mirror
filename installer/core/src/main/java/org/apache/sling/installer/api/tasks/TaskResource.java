@@ -65,12 +65,13 @@ public interface TaskResource extends RegisteredResource {
 
     /**
      * Get the current state of the resource.
+     * @return The state of the resource.
      */
     ResourceState getState();
-    
+
     /**
      * In case the resource was not successfully processed this might expose the related error description
-     * 
+     *
      * @return an error string or {@code null}
      */
     @CheckForNull

@@ -65,6 +65,7 @@ public class UpdateResult {
      * but should uniquely identify the resource within the namespace of
      * the used installation mechanism.
      * The url includes the scheme followed by a colon followed by the unique id.
+     * @return The url.
      */
     public String getURL() {
         return this.url;
@@ -72,6 +73,7 @@ public class UpdateResult {
 
     /**
      * Return the scheme of the provider.
+     * @return The scheme
      */
     public String getScheme() {
         final int pos = this.url.indexOf(':');
@@ -81,6 +83,7 @@ public class UpdateResult {
     /**
      * Return just the resource id (everything in the url
      * after the colon)
+     * @return The resource id
      */
     public String getResourceId() {
         final int pos = this.url.indexOf(':');
@@ -90,7 +93,7 @@ public class UpdateResult {
     /**
      * Return this resource's digest. Not necessarily an actual md5 or other digest of the
      * data, can be any string that changes if the data changes.
-     * @return The digest or null
+     * @return The digest or {@code null}.
      */
     public String getDigest() {
         return this.digest;
@@ -100,6 +103,7 @@ public class UpdateResult {
      * Return the priority of this resource. Priorities are used to decide which
      * resource to install when several are registered for the same OSGi entity
      * (bundle, config, etc.)
+     * @return The priority
      */
     public int getPriority() {
         return this.priority != null ? this.priority : InstallableResource.DEFAULT_PRIORITY;
@@ -107,6 +111,7 @@ public class UpdateResult {
 
     /**
      * Set the priority.
+     * @param prio The new priority or {@code null} for the default priority.
      */
     public void setPriority(final Integer prio) {
         this.priority = prio;
@@ -114,13 +119,15 @@ public class UpdateResult {
 
     /**
      * Set the digest.
+     * @param digest The new digest.
      */
     public void setDigest(final String digest) {
         this.digest = digest;
     }
 
     /**
-     * Sett whether this resource has been moved or added.
+     * Set whether this resource has been moved or added.
+     * @param flag Flag indicating that this is a move
      */
     public void setResourceIsMoved(final boolean flag) {
         this.resourceIsMoved = flag;
@@ -128,6 +135,7 @@ public class UpdateResult {
 
     /**
      * Has this resource been moved or added?
+     * @return {@code true} if it has been moved
      */
     public boolean getResourceIsMoved() {
         return this.resourceIsMoved;

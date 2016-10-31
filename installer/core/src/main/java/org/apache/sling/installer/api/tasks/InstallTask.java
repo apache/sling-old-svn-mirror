@@ -53,6 +53,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 
     /**
      * Return the corresponding resource - depending on the task this might be null.
+     * @return The task resource or {@code null}.
      */
     public TaskResource getResource() {
         if ( this.resourceGroup != null ) {
@@ -63,6 +64,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 
     /**
      * Return the corresponding resource - depending on the task this might be null.
+     * @return The task resource group or {@code null}.
      */
     public TaskResourceGroup getResourceGroup() {
         return this.resourceGroup;
@@ -79,6 +81,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 	 * Therefore this key must uniquely identify this task.
 	 * A typical sort key contains the entity id of the resource
 	 * in execution.
+	 * @return The sorting key.
 	 */
 	public abstract String getSortKey();
 
@@ -137,6 +140,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
     /**
      * All comparisons are based on getSortKey().
      */
+    @Override
     public final int compareTo(final InstallTask o) {
         return getSortKey().compareTo(o.getSortKey());
     }
