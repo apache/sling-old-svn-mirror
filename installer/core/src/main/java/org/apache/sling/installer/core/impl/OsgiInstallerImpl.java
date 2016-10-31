@@ -113,6 +113,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /** Update infos to process. */
     private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
 
+    /** Are the required services satisfied? */
+    private volatile boolean satisfied = false;
+
     /** Are we still activate? */
     private volatile boolean active = true;
 
@@ -230,6 +233,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         this.updateHandlerTracker.open();
 
         this.logger.info("Apache Sling OSGi Installer Service started.");
+        this.checkSatisfied();
     }
 
     /**
@@ -252,7 +256,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             this.init();
 
             while (this.active) {
-                this.logger.debug("Starting new installer cycle");
                 this.listener.start();
 
                 processUpdateInfos();
@@ -261,6 +264,14 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 this.mergeNewlyRegisteredResources();
 
                 synchronized ( this.resourcesLock ) {
+                    if ( !this.satisfied ) {
+                        logger.debug("Required services are not available yet.");
+                        try {
+                            logger.debug("wait() on resourcesLock");
+                            this.resourcesLock.wait();
+                        } catch (final InterruptedException ignore) {}
+                        continue;
+                    }
                     this.retryDuringTaskExecution = false;
                 }
 
@@ -941,6 +952,33 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         }
     }
 
+    private void checkSatisfied() {
+        synchronized ( this.resourcesLock ) {
+            if ( !this.satisfied ) {
+                this.satisfied = true;
+                if ( this.ctx.getProperty(PROP_REQUIRED_SERVICES) != null ) {
+                    final String[] reqs = this.ctx.getProperty(PROP_REQUIRED_SERVICES).split(",");
+                    this.satisfied = true;
+                    for(final String val : reqs) {
+                        if ( val.startsWith("resourcetransformer:") ) {
+                            final String name = val.substring(20);
+
+                            this.satisfied = this.transformerTracker.check(ResourceTransformer.NAME, name);
+
+                        } else if ( val.startsWith("installtaskfactory:") ) {
+                            final String name = val.substring(19);
+
+                            this.satisfied = this.factoryTracker.check(InstallTaskFactory.NAME, name);
+
+                        } else {
+                            logger.warn("Invalid requirements for installer: {}", val);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * @see org.apache.sling.installer.api.tasks.RetryHandler#scheduleRetry()
      */
@@ -950,6 +988,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         this.listener.start();
         synchronized ( this.resourcesLock ) {
             this.retryDuringTaskExecution = true;
+            this.checkSatisfied();
         }
         this.wakeUp();
     }
