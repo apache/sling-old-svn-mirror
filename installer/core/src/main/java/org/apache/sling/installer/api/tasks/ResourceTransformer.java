@@ -33,6 +33,7 @@ public interface ResourceTransformer {
     /**
      * Optional service registration property setting a unique name
      * for the transformer.
+     * The value of this property must be of type String.
      * @since 1.4.0
      */
     String NAME = "resourcetransformer.name";
