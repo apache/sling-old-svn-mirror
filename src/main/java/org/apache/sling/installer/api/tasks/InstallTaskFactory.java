@@ -45,6 +45,9 @@ public interface InstallTaskFactory {
      * The factory should not alter the state of the resources,
      * therefore it's not allowed to call one of the setState methods
      * on the task resource group!
+     *
+     * @param group The group containing the resource to activate.
+     * @return An install task or {@code null}.
      */
-    InstallTask createTask(final TaskResourceGroup toActivate);
+    InstallTask createTask(TaskResourceGroup group);
 }

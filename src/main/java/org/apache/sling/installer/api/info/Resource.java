@@ -39,12 +39,13 @@ public interface Resource extends RegisteredResource {
 
     /**
      * Get the current state of the resource.
+     * @return The resource state.
      */
     ResourceState getState();
 
     /**
      * In case the resource was not successfully processed this might expose the related error description
-     * 
+     *
      * @return an error string or {@code null}
      */
     @CheckForNull
@@ -59,7 +60,7 @@ public interface Resource extends RegisteredResource {
 
     /**
      * When did the last change happen?
-     * @return -1 if no change , 0 if unknown, > 0 otherwise
+     * @return -1 if no change , 0 if unknown, &gt; 0 otherwise
      */
     long getLastChange();
 

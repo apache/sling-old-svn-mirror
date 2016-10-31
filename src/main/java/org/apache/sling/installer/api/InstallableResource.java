@@ -185,6 +185,7 @@ public class InstallableResource {
      * Return this data's id. It is opaque for the {@link OsgiInstaller}
      * but should uniquely identify the resource within the namespace of
      * the used installation mechanism.
+     * @return The id.
      */
     public String getId() {
         return this.id;
@@ -192,7 +193,7 @@ public class InstallableResource {
 
     /**
      * Return the type of this resource.
-     * @return The resource type or <code>null</code> if the type is unnown for the client.
+     * @return The resource type or <code>null</code> if the type is unknown for the client.
      */
     public String getType() {
         return this.resourceType;
@@ -234,6 +235,7 @@ public class InstallableResource {
      * Return the priority of this resource. Priorities are used to decide which
      * resource to install when several are registered for the same OSGi entity
      * (bundle, config, etc.)
+     * @return The priority.
      */
     public int getPriority() {
         return this.priority;

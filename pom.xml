@@ -105,6 +105,15 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>
+                        org.apache.sling.installer.core.impl:org.apache.sling.installer.core.impl.tasks:org.apache.sling.installer.core.impl.util
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 
@@ -131,7 +140,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.8.10</version>
+            <version>1.8.12</version>
             <scope>provided</scope>
         </dependency>
       <!-- Basic dependencies for Unit Tests -->
