@@ -71,6 +71,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         serviceRegistrations.add(bundleContext.registerService(ConfigurationListener.class.getName(), this, null));
 
         final InstallationListener il = new InstallationListener() {
+            @Override
             public void onEvent(InstallationEvent event) {
                 installationEvents++;
             }
@@ -95,6 +96,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
+    @Override
     public void configurationEvent(final ConfigurationEvent e) {
         if ( e.getType() == ConfigurationEvent.CM_DELETED || e.getType() == ConfigurationEvent.CM_UPDATED) {
             synchronized ( events ) {
@@ -452,14 +454,17 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         final ServiceTracker st = new ServiceTracker(bundleContext,
                 ResourceTransformer.class.getName(), new ServiceTrackerCustomizer() {
 
+            @Override
             public void removedService(ServiceReference reference, Object service) {
                 bundleContext.ungetService(reference);
                 transformerCount.decrementAndGet();
             }
 
+            @Override
             public void modifiedService(ServiceReference reference, Object service) {
             }
 
+            @Override
             public Object addingService(ServiceReference reference) {
                 transformerCount.incrementAndGet();
                 return bundleContext.getService(reference);
