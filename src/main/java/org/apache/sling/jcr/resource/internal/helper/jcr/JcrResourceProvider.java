@@ -38,15 +38,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -72,22 +63,26 @@ import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(name="org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
-@Service(value = ResourceProvider.class)
-@Properties({ @Property(name = ResourceProvider.PROPERTY_NAME, value = "JCR"),
-        @Property(name = ResourceProvider.PROPERTY_ROOT, value = "/"),
-        @Property(name = ResourceProvider.PROPERTY_MODIFIABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_ADAPTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_AUTHENTICATE, value = ResourceProvider.AUTHENTICATE_REQUIRED),
-        @Property(name = ResourceProvider.PROPERTY_ATTRIBUTABLE, boolValue = true),
-        @Property(name = ResourceProvider.PROPERTY_REFRESHABLE, boolValue = true)
-})
-@Reference(name = "dynamicClassLoaderManager",
-           referenceInterface = DynamicClassLoaderManager.class,
-           cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+@Component(name="org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory",
+           service = ResourceProvider.class,
+           property = {
+                   ResourceProvider.PROPERTY_NAME + "=JCR",
+                   ResourceProvider.PROPERTY_ROOT + "=/",
+                   ResourceProvider.PROPERTY_MODIFIABLE + ":Boolean=true",
+                   ResourceProvider.PROPERTY_ADAPTABLE + ":Boolean=true",
+                   ResourceProvider.PROPERTY_ATTRIBUTABLE + ":Boolean=true",
+                   ResourceProvider.PROPERTY_REFRESHABLE + ":Boolean=true",
+                   ResourceProvider.PROPERTY_AUTHENTICATE + "=" + ResourceProvider.AUTHENTICATE_REQUIRED
+           })
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     /** Logger */
@@ -103,7 +98,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         IGNORED_PROPERTIES.add("jcr:createdBy");
     }
 
-    @Reference(name = REPOSITORY_REFERNENCE_NAME, referenceInterface = SlingRepository.class)
+    @Reference(name = REPOSITORY_REFERNENCE_NAME, service = SlingRepository.class)
     private ServiceReference<SlingRepository> repositoryReference;
 
     @Reference
@@ -113,7 +108,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     private LoginAdminWhitelist loginAdminWhitelist;
 
     /** This service is only available on OAK, therefore optional and static) */
-    @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL)
     private Executor executor;
 
     /** The JCR listener base configuration. */
@@ -151,6 +146,9 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.stateFactory = null;
     }
 
+    @Reference(name = "dynamicClassLoaderManager",
+            service = DynamicClassLoaderManager.class,
+            cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
         this.classLoaderManagerReference.set(dynamicClassLoaderManager);
     }

@@ -23,14 +23,6 @@ import java.util.Map;
 
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -38,6 +30,11 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -48,13 +45,12 @@ import org.slf4j.LoggerFactory;
  * <li><code>JcrResourceResolverFactory</code> service
  * </ul>
  */
-@Component(name = "org.apache.sling.jcr.resource.internal.LegacyJcrResourceResolverFactoryImpl")
-@Service(value = JcrResourceResolverFactory.class)
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JcrResourceResolverFactory Implementation"),
-        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
-
-})
+@Component(name = "org.apache.sling.jcr.resource.internal.LegacyJcrResourceResolverFactoryImpl",
+           service = JcrResourceResolverFactory.class,
+           property = {
+                   Constants.SERVICE_DESCRIPTION + "=Apache Sling JcrResourceResolverFactory Implementation",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public class JcrResourceResolverFactoryImpl implements
         JcrResourceResolverFactory {
 
@@ -62,7 +58,7 @@ public class JcrResourceResolverFactoryImpl implements
     private ResourceResolverFactory delegatee;
 
     /** The dynamic class loader */
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
     @Activate

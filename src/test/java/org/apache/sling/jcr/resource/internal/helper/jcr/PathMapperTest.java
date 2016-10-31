@@ -21,24 +21,31 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import junitx.util.PrivateAccessor;
+import java.lang.annotation.Annotation;
 
 import org.junit.Test;
+
+import junitx.util.PrivateAccessor;
 
 public class PathMapperTest {
 
     @Test public void mappingTest() throws Throwable {
-        final Map<String, Object> config = new HashMap<String, Object>();
-        config.put("path.mapping", new String[] {
-                "/libs:/foo",
-                "/hidden:.",
-                "/deep/node:/deep/resource"
-        });
+        final PathMapper.Config config = new PathMapper.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return null;
+            }
+
+            @Override
+            public String[] path_mapping() {
+                return new String[] {"/libs:/foo",
+                        "/hidden:.",
+                        "/deep/node:/deep/resource"};
+            }
+        };
         final PathMapper pm = new PathMapper();
-        PrivateAccessor.invoke(pm, "activate", new Class[] {Map.class}, new Object[] {config});
+        PrivateAccessor.invoke(pm, "activate", new Class[] {PathMapper.Config.class}, new Object[] {config});
 
         assertEquals("/", pm.mapResourcePathToJCRPath("/"));
         assertEquals("/", pm.mapJCRPathToResourcePath("/"));
