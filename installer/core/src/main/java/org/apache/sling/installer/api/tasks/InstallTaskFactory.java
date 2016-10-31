@@ -31,6 +31,13 @@ import org.osgi.annotation.versioning.ConsumerType;
 public interface InstallTaskFactory {
 
     /**
+     * Optional service registration property setting a unique name
+     * for the task factory.
+     * @since 1.4.0
+     */
+    String NAME = "installtaskfactory.name";
+
+    /**
      * Creates an {@link InstallTask} for the resource or
      * <code>null</code> if the factory does not support the resource.
      *

@@ -83,9 +83,14 @@ public class OsgiInstallerImpl
 implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Runnable {
 
     /**
-     * The name of the bundle context property defining handling of bundle updates
+     * The name of the framework property defining handling of bundle updates
      */
-    private static final String START_LEVEL_HANDLING = "sling.installer.switchstartlevel";
+    private static final String PROP_START_LEVEL_HANDLING = "sling.installer.switchstartlevel";
+
+    /**
+     * The name of the framework property setting required services
+     */
+    private static final String PROP_REQUIRED_SERVICES = "sling.installer.requiredservices";
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -150,7 +155,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         final File f = FileDataStore.SHARED.getDataFile("RegisteredResourceList.ser");
         this.listener = new InstallListener(ctx, logger);
         this.persistentList = new PersistentResourceList(f, listener);
-        this.switchStartLevel = PropertiesUtil.toBoolean(ctx.getProperty(START_LEVEL_HANDLING), false);
+        this.switchStartLevel = PropertiesUtil.toBoolean(ctx.getProperty(PROP_START_LEVEL_HANDLING), false);
     }
 
     /**
@@ -751,6 +756,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
             final InstallationContext ctx = new InstallationContext() {
 
+                @SuppressWarnings("deprecation")
                 @Override
                 public void addTaskToNextCycle(final InstallTask t) {
                     logger.warn("Deprecated method addTaskToNextCycle was called. Task will be executed in this cycle instead: {}", t);
@@ -767,6 +773,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
 
+                @SuppressWarnings("deprecation")
                 @Override
                 public void addAsyncTask(final InstallTask t) {
                     if ( t.isAsynchronousTask() ) {
