@@ -31,6 +31,13 @@ import org.osgi.annotation.versioning.ConsumerType;
 public interface ResourceTransformer {
 
     /**
+     * Optional service registration property setting a unique name
+     * for the transformer.
+     * @since 1.4.0
+     */
+    String NAME = "resourcetransformer.name";
+
+    /**
      * Try to transform the registered resource.
      * If the transformer is not responsible for transforming the
      * resource, it should return <code>null</code>
