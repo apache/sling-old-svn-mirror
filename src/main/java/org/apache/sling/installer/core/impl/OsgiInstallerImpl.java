@@ -226,10 +226,10 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     private void init() {
         // start service trackers
         this.factoryTracker = new SortingServiceTracker<InstallTaskFactory>(ctx, InstallTaskFactory.class.getName(), this);
-        this.factoryTracker.open();
         this.transformerTracker = new SortingServiceTracker<ResourceTransformer>(ctx, ResourceTransformer.class.getName(), this);
-        this.transformerTracker.open();
         this.updateHandlerTracker = new SortingServiceTracker<UpdateHandler>(ctx, UpdateHandler.class.getName(), null);
+        this.factoryTracker.open();
+        this.transformerTracker.open();
         this.updateHandlerTracker.open();
 
         this.logger.info("Apache Sling OSGi Installer Service started.");
