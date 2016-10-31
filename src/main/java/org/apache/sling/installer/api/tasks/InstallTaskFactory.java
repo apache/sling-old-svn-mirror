@@ -33,6 +33,7 @@ public interface InstallTaskFactory {
     /**
      * Optional service registration property setting a unique name
      * for the task factory.
+     * The value of this property must be of type String.
      * @since 1.4.0
      */
     String NAME = "installtaskfactory.name";
