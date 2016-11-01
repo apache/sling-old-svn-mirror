@@ -51,6 +51,7 @@
 
     <properties>
         <antlr.version>4.1</antlr.version>
+        <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
     </properties>
 
     <!-- ======================================================================= -->
@@ -157,7 +158,7 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.7.7.201606060606</version>
+                        <version>${jacoco.maven.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>default-prepare-agent</id>
