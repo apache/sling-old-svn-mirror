@@ -21,10 +21,12 @@ package org.apache.sling.scripting.sightly.it;
 import java.io.IOException;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,9 +34,7 @@ import org.junit.Test;
 import io.sightly.tck.html.HTMLExtractor;
 import io.sightly.tck.http.Client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SlingSpecificsSightlyIT {
 
@@ -62,6 +62,7 @@ public class SlingSpecificsSightlyIT {
     private static final String SLING_RESOURCE_USE = "/sightly/use.resource.html";
     private static final String SLING_I18N = "/sightly/i18n";
     private static final String TCK_XSS = "/sightlytck/exprlang/xss.html";
+    private static final String WHITESPACE = "/sightly/whitespace.html";
 
     @BeforeClass
     public static void init() {
@@ -298,6 +299,15 @@ public class SlingSpecificsSightlyIT {
         String url = launchpadURL + TCK_XSS;
         String pageContent = client.getStringContent(url, 200);
         assertTrue(pageContent.contains("<p id=\"req-context-8\" onclick=\"console.log('red')\">Paragraph</p>"));
+    }
+
+    @Test
+    public void testWhiteSpaceExpressions() {
+        String url = launchpadURL + WHITESPACE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#nbsp"));
+        assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#tab"));
+        assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#newline"));
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {

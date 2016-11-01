@@ -448,12 +448,23 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Dependency for running Sling performance tests -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.performance.base</artifactId>
             <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
