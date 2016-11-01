@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>28</version>
+        <version>29</version>
         <relativePath />
     </parent>
 
@@ -261,8 +261,6 @@
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-jar-plugin</artifactId>
-              <!-- Update to 3.0.2 to avoid heap space problem -->
-              <version>3.0.2</version>
               <executions>
                   <execution>
                       <goals>
