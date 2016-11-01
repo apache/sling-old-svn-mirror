@@ -157,6 +157,9 @@ def modules = [
         location: 'bundles/extensions/models/impl'
     ],
     [
+        location: 'bundles/extensions/models/jackson-exporter'
+    ],
+    [
         location: 'bundles/extensions/models/integration-tests'
     ],
     [
