@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
     @Property(name=JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO, boolValue=true),
     @Property(name=JavaScriptEngineFactory.PROPERTY_ENCODING, value="UTF-8"),
-    @Property(name = ResourceChangeListener.CHANGES, value = {"CHANGED", "REMOVED"}),
+    @Property(name = ResourceChangeListener.CHANGES, value = {"CHANGED", "REMOVED"}, propertyPrivate = true),
     @Property(name = ResourceChangeListener.PATHS, value = {"."}, propertyPrivate = true)
 })
 public class JavaScriptEngineFactory
