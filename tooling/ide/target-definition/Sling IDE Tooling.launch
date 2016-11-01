@@ -16,6 +16,9 @@
 <stringAttribute key="featurePluginResolution" value="workspace"/>
 <booleanAttribute key="includeOptional" value="true"/>
 <stringAttribute key="location" value="${workspace_loc}/../runtime-sling-ide-tooling"/>
+<mapAttribute key="org.eclipse.debug.core.environmentVariables">
+<mapEntry key="SWT_GTK3" value="0"/>
+</mapAttribute>
 <listAttribute key="org.eclipse.jdt.launching.CLASSPATH">
 <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry containerPath=&quot;org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7&quot; path=&quot;1&quot; type=&quot;4&quot;/&gt;&#10;"/>
 </listAttribute>
