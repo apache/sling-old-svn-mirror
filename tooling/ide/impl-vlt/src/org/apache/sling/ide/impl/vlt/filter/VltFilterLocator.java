@@ -24,11 +24,15 @@ import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = FilterLocator.class, property = "service.ranking:Integer=100")
 public class VltFilterLocator implements FilterLocator {
 
     private VaultFsLocator fsLocator;
 
+    @Reference
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
         this.fsLocator = fsLocator;
     }

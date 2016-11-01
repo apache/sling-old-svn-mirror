@@ -18,7 +18,9 @@ package org.apache.sling.ide.transport.impl;
 
 import org.apache.sling.ide.transport.Batcher;
 import org.apache.sling.ide.transport.BatcherFactory;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=BatcherFactory.class)
 public class DefaultBatcherFactory implements BatcherFactory {
 
     @Override

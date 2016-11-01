@@ -22,7 +22,9 @@ import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = EmbeddedArtifactLocator.class)
 public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
 
     private static final String ARTIFACTS_LOCATION = "target/artifacts";

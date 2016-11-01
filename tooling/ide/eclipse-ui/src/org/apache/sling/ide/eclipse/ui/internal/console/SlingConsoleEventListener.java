@@ -34,9 +34,11 @@ import org.eclipse.ui.console.IConsoleListener;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
+@Component(service = EventHandler.class, property = "event.topics=org/apache/sling/ide/transport")
 public class SlingConsoleEventListener implements EventHandler {
 
     private final Object sync = new Object();

@@ -19,8 +19,11 @@ package org.apache.sling.ide.osgi.impl;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.EventAdmin;
 
+@Component(service=OsgiClientFactory.class)
 public class HttpOsgiClientFactory implements OsgiClientFactory {
 
     private EventAdmin eventAdmin;
@@ -32,6 +35,7 @@ public class HttpOsgiClientFactory implements OsgiClientFactory {
         return new HttpOsgiClient(repositoryInfo);
     }
 
+    @Reference
     protected void bindEventAdmin(EventAdmin eventAdmin) {
         this.eventAdmin = eventAdmin;
     }

@@ -20,12 +20,15 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.EventAdmin;
 
 /**
  * The <tt>RepositoryFactoryImpl</tt> creates <tt>RepositoryImpl</tt> instances
  *
  */
+@Component(service = RepositoryFactory.class)
 public class RepositoryFactoryImpl implements RepositoryFactory {
 
     private EventAdmin eventAdmin;
@@ -48,6 +51,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
         //TODO: not yet implemented
     }
 
+    @Reference
     protected void bindEventAdmin(EventAdmin eventAdmin) {
         this.eventAdmin = eventAdmin;
     }

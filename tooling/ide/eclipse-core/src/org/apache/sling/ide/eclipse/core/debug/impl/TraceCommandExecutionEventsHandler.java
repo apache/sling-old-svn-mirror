@@ -21,6 +21,8 @@ import java.util.Date;
 
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
@@ -29,6 +31,7 @@ import org.osgi.service.event.EventHandler;
  * the PluginLogger
  *
  */
+@Component(property="event.topics=org/apache/sling/ide/transport")
 public class TraceCommandExecutionEventsHandler implements EventHandler {
 
     private Logger logger;
@@ -57,6 +60,7 @@ public class TraceCommandExecutionEventsHandler implements EventHandler {
         logger.trace(message.toString(), t);
     }
 
+    @Reference(target="(listener.symbolic.name=org.apache.sling.ide.eclipse-core)")
     protected void bindLogger(Logger logger) {
         this.logger = logger;
     }

@@ -23,12 +23,15 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.EventAdmin;
 
 /**
  * The <tt>VltRepositoryFactory</tt> instatiantes <tt>VltRepository</tt> instances
  *
  */
+@Component(service = RepositoryFactory.class, property = "service.ranking:Integer=100")
 public class VltRepositoryFactory implements RepositoryFactory {
 
     private EventAdmin eventAdmin;
@@ -91,6 +94,7 @@ public class VltRepositoryFactory implements RepositoryFactory {
         return repositoryInfo.getUsername()+":"+repositoryInfo.getPassword()+"@"+repositoryInfo.getUrl();
     }
 
+    @Reference
     protected void bindEventAdmin(EventAdmin eventAdmin) {
         this.eventAdmin = eventAdmin;
     }
