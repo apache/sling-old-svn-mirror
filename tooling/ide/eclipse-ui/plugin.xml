@@ -229,6 +229,7 @@
 			<includes>
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.javaEEFilter" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
 			</includes>
 		</viewerContentBinding>
@@ -243,7 +244,7 @@
            activeByDefault="true">
       </commonFilter>
       <navigatorContent
-            appearsBefore="org.eclipse.jst.jee.ui.ejb"
+            appearsBefore="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf"
             contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
             icon="icons/obj16/sling_misc.gif"
             id="org.apache.sling.ide.eclipse-ui.navigatorJcrContent"
@@ -298,6 +299,7 @@
 		   </actionProvider>
      <override
            policy="InvokeAlwaysRegardlessOfSuppressedExt"
+           
            suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
      </override>
      <commonSorter
@@ -316,6 +318,37 @@
         <possibleDropTargets></possibleDropTargets>
      </dropAssistant>
         
+      </navigatorContent>
+      <!-- dedicated content provider which lists the META-INF/filevault directly below the projects -->
+      <navigatorContent id="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf" 
+           name="FileVault Synchronization/Packaging Settings"
+           appearsBefore="org.eclipse.jst.jee.ui.ejb"
+           contentProvider="org.apache.sling.ide.eclipse.ui.nav.FileVaultMetaInfContentProvider"
+           labelProvider="org.apache.sling.ide.eclipse.ui.nav.FileVaultMetaInfLabelProvider"
+           icon="icons/obj16/sling_misc.gif">
+          <triggerPoints>
+              <and>
+                  <!-- only trigger for Sling Content Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.content"/>
+                  </adapt>
+                  <or>
+                      <!-- and either IProject or FileVaultMetaInfRootFolder -->
+                      <instanceof value="org.eclipse.core.resources.IProject" />
+                      <instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.FileVaultMetaInfRootFolder" />
+                  </or>
+              </and>
+          </triggerPoints>
+          <possibleChildren>
+              <and>
+                  <!-- only trigger for Sling Content Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.content"/>
+                  </adapt>         
+	              <instanceof 
+	                     value="org.eclipse.core.resources.IResource" /> 
+             </and>
+          </possibleChildren>
       </navigatorContent>
    </extension>
    <extension
