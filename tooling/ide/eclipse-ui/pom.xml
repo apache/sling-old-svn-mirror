@@ -78,18 +78,6 @@
                 </execution>
             </executions>
         </plugin>
-        <plugin>
-            <!-- used for generating SCR descriptors -->
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>bnd-maven-plugin</artifactId>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>bnd-process</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
     </plugins>
   </build>
 </project>

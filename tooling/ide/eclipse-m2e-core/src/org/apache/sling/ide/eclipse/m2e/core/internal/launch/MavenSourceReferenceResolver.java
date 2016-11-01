@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.m2e.core.internal.launch;
 
-
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
@@ -31,11 +30,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.osgi.service.component.annotations.Component;
 
-@Component(service = SourceReferenceResolver.class)
 public class MavenSourceReferenceResolver implements SourceReferenceResolver {
-
     @Override
     public IRuntimeClasspathEntry resolve(SourceReference reference) throws CoreException {
         if ( reference == null || reference.getType() != SourceReference.Type.MAVEN) {

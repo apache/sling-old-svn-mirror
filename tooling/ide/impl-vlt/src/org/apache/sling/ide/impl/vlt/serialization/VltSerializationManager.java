@@ -47,12 +47,9 @@ import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.ResourceProxy;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-@Component(service = SerializationManager.class, property = "service.ranking:Integer=100")
 public class VltSerializationManager implements SerializationManager {
 
     static final String EXTENSION_XML = ".xml";
@@ -205,7 +202,6 @@ public class VltSerializationManager implements SerializationManager {
         return PlatformNameFormat.getPlatformPath(repositoryPath);
     }
 
-    @Reference
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
 
         getBuilder().setLocator(fsLocator);

@@ -30,9 +30,7 @@ import org.apache.jackrabbit.vault.fs.config.AbstractVaultFsConfig;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.util.Constants;
-import org.osgi.service.component.annotations.Component;
 
-@Component(service = VaultFsLocator.class)
 public class VaultFsLocatorImpl implements VaultFsLocator {
 
     @Override

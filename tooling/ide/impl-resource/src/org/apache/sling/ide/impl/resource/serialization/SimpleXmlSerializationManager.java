@@ -44,14 +44,12 @@ import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.ResourceProxy;
-import org.osgi.service.component.annotations.Component;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
-@Component
 public class SimpleXmlSerializationManager implements SerializationManager, SerializationDataBuilder {
 
     private static final String TAG_PROPERTY = "property";

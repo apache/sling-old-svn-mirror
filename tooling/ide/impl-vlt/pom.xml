@@ -55,19 +55,7 @@
                     <manifestFile>META-INF/MANIFEST.MF</manifestFile>
                 </archive>
             </configuration>
-        </plugin>
-        <plugin>
-            <!-- used for generating SCR descriptors -->
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>bnd-maven-plugin</artifactId>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>bnd-process</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
+        </plugin>        
     </plugins>
   </build>  
 </project>

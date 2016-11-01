@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
-import org.osgi.service.component.annotations.Component;
 
 /**
  * The <tt>SimpleFilterLocator</tt> looks for a file named {@value #FILTERS_FILE_NAME} in the parent folder of the
@@ -39,7 +38,6 @@ import org.osgi.service.component.annotations.Component;
  * @see SimpleFilter
  * 
  */
-@Component(service = FilterLocator.class)
 public class SimpleFilterLocator implements FilterLocator {
 
     private static final String FILTERS_FILE_NAME = "filters.txt";
