@@ -256,10 +256,14 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.RESOLVED) {
-            this.registerMimeType(event.getBundle().getEntry(MIME_TYPES));
+            try {
+                this.registerMimeType(event.getBundle().getEntry(MIME_TYPES));
+            } catch (IllegalStateException ie) {
+                log(LogService.LOG_INFO, "bundleChanged: an issue while registering the mime type occurred", null);
+            }
         }
     }
-
+    
     // ---------- plugin support -----------------------------------------------
 
     Map<String, String> getMimeMap() {
