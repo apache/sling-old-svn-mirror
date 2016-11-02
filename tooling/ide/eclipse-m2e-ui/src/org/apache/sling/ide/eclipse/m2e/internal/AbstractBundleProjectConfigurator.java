@@ -67,7 +67,7 @@ public abstract class AbstractBundleProjectConfigurator extends AbstractProjectC
         }
         if (!isSupportingM2eIncrementalBuild(mavenProject, getLogger())) {
             markerManager.addMarker(configRequest.getPom(), MARKER_TYPE_BUNDLE_NOT_SUPPORTING_M2E,
-                    "Missing m2e incremental support for generating the bundle manifest and service definitions. Please use the provided QuickFixes on this issue to resolve this.",
+                    "Missing m2e incremental support for generating the bundle manifest, component descriptions and metatype resources. Please use the provided QuickFixes on this issue to resolve this.",
                     -1,
                     IMarker.SEVERITY_ERROR);
         }
