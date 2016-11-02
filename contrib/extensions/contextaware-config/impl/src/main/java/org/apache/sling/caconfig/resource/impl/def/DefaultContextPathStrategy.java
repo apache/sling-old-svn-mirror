@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Activate;
@@ -53,6 +54,10 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
                               " If the list is not empty than only those listed resources are used for look up. If you want to include the current resource you can use a dot for the value.")
         String[] configRefResourceNames();
 
+        @AttributeDefinition(name="Config ref. property names",
+                description = "Additional property names to " + PROPERTY_CONFIG_REF + " to look up a configuration reference. The names are used in the order defined, "
+                            + "always starting with " + PROPERTY_CONFIG_REF + ". Once a property with a value is found, that value is used and the following property names are skipped.")
+        String[] configRefPropertyNames();
     }
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -126,14 +131,28 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             return null;
         }
 
+        private String getConfigRefValue(final Resource resource) {
+            final ValueMap map = resource.getValueMap();
+            String val = map.get(PROPERTY_CONFIG_REF, String.class);
+            if ( val == null && !ArrayUtils.isEmpty(config.configRefPropertyNames()) ) {
+                for(final String name : config.configRefPropertyNames()) {
+                    val = map.get(name, String.class);
+                    if ( val != null ) {
+                        break;
+                    }
+                }
+            }
+            return val;
+        }
+
         private String getConfigRef(final Resource resource) {
             if (ArrayUtils.isEmpty(config.configRefResourceNames())) {
-                return resource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+                return getConfigRefValue(resource);
             }
-            for (String name : config.configRefResourceNames()) {
-                Resource lookupResource = resource.getChild(name);
+            for (final String name : config.configRefResourceNames()) {
+                final Resource lookupResource = resource.getChild(name);
                 if (lookupResource != null) {
-                    String configRef = lookupResource.getValueMap().get(PROPERTY_CONFIG_REF, String.class);
+                    String configRef = getConfigRefValue(lookupResource);
                     if (configRef != null) {
                         return configRef;
                     }
@@ -141,7 +160,6 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             }
             return null;
         }
-
     }
 
 }
