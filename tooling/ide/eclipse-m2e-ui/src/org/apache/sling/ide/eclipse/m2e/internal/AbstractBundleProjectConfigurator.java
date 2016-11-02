@@ -66,7 +66,9 @@ public abstract class AbstractBundleProjectConfigurator extends AbstractProjectC
             trace("Couldn't find maven-sling-plugin in build plugins for project {0}, therefore not adding the sling bundle facets!", project.getName());
         }
         if (!isSupportingM2eIncrementalBuild(mavenProject, getLogger())) {
-            markerManager.addMarker(configRequest.getPom(), MARKER_TYPE_BUNDLE_NOT_SUPPORTING_M2E, "Missing m2e incremental support for generating the bundle manifest and service definitions", -1,
+            markerManager.addMarker(configRequest.getPom(), MARKER_TYPE_BUNDLE_NOT_SUPPORTING_M2E,
+                    "Missing m2e incremental support for generating the bundle manifest and service definitions. Please use the provided QuickFixes on this issue to resolve this.",
+                    -1,
                     IMarker.SEVERITY_ERROR);
         }
     }
