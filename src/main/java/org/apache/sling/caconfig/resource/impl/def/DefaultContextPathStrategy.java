@@ -49,7 +49,8 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         boolean enabled() default true;
 
         @AttributeDefinition(name="Config ref. resource names",
-                description = "Names of resource to try to look up sling:configRef property in. If list is empty only current resource is checked.")
+                description = "Names of resource to try to look up " + PROPERTY_CONFIG_REF + " property in. If list is empty only current resource is checked." +
+                              " If the list is not empty than only those listed resources are used for look up. If you want to include the current resource you can use a dot for the value.")
         String[] configRefResourceNames();
 
     }
