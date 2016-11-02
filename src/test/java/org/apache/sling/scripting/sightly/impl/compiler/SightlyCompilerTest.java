@@ -47,6 +47,7 @@ public class SightlyCompilerTest {
         List<CompilerMessage> warnings = result.getWarnings();
         assertTrue("Expected compilation warnings.", warnings.size() == 1);
         CompilerMessage warningMessage = warnings.get(0);
+        assertEquals("Expected warning on a different line.", 18, warningMessage.getLine());
         assertTrue(script.equals(warningMessage.getScriptName()));
         assertEquals("${some.value}: Element script requires that all expressions have an explicit context specified. The expression will" +
                 " be replaced with an empty string.", warningMessage.getMessage());
@@ -61,12 +62,24 @@ public class SightlyCompilerTest {
         CompilerMessage _1stWarning = warnings.get(0);
         CompilerMessage _2ndWarning = warnings.get(1);
         assertEquals(script, _1stWarning.getScriptName());
+        assertEquals("Expected warning on a different line.", 17, _1stWarning.getLine());
+        assertEquals("Expected warning on a different line.", 18, _2ndWarning.getLine());
         assertEquals(script, _2ndWarning.getScriptName());
         assertEquals("${style.string}: Expressions within the value of attribute style need to have an explicit context option. The " +
                 "expression will be replaced with an empty string.", _1stWarning.getMessage());
         assertEquals("${onclick.action}: Expressions within the value of attribute onclick need to have an explicit context option. The " +
                 "expression will be replaced with an empty string.", _2ndWarning.getMessage());
 
+    }
+
+    @Test
+    public void testErrorReporting1() {
+        String script = "/error-1.html";
+        CompilationResult result = compile(script);
+        List<CompilerMessage> errors = result.getErrors();
+        assertTrue("Expected compilation errors.", errors.size() == 1);
+        CompilerMessage error = errors.get(0);
+        assertEquals("Error is not reported at the expected line.", 18, error.getLine());
     }
 
     private CompilationResult compile(String file) {

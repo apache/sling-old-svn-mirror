@@ -146,7 +146,7 @@ public final class SightlyCompiler {
             }
             frontend.compile(stream, scriptSource);
             for (PushStream.StreamMessage w : stream.getWarnings()) {
-                ScriptError warning = getScriptError(scriptSource, w.getCode(), 0, 0, w.getMessage());
+                ScriptError warning = getScriptError(scriptSource, w.getCode(), 1, 0, w.getMessage());
                 compilationResult.getWarnings().add(new CompilerMessageImpl(scriptName, warning.errorMessage, warning.lineNumber, warning
                         .column));
             }
@@ -161,26 +161,20 @@ public final class SightlyCompiler {
         return compilationResult;
     }
 
-    private ScriptError getScriptError(String documentFragment, String offendingInput, int lineOffset, int column, String message) {
+    private ScriptError getScriptError(String documentFragment, String offendingInput, int lineOffset, int columnOffset, String message) {
         if (StringUtils.isNotEmpty(offendingInput)) {
             int offendingInputIndex = documentFragment.indexOf(offendingInput);
             if (offendingInputIndex > -1) {
                 String textBeforeError = documentFragment.substring(0, offendingInputIndex);
-                int line = 1;
-                int newLine = 0;
-                while (textBeforeError.length() > 0 && newLine != -1) {
-                    newLine = textBeforeError.indexOf(System.lineSeparator());
-                    if (newLine != -1) {
-                        line++;
-                        textBeforeError = textBeforeError.substring(newLine + 1, textBeforeError.length());
-                    }
+                int line = lineOffset + textBeforeError.length() - textBeforeError.replaceAll(System.lineSeparator(), "").length();
+                int column = textBeforeError.substring(textBeforeError.lastIndexOf(System.lineSeparator())).length();
+                if (column != columnOffset) {
+                    column +=columnOffset;
                 }
-                line = line + lineOffset;
-                column = textBeforeError.length() + column + 1;
                 return new ScriptError(line, column, offendingInput + ": " + message);
             }
         }
-        return new ScriptError(lineOffset, column, message);
+        return new ScriptError(lineOffset, columnOffset, message);
     }
 
     private static class ScriptError {
