@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.m2e;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.sling.ide.eclipse.m2e.impl.helpers.MavenProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.DefaultJavaVMInstall;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
@@ -57,7 +59,8 @@ public class LegacyMavenBundleProjectTest {
         
         project.convertToMavenProject();
 
-        Poller markerPoller = new Poller();
+        // wait up to 1 minute for the build to succeed due to time needed to retrieve dependencies
+        Poller markerPoller = new Poller(TimeUnit.MINUTES.toMillis(1));
         markerPoller.pollUntilSuccessful(new Runnable() {
             @Override
             public void run() {
