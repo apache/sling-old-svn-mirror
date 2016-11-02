@@ -355,7 +355,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     private boolean getBooleanValue(final ValueMap valueMap, final String key, final String[] additionalKeys) {
         Boolean result = valueMap.get(key, Boolean.class);
-        if ( result != null && !ArrayUtils.isEmpty(additionalKeys) ) {
+        if ( result == null && !ArrayUtils.isEmpty(additionalKeys) ) {
             for(final String name : additionalKeys) {
                 result = valueMap.get(name, Boolean.class);
                 if ( result != null ) {
