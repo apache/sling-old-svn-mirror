@@ -222,4 +222,7 @@ public class ProjectAdapter {
         }
     }
 
+    protected IProject getProject() {
+        return project;
+    }
 }
