@@ -72,7 +72,7 @@ public class LegacyMavenBundleProjectTest {
                             continue;
                         }
                         
-                        if ( marker.getAttribute(IMarker.MESSAGE, "").startsWith("Missing m2e incremental support")) {
+                        if ( marker.getAttribute(IMarker.MESSAGE, "").startsWith("Missing m2e incremental build support")) {
                             return;
                         }
                     }
