@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.sling.ide.eclipse.internal.validation.ServiceComponentHeaderValidator;
+import org.apache.sling.ide.test.impl.helpers.DefaultJavaVMInstall;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
