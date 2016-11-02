@@ -36,6 +36,7 @@ import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -75,6 +76,16 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         @AttributeDefinition(name="Fallback paths",
                 description = "Global fallback configurations, ordered from most specific (checked first) to least specific.")
         String[] fallbackPaths() default {"/conf/global", "/apps/conf", "/libs/conf"};
+
+        @AttributeDefinition(name="Config collection inheritance property names",
+                description = "Additional property names to " + PROPERTY_CONFIG_COLLECTION_INHERIT + " to handle configuration inheritance. The names are used in the order defined, "
+                            + "always starting with " + PROPERTY_CONFIG_COLLECTION_INHERIT + ". Once a property with a value is found, that value is used and the following property names are skipped.")
+        String[] configCollectionInheritancePropertyNames();
+
+        @AttributeDefinition(name="Config property inheritance property names",
+                description = "Additional property names to " + PROPERTY_CONFIG_PROPERTY_INHERIT + " to handle property inheritance. The names are used in the order defined, "
+                            + "always starting with " + PROPERTY_CONFIG_PROPERTY_INHERIT + ". Once a property with a value is found, that value is used and the following property names are skipped.")
+        String[] configPropertyInheritancePropertyNames();
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -218,7 +229,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             final Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
             if (item != null) {
                 logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
-                
+
                 if (propertyInheritance) {
                     // merge property map with values from inheritance parent
                     Map<String,Object> mergedValueMap = new HashMap<>(item.getValueMap());
@@ -298,8 +309,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 // check collection and property inheritance mode on current level - should we check on next-highest level as well?
-                inheritCollection = item.getValueMap().get(PROPERTY_CONFIG_COLLECTION_INHERIT, false);
-                inheritProperties = item.getValueMap().get(PROPERTY_CONFIG_PROPERTY_INHERIT, false);
+                final ValueMap valueMap = item.getValueMap();
+                inheritCollection = getBooleanValue(valueMap, PROPERTY_CONFIG_COLLECTION_INHERIT, config.configCollectionInheritancePropertyNames());
+                inheritProperties = getBooleanValue(valueMap, PROPERTY_CONFIG_PROPERTY_INHERIT, config.configPropertyInheritancePropertyNames());
                 inherit = inheritCollection || inheritProperties;
                 if (!inherit) {
                     break;
@@ -316,7 +328,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         if (logger.isTraceEnabled()) {
             logger.trace("- final list has {} items", result.size());
         }
-        
+
         // replace config resources with wrappers with merged properties if property inheritance was applied
         if (propertyInheritanceApplied) {
             List<Resource> transformedResult = new ArrayList<>();
@@ -339,6 +351,19 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     private boolean isValidResourceCollectionItem(Resource resource) {
         // do not include jcr:content nodes in resource collection list
         return !StringUtils.equals(resource.getName(), "jcr:content");
+    }
+
+    private boolean getBooleanValue(final ValueMap valueMap, final String key, final String[] additionalKeys) {
+        Boolean result = valueMap.get(key, Boolean.class);
+        if ( result != null && !ArrayUtils.isEmpty(additionalKeys) ) {
+            for(final String name : additionalKeys) {
+                result = valueMap.get(name, Boolean.class);
+                if ( result != null ) {
+                    break;
+                }
+            }
+        }
+        return result == null ? false : result.booleanValue();
     }
 
     @Override
