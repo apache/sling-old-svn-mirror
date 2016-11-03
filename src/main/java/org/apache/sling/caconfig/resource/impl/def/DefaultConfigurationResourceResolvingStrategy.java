@@ -180,9 +180,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                             if ( isAbsolute && !relativePaths.isEmpty() ) {
                                 useFromRelativePathsWith = val;
                                 val = null;
-                                val = null;
                             } else if ( !isAbsolute ) {
-                                relativePaths.add(contextResource);
+                                relativePaths.add(0, contextResource);
                                 val = null;
                             }
                         }
