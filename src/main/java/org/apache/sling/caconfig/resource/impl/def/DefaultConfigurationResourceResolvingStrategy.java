@@ -29,13 +29,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-import org.apache.commons.collections.PredicateUtils;
-import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ArrayIterator;
-import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -139,53 +136,108 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
      */
     @SuppressWarnings("unchecked")
     private Iterator<String> findConfigRefs(final Resource startResource, final String bucketName) {
+        final String notAllowedPostfix = "/" + bucketName;
+
         // collect all context path resources
-        Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(startResource);
+        final Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(startResource);
 
         // get config resource path for each context resource, filter out items where not reference could be resolved
-        Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
-                @Override
-                public Object transform(Object input) {
-                    return getReference((ContextResource)input, bucketName);
+        final Iterator<String> configPaths = new Iterator<String>() {
+
+            private final List<ContextResource> relativePaths = new ArrayList<>();
+
+            private String next = seek();
+
+            private String useFromRelativePathsWith;
+
+            private String seek() {
+                String val = null;
+                while ( val == null && (useFromRelativePathsWith != null || contextResources.hasNext()) ) {
+                    if ( useFromRelativePathsWith != null ) {
+                        val = useFromRelativePathsWith;
+                        for(final ContextResource part : relativePaths) {
+                            val = val + '/' + part.getConfigRef();
+                        }
+                        final ContextResource contextResource = relativePaths.remove(relativePaths.size() - 1);
+                        val = checkPath(contextResource, val, notAllowedPostfix);
+
+                        if ( relativePaths.isEmpty() ) {
+                            useFromRelativePathsWith = null;
+                        }
+                    } else {
+                        final ContextResource contextResource = contextResources.next();
+                        val = contextResource.getConfigRef();
+
+                        // if absolute path found we are (probably) done
+                        if (val != null && val.startsWith("/")) {
+                            val = checkPath(contextResource, val, notAllowedPostfix);
+                        }
+
+                        if (val != null) {
+                            logger.trace("Reference '{}' found at {}",
+                                    contextResource.getConfigRef(), contextResource.getResource().getPath());
+                            final boolean isAbsolute = val.startsWith("/");
+                            if ( isAbsolute && !relativePaths.isEmpty() ) {
+                                useFromRelativePathsWith = val;
+                                val = null;
+                                val = null;
+                            } else if ( !isAbsolute ) {
+                                relativePaths.add(contextResource);
+                                val = null;
+                            }
+                        }
+                    }
                 }
-            }), PredicateUtils.notNullPredicate());
+                if ( val == null && !relativePaths.isEmpty() ) {
+                    logger.error("Relative references not used as no absolute reference was found: {}", relativePaths);
+                }
+                return val;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return next != null;
+            }
+
+            @Override
+            public String next() {
+                if ( next == null ) {
+                    throw new NoSuchElementException();
+                }
+                final String result = next;
+                next = seek();
+                return result;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
 
         // expand paths and eliminate duplicates
         return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
 
-    private String getReference(final ContextResource contextResource, final String bucketName) {
-        final String notAllowedPostfix = "/" + bucketName;
-        Resource resource = contextResource.getResource();
-        String ref = contextResource.getConfigRef();
+    private String checkPath(final ContextResource contextResource, String ref, final String notAllowedPostfix) {
+        // combine full path if relativeRef is present
+        ref = ResourceUtil.normalize(ref);
 
-        if (ref != null) {
-            // if absolute path found we are (probably) done
-            if (ref.startsWith("/")) {
-                // combine full path if relativeRef is present
-                ref = ResourceUtil.normalize(ref);
-
-                if (ref != null && ref.endsWith(notAllowedPostfix) ) {
-                    logger.warn("Ignoring reference to {} from {} - Probably misconfigured as it ends with '/{}'", ref, resource.getPath(), bucketName);
-                    ref = null;
-                }
-                if (ref != null && !isAllowedConfigPath(ref)) {
-                    logger.warn("Ignoring reference to {} from {} - not in allowed paths.", ref, resource.getPath());
-                    ref = null;
-                }
-
-                if (ref != null && isFallbackConfigPath(ref)) {
-                    logger.warn("Ignoring reference to {} from {} - already a fallback path.", ref, resource.getPath());
-                    ref = null;
-                }
-
-            } else {
-                logger.error("Invalid relative reference found for {} : {}. This entry is ignored", resource.getPath(), ref);
-            }
+        if (ref != null && ref.endsWith(notAllowedPostfix) ) {
+            logger.warn("Ignoring reference to {} from {} - Probably misconfigured as it ends with '{}'",
+                    contextResource.getConfigRef(), contextResource.getResource().getPath(), notAllowedPostfix);
+            ref = null;
+        }
+        if (ref != null && !isAllowedConfigPath(ref)) {
+            logger.warn("Ignoring reference to {} from {} - not in allowed paths.",
+                    contextResource.getConfigRef(), contextResource.getResource().getPath());
+            ref = null;
         }
 
-        if (ref != null) {
-            logger.trace("Reference '{}' found at {}", ref, resource.getPath());
+        if (ref != null && isFallbackConfigPath(ref)) {
+            logger.warn("Ignoring reference to {} from {} - already a fallback path.",
+                    contextResource.getConfigRef(), contextResource.getResource().getPath());
+            ref = null;
         }
 
         return ref;
