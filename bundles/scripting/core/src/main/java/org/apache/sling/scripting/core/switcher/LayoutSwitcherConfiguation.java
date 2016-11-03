@@ -30,7 +30,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(
         name = "Config paths",
-        description = "Redirection paths"
+        description = "Redirection paths, configured like <content path>:<apps path>"
     )
     String[] configPaths();
 
