@@ -44,8 +44,6 @@ public class LayoutSwitcher implements ResourceDecorator {
 
 	private LayoutSwitcherConfiguation config;
 	
-	public static final String CONFIG_PATH_PROP_NAME = "configPaths";
-	
 	@Activate
 	public void activate(final LayoutSwitcherConfiguation config) {
 		this.config = config;
@@ -99,7 +97,7 @@ public class LayoutSwitcher implements ResourceDecorator {
 			String contentPath = StringUtils.substringBefore(configPath, ":");
 			if ( path.startsWith(contentPath)) {
 				String redrectionPath = StringUtils.substringAfter(configPath, ":");
-				LOG.debug("Returning redirection path {}",redrectionPath);
+				LOG.trace("Returning redirection path {}",redrectionPath);
 				return redrectionPath;
 			}
 		}
