@@ -242,7 +242,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 // check property inheritance mode on current level - should we check on next-highest level as well?
-                propertyInheritance = item.getValueMap().get(PROPERTY_CONFIG_PROPERTY_INHERIT, false);
+                propertyInheritance = getBooleanValue(item.getValueMap(), PROPERTY_CONFIG_PROPERTY_INHERIT, config.configPropertyInheritancePropertyNames());
                 if (!propertyInheritance) {
                     break;
                 }
