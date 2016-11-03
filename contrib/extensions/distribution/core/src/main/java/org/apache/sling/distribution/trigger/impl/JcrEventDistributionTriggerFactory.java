@@ -74,7 +74,7 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     /**
      * use deep distribution
      */
-    @Property(label = "Use deep distribution", description = "Distribute entire subtree of the event node path")
+    @Property(label = "Use deep distribution", description = "Distribute entire subtree of the event node path", boolValue = false)
     private static final String DEEP = "deep";
 
 
