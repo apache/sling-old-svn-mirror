@@ -253,7 +253,7 @@
       </validator>
    </extension>
    
-   <!-- disable XML validation for content projects -->
+   <!-- disable general XML validation for content projects -->
     <extension id="org.apache.sling.ide.excludeXmlValidator" point="org.eclipse.wst.validation.exclude">
     	<validator id="org.eclipse.wst.xml.core.xml">
 			<exclude>
@@ -263,6 +263,42 @@
 			</exclude>
 		</validator>
  	</extension>
+ 	
+ 	<!-- but enable our own XML validator based on the default XML validator ignoring any missing grammar, look at org.eclipse.wst.xml.core -> plugin.xml on how to configure -->
+    <extension id="xml" name="XML Validator for Sling Content Projects" point="org.eclipse.wst.validation.validatorV2">
+      <validator
+            build="true"
+            class="org.apache.sling.ide.eclipse.internal.validation.IgnoreMissingGrammarXmlValidator"
+            manual="true"
+            sourceid="org.eclipse.wst.xml.ui.internal.validation.DelegatingSourceValidatorForXML"
+            version="3"
+            markerId="org.eclipse.wst.xml.core.validationMarker">
+         <include>
+            <rules>
+               <contentType id="org.eclipse.core.runtime.xml"></contentType>
+               <contentType id="org.eclipse.wst.xml.core.xmlsource"></contentType>
+               <contentType id="org.eclipse.wst.xml.core.xslsource"></contentType>
+               <contentType id="org.eclipse.jst.jsp.core.tldsource"></contentType>
+               <fileext
+                     caseSensitive="false"
+                     ext="xml">
+               </fileext>
+               <!--only enable for sling.content projects -->
+               <facet id="sling.content"/>
+            </rules>
+         </include>
+         <exclude>
+            <rules>
+				<projectNature id="org.eclipse.jst.j2ee.ejb.EJBNature"/>
+				<projectNature id="org.eclipse.jst.j2ee.EARNature"/>
+    			<file caseSensitive="true" name=".project" type="file"/>
+    			<file caseSensitive="true" name=".classpath" type="file"/>
+    			<file caseSensitive="true" name=".settings"  type="folder"/>
+            </rules>
+         </exclude>
+      </validator>
+   </extension>
+ 	
  	
  	<!-- Store project preferences in the filesystem -->
  	<extension id="org.apache.sling.ide.preferences" point="org.eclipse.core.runtime.preferences">
