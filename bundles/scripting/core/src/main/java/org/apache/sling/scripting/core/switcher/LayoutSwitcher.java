@@ -20,81 +20,90 @@ package org.apache.sling.scripting.core.switcher;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Service(value = ResourceDecorator.class)
-@Component
+
+@Component(
+        service = ResourceDecorator.class
+        
+)
+@Designate(
+	    ocd = LayoutSwitcherConfiguation.class
+	)
 public class LayoutSwitcher implements ResourceDecorator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(LayoutSwitcher.class);
 
-	@Reference
-	private LayoutThreadLocalService threadLocalService;
+	private LayoutSwitcherConfiguation config;
+	
+	public static final String CONFIG_PATH_PROP_NAME = "configPaths";
+	
+	@Activate
+	public void activate(final LayoutSwitcherConfiguation config) {
+		this.config = config;
+	}
+	
+	
+	private boolean isPathConfigured(String path) {
+		return StringUtils.isNotBlank(getSlingScriptFolder(path));
 
+	}
+	
 	@Override
 	public Resource decorate(Resource resource) {
-		
+
 		String path = resource.getPath();
-		if (path.indexOf(".html") != -1 && (path.startsWith("/apps") || path.startsWith("/libs"))) {
-			
-			// only decorating paths like /apps/path/file.html or /libs/path/file.html
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("decorate called for : " + resource.getPath());
-				LOG.trace("thread local : " + threadLocalService.get());
-			}
-
-			String context = threadLocalService.get();
-
-			String scriptFolder = null;
-
-			if (context != null) {
-				scriptFolder = getSlingScriptFolder(context, resource.getResourceResolver());
-			} else {
-				return null;
-			}
-
-			if (scriptFolder == null) {
-				return null;
-			}
-			
-			if ( resource.getPath().startsWith(scriptFolder) ) {
-				// to prevent endless loop and stackoverlow
-				return null;
-			}
-
-			return getIfExisting(scriptFolder, resource.getPath(), resource.getResourceResolver());
+		
+		if ( ArrayUtils.isEmpty(config.configPaths()) || !isPathConfigured(path) ) {
+			return null;
+		} 
+		
+		if ( resource instanceof LayoutResource) {
+			return null;
 		}
+				
+		String scriptFolder = getSlingScriptFolder(path);
 
+		String componentName = resource.getResourceType();
+		if (componentName != null ) {
+			componentName = StringUtils.substringAfterLast(componentName, "/");
+		}
+			
+		if ( StringUtils.isNotBlank( scriptFolder) && StringUtils.isNotBlank(componentName)) {
+			
+			if ( resource.getResourceResolver().getResource(scriptFolder + "/" + componentName) != null ) {
+				LayoutResource lr = new LayoutResource(resource);
+				lr.setSlingResourceType(scriptFolder + "/" + componentName);
+				
+				LOG.trace("returning rt {}", lr.getSlingResourceType());
+				
+				return lr;
+				
+			}
+		}
 		return null;
+		
 	}
 
-	private String getSlingScriptFolder(String path, ResourceResolver rr) {
-		String scriptFolder = null;
-		Resource r = rr.getResource(path);
-		while (r != null && scriptFolder == null) {
-			Resource child = r.getChild("jcr:content");
-			if (child != null) {
-				scriptFolder = child.getValueMap().get("sling:scriptFolder", String.class);
+
+	private String getSlingScriptFolder(String path) {
+		for( String configPath : config.configPaths()) {
+			String contentPath = StringUtils.substringBefore(configPath, ":");
+			if ( path.startsWith(contentPath)) {
+				String redrectionPath = StringUtils.substringAfter(configPath, ":");
+				LOG.debug("Returning redirection path {}",redrectionPath);
+				return redrectionPath;
 			}
-
-			r = r.getParent();
 		}
-		return scriptFolder;
-
-	}
-
-	private Resource getIfExisting(String folder, String path, ResourceResolver rr) {
-		String layoutPath = folder + "/" + StringUtils.substringAfterLast(path, "/");
-
-		return rr.getResource(layoutPath);
+		return StringUtils.EMPTY;
 
 	}
 
