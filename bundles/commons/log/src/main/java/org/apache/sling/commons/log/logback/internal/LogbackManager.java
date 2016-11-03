@@ -167,8 +167,13 @@ public class LogbackManager extends LoggerContextAwareBase {
         registerWebConsoleSupport();
         registerEventHandler();
 
+        // initial configuration must be done synchronously (aka immediately)
+        addInfo("LogbackManager: BEGIN initial configuration");
+        failSafeConfigure();
+        addInfo("LogbackManager: END initialconfiguration");
+
+        // now open the gate for regular configuration
         started = true;
-        configChanged();
     }
 
     public void shutdown() {
@@ -258,11 +263,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             public void run() {
                 // TODO Might be better to run a job to monitor refreshRequirement
                 try {
-                    addInfo("Performing configuration");
-                    configure();
-                } catch (Exception e) {
-                    log.warn("Error occurred while re-configuring logger", e);
-                    addError("Error occurred while re-configuring logger", e);
+                    failSafeConfigure();
                 } finally {
                     resetLock.release();
                     addInfo("Re configuration done");
@@ -270,6 +271,16 @@ public class LogbackManager extends LoggerContextAwareBase {
                 }
             }
         });
+    }
+
+    private void failSafeConfigure(){
+        try {
+            addInfo("Performing configuration");
+            configure();
+        } catch (Exception e) {
+            log.warn("Error occurred while re-configuring logger", e);
+            addError("Error occurred while re-configuring logger", e);
+        }
     }
 
     public void fireResetCompleteListeners(){
