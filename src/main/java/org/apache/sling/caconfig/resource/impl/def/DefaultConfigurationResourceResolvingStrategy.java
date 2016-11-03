@@ -110,10 +110,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     @SuppressWarnings("unchecked")
-    Iterator<String> getResolvePaths(final Resource contentResource) {
+    Iterator<String> getResolvePaths(final Resource contentResource, final String bucketName) {
         return new IteratorChain(
             // add all config references found in resource hierarchy
-            findConfigRefs(contentResource),
+            findConfigRefs(contentResource, bucketName),
             // finally add the global fallbacks
             new ArrayIterator(this.config.fallbackPaths())
         );
@@ -138,7 +138,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
      * @param startResource Resource to start searching
      */
     @SuppressWarnings("unchecked")
-    private Iterator<String> findConfigRefs(final Resource startResource) {
+    private Iterator<String> findConfigRefs(final Resource startResource, final String bucketName) {
         // collect all context path resources
         Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(startResource);
 
@@ -146,7 +146,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         Iterator<String> configPaths = new FilterIterator(new TransformIterator(contextResources, new Transformer() {
                 @Override
                 public Object transform(Object input) {
-                    return getReference((ContextResource)input);
+                    return getReference((ContextResource)input, bucketName);
                 }
             }), PredicateUtils.notNullPredicate());
 
@@ -154,7 +154,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         return new PathEliminateDuplicatesIterator(new PathParentExpandIterator(config.configPath(), configPaths));
     }
 
-    private String getReference(final ContextResource contextResource) {
+    private String getReference(final ContextResource contextResource, final String bucketName) {
+        final String notAllowedPostfix = "/" + bucketName;
         Resource resource = contextResource.getResource();
         String ref = contextResource.getConfigRef();
 
@@ -164,6 +165,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 // combine full path if relativeRef is present
                 ref = ResourceUtil.normalize(ref);
 
+                if (ref != null && ref.endsWith(notAllowedPostfix) ) {
+                    logger.warn("Ignoring reference to {} from {} - Probably misconfigured as it ends with '/{}'", ref, resource.getPath(), bucketName);
+                    ref = null;
+                }
                 if (ref != null && !isAllowedConfigPath(ref)) {
                     logger.warn("Ignoring reference to {} from {} - not in allowed paths.", ref, resource.getPath());
                     ref = null;
@@ -220,7 +225,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         // strategy: find first item among all configured paths
         int idx = 1;
-        Iterator<String> paths = getResolvePaths(contentResource);
+        Iterator<String> paths = getResolvePaths(contentResource, bucketName);
         Resource configResource = null;
         Map<String,Object> configValueMap = null;
         boolean propertyInheritance = false;
@@ -278,7 +283,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final Map<String,Map<String,Object>> configValueMaps = new HashMap<>();
 
         int idx = 1;
-        Iterator<String> paths = getResolvePaths(contentResource);
+        Iterator<String> paths = getResolvePaths(contentResource, bucketName);
         boolean inheritCollection = false;
         boolean inheritProperties = false;
         boolean inherit = false;
@@ -373,7 +378,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         String name = bucketName + "/" + configName;
 
-        Iterator<String> configPaths = this.findConfigRefs(contentResource);
+        Iterator<String> configPaths = this.findConfigRefs(contentResource, bucketName);
         if (configPaths.hasNext()) {
             String configPath = buildResourcePath(configPaths.next(), name);
             logger.debug("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
@@ -392,7 +397,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         String name = bucketName + "/" + configName;
 
-        Iterator<String> configPaths = this.findConfigRefs(contentResource);
+        Iterator<String> configPaths = this.findConfigRefs(contentResource, bucketName);
         if (configPaths.hasNext()) {
             String configPath = buildResourcePath(configPaths.next(), name);
             logger.debug("Building configuration collection parent path {} for resource {}: {}", name, contentResource.getPath(), configPath);
