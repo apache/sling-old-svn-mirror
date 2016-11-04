@@ -18,14 +18,16 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -40,13 +42,15 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
-import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
+import org.osgi.framework.BundleContext;
 
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.
@@ -178,14 +182,23 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     )
     private static final String DIGEST_ALGORITHM = "digestAlgorithm";
 
+    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 100;
+
+    @Property(
+        label="The number of items for monitoring distribution packages creation/installation",
+        description = "The number of items for monitoring distribution packages creation/installation, 100 by default",
+        intValue = DEFAULT_MONITORING_QUEUE_SIZE
+    )
+    private static final String MONITORING_QUEUE_SIZE = "monitoringQueueSize";
+
     @Reference
     private Packaging packaging;
 
-    private DistributionPackageBuilder packageBuilder;
+    private MonitoringDistributionPackageBuilder packageBuilder;
 
 
     @Activate
-    public void activate(Map<String, Object> config) {
+    public void activate(BundleContext context, Map<String, Object> config) {
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         String type = PropertiesUtil.toString(config.get(TYPE), null);
@@ -218,15 +231,24 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         DistributionContentSerializer contentSerializer = new FileVaultContentSerializer(name, packaging, importMode, aclHandling,
                 packageRoots, packageNodeFilters, packagePropertyFilters, useBinaryReferences, autosaveThreshold);
 
+        DistributionPackageBuilder wrapped;
         if ("filevlt".equals(type)) {
-            packageBuilder = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder, digestAlgorithm);
+            wrapped = new FileDistributionPackageBuilder(name, contentSerializer, tempFsFolder, digestAlgorithm);
         } else {
             final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
             String memoryUnitName = PropertiesUtil.toString(config.get(MEMORY_UNIT), DEFAULT_MEMORY_UNIT);
             final MemoryUnit memoryUnit = MemoryUnit.valueOf(memoryUnitName);
             final boolean useOffHeapMemory = PropertiesUtil.toBoolean(config.get(USE_OFF_HEAP_MEMORY), DEFAULT_USE_OFF_HEAP_MEMORY);
-            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory, digestAlgorithm);
+            wrapped = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory, digestAlgorithm);
         }
+
+        int monitoringQueueSize = PropertiesUtil.toInteger(config.get(MONITORING_QUEUE_SIZE), DEFAULT_MONITORING_QUEUE_SIZE);
+        packageBuilder = new MonitoringDistributionPackageBuilder(monitoringQueueSize, wrapped, context);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        packageBuilder.clear();
     }
 
     public String getType() {
