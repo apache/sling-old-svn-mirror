@@ -18,27 +18,29 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
-import java.util.ArrayList;
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -62,9 +64,6 @@ import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.hamcrest.Matchers;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -74,9 +73,9 @@ import org.osgi.framework.BundleContext;
 public class ResourceResolverControlTest {
 
     private static final String TEST_ATTRIBUTE = "some.test.attribute";
-    
+
     private static final List<String> TEST_FORBIDDEN_ATTRIBUTES = new ArrayList<String>();
-    
+
     static {
             TEST_FORBIDDEN_ATTRIBUTES.add(ResourceResolverFactory.PASSWORD);
             TEST_FORBIDDEN_ATTRIBUTES.add(ResourceProvider.AUTH_SERVICE_BUNDLE);
@@ -158,7 +157,7 @@ public class ResourceResolverControlTest {
         final ResourceProviderStorage storage = new ResourceProviderStorage(handlers);
 
         crp = new ResourceResolverControl(false, authInfo, new ResourceProviderStorageProvider() {
-            
+
             @Override
             public ResourceProviderStorage getResourceProviderStorage() {
                 return storage;
@@ -166,19 +165,19 @@ public class ResourceResolverControlTest {
         });
         context = new ResourceResolverContext(rr, securityTracker);
     }
-    
+
     /** Return test auth info */
     private Map<String, Object> getAuthInfo() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        
+
         // Add all forbidden attributes to be able to verify that
         // they are masked
         for(String str : TEST_FORBIDDEN_ATTRIBUTES) {
             result.put(str, "should be hidden");
         }
-        
+
         result.put(TEST_ATTRIBUTE, "is " + TEST_ATTRIBUTE);
-        
+
         return result;
     }
 
@@ -456,7 +455,7 @@ public class ResourceResolverControlTest {
 
         assertThat("query result count", count, Matchers.equalTo(1));
     }
-    
+
     @Test
     public void forbiddenAttributeNames() {
         for(String name : crp.getAttributeNames(context)) {
@@ -466,7 +465,7 @@ public class ResourceResolverControlTest {
         }
         assertTrue("Expecting non-forbidden attribute", crp.getAttributeNames(context).contains(TEST_ATTRIBUTE));
     }
-    
+
     @Test
     public void forbiddenAttributeValues() {
         for(String name : TEST_FORBIDDEN_ATTRIBUTES) {
