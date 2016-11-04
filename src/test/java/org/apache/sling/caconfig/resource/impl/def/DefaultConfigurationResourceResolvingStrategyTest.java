@@ -58,7 +58,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/content/site2", PROPERTY_CONFIG_REF, "/conf/site2")
             .resource("/content/mainsite", PROPERTY_CONFIG_REF, "/conf/main")
             .resource("/content/mainsite/sub", PROPERTY_CONFIG_REF, "sub")
-            .resource("/content/mainsite/sub/some/where/deep", PROPERTY_CONFIG_REF, "deep");
+            .resource("/content/mainsite/sub/some/where/deep", PROPERTY_CONFIG_REF, "sub/deep");
         site1Page1 = context.create().resource("/content/site1/page1");
         site2Page1 = context.create().resource("/content/site2/page1");
         subPage = context.create().resource("/content/mainsite/sub/page1");
