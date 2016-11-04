@@ -40,6 +40,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
@@ -81,10 +82,16 @@ public class OsgiObservationBridge implements ResourceChangeListener, ExternalRe
 
     @Reference(name = "handlers",
             cardinality=ReferenceCardinality.AT_LEAST_ONE,
+            policy=ReferencePolicy.DYNAMIC,
             service=EventHandler.class,
             target="(event.topics=org/apache/sling/api/resource/*)")
     private void bindEventHandler(final EventHandler handler) {
         logger.warn("Found OSGi Event Handler for deprecated resource bridge: {}", handler);
+    }
+
+    @SuppressWarnings("unused")
+    private void unbindEventHandler(final EventHandler handler) {
+        // nothing to do here
     }
 
     protected void deactivate() {
