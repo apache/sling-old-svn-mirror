@@ -166,12 +166,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 String val = null;
                 while ( val == null && (useFromRelativePathsWith != null || contextResources.hasNext()) ) {
                     if ( useFromRelativePathsWith != null ) {
-                        val = useFromRelativePathsWith;
-                        for(final ContextResource part : relativePaths) {
-                            val = val + '/' + part.getConfigRef();
-                        }
                         final ContextResource contextResource = relativePaths.remove(relativePaths.size() - 1);
-                        val = checkPath(contextResource, val, notAllowedPostfix);
+                        val = checkPath(contextResource, useFromRelativePathsWith + "/" + contextResource.getConfigRef(), notAllowedPostfix);
 
                         if ( relativePaths.isEmpty() ) {
                             useFromRelativePathsWith = null;
