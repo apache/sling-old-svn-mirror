@@ -25,11 +25,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
@@ -42,12 +44,17 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.PathParentExpandIterator;
+import org.apache.sling.caconfig.resource.spi.CollectionInheritanceDecider;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
+import org.apache.sling.caconfig.resource.spi.InheritanceDecision;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -91,6 +98,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     @Reference
     private ContextPathStrategyMultiplexer contextPathStrategy;
+
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL,
+               policy=ReferencePolicy.DYNAMIC,
+               policyOption=ReferencePolicyOption.GREEDY)
+    private volatile CollectionInheritanceDecider collectionInheritanceDecider;
 
     Config getConfiguration() {
         return this.config;
@@ -320,6 +332,23 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
     }
 
+    private boolean include(final CollectionInheritanceDecider decider,
+            final String bucketName,
+            final Resource resource,
+            final Set<String> blockedItems) {
+        boolean result = !blockedItems.contains(resource.getName());
+        if ( result && decider != null ) {
+            final InheritanceDecision decision = decider.decide(bucketName, resource);
+            if ( decision == InheritanceDecision.EXCLUDE ) {
+                result = false;
+            } else if ( decision == InheritanceDecision.BLOCK ) {
+                result = false;
+                blockedItems.add(resource.getName());
+            }
+        }
+        return result;
+    }
+
     @Override
     public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
         if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
@@ -332,6 +361,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
         final Map<String,Resource> result = new LinkedHashMap<>();
         final Map<String,Map<String,Object>> configValueMaps = new HashMap<>();
+
+        final CollectionInheritanceDecider decider = this.collectionInheritanceDecider;
+        final Set<String> blockedItems = new HashSet<>();
 
         int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource, bucketName);
@@ -349,7 +381,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 for (Resource child : item.getChildren()) {
-                    if (isValidResourceCollectionItem(child)) {
+                    if (isValidResourceCollectionItem(child) && include(decider, bucketName, child, blockedItems)) {
                         if ((!inherit || inheritCollection) && !result.containsKey(child.getName())) {
                             result.put(child.getName(), child);
                             configValueMaps.put(child.getName(), child.getValueMap());
