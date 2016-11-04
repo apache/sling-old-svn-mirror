@@ -16,8 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * SPI for applications hooking into the configuration resource infrastructure for parameterizing and customizing.
- */
-@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.sling.caconfig.resource.spi;
+
+import org.apache.sling.api.resource.Resource;
+import org.osgi.annotation.versioning.ConsumerType;
+
+/**
+ * The {@code CollectionInheritanceDecider} is an SPI which should be used by
+ * all {@link ConfigurationResourceResolvingStrategy} implementations if they
+ * support inheritance for collections.
+ *
+ * @since 1.1
+ */
+@ConsumerType
+public interface CollectionInheritanceDecider {
+
+    /**
+     * Decide whether the provided resource should be included in the collection.
+     * The provided resource can either be included, excluded or blocked.
+     *
+     * @param bucketName The bucket name
+     * @param resource The resource
+     * @return The decision.
+     */
+    InheritanceDecision decide(String bucketName, Resource resource);
+}

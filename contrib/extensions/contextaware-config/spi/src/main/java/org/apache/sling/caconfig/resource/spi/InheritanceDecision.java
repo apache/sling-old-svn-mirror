@@ -16,8 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * SPI for applications hooking into the configuration resource infrastructure for parameterizing and customizing.
- */
-@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.sling.caconfig.resource.spi;
+
+/**
+ * Return values for {@link CollectionInheritanceDecider}.
+ *
+ * @since 1.1
+ */
+public enum InheritanceDecision {
+
+    INCLUDE, // include the resource.
+    EXCLUDE, // exclude the resource, but allow others to provide it.
+    BLOCK    // exclude the resource, no one else can provide it.
+}

@@ -29,6 +29,10 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * Defines how and where the configuration resources are looked up.
  * This SPI allows application to define their own configuration storage and inheritance strategies.
+ *
+ * If this strategy supports inheritance for collections, it should use the optional
+ * {@link CollectionInheritanceDecider} SPI interface. If such a service is available, it should
+ * be called.
  */
 @ConsumerType
 public interface ConfigurationResourceResolvingStrategy {
@@ -36,7 +40,7 @@ public interface ConfigurationResourceResolvingStrategy {
     /**
      * Get a context-aware singleton configuration resource defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
-     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
@@ -47,20 +51,20 @@ public interface ConfigurationResourceResolvingStrategy {
     /**
      * Get a collection of context-aware configuration resources defined by the given configuration name.
      * @param resource Context resource to fetch configuration for
-     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
      * @return Collection of configuration resources, the collection might be empty.
      */
     @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
-    
+
     /**
      * Get the configuration resource path for storing configuration data for the given context resource and configuration name.
      * This path is used when no configuration resource exists yet, but new configuration data should be stored.
-     * So usually the returned path does not yet exist (and perhaps not even it's parents). 
+     * So usually the returned path does not yet exist (and perhaps not even it's parents).
      * @param resource Context resource to fetch configuration for
-     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
@@ -71,14 +75,14 @@ public interface ConfigurationResourceResolvingStrategy {
     /**
      * Get the configuration resource collection parent path for storing configuration data for the given context resource and configuration name.
      * This path is used when no configuration resource collection exists yet, but new configuration data should be stored.
-     * So usually the returned path does not yet exist (and perhaps not even it's parents). 
+     * So usually the returned path does not yet exist (and perhaps not even it's parents).
      * @param resource Context resource to fetch configuration for
-     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store 
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
      * @return Resource path, or null if no matching configuration resource path can be determined
      */
     @CheckForNull String getResourceCollectionParentPath(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
-    
+
 }
