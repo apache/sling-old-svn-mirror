@@ -269,10 +269,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.release</groupId>
+                        <artifactId>maven-release-oddeven-policy</artifactId>
+                        <version>2.5.3</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <tagBase>
-                        https://svn.apache.org/repos/asf/sling/tags
-                    </tagBase>
+                    <projectVersionPolicyId>OddEvenVersionPolicy</projectVersionPolicyId>
+                    <tagBase>https://svn.apache.org/repos/asf/sling/tags</tagBase>
                 </configuration>
             </plugin>
             <plugin>
