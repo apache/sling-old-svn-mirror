@@ -64,6 +64,9 @@ original
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/LoginController.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/MainController.js"></script>
 
+
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/scriptpathchooser/scriptfilechooser.js"></script>
+
 <!-- 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/jquery.scrollTo-min.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/urlEncode.js"></script>
@@ -99,7 +102,10 @@ var mainControllerSettings = {
 var mainController = new org.apache.sling.reseditor.MainController(mainControllerSettings, ntManager);
 
 var treeControllerSettings = {
-		contextPath: "<%= request.getContextPath() %>"
+		contextPath: "<%= request.getContextPath() %>",
+		treeAndPropsSelector: "#tree-and-props",
+		treeSelector: "#tree",
+		treeRootElementSelector: "#tree-and-props .root-element"
 };
 var treeController = new org.apache.sling.reseditor.TreeController(treeControllerSettings, mainController);
 
@@ -193,7 +199,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 		</div>
 		<div id="main-row" class="row">
 			<div id="sidebar-col" class="col-sm-4">
-				<div id="sidebar" class="plate">
+				<div id="tree" class="plate">
 					<div class="ie9filter-plate-div">
 						<div style="display:none;" class="info-content-container" >
 							<div class="well well-sm info-content">
@@ -212,7 +218,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 						  		</ul>
 							</div>
 					  	</div>	
-						<div id="tree" class="root" ></div>
+						<div id="tree-and-props" class="root tree-and-props" ></div>
 					</div>
 				</div>
 			</div>
@@ -226,7 +232,7 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 			</div>
 		</div>
 	</div>
-	<span id="tree-info-icon" class="info-icon info-icon-lightgray pull-right clearfix" style="display:none;"></span>
+	<span class="tree-info-icon info-icon info-icon-lightgray pull-right clearfix" style="display:none;"></span>
 	<!-- Add node dialog -->
 	<div class="modal fade" id="addNodeDialog" tabindex="-1" role="dialog" aria-labelledby="addNodeDialogLabel" aria-hidden="true">
 	  <div class="modal-dialog modal-sm">

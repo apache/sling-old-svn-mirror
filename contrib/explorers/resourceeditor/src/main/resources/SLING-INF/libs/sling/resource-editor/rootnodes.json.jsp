@@ -34,7 +34,7 @@
 	"id" : "root",
 	"state" : {"opened":true, "disabled": false, "selected": false},
 	"text"	: "<i class=\"jstree-icon node-icon open-icon\"></i><i class=\"jstree-icon node-icon add-icon\"></i> /",
-	"li_attr" :{ "nodename" : "${currentNode.name}", "nodetype" :"${currentNode.primaryNodeType.name}" },
+	"li_attr" :{ "nodename" : "${currentNode.name}", "nodetype" :"${currentNode.primaryNodeType.name}", "class": "root-element"},
 	"a_attr" :{ "href" : "<%= request.getContextPath() %>/reseditor/.html" },
 	"children" :
 		<%@ include file="nodes.json.incl.jsp" %>

@@ -40,32 +40,38 @@ org.apache.sling.reseditor.TreeController = (function() {
 		var addNodeControllerSettings = {};
 		this.addNodeController = new org.apache.sling.reseditor.AddNodeController(addNodeControllerSettings, mainController);
 		
-		$(document).ready(function() {
-			$("#tree").on("click", "#root",function(e) {
-				var target = $(e.target);
-				if (target.hasClass("open-icon")){
-					thatTreeController.openNodeTarget(e);
-				} else if (target.hasClass("add-icon")){
-					thatTreeController.openAddNodeDialog(target.parents("li"));
-				}else if (target.hasClass("remove-icon")){
-					thatTreeController.deleteSingleNode(target.parents("li"));
-				}
-			});
-			$("#tree").on("dblclick", "#root",function(e) {
-				var target = $(e.target);
-				if (target.hasClass("jstree-anchor") || target.hasClass("node-type")){
-					var id = target.parents("li:first").attr("id");
-					thatTreeController.openRenameNodeDialog(id);
-				}
-			});
-			$("#tree-info-icon").on("click", function(e, data) {
-				$('#sidebar .info-content-container').slideToggle();
-			});
-			$("#sidebar .info-content-container .close").on("click", function(e, data) {
-				$('#sidebar .info-content-container').slideToggle();
-			});
-		});
 	};
+	
+	TreeController.prototype.initTreeEvents = function(root, paths) {
+		var thatTreeController = this;
+		$(thatTreeController.settings.treeAndPropsSelector).on("click", function(e) {
+			var target = $(e.target);
+			if (target.hasClass("open-icon")){
+				thatTreeController.openNodeTarget(e);
+			} else if (target.hasClass("add-icon")){
+				thatTreeController.openAddNodeDialog(target.parents("li"));
+			}else if (target.hasClass("remove-icon")){
+				thatTreeController.deleteSingleNode(target.parents("li"));
+			}
+		});
+		$(thatTreeController.settings.treeAndPropsSelector).on("dblclick", thatTreeController.settings.treeRootElementSelector,function(e) {
+			var target = $(e.target);
+			if (target.hasClass("jstree-anchor") || target.hasClass("node-type")){
+				var id = target.parents("li:first").attr("id");
+				thatTreeController.openRenameNodeDialog(id);
+			}
+		});
+		if (thatTreeController.settings.treeSelector != null) {
+			$(thatTreeController.settings.treeSelector+" .tree-info-icon").on("click", function(e, data) {
+				console.log($(thatTreeController.settings.treeSelector+' .info-content-container').parentsUntil("body"));
+				$(thatTreeController.settings.treeSelector+' .info-content-container').slideToggle();
+			});
+			$(thatTreeController.settings.treeSelector+" .info-content-container .close").on("click", function(e, data) {
+				console.log($(thatTreeController.settings.treeSelector+' .info-content-container').parentsUntil("body"));
+				$(thatTreeController.settings.treeSelector+' .info-content-container').slideToggle();
+			});
+		}
+	}
 
 	TreeController.prototype.configureKeyListeners = function(e) {
     	// see http://www.javascripter.net/faq/keycodes.htm
@@ -129,7 +135,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 
 	TreeController.prototype.openRenameNodeDialog = function(id) {
 		var liElement = $('#'+id);
-		$("#tree").jstree("edit", $('#'+id), this.mainController.decodeFromHTML(liElement.attr("nodename")));
+		$(this.settings.treeAndPropsSelector).jstree("edit", $('#'+id), this.mainController.decodeFromHTML(liElement.attr("nodename")));
 	}
 	
 	TreeController.prototype.renameNode = function(e, data) {
@@ -176,7 +182,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 	}
 
 	TreeController.prototype.getPathFromLi = function(li){
-		var path = $(li).parentsUntil(".root").andSelf().map(
+		var path = $(li).parentsUntil(this.settings.treeAndPropsSelector).andSelf().map(
 				function() {
 					return this.tagName == "LI"
 							? $(this).attr("nodename") 
@@ -199,12 +205,12 @@ org.apache.sling.reseditor.TreeController = (function() {
 		if (pathElementLi.length === 0){
 			alert("Couldn't find "+pathElementName+" under the path "+this.getPathFromLi(root.parent()));
 		} else {
-			$('#tree').jstree('open_node', pathElementLi,
+			$(this.settings.treeAndPropsSelector).jstree('open_node', pathElementLi,
 					function(){
 						if (paths.length>0){
 							thisTreeController.openElement($("#"+pathElementLi.attr('id')).children("ul"), paths);
 						} else  {
-							$('#tree').jstree('select_node', pathElementLi.attr('id'), 'true');
+							$(thisTreeController.settings.treeAndPropsSelector).jstree('select_node', pathElementLi.attr('id'), 'true');
 					        var target = $('#'+pathElementLi.attr('id')+' a:first');
 					        target.focus();
 						}
@@ -217,13 +223,14 @@ org.apache.sling.reseditor.TreeController = (function() {
 		var path = this.getPathFromLi(li);
 		path = this.mainController.decodeFromHTML(path);
 		path = this.mainController.encodeURL(path);
-		return this.settings.contextPath+"/reseditor"+path+extension;
+		var rootPath = this.settings.rootPath == null ? "" : this.settings.rootPath ; 
+		return this.settings.contextPath+"/reseditor"+rootPath+path+extension;
 	}
 
 	TreeController.prototype.deleteNodes = function() {
 		var thatTreeController = this;
 		var lastDeletedLI;
-		var selectedIds = $("#tree").jstree('get_selected');
+		var selectedIds = $(this.settings.treeAndPropsSelector).jstree('get_selected');
 		var firstId = selectedIds[0];
 		var parentLi = $('#'+firstId).parents('li');
 		var parentPath = this.getURLEncodedPathFromLi(parentLi);
@@ -245,7 +252,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 			        	  type: 'POST',
 						  url: parentPath,
 			        	  success: function(server_data) {
-							var tree = $('#tree').jstree(true);
+							var tree = $(thatTreeController.settings.treeAndPropsSelector).jstree(true);
 							for (var i=0; i<selectedIds.length; i++){
 								var id = selectedIds[i];
 								tree.delete_node(id);
@@ -280,7 +287,7 @@ org.apache.sling.reseditor.TreeController = (function() {
 					  url: encodedResourcePathToDelete,
 		        	  success: function(server_data) {
 		        		var id = li.attr("id");
-						var tree = $('#tree').jstree(true);
+						var tree = $(thatTreeController.settings.treeAndPropsSelector).jstree(true);
 						tree.delete_node(id);
 		      		  },
 		        	  error: function(errorJson) {

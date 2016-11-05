@@ -160,7 +160,7 @@ body
 	width: 200px;
 }
 
-#tree
+.tree-and-props
 {
     overflow: auto;
     height: 100%;
@@ -204,14 +204,14 @@ body
     clear: both
 }
 
-#tree a, #tree :visited, #tree :link {
+.tree-and-props a, .tree-and-props :visited, .tree-and-props :link {
 	border:1px solid transparent; 
 	padding:0px 1px;
 	font-family: arial, helvetica, sans-serif, times;
 	color: @textColor
 }
 
-#tree .jstree-hovered, #tree .jstree-hovered.jstree-clicked { 
+.tree-and-props .jstree-hovered, .tree-and-props .jstree-hovered.jstree-clicked{ 
 	.plate-selected-text-shadow;
 	color: #FFF;
 	background: transparent; 
@@ -291,8 +291,9 @@ body
   box-shadow: none;
 }
 
-#tree .jstree-clicked 
+.tree-and-props .jstree-clicked, #page-script-chooser-row .files>tr:hover 
 {
+	.rounded;
 	background: @selectedBackground; 
 	border:1px solid black; 
 	padding:0px 1px;
@@ -373,4 +374,14 @@ input.jstree-rename-input{
 
 #properties-info-icon {
 	margin-top: 5px;
+}
+
+#page-script-chooser-row {
+	.rounded;
+	border: 1px solid @textColor;
+	margin: 10px;
+}
+
+#page-script-chooser-row .table > tbody > tr > td {
+    border-top: 0;
 }

@@ -52,30 +52,34 @@ $(document).ready(function() {
 	
 	// TO CREATE AN INSTANCE
 	// select the tree container using jQuery
-	$("#tree")
+	$(thisJSTreeAdapter.treeController.settings.treeAndPropsSelector)
 	.bind("loaded.jstree", function (event, data) {
-		var pathElements = treeController.getPathElements(settings.resourcePath);
-		
-		if (pathElements.length >= 1 && pathElements[0] != "") {
-			treeController.openElement($("#tree > ul > li[nodename=''] > ul"), pathElements);
+		if (thisJSTreeAdapter.treeController.settings.rootPath == null) {
+			var pathElements = treeController.getPathElements(settings.resourcePath);
+			if (pathElements.length >= 1 && pathElements[0] != "") {
+				treeController.openElement($(thisJSTreeAdapter.treeController.settings.treeAndPropsSelector+" > ul > li[nodename=''] > ul"), pathElements);
+			}
 		}
 		
 		// position the info-icon
-		$('#tree-info-icon').show();
-		$('#root i:first').before($('#tree-info-icon'));
+		if (thisJSTreeAdapter.treeController.settings.treeSelector != null) {
+			$(thisJSTreeAdapter.treeController.settings.treeRootElementSelector+' i:first').before($('.tree-info-icon:last').clone().show());
+			thisJSTreeAdapter.treeController.initTreeEvents();
+		}
 	})
 	// call `.jstree` with the options object
 	.jstree({
 		"core"      : {
 		    "check_callback" : true,
-		    multiple: true,
+		    multiple: thisJSTreeAdapter.treeController.settings.multipleSelection == null ? true : thisJSTreeAdapter.treeController.settings.multipleSelection,
 			animation: 600,
 			'dblclick_toggle': false,
 			'data' : {
 				'url' : function (liJson) {
 					// initial call for the root element
 					if (liJson.id === '#'){
-						return settings.contextPath+"/reseditor/.rootnodes.json";
+						var rootPath = thisJSTreeAdapter.treeController.settings.rootPath == null ? "/" : thisJSTreeAdapter.treeController.settings.rootPath;
+						return settings.contextPath+"/reseditor"+rootPath+".rootnodes.json";
 					} else {
 						// the li the user clicked on.
 						var li = $('#'+liJson.id);
@@ -159,12 +163,17 @@ $(document).ready(function() {
     }).on('keydown.jstree', 'a.jstree-anchor', function (e) {
     	treeController.configureKeyListeners(e);
     }).on('select_node.jstree', function (e, data) {
-    	//noop
-    	;
+    	if (thisJSTreeAdapter.treeController.settings.selectCallback != null) {
+    		thisJSTreeAdapter.treeController.settings.selectCallback(e, data);
+    	}
     }).on('after_open.jstree', function(e, data){
     	treeController.afterOpen(data.node);
     }).on('close_node.jstree', function(e, data){
     	treeController.beforeClose(data.node);
+    }).on('ready.jstree', function(e, data){
+    	if (thisJSTreeAdapter.treeController.settings.readyCallback != null) {
+    		thisJSTreeAdapter.treeController.settings.readyCallback(e, data);
+    	}
     });
 });
 

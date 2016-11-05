@@ -8,21 +8,145 @@
 <sling:defineObjects />
 			<div id="node-content" class="col-sm-8">
 				<c:set var="scriptResource" scope="request" value="${sling:getResource(resourceResolver,sling:getResource(resourceResolver,resource.path).resourceType)}"/>
-				<% Resource theResource = (Resource) request.getAttribute("scriptResource");%>
-				<c:set var="isWebPage" value="<%=theResource != null ? theResource.isResourceType("sling/web-page") : false %>"/>
+				<% 
+				Resource scriptResourceReqAttr = (Resource) request.getAttribute("scriptResource");
+				boolean hasScriptResource = scriptResourceReqAttr != null;
+				%>
+				<%--
+				Has to inherit from sling/resource-editor/node-content and has to have a "name" string property
+				When should it be displayed as active?
+				 --%>
+				<c:set var="isWebPage" value="<%=hasScriptResource ? scriptResourceReqAttr.isResourceType("sling/web-page") : false %>"/>
 			    <c:if test="${isWebPage}">
 					<ul id="content-tabs" class="nav nav-pills" role="tablist">
 					    <li role="presentation" class="active"><a href="#page-editor" aria-controls="page-editor" role="tab" data-toggle="pill">Web Page Editor</a></li>
 					    <li role="presentation"><a href="#page-preview" aria-controls="page-preview" role="tab" data-toggle="pill">Page Preview</a></li>
+					    <li role="presentation"><a href="#resource-type-editor" aria-controls="resource-type-editor" role="tab" data-toggle="pill">Resource Type Editor</a></li>
 					    <li role="presentation"><a href="#properties" aria-controls="properties" role="tab" data-toggle="pill">Properties</a></li>
 					</ul>
 			    </c:if>
+			    <c:if test="${!isWebPage}">
+					<ul id="content-tabs" class="nav nav-pills" role="tablist">
+					    <li role="presentation" class="active"><a href="#properties" aria-controls="properties" role="tab" data-toggle="pill">Properties</a></li>
+					    <li role="presentation"><a href="#resource-type-editor" aria-controls="resource-type-editor" role="tab" data-toggle="pill">Resource Type Editor</a></li>
+					</ul>
+				</c:if>
 				<div id="outer_content" class="plate">
 					<div class="ie9filter-plate-div">
 						<div id="inner_content_margin" class="full-height">
 							<div class="row full-height" >
 								<div class="col-sm-12 full-height" >
 									<div class="tab-content full-height" >
+									<%-- TODO: move the resource-type-editor to the Sitebuilder project --%>
+									    <div style="color: #c0c0c0;" role="tabpanel" class="tab-pane" id="resource-type-editor">
+											<script type="text/javascript">
+											var superTypeTreeController = null;
+											var selectedScriptResourcePath = "";
+											var scriptFileChooser = null;
+											function selectCallback(e, data) {
+												// https://www.jstree.com/api/#/?q=.jstree%20Event&f=select_node.jstree
+												var id = data.selected[0];
+												var li = $('#'+id);
+												var selectedPath = superTypeTreeController.get_uri_from_li(li,".json");
+												
+												scriptFileChooser.setSelectedScriptResourcePath($('#'+id+" .node-type:first").text());
+												
+												$.getJSON(selectedPath).done(function(propertyJson) {
+														$('#page-script-chooser-row .files').empty();
+														for (var key in propertyJson) { 
+															$('#page-script-chooser-row .files').append("<tr><td>"+key+"</td></tr>");
+														}
+													}).fail(function(data) {
+														superTypeTreeController.mainController.displayAlertHtml(data.responseText);
+													});
+											};
+											var superTypeTreeControllerSettings = {
+													contextPath : "<%= request.getContextPath() %>",
+													treeAndPropsSelector: "#resource-super-type-tree-and-props",
+													treeSelector: null,
+													treeRootElementSelector: "#resource-super-type-tree-and-props .root-element",
+													rootPath:"/apps/inheritedresources",
+													multipleSelection: false,
+													selectCallback: selectCallback,
+													readyCallback: pageScriptChooserReady
+											};
+											superTypeTreeController = new org.apache.sling.reseditor.TreeController(superTypeTreeControllerSettings, mainController);
+
+											function pageScriptChooserReady(){
+												scriptFileChooser = new org.apache.sling.sitebuilder.Scriptfilechooser(selectedScriptResourcePath); 
+
+												// TODO: Use this page as an editor for the resource type.
+// 												var pathElements = superTypeTreeController.getPathElements("/com/lux-car-rental");
+// 												if (pathElements.length >= 1 && pathElements[0] != "") {
+// 													superTypeTreeController.openElement($(superTypeTreeControllerSettings.treeAndPropsSelector+" .root-element > ul"), pathElements);
+// 												}
+											};
+											
+											var superTypesTreeAdapterSettings = {
+													resourcePath : "${resource.path}",
+													requestURI: "${pageContext.request.requestURI}",
+													contextPath: "<%= request.getContextPath() %>",
+													resolutionPathInfo: "${resource.resourceMetadata['sling.resolutionPathInfo']}"
+											};
+											new org.apache.sling.reseditor.JSTreeAdapter(superTypesTreeAdapterSettings, superTypeTreeController, mainController);
+
+											</script>	
+											<div class="row">
+												<div id="sidebar-col" class="col-sm-12">
+													<h5>Script to copy and overwrite</h5>
+												</div>
+											</div>
+											<div id="page-script-chooser-row" class="row">
+												<div id="sidebar-col" class="col-sm-8">
+													<div id="resource-super-type-tree" class="">
+														<div class="ie9filter-plate-div">
+															<div id="resource-super-type-tree-and-props" class="root tree-and-props" ></div>
+														</div>
+													</div>
+												</div>
+												<div class="col-sm-4">
+													<div class="file-props-container">
+														<table class="table table-hover">
+															<thead>
+																<tr>
+																	<th>Filename:</th>
+																</tr>
+															</thead>
+															<tbody class="files">
+															</tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+											<div id="selected-script-path-row" class="row">
+												<form method="post" action="<%= request.getRequestURL() %>" enctype="multipart/form-data">
+													<div class="col-sm-12">
+														<div class="form-group">
+														    <label for="resourceSuperType">Resource super type:</label>
+														    <input type="text" class="form-control" id="resourceSuperType" name="resourceSuperType" readonly>
+														</div>
+														<div class="form-group">
+														    <label for="resourceType">Resource Type:</label>
+														    <input type="text" class="form-control" id="resourceType" name="resourceType" >
+														</div>
+														<div class="form-group">
+														    <label for="selectedScriptFilePath">Resource super type script to overwrite:</label>
+														    <input type="text" class="form-control" id="selectedScriptFilePath" name="selectedScriptFilePath" readonly>
+														</div>
+														<div>'Create new script' does the following:
+															<ol>
+																<li>Creates the specified resource type</li>
+																<li>Assigns the specified resource super type to the resource type</li>
+																<li>Copies the specified script to the resource type to overwrite it from the resource super type</li>
+															</ol> 
+														</div>
+														<input type="hidden" name=":operation" value="edit-resource-type">
+														<input type="hidden" name="_charset_" value="utf-8">
+														<button type="submit" class="btn btn-default">Create new script</button>
+													</div>
+												</form>
+											</div>
+										</div>
 									    <div role="tabpanel" class="tab-pane ${isWebPage ? 'active' : ''} full-height" id="page-editor">
 									    	<a href="/pageeditor${resource.path}.main.html" target="_blank">
 											  	<span id="open-new-window" class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
@@ -39,7 +163,7 @@
 									    	</a>
 									    	<iframe id="iframe" src="${resource.path}.html" allowtransparency="true" frameborder="0" height="100%" width="100%" style="height: 500px;background:none transparent;-webkit-border-radius:7px;-moz-border-radius: 7px;border-radius: 7px; border: 3px solid black"></iframe>
 										</div>
-									    <div role="tabpanel" class="tab-pane ${!isWebPage ? 'active' : ''}" id="properties">
+									    <div role="tabpanel" class="tab-pane ${!isWebPage && !showPageChooser ? 'active' : ''}" id="properties">
 											<div style="display: none;" class="info-content-container" >
 												<div class="well well-sm info-content">
 													<button type="button" class="close"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>

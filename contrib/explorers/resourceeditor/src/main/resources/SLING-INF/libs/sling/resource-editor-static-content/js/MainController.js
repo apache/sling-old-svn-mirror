@@ -157,13 +157,13 @@ org.apache.sling.reseditor.MainController = (function() {
 		var alert_height = $("#alerts").outerHeight(true);
 		var content_tab_height = $("#content-tabs").outerHeight(true);
 		var footer_height = $("#footer").outerHeight(true);
-		var sidebar_margin = $("#sidebar").outerHeight(true)-$("#sidebar").outerHeight(false);
+		var tree_margin = $("#tree").outerHeight(true)-$("#tree").outerHeight(false);
 		var mainrow_margin = $("#main-row").outerHeight(true)-$("#main-row").outerHeight(false);
-		var usable_height = $(window).height() - login_height - header_height - alert_height - sidebar_margin - mainrow_margin - 15;
+		var usable_height = $(window).height() - login_height - header_height - alert_height - tree_margin - mainrow_margin - 15;
 		
 	// activate again if the footer is needed	
-//	 	var usable_height = $(window).height() - header_height - footer_height - sidebar_margin - 1;
-		$("#sidebar").height( usable_height );
+//	 	var usable_height = $(window).height() - header_height - footer_height - tree_margin - 1;
+		$("#tree").height( usable_height );
 		$("#outer_content").height( usable_height-content_tab_height );
 	}
 
