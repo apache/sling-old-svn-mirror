@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -73,6 +74,35 @@ abstract class ConfigUtil {
         return keys;
     }
 
+    /**
+     * Convert the object to an array
+     * @param value The array
+     * @return an object array
+     */
+    private static Object[] convertToObjectArray(final Object value) {
+        final Object[] values;
+        if (value instanceof long[]) {
+            values = ArrayUtils.toObject((long[])value);
+        } else if (value instanceof int[]) {
+            values = ArrayUtils.toObject((int[])value);
+        } else if (value instanceof double[]) {
+            values = ArrayUtils.toObject((double[])value);
+        } else if (value instanceof byte[]) {
+            values = ArrayUtils.toObject((byte[])value);
+        } else if (value instanceof float[]) {
+            values = ArrayUtils.toObject((float[])value);
+        } else if (value instanceof short[]) {
+            values = ArrayUtils.toObject((short[])value);
+        } else if (value instanceof boolean[]) {
+            values = ArrayUtils.toObject((boolean[])value);
+        } else if (value instanceof char[]) {
+            values = ArrayUtils.toObject((char[])value);
+        } else {
+            values = (Object[]) value;
+        }
+        return values;
+    }
+
     /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */
     public static boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) {
         boolean result = false;
@@ -85,8 +115,8 @@ abstract class ConfigUtil {
                     final Object valA = a.get(key);
                     final Object valB = b.get(key);
                     if ( valA.getClass().isArray() ) {
-                        final Object[] arrA = (Object[])valA;
-                        final Object[] arrB = (Object[])valB;
+                        final Object[] arrA = convertToObjectArray(valA);
+                        final Object[] arrB = convertToObjectArray(valB);
 
                         if ( arrA.length != arrB.length ) {
                             result = false;
