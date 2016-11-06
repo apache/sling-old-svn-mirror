@@ -19,13 +19,13 @@
 package org.apache.sling.installer.factories.configuration.impl;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -80,25 +80,9 @@ abstract class ConfigUtil {
      * @return an object array
      */
     private static Object[] convertToObjectArray(final Object value) {
-        final Object[] values;
-        if (value instanceof long[]) {
-            values = ArrayUtils.toObject((long[])value);
-        } else if (value instanceof int[]) {
-            values = ArrayUtils.toObject((int[])value);
-        } else if (value instanceof double[]) {
-            values = ArrayUtils.toObject((double[])value);
-        } else if (value instanceof byte[]) {
-            values = ArrayUtils.toObject((byte[])value);
-        } else if (value instanceof float[]) {
-            values = ArrayUtils.toObject((float[])value);
-        } else if (value instanceof short[]) {
-            values = ArrayUtils.toObject((short[])value);
-        } else if (value instanceof boolean[]) {
-            values = ArrayUtils.toObject((boolean[])value);
-        } else if (value instanceof char[]) {
-            values = ArrayUtils.toObject((char[])value);
-        } else {
-            values = (Object[]) value;
+        final Object[] values = new Object[Array.getLength(value)];
+        for(int i=0;i<values.length;i++) {
+            values[i] = Array.get(value, i);
         }
         return values;
     }

@@ -48,18 +48,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            !org.apache.commons.lang3.builder,
-                            !org.apache.commons.lang3.math,
-                            !org.apache.commons.lang3.mutable,
-                            *
-                        </Import-Package>
                         <Bundle-Activator>
                             org.apache.sling.installer.factories.configuration.impl.Activator
                         </Bundle-Activator>
-                        <Embed-Dependency>
-                            commons-lang3;inline="org/apache/commons/lang3/ArrayUtils.*"
-                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -88,12 +79,6 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.cm</artifactId>
             <version>1.5.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
