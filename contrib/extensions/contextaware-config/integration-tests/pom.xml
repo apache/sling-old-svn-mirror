@@ -152,13 +152,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.caconfig.spi</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.caconfig.impl</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
