@@ -1,0 +1,6 @@
+DeleteUser userB
+CreateUser userB
+CreateUser userC (with password)
+CreateUser userD (with encoded password)
+CreateUser userE (with encoded password)
+CreateUser one_with-more-chars.ok:/123456 (with encoded password)

@@ -23,4 +23,6 @@ RegisterNodetypes:
  [slingevent:Event] > nt:unstructured, nt:hierarchyNode
       - slingevent:topic (string)
       - slingevent:properties (binary)
+CreateUser userE (with encoded password)
+CreateUser one_with-more-chars.ok:/123456 (with encoded password)
 CreateServiceUser the-last-one

@@ -69,9 +69,13 @@ TOKEN:
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
 |   < NAMESPACE: "namespace" >
+|   < WITH: "with" >
+|   < PASSWORD: "password" >
 |   < START_TEXTBLOCK: "<<===" > : TEXTBLOCK
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
+|   < LCURLY: "{" >
+|   < RCURLY: "}" >
 |   < COMMA: "," >
 |   < STAR: "*" >
 
@@ -105,6 +109,8 @@ List<Operation> parse() :
         | createPathStatement(result)
         | registerNamespaceStatement(result)
         | registerNodetypesStatement(result)
+        | createUserStatement(result)
+        | deleteUserStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -332,5 +338,37 @@ void registerNodetypesStatement(List<Operation> result) :
     (<EOL> | <EOF>)
     {
         result.add(new RegisterNodetypes(b.toString()));
+    }
+}
+
+void createUserStatement(List<Operation> result) :
+{
+    Token user = null;
+    Token encoding = null;
+    Token password = null;
+}
+{
+    <CREATE> <USER> 
+    ( user = <STRING> )
+    ( <WITH> <PASSWORD> ( <LCURLY> encoding = <STRING> <RCURLY> )? password = <STRING> )?
+    
+    {
+        result.add(new CreateUser(user.image, 
+            (encoding == null ? null : encoding.image), 
+            (password == null ? null : password.image)
+        ));
+    }
+}
+
+void deleteUserStatement(List<Operation> result) :
+{
+    Token user = null;
+}
+{
+    <DELETE> <USER> 
+    ( user = <STRING> )
+
+    {
+        result.add(new DeleteUser(user.image));
     }
 }

@@ -17,14 +17,23 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateUser(CreateUser u);
-    void visitDeleteUser(DeleteUser u);
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
-    void visitCreatePath(CreatePath cp);
-    void visitRegisterNamespace(RegisterNamespace rn);
-    void visitRegisterNodetypes(RegisterNodetypes b);
+public class DeleteUser extends Operation {
+    private final String username;
+
+    /** Operation that deletes a user.
+     * @param username the name of the user to delete
+     */
+    public DeleteUser(String username) {
+        this.username = username;
+    }
+
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitDeleteUser(this);
+    }
+
+    @Override
+    protected String getParametersDescription() {
+        return username;
+    }
 }
