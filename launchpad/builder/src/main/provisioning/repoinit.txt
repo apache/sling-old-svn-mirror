@@ -19,9 +19,9 @@
 [feature name=repoinit]
 
 [artifacts]
-  org.apache.sling/org.apache.sling.repoinit.parser/1.0.4
+  org.apache.sling/org.apache.sling.repoinit.parser/1.0.5-SNAPSHOT
   org.apache.sling/org.apache.sling.jcr.repoinit/1.0.3-SNAPSHOT
-  org.apache.sling/org.apache.sling.provisioning.model/1.4.4
+  org.apache.sling/org.apache.sling.provisioning.model/1.5.0
 
 [:repoinit]
     create path (sling:OrderedFolder) /content
