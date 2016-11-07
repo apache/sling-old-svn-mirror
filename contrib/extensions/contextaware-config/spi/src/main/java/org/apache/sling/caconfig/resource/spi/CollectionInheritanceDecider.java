@@ -18,10 +18,10 @@
  */
 package org.apache.sling.caconfig.resource.spi;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ConsumerType;
-
-import com.sun.istack.internal.NotNull;
 
 /**
  * The {@code CollectionInheritanceDecider} is an SPI which should be used by
@@ -41,6 +41,6 @@ public interface CollectionInheritanceDecider {
      * @param resource The resource
      * @return The decision.
      */
-    @NotNull InheritanceDecision decide(@NotNull Resource resource, @NotNull String bucketName);
+    @Nonnull InheritanceDecision decide(@Nonnull Resource resource, @Nonnull String bucketName);
 
 }
