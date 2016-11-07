@@ -50,4 +50,12 @@ public class CreateUser extends Operation {
         }
         return sb.toString();
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 }
