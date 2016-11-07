@@ -36,10 +36,11 @@ public interface CollectionInheritanceDecider {
     /**
      * Decide whether the provided resource should be included in the collection.
      * The provided resource can either be included, excluded or blocked.
+     * If the decider can't decide it must return {@code null}.
      *
      * @param bucketName The bucket name
      * @param resource The resource
-     * @return The decision.
+     * @return The decision or {@code null}
      */
     @Nonnull InheritanceDecision decide(@Nonnull Resource resource, @Nonnull String bucketName);
 

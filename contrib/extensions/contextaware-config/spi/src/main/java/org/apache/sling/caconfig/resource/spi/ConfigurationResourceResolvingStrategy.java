@@ -31,8 +31,10 @@ import org.osgi.annotation.versioning.ConsumerType;
  * This SPI allows application to define their own configuration storage and inheritance strategies.
  *
  * If this strategy supports inheritance for collections, it should use the optional
- * {@link CollectionInheritanceDecider} SPI interface. If such a service is available, it should
- * be called.
+ * {@link CollectionInheritanceDecider} SPI interface. If such services are available,
+ * they should be called in order of there service ranking, starting with the highest
+ * ranking. The first decider service providing a non null return value is used
+ * for the decision.
  */
 @ConsumerType
 public interface ConfigurationResourceResolvingStrategy {
