@@ -18,6 +18,7 @@
  */
 package org.apache.sling.caconfig.resource.spi;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
@@ -42,6 +43,6 @@ public interface CollectionInheritanceDecider {
      * @param resource The resource
      * @return The decision or {@code null}
      */
-    @Nonnull InheritanceDecision decide(@Nonnull Resource resource, @Nonnull String bucketName);
+    @CheckForNull InheritanceDecision decide(@Nonnull Resource resource, @Nonnull String bucketName);
 
 }
