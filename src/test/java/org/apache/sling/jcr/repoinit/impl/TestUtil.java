@@ -16,8 +16,10 @@
  */
 package org.apache.sling.jcr.repoinit.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.Reader;
@@ -40,24 +42,35 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
 /** Test utilities */
 public class TestUtil {
-    
+
     public static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
     public final Session adminSession;
     public final String id;
     public final String username;
-    
+
     public TestUtil(SlingContext ctx) {
         adminSession = ctx.resourceResolver().adaptTo(Session.class);
         id = UUID.randomUUID().toString();
         username = "user_" + id;
     }
-    
+
     public List<Operation> parse(String input) throws RepoInitParsingException {
         final Reader r = new StringReader(input);
         try {
             return new RepoInitParserService().parse(r);
         } finally {
             IOUtils.closeQuietly(r);
+        }
+    }
+
+    public void assertUser(String info, String id, boolean expectToExist) throws RepositoryException {
+        final Authorizable a = UserUtil.getUserManager(adminSession).getAuthorizable(id);
+        if(!expectToExist) {
+            assertNull(info + ", expecting Principal to be absent:" + id, a);
+        } else {
+            assertNotNull(info + ", expecting Principal to exist:" + id, a);
+            final User u = (User)a;
+            assertFalse(info + ", expecting Principal to be a plain user:" + id, u.isSystemUser());
         }
     }
 
@@ -68,14 +81,14 @@ public class TestUtil {
         } else {
             assertNotNull(info + ", expecting Principal to exist:" + id, a);
             final User u = (User)a;
-            assertNotNull(info + ", expecting Principal to be a System user:" + id, u.isSystemUser());
+            assertTrue(info + ", expecting Principal to be a System user:" + id, u.isSystemUser());
         }
     }
-    
+
     public void assertNodeExists(String path) throws RepositoryException {
         assertNodeExists(path, null);
     }
-    
+
     public void assertNodeExists(String path, String primaryType) throws RepositoryException {
         if(!adminSession.nodeExists(path)) {
             fail("Node does not exist:" + path);
@@ -91,31 +104,31 @@ public class TestUtil {
             }
         }
     }
-    
+
     public void parseAndExecute(String input) throws RepositoryException, RepoInitParsingException {
         final JcrRepoInitOpsProcessorImpl p = new JcrRepoInitOpsProcessorImpl();
         p.apply(adminSession, parse(input));
         adminSession.save();
     }
-    
+
     public void cleanupUser() throws RepositoryException, RepoInitParsingException {
         parseAndExecute("delete service user " + username);
         assertServiceUser("in cleanupUser()", username, false);
     }
-    
+
     public Session loginService(String serviceUsername) throws RepositoryException {
         final SimpleCredentials cred = new SimpleCredentials(serviceUsername, new char[0]);
         return adminSession.impersonate(cred);
     }
-    
+
     public Session getAdminSession() {
         return adminSession;
     }
-    
+
     public void cleanup() {
         adminSession.logout();
     }
-    
+
     public String getTestCndStatement(String nsPrefix, String nsURI) throws RepositoryException, RepoInitParsingException {
         return "register nodetypes\n"
                 + "<<===\n"
@@ -123,7 +136,7 @@ public class TestUtil {
                 + "===>>\n"
         ;
     }
-    
+
     public String getTestCND(String nsPrefix, String nsURI) {
         return "<" + nsPrefix + "='" + nsURI + "'>\n"
                 + "[" + nsPrefix + ":foo] > nt:unstructured\n";
