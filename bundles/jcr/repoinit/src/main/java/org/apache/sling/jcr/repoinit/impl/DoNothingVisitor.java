@@ -20,7 +20,9 @@ import javax.jcr.Session;
 
 import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
+import org.apache.sling.repoinit.parser.operations.CreateUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
+import org.apache.sling.repoinit.parser.operations.DeleteUser;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
 import org.apache.sling.repoinit.parser.operations.RegisterNodetypes;
@@ -65,6 +67,14 @@ class DoNothingVisitor implements OperationVisitor {
     public void visitDeleteServiceUser(DeleteServiceUser s) {
     }
 
+    @Override
+    public void visitCreateUser(CreateUser cu) {
+    }
+
+    @Override
+    public void visitDeleteUser(DeleteUser u) {
+    }
+    
     @Override
     public void visitSetAclPrincipal(SetAclPrincipals s) {
      }
