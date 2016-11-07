@@ -36,4 +36,8 @@ public class DeleteUser extends Operation {
     protected String getParametersDescription() {
         return username;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }
