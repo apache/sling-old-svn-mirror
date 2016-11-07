@@ -30,7 +30,7 @@
     create path (sling:Folder) /var/eventing
 
     set ACL for sling-event
-        allow   jcr:read,jcr:write    on /var/eventing
+        allow   jcr:read,rep:write    on /var/eventing
     end
 
 
