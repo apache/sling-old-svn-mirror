@@ -62,7 +62,7 @@ public class TestUtil {
     }
 
     public void assertServiceUser(String info, String id, boolean expectToExist) throws RepositoryException {
-        final Authorizable a = ServiceUserUtil.getUserManager(adminSession).getAuthorizable(id);
+        final Authorizable a = UserUtil.getUserManager(adminSession).getAuthorizable(id);
         if(!expectToExist) {
             assertNull(info + ", expecting Principal to be absent:" + id, a);
         } else {

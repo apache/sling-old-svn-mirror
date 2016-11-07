@@ -24,8 +24,8 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
-/** Utilities for Service Users management */
-public class ServiceUserUtil {
+/** Utilities for (Service) Users management */
+public class UserUtil {
 
     public static UserManager getUserManager(Session session) throws RepositoryException {
         if(!(session instanceof JackrabbitSession)) {
@@ -33,16 +33,16 @@ public class ServiceUserUtil {
         }
         return ((JackrabbitSession)session).getUserManager();
     }
-    
+
     public static Authorizable getAuthorizable(Session session, String username) throws RepositoryException {
         return getUserManager(session).getAuthorizable(username);
     }
-    
+
     /** Create a service user - fails if it already exists */
     public static void createServiceUser(Session s, String username) throws RepositoryException {
         getUserManager(s).createSystemUser(username, null);
     }
-    
+
     /** True if specified service user exists */
     public static boolean serviceUserExists(Session session, String username) throws RepositoryException {
         boolean result = false;
@@ -53,7 +53,31 @@ public class ServiceUserUtil {
         }
         return result;
     }
-    
+
+    public static void deleteUser(Session s, String username) throws RepositoryException {
+        final Authorizable a = getUserManager(s).getAuthorizable(username);
+        if(a == null) {
+            throw new IllegalStateException("Authorizable not found:" + username);
+        }
+        a.remove();
+    }
+
+    /** Create a service user - fails if it already exists */
+    public static void createUser(Session s, String username, String password) throws RepositoryException {
+        getUserManager(s).createUser(username, password);
+    }
+
+    /** True if specified user exists */
+    public static boolean serviceExists(Session session, String username) throws RepositoryException {
+        boolean result = false;
+        final Authorizable a = getAuthorizable(session, username);
+        if (a != null) {
+            final User u = (User)a;
+            result = !u.isSystemUser();
+        }
+        return result;
+    }
+
     public static void deleteServiceUser(Session s, String username) throws RepositoryException {
         final Authorizable a = getUserManager(s).getAuthorizable(username);
         if(a == null) {
@@ -61,5 +85,4 @@ public class ServiceUserUtil {
         }
         a.remove();
     }
-    
 }
