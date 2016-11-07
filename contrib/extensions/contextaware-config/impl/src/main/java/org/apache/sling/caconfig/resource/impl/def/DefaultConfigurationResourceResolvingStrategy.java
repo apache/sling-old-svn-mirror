@@ -51,10 +51,10 @@ import org.apache.sling.caconfig.resource.spi.InheritanceDecision;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.FieldOption;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -99,10 +99,10 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     @Reference
     private ContextPathStrategyMultiplexer contextPathStrategy;
 
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL,
-               policy=ReferencePolicy.DYNAMIC,
-               policyOption=ReferencePolicyOption.GREEDY)
-    private volatile CollectionInheritanceDecider collectionInheritanceDecider;
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC,
+            fieldOption=FieldOption.REPLACE)
+    private volatile List<CollectionInheritanceDecider> collectionInheritanceDeciders;
 
     Config getConfiguration() {
         return this.config;
@@ -328,18 +328,22 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
     }
 
-    private boolean include(final CollectionInheritanceDecider decider,
+    private boolean include(final List<CollectionInheritanceDecider> deciders,
             final String bucketName,
             final Resource resource,
             final Set<String> blockedItems) {
         boolean result = !blockedItems.contains(resource.getName());
-        if ( result && decider != null ) {
-            final InheritanceDecision decision = decider.decide(resource, bucketName);
-            if ( decision == InheritanceDecision.EXCLUDE ) {
-                result = false;
-            } else if ( decision == InheritanceDecision.BLOCK ) {
-                result = false;
-                blockedItems.add(resource.getName());
+        if ( result && deciders != null && !deciders.isEmpty() ) {
+            for(int i=deciders.size()-1;i>=0;i--) {
+                final InheritanceDecision decision = deciders.get(i).decide(resource, bucketName);
+                if ( decision == InheritanceDecision.EXCLUDE ) {
+                    result = false;
+                    break;
+                } else if ( decision == InheritanceDecision.BLOCK ) {
+                    result = false;
+                    blockedItems.add(resource.getName());
+                    break;
+                }
             }
         }
         return result;
@@ -358,7 +362,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final Map<String,Resource> result = new LinkedHashMap<>();
         final Map<String,Map<String,Object>> configValueMaps = new HashMap<>();
 
-        final CollectionInheritanceDecider decider = this.collectionInheritanceDecider;
+        final List<CollectionInheritanceDecider> deciders = this.collectionInheritanceDeciders;
         final Set<String> blockedItems = new HashSet<>();
 
         int idx = 1;
@@ -377,7 +381,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 for (Resource child : item.getChildren()) {
-                    if (isValidResourceCollectionItem(child) && include(decider, bucketName, child, blockedItems)) {
+                    if (isValidResourceCollectionItem(child) && include(deciders, bucketName, child, blockedItems)) {
                         if ((!inherit || inheritCollection) && !result.containsKey(child.getName())) {
                             result.put(child.getName(), child);
                             configValueMaps.put(child.getName(), child.getValueMap());
