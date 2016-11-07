@@ -334,7 +334,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             final Set<String> blockedItems) {
         boolean result = !blockedItems.contains(resource.getName());
         if ( result && decider != null ) {
-            final InheritanceDecision decision = decider.decide(bucketName, resource);
+            final InheritanceDecision decision = decider.decide(resource, bucketName);
             if ( decision == InheritanceDecision.EXCLUDE ) {
                 result = false;
             } else if ( decision == InheritanceDecision.BLOCK ) {
