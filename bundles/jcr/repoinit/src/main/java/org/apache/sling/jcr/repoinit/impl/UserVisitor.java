@@ -19,7 +19,9 @@ package org.apache.sling.jcr.repoinit.impl;
 import javax.jcr.Session;
 
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
+import org.apache.sling.repoinit.parser.operations.CreateUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
+import org.apache.sling.repoinit.parser.operations.DeleteUser;
 
 /** OperationVisitor which processes only operations related to
  *  service users and ACLs. Having several such specialized visitors
@@ -39,9 +41,9 @@ class UserVisitor extends DoNothingVisitor {
     public void visitCreateServiceUser(CreateServiceUser s) {
         final String id = s.getUsername();
         try {
-            if(!ServiceUserUtil.serviceUserExists(session, id)) {
+            if(!UserUtil.serviceUserExists(session, id)) {
                 log.info("Creating service user {}", id);
-                ServiceUserUtil.createServiceUser(session, id);
+                UserUtil.createServiceUser(session, id);
             } else {
                 log.info("Service user {} already exists, no changes made", id);
             }
@@ -55,9 +57,36 @@ class UserVisitor extends DoNothingVisitor {
         final String id = s.getUsername();
         log.info("Deleting service user {}", id);
         try {
-            ServiceUserUtil.deleteServiceUser(session, id);
+            UserUtil.deleteServiceUser(session, id);
         } catch(Exception e) {
             report(e, "Unable to delete service user [" + id + "]:" + e);
         }
     }
+
+    @Override
+    public void visitCreateUser(CreateUser u) {
+        final String id = u.getUsername();
+        try {
+            if(!UserUtil.serviceExists(session, id)) {
+                log.info("Creating user {}", id);
+                UserUtil.createUser(session, id, u.getPassword());
+            } else {
+                log.info("User {} already exists, no changes made", id);
+            }
+        } catch(Exception e) {
+            report(e, "Unable to create user [" + id + "]:" + e);
+        }
+    }
+
+    @Override
+    public void visitDeleteUser(DeleteUser u) {
+        final String id = u.getUsername();
+        log.info("Deleting user {}", id);
+        try {
+            UserUtil.deleteUser(session, id);
+        } catch(Exception e) {
+            report(e, "Unable to delete user [" + id + "]:" + e);
+        }
+    }
+
 }
