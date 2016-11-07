@@ -30,18 +30,20 @@ import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 @Component
 @Service(JcrRepoInitOpsProcessor.class)
 public class JcrRepoInitOpsProcessorImpl implements JcrRepoInitOpsProcessor {
-    
+
     /** Apply the supplied operations: first the namespaces and nodetypes
      *  registrations, then the service users, paths and ACLs.
      */
+    @Override
     public void apply(Session session, List<Operation> ops) {
-        
+
         final OperationVisitor [] visitors = {
                 new NamespacesVisitor(session),
                 new NodetypesVisitor(session),
-                new ServiceAndAclVisitor(session)
+                new UserVisitor(session),
+                new AclVisitor(session)
         };
-        
+
         for(OperationVisitor v : visitors) {
             for(Operation op : ops) {
                 op.accept(v);
