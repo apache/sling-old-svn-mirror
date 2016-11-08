@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -45,33 +46,36 @@ public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
         if ( !(jettyVersion instanceof String) ) {
             return Collections.emptyList();
         }
-        
-        URL entry = bundle.getEntry("/META-INF/maven/org.apache.felix/org.apache.felix.http.jetty/pom.xml");
-        
-        InputStream pom = null;
-        try {
-            pom = entry.openStream();
-            
+        Enumeration entries = bundle.findEntries("META-INF/maven", "pom.xml", true);
+        if (entries != null && entries.hasMoreElements()) {
+            URL entry = (URL)entries.nextElement();
+            InputStream pom = null;
             try {
-                SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-                SAXParser parser = parserFactory.newSAXParser();
-                PomHandler handler = new PomHandler((String) jettyVersion);
-                parser.parse(new InputSource(pom), handler);
+                pom = entry.openStream();
                 
-                return handler.getReferences();
-            } catch (SAXException e) {
-                throw new SourceReferenceException(e);
-            } catch (ParserConfigurationException e) {
+                try {
+                    SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+                    SAXParser parser = parserFactory.newSAXParser();
+                    PomHandler handler = new PomHandler((String) jettyVersion);
+                    parser.parse(new InputSource(pom), handler);
+                    
+                    return handler.getReferences();
+                } catch (SAXException e) {
+                    throw new SourceReferenceException(e);
+                } catch (ParserConfigurationException e) {
+                    throw new SourceReferenceException(e);
+                } finally {
+                    IOUtils.closeQuietly(pom);
+                }
+            } catch (IOException e) {
                 throw new SourceReferenceException(e);
             } finally {
                 IOUtils.closeQuietly(pom);
             }
-        } catch (IOException e) {
-            throw new SourceReferenceException(e);
-        } finally {
-            IOUtils.closeQuietly(pom);
+            
+        } else {
+            return Collections.emptyList();
         }
-
     }
 
 }
