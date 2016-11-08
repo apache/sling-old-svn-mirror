@@ -22,10 +22,12 @@ import java.io.Reader;
 import java.util.List;
 
 import org.apache.sling.repoinit.parser.operations.Operation;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * repoinit parser service interface
  */
+@ProviderType
 public interface RepoInitParser {
 
     /**
