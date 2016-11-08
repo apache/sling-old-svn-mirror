@@ -185,7 +185,7 @@ public abstract class OakServerTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
             // repoinit (temp)
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.0.3-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.0.4"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.0.5-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.4.4"),
             newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
