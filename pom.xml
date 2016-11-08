@@ -69,6 +69,15 @@
                     <exportScr>true</exportScr>
                  </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>
+                        org.apache.sling.jcr.repoinit.impl
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
