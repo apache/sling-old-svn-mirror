@@ -74,10 +74,10 @@ public class StartMojo extends AbstractMojo {
      */
     @Parameter
     private List<ServerConfiguration> servers;
-    
+
     /**
      * Overwrites debug parameter of all server configurations (if set).
-     * Attaches a debugger to the forked JVM. If set to {@code "true"}, the process will allow a debugger to connect on port 8000. 
+     * Attaches a debugger to the forked JVM. If set to {@code "true"}, the process will allow a debugger to connect on port 8000.
      * If set to some other string, that string will be appended to the server's {@code vmOpts}, allowing you to configure arbitrary debugging options.
      */
     @Parameter(property = "launchpad.debug")
@@ -402,7 +402,7 @@ public class StartMojo extends AbstractMojo {
 
         // If the current project is a slingstart project, use its JAR artifact
         if (this.project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART)) {
-            final File jarFile = new File(this.project.getBuild().getDirectory(), this.project.getBuild().getFinalName() + ".jar");
+            final File jarFile = project.getArtifact().getFile();
             if (jarFile.exists()) {
                 getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
                 return jarFile;
