@@ -76,7 +76,12 @@ public class PackageMojo extends AbstractSlingStartMojo {
             final Manifest mf = new Manifest(fis);
 
             // make sure this filename does not conflict with any other project artifacts (primary or secondary)
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".standalonelaunchpad.jar");
+            final File outputFile;
+            if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
+                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".jar");
+            } else {
+                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".standalonelaunchpad.jar");
+            }
 
             final JarArchiverHelper helper = new JarArchiverHelper(jarArchiver, this.project, outputFile, mf);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
@@ -107,7 +112,12 @@ public class PackageMojo extends AbstractSlingStartMojo {
 
             final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
             // make sure this filename does not conflict with any other project artifacts (primary or secondary)
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".webapplaunchpad.war");
+            final File outputFile;
+            if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
+                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".war");
+            } else {
+                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".webapplaunchpad.war");
+            }
 
             final JarArchiverHelper helper = new JarArchiverHelper(this.jarArchiver, this.project, outputFile);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
