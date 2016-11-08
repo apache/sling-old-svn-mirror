@@ -24,8 +24,14 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +49,11 @@ public class LayoutSwitcher implements ResourceDecorator {
 	private static final Logger LOG = LoggerFactory.getLogger(LayoutSwitcher.class);
 
 	private LayoutSwitcherConfiguation config;
+	
+	@Reference(cardinality = ReferenceCardinality.MANDATORY,
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY)
+	private volatile ResourceResolverFactory resourceResolverFactory;
 	
 	@Activate
 	public void activate(final LayoutSwitcherConfiguation config) {
@@ -76,8 +87,10 @@ public class LayoutSwitcher implements ResourceDecorator {
 		}
 			
 		if ( StringUtils.isNotBlank( scriptFolder) && StringUtils.isNotBlank(componentName)) {
+		
+			String resourceType = scriptFolder + "/" + componentName;
 			
-			if ( resource.getResourceResolver().getResource(scriptFolder + "/" + componentName) != null ) {
+			if (resourceTypeExist(resourceType) ) {
 				LayoutResource lr = new LayoutResource(resource);
 				lr.setSlingResourceType(scriptFolder + "/" + componentName);
 				
@@ -88,6 +101,23 @@ public class LayoutSwitcher implements ResourceDecorator {
 			}
 		}
 		return null;
+		
+	}
+	
+	private boolean resourceTypeExist(String resourceType) {
+		
+		ResourceResolver resolver = null;
+		try {
+			resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+			return resolver.getResource(resourceType) != null;
+		} catch (Exception e) {
+			return false;
+		} finally {
+			if ( resolver != null && resolver.isLive()) {
+				resolver.close();
+			}
+		}
+		
 		
 	}
 
