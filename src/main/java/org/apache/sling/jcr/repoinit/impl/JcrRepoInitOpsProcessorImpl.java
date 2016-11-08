@@ -20,15 +20,15 @@ import java.util.List;
 
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
+import org.osgi.service.component.annotations.Component;
 
-/** Apply Operations produced by the repoinit parser to a JCR Repository */
-@Component
-@Service(JcrRepoInitOpsProcessor.class)
+/**
+ * Apply Operations produced by the repoinit parser to a JCR Repository
+ */
+@Component(service = JcrRepoInitOpsProcessor.class)
 public class JcrRepoInitOpsProcessorImpl implements JcrRepoInitOpsProcessor {
 
     /** Apply the supplied operations: first the namespaces and nodetypes
