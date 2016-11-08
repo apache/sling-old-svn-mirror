@@ -58,4 +58,8 @@ public class CreateUser extends Operation {
     public String getPassword() {
         return password;
     }
+    
+    public String getPasswordEncoding() {
+        return passwordEncoding;
+    }
 }

@@ -55,7 +55,15 @@ class OperationToStringVisitor implements OperationVisitor {
 
     @Override
     public void visitCreateUser(CreateUser u) {
-        out.println(u.toString());
+        final StringBuilder sb = new StringBuilder();
+        sb.append(u.toString());
+        if(u.getPassword() != null) {
+            sb.append(", password=").append(u.getPassword());
+        }
+        if(u.getPasswordEncoding() != null) {
+            sb.append(", passwordEncoding=").append(u.getPasswordEncoding());
+        }
+        out.println(sb.toString());
     }
 
     @Override
