@@ -53,6 +53,16 @@ public class CreateUsersTest {
         U.assertUser("after deleting user", userId, false);
     }
 
+    @Test
+    public void createDeleteSingleWithPasswordTest() throws Exception {
+        final String userId = namePrefix + "_cdstpw";
+        U.assertUser("at start of test", userId, false);
+        U.parseAndExecute("create user " + userId + " with password mypw");
+        U.assertUser("after creating user", userId, true);
+        U.parseAndExecute("delete user " + userId);
+        U.assertUser("after deleting user", userId, false);
+    }
+
     private String user(int index) {
         return namePrefix + "_" + index;
     }
