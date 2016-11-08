@@ -73,7 +73,8 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
+            <!-- use the Java 7 compliant dependency: http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html -->
+            <version>4.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
