@@ -98,16 +98,20 @@ class PackageAdminClassLoader extends ClassLoader {
      * @param pckName The package name.
      * @return The bundle or <code>null</code>
      */
-    private Bundle findBundleForPackage(final String pckName) {
-        final ExportedPackage exportedPackage = this.packageAdmin.getExportedPackage(pckName);
-        Bundle bundle = null;
-        if (exportedPackage != null && !exportedPackage.isRemovalPending() ) {
-            bundle = exportedPackage.getExportingBundle();
-            if ( !this.isBundleActive(bundle) ) {
-                bundle = null;
+    private Set<Bundle> findBundlesForPackage(final String pckName) {
+        final ExportedPackage[] exportedPackages = this.packageAdmin.getExportedPackages(pckName);
+        Set<Bundle> bundles = new HashSet<>();
+        if (exportedPackages != null) {
+            for (ExportedPackage exportedPackage : exportedPackages) {
+                if (!exportedPackage.isRemovalPending()) {
+                    Bundle bundle = exportedPackage.getExportingBundle();
+                    if (isBundleActive(bundle)) {
+                        bundles.add(bundle);
+                    }
+                }
             }
         }
-        return bundle;
+        return bundles;
     }
 
     /**
@@ -123,7 +127,7 @@ class PackageAdminClassLoader extends ClassLoader {
 
     /**
      * Return the package from a class.
-     * @param resource The class name.
+     * @param name The class name.
      * @return The package name.
      */
     private String getPackageFromClassName(final String name) {
@@ -139,9 +143,11 @@ class PackageAdminClassLoader extends ClassLoader {
     public Enumeration<URL> getResources(final String name) throws IOException {
         Enumeration<URL> e = super.getResources(name);
         if ( e == null || !e.hasMoreElements() ) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
+            for (Bundle bundle : findBundlesForPackage(getPackageFromResource(name))) {
                 e = bundle.getResources(name);
+                if (e != null) {
+                    return e;
+                }
             }
         }
         return e;
@@ -157,11 +163,12 @@ class PackageAdminClassLoader extends ClassLoader {
         }
         URL url = super.findResource(name);
         if ( url == null ) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
+            Set<Bundle> bundles = findBundlesForPackage(getPackageFromResource(name));
+            for (Bundle bundle : bundles) {
                 url = bundle.getResource(name);
                 if ( url != null ) {
                     urlCache.put(name, url);
+                    return url;
                 }
             }
         }
@@ -180,10 +187,15 @@ class PackageAdminClassLoader extends ClassLoader {
         try {
             clazz = super.findClass(name);
         } catch (ClassNotFoundException cnfe) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-            if ( bundle != null ) {
-                clazz = bundle.loadClass(name);
-                this.factory.addUsedBundle(bundle);
+            Set<Bundle> bundles = findBundlesForPackage(getPackageFromClassName(name));
+            for (Bundle bundle : bundles) {
+                try {
+                    clazz = bundle.loadClass(name);
+                    this.factory.addUsedBundle(bundle);
+                    break;
+                } catch (ClassNotFoundException icnfe) {
+                    // do nothing; we need to loop over the bundles providing the class' package
+                }
             }
         }
         if ( clazz == null ) {
@@ -209,15 +221,14 @@ class PackageAdminClassLoader extends ClassLoader {
             clazz = super.loadClass(name, resolve);
         } catch (final ClassNotFoundException cnfe) {
             final String pckName = getPackageFromClassName(name);
-            final Bundle bundle = this.findBundleForPackage(pckName);
-            if ( bundle != null ) {
+            Set<Bundle> bundles = findBundlesForPackage(pckName);
+            for (Bundle bundle : bundles) {
                 try {
                     clazz = bundle.loadClass(name);
                     this.factory.addUsedBundle(bundle);
+                    break;
                 } catch (final ClassNotFoundException inner) {
-                    negativeClassCache.add(name);
-                    this.factory.addUnresolvedPackage(pckName);
-                    throw inner;
+                    // do nothing; we need to loop over the bundles providing the class' package
                 }
             }
         }
