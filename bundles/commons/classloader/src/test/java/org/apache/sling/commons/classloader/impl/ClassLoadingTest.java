@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
+import java.util.ArrayList;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -56,8 +58,8 @@ public class ClassLoadingTest {
             will(returnValue(null));
             allowing(bundleContext).addServiceListener(with(any(ServiceListener.class)), with(any(String.class)));
             allowing(bundleContext).removeServiceListener(with(any(ServiceListener.class)));
-            allowing(packageAdmin).getExportedPackage("org.apache.sling.test");
-            will(returnValue(ep));
+            allowing(packageAdmin).getExportedPackages("org.apache.sling.test");
+            will(returnValue(new ExportedPackage[] {ep}));
             allowing(ep).getExportingBundle();
             will(returnValue(bundle));
             allowing(ep).isRemovalPending();
@@ -83,5 +85,57 @@ public class ClassLoadingTest {
         // as we cache the result, we still get the map!
         final Class<?> c3 = cl.loadClass("org.apache.sling.test.A");
         Assert.assertEquals("java.util.Map", c3.getName());
+    }
+
+    @Test public void testLoading_SLING_6258() throws Exception {
+        final BundleContext bundleContext = this.context.mock(BundleContext.class);
+        final PackageAdmin packageAdmin = this.context.mock(PackageAdmin.class);
+        final ExportedPackage ep1 = this.context.mock(ExportedPackage.class, "ep1");
+        final ExportedPackage ep2 = this.context.mock(ExportedPackage.class, "ep2");
+        final Bundle bundle1 = this.context.mock(Bundle.class, "bundle1");
+        final Bundle bundle2 = this.context.mock(Bundle.class, "bundle2");
+        final ClassNotFoundException cnfe = new ClassNotFoundException();
+        this.context.checking(new Expectations() {{
+            allowing(bundleContext).createFilter(with(any(String.class)));
+            will(returnValue(null));
+            allowing(bundleContext).getServiceReferences(with(any(String.class)), with((String)null));
+            will(returnValue(null));
+            allowing(bundleContext).addServiceListener(with(any(ServiceListener.class)), with(any(String.class)));
+            allowing(bundleContext).removeServiceListener(with(any(ServiceListener.class)));
+            allowing(packageAdmin).getExportedPackages("org.apache.sling.test");
+            will(returnValue(new ExportedPackage[] {ep1, ep2}));
+
+            allowing(ep1).getExportingBundle();
+            will(returnValue(bundle1));
+            allowing(ep1).isRemovalPending();
+            will(returnValue(false));
+
+            allowing(ep2).getExportingBundle();
+            will(returnValue(bundle2));
+            allowing(ep2).isRemovalPending();
+            will(returnValue(false));
+
+            allowing(bundle1).getBundleId();
+            will(returnValue(2L));
+            allowing(bundle1).getState();
+            will(returnValue(Bundle.ACTIVE));
+
+
+            allowing(bundle2).getBundleId();
+            will(returnValue(3L));
+            allowing(bundle2).getState();
+            will(returnValue(Bundle.ACTIVE));
+
+            allowing(bundle1).loadClass("org.apache.sling.test.T1");
+            will(throwException(cnfe));
+
+            allowing(bundle2).loadClass("org.apache.sling.test.T1");
+            will(returnValue(ArrayList.class));
+
+        }});
+        DynamicClassLoaderManagerImpl manager = new DynamicClassLoaderManagerImpl(bundleContext, packageAdmin, null,
+                new DynamicClassLoaderManagerFactory(bundleContext, packageAdmin));
+        final ClassLoader cl = manager.getDynamicClassLoader();
+        Assert.assertEquals(ArrayList.class, cl.loadClass("org.apache.sling.test.T1"));
     }
 }
