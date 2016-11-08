@@ -41,6 +41,7 @@ import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -63,7 +64,7 @@ public class JVMDebuggerConnection {
 		this.launch = launch;
 		boolean success = false;
 		IVMConnector connector = null;
-		connector = JavaRuntime.getVMConnector("org.eclipse.jdt.launching.socketAttachConnector");
+		connector = JavaRuntime.getVMConnector(IJavaLaunchConfigurationConstants.ID_SOCKET_ATTACH_VM_CONNECTOR);
 		if (connector == null) {
 			connector = JavaRuntime.getDefaultVMConnector();
 		}
