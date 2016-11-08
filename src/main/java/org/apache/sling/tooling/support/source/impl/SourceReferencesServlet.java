@@ -41,6 +41,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,12 @@ public class SourceReferencesServlet extends HttpServlet {
             
             for ( Bundle bundle : ctx.getBundleContext().getBundles() ) {
 
+                // skip bundle if it is a fragment (http://stackoverflow.com/questions/11655295/using-the-osgi-api-how-do-i-find-out-if-a-given-bundle-is-a-fragment)
+                if ((bundle.adapt(BundleRevision.class).getTypes() & BundleRevision.TYPE_FRAGMENT) != 0) {
+                    log.debug("Skip bundle '{}' because it is a fragment", bundle);
+                    // source references should only be listed with the host bundle
+                    continue;
+                }
                 Object bundleVersion = bundle.getHeaders().get(Constants.BUNDLE_VERSION);
                 
                 w.object();
