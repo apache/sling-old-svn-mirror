@@ -64,7 +64,6 @@ public class PackageMojo extends AbstractSlingStartMojo {
     private void packageStandaloneApp(final Map<String, File> globalContentsMap) throws MojoExecutionException {
         this.getLog().info("Packaging standalone jar...");
 
-        final File buildDirectory = new File(this.project.getBuild().getDirectory());
         @SuppressWarnings("unchecked")
         final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_STANDALONE);
 
@@ -75,14 +74,7 @@ public class PackageMojo extends AbstractSlingStartMojo {
             fis = new FileInputStream(manifestFile);
             final Manifest mf = new Manifest(fis);
 
-            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
-            final File outputFile;
-            if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
-                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".jar");
-            } else {
-                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".standalonelaunchpad.jar");
-            }
-
+            final File outputFile = getBuildFile(".jar");
             final JarArchiverHelper helper = new JarArchiverHelper(jarArchiver, this.project, outputFile, mf);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
 
@@ -110,16 +102,10 @@ public class PackageMojo extends AbstractSlingStartMojo {
             @SuppressWarnings("unchecked")
             final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_WEBAPP);
 
-            final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
-            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
-            final File outputFile;
-            if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
-                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".war");
-            } else {
-                outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".webapplaunchpad.war");
-            }
+            final File outputFile = getBuildFile(".war");
 
             final JarArchiverHelper helper = new JarArchiverHelper(this.jarArchiver, this.project, outputFile);
+            final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
 
             helper.addArtifacts(globalContentsMap, "WEB-INF/");
@@ -129,5 +115,22 @@ public class PackageMojo extends AbstractSlingStartMojo {
 
             projectHelper.attachArtifact(project, BuildConstants.TYPE_WAR, BuildConstants.CLASSIFIER_WEBAPP, outputFile);
         }
+    }
+
+    /**
+     *
+     * @param isStandalone {@code true} if the standalone launchpad should be built, {@code false} if the webapp should be built.
+     * @return the absolute file name of the to be created artifact
+     */
+    private File getBuildFile(final String extension) {
+        final File buildDirectory = new File(this.project.getBuild().getDirectory());
+        final File buildFile;
+        if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
+            buildFile = new File(buildDirectory, this.project.getBuild().getFinalName() + extension);
+        } else {
+            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
+            buildFile = new File(buildDirectory, this.project.getBuild().getFinalName() + ".launchpad" + extension);
+        }
+        return buildFile;
     }
 }
