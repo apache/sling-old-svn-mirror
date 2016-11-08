@@ -29,10 +29,14 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public List<SourceReference> findSourceReferences(Bundle bundle) throws SourceReferenceException {
@@ -44,11 +48,12 @@ public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
             
         final Object jettyVersion = bundle.getHeaders().get("X-Jetty-Version");
         if ( !(jettyVersion instanceof String) ) {
+            log.warn("Could not retrieve Jetty version from bundle '{}' because header 'X-Jetty-Version' is not set!", bundle);
             return Collections.emptyList();
         }
-        Enumeration entries = bundle.findEntries("META-INF/maven", "pom.xml", true);
+        Enumeration<URL> entries = bundle.findEntries("META-INF/maven", "pom.xml", true);
         if (entries != null && entries.hasMoreElements()) {
-            URL entry = (URL)entries.nextElement();
+            URL entry = entries.nextElement();
             InputStream pom = null;
             try {
                 pom = entry.openStream();
@@ -74,6 +79,7 @@ public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
             }
             
         } else {
+            log.warn("Could not find a pom.xml in bundle '{}'!", bundle);
             return Collections.emptyList();
         }
     }
