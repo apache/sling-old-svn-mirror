@@ -22,15 +22,13 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.operations.Operation;
+import org.osgi.service.component.annotations.Component;
 
 /** ACL definitions parser service */
-@Component
-@Service(value=RepoInitParser.class)
+@Component(service=RepoInitParser.class)
 public class RepoInitParserService implements RepoInitParser {
 
     @Override
