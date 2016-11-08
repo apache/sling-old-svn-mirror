@@ -19,52 +19,49 @@ package org.apache.sling.jcr.repoinit.impl;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
 import org.apache.sling.jcr.repoinit.JcrRepoInitOpsProcessor;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.operations.Operation;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** SlingRepositoryInitializer that executes repoinit statements read
  *  from a configurable URL.
  */
-@Component(
-        label="Apache Sling Repository Initializer",
-        description="Initializes the JCR content repository using repoinit statements",
-        metatype=true)
-@Service(SlingRepositoryInitializer.class)
-@Properties({
-    // SlingRepositoryInitializers are executed in ascending
-    // order of their service ranking
-    @Property(name=Constants.SERVICE_RANKING, intValue=100)
-})
+@Designate(ocd = RepositoryInitializer.Config.class)
+@Component(service = SlingRepositoryInitializer.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            // SlingRepositoryInitializers are executed in ascending
+            // order of their service ranking
+            Constants.SERVICE_RANKING + ":Integer=100"
+    })
 public class RepositoryInitializer implements SlingRepositoryInitializer {
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(
-            label="Repoinit references",
+    @ObjectClassDefinition(name = "Apache Sling Repository Initializer",
+        description="Initializes the JCR content repository using repoinit statements")
+    public @interface Config {
+
+        @AttributeDefinition(name="Repoinit references",
             description=
                  "References to the source text that provides repoinit statements."
-                + " format is either model@repoinit:<provisioning model URL> or raw:<raw URL>"
-            ,
-            cardinality=Integer.MAX_VALUE,
-            value={})
-    public static final String PROP_REFERENCES = "references";
-    private String [] references;
+                + " format is either model@repoinit:<provisioning model URL> or raw:<raw URL>")
+        String[] references() default {};
+    }
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
 
     @Reference
     private RepoInitParser parser;
@@ -72,32 +69,17 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
     @Reference
     private JcrRepoInitOpsProcessor processor;
 
+    private Config config;
+
     @Activate
-    public void activate(Map<String, Object> config) {
-        warnForOldConfigParameters(config);
-        references = PropertiesUtil.toStringArray(config.get(PROP_REFERENCES), new String[]{});
+    public void activate(Config config) {
+        this.config = config;
         log.debug("Activated: {}", this.toString());
     }
 
-    /** Some config parameters are not used anymore as of V1.0.2, this logs
-     *  warnings if they are still used.
-     */
-    private void warnForOldConfigParameters(Map<String, Object> config) {
-        final String [] names = {
-                "text.url",
-                "text.format",
-                "model.section.name"
-        };
-        for(String name : names) {
-            if(config.containsKey(name)) {
-                log.warn("Configuration parameter '{}' is not used anymore, will be ignored", name);
-            }
-        }
-        }
-
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", references=" + Arrays.asList(references);
+        return getClass().getSimpleName() + ", references=" + Arrays.asList(config.references());
     }
 
     @Override
@@ -106,7 +88,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
         final Session s = repo.loginAdministrative(null);
         try {
             final RepoinitTextProvider p = new RepoinitTextProvider();
-            for(String reference : references) {
+            for(String reference : config.references()) {
                 final String repoinitText = p.getRepoinitText(reference);
                 final List<Operation> ops = parser.parse(new StringReader(repoinitText));
                 log.info("Executing {} repoinit operations", ops.size());

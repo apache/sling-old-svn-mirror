@@ -47,14 +47,14 @@ import org.junit.runners.Parameterized.Parameters;
 
 /** Test the two ways in which our RepositoryInitializer
  *  can read repoinit statements: either from a provisioning
- *  model file or directly as raw repoinit statements. 
+ *  model file or directly as raw repoinit statements.
  */
 @RunWith(Parameterized.class)
 public class RepositoryInitializerTest {
-    
+
     @Rule
     public final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
-    
+
     private RepositoryInitializer initializer;
     private Map<String, Object> config;
     private TestUtil U;
@@ -65,37 +65,37 @@ public class RepositoryInitializerTest {
     private final boolean testLogin;
     private final String serviceUser;
     private final Class<?> expectedActivateException;
-    
+
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
         final List<Object []> result = new ArrayList<Object[]>();
-        
+
         // Realistic cases
-        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), TextFormat.model.toString(), true, true, null }); 
+        result.add(new Object[] { "Using provisioning model", "SECTION_" + UUID.randomUUID(), TextFormat.model.toString(), true, true, null });
         result.add(new Object[] { "Default value of model section config", null, TextFormat.model.toString(), true, true, null });
-        result.add(new Object[] { "Raw repoinit/empty section", "", TextFormat.raw.toString(), false, true, null }); 
-        result.add(new Object[] { "Raw repoinit/ignored section name", "IGNORED_SectionName", TextFormat.raw.toString(), false, true, null }); 
-        
-        // Edge and failure cases 
+        result.add(new Object[] { "Raw repoinit/empty section", "", TextFormat.raw.toString(), false, true, null });
+        result.add(new Object[] { "Raw repoinit/ignored section name", "IGNORED_SectionName", TextFormat.raw.toString(), false, true, null });
+
+        // Edge and failure cases
         result.add(new Object[] { "All empty, just setup + parsing", "", TextFormat.raw.toString(), false, false, null });
         result.add(new Object[] { "Raw repoinit/null format", null, null, true, false, RepoInitParsingException.class });
         result.add(new Object[] { "With model/null format", null, null, false, false, RuntimeException.class });
-        result.add(new Object[] { "Invalid format", null, "invalidFormat", false, false, RuntimeException.class }); 
-        result.add(new Object[] { "Empty model section", "", TextFormat.model.toString(), false, false, IllegalArgumentException.class }); 
+        result.add(new Object[] { "Invalid format", null, "invalidFormat", false, false, RuntimeException.class });
+        result.add(new Object[] { "Empty model section", "", TextFormat.model.toString(), false, false, IllegalArgumentException.class });
         result.add(new Object[] { "Null model section", null, TextFormat.model.toString(), false, false, IOException.class });
-        
+
         return result;
     }
-    
-    public RepositoryInitializerTest(String description, String modelSection, String textFormat, 
+
+    public RepositoryInitializerTest(String description, String modelSection, String textFormat,
             boolean useProvisioningModel, boolean testLogin, Class<?> expectedException) throws IOException {
         serviceUser = getClass().getSimpleName() + "-" + UUID.randomUUID();
-        
-        String txt = "create service user " + serviceUser; 
+
+        String txt = "create service user " + serviceUser;
         if(useProvisioningModel && modelSection == null) {
-            txt = "[feature name=foo]\n[:repoinit]\n" + txt; 
+            txt = "[feature name=foo]\n[:repoinit]\n" + txt;
         } else if(useProvisioningModel) {
-            txt = "[feature name=bar]\n[:" + modelSection + "]\n" + txt; 
+            txt = "[feature name=bar]\n[:" + modelSection + "]\n" + txt;
         }
         this.repoInitText = txt + "\n";
         this.url = getTestUrl(repoInitText);
@@ -104,15 +104,12 @@ public class RepositoryInitializerTest {
         this.textFormat = textFormat;
         this.expectedActivateException = expectedException;
     }
-    
+
     @Before
     public void setup() throws Exception {
         U = new TestUtil(context);
 
-        initializer = new RepositoryInitializer();
-        config = new HashMap<String, Object>();
-        
-        String ref = null;
+        final String ref;
         if(TextFormat.model.toString().equals(textFormat)) {
             if(modelSection != null) {
                 ref = "model@" + modelSection + ":" + url;
@@ -122,15 +119,17 @@ public class RepositoryInitializerTest {
         } else {
             ref = "raw:" + url;
         }
-        
-        config.put(RepositoryInitializer.PROP_REFERENCES, new String[] { ref });
-        
+
+        initializer = new RepositoryInitializer();
+        config = new HashMap<String, Object>();
+        config.put("references", new String[] { ref });
+
         context.registerInjectActivateService(new RepoInitParserService());
         context.registerInjectActivateService(new JcrRepoInitOpsProcessorImpl());
-        
+
         try {
             context.registerInjectActivateService(initializer, config);
-            
+
             // Mock environment doesn't cause this to be called
             initializer.processRepository(context.getService(SlingRepository.class));
         } catch(Exception e) {
@@ -140,9 +139,9 @@ public class RepositoryInitializerTest {
                 fail("Got unexpected " + e.getClass().getName() + " in activation");
             }
         }
-        
+
     }
-    
+
     @Test
     public void testLogin() throws Exception {
         if(testLogin) {
@@ -153,7 +152,7 @@ public class RepositoryInitializerTest {
             }
         }
     }
-    
+
     /** Return the URL of a temporary file that contains repoInitText */
     private String getTestUrl(String repoInitText) throws IOException {
         final File tmpFile = File.createTempFile(getClass().getSimpleName(), "txt");
