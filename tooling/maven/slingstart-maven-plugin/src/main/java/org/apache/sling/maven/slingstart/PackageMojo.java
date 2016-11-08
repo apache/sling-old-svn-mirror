@@ -119,8 +119,8 @@ public class PackageMojo extends AbstractSlingStartMojo {
 
     /**
      *
-     * @param isStandalone {@code true} if the standalone launchpad should be built, {@code false} if the webapp should be built.
-     * @return the absolute file name of the to be created artifact
+     * @param extension the extension including the leading dot to be used for the file name.
+     * @return the absolute file name of the to be created artifact.
      */
     private File getBuildFile(final String extension) {
         final File buildDirectory = new File(this.project.getBuild().getDirectory());
