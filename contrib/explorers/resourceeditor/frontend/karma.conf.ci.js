@@ -3,7 +3,7 @@ module.exports = function(config) {
   config.set({
 	    runnerPort: 9999,
 	    singleRun: true,
-	    browsers: ['Chrome', 'Firefox', 'PhantomJS'],
+	    browsers: ['PhantomJS'],
 	    reporters: ["spec"],
 	    specReporter: {maxLogLines: 5},
 	    plugins : ['karma-jasmine', 'karma-phantomjs-launcher', 'karma-chrome-launcher', 'karma-firefox-launcher', 'karma-ie-launcher', 
