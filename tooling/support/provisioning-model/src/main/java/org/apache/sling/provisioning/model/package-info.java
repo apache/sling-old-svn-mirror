@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.7.0")
+@org.osgi.annotation.versioning.Version("1.8.0")
 package org.apache.sling.provisioning.model;
 
 

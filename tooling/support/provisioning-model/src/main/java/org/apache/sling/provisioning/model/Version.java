@@ -33,17 +33,19 @@ public class Version implements Comparable<Version> {
 	 */
 	public Version(final String version) {
 	    String parts[] = version.split("\\.");
-	    if ( parts.length > 3 ) {
+	    if ( parts.length > 4 ) {
 	        throw new IllegalArgumentException("Invalid version " + version);
 	    }
-	    final int pos = parts[parts.length - 1].indexOf('-');
-	    if ( pos != -1 ) {
-	        final String[] newParts = new String[4];
-	        newParts[0] = parts.length > 1 ? parts[0] : parts[0].substring(0, pos);
-            newParts[1] = parts.length > 2 ? parts[1] : (parts.length > 1 ? parts[1].substring(0, pos) : "0");
-            newParts[2] = parts.length > 3 ? parts[2] : (parts.length > 2 ? parts[2].substring(0, pos) : "0");
-            newParts[3] = parts[parts.length - 1].substring(pos + 1);
-            parts = newParts;
+	    if ( parts.length < 4) {
+    	    final int pos = parts[parts.length - 1].indexOf('-');
+    	    if ( pos != -1 ) {
+    	        final String[] newParts = new String[4];
+    	        newParts[0] = parts.length > 1 ? parts[0] : parts[0].substring(0, pos);
+                newParts[1] = parts.length > 2 ? parts[1] : (parts.length > 1 ? parts[1].substring(0, pos) : "0");
+                newParts[2] = parts.length > 3 ? parts[2] : (parts.length > 2 ? parts[2].substring(0, pos) : "0");
+                newParts[3] = parts[parts.length - 1].substring(pos + 1);
+                parts = newParts;
+    	    }
 	    }
 	    this.majorVersion = parseInt(parts[0], version);
 	    if ( parts.length > 1 ) {
@@ -57,10 +59,45 @@ public class Version implements Comparable<Version> {
             this.microVersion = 0;
         }
         this.qualifier = (parts.length > 3 ? parts[3] : "");
-
 	}
 
 	/**
+	 * Get the major version
+	 * @return The major version
+	 * @since 1.8.0
+	 */
+	public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    /**
+     * Get the major version
+     * @return The major version
+     * @since 1.8.0
+     */
+    public int getMinorVersion() {
+        return minorVersion;
+    }
+
+    /**
+     * Get the minor version
+     * @return The minor version
+     * @since 1.8.0
+     */
+    public int getMicroVersion() {
+        return microVersion;
+    }
+
+    /**
+     * Get the qualifier
+     * @return The qualifier, the qualifier might be the empty string.
+     * @since 1.8.0
+     */
+    public String getQualifier() {
+        return qualifier;
+    }
+
+    /**
 	 * Parse an integer.
 	 */
 	private static int parseInt(final String value, final String version) {
@@ -135,4 +172,12 @@ public class Version implements Comparable<Version> {
 		}
 		return result;
 	}
+
+    @Override
+    public String toString() {
+        return String.valueOf(this.majorVersion) + "."
+                + String.valueOf(this.minorVersion + "."
+                + String.valueOf(this.microVersion) +
+                (this.qualifier.length() == 0 ? "" : "." + this.qualifier));
+    }
 }
