@@ -86,4 +86,12 @@ public class VersionTest {
         assertTrue(va.compareTo(vb) < 0);
         assertTrue(vb.compareTo(va) > 0);
     }
+
+    @Test
+    public void testOSGiVersion() {
+        final Version v = new Version("1.5.2.SNAPSHOT");
+        assertEquals(1, v.getMajorVersion());
+        assertEquals(5, v.getMinorVersion());
+        assertEquals(2, v.getMicroVersion());
+    }
 }

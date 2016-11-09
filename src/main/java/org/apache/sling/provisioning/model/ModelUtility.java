@@ -174,7 +174,7 @@ public abstract class ModelUtility {
                 try {
                     new Version(feature.getVersion());
                 } catch ( final IllegalArgumentException iae) {
-                    errors.put(feature, "Version is not a valid version");
+                    errors.put(feature, "Version is not a valid version: " + feature.getVersion());
                 }
             }
             for(final RunMode runMode : feature.getRunModes()) {
