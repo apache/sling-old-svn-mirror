@@ -179,7 +179,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         return new TcclWrappingJackrabbitRepository((JackrabbitRepository) jcr.createRepository());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Dictionary<String, Object> getServiceRegistrationProperties() {
         return componentContext.getProperties();
