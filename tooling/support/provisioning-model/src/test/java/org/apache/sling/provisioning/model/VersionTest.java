@@ -93,5 +93,6 @@ public class VersionTest {
         assertEquals(1, v.getMajorVersion());
         assertEquals(5, v.getMinorVersion());
         assertEquals(2, v.getMicroVersion());
+        assertEquals("SNAPSHOT", v.getQualifier());
     }
 }
