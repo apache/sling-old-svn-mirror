@@ -30,11 +30,10 @@ import javax.jcr.Value;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * The <code>AbstractSlingRepository2</code> is an abstract implementation of
@@ -73,7 +72,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
 
     /** The bundle using this repository instance. */
     private final Bundle usingBundle;
-    
+
     /**
      * Sets up this abstract SlingRepository implementation.
      *
