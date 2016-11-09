@@ -17,7 +17,7 @@
 package org.apache.sling.provisioning.model;
 
 /**
- * Version object supporting Maven versions.
+ * Version object supporting Maven and OSGi versions.
  * @since 1.4
  */
 public class Version implements Comparable<Version> {
