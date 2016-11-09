@@ -205,8 +205,8 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     }
 
     @Override
-    protected LoginAdminWhitelist getLoginAdminWhitelist() {
-        return loginAdminWhitelist;
+    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
+        return loginAdminWhitelist.allowLoginAdministrative(bundle);
     }
 
     @Activate

@@ -21,10 +21,17 @@ package org.apache.sling.jcr.base;
 import org.osgi.framework.Bundle;
 
 /** Mock LoginAdminWhitelist */
-class MockLoginAdminWhitelist implements LoginAdminWhitelist {
+public class MockLoginAdminWhitelist implements LoginAdminWhitelist {
+
+    private boolean allowAll;
+
+    public MockLoginAdminWhitelist(final boolean allowAll) {
+        this.allowAll = allowAll;
+    }
+
     @Override
     public boolean allowLoginAdministrative(Bundle b) {
-        return true;
+        return allowAll;
     }
     
 }
