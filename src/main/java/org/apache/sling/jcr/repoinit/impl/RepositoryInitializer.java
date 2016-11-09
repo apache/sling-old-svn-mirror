@@ -79,7 +79,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", references=" + Arrays.asList(config.references());
+        return getClass().getSimpleName() + ", references=" + Arrays.toString(config.references());
     }
 
     @Override
