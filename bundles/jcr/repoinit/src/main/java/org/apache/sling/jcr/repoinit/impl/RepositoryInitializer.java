@@ -30,6 +30,7 @@ import org.apache.sling.repoinit.parser.operations.Operation;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 @Designate(ocd = RepositoryInitializer.Config.class)
 @Component(service = SlingRepositoryInitializer.class,
+    configurationPolicy=ConfigurationPolicy.REQUIRE,
     property = {
             Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
             // SlingRepositoryInitializers are executed in ascending
