@@ -30,6 +30,7 @@ import org.apache.sling.repoinit.parser.operations.Operation;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 @Designate(ocd = RepositoryInitializer.Config.class)
 @Component(service = SlingRepositoryInitializer.class,
+    configurationPolicy=ConfigurationPolicy.REQUIRE,
     property = {
             Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
             // SlingRepositoryInitializers are executed in ascending
@@ -84,19 +86,21 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
 
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
-        // loginAdministrative is ok here, definitely an admin operation
-        final Session s = repo.loginAdministrative(null);
-        try {
-            final RepoinitTextProvider p = new RepoinitTextProvider();
-            for(String reference : config.references()) {
-                final String repoinitText = p.getRepoinitText(reference);
-                final List<Operation> ops = parser.parse(new StringReader(repoinitText));
-                log.info("Executing {} repoinit operations", ops.size());
-                processor.apply(s, ops);
-                s.save();
+        if ( config.references() != null && config.references().length > 0 ) {
+            // loginAdministrative is ok here, definitely an admin operation
+            final Session s = repo.loginAdministrative(null);
+            try {
+                final RepoinitTextProvider p = new RepoinitTextProvider();
+                for(String reference : config.references()) {
+                    final String repoinitText = p.getRepoinitText(reference);
+                    final List<Operation> ops = parser.parse(new StringReader(repoinitText));
+                    log.info("Executing {} repoinit operations", ops.size());
+                    processor.apply(s, ops);
+                    s.save();
+                }
+            } finally {
+                s.logout();
             }
-        } finally {
-            s.logout();
         }
     }
 }
