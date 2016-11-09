@@ -100,7 +100,6 @@ public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityP
                     }
 
                     // check groups
-                    @SuppressWarnings("unchecked")
                     Iterator<Group> gi = a.memberOf();
                     while (gi.hasNext()) {
                         if (groups.contains(gi.next().getID())) {

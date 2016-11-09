@@ -25,19 +25,21 @@ public class Activator implements BundleActivator {
 
     private ServicesListener listener;
 
-    private ServiceRegistration registration;
+    private ServiceRegistration<StartupListener> registration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
         listener = new ServicesListener(context);
-        registration = context.registerService(StartupListener.class.getName(), listener, null);
+        registration = context.registerService(StartupListener.class, listener, null);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
         if ( registration != null ) {
             registration.unregister();

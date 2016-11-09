@@ -58,7 +58,8 @@ public abstract class AbstractWebConsoleSecurityProvider
      * Handle configuration
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
-    public void updated(final Dictionary properties)
+    @Override
+    public void updated(final Dictionary<String, ?> properties)
             throws ConfigurationException {
         this.users = toSet(properties == null ? null : properties.get(PROP_USERS), PROP_GROUPS_DEFAULT_USER);
         this.groups = toSet(properties == null ? null : properties.get(PROP_GROUPS), null);
