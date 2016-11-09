@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -139,7 +140,7 @@ public class ModelPreprocessor {
         if ( nodeBooleanValue(info.plugin, "setFeatureVersions", false) ) {
             for(final Feature f : info.localModel.getFeatures() ) {
                 if ( f.getVersion() == null ) {
-                    f.setVersion(info.project.getVersion());
+                    f.setVersion(cleanupVersion(info.project.getVersion()));
                 }
             }
         }
@@ -581,5 +582,67 @@ public class ModelPreprocessor {
      */
     protected void mergeModels(final Model base, final Model additional) throws MavenExecutionException {
         MergeUtility.merge(base, additional);
+    }
+
+    /**
+     * Pattern for converting Maven to OSGi version
+     * Based on the DefaultMaven2OsgiConverter from the Apache Maven Project.
+     */
+    private static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
+        Pattern.DOTALL );
+
+
+    private String cleanupVersion( final String version ) {
+        final StringBuilder result = new StringBuilder();
+        final Matcher m = FUZZY_VERSION.matcher( version );
+        if ( m.matches() ) {
+            final String major = m.group( 1 );
+            final String minor = m.group( 3 );
+            final String micro = m.group( 5 );
+            final String qualifier = m.group( 7 );
+
+            if ( major != null ) {
+                result.append( major );
+                if ( minor != null ) {
+                    result.append( "." );
+                    result.append( minor );
+                    if ( micro != null ) {
+                        result.append( "." );
+                        result.append( micro );
+                        if ( qualifier != null )
+                        {
+                            result.append( "." );
+                            cleanupModifier( result, qualifier );
+                        }
+                    } else if ( qualifier != null ) {
+                        result.append( ".0." );
+                        cleanupModifier( result, qualifier );
+                    } else {
+                        result.append( ".0" );
+                    }
+                } else if ( qualifier != null ) {
+                    result.append( ".0.0." );
+                    cleanupModifier( result, qualifier );
+                } else {
+                    result.append( ".0.0" );
+                }
+            }
+        } else {
+            result.append( "0.0.0." );
+            cleanupModifier( result, version );
+        }
+        return result.toString();
+    }
+
+    private static void cleanupModifier( final StringBuilder result, final String modifier )  {
+        for ( int i = 0; i < modifier.length(); i++ ) {
+            final char c = modifier.charAt( i );
+            if ( ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || c == '_'
+                || c == '-' ) {
+                result.append( c );
+            } else {
+                result.append( '_' );
+            }
+        }
     }
 }
