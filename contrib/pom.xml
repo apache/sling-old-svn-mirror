@@ -87,29 +87,15 @@
           <module>auth/org.apache.sling.auth.xing.login</module>
           <module>auth/org.apache.sling.auth.xing.oauth</module>
 
-          <!-- SLING-2760 Do not include in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
-          <module>auth/openid</module>
-          <module>auth/selector</module>
-          -->
-
           <module>commons/html</module>
 
-          <module>extensions/apt/parser</module>
-          <module>extensions/apt/servlet</module>
           <module>extensions/collection</module>
           <module>extensions/datasource</module>
-          <module>extensions/dojo</module>
-          <module>extensions/dojo-sling</module>
-          <module>extensions/ftpserver</module>
-          <module>extensions/gwt/sample</module>
-          <module>extensions/gwt/servlet</module>
           <module>extensions/jmxprovider</module>
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
-          <module>extensions/obr</module>
           <module>extensions/distribution</module>
           <module>extensions/logtail</module>
-          <module>extensions/oak-s3</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/resourcemerger</module>
           <module>extensions/resource-inventory</module>
@@ -126,24 +112,11 @@
           <module>extensions/startup-filter</module>
           <module>extensions/startup-filter-disabler</module>
 
-          <module>jcr/compiler</module>
-          <module>jcr/jackrabbit-client</module>
-          <module>jcr/ocm</module>
-          <module>jcr/prefs</module>
           <module>jcr/resourcesecurity</module>
 
           <module>scripting/script-console</module>
-          <module>scripting/jsp-taglib-atom</module>
           <module>scripting/groovy</module>
           <module>scripting/java</module>
-          <module>scripting/jst</module>
-          <module>scripting/python</module>
-          <module>scripting/ruby</module>
-          <module>scripting/scala/script</module>
-          <module>scripting/scala/config</module>
-          <module>scripting/scala/samples/hello-world</module>
-          <module>scripting/scala/samples/forum</module>
-          <module>scripting/velocity</module>
           <module>scripting/xproc</module>
 
           <module>nosql</module>
