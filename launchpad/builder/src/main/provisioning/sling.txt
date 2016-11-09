@@ -102,7 +102,7 @@
 
 [artifacts startLevel=15]
     org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
-    org.apache.sling/org.apache.sling.jcr.api/2.4.0
+    org.apache.sling/org.apache.sling.jcr.api/2.4.1-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.base/2.4.1-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.registration/1.0.2
     org.apache.jackrabbit/jackrabbit-api/${jackrabbit.version}
