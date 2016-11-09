@@ -19,15 +19,15 @@
 package org.apache.sling.jcr.base;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
- * Whitelist that defines which bundles can use the 
+ * Whitelist that defines which bundles can use the
  * {@link SlingRepository#loginAdministrative} method.
  */
 @ProviderType
 public interface LoginAdminWhitelist {
+
     boolean allowLoginAdministrative(Bundle b);
 }

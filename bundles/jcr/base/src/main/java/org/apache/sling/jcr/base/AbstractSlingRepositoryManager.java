@@ -27,6 +27,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -35,8 +36,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * The <code>AbstractSlingRepositoryManager</code> is the basis for controlling
@@ -57,7 +56,7 @@ import aQute.bnd.annotation.ProviderType;
  * <li>{@link #create(Bundle)}</li>
  * <li>{@link #registerService()}</li>
  * </ol>
- * Earlier versions of this class had an additional <code>setup</code> method, 
+ * Earlier versions of this class had an additional <code>setup</code> method,
  * whatever code was there can be moved to the <core>create</code> method.
  * <p>
  * To stop the repository instance, the implementation calls the {@link #stop()}
@@ -140,7 +139,7 @@ public abstract class AbstractSlingRepositoryManager {
      * @see AbstractSlingRepository2#loginService(String, String)
      */
     protected abstract ServiceUserMapper getServiceUserMapper();
-    
+
     /** Returns the {@code LoginAdminWhitelist} service used to decide whether
      *  to allow bundles to use the {@code loginAdministrative} method.
      * @return the non-null {@code LoginAdminWhitelist} service
