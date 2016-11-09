@@ -73,8 +73,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A Sling repository implementation that wraps the Oak repository
@@ -90,8 +88,6 @@ import org.slf4j.LoggerFactory;
     ocd = OakSlingRepositoryManagerConfiguration.class
 )
 public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
     private ServiceUserMapper serviceUserMapper;
