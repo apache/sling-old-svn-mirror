@@ -84,19 +84,21 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
 
     @Override
     public void processRepository(SlingRepository repo) throws Exception {
-        // loginAdministrative is ok here, definitely an admin operation
-        final Session s = repo.loginAdministrative(null);
-        try {
-            final RepoinitTextProvider p = new RepoinitTextProvider();
-            for(String reference : config.references()) {
-                final String repoinitText = p.getRepoinitText(reference);
-                final List<Operation> ops = parser.parse(new StringReader(repoinitText));
-                log.info("Executing {} repoinit operations", ops.size());
-                processor.apply(s, ops);
-                s.save();
+        if ( config.references() != null && config.references().length > 0 ) {
+            // loginAdministrative is ok here, definitely an admin operation
+            final Session s = repo.loginAdministrative(null);
+            try {
+                final RepoinitTextProvider p = new RepoinitTextProvider();
+                for(String reference : config.references()) {
+                    final String repoinitText = p.getRepoinitText(reference);
+                    final List<Operation> ops = parser.parse(new StringReader(repoinitText));
+                    log.info("Executing {} repoinit operations", ops.size());
+                    processor.apply(s, ops);
+                    s.save();
+                }
+            } finally {
+                s.logout();
             }
-        } finally {
-            s.logout();
         }
     }
 }
