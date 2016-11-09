@@ -93,7 +93,7 @@
 			<plugin>
 		        <groupId>com.github.eirslett</groupId>
 		        <artifactId>frontend-maven-plugin</artifactId>
-		        <version>0.0.24</version>
+		        <version>1.2</version>
 		        <configuration>
 			        <workingDirectory>frontend</workingDirectory>
 			    </configuration>
@@ -101,8 +101,8 @@
 				    <execution>
 					    <goals> <goal>install-node-and-npm</goal> </goals>
 					    <configuration>
-					        <nodeVersion>v0.12.1</nodeVersion>
-					        <npmVersion>1.4.9</npmVersion>
+					        <nodeVersion>v6.9.1</nodeVersion>
+					        <npmVersion>3.10.8</npmVersion>
 					    </configuration>
 					</execution>
 					<execution> 
@@ -112,6 +112,19 @@
 					<execution>
 						<id>grunt build</id>
 						<goals> <goal>grunt</goal> </goals>
+					</execution>
+					<execution>
+					    <id>javascript tests</id>
+					    <goals> <goal>karma</goal> </goals>
+					
+					    <!-- optional: the default phase is "test". Some developers
+					    choose to run karma in the "integration-test" phase. -->
+<!-- 					    <phase>install</phase> -->
+					
+					    <configuration>
+					        <!-- optional: the default is "karma.conf.js" in your working directory -->
+					        <karmaConfPath>karma.conf.ci.js</karmaConfPath>
+					    </configuration>
 					</execution>
 				</executions>
 		    </plugin>
