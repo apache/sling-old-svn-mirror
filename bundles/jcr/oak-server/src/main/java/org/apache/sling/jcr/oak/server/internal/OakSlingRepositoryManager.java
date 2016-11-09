@@ -18,6 +18,11 @@
  */
 package org.apache.sling.jcr.oak.server.internal;
 
+import static com.google.common.collect.ImmutableSet.of;
+import static java.util.Collections.singleton;
+import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
+import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
+
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -71,17 +76,11 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.collect.ImmutableSet.of;
-import static java.util.Collections.singleton;
-import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
-import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
-
 /**
  * A Sling repository implementation that wraps the Oak repository
  * implementation from the Jackrabbit Oak project.
  */
 @Component(
-    immediate = true,
     property = {
         Constants.SERVICE_DESCRIPTION + "=Apache Sling JCR Oak Repository Manager",
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
