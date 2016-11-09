@@ -34,6 +34,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,9 +97,11 @@ public abstract class AbstractSlingRepositoryManager {
 
     private volatile boolean disableLoginAdministrative;
 
-    private volatile ServiceTracker repoInitializerTracker;
+    private volatile ServiceTracker<SlingRepositoryInitializer, SlingRepositoryInitializerInfo> repoInitializerTracker;
 
     private volatile Loader loader;
+
+    private final Object repoInitLock = new Object();
 
     /**
      * Returns the default workspace, which may be <code>null</code> meaning to
@@ -315,7 +318,42 @@ public abstract class AbstractSlingRepositoryManager {
         this.defaultWorkspace = defaultWorkspace;
         this.disableLoginAdministrative = disableLoginAdministrative;
 
-        this.repoInitializerTracker = new ServiceTracker(bundleContext, SlingRepositoryInitializer.class.getName(), null);
+        this.repoInitializerTracker = new ServiceTracker<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>(bundleContext, SlingRepositoryInitializer.class,
+                new ServiceTrackerCustomizer<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>() {
+
+                    @Override
+                    public SlingRepositoryInitializerInfo addingService(final ServiceReference<SlingRepositoryInitializer> reference) {
+                        final SlingRepositoryInitializer service = bundleContext.getService(reference);
+                        if ( service != null ) {
+                            final SlingRepositoryInitializerInfo info = new SlingRepositoryInitializerInfo(service, reference);
+                            synchronized ( repoInitLock ) {
+                                if ( masterSlingRepository != null ) {
+                                    log.debug("Executing {}", info.initializer);
+                                    try {
+                                        info.initializer.processRepository(masterSlingRepository);
+                                    } catch (final Exception e) {
+                                        log.error("Exception in a SlingRepositoryInitializer: " + info.initializer, e);
+                                    }
+                                }
+                            }
+                            return info;
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public void modifiedService(final ServiceReference<SlingRepositoryInitializer> reference,
+                            final SlingRepositoryInitializerInfo service) {
+                        // nothing to do
+                    }
+
+                    @Override
+                    public void removedService(final ServiceReference<SlingRepositoryInitializer> reference,
+                            final SlingRepositoryInitializerInfo service) {
+                        bundleContext.ungetService(reference);
+                    }
+
+        });
         this.repoInitializerTracker.open();
 
         try {
@@ -326,29 +364,31 @@ public abstract class AbstractSlingRepositoryManager {
                 // ensure we really have the repository
                 log.debug("start: got a Repository");
                 this.repository = newRepo;
-                this.masterSlingRepository = this.create(this.bundleContext.getBundle());
+                synchronized ( this.repoInitLock ) {
+                    this.masterSlingRepository = this.create(this.bundleContext.getBundle());
 
-                log.debug("start: setting up Loader");
-                this.loader = new Loader(this.masterSlingRepository, this.bundleContext);
+                    log.debug("start: setting up Loader");
+                    this.loader = new Loader(this.masterSlingRepository, this.bundleContext);
 
-                log.debug("start: calling SlingRepositoryInitializer");
-                Throwable t = null;
-                try {
-                    executeRepositoryInitializers(this.masterSlingRepository);
-                } catch(Exception e) {
-                    t = e;
-                } catch(Error e) {
-                    t = e;
+                    log.debug("start: calling SlingRepositoryInitializer");
+                    Throwable t = null;
+                    try {
+                        executeRepositoryInitializers(this.masterSlingRepository);
+                    } catch(Exception e) {
+                        t = e;
+                    } catch(Error e) {
+                        t = e;
+                    }
+                    if(t != null) {
+                        log.error("Exception in a SlingRepositoryInitializer, SlingRepository service registration aborted", t);
+                        return false;
+                    }
+
+                    log.debug("start: calling registerService()");
+                    this.repositoryService = registerService();
+
+                    log.debug("start: registerService() successful, registration=" + repositoryService);
                 }
-                if(t != null) {
-                    log.error("Exception in a SlingRepositoryInitializer, SlingRepository service registration aborted", t);
-                    return false;
-                }
-
-                log.debug("start: calling registerService()");
-                this.repositoryService = registerService();
-
-                log.debug("start: registerService() successful, registration=" + repositoryService);
                 return true;
             }
         } catch (Throwable t) {
@@ -363,21 +403,16 @@ public abstract class AbstractSlingRepositoryManager {
         return false;
     }
 
-    private void executeRepositoryInitializers(SlingRepository repo) throws Exception {
-        final ServiceReference [] refs = repoInitializerTracker.getServiceReferences();
-        if(refs == null || refs.length == 0) {
+    private void executeRepositoryInitializers(final SlingRepository repo) throws Exception {
+        final SlingRepositoryInitializerInfo [] infos = repoInitializerTracker.getServices(new SlingRepositoryInitializerInfo[0]);
+        if (infos == null || infos.length == 0) {
             log.debug("No SlingRepositoryInitializer services found");
             return;
         }
-        Arrays.sort(refs);
-        for(ServiceReference ref : refs) {
-            final SlingRepositoryInitializer sri = (SlingRepositoryInitializer)bundleContext.getService(ref);
-            log.debug("Executing {}", sri);
-            try {
-                sri.processRepository(repo);
-            } finally {
-                bundleContext.ungetService(ref);
-            }
+        Arrays.sort(infos);
+        for(final SlingRepositoryInitializerInfo info : infos) {
+            log.debug("Executing {}", info.initializer);
+            info.initializer.processRepository(repo);
         }
     }
 
@@ -432,5 +467,21 @@ public abstract class AbstractSlingRepositoryManager {
         this.repository = null;
         this.defaultWorkspace = null;
         this.bundleContext = null;
+    }
+
+    public static final class SlingRepositoryInitializerInfo implements Comparable<SlingRepositoryInitializerInfo> {
+
+        public final SlingRepositoryInitializer initializer;
+        public final ServiceReference<SlingRepositoryInitializer> ref;
+
+        public SlingRepositoryInitializerInfo(final SlingRepositoryInitializer init, ServiceReference<SlingRepositoryInitializer> ref) {
+            this.initializer = init;
+            this.ref = ref;
+        }
+
+        @Override
+        public int compareTo(SlingRepositoryInitializerInfo o) {
+            return ref.compareTo(o.ref);
+        }
     }
 }
