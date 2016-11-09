@@ -49,7 +49,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.LoginAdminWhitelist;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.JcrListenerBaseConfig;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
@@ -104,9 +103,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference
     private PathMapper pathMapper;
 
-    @Reference
-    private LoginAdminWhitelist loginAdminWhitelist;
-
     /** This service is only available on OAK, therefore optional and static) */
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL)
     private Executor executor;
@@ -138,7 +134,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.repository = repository;
 
         this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository,
-                classLoaderManagerReference, pathMapper, loginAdminWhitelist);
+                classLoaderManagerReference, pathMapper);
     }
 
     @Deactivate
