@@ -374,22 +374,7 @@ def modules = [
         location: 'contrib/crankstart/test-model'
     ],
     [
-        location: 'contrib/explorers/gwt'
-    ],
-    [
         location: 'contrib/explorers/resourceeditor'
-    ],
-    [
-        location: 'contrib/extensions/apt/parser'
-    ],
-    [
-        location: 'contrib/extensions/apt/servlet'
-    ],
-    [
-        location: 'contrib/extensions/bgservlets/engine'
-    ],
-    [
-        location: 'contrib/extensions/bgservlets/testing'
     ],
     [
         location: 'contrib/extensions/cache/api'
@@ -449,25 +434,7 @@ def modules = [
         location: 'contrib/extensions/hapi/client'
     ],
     [
-        location: 'contrib/extensions/dojo-sling'
-    ],
-    [
-        location: 'contrib/extensions/dojo'
-    ],
-    [
-        location: 'contrib/extensions/ftpserver'
-    ],
-    [
-        location: 'contrib/extensions/gwt/sample'
-    ],
-    [
-        location: 'contrib/extensions/gwt/servlet'
-    ],
-    [
         location: 'contrib/extensions/jmxprovider'
-    ],
-    [
-        location: 'contrib/extensions/jolokia'
     ],
     [
         location: 'contrib/extensions/leak-detector'
@@ -477,12 +444,6 @@ def modules = [
     ],
     [
         location: 'contrib/extensions/mongodb'
-    ],
-    [
-        location: 'contrib/extensions/oak-s3'
-    ],
-    [
-        location: 'contrib/extensions/obr'
     ],
     [
         location: 'contrib/extensions/reqanalyzer'
@@ -568,18 +529,6 @@ def modules = [
         location: 'contrib/extensions/oak-restrictions'
     ],
     [
-        location: 'contrib/jcr/compiler'
-    ],
-    [
-        location: 'contrib/jcr/jackrabbit-client'
-    ],
-    [
-        location: 'contrib/jcr/ocm'
-    ],
-    [
-        location: 'contrib/jcr/prefs'
-    ],
-    [
         location: 'contrib/jcr/resourcesecurity'
     ],
     [
@@ -602,34 +551,7 @@ def modules = [
         location: 'contrib/scripting/java'
     ],
     [
-        location: 'contrib/scripting/jsp-taglib-atom'
-    ],
-    [
-        location: 'contrib/scripting/jst'
-    ],
-    [
-        location: 'contrib/scripting/python'
-    ],
-    [
-        location: 'contrib/scripting/ruby'
-    ],
-    [
-        location: 'contrib/scripting/scala/config'
-    ],
-    [
-        location: 'contrib/scripting/scala/samples/forum'
-    ],
-    [
-        location: 'contrib/scripting/scala/samples/hello-world'
-    ],
-    [
-        location: 'contrib/scripting/scala/script'
-    ],
-    [
         location: 'contrib/scripting/script-console'
-    ],
-    [
-        location: 'contrib/scripting/velocity'
     ],
     [
         location: 'contrib/scripting/xproc'
@@ -767,9 +689,6 @@ def modules = [
     ],
     [
         location: 'samples/framework-fragment'
-    ],
-    [
-        location: 'samples/inplace-integration-test'
     ],
     [
         location: 'samples/installing-dependencies'
