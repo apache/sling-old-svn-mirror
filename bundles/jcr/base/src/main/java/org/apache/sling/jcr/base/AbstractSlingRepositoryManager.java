@@ -473,12 +473,12 @@ public abstract class AbstractSlingRepositoryManager {
         this.bundleContext = null;
     }
 
-    public static final class SlingRepositoryInitializerInfo implements Comparable<SlingRepositoryInitializerInfo> {
+    private static final class SlingRepositoryInitializerInfo implements Comparable<SlingRepositoryInitializerInfo> {
 
-        public final SlingRepositoryInitializer initializer;
-        public final ServiceReference<SlingRepositoryInitializer> ref;
+        final SlingRepositoryInitializer initializer;
+        final ServiceReference<SlingRepositoryInitializer> ref;
 
-        public SlingRepositoryInitializerInfo(final SlingRepositoryInitializer init, ServiceReference<SlingRepositoryInitializer> ref) {
+        SlingRepositoryInitializerInfo(final SlingRepositoryInitializer init, ServiceReference<SlingRepositoryInitializer> ref) {
             this.initializer = init;
             this.ref = ref;
         }
