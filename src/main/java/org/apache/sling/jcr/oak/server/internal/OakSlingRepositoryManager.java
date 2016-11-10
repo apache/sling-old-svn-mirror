@@ -59,7 +59,6 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
 import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
-import org.apache.sling.jcr.base.LoginAdminWhitelist;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
