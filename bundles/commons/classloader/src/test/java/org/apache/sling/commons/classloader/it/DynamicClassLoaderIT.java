@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Hashtable;
 
 import javax.inject.Inject;
 
@@ -37,6 +38,8 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
+import org.ops4j.pax.url.mvn.MavenResolver;
+import org.ops4j.pax.url.mvn.MavenResolvers;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -49,6 +52,8 @@ public class DynamicClassLoaderIT {
     // the name of the system property providing the bundle file to be installed and tested
     private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
+    private static MavenArtifactCoordinates commonsOsgi = new MavenArtifactCoordinates("org.apache.sling", "org.apache.sling.commons.osgi", "2.1.0");
+    
     @Inject
     protected BundleContext bundleContext;
 
@@ -92,6 +97,13 @@ public class DynamicClassLoaderIT {
 
     @Configuration
     public static Option[] configuration() {
+
+        try {
+            commonsOsgi.ensureIsDownloaded();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
         final File bundleFile = new File( bundleFileName );
         if ( !bundleFile.canRead() ) {
@@ -120,7 +132,7 @@ public class DynamicClassLoaderIT {
         // check class loader
         assertNotNull(getDynamicClassLoader());
 
-        final URL url = new URL(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.1.0").getURL());
+        final URL url = new URL(commonsOsgi.getURL());
         final InputStream is = url.openStream();
         Bundle osgiBundle = null;
         try {
@@ -198,4 +210,30 @@ public class DynamicClassLoaderIT {
         }
     
     }
+    
+    /**
+     * Helper class which ensures that a Maven artifact is resolved and allows access to its contents
+     */
+    static class MavenArtifactCoordinates {
+        private String groupId;
+        private String artifactId;
+        private String version;
+        
+        private MavenArtifactCoordinates(String groupId, String artifactId, String version) {
+            this.groupId = groupId;
+            this.artifactId = artifactId;
+            this.version = version;
+        }
+        
+        public void ensureIsDownloaded() throws IOException {
+
+            MavenResolver resolver = MavenResolvers.createMavenResolver(new Hashtable<String,  String>(), null);
+            resolver.resolve(groupId, artifactId, null, "jar", version);
+        }
+
+        public String getURL() {
+            return maven(groupId, artifactId, version).getURL();
+        }
+    }
+    
 }
