@@ -21,10 +21,11 @@ import static org.ops4j.pax.exam.Constants.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.Hashtable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.inject.Inject;
 
@@ -38,8 +39,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
-import org.ops4j.pax.url.mvn.MavenResolver;
-import org.ops4j.pax.url.mvn.MavenResolvers;
+import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -98,12 +98,6 @@ public class DynamicClassLoaderIT {
     @Configuration
     public static Option[] configuration() {
 
-        try {
-            commonsOsgi.ensureIsDownloaded();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
         final File bundleFile = new File( bundleFileName );
         if ( !bundleFile.canRead() ) {
@@ -132,13 +126,9 @@ public class DynamicClassLoaderIT {
         // check class loader
         assertNotNull(getDynamicClassLoader());
 
-        final URL url = new URL(commonsOsgi.getURL());
-        final InputStream is = url.openStream();
-        Bundle osgiBundle = null;
-        try {
-            osgiBundle = this.bundleContext.installBundle(url.toExternalForm(), is);
-        } finally {
-            try { is.close(); } catch ( final IOException ignore) {}
+        Bundle osgiBundle;
+        try ( InputStream input = commonsOsgi.openInputStream() ) {
+            osgiBundle = this.bundleContext.installBundle(commonsOsgi.getMavenBundle().getURL(), input);
         }
         assertNotNull(osgiBundle);
         assertEquals(Bundle.INSTALLED, osgiBundle.getState());
@@ -212,7 +202,7 @@ public class DynamicClassLoaderIT {
     }
     
     /**
-     * Helper class which ensures that a Maven artifact is resolved and allows access to its contents
+     * Helper class which simplifies accesing a Maven artifact based on its coordinates
      */
     static class MavenArtifactCoordinates {
         private String groupId;
@@ -224,15 +214,34 @@ public class DynamicClassLoaderIT {
             this.artifactId = artifactId;
             this.version = version;
         }
-        
-        public void ensureIsDownloaded() throws IOException {
 
-            MavenResolver resolver = MavenResolvers.createMavenResolver(new Hashtable<String,  String>(), null);
-            resolver.resolve(groupId, artifactId, null, "jar", version);
+        public InputStream openInputStream() throws FileNotFoundException {
+
+            // note that this contains a lot of Maven-related logic, but I did not find the
+            // right set of dependencies to make this work inside the OSGi container
+            // 
+            // The tough part is making sure that this also works on Jenkins where a 
+            // private local repository is specified using -Dmaven.repo.local
+            Path localRepo = Paths.get(System.getProperty("user.home"), ".m2", "repository");
+            String overridenRepo = System.getProperty("maven.repo.local");
+            if ( overridenRepo != null ) {
+                localRepo = Paths.get(overridenRepo);
+            }
+            
+            Path artifact = Paths.get(localRepo.toString(), groupId.replace('.', File.separatorChar), artifactId, version, artifactId+"-" + version+".jar");
+            
+            if ( !artifact.toFile().exists() ) {
+                throw new RuntimeException("Artifact at " + artifact + " does not exist.");
+            }
+            
+            return new FileInputStream(artifact.toFile());
         }
-
-        public String getURL() {
-            return maven(groupId, artifactId, version).getURL();
+        
+        
+        
+        public MavenArtifactProvisionOption getMavenBundle() {
+            
+            return mavenBundle(groupId, artifactId, version);
         }
     }
     
