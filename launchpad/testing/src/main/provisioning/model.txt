@@ -33,7 +33,7 @@
     servletresolver.cacheSize=I"0"
 
   org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl
-    whitelist.regexp="org.apache.sling.(launchpad|junit).*"
+    whitelist.bundles.regexp="org.apache.sling.(launchpad|junit).*"
 
 [settings]
   org.apache.sling.commons.log.julenabled=true

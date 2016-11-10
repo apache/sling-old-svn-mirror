@@ -70,20 +70,20 @@ public class LoginAdminWhitelistImpl implements LoginAdminWhitelist {
             description="Regular expression for bundle symbolic names for which loginAdministrative() is allowed. "
                 + " NOT recommended for production use, but useful for testing with generated bundles.",
             value = "")
-    public static final String PROP_WHITELIST_REGEXP = "whitelist.regexp";
+    public static final String PROP_WHITELIST_REGEXP = "whitelist.bundles.regexp";
     private Pattern whitelistRegexp;
 
     @Property(
             label="Default whitelisted BSNs",
             description="Default list of bundle symbolic names for which loginAdministrative() is allowed",
             value = {})
-    public static final String PROP_DEFAULT_WHITELISTED_BSN = "default.whitelisted.bundle.symbolic.names";
+    public static final String PROP_DEFAULT_WHITELISTED_BSN = "whitelist.bundles.default";
 
     @Property(
             label="Additional whitelisted BSNs",
             description="Additional list of bundle symbolic names for which loginAdministrative() is allowed",
             value = {})
-    public static final String PROP_ADDITIONAL_WHITELISTED_BSN = "additional.whitelisted.bundle.symbolic.names";
+    public static final String PROP_ADDITIONAL_WHITELISTED_BSN = "whitelist.bundles.additional";
 
     private Set<String> whitelistedBsn;
 
