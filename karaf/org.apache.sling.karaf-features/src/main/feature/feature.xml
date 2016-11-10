@@ -341,13 +341,13 @@
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
   </feature>
   <feature name="sling-jcr-repoinit" version="${feature.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.0.3-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.1.1-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
-    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.0.4</bundle>
-    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.4.4</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.1.1-SNAPSHOT</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.6.0</bundle>
     <feature prerequisite="true" version="${feature.version}">pax-url-classpath-sling</feature>
   </feature>
   <!-- Apache Sling Launchpad -->
