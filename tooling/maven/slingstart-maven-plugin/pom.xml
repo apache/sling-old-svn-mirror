@@ -84,7 +84,7 @@
        <dependency>
            <groupId>org.apache.sling</groupId>
            <artifactId>org.apache.sling.provisioning.model</artifactId>
-           <version>1.6.0</version>
+           <version>1.7.0</version>
        </dependency>
        <dependency>
            <groupId>org.apache.maven</groupId>
@@ -148,17 +148,6 @@
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-filtering</artifactId>
             <version>1.2</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>maven-project</artifactId>
-                    <groupId>org.apache.maven</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.shared</groupId>
-            <artifactId>maven-osgi</artifactId>
-            <version>0.2.0</version>
             <exclusions>
                 <exclusion>
                     <artifactId>maven-project</artifactId>
