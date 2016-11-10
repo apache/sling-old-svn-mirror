@@ -18,22 +18,6 @@
  */
 package org.apache.sling.jcr.base.internal;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.LoginAdminWhitelist;
-import org.osgi.framework.Bundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Define the default whitelist in its own class to better
  * keep track of it. The goal is to reduce it to the bare

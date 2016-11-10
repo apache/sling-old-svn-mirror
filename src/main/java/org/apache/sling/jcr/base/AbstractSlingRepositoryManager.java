@@ -143,11 +143,15 @@ public abstract class AbstractSlingRepositoryManager {
      */
     protected abstract ServiceUserMapper getServiceUserMapper();
 
-    /** Returns the {@code LoginAdminWhitelist} service used to decide whether
-     *  to allow bundles to use the {@code loginAdministrative} method.
-     * @return the non-null {@code LoginAdminWhitelist} service
+    /**
+     * Returns whether or not the provided bundle is allowed to use
+     * {@link SlingRepository#loginAdministrative(String)}.
+     *
+     * @param bundle The bundle requiring access to {@code loginAdministrative}
+     * @return A boolean value indicating whether or not the bundle is allowed
+     *         to use {@code loginAdministrative}.
      */
-    protected abstract LoginAdminWhitelist getLoginAdminWhitelist();
+    protected abstract boolean allowLoginAdministrativeForBundle(final Bundle bundle);
 
     /**
      * Creates the backing JCR repository instances. It is expected for this

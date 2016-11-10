@@ -370,7 +370,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      */
     @Override
     public final Session loginAdministrative(final String workspace) throws RepositoryException {
-        final boolean whitelisted = getSlingRepositoryManager().getLoginAdminWhitelist().allowLoginAdministrative(usingBundle);
+        final boolean whitelisted = getSlingRepositoryManager().allowLoginAdministrativeForBundle(usingBundle);
 
         if(!whitelisted) {
             logger.error("Bundle {} is NOT whitelisted to use SlingRepository.loginAdministrative", usingBundle.getSymbolicName());
