@@ -24,6 +24,7 @@ package org.apache.sling.jcr.base.internal;
  * minimum over time.
  */
 class DefaultWhitelist {
+    // TODO: remove bundles as their dependency on admin login is fixed, see SLING-5355 for linked issues
     static final String [] WHITELISTED_BSN = {
             "org.apache.sling.discovery.commons",
             "org.apache.sling.discovery.base",
@@ -36,15 +37,11 @@ class DefaultWhitelist {
             "org.apache.sling.jcr.davex",
             "org.apache.sling.jcr.jackrabbit.usermanager",
             "org.apache.sling.jcr.oak.server",
+            "org.apache.sling.jcr.repoinit",
             "org.apache.sling.jcr.resource",
             "org.apache.sling.jcr.webconsole",
-            "org.apache.sling.jcr.webdav",
-            "org.apache.sling.junit.core",
             "org.apache.sling.resourceresolver",
-            "org.apache.sling.scripting.core",
-            "org.apache.sling.scripting.sightly",
-            "org.apache.sling.servlets.post",
-            "org.apache.sling.servlets.resolver",
-            "org.apache.sling.xss"
+            "org.apache.sling.servlets.post", // remove when 2.3.16 is released
+            "org.apache.sling.servlets.resolver"
     };
 }
