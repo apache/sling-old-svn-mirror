@@ -124,8 +124,8 @@ public abstract class ThymeleafTestSupport extends TestSupport {
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", "org.apache.sling.scripting.thymeleaf=sling-scripting")
                 .asOption(),
-            newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl")
-                .put("whitelist.regexp", "org.apache.sling.*")
+            newConfiguration("org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist")
+                .put("whitelist.bundles.regexp", "org.apache.sling.*")
                 .asOption()
         );
     }

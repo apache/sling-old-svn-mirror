@@ -32,8 +32,8 @@
     # Set the servlet resolver's cache size to zero for testing
     servletresolver.cacheSize=I"0"
 
-  org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl
-    whitelist.regexp="org.apache.sling.(launchpad|junit).*"
+  org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist
+    whitelist.bundles.regexp="org.apache.sling.(launchpad|junit).*"
 
 [settings]
   org.apache.sling.commons.log.julenabled=true

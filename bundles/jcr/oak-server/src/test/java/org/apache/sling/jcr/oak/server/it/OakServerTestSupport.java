@@ -202,8 +202,8 @@ public abstract class OakServerTestSupport extends TestSupport {
     }
 
     protected Option getWhitelistRegexpOption() {
-        return newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl")
-            .put("whitelist.regexp", "PAXEXAM-PROBE-.*")
+        return newConfiguration("org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist")
+            .put("whitelist.bundles.regexp", "PAXEXAM-PROBE-.*")
             .asOption();
     }
 }

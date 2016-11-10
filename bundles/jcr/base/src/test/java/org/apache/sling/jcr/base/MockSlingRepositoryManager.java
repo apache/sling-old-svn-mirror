@@ -20,27 +20,43 @@ package org.apache.sling.jcr.base;
 
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 /** Minimal AbstractSlingRepositoryManager used for testing */
 public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
+    public static final String WHITELIST_ALL = "*";
+
+    public static final String WHITELIST_NONE = "";
+
     private final Repository repository;
-    private LoginAdminWhitelist loginAdminWhitelist; 
-    
+
+    private boolean loginAdminDisabled;
+
+    private Set<String> loginAdminWhitelist;
 
     public MockSlingRepositoryManager(Repository repository) {
-        this.repository = repository;
-        this.loginAdminWhitelist = new MockLoginAdminWhitelist();
+        this(repository, false, WHITELIST_ALL);
     }
-    
+
+    public MockSlingRepositoryManager(Repository repository, boolean loginAdminDisabled, String... loginAdminWhitelist) {
+        this.repository = repository;
+        this.loginAdminDisabled = loginAdminDisabled;
+        this.loginAdminWhitelist = new HashSet<>(Arrays.asList(loginAdminWhitelist));
+        this.loginAdminWhitelist.remove(WHITELIST_NONE);
+    }
+
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
         return null;
@@ -77,11 +93,11 @@ public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
     }
 
     @Override
-    protected LoginAdminWhitelist getLoginAdminWhitelist() {
-        return loginAdminWhitelist;
+    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
+        return loginAdminWhitelist.contains("*") || loginAdminWhitelist.contains(bundle.getSymbolicName());
     }
-    
-    public void setLoginAdminWhitelist(LoginAdminWhitelist w) {
-        loginAdminWhitelist = w;
+
+    public void activate(BundleContext context) {
+        start(context, null, loginAdminDisabled);
     }
 }
