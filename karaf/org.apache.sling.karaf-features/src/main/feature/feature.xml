@@ -296,7 +296,7 @@
   </feature>
   <!-- Apache Sling JCR -->
   <feature name="sling-jcr" version="${feature.version}">
-    <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl</configfile>
+    <configfile finalname="/etc/org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.4.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.4.1-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.2.2</bundle>

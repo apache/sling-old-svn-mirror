@@ -20,8 +20,11 @@ package org.apache.sling.jcr.base;
 
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -33,20 +36,25 @@ import org.osgi.framework.BundleContext;
 /** Minimal AbstractSlingRepositoryManager used for testing */
 public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
-    private final Repository repository;
+    public static final String WHITELIST_ALL = "*";
 
-    private LoginAdminWhitelist loginAdminWhitelist;
+    public static final String WHITELIST_NONE = "";
+
+    private final Repository repository;
 
     private boolean loginAdminDisabled;
 
+    private Set<String> loginAdminWhitelist;
+
     public MockSlingRepositoryManager(Repository repository) {
-        this(repository, false, new MockLoginAdminWhitelist(true));
+        this(repository, false, WHITELIST_ALL);
     }
 
-    public MockSlingRepositoryManager(Repository repository, boolean loginAdminDisabled, LoginAdminWhitelist loginAdminWhitelist) {
+    public MockSlingRepositoryManager(Repository repository, boolean loginAdminDisabled, String... loginAdminWhitelist) {
         this.repository = repository;
         this.loginAdminDisabled = loginAdminDisabled;
-        this.loginAdminWhitelist = loginAdminWhitelist;
+        this.loginAdminWhitelist = new HashSet<>(Arrays.asList(loginAdminWhitelist));
+        this.loginAdminWhitelist.remove(WHITELIST_NONE);
     }
 
     @Override
@@ -86,7 +94,7 @@ public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
-        return loginAdminWhitelist.allowLoginAdministrative(bundle);
+        return loginAdminWhitelist.contains("*") || loginAdminWhitelist.contains(bundle.getSymbolicName());
     }
 
     public void activate(BundleContext context) {

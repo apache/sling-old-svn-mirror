@@ -118,8 +118,8 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl</classifier>
-                  <file>src/main/resources/org.apache.sling.jcr.base.internal.LoginAdminWhitelistImpl.config</file>
+                  <classifier>org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>
