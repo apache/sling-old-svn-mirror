@@ -28,19 +28,27 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 /** Minimal AbstractSlingRepositoryManager used for testing */
 public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private final Repository repository;
-    private LoginAdminWhitelist loginAdminWhitelist; 
-    
+
+    private LoginAdminWhitelist loginAdminWhitelist;
+
+    private boolean loginAdminDisabled;
 
     public MockSlingRepositoryManager(Repository repository) {
-        this.repository = repository;
-        this.loginAdminWhitelist = new MockLoginAdminWhitelist();
+        this(repository, false, new MockLoginAdminWhitelist(true));
     }
-    
+
+    public MockSlingRepositoryManager(Repository repository, boolean loginAdminDisabled, LoginAdminWhitelist loginAdminWhitelist) {
+        this.repository = repository;
+        this.loginAdminDisabled = loginAdminDisabled;
+        this.loginAdminWhitelist = loginAdminWhitelist;
+    }
+
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
         return null;
@@ -77,11 +85,11 @@ public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
     }
 
     @Override
-    protected LoginAdminWhitelist getLoginAdminWhitelist() {
-        return loginAdminWhitelist;
+    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
+        return loginAdminWhitelist.allowLoginAdministrative(bundle);
     }
-    
-    public void setLoginAdminWhitelist(LoginAdminWhitelist w) {
-        loginAdminWhitelist = w;
+
+    public void activate(BundleContext context) {
+        start(context, null, loginAdminDisabled);
     }
 }

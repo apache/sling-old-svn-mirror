@@ -19,13 +19,10 @@
 package org.apache.sling.jcr.base.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
@@ -33,10 +30,11 @@ import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
-import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.jcr.base.LoginAdminWhitelist;
+import org.apache.sling.jcr.base.MockLoginAdminWhitelist;
 import org.apache.sling.jcr.base.MockSlingRepositoryManager;
 import org.apache.sling.testing.mock.jcr.MockJcr;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -47,19 +45,16 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 /** Verify that the AbstractSlingRepository2 uses the login admin whitelist,
  *  as well as its combination with the global "disable login admin" flag
  */
 @RunWith(Parameterized.class)
 public class WhitelistWiringTest {
-    @Rule
-    public final SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
-    
-    private LoginAdminWhitelist whitelist;
-    private Bundle bundle;
-    private static final String BSN = "random.bsn." + UUID.randomUUID();
+
     private SlingRepository repository;
+
     private final boolean managerAllowsLoginAdmin;
     private final boolean whitelistAllowsLoginAdmin;
     private final boolean loginAdminExpected;
@@ -81,24 +76,18 @@ public class WhitelistWiringTest {
     }
     
     @Before
-    public void setup() throws NoSuchFieldException, Exception  {
-        bundle = Mockito.mock(Bundle.class);
-        when(bundle.getSymbolicName()).thenReturn(BSN);
+    public void setup() throws Exception  {
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        Bundle bundle = bundleContext.getBundle();
+
+        LoginAdminWhitelist whitelist = new MockLoginAdminWhitelist(whitelistAllowsLoginAdmin);
+
+        final MockSlingRepositoryManager repoMgr =
+                new MockSlingRepositoryManager(MockJcr.newRepository(), !managerAllowsLoginAdmin, whitelist);
+
+        repoMgr.activate(bundleContext);
         
-        whitelist = new LoginAdminWhitelist() {
-            @Override
-            public boolean allowLoginAdministrative(Bundle b) {
-                return whitelistAllowsLoginAdmin;
-            }
-        };
-        
-        final MockSlingRepositoryManager arm = new MockSlingRepositoryManager(MockJcr.newRepository());
-        arm.setLoginAdminWhitelist(whitelist);
-        final Field f = AbstractSlingRepositoryManager.class.getDeclaredField("disableLoginAdministrative");
-        f.setAccessible(true);
-        f.set(arm, !managerAllowsLoginAdmin);
-        
-        repository = new AbstractSlingRepository2(arm, bundle) {
+        repository = new AbstractSlingRepository2(repoMgr, bundle) {
             @Override
             protected Session createAdministrativeSession(String workspace) throws RepositoryException {
                 return Mockito.mock(Session.class);
