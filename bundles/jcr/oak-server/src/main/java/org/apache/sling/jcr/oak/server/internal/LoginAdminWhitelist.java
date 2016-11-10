@@ -19,18 +19,15 @@
 package org.apache.sling.jcr.oak.server.internal;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * The default configuration lets a few trusted Sling bundles
  * use the loginAdministrative method.
  */
-@org.osgi.service.component.annotations.Component(
+@Component(
         service = LoginAdminWhitelist.class,
         property = {
                 Constants.SERVICE_DESCRIPTION + "=Apache Sling Login Admin Whitelist",
