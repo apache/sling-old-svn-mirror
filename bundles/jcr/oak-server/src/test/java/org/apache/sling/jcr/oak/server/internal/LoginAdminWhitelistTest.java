@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.base.internal;
+package org.apache.sling.jcr.oak.server.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Before;
@@ -32,15 +31,15 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 
-public class LoginAdminWhitelistImplTest {
-    private LoginAdminWhitelistImpl whitelist;
-    private Map<String, Object> config;
+public class LoginAdminWhitelistTest {
+
     private static final String TYPICAL_DEFAULT_ALLOWED_BSN = "org.apache.sling.jcr.base";
-    
+
+    private LoginAdminWhitelist whitelist;
+
     @Before
     public void setup() {
-        whitelist = new LoginAdminWhitelistImpl();
-        config = new HashMap<String, Object>();
+        whitelist = new LoginAdminWhitelist();
     }
     
     private void assertAdminLogin(final String bundleSymbolicName, boolean expected) {
@@ -60,9 +59,10 @@ public class LoginAdminWhitelistImplTest {
  
     @Test
     public void testDefaultConfig() {
+        final LoginAdminWhitelistConfiguration config = config(null, null, null, null);
         whitelist.activate(config);
-        
-        for(String bsn : DefaultWhitelist.WHITELISTED_BSN) {
+
+        for(String bsn : config.whitelist_bundles_default()) {
             assertAdminLogin(bsn, true);
         }
         
@@ -72,11 +72,10 @@ public class LoginAdminWhitelistImplTest {
             assertAdminLogin(bsn, false);
         }
     }
-    
+
     @Test
     public void testBypassWhitelist() {
-        config.put(LoginAdminWhitelistImpl.PROP_BYPASS_WHITELIST, true);
-        whitelist.activate(config);
+        whitelist.activate(config(true, null, null, null));
         
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, true);
@@ -88,8 +87,7 @@ public class LoginAdminWhitelistImplTest {
         final String [] allowed = {
                 "bundle1", "bundle2"
         };
-        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, allowed);
-        whitelist.activate(config);
+        whitelist.activate(config(null, null, allowed, null));
         
         assertAdminLogin("bundle1", true);
         assertAdminLogin("bundle2", true);
@@ -106,14 +104,15 @@ public class LoginAdminWhitelistImplTest {
         final String [] allowed = {
                 "bundle5", "bundle6"
         };
-        config.put(LoginAdminWhitelistImpl.PROP_ADDITIONAL_WHITELISTED_BSN, allowed);
+        final LoginAdminWhitelistConfiguration config = config(null, null, null, allowed);
         whitelist.activate(config);
         
         assertAdminLogin("bundle5", true);
         assertAdminLogin("bundle6", true);
         assertAdminLogin("foo.1.bar", false);
+        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, true);
         
-        for(String bsn : DefaultWhitelist.WHITELISTED_BSN) {
+        for(String bsn : config.whitelist_bundles_default()) {
             assertAdminLogin(bsn, true);
         }
         
@@ -124,9 +123,7 @@ public class LoginAdminWhitelistImplTest {
     
     @Test
     public void testDefaultAndAdditionalConfig() {
-        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, new String [] { "defB"});
-        config.put(LoginAdminWhitelistImpl.PROP_ADDITIONAL_WHITELISTED_BSN, new String [] { "addB"});
-        whitelist.activate(config);
+        whitelist.activate(config(null, null, new String [] { "defB"}, new String [] { "addB"}));
         
         assertAdminLogin("defB", true);
         assertAdminLogin("addB", true);
@@ -143,9 +140,7 @@ public class LoginAdminWhitelistImplTest {
         final String [] allowed = {
                 "bundle3", "bundle4"
         };
-        config.put(LoginAdminWhitelistImpl.PROP_DEFAULT_WHITELISTED_BSN, allowed);
-        config.put(LoginAdminWhitelistImpl.PROP_WHITELIST_REGEXP, "foo.*bar");
-        whitelist.activate(config);
+        whitelist.activate(config(null, "foo.*bar", allowed, null));
         
         assertAdminLogin("bundle3", true);
         assertAdminLogin("bundle4", true);
@@ -156,5 +151,46 @@ public class LoginAdminWhitelistImplTest {
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, false);
         }
+    }
+
+
+    private LoginAdminWhitelistConfiguration config(final Boolean bypass, final String regexp, final String[] defaultBSNs, final String[] additionalBSNs) {
+        return new LoginAdminWhitelistConfiguration() {
+            @Override
+            public boolean whitelist_bypass() {
+                return defaultIfNull(bypass, "whitelist_bypass");
+            }
+
+            @Override
+            public String whitelist_bundles_regexp() {
+                return defaultIfNull(regexp, "whitelist_bundles_regexp");
+            }
+
+            @Override
+            public String[] whitelist_bundles_default() {
+                return defaultIfNull(defaultBSNs, "whitelist_bundles_default");
+            }
+
+            @Override
+            public String[] whitelist_bundles_additional() {
+                return defaultIfNull(additionalBSNs, "whitelist_bundles_additional");
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return LoginAdminWhitelistConfiguration.class;
+            }
+
+            private <T> T defaultIfNull(final T value, final String methodName) {
+                if (value != null) {
+                    return value;
+                }
+                try {
+                    return (T)this.annotationType().getMethod(methodName).getDefaultValue();
+                } catch (NoSuchMethodException e) {
+                    return null;
+                }
+            }
+        };
     }
 }

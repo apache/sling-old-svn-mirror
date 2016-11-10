@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.base.internal;
 
+import static org.apache.sling.jcr.base.MockSlingRepositoryManager.WHITELIST_ALL;
+import static org.apache.sling.jcr.base.MockSlingRepositoryManager.WHITELIST_NONE;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -30,15 +32,10 @@ import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
-import org.apache.sling.jcr.base.LoginAdminWhitelist;
-import org.apache.sling.jcr.base.MockLoginAdminWhitelist;
 import org.apache.sling.jcr.base.MockSlingRepositoryManager;
 import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -80,7 +77,7 @@ public class WhitelistWiringTest {
         BundleContext bundleContext = MockOsgi.newBundleContext();
         Bundle bundle = bundleContext.getBundle();
 
-        LoginAdminWhitelist whitelist = new MockLoginAdminWhitelist(whitelistAllowsLoginAdmin);
+        String whitelist = whitelistAllowsLoginAdmin ? WHITELIST_ALL : WHITELIST_NONE;
 
         final MockSlingRepositoryManager repoMgr =
                 new MockSlingRepositoryManager(MockJcr.newRepository(), !managerAllowsLoginAdmin, whitelist);
