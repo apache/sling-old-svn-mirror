@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>29</version>
         <relativePath/>
     </parent>
 
@@ -42,10 +42,6 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/file/</url>
     </scm>
 
-    <properties>
-        <sling.java.version>7</sling.java.version>
-    </properties>
-    
     <build>
         <plugins>
 
@@ -80,11 +76,7 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -106,7 +98,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.8</version>
+            <version>1.8.10</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
