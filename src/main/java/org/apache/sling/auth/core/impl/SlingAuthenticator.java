@@ -20,6 +20,7 @@ package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +30,6 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.login.AccountLockedException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -40,7 +40,6 @@ import javax.servlet.ServletRequestListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -1511,22 +1510,27 @@ public class SlingAuthenticator implements Authenticator,
      * @param value The cookie value to unquote
      * @return The unquoted cookie value
      */
-    static String unquoteCookieValue(final String value) {
+    static String unquoteCookieValue(String value) {
         // method is package private to enable unit testing
 
-        // return value unmodified if null, empty or not starting with a quote
-        if (value == null || value.length() == 0 || value.charAt(0) != '"') {
+        // return value unmodified if null or empty
+        if (value == null || value.length() == 0) {
             return value;
         }
-
-        StringBuilder builder = new StringBuilder(value.length());
-        for (int i = 1; i < value.length() - 1; i++) {
-            char c = value.charAt(i);
-            if (c != '\\') {
-                builder.append(c);
-            }
+        
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length()-1);
         }
-
+        
+        StringBuilder builder = new StringBuilder();
+        String [] values = value.split("\\\\");
+        for (String v:values) {
+            try {
+                builder.append(URLDecoder.decode(v, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                builder.append(v);
+            } 
+        }
         return builder.toString();
     }
 
