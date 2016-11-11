@@ -55,7 +55,7 @@ public class DefaultAuthenticationFeedbackHandler implements
      *  method. If valid a redirect to that path is sent back and <code>true</code>
      *  is returned. Otherwise a redirect to the servlet context root is
      *  sent back and <code>true</code> is returned.</li>
-     * <p>
+     *  </ul>
      * If sending the redirect response fails due to some IO problems, the
      * request is still terminated but an error message is logged indicating the
      * problem.
