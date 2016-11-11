@@ -18,10 +18,10 @@
  */
 package org.apache.sling.caconfig.bndplugin;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,9 +40,9 @@ import aQute.service.reporter.Reporter;
  */
 public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
     
-    private static final String CONFIGURATION_ANNOTATION_CLASS = "org.apache.sling.caconfig.annotation.Configuration";
+    static final String CONFIGURATION_ANNOTATION_CLASS = "org.apache.sling.caconfig.annotation.Configuration";
     
-    private static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
+    static final String CONFIGURATION_CLASSES_HEADER = "Sling-ContextAware-Configuration-Classes";
     
     private Reporter reporter;
 
@@ -63,7 +63,9 @@ public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
         Collection<String> classNames = getClassesWithAnnotation(CONFIGURATION_ANNOTATION_CLASS, analyzer);
 
         // set bundle header containing all class names found
-        analyzer.set(CONFIGURATION_CLASSES_HEADER, StringUtils.join(classNames, ","));
+        if (!classNames.isEmpty()) {
+            analyzer.set(CONFIGURATION_CLASSES_HEADER, StringUtils.join(classNames, ","));
+        }
         
         // we did not change any classes - no need to re-analyze
         return false;
@@ -76,7 +78,7 @@ public class ConfigurationClassScannerPlugin implements AnalyzerPlugin, Plugin {
      * @return Class names
      */
     private Collection<String> getClassesWithAnnotation(String annotationClassName, Analyzer analyzer) {
-        List<String> classNames = new ArrayList<>();
+        SortedSet<String> classNames = new TreeSet<>();
         Collection<Clazz> clazzes = analyzer.getClassspace().values();
         Instruction instruction = new Instruction(annotationClassName);
         try {
