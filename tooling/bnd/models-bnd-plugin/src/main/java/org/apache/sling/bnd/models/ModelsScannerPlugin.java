@@ -18,11 +18,14 @@
  */
 package org.apache.sling.bnd.models;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import aQute.bnd.osgi.Analyzer;
@@ -44,11 +47,18 @@ public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
     static final String MODELS_PACKAGES_HEADER = "Sling-Model-Packages";
     static final String MODELS_CLASSES_HEADER = "Sling-Model-Classes";
     
+    // max length of manifest header value 65535 bytes (see http://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html)
+    // fall back to packages header when class names string gets too long
+    static final int MODELS_CLASSES_HEADER_MAXLENGTH = 60000;
+    
+    static final String PROPERTY_GENERATE_PACKAGES_HEADER = "generatePackagesHeader";
+    
     private Reporter reporter;
+    private Map<String,String> properties;
 
     @Override
     public void setProperties(Map<String, String> map) throws Exception {
-        // ignore
+        properties = map;
     }
 
     @Override
@@ -67,13 +77,65 @@ public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
 
             // set bundle header containing all class names found
             if (!classNames.isEmpty()) {
-                analyzer.set(MODELS_CLASSES_HEADER, StringUtils.join(classNames, ","));
+                if (getBooleanProperty(PROPERTY_GENERATE_PACKAGES_HEADER)) {
+                    generatePackagesHeader(analyzer, classNames);
+                }
+                else {
+                    generateClassesHeader(analyzer, classNames);
+                }
             }
 
         }
         
         // we did not change any classes - no need to re-analyze
         return false;
+    }
+    
+    private void generateClassesHeader(Analyzer analyzer, Collection<String> classNames) {
+        String classNameHeader = StringUtils.join(classNames, ",");
+        if (classNameHeader.length() <= MODELS_CLASSES_HEADER_MAXLENGTH) {
+            analyzer.set(MODELS_CLASSES_HEADER, classNameHeader);
+        }
+        else {
+            generatePackagesHeader(analyzer, classNames);
+        }
+    }
+    
+    private void generatePackagesHeader(Analyzer analyzer, Collection<String> classNames) {
+        
+        // get all package names
+        SortedSet<String> packages = new TreeSet<>();
+        for (String className : classNames) {
+            if (StringUtils.contains(className, ".")) {
+                packages.add(StringUtils.substringBeforeLast(className, "."));
+            }
+        }
+        
+        // eliminate package names for which parent packages exist (they are included automatically)
+        Set<String> packagesToRemove = new HashSet<>();
+        for (String packageName : packages) {
+            if (includesParentPackage(packages, packageName)) {
+                packagesToRemove.add(packageName);
+            }
+        }
+        packages.removeAll(packagesToRemove);
+        
+        analyzer.set(MODELS_PACKAGES_HEADER, StringUtils.join(packages, ","));
+    }
+    
+    private boolean includesParentPackage(Set<String> packages, String packageName) {
+        if (StringUtils.contains(packageName, ".")) {
+            String parentPackageName = StringUtils.substringBeforeLast(packageName, ".");
+            if (packages.contains(parentPackageName)) {
+                return true;
+            }
+            else {
+                return includesParentPackage(packages, parentPackageName);
+            }
+        }
+        else {
+            return false;
+        }
     }
     
     /**
@@ -83,12 +145,12 @@ public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
      * @return Class names
      */
     private Collection<String> getClassesWithAnnotation(String annotationClassName, Analyzer analyzer) {
-        List<String> classNames = new ArrayList<>();
+        SortedSet<String> classNames = new TreeSet<>();
         Collection<Clazz> clazzes = analyzer.getClassspace().values();
         Instruction instruction = new Instruction(annotationClassName);
         try {
             for (Clazz clazz : clazzes) {
-                if (clazz.isAnnotation() && clazz.is(QUERY.ANNOTATED, instruction, analyzer)) {
+                if (clazz.is(QUERY.ANNOTATED, instruction, analyzer)) {
                     classNames.add(clazz.getClassName().getFQN());
                 }
             }
@@ -97,6 +159,11 @@ public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
             reporter.exception(ex, "Error querying for classes with annotation: " + annotationClassName);
         }
         return classNames;
+    }
+    
+    private boolean getBooleanProperty(String propertyName) {
+        String value = properties != null ? properties.get(propertyName) : null;
+        return BooleanUtils.toBoolean(value);
     }
     
 }
