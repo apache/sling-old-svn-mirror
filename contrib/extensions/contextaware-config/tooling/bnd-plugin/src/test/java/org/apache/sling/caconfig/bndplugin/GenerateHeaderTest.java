@@ -16,13 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.bndplugintest;
+package org.apache.sling.caconfig.bndplugin;
 
-/**
- * Annotation classes without the proper Configuration annotation are not supported.
- */
-public @interface WithoutAnnotationConfig {
+import static org.apache.sling.caconfig.bndplugin.ConfigurationClassScannerPlugin.*;
 
-    String stringParam();
-    
+import org.junit.Test;
+
+import aQute.bnd.osgi.Jar;
+
+public class GenerateHeaderTest extends AbstractConfigurationClassScannerPlugin {
+
+    @Test
+    public void testBuild() throws Exception {
+        Jar jar = builder.build();
+        
+        assertHeader(jar, CONFIGURATION_CLASSES_HEADER, 
+                "dummy.example.pkg1.Config1",
+                "dummy.example.pkg1.Config2",
+                "dummy.example.pkg1.sub1.Config3");        
+    }
+
 }

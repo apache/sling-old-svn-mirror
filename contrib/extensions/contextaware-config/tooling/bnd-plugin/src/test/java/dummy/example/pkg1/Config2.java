@@ -16,15 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.bndplugintest;
+package dummy.example.pkg1;
 
 import org.apache.sling.caconfig.annotation.Configuration;
 
 @Configuration
-public @interface NestedConfig {
+public @interface Config2 {
 
-    String stringParam();
-    
-    SimpleConfig subConfig();
-    
 }

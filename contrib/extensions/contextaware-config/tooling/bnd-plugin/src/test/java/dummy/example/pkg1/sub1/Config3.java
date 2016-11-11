@@ -16,26 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.bndplugintest;
+package dummy.example.pkg1.sub1;
 
 import org.apache.sling.caconfig.annotation.Configuration;
-import org.apache.sling.caconfig.annotation.Property;
 
-@Configuration(name = "simpleConfig",
-    label = "Simple configuration",
-    description = "This is a configuration example with additional metadata.",
-    property = {
-            "param1=value1",
-            "param2=123"
-    })
-public @interface MetadataSimpleConfig {
+@Configuration
+public @interface Config3 {
 
-    @Property(label = "String Param", description = "Enter strings here.", property = "p1=v1")
-    String stringParam();
-    
-    @Property(label = "Integer Param")
-    int intParam() default 5;
-    
-    boolean boolParam();
-    
 }
