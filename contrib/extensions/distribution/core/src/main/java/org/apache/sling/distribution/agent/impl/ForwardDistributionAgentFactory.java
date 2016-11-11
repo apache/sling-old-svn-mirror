@@ -46,6 +46,7 @@ import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBean;
 import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBeanImpl;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionQueueProvider;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -248,6 +249,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         } else {
             queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, true);
         }
+        queueProvider = new MonitoringDistributionQueueProvider(queueProvider, context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy errorQueueStrategy = null;
