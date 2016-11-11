@@ -32,8 +32,8 @@ Launching Sling
 The Sling Container can be launched by running the following command in the 
 launchpad/builder/target directory:
   java -jar org.apache.sling.launchpad-<version>-standalone.jar
-so if the current version is 7, the command should be:
-  java -jar org.apache.sling.launchpad-7-standalone.jar
+so if the current version is 8, the command should be:
+  java -jar org.apache.sling.launchpad-8-standalone.jar
   
   
 Deploy the Demo

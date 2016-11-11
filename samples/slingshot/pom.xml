@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>28</version>
+        <version>29</version>
         <relativePath/>
     </parent>
 
@@ -37,7 +37,6 @@
     <properties>
       <!-- If you set this to true, the scripts are mounted through the file resource provider! -->
       <fileMount>false</fileMount>
-      <sling.java.version>7</sling.java.version>
     </properties>
     
     <build>
@@ -69,6 +68,26 @@
                     </instructions>
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.6.1-SNAPSHOT</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>attach-prov-model</id>
+                        <goals>
+                            <goal>attach-slingfeature</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <setFeatureVersions>true</setFeatureVersions>
+                    <attach>
+                        <type>jar</type>
+                    </attach>
                 </configuration>
             </plugin>
             <plugin>
