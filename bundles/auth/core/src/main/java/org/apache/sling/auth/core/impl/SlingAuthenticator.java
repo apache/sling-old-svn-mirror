@@ -1218,8 +1218,10 @@ public class SlingAuthenticator implements Authenticator,
             final String owner) {
 
         final String quotedUser;
+        final String quotedOwner;
         try {
             quotedUser = quoteCookieValue(user);
+            quotedOwner = quoteCookieValue(owner);
         } catch (IllegalArgumentException iae) {
             log.error(
                 "sendSudoCookie: Failed to quote value '{}' of cookie {}: {}",
@@ -1237,7 +1239,7 @@ public class SlingAuthenticator implements Authenticator,
             cookie.setMaxAge(maxAge);
             cookie.setPath((path == null || path.length() == 0) ? "/" : path);
             try {
-                cookie.setComment(owner + " impersonates as " + user);
+                cookie.setComment(quotedOwner + " impersonates as " +quotedUser);
             } catch (IllegalArgumentException iae) {
                 // ignore
             }
