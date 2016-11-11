@@ -88,6 +88,7 @@ import org.slf4j.LoggerFactory;
  * <li>Support for multiple authentication handlers, which must implement the
  * {@link AuthenticationHandler} interface.
  * <li>
+ * </ul>
  * <p>
  * Currently this class does not support multiple handlers for any one request
  * URL.
