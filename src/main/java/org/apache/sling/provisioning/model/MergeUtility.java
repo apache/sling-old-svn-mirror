@@ -140,15 +140,18 @@ public abstract class MergeUtility {
                 baseFeature.getRunModes().clear();
                 baseFeature.getAdditionalSections().clear();
                 baseFeature.getVariables().clear();
+                baseFeature.setComment(null);
             }
 
+            mergeComments(baseFeature, feature);
             baseFeature.setType(feature.getType());
 
-            // additional sections
+            // additional sections (sections are not cloned, therefore comments do not need to be merged)
             baseFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
 
             // variables
             baseFeature.getVariables().putAll(feature.getVariables());
+            mergeComments(baseFeature.getVariables(), feature.getVariables());
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
@@ -164,6 +167,8 @@ public abstract class MergeUtility {
                 // artifact groups
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
+
+                    mergeComments(baseGroup, group);
 
                     int foundStartLevel = 0;
 
@@ -198,6 +203,7 @@ public abstract class MergeUtility {
                             }
                         }
                         if ( addArtifact ) {
+                            // artifacts are not cloned, therefore comments do not need to be merged
                             if ( group.getStartLevel() == 0 && foundStartLevel != 0 ) {
                                 baseRunMode.getOrCreateArtifactGroup(foundStartLevel).add(artifact);
                             } else {
@@ -212,12 +218,14 @@ public abstract class MergeUtility {
                     final Configuration found = baseRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
 
                     mergeConfiguration(found, config);
+                    mergeComments(found, config);
                 }
 
                 // settings
                 for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
                     baseRunMode.getSettings().put(entry.getKey(), entry.getValue());
                 }
+                mergeComments(baseRunMode.getSettings(), runMode.getSettings());
             }
 
         }
@@ -378,6 +386,20 @@ public abstract class MergeUtility {
             if ( !key.equals(ModelConstants.CFG_UNPROCESSED_MODE) ) {
                 baseConfig.getProperties().put(key, mergeConfig.getProperties().get(key));
             }
+        }
+    }
+
+    /**
+     * Merge the comments
+     * @param base The base model object
+     * @param additional The additional model object
+     * @since 1.9.0
+     */
+    public static void mergeComments(final Commentable base, final Commentable additional) {
+        if ( base.getComment() == null ) {
+            base.setComment(additional.getComment());
+        } else if ( additional.getComment() != null ) {
+            base.setComment(base.getComment() + "\n" + additional.getComment());
         }
     }
 }
