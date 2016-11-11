@@ -39,10 +39,10 @@ import aQute.service.reporter.Reporter;
  */
 public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
     
-    private static final String MODELS_ANNOTATION_CLASS = "org.apache.sling.models.annotations.Model";
+    static final String MODELS_ANNOTATION_CLASS = "org.apache.sling.models.annotations.Model";
     
-    private static final String MODELS_PACKAGES_HEADER = "Sling-Model-Packages";
-    private static final String MODELS_CLASSES_HEADER = "Sling-Model-Classes";
+    static final String MODELS_PACKAGES_HEADER = "Sling-Model-Packages";
+    static final String MODELS_CLASSES_HEADER = "Sling-Model-Classes";
     
     private Reporter reporter;
 
@@ -66,7 +66,9 @@ public class ModelsScannerPlugin implements AnalyzerPlugin, Plugin {
             Collection<String> classNames = getClassesWithAnnotation(MODELS_ANNOTATION_CLASS, analyzer);
 
             // set bundle header containing all class names found
-            analyzer.set(MODELS_CLASSES_HEADER, StringUtils.join(classNames, ","));
+            if (!classNames.isEmpty()) {
+                analyzer.set(MODELS_CLASSES_HEADER, StringUtils.join(classNames, ","));
+            }
 
         }
         
