@@ -98,10 +98,13 @@ public final class AuthUtil {
     /**
      * Returns the value of the named request attribute or parameter as a string
      * as follows:
+     * <ol>
      * <li>If there is a request attribute of that name, which is a non-empty
-     * string, it is returned.</li>If there is a non-empty request parameter of
-     * that name, this parameter is returned.
-     * <li>Otherwise the <code>defaultValue</code> is returned.
+     * string, it is returned.</li>
+     * <li>If there is a non-empty request parameter of
+     * that name, this parameter is returned. </li>
+     * <li>Otherwise the <code>defaultValue</code> is returned.</li>
+     * </ol>
      *
      * @param request The request from which to return the attribute or request
      *            parameter
