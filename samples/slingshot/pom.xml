@@ -80,6 +80,7 @@
                         <id>attach-prov-model</id>
                         <goals>
                             <goal>attach-slingfeature</goal>
+                            <goal>attach-modelarchive</goal>
                         </goals>
                     </execution>
                 </executions>
