@@ -21,6 +21,7 @@ package org.apache.sling.installer.factory.model.impl;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -123,7 +124,7 @@ public class RepositoryAccess {
         lines.add("    </dependencies>");
         lines.add("</project>");
         logger.info("Writing pom to {}", dir);
-        Files.write(dir.resolve("pom.xml"), lines);
+        Files.write(dir.resolve("pom.xml"), lines, Charset.forName("UTF-8"));
 
         final File output = dir.resolve("output.txt").toFile();
         final File error = dir.resolve("error.txt").toFile();
