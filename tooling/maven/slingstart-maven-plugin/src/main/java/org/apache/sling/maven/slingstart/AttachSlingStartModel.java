@@ -21,7 +21,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -56,14 +55,10 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
         final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + BuildConstants.MODEL_ARTIFACT_NAME);
         outputFile.getParentFile().mkdirs();
 
-        Writer writer = null;
-        try {
-            writer = new FileWriter(outputFile);
+        try ( final Writer writer = new FileWriter(outputFile)) {
             ModelWriter.write(writer, model);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new MojoExecutionException("Unable to write model to " + outputFile, e);
-        } finally {
-            IOUtils.closeQuietly(writer);
         }
 
         // if this project is a partial bundle list, it's the main artifact
