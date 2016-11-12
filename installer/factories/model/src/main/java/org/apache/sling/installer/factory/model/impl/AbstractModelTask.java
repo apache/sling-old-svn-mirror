@@ -18,6 +18,7 @@
  */
 package org.apache.sling.installer.factory.model.impl;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,9 +74,16 @@ public abstract class AbstractModelTask extends InstallTask {
         return service;
     }
 
-    protected String getModelName() {
-        final String url = this.getResource().getURL();
-        final int lastSlash = url.lastIndexOf('/');
-        return lastSlash == -1 ? url : url.substring(lastSlash + 1);
+    protected void deleteDirectory(final File dir) {
+        if ( dir.exists() ) {
+            for(final File f : dir.listFiles()) {
+                if ( f.isDirectory() ) {
+                    deleteDirectory(f);
+                } else {
+                    f.delete();
+                }
+            }
+            dir.delete();
+        }
     }
 }

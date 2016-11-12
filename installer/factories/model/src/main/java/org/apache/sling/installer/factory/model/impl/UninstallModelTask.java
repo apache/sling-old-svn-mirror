@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.factory.model.impl;
 
+import java.io.File;
+
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -41,7 +43,12 @@ public class UninstallModelTask extends AbstractModelTask {
             if ( installer == null ) {
                 ctx.log("Unable to get OSGi Installer service!");
             } else {
-                installer.registerResources("model-" + getModelName(), null);
+                installer.registerResources("model-" + getResource().getAttribute(ModelTransformer.ATTR_FEATURE_NAME), null);
+                final String path = (String)this.getResource().getAttribute(ModelTransformer.ATTR_BASE_PATH);
+                if ( path != null ) {
+                    final File dir = new File(path);
+                    deleteDirectory(dir);
+                }
                 this.getResourceGroup().setFinishState(ResourceState.UNINSTALLED);
             }
         } finally {
@@ -51,6 +58,6 @@ public class UninstallModelTask extends AbstractModelTask {
 
     @Override
     public String getSortKey() {
-        return "31-" + getModelName();
+        return "31-" + getResource().getAttribute(ModelTransformer.ATTR_FEATURE_NAME);
     }
 }
