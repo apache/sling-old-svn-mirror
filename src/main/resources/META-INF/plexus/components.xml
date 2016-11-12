@@ -87,5 +87,17 @@
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>mar</role-hint>
+      <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
+      <configuration>
+        <type>mar</type>
+        <includesDependencies>false</includesDependencies>
+        <language>java</language>
+        <extension>mar</extension>
+        <addedToClasspath>false</addedToClasspath>
+      </configuration>
+    </component>
   </components>
 </component-set>
