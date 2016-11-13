@@ -37,12 +37,16 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for all file handling.
  */
 public class FileDataStore {
 
+    private static final Logger log = LoggerFactory.getLogger(FileDataStore.class);
+    
     /**
      * The name of the bundle context property defining the location for the
      * installer files (value is "sling.installer.dir").
@@ -119,6 +123,7 @@ public class FileDataStore {
 
         this.directory = locationFile;
         SHARED = this;
+        log.debug("FileDataStore setup with directory={}", safePath(directory));
     }
 
     /**
@@ -126,7 +131,9 @@ public class FileDataStore {
      * @param fileName The file name
      */
     public File getDataFile(final String fileName) {
-        return new File(this.directory, fileName);
+        final File result = new File(this.directory, fileName);
+        log.debug("getDataFile({}) returns {}", fileName, safePath(result));
+        return result;
     }
 
     /** Serial number to create unique file names in the data storage. */
@@ -151,6 +158,9 @@ public class FileDataStore {
             synchronized ( this.digestCache ) {
                 final CacheEntry storedDigest = this.digestCache.get(url);
                 if ( storedDigest != null && storedDigest.digest.equals(digest) ) {
+                    log.debug(
+                            "File {} with digest {} found, returning {}", 
+                            url, digest, safePath(storedDigest.file));
                     return storedDigest.file;
                 }
             }
@@ -165,7 +175,7 @@ public class FileDataStore {
         final File file = this.getDataFile(filename2);
 
         this.copyToLocalStorage(stream, file);
-
+        log.debug("Stream with digest {} copied to {}", digest, safePath(file));
         if ( digest != null ) {
             synchronized ( this.digestCache ) {
                 this.digestCache.put(url, new CacheEntry(file, digest));
@@ -176,6 +186,7 @@ public class FileDataStore {
     }
 
     public void updateDigestCache(final String url, final File file, final String digest) {
+        log.debug("Updating digest cache for {}, file {}, digest {}", url, safePath(file), digest);
         synchronized ( this.digestCache ) {
             this.digestCache.put(url, new CacheEntry(file, digest));
         }
@@ -204,12 +215,14 @@ public class FileDataStore {
         final String filename = (hint == null ? "unknown" : hint) + "-resource-" + getNextSerialNumber() + ".ser";
         final File file = this.getDataFile(filename);
 
+        log.debug("createNewDataFile: file={}", safePath(file));
         this.copyToLocalStorage(stream, file);
 
         return file;
     }
 
     public void removeFromDigestCache(final String url, final String digest) {
+        log.debug("Removing {} / {} from digest cache", url, digest);
         synchronized ( this.digestCache ) {
             final CacheEntry entry = this.digestCache.get(url);
             if ( entry != null && entry.digest.equals(digest) ) {
@@ -230,14 +243,18 @@ public class FileDataStore {
                 while( (count = is.read(buffer, 0, buffer.length)) > 0) {
                     d.update(buffer, 0, count);
                 }
-                return digestToString(d);
+                final String result = digestToString(d);
+                log.debug("Digest of {} is {}", safePath(data), result);
+                return result;
             } finally {
                 is.close();
             }
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception ignore) {
-            return data.toString();
+            final String result = data.toString();
+            log.debug("Returning fake digest {} for {} due to {}", result, safePath(data), ignore);
+            return result;
         }
     }
 
@@ -273,9 +290,17 @@ public class FileDataStore {
 
             oos.flush();
             d.update(bos.toByteArray());
-            return digestToString(d);
+            final String result = digestToString(d);
+            log.debug("Dictionary digest = {}", result);
+            return result;
         } catch (Exception ignore) {
-            return data.toString();
+            final String result = data.toString();
+            log.debug("Returning fake dictionary digest {} due to {}", result, ignore);
+            return result;
         }
+    }
+    
+    private static final String safePath(File f) {
+        return f == null ? null : f.getAbsolutePath();
     }
 }
