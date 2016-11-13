@@ -504,6 +504,13 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                                 "JCR Provider scanning would not be performed", cfg.getPauseScanNodePath());
                         pauseMessageLogged = true;
                     }
+                    
+                    try {
+                        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC);
+                    } catch(InterruptedException ignored) {
+                        logger.debug("InterruptedException in scanningIsPaused block");
+                    }
+                    
                     return;
                 } else if (pauseMessageLogged) {
                     pauseMessageLogged = false;
@@ -582,7 +589,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 while (childItr.hasNext()) {
                     nodeNames.add(childItr.nextNode().getName());
                 }
-                logger.debug("Found child nodes {} at path {}. Scanning would be paused", nodeNames, cfg.getPauseScanNodePath());
+                logger.debug("Found child nodes {} at path {}. Scanning will be paused", nodeNames, cfg.getPauseScanNodePath());
             }
             return result;
         }
