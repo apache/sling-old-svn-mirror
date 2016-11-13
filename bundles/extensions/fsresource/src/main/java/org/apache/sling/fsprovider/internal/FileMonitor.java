@@ -19,13 +19,14 @@
 package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.Collections;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.sling.api.SlingConstants;
-import org.osgi.service.event.EventAdmin;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,6 +92,7 @@ public class FileMonitor extends TimerTask {
     /**
      * @see java.util.TimerTask#run()
      */
+    @Override
     public void run() {
         synchronized (timer) {
             stopped = false;
@@ -102,10 +104,10 @@ public class FileMonitor extends TimerTask {
         }
         synchronized ( this ) {
             try {
-                // if we don't have an event admin, we just skip the check
-                final EventAdmin localEA = this.provider.getEventAdmin();
-                if ( localEA != null ) {
-                    this.check(this.root, localEA);
+                // if we don't have an observation reporter, we just skip the check
+                final ObservationReporter reporter = this.provider.getObservationReporter();
+                if ( reporter != null ) {
+                    this.check(this.root, reporter);
                 }
             } catch (Exception e) {
                 // ignore this
@@ -120,9 +122,9 @@ public class FileMonitor extends TimerTask {
     /**
      * Check the monitorable
      * @param monitorable The monitorable to check
-     * @param localEA The event admin
+     * @param reporter The ObservationReporter
      */
-    private void check(final Monitorable monitorable, final EventAdmin localEA) {
+    private void check(final Monitorable monitorable, final ObservationReporter reporter) {
         logger.debug("Checking {}", monitorable.file);
         // if the file is non existing, check if it has been readded
         if ( monitorable.status instanceof NonExistingStatus ) {
@@ -130,16 +132,16 @@ public class FileMonitor extends TimerTask {
                 // new file and reset status
                 createStatus(monitorable);
                 sendEvents(monitorable,
-                           SlingConstants.TOPIC_RESOURCE_ADDED,
-                           localEA);
+                           ChangeType.ADDED,
+                           reporter);
             }
         } else {
             // check if the file has been removed
             if ( !monitorable.file.exists() ) {
                 // removed file and update status
                 sendEvents(monitorable,
-                           SlingConstants.TOPIC_RESOURCE_REMOVED,
-                           localEA);
+                           ChangeType.REMOVED,
+                           reporter);
                 monitorable.status = NonExistingStatus.SINGLETON;
             } else {
                 // check for changes
@@ -149,15 +151,15 @@ public class FileMonitor extends TimerTask {
                     fs.lastModified = monitorable.file.lastModified();
                     // changed
                     sendEvents(monitorable,
-                               SlingConstants.TOPIC_RESOURCE_CHANGED,
-                               localEA);
+                               ChangeType.CHANGED,
+                               reporter);
                     changed = true;
                 }
                 if ( fs instanceof DirStatus ) {
                     // directory
                     final DirStatus ds = (DirStatus)fs;
                     for(int i=0; i<ds.children.length; i++) {
-                        check(ds.children[i], localEA);
+                        check(ds.children[i], reporter);
                     }
                     // if the dir changed we have to update
                     if ( changed ) {
@@ -178,7 +180,7 @@ public class FileMonitor extends TimerTask {
                                         monitorable.path + '/'
                                             + files[i].getName(), files[i]);
                                     children[i].status = NonExistingStatus.SINGLETON;
-                                    check(children[i], localEA);
+                                    check(children[i], reporter);
                                 }
                             }
                             ds.children = children;
@@ -194,17 +196,17 @@ public class FileMonitor extends TimerTask {
     /**
      * Send the event async via the event admin.
      */
-    private void sendEvents(final Monitorable monitorable, final String topic, final EventAdmin localEA) {
+    private void sendEvents(final Monitorable monitorable, final ChangeType changeType, final ObservationReporter reporter) {
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Detected change for resource {} : {}", monitorable.path, topic);
+            logger.debug("Detected change for resource {} : {}", monitorable.path, changeType);
         }
 
-        final Dictionary<String, String> properties = new Hashtable<String, String>();
-        properties.put(SlingConstants.PROPERTY_PATH, monitorable.path);
-        final String type = monitorable.status instanceof FileStatus ?
-                FsResource.RESOURCE_TYPE_FILE : FsResource.RESOURCE_TYPE_FOLDER;
-        properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, type);
-        localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
+        for(final ObserverConfiguration config : reporter.getObserverConfigurations()) {
+            if ( config.matches(monitorable.path) ) {
+                final ResourceChange change = new ResourceChange(changeType, monitorable.path, false);
+                reporter.reportChanges(config, Collections.singleton(change), false);
+            }
+        }
     }
 
     /**

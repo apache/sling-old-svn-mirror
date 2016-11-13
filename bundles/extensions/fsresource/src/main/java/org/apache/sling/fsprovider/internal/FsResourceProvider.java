@@ -21,28 +21,28 @@ package org.apache.sling.fsprovider.internal;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ProviderContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.event.EventAdmin;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * The <code>FsResourceProvider</code> is a resource provider which maps
- * filesystem files and folders into the virtual resource tree. The provider is
+ * file system files and folders into the virtual resource tree. The provider is
  * implemented in terms of a component factory, that is multiple instances of
  * this provider may be created by creating respective configuration.
  * <p>
@@ -51,40 +51,49 @@ import org.osgi.service.event.EventAdmin;
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
  */
-@Component(
-        name="org.apache.sling.fsprovider.internal.FsResourceProvider",
-        label="%resource.resolver.name",
-        description="%resource.resolver.description",
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE,
-        metatype=true
-        )
-@Service(ResourceProvider.class)
-@Properties({
-    @Property(name="service.description", value="Sling Filesystem Resource Provider"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name=ResourceProvider.ROOTS),
-    @Property(name = "webconsole.configurationFactory.nameHint", 
-        value = "Root paths: {" + ResourceProvider.ROOTS + "}")
-})
-public class FsResourceProvider implements ResourceProvider {
+@Component(name="org.apache.sling.fsprovider.internal.FsResourceProvider",
+           service=ResourceProvider.class,
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           property={
+                   Constants.SERVICE_DESCRIPTION + "=Sling Filesystem Resource Provider",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                   "webconsole.configurationFactory.nameHint=Root paths: {" + ResourceProvider.PROPERTY_ROOT + "}"
+           })
+@Designate(ocd=FsResourceProvider.Config.class, factory=true)
+public class FsResourceProvider extends ResourceProvider<Object> {
 
-    /**
-     * The name of the configuration property providing file system path of
-     * files and folders mapped into the resource tree (value is
-     * "provider.file").
-     */
-    @Property
-    public static final String PROP_PROVIDER_FILE = "provider.file";
+    @ObjectClassDefinition(name = "Apache Sling Filesystem Resource Provider",
+            description = "Configure an instance of the filesystem " +
+                          "resource provider in terms of provider root and filesystem location")
+    public @interface Config {
+        /**
+         * The name of the configuration property providing file system path of
+         * files and folders mapped into the resource tree (value is
+         * "provider.file").
+         */
+        @AttributeDefinition(name = "Provider Root",
+                description = "Location in the virtual resource tree where the " +
+                              "filesystem resources are mapped in. This property must not be an empty string.")
+        String provider_file();
 
-    /**
-     * The name of the configuration property providing the check interval
-     * for file changes (value is "provider.checkinterval").
-     */
-    @Property(longValue=FsResourceProvider.DEFAULT_CHECKINTERVAL)
-    public static final String PROP_PROVIDER_CHECKINTERVAL = "provider.checkinterval";
+        /**
+         * The name of the configuration property providing the check interval
+         * for file changes (value is "provider.checkinterval").
+         */
+        @AttributeDefinition(name = "Check Interval",
+                             description = "If the interval has a value higher than 100, the provider will " +
+             "check the file system for changes periodically. This interval defines the period in milliseconds " +
+             "(the default is 1000). If a change is detected, resource events are sent through the event admin.")
+        long provider_checkinterval() default 1000;
 
-    public static final long DEFAULT_CHECKINTERVAL = 1000;
+        @AttributeDefinition(name = "Filesystem Root",
+                description = "Filesystem directory mapped to the virtual " +
+                              "resource tree. This property must not be an empty string. If the path is " +
+                              "relative it is resolved against sling.home or the current working directory. " +
+                              "The path may be a file or folder. If the path does not address an existing " +
+                              "file or folder, an empty folder is created.")
+        String provider_root();
+    }
 
     // The location in the resource tree where the resources are mapped
     private String providerRoot;
@@ -98,22 +107,8 @@ public class FsResourceProvider implements ResourceProvider {
     /** The monitor to detect file changes. */
     private FileMonitor monitor;
 
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private volatile EventAdmin eventAdmin;
-
     /**
-     * Same as {@link #getResource(ResourceResolver, String)}, i.e. the
-     * <code>request</code> parameter is ignored.
-     *
-     * @see #getResource(ResourceResolver, String)
-     */
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
-
-    /**
-     * Returns a resource wrapping a filesystem file or folder for the given
+     * Returns a resource wrapping a file system file or folder for the given
      * path. If the <code>path</code> is equal to the configured resource tree
      * location of this provider, the configured file system file or folder is
      * used for the resource. Otherwise the configured resource tree location
@@ -121,14 +116,19 @@ public class FsResourceProvider implements ResourceProvider {
      * to access the file or folder. If no such file or folder exists, this
      * method returns <code>null</code>.
      */
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
-        return getResource(resourceResolver, path, getFile(path));
+    @Override
+    public Resource getResource(final ResolveContext<Object> ctx,
+            final String path,
+            final ResourceContext resourceContext,
+            final Resource parent) {
+        return getResource(ctx.getResourceResolver(), path, getFile(path));
     }
 
     /**
      * Returns an iterator of resources.
      */
-    public Iterator<Resource> listChildren(Resource parent) {
+    @Override
+    public Iterator<Resource> listChildren(final ResolveContext<Object> ctx, final Resource parent) {
         File parentFile = parent.adaptTo(File.class);
 
         // not a FsResource, try to create one from the resource
@@ -171,10 +171,12 @@ public class FsResourceProvider implements ResourceProvider {
 
                 Resource next = seek();
 
+                @Override
                 public boolean hasNext() {
                     return next != null;
                 }
 
+                @Override
                 public Resource next() {
                     if (!hasNext()) {
                         throw new NoSuchElementException();
@@ -185,6 +187,7 @@ public class FsResourceProvider implements ResourceProvider {
                     return result;
                 }
 
+                @Override
                 public void remove() {
                     throw new UnsupportedOperationException("remove");
                 }
@@ -210,33 +213,28 @@ public class FsResourceProvider implements ResourceProvider {
     }
 
     // ---------- SCR Integration
-
-    protected void activate(BundleContext bundleContext, Map<?, ?> props) {
-        String providerRoot = (String) props.get(ROOTS);
+    @Activate
+    protected void activate(BundleContext bundleContext, final Config config) {
+        String providerRoot = config.provider_root();
         if (providerRoot == null || providerRoot.length() == 0) {
-            throw new IllegalArgumentException(ROOTS + " property must be set");
+            throw new IllegalArgumentException("provider.root property must be set");
         }
 
-        String providerFileName = (String) props.get(PROP_PROVIDER_FILE);
+        String providerFileName = config.provider_file();
         if (providerFileName == null || providerFileName.length() == 0) {
-            throw new IllegalArgumentException(PROP_PROVIDER_FILE
-                    + " property must be set");
+            throw new IllegalArgumentException("provider.file property must be set");
         }
 
         this.providerRoot = providerRoot;
         this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = getProviderFile(providerFileName, bundleContext);
         // start background monitor if check interval is higher than 100
-        long checkInterval = DEFAULT_CHECKINTERVAL;
-        final Object interval = props.get(PROP_PROVIDER_CHECKINTERVAL);
-        if ( interval != null && interval instanceof Long ) {
-            checkInterval = (Long)interval;
-        }
-        if ( checkInterval > 100 ) {
-            this.monitor = new FileMonitor(this, checkInterval);
+        if ( config.provider_checkinterval() > 100 ) {
+            this.monitor = new FileMonitor(this, config.provider_checkinterval());
         }
     }
 
+    @Deactivate
     protected void deactivate() {
         if ( this.monitor != null ) {
             this.monitor.stop();
@@ -245,10 +243,6 @@ public class FsResourceProvider implements ResourceProvider {
         this.providerRoot = null;
         this.providerRootPrefix = null;
         this.providerFile = null;
-    }
-
-    EventAdmin getEventAdmin() {
-        return this.eventAdmin;
     }
 
     File getRootFile() {
@@ -323,6 +317,14 @@ public class FsResourceProvider implements ResourceProvider {
         }
 
         // not applicable or not an existing file path
+        return null;
+    }
+
+    public ObservationReporter getObservationReporter() {
+        final ProviderContext ctx = this.getProviderContext();
+        if ( ctx != null ) {
+            return ctx.getObservationReporter();
+        }
         return null;
     }
 }
