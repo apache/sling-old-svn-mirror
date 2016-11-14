@@ -96,7 +96,25 @@ public class BasicObservationReporter implements ObservationReporter {
                 // find the set of paths that match the provider
                 final Set<Path> paths = new HashSet<>();
                 for(final Path p : info.getPaths()) {
-                    if ( providerPath.matches(p.getPath()) && excludePaths.matches(p.getPath()) == null ) {
+                    boolean add = providerPath.matches(p.getPath());
+                    if ( add ) {
+                        if ( p.isPattern() ) {
+                            for(final Path exclude : excludePaths) {
+                                if ( p.getPath().startsWith(Path.GLOB_PREFIX + exclude.getPath() + "/")) {
+                                    logger.debug("ResourceChangeListener {} is shadowed by {}", info, exclude);
+                                    add = false;
+                                    break;
+                                }
+                            }
+                        } else {
+                            final Path exclude = excludePaths.matches(p.getPath());
+                            if ( exclude != null ) {
+                                logger.debug("ResourceChangeListener {} is shadowed by {}", info, exclude);
+                                add = false;
+                            }
+                        }
+                    }
+                    if ( add ) {
                         paths.add(p);
                     }
                 }
