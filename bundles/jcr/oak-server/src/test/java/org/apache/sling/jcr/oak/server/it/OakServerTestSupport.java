@@ -161,10 +161,10 @@ public abstract class OakServerTestSupport extends TestSupport {
     }
 
     protected Option launchpad() {
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.base");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.resource");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.resourceresolver");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.api");
+        SlingOptions.versionResolver.setVersion("org.apache.sling", "org.apache.sling.jcr.base", "2.4.2");
+        SlingOptions.versionResolver.setVersion("org.apache.sling", "org.apache.sling.jcr.resource", "2.8.2");
+        SlingOptions.versionResolver.setVersion("org.apache.sling", "org.apache.sling.resourceresolver", "1.5.2");
+        SlingOptions.versionResolver.setVersion("org.apache.sling", "org.apache.sling.api", "2.15.0");
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
         SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
         final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
