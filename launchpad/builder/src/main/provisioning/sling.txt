@@ -61,7 +61,8 @@
     org.apache.sling/org.apache.sling.launchpad.content/2.0.8
     org.apache.sling/org.apache.sling.models.api/1.2.2
     org.apache.sling/org.apache.sling.models.impl/1.2.8
-    org.apache.sling/org.apache.sling.resourceresolver/1.5.2
+    # We need resource resolver 1.5.4
+    org.apache.sling/org.apache.sling.resourceresolver/1.5.5-SNAPSHOT
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.18
     org.apache.sling/org.apache.sling.servlets.post/2.3.14
