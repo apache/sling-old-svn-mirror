@@ -330,7 +330,10 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         Manifest runModesManifest = getRunModesManifest(feature);
 
         getLog().info("Creating subsystem base file: " + subsystemFile.getName());
-        subsystemFile.getParentFile().mkdirs();
+        boolean created = subsystemFile.getParentFile().mkdirs();
+        if ( !created ) {
+            throw new MojoExecutionException("Failed creating " + subsystemFile.getParentFile().getAbsolutePath());
+        }
 
         try (JarOutputStream os = new JarOutputStream(new FileOutputStream(subsystemFile), runModesManifest)) {
             Map<String, Integer> bsnStartOrderMap = new HashMap<>();
