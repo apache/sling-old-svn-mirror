@@ -45,9 +45,12 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
      * as follows:
      * <ol>
      * <li>If there is a request attribute of that name, which is a non-empty
-     * string, it is returned.</li>If there is a non-empty request parameter of
+     * string, it is returned.</li>
+     * <li>If there is a non-empty request parameter of
      * that name, this parameter is returned.
-     * <li>Otherwise the <code>defaultValue</code> is returned.
+     * </li>
+     * <li>Otherwise the <code>defaultValue</code> is returned.</li>
+     * </ol>
      *
      * @param request The request from which to return the attribute or request
      *            parameter
@@ -87,11 +90,11 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
     }
 
     /**
-     * Ensures and returns the {@link Authenticator#LOGIN_RESOURCE} request
+     * Ensures and returns the {@link org.apache.sling.api.auth.Authenticator#LOGIN_RESOURCE} request
      * attribute is set to a non-null, non-empty string. If the attribute is not
      * currently set, this method sets it as follows:
      * <ol>
-     * <li>If the {@link Authenticator#LOGIN_RESOURCE} request parameter is set
+     * <li>If the {@link org.apache.sling.api.auth.Authenticator#LOGIN_RESOURCE} request parameter is set
      * to a non-empty string, that parameter is set</li>
      * <li>Otherwise if the <code>defaultValue</code> is a non-empty string the
      * default value is used</li>
@@ -123,11 +126,11 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
      * <code>target</code> path parameter must not be prefixed with the context
      * path.</li>
      * <li>If the <code>params</code> map does not contain a (non-
-     * <code>null</code>) value for the {@link Authenticator#LOGIN_RESOURCE
+     * <code>null</code>) value for the {@link org.apache.sling.api.auth.Authenticator#LOGIN_RESOURCE
      * resource} entry, such an entry is generated from the request URI and the
      * (optional) query string of the given <code>request</code>.</li>
      * <li>The parameters from the <code>params</code> map or at least a single
-     * {@link Authenticator#LOGIN_RESOURCE resource} parameter are added to the
+     * {@link org.apache.sling.api.auth.Authenticator#LOGIN_RESOURCE resource} parameter are added to the
      * target path for the redirect. Each parameter value is encoded using the
      * <code>java.net.URLEncoder</code> with UTF-8 encoding to make it safe for
      * requests</li>
@@ -135,7 +138,7 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
      *
      * @param request The request object used to get the current request URI and
      *            request query string if the <code>params</code> map does not
-     *            have the {@link Authenticator#LOGIN_RESOURCE resource}
+     *            have the {@link org.apache.sling.api.auth.Authenticator#LOGIN_RESOURCE resource}
      *            parameter set.
      * @param response The response used to send the redirect to the client.
      * @param target The target path to redirect the client to. This parameter
@@ -186,12 +189,12 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
      * submitted username/password credentials.
      * <p>
      * This implementation returns <code>true</code> if the request parameter
-     * {@link #PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
+     * {@link org.apache.sling.auth.core.AuthConstants#PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
      * the request parameter is not set or to any value other than
      * <code>true</code> this method returns <code>false</code>.
      *
      * @param request The request to provide the parameter to check
-     * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
+     * @return <code>true</code> if the {@link org.apache.sling.auth.core.AuthConstants#PAR_J_VALIDATE} parameter is set
      *         to <code>true</code>.
      * @since 1.0.2 (Bundle version 1.0.4)
      * @deprecated since Bundle 1.0.8, use
@@ -217,8 +220,8 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
 
     /**
      * Sends a 403/FORBIDDEN response optionally stating the reason for this
-     * response code in the {@link #X_REASON} header. The value for the
-     * {@link #X_REASON} header is taken from
+     * response code in the {@link org.apache.sling.auth.core.AuthConstants#X_REASON} header. The value for the
+     * {@link org.apache.sling.auth.core.AuthConstants#X_REASON} header is taken from
      * {@link AuthenticationHandler#FAILURE_REASON} request attribute if set.
      *
      * @param request The request object
