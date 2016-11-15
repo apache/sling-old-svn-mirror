@@ -48,7 +48,6 @@ import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
 
 /**
  * The IdMapService is responsible for storing a slingId-clusterNodeId
@@ -67,9 +66,9 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
 
     @Reference
     private DiscoveryLiteConfig commonsConfig;
-    
+
     private boolean initialized = false;
-    
+
     private String slingId;
 
     private long me;
@@ -100,9 +99,9 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
     protected void activate(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         registerEventHandler();
-        
+
         startBackgroundCheck("IdMapService-initializer", new BackgroundCheck() {
-            
+
             @Override
             public boolean check() {
                 try {
@@ -114,7 +113,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             }
         }, null, -1, 1000 /* = 1sec interval */);
     }
-    
+
     @Deactivate
     protected void deactivate() {
         if (eventHandlerRegistration != null) {
@@ -124,7 +123,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         // SLING-5592: cancel the potentially running background thread
         cancelPreviousBackgroundCheck();
     }
-    
+
     private void registerEventHandler() {
         if (bundleContext == null) {
             logger.info("registerEventHandler: bundleContext is null - cannot register");
@@ -146,16 +145,16 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
 
     /** Get or create a ResourceResolver **/
     private ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
-    
+
     public synchronized long getMyId() {
         if (!initialized) {
             return -1;
         }
         return me;
     }
-    
+
     /** for testing only **/
     public synchronized boolean waitForInit(long timeout) {
         long start = System.currentTimeMillis();
@@ -176,7 +175,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         }
         return initialized;
     }
-    
+
     public synchronized boolean isInitialized() {
         return initialized;
     }
@@ -189,7 +188,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = 
+            DiscoveryLiteDescriptor descriptor =
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
             long me = descriptor.getMyId();
             final Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
@@ -242,9 +241,9 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
                 resourceResolver.close();
             }
         }
-        
+
     }
-    
+
     public synchronized void clearCache() {
         if (!idMapCache.isEmpty()) {
             logger.debug("clearCache: clearing idmap cache");
@@ -265,7 +264,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             // force a cache invalidation).
             // we can either rely on observation - or combine that with
             // an invalidation of once per minute
-            // (note that this means we'll be reading 
+            // (note that this means we'll be reading
             // /var/discovery/oak/idMap once per minute - but that sounds
             // perfectly fine)
             clearCache();
@@ -294,10 +293,10 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
                 logger.info("toSlingId: mapping for "+oldEntry.getKey()+" to "+oldEntry.getValue()+" disappeared.");
             }
         }
-        
+
         return idMapCache.get(clusterNodeId);
     }
-    
+
     private Map<Integer, String> readIdMap(ResourceResolver resourceResolver) throws PersistenceException {
         Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
         ValueMap idmapValueMap = resource.adaptTo(ValueMap.class);

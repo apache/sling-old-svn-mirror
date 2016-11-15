@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.base.its.AbstractDiscoveryServiceTest;
@@ -48,20 +48,22 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
 
     private VirtualInstance instance2;
 
+    @Override
     public OakVirtualInstanceBuilder newBuilder() {
         return new OakVirtualInstanceBuilder();
     }
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
-        discoveryLogger.setLevel(Level.INFO);        
+        discoveryLogger.setLevel(Level.INFO);
     }
-    
+
     @After
     public void teartDown() throws Throwable {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
         if (instance1!=null) {
             instance1.stopViewChecker();
@@ -74,7 +76,7 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
             instance2 = null;
         }
     }
-    
+
     /**
      * Tests whether the not-current view returned by getTopology()
      * matches what listeners get in TOPOLOGY_CHANGING - it should
@@ -82,7 +84,7 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
      */
     @Test
     public void testOldView() throws Throwable {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(Level.INFO); // info should do
         OakVirtualInstanceBuilder builder = newBuilder();
         builder.setDebugName("firstInstanceA")
@@ -113,7 +115,7 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
         t1 = instance1.getDiscoveryService().getTopology();
         assertTrue(t1.isCurrent()); // current it should now be
         assertEquals(1, t1.getInstances().size()); // and it must contain the local instance
-        
+
         logger.info("testOldView: creating instance2");
         builder.getSimulatedLeaseCollection().setFinal(false);
         l1.addExpected(Type.TOPOLOGY_CHANGING);
@@ -125,7 +127,7 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
         instance2 = builder2.build();
         instance2.stopViewChecker();
 //        instance2.stopVoting();
-        
+
         logger.info("testOldView: instance2 created, now issuing one heartbeat with instance2 first, so that instance1 can take note of it");
         instance2.getViewChecker().checkView();
         OakDiscoveryService oakDisco1 = (OakDiscoveryService) instance2.getDiscoveryService();
@@ -144,7 +146,7 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
         t1 = instance1.getDiscoveryService().getTopology();
         assertFalse(t1.isCurrent()); // current it should not be
         assertEquals(1, t1.getInstances().size()); // but it should still contain the local instance from before
-        
+
         builder.getSimulatedLeaseCollection().setFinal(true);
         l1.addExpected(Type.TOPOLOGY_CHANGED);
         logger.info("testOldView: now issuing 3 rounds of heartbeats/checks and expecting a TOPOLOGY_CHANGED then");
@@ -160,14 +162,14 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
         instance2.heartbeatsAndCheckView();
         instance1.heartbeatsAndCheckView();
         Thread.sleep(1200);
-        
+
         assertEquals(3, l1.getEvents().size()); // INIT, CHANGING and CHANGED
         assertEquals(0, l1.getRemainingExpectedCount()); // no remaining expected
         assertEquals(0, l1.getUnexpectedCount()); // and no unexpected
         t1 = instance1.getDiscoveryService().getTopology();
         assertTrue(t1.isCurrent()); // and we should be current again
         assertEquals(2, t1.getInstances().size()); // and contain both instances now
-        
+
         // timeout is set to 3sec, so we now do heartbeats for 4sec with only instance1
         // to let instance2 crash
         builder.getSimulatedLeaseCollection().setFinal(false);
@@ -183,5 +185,5 @@ public class OakDiscoveryServiceTest extends AbstractDiscoveryServiceTest {
         assertFalse(t1.isCurrent()); // and we should be current again
         assertEquals(2, t1.getInstances().size()); // and contain both instances now
     }
-    
+
 }

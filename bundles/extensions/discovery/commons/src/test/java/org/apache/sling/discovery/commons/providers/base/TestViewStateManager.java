@@ -31,8 +31,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.sling.commons.testing.junit.categories.Slow;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
@@ -47,7 +46,6 @@ import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +62,8 @@ public class TestViewStateManager {
             this.lock = lock;
             this.semaphore = semaphore;
         }
-        
+
+        @Override
         public void sync(BaseTopologyView view, Runnable callback) {
             try {
                 lock.unlock();
@@ -97,22 +96,23 @@ public class TestViewStateManager {
     @Before
     public void setup() throws Exception {
         mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
-            
+
+            @Override
             public void sync(BaseTopologyView view, Runnable callback) {
                 callback.run();
             }
-            
+
             @Override
             public void cancelSync() {
                 // nothing to cancel, we're auto-run
             }
         });
         defaultRandom = new Random(1234123412); // I want randomness yes, but deterministic, for some methods at least
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.INFO);
     }
-    
+
     @After
     public void teardown() throws Exception {
         if (mgr != null) {
@@ -121,7 +121,7 @@ public class TestViewStateManager {
         }
         mgr = null;
         defaultRandom= null;
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
     }
     
@@ -172,7 +172,7 @@ public class TestViewStateManager {
         mgr.bind(listener); // we should be generous and allow duplicate registration
         assertTrue(mgr.unbind(listener));
         assertFalse(mgr.unbind(listener));
-        
+
         mgr.handleActivated();
         assertFalse(mgr.unbind(listener));
         mgr.bind(listener);
@@ -180,7 +180,7 @@ public class TestViewStateManager {
         assertTrue(mgr.unbind(listener));
         assertFalse(mgr.unbind(listener));
     }
-    
+
     @Test
     public void testBindActivateChangingChanged() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -195,7 +195,7 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindChangingActivateChanged() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -210,7 +210,7 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindChangingChangedActivate() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -225,7 +225,7 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindChangingChangedChangingActivate() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -245,7 +245,7 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view2));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindChangedChangingActivate() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -263,18 +263,19 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view2));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testCancelSync() throws Exception {
         final List<Runnable> syncCallbacks = new LinkedList<Runnable>();
         mgr = new ViewStateManagerImpl(new ReentrantLock(), new ClusterSyncService() {
-            
+
+            @Override
             public void sync(BaseTopologyView view, Runnable callback) {
                 synchronized(syncCallbacks) {
                     syncCallbacks.add(callback);
                 }
             }
-            
+
             @Override
             public void cancelSync() {
                 synchronized(syncCallbacks) {
@@ -295,7 +296,7 @@ public class TestViewStateManager {
         }
         String id1 = UUID.randomUUID().toString();
         String id2 = UUID.randomUUID().toString();
-        final BaseTopologyView view2 = TestHelper.newView(true, id1, id1, id1, id2); 
+        final BaseTopologyView view2 = TestHelper.newView(true, id1, id1, id1, id2);
         mgr.handleNewView(view2);
         assertEquals(0, mgr.waitForAsyncEvents(1000));
         TestHelper.assertNoEvents(listener);
@@ -307,7 +308,7 @@ public class TestViewStateManager {
         assertEquals(0, mgr.waitForAsyncEvents(1000));
         assertEvents(listener, EventHelper.newInitEvent(view2));
     }
-    
+
     @Test
     public void testActivateBindChangingChanged() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -332,7 +333,7 @@ public class TestViewStateManager {
         mgr.bind(listener);
         mgr.handleChanging();
         DummyTopologyView oldView = new DummyTopologyView().addInstance();
-        DefaultInstanceDescription localInstance = 
+        DefaultInstanceDescription localInstance =
                 (DefaultInstanceDescription) oldView.getLocalInstance();
         localInstance.setProperty("foo", "bar1");
         mgr.handleNewView(oldView);
@@ -381,12 +382,12 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newInitEvent(view));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindActivateBindChangingChanged() throws Exception {
         final DummyListener listener1 = new DummyListener();
         final DummyListener listener2 = new DummyListener();
-        
+
         mgr.bind(listener1);
         TestHelper.assertNoEvents(listener1);
         mgr.handleActivated();
@@ -401,7 +402,7 @@ public class TestViewStateManager {
         mgr.handleNewView(view);
         assertEvents(listener1, EventHelper.newInitEvent(view));
         assertEvents(listener2, EventHelper.newInitEvent(view));
-        
+
         randomEventLoop(defaultRandom, listener1, listener2);
     }
 
@@ -409,7 +410,7 @@ public class TestViewStateManager {
     public void testBindActivateChangingBindChanged() throws Exception {
         final DummyListener listener1 = new DummyListener();
         final DummyListener listener2 = new DummyListener();
-        
+
         mgr.bind(listener1);
         TestHelper.assertNoEvents(listener1);
         mgr.handleActivated();
@@ -426,7 +427,7 @@ public class TestViewStateManager {
 
         randomEventLoop(defaultRandom, listener1, listener2);
     }
-    
+
     @Test
     public void testActivateBindChangingDuplicateHandleNewView() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -440,7 +441,7 @@ public class TestViewStateManager {
         TestHelper.assertNoEvents(listener);
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testActivateBindChangingChangedBindDuplicateHandleNewView() throws Exception {
         final DummyListener listener1 = new DummyListener();
@@ -450,7 +451,7 @@ public class TestViewStateManager {
         final DummyTopologyView view = new DummyTopologyView().addInstance();
         mgr.handleNewView(view);
         assertEvents(listener1, EventHelper.newInitEvent(view));
-        
+
         final DummyListener listener2 = new DummyListener();
         mgr.bind(listener2);
         mgr.handleNewView(DummyTopologyView.clone(view));
@@ -458,7 +459,7 @@ public class TestViewStateManager {
         assertEvents(listener2, EventHelper.newInitEvent(view));
         randomEventLoop(defaultRandom, listener1, listener2);
     }
-    
+
     @Test
     public void testActivateChangedBindDuplicateHandleNewView() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -473,7 +474,7 @@ public class TestViewStateManager {
         TestHelper.assertNoEvents(listener);
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindActivateChangedChanged() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -491,7 +492,7 @@ public class TestViewStateManager {
         assertEvents(listener, EventHelper.newChangingEvent(view1), EventHelper.newChangedEvent(view1, view2));
         randomEventLoop(defaultRandom, listener);
     }
-    
+
     @Test
     public void testBindActivateChangedDeactivateChangingActivateChanged() throws Exception {
         final DummyListener listener = new DummyListener();
@@ -560,11 +561,11 @@ public class TestViewStateManager {
         mgr.handleNewView(view2);
         assertEvents(listener, EventHelper.newInitEvent(view2));
     }
-    
+
     @Test
     public void testClusterSyncService_noConcurrency() throws Exception {
-        final org.apache.log4j.Logger commonsLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery.commons.providers");
-        final org.apache.log4j.Level logLevel = commonsLogger.getLevel();
+        final org.apache.log4j.Logger commonsLogger = RootLogger.getLogger("org.apache.sling.discovery.commons.providers");
+//        final org.apache.log4j.Level logLevel = commonsLogger.getLevel();
         commonsLogger.setLevel(Level.INFO); // change here to DEBUG in case of issues with this test
         final Semaphore serviceSemaphore = new Semaphore(0);
         final ReentrantLock lock = new ReentrantLock();
@@ -584,10 +585,11 @@ public class TestViewStateManager {
                 .addInstance(slingId2, cluster, false, false);
         async(new Runnable() {
 
+            @Override
             public void run() {
                 mgr.handleNewView(view1);
             }
-            
+
         });
         Thread.sleep(1000);
         TestHelper.assertNoEvents(listener);
@@ -600,10 +602,11 @@ public class TestViewStateManager {
         view2.removeInstance(slingId2);
         async(new Runnable() {
 
+            @Override
             public void run() {
                 mgr.handleNewView(view2);
             }
-            
+
         });
         logger.debug("run: waiting for 1sec");
         Thread.sleep(1000);
@@ -624,7 +627,7 @@ public class TestViewStateManager {
 
     @Test
     public void testOnlyDiffersInProperties() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(Level.INFO); // changed from Level.DEBUG
         logger.info("testOnlyDiffersInProperties: start");
         final String slingId1 = UUID.randomUUID().toString();
@@ -639,7 +642,7 @@ public class TestViewStateManager {
         final DummyTopologyView view2 = DummyTopologyView.clone(view1).removeInstance(slingId2);
         final DummyTopologyView view3 = DummyTopologyView.clone(view1).removeInstance(slingId2).removeInstance(slingId3);
         DummyTopologyView view1Cloned = DummyTopologyView.clone(view1);
-        
+
         logger.info("testOnlyDiffersInProperties: handleNewView(view1)");
         mgr.handleNewView(view1);
         logger.info("testOnlyDiffersInProperties: handleActivated()");
@@ -671,7 +674,7 @@ public class TestViewStateManager {
         i4_1.setProperty("a", "b");
         logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view4)");
         assertTrue(mgr.onlyDiffersInProperties(view4));
-    
+
         DefaultInstanceDescription i5_1 = (DefaultInstanceDescription) view5.getInstance(slingId1);
         i5_1.setProperty("a", "b");
         logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view5)");
@@ -701,7 +704,7 @@ public class TestViewStateManager {
         view6.setId(originalId);
         logger.info("testOnlyDiffersInProperties: onlyDiffersInProperties(view6) [5]");
         assertTrue(mgr.onlyDiffersInProperties(view6));
-        
+
         // hack: we're modifying the view *in the ViewStateManagerImpl* here!!:
         view4.setId(null);
 

@@ -69,13 +69,14 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return service;
     }
 
+    @Override
     public String getSlingId() {
     	if (settingsService==null) {
     		return null;
     	}
         return settingsService.getSlingId();
     }
-    
+
     public void invalidateEstablishedViewId(String establishedViewId) {
         if (establishedViewId != null &&
                 (failedEstablishedViewId == null ||
@@ -85,6 +86,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         failedEstablishedViewId = establishedViewId;
     }
 
+    @Override
     public LocalClusterView getLocalClusterView() throws UndefinedClusterViewException {
     	if (resourceResolverFactory==null) {
     		logger.warn("getClusterView: no resourceResolverFactory set at the moment.");
@@ -94,7 +96,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             View view = ViewHelper.getEstablishedView(resourceResolver, config);
             if (view == null) {
@@ -102,11 +104,11 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
                         "no established view at the moment");
             }
-            
+
             if (failedEstablishedViewId != null
                     && failedEstablishedViewId.equals(view.getResource().getName())) {
                 // SLING-5195 : the heartbeat-handler-self-check has declared the currently
-                // established view as invalid - hence we should now treat this as 
+                // established view as invalid - hence we should now treat this as
                 // undefined clusterview
                 logger.debug("getClusterView: current establishedView is marked as invalid: "+failedEstablishedViewId);
                 throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
@@ -115,7 +117,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
                     config, view, getSlingId());
-            
+
             InstanceDescription local = clusterViewImpl.getLocalInstance();
             if (local != null) {
                 return clusterViewImpl;
@@ -124,7 +126,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                         + "This is normal at startup. At other times is pseudo-network-partitioning is an indicator for repository/network-delays or clocks-out-of-sync (SLING-3432). "
                         + "(increasing the heartbeatTimeout can help as a workaround too) "
                         + "The local instance will stay in TOPOLOGY_CHANGING or pre _INIT mode until a new vote was successful.");
-                throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
+                throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY,
                         "established view does not include local instance - isolated");
             }
         } catch (UndefinedClusterViewException e) {

@@ -35,7 +35,7 @@ import java.util.Set;
 import javax.jcr.Property;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 import junitx.util.PrivateAccessor;
 
 public class HeartbeatTest {
-    
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     class SimpleTopologyEventListener implements TopologyEventListener {
@@ -73,7 +73,7 @@ public class HeartbeatTest {
         public SimpleTopologyEventListener(String name) {
             this.name = name;
         }
-        
+
         @Override
         public void handleTopologyEvent(TopologyEvent event) {
             events.add(event);
@@ -107,30 +107,30 @@ public class HeartbeatTest {
             lastEvent = event;
             eventCount++;
         }
-        
+
         public int getEventCount() {
             return eventCount;
         }
-        
+
         public TopologyEvent getLastEvent() {
             return lastEvent;
         }
-        
+
     }
-    
+
     Set<VirtualInstance> instances = new HashSet<VirtualInstance>();
     private Level logLevel;
-    
+
     @Before
     public void setup() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.TRACE);
     }
-    
+
     @After
     public void tearDown() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
 
         Iterator<VirtualInstance> it = instances.iterator();
@@ -172,7 +172,7 @@ public class HeartbeatTest {
         Thread.sleep(10); // wait 10ms to ensure 'slowMachine' has the lowerst leaderElectionId (to become leader)
         SimpleTopologyEventListener slowListener = new SimpleTopologyEventListener("slow");
         slowMachine.bindTopologyEventListener(slowListener);
-        
+
         logger.info("doTestPartitioning: creating fastMachine1...");
         FullJR2VirtualInstanceBuilder fastBuilder1 = newBuilder();
         fastBuilder1.setDebugName("fast1")
@@ -233,7 +233,7 @@ public class HeartbeatTest {
         instances.add(fastMachine4);
         SimpleTopologyEventListener fastListener4 = new SimpleTopologyEventListener("fast4");
         fastMachine4.bindTopologyEventListener(fastListener4);
-        
+
         logger.info("doTestPartitioning: --------------------------------");
         logger.info("doTestPartitioning: letting heartbeats be sent by all instances for a few loops...");
         logger.info("doTestPartitioning: --------------------------------");
@@ -278,7 +278,7 @@ public class HeartbeatTest {
             }
             Thread.sleep(1000);
         }
-        
+
         // at this stage the 4 fast plus the slow instance should all see each other
         logger.info("doTestPartitioning: all 4 instances should have agreed on seeing each other");
         assertNotNull(fastListener1.getLastEvent());
@@ -301,7 +301,7 @@ public class HeartbeatTest {
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, slowListener.getLastEvent().getType());
         assertEquals(5, slowListener.getLastEvent().getNewView().getInstances().size());
         assertTrue(slowListener.getLastEvent().getNewView().getLocalInstance().isLeader());
-        
+
         // after 12sec the slow instance' heartbeat should have timed out
         logger.info("doTestPartitioning: letting slowMachine NOT send any heartbeats for 12sec, only the fast ones do...");
         for(int i=0; i<12; i++) {
@@ -326,7 +326,7 @@ public class HeartbeatTest {
             Thread.sleep(1000);
         }
         logger.info("doTestPartitioning: this should now have decoupled slowMachine from the other 4...");
-        
+
         // so the fast listeners should only see 4 instances remaining
         for(int i=0; i<7; i++) {
             logger.info("doTestPartitioning: sleeping 2sec...");
@@ -340,7 +340,7 @@ public class HeartbeatTest {
             assertEquals(4, fastListener3.getLastEvent().getNewView().getInstances().size());
             assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener4.getLastEvent().getType());
             assertEquals(4, fastListener4.getLastEvent().getNewView().getInstances().size());
-            
+
             assertTrue(fastListener1.getLastEvent().getNewView().getLocalInstance().isLeader());
             assertFalse(fastListener2.getLastEvent().getNewView().getLocalInstance().isLeader());
             assertFalse(fastListener3.getLastEvent().getNewView().getLocalInstance().isLeader());
@@ -412,7 +412,7 @@ public class HeartbeatTest {
             }
             Thread.sleep(1000);
         }
-        
+
         // now all should be in one cluster again
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener1.getLastEvent().getType());
         assertEquals(5, fastListener1.getLastEvent().getNewView().getInstances().size());
@@ -424,7 +424,7 @@ public class HeartbeatTest {
         assertEquals(5, fastListener4.getLastEvent().getNewView().getInstances().size());
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, slowListener.getLastEvent().getType());
         assertEquals(5, slowListener.getLastEvent().getNewView().getInstances().size());
-        
+
         // SLING-5030 part 2 : after rejoin-after-partitioning the slowMachine1 should again be leader
         slowMachine.dumpRepo();
         assertFalse(slowListener.getLastEvent().getNewView().getLocalInstance().isLeader());
@@ -433,12 +433,12 @@ public class HeartbeatTest {
         assertFalse(fastListener3.getLastEvent().getNewView().getLocalInstance().isLeader());
         assertFalse(fastListener4.getLastEvent().getNewView().getLocalInstance().isLeader());
     }
-    
+
     /**
      * This tests the case where one machine is slow with sending heartbeats
      * and should thus trigger the second, fast machine to kick it out of the topology.
      * But the slow one should also get a TOPOLOGY_CHANGING but just not get a
-     * TOPOLOGY_CHANGED until it finally sends heartbeats again and the voting can 
+     * TOPOLOGY_CHANGED until it finally sends heartbeats again and the voting can
      * happen again.
      */
     @Category(Slow.class) //TODO: takes env 25sec
@@ -480,7 +480,7 @@ public class HeartbeatTest {
         fastMachine.bindTopologyEventListener(fastListener);
         HeartbeatHandler hhSlow = slowMachine.getHeartbeatHandler();
         HeartbeatHandler hhFast = fastMachine.getHeartbeatHandler();
-        
+
         Thread.sleep(1000);
         logger.info("doTestSlowAndFastMachine: no event should have been triggered yet");
         assertFalse(fastMachine.getDiscoveryService().getTopology().isCurrent());
@@ -503,14 +503,14 @@ public class HeartbeatTest {
         }
         logger.info("doTestSlowAndFastMachine: now the two instances should be connected.");
         slowMachine.dumpRepo();
-        
+
         assertEquals(2, slowMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(2, fastMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, fastListener.getLastEvent().getType());
         assertEquals(1, fastListener.getEventCount());
         assertEquals(TopologyEvent.Type.TOPOLOGY_INIT, slowListener.getLastEvent().getType());
         assertEquals(1, slowListener.getEventCount());
-        
+
         // now let the slow machine be slow while the fast one updates as expected
         logger.info("doTestSlowAndFastMachine: last heartbeat of slowMachine.");
         synchronized(lock(hhSlow)) {
@@ -535,10 +535,10 @@ public class HeartbeatTest {
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener.getLastEvent().getType());
         assertEquals(3, fastListener.getEventCount());
         assertEquals(1, fastMachine.getDiscoveryService().getTopology().getInstances().size());
-        
+
         TopologyView topo = slowMachine.getDiscoveryService().getTopology();
         assertFalse(topo.isCurrent());
-        
+
         // after those 6 sec, hhSlow does the check (6sec between heartbeat and check)
         logger.info("doTestSlowAndFastMachine: slowMachine is going to do a checkView next - and will detect being decoupled");
         hhSlow.doCheckView();
@@ -560,7 +560,7 @@ public class HeartbeatTest {
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener.getLastEvent().getType());
         assertEquals(1, fastMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(3, fastListener.getEventCount());
-        
+
         // make few rounds of heartbeats so that the two instances see each other again
         logger.info("doTestSlowAndFastMachine: now let both fast and slow issue heartbeats...");
         for(int i=0; i<4; i++) {
@@ -575,7 +575,7 @@ public class HeartbeatTest {
             Thread.sleep(1000);
         }
         logger.info("doTestSlowAndFastMachine: by now the two should have joined");
-        
+
         // this should have put the two together again
         // even after 8 sec the slow lsitener did not send a TOPOLOGY_CHANGED yet
         assertEquals(TopologyEvent.Type.TOPOLOGY_CHANGED, fastListener.getLastEvent().getType());
@@ -587,7 +587,7 @@ public class HeartbeatTest {
         assertEquals(2, slowMachine.getDiscoveryService().getTopology().getInstances().size());
         assertEquals(3, slowListener.getEventCount());
     }
-    
+
     private Object lock(HeartbeatHandler heartbeatHandler) throws NoSuchFieldException {
         //TODO: refactor HeartbeatHandler to provide such a synchronized method
         // rather having the test rely on this
@@ -611,7 +611,7 @@ public class HeartbeatTest {
         instances.add(slowMachine1);
         SimpleTopologyEventListener slowListener1 = new SimpleTopologyEventListener("slow1");
         slowMachine1.bindTopologyEventListener(slowListener1);
-        
+
         logger.info("testVotingLoop: creating slowMachine2...");
         FullJR2VirtualInstanceBuilder slowBuilder2 = newBuilder();
         slowBuilder2.setDebugName("slow2")
@@ -623,7 +623,7 @@ public class HeartbeatTest {
         instances.add(slowMachine2);
         SimpleTopologyEventListener slowListener2 = new SimpleTopologyEventListener("slow2");
         slowMachine2.bindTopologyEventListener(slowListener2);
-        
+
         logger.info("testVotingLoop: creating fastMachine...");
         FullJR2VirtualInstanceBuilder fastBuilder = newBuilder();
         fastBuilder.setDebugName("fast")
@@ -638,7 +638,7 @@ public class HeartbeatTest {
         HeartbeatHandler hhSlow1 = slowMachine1.getHeartbeatHandler();
         HeartbeatHandler hhSlow2 = slowMachine2.getHeartbeatHandler();
         HeartbeatHandler hhFast = fastMachine.getHeartbeatHandler();
-        
+
         Thread.sleep(1000);
         logger.info("testVotingLoop: after some initial 1sec sleep no event should yet have been sent");
         assertFalse(fastMachine.getDiscoveryService().getTopology().isCurrent());
@@ -651,7 +651,7 @@ public class HeartbeatTest {
         // prevent the slow machine from voting
         logger.info("testVotingLoop: stopping voting of slowMachine1...");
         slowMachine1.stopVoting();
-        
+
         // now let all issue a heartbeat
         logger.info("testVotingLoop: letting slow1, slow2 and fast all issue 1 heartbeat");
         hhSlow1.issueHeartbeat();
@@ -663,7 +663,7 @@ public class HeartbeatTest {
         // that will cause a voting loop
         logger.info("testVotingLoop: let the fast one do a checkView, thus initiate a voting");
         hhFast.doCheckView();
-        
+
         Calendar previousVotedAt = null;
         for(int i=0; i<5; i++) {
             logger.info("testVotingLoop: sleeping 1sec...");
@@ -672,9 +672,9 @@ public class HeartbeatTest {
             // now check the ongoing votings
             ResourceResolverFactory factory = fastMachine.getResourceResolverFactory();
             ResourceResolver resourceResolver = factory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
             try{
-                List<VotingView> ongoingVotings = 
+                List<VotingView> ongoingVotings =
                         VotingHelper.listOpenNonWinningVotings(resourceResolver, fastMachine.getFullConfig());
                 assertNotNull(ongoingVotings);
                 assertEquals(1, ongoingVotings.size());
@@ -697,7 +697,7 @@ public class HeartbeatTest {
                 fail("Exception: "+e);
             }
         }
-        
+
     }
-    
+
 }

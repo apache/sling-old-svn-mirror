@@ -39,9 +39,9 @@ public class FullJR2VirtualInstance extends VirtualInstance {
     public void stopVoting() {
         fullBuilder.stopVoting();
     }
-    
+
     public void analyzeVotings() throws Exception {
-        ResourceResolver resourceResolver = getResourceResolverFactory().getAdministrativeResourceResolver(null);
+        ResourceResolver resourceResolver = getResourceResolverFactory().getServiceResourceResolver(null);
         fullBuilder.getVotingHandler().analyzeVotings(resourceResolver);
         resourceResolver.close();
     }

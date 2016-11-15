@@ -36,6 +36,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
@@ -62,17 +63,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractClusterTest {
-	
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     private class SimpleClusterView {
-    	
+
     	private VirtualInstance[] instances;
 
     	SimpleClusterView(VirtualInstance... instances) {
     		this.instances = instances;
     	}
-    	
+
     	@Override
     	public String toString() {
     	    String instanceSlingIds = "";
@@ -100,10 +101,10 @@ public abstract class AbstractClusterTest {
     private Level logLevel;
 
     protected abstract VirtualInstanceBuilder newBuilder();
-    
+
     @Before
     public void setup() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.TRACE);
         logger.debug("here we are");
@@ -140,10 +141,10 @@ public abstract class AbstractClusterTest {
         instance3 = null;
         instance4 = null;
         instance5 = null;
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
     }
-    
+
     /** test leader behaviour with ascending slingIds, SLING-3253 **/
     @Test
     public void testLeaderAsc() throws Throwable {
@@ -206,11 +207,11 @@ public abstract class AbstractClusterTest {
         }
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
-        
+
         // now they must be in the same cluster, so in a cluster of size 1
         assertEquals(2, instance1.getClusterViewService().getLocalClusterView().getInstances().size());
         assertEquals(2, instance2.getClusterViewService().getLocalClusterView().getInstances().size());
-        
+
         // the first instance should be the leader - since it was started first
         assertTrue(instance1.getLocalInstanceDescription().isLeader());
         assertFalse(instance2.getLocalInstanceDescription().isLeader());
@@ -231,11 +232,11 @@ public abstract class AbstractClusterTest {
     public void testStaleAnnouncementsVisibleToClusterPeers4139() throws Throwable {
         logger.info("testStaleAnnouncementsVisibleToClusterPeers4139: start");
     	final String instance1SlingId = prepare4139();
-        
+
         // remove topology connector from instance3 to instance1
         // -> corresponds to stop pinging
         // (nothing to assert additionally here)
-        
+
         // start instance 1
         instance1Restarted = newBuilder().setDebugName("firstInstance")
                 .useRepositoryOf(instance2)
@@ -247,13 +248,13 @@ public abstract class AbstractClusterTest {
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3);
         Thread.sleep(500);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3);
-        
+
         // facts: connector 3->1 does not exist actively anymore,
-        //        instance 1+2 should build a cluster, 
+        //        instance 1+2 should build a cluster,
         //        instance 3 should be isolated
         logger.info("instance1Restarted.dump: "+instance1Restarted.slingId);
         instance1Restarted.dumpRepo();
-        
+
         logger.info("instance2.dump: "+instance2.slingId);
         instance2.dumpRepo();
 
@@ -266,10 +267,10 @@ public abstract class AbstractClusterTest {
         instance1Restarted.stop();
         logger.info("testStaleAnnouncementsVisibleToClusterPeers4139: end");
     }
-    
+
     /**
      * Tests a situation where a connector was done to instance1, which eventually
-     * crashed, then the connector is done to instance2. Meanwhile instance1 
+     * crashed, then the connector is done to instance2. Meanwhile instance1
      * got restarted and this test assures that the instance3 is not reported
      * twice in the topology. Did not happen before 4139, but should never afterwards neither
      */
@@ -277,13 +278,13 @@ public abstract class AbstractClusterTest {
     public void testDuplicateInstanceIn2Clusters4139() throws Throwable {
         logger.info("testDuplicateInstanceIn2Clusters4139: start");
         final String instance1SlingId = prepare4139();
-        
+
         // remove topology connector from instance3 to instance1
         // -> corresponds to stop pinging
         // (nothing to assert additionally here)
         // instead, now start a connector from instance3 to instance2
         pingConnector(instance3, instance2);
-        
+
         // start instance 1
         instance1Restarted = newBuilder().setDebugName("firstInstance")
                 .useRepositoryOf(instance2)
@@ -300,7 +301,7 @@ public abstract class AbstractClusterTest {
         logger.info("instance3.slingId: "+instance3.slingId);
         instance1Restarted.dumpRepo();
         assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), new SimpleClusterView(instance3));
-        
+
         Thread.sleep(500);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3);
         pingConnector(instance3, instance2);
@@ -316,16 +317,16 @@ public abstract class AbstractClusterTest {
 
         logger.info("testDuplicateInstanceIn2Clusters4139: end");
     }
-    
+
 /*    ok, this test should do the following:
          * cluster A with instance 1 and instance 2
          * cluster B with instance 3 and instance 4
          * cluster C with instance 5
-         
+
          * initially, instance3 is pinging instance1, and instance 5 is pinging instance1 as well (MAC hub)
           * that should result in instance3 and 5 to inherit the rest from instance1
-         * then simulate load balancer switching from instance1 to instance2 - hence pings go to instance2 
-         * 
+         * then simulate load balancer switching from instance1 to instance2 - hence pings go to instance2
+         *
          */
     @Category(Slow.class) //TODO: this takes env 45sec
     @Test
@@ -333,10 +334,10 @@ public abstract class AbstractClusterTest {
         final int MIN_EVENT_DELAY = 1;
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.DEBUG);
-        
+
         instance1 = newBuilder().setDebugName("instance1")
                 .newRepository("/var/discovery/clusterA/", true)
                 .setConnectorPingTimeout(10 /* sec */)
@@ -375,7 +376,7 @@ public abstract class AbstractClusterTest {
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3, instance4));
         assertSameTopology(new SimpleClusterView(instance5));
-        
+
         // create a topology connector from instance3 to instance1
         // -> corresponds to starting to ping
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
@@ -386,7 +387,7 @@ public abstract class AbstractClusterTest {
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
         Thread.sleep(500);
-        
+
         // make asserts on the topology
         logger.info("testConnectorSwitching4139: instance1.slingId="+instance1.slingId);
         logger.info("testConnectorSwitching4139: instance2.slingId="+instance2.slingId);
@@ -394,11 +395,11 @@ public abstract class AbstractClusterTest {
         logger.info("testConnectorSwitching4139: instance4.slingId="+instance4.slingId);
         logger.info("testConnectorSwitching4139: instance5.slingId="+instance5.slingId);
         instance1.dumpRepo();
-        
-        assertSameTopology(new SimpleClusterView(instance1, instance2), 
-                new SimpleClusterView(instance3, instance4), 
+
+        assertSameTopology(new SimpleClusterView(instance1, instance2),
+                new SimpleClusterView(instance3, instance4),
                 new SimpleClusterView(instance5));
-        
+
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
         boolean success = false;
         for(int i=0; i<25; i++) {
@@ -419,7 +420,7 @@ public abstract class AbstractClusterTest {
             }
             logger.info("testConnectorSwitching4139: looping cos ping1="+ping1+", ping2="+ping2);
             Thread.sleep(1000); // 25x1000ms = 25sec max - (vs 10sec timeout)
-            
+
         }
         assertTrue(success);
         // one final heartbeat
@@ -429,8 +430,8 @@ public abstract class AbstractClusterTest {
 
         instance2.dumpRepo();
 
-        assertSameTopology(new SimpleClusterView(instance2), 
-                new SimpleClusterView(instance3, instance4), 
+        assertSameTopology(new SimpleClusterView(instance2),
+                new SimpleClusterView(instance3, instance4),
                 new SimpleClusterView(instance5));
 
         // restart instance1, crash instance4
@@ -455,7 +456,7 @@ public abstract class AbstractClusterTest {
             // an establishedView as failing upon detecting a view change
             // when the view changes, we're sending TOPOLOGY_CHANGING to listeners
             // so getTopology() should also return isCurrent==false - which
-            // means that doing a ping will also fail, cos that wants to 
+            // means that doing a ping will also fail, cos that wants to
             // get a current topology to send as an announcement.
             // which is a long way of saying: we cannot do an assert here
             // since instance3 *can* have an undefined cluster view..
@@ -500,8 +501,8 @@ public abstract class AbstractClusterTest {
         instance1Restarted.dumpRepo();
         assertTrue(success);
 
-        assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), 
-                new SimpleClusterView(instance3), 
+        assertSameTopology(new SimpleClusterView(instance1Restarted, instance2),
+                new SimpleClusterView(instance3),
                 new SimpleClusterView(instance5));
         instance1Restarted.stop();
 
@@ -514,10 +515,10 @@ public abstract class AbstractClusterTest {
         final int MIN_EVENT_DELAY = 1;
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.DEBUG);
-        
+
         instance1 = newBuilder().setDebugName("instance1")
                 .newRepository("/var/discovery/clusterA/", true)
                 .setConnectorPingTimeout(15 /* sec */)
@@ -547,25 +548,25 @@ public abstract class AbstractClusterTest {
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3));
         assertSameTopology(new SimpleClusterView(instance5));
-        
+
         // create a topology connector from instance3 to instance1
         // -> corresponds to starting to ping
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
-        
+
         // make asserts on the topology
         logger.info("testDuplicateInstance3726: instance1.slingId="+instance1.slingId);
         logger.info("testDuplicateInstance3726: instance2.slingId="+instance2.slingId);
         logger.info("testDuplicateInstance3726: instance3.slingId="+instance3.slingId);
         logger.info("testDuplicateInstance3726: instance5.slingId="+instance5.slingId);
         instance1.dumpRepo();
-        
-        assertSameTopology(new SimpleClusterView(instance1, instance2), 
-                new SimpleClusterView(instance3/*, instance4*/), 
+
+        assertSameTopology(new SimpleClusterView(instance1, instance2),
+                new SimpleClusterView(instance3/*, instance4*/),
                 new SimpleClusterView(instance5));
-        
+
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
         instance1.stopViewChecker();
         boolean success = false;
@@ -587,7 +588,7 @@ public abstract class AbstractClusterTest {
             }
             logger.info("testDuplicateInstance3726: looping");
             Thread.sleep(1000); // 25x1000ms = 25sec max - (vs 15sec timeout)
-            
+
         }
         assertTrue(success);
         // one final heartbeat
@@ -597,8 +598,8 @@ public abstract class AbstractClusterTest {
 
         instance2.dumpRepo();
 
-        assertSameTopology(new SimpleClusterView(instance2), 
-                new SimpleClusterView(instance3), 
+        assertSameTopology(new SimpleClusterView(instance2),
+                new SimpleClusterView(instance3),
                 new SimpleClusterView(instance5));
 
         // restart instance1, start instance4
@@ -614,7 +615,7 @@ public abstract class AbstractClusterTest {
         for(int i=0; i<3; i++) {
             runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance4, instance5);
             Thread.sleep(250);
-            // since instance4 just started - hooked to instance3 
+            // since instance4 just started - hooked to instance3
             // it is possible that it doesn't just have a topology
             // yet - so we cannot do:
             //assertTrue(pingConnector(instance3, instance2));
@@ -635,8 +636,8 @@ public abstract class AbstractClusterTest {
         logger.info("testDuplicateInstance3726: instance5.slingId="+instance5.slingId);
         assertTrue(success);
 
-        assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), 
-                new SimpleClusterView(instance3, instance4), 
+        assertSameTopology(new SimpleClusterView(instance1Restarted, instance2),
+                new SimpleClusterView(instance3, instance4),
                 new SimpleClusterView(instance5));
         instance1Restarted.stop();
         logger.info("testDuplicateInstance3726: end");
@@ -646,7 +647,7 @@ public abstract class AbstractClusterTest {
         if (clusters==null) {
             return;
         }
-        for(int i=0; i<clusters.length; i++) { // go through all clusters 
+        for(int i=0; i<clusters.length; i++) { // go through all clusters
             final SimpleClusterView aCluster = clusters[i];
             assertSameClusterIds(aCluster.instances);
             for(int j=0; j<aCluster.instances.length; j++) { // and all instances therein
@@ -676,7 +677,7 @@ public abstract class AbstractClusterTest {
 
     /**
      * Tests a situation where a connector was done to instance1, which eventually
-     * crashed, then the connector is done to instance4 (which is in a separate, 3rd cluster). 
+     * crashed, then the connector is done to instance4 (which is in a separate, 3rd cluster).
      * Meanwhile instance1 got restarted and this test assures that the instance3 is not reported
      * twice in the topology. This used to happen prior to SLING-4139
      */
@@ -684,11 +685,11 @@ public abstract class AbstractClusterTest {
     public void testStaleInstanceIn3Clusters4139() throws Throwable {
         logger.info("testStaleInstanceIn3Clusters4139: start");
         final String instance1SlingId = prepare4139();
-        
+
         // remove topology connector from instance3 to instance1
         // -> corresponds to stop pinging
         // (nothing to assert additionally here)
-        
+
         // start instance4 in a separate cluster
         instance4 = newBuilder().setDebugName("remoteInstance4")
                 .newRepository("/var/discovery/implremote4/", false)
@@ -700,12 +701,12 @@ public abstract class AbstractClusterTest {
         } catch(UndefinedClusterViewException e) {
             // ok
         }
-        
+
         // instead, now start a connector from instance3 to instance2
         instance4.heartbeatsAndCheckView();
         instance4.heartbeatsAndCheckView();
         pingConnector(instance3, instance4);
-        
+
         // start instance 1
         instance1Restarted = newBuilder().setDebugName("firstInstance")
                 .useRepositoryOf(instance2)
@@ -726,7 +727,7 @@ public abstract class AbstractClusterTest {
                 new SimpleClusterView(instance3),
                 new SimpleClusterView(instance4));
         assertSameTopology(new SimpleClusterView(instance1Restarted, instance2));
-        
+
         Thread.sleep(100);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance4);
         pingConnector(instance3, instance4);
@@ -746,7 +747,7 @@ public abstract class AbstractClusterTest {
         Thread.sleep(100);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance4);
         pingConnector(instance3, instance4);
-        
+
         // now the situation should be as follows:
         logger.info("iteration 2");
         logger.info("instance1Restarted.slingId: "+instance1Restarted.slingId);
@@ -762,7 +763,7 @@ public abstract class AbstractClusterTest {
 
         logger.info("testStaleInstanceIn3Clusters4139: end");
     }
-    
+
     /**
      * Preparation steps for SLING-4139 tests:
      * Creates two clusters: A: with instance1 and 2, B with instance 3
@@ -788,7 +789,7 @@ public abstract class AbstractClusterTest {
         Thread.sleep(100);
         runHeartbeatOnceWith(instance1, instance2);
         assertSameClusterIds(instance1, instance2);
-        
+
         // now launch the remote instance
         instance3 = newBuilder().setDebugName("remoteInstance")
                 .newRepository("/var/discovery/implremote/", false)
@@ -807,7 +808,7 @@ public abstract class AbstractClusterTest {
         assertEquals(0, instance2.getAnnouncementRegistry().listLocalIncomingAnnouncements().size());
         assertEquals(0, instance3.getAnnouncementRegistry().listLocalAnnouncements().size());
         assertEquals(0, instance3.getAnnouncementRegistry().listLocalIncomingAnnouncements().size());
-        
+
         // create a topology connector from instance3 to instance1
         // -> corresponds to starting to ping
         instance3.heartbeatsAndCheckView();
@@ -817,7 +818,7 @@ public abstract class AbstractClusterTest {
         // make asserts on the topology
         instance1.dumpRepo();
         assertSameTopology(new SimpleClusterView(instance1, instance2), new SimpleClusterView(instance3));
-        
+
         // kill instance 1
         logger.info("instance1.slingId="+instance1.slingId);
         logger.info("instance2.slingId="+instance2.slingId);
@@ -842,7 +843,7 @@ public abstract class AbstractClusterTest {
         instance3.getConfig().setViewCheckTimeout(Integer.MAX_VALUE /* no timeout */); // set instance3's heartbeatTimeout back to Integer.MAX_VALUE /* no timeout */
 		return instance1SlingId;
 	}
-    
+
     private void assertNotSameClusterIds(VirtualInstance... instances) throws UndefinedClusterViewException {
     	if (instances==null) {
     		fail("must not pass empty set of instances here");
@@ -998,12 +999,12 @@ public abstract class AbstractClusterTest {
 //        statusDetails = null;
 	}
 
-	private Announcement ping(VirtualInstance to, final Announcement incomingTopologyAnnouncement) 
+	private Announcement ping(VirtualInstance to, final Announcement incomingTopologyAnnouncement)
 	        throws UndefinedClusterViewException {
 		final String slingId = to.slingId;
 		final ClusterViewService clusterViewService = to.getClusterViewService();
 		final AnnouncementRegistry announcementRegistry = to.getAnnouncementRegistry();
-		
+
 		incomingTopologyAnnouncement.removeInherited(slingId);
 
         final Announcement replyAnnouncement = new Announcement(
@@ -1034,6 +1035,7 @@ public abstract class AbstractClusterTest {
                 announcementRegistry.addAllExcept(replyAnnouncement, clusterView,
                         new AnnouncementFilter() {
 
+                            @Override
                             public boolean accept(final String receivingSlingId, Announcement announcement) {
                                 if (announcement.getPrimaryKey().equals(
                                         incomingTopologyAnnouncement
@@ -1055,11 +1057,12 @@ public abstract class AbstractClusterTest {
         final ClusterView clusterView = from.getClusterViewService().getLocalClusterView();
         topologyAnnouncement.setLocalCluster(clusterView);
         from.getAnnouncementRegistry().addAllExcept(topologyAnnouncement, clusterView, new AnnouncementFilter() {
-            
+
+            @Override
             public boolean accept(final String receivingSlingId, final Announcement announcement) {
                 // filter out announcements that are of old cluster instances
                 // which I dont really have in my cluster view at the moment
-                final Iterator<InstanceDescription> it = 
+                final Iterator<InstanceDescription> it =
                         clusterView.getInstances().iterator();
                 while(it.hasNext()) {
                     final InstanceDescription instance = it.next();
@@ -1119,18 +1122,18 @@ public abstract class AbstractClusterTest {
         Thread.sleep(500);
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
-        
+
         String newClusterId1 = instance1.getClusterViewService()
                 .getLocalClusterView().getId();
         String newClusterId2 = instance2.getClusterViewService()
                 .getLocalClusterView().getId();
         // both cluster ids must be the same
         assertEquals(newClusterId1, newClusterId1);
-        
+
         instance1.dumpRepo();
         assertEquals(2, instance1.getClusterViewService().getLocalClusterView().getInstances().size());
         assertEquals(2, instance2.getClusterViewService().getLocalClusterView().getInstances().size());
-        
+
         // let instance2 'die' by now longer doing heartbeats
 	// SLING-4302 : then set the heartbeatTimeouts back to 1 sec to have them properly time out with the sleeps applied below
         instance2.getConfig().setViewCheckTimeout(1);
@@ -1168,7 +1171,7 @@ public abstract class AbstractClusterTest {
 		assertEquals(newClusterId1, actualClusterId);
         logger.info("testStableClusterId: end");
     }
-    
+
     @Test
     public void testClusterView() throws Exception {
         logger.info("testClusterView: start");
@@ -1399,26 +1402,27 @@ public abstract class AbstractClusterTest {
         throw new IllegalStateException("instance not found: instance="
                 + instance + ", slingId=" + slingId);
     }
-    
+
     class LongRunningListener implements TopologyEventListener {
-        
+
         String failMsg = null;
-        
+
         boolean initReceived = false;
         int noninitReceived;
 
         private Semaphore changedSemaphore = new Semaphore(0);
-        
+
         public void assertNoFail() {
             if (failMsg!=null) {
                 fail(failMsg);
             }
         }
-        
+
         public Semaphore getChangedSemaphore() {
             return changedSemaphore;
         }
-        
+
+        @Override
         public void handleTopologyEvent(TopologyEvent event) {
             if (failMsg!=null) {
                 failMsg += "/ Already failed, got another event; "+event;
@@ -1442,7 +1446,7 @@ public abstract class AbstractClusterTest {
             noninitReceived++;
         }
     }
-    
+
     /**
      * Test plan:
      *  * have a discoveryservice with two listeners registered
@@ -1457,7 +1461,7 @@ public abstract class AbstractClusterTest {
      *    and that the first listener is still busy, make
      *    sure that once the first listener finishes, that
      *    the second listener still gets the event
-     * @throws Throwable 
+     * @throws Throwable
      */
     @Category(Slow.class) //TODO: this takes env 15sec
     @Test
@@ -1475,7 +1479,7 @@ public abstract class AbstractClusterTest {
         instance1.heartbeatsAndCheckView();
         logger.info("testLongRunningListener : instance 2 should now be considered dead");
 //        instance1.dumpRepo();
-        
+
         LongRunningListener longRunningListener1 = new LongRunningListener();
         AssertingTopologyEventListener fastListener2 = new AssertingTopologyEventListener();
         fastListener2.addExpected(Type.TOPOLOGY_INIT);
@@ -1489,7 +1493,7 @@ public abstract class AbstractClusterTest {
         Thread.sleep(2500); // SLING-4755: async event sending requires some minimal wait time nowadays
         assertEquals(0, fastListener2.getRemainingExpectedCount());
         assertTrue(longRunningListener1.initReceived);
-        
+
         // after INIT, now do an actual change where listener1 will do a long-running handling
         fastListener2.addExpected(Type.TOPOLOGY_CHANGING);
         fastListener2.addExpected(Type.TOPOLOGY_CHANGED);
@@ -1504,7 +1508,7 @@ public abstract class AbstractClusterTest {
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
         Thread.sleep(500);
-        
+
         instance1.dumpRepo();
         longRunningListener1.assertNoFail();
         // nothing unexpected should arrive at listener2:
@@ -1521,12 +1525,13 @@ public abstract class AbstractClusterTest {
         assertEquals(1, fastListener2.getRemainingExpectedCount());
         assertEquals(1, longRunningListener1.noninitReceived);
         assertTrue(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
-        
+
         // now let's simulate SLING-4755: deactivation while longRunningListener1 does long processing
         // - which is simulated by waiting on changedSemaphore.
         final List<Exception> asyncException = new LinkedList<Exception>();
         Thread th = new Thread(new Runnable() {
 
+            @Override
             public void run() {
                 try {
                     instance1.stop();
@@ -1536,7 +1541,7 @@ public abstract class AbstractClusterTest {
                     }
                 }
             }
-            
+
         });
         th.start();
         logger.info("Waiting max 4 sec...");
@@ -1557,7 +1562,7 @@ public abstract class AbstractClusterTest {
                 fail("async exceptions: "+asyncException.size()+", first: "+asyncException.get(0));
             }
         }
-        
+
         // now the test consists of
         // a) the fact that we reached this place without unlocking the changedSemaphore
         // b) when we now unlock the changedSemaphore the remaining events should flush through
@@ -1569,5 +1574,5 @@ public abstract class AbstractClusterTest {
         assertFalse(longRunningListener1.getChangedSemaphore().hasQueuedThreads());
     }
 
-    
+
 }

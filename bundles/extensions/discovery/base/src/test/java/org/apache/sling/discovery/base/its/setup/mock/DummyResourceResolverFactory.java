@@ -38,26 +38,40 @@ public class DummyResourceResolverFactory implements ResourceResolverFactory {
     private ArtificialDelay delay;
 
     public DummyResourceResolverFactory() {
-        
+
     }
-    
+
     public void setSlingRepository(SlingRepository repository) {
         this.repository = repository;
     }
-    
+
     public void setArtificialDelay(ArtificialDelay delay) {
         this.delay = delay;
     }
-    
+
     @Override
     public ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
         throw new IllegalStateException("not yet implemented");
     }
 
+
     @Override
+    public ResourceResolver getServiceResourceResolver(Map<String, Object> arg0) throws LoginException {
+        try {
+            MockedResourceResolver mockedResourceResolver =
+                    new MockedResourceResolver(repository, delay);
+            repository = (SlingRepository) mockedResourceResolver.getRepository();
+            return mockedResourceResolver;
+        } catch (RepositoryException e) {
+            throw new LoginException(e);
+        }
+    }
+
+    @Override
+    @Deprecated
     public ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
         try {
-            MockedResourceResolver mockedResourceResolver = 
+            MockedResourceResolver mockedResourceResolver =
                     new MockedResourceResolver(repository, delay);
             repository = (SlingRepository) mockedResourceResolver.getRepository();
             return mockedResourceResolver;

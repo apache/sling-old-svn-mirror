@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
@@ -55,12 +55,12 @@ public abstract class AbstractSingleInstanceTest {
     String propertyValue;
 
     private Level logLevel;
-    
+
     protected abstract VirtualInstanceBuilder newBuilder();
 
     @Before
     public void setup() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.DEBUG);
         logger.info("setup: creating new standalone instance");
@@ -74,7 +74,7 @@ public abstract class AbstractSingleInstanceTest {
 
     @After
     public void tearDown() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
         logger.info("tearDown: stopping standalone instance");
         if (instance!=null) {
@@ -99,7 +99,7 @@ public abstract class AbstractSingleInstanceTest {
         instance.heartbeatsAndCheckView();
         // wait 4000ms for the vote to happen
         Thread.sleep(4000);
-        
+
         assertNotNull(instance.getClusterViewService().getLocalClusterView());
         ClusterView cv = instance.getClusterViewService().getLocalClusterView();
         logger.info("cluster view: id=" + cv.getId());
@@ -155,14 +155,14 @@ public abstract class AbstractSingleInstanceTest {
                 .getProperty(UUID.randomUUID().toString()));
         logger.info("testPropertyProviders: end");
     }
-    
+
     @Test
     public void testInvalidProperties() throws Throwable {
         logger.info("testInvalidProperties: start");
-        
+
         instance.heartbeatsAndCheckView();
         instance.heartbeatsAndCheckView();
-        
+
         final String propertyValue = UUID.randomUUID().toString();
         Thread.sleep(2000);
         doTestProperty(UUID.randomUUID().toString(), propertyValue, propertyValue);
@@ -187,7 +187,7 @@ public abstract class AbstractSingleInstanceTest {
                 instance.getClusterViewService().getLocalClusterView()
                         .getInstances().get(0).getProperty(propertyName));
 	}
-    
+
     @Test
     public void testTopologyEventListeners() throws Throwable {
         logger.info("testTopologyEventListeners: start");
@@ -270,7 +270,7 @@ public abstract class AbstractSingleInstanceTest {
         } catch(UndefinedClusterViewException e) {
             // ok
         }
-        
+
         ada.addExpected(Type.TOPOLOGY_INIT);
         instance.heartbeatsAndCheckView();
         Thread.sleep(1000);
@@ -292,5 +292,5 @@ public abstract class AbstractSingleInstanceTest {
         instance.assertEstablishedView();
         logger.info("testBootstrap: end");
     }
-    
+
 }
