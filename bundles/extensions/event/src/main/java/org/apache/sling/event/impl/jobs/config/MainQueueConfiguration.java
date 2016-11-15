@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +110,7 @@ public class MainQueueConfiguration {
                     maxParallel, ConfigurationConstants.PROP_MAX_PARALLEL);
             queueProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, 2);
         }
+        queueProps.put(Constants.SERVICE_PID, "org.apache.sling.event.impl.jobs.DefaultJobManager");
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
     }
 
