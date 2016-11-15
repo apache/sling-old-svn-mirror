@@ -19,50 +19,60 @@
 package org.apache.sling.resource.inventory.impl;
 
 import java.io.PrintWriter;
-import java.util.Map;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.json.JSONException;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.LoggerFactory;
 
-@Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true)
-@Service(value=InventoryPrinter.class)
-@Properties({
-    @Property(name=InventoryPrinter.FORMAT, value="JSON", propertyPrivate=true),
-    @Property(name=InventoryPrinter.NAME),
-    @Property(name=InventoryPrinter.TITLE),
-    @Property(name=InventoryPrinter.WEBCONSOLE, boolValue=false, propertyPrivate=true)
-})
+@Component(service = InventoryPrinter.class,
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           property = {
+                   InventoryPrinter.FORMAT + "=JSON",
+                   InventoryPrinter.WEBCONSOLE + ":Boolean=false"
+           })
+@Designate(ocd=ResourceInventoryPrinterFactory.Config.class, factory=true)
 public class ResourceInventoryPrinterFactory implements InventoryPrinter {
 
-    @Property(value = "")
-    private static final String PROP_PATH = "path";
+    @ObjectClassDefinition(name = "Apache Sling Resource Inventory Printer Factory",
+                           description = "This factory can be used to add " +
+                                         "resource trees to the inventory of the system.")
+    public @interface Config {
 
-    private String path;
+        @AttributeDefinition(name="Name", description="The unique name of the inventory printer.")
+        String felix_inventory_printer_name();
 
-    @Activate
-    protected void activate(final Map<String, Object> props) {
-        this.path = (String)props.get(PROP_PATH);
+        @AttributeDefinition(name="Title", description="The title of the inventory printer.")
+        String felix_inventory_printer_title();
+
+        @AttributeDefinition(name="Path", description="The resource path to include.")
+        String path() default "";
     }
+    private String path;
 
     @Reference
     private ResourceResolverFactory factory;
 
+    @Activate
+    protected void activate(final Config config) {
+        this.path = config.path();
+    }
+
     /**
      * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
+    @Override
     public void print(PrintWriter printWriter, Format format, boolean isZip) {
         if ( this.path == null || !format.equals(Format.JSON) ) {
             return;
