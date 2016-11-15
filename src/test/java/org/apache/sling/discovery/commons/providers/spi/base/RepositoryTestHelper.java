@@ -64,10 +64,10 @@ import org.slf4j.LoggerFactory;
 public class RepositoryTestHelper {
 
     private final static Logger logger = LoggerFactory.getLogger(RepositoryTestHelper.class);
-    
+
     public static void dumpRepo(ResourceResolverFactory resourceResolverFactory) throws Exception {
         Session session = resourceResolverFactory
-                .getAdministrativeResourceResolver(null).adaptTo(Session.class);
+                .getServiceResourceResolver(null).adaptTo(Session.class);
         logger.info("dumpRepo: ====== START =====");
         logger.info("dumpRepo: repo = " + session.getRepository());
 
@@ -78,7 +78,7 @@ public class RepositoryTestHelper {
 
         session.logout();
     }
-    
+
     public static void dump(Node node) throws RepositoryException {
         if (node.getPath().equals("/jcr:system")
                 || node.getPath().equals("/rep:policy")) {
@@ -153,7 +153,7 @@ public class RepositoryTestHelper {
     public static Repository createOakRepository() {
         return createOakRepository(new MemoryNodeStore());
     }
-    
+
     public static Repository createOakRepository(NodeStore nodeStore) {
         DefaultWhiteboard whiteboard = new DefaultWhiteboard();
         final Oak oak = new Oak(nodeStore)
@@ -191,7 +191,7 @@ public class RepositoryTestHelper {
 //        .withAsyncIndexing()
         .with(whiteboard)
         ;
-        
+
 //        if (commitRateLimiter != null) {
 //            oak.with(commitRateLimiter);
 //        }
@@ -229,14 +229,16 @@ public class RepositoryTestHelper {
         context.checking(new Expectations() {
             {
                 allowing(resourceResolverFactory)
-                        .getAdministrativeResourceResolver(null);
+                        .getServiceResourceResolver(null);
                 will(new Action() {
     
+                    @Override
                     public Object invoke(Invocation invocation)
                             throws Throwable {
                     	return new MockedResourceResolver(repositoryOrNull);
                     }
     
+                    @Override
                     public void describeTo(Description arg0) {
                         arg0.appendText("whateva - im going to create a new mockedresourceresolver");
                     }

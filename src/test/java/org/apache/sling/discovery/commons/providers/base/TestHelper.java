@@ -19,7 +19,6 @@
 package org.apache.sling.discovery.commons.providers.base;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -33,7 +32,6 @@ import org.apache.sling.discovery.commons.providers.DefaultClusterView;
 import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 import org.apache.sling.discovery.commons.providers.DummyTopologyView;
 import org.apache.sling.discovery.commons.providers.EventHelper;
-import org.apache.sling.discovery.commons.providers.base.ViewStateManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +76,7 @@ public class TestHelper {
             if (!mgr.getAsyncEventSender().hasInFlightEvent()) {
                 return;
             }
-            
+
             // sleep outside of synchronized to keep test-influence
             // to a minimum
             try {
@@ -96,7 +94,7 @@ public class TestHelper {
     }
 
     /** does couple loops randomly calling handleChanging() (or not) and then handleNewView().
-     * Note: random is passed to allow customizing and not hardcoding this method to a particular random 
+     * Note: random is passed to allow customizing and not hardcoding this method to a particular random
      * @throws InterruptedException **/
     public static void randomEventLoop(ViewStateManagerImpl mgr, DummyDiscoveryService sds, int loopSize, int delayInMillis, final Random random, DummyListener... listeners) throws InterruptedException {
         for(int i=0; i<loopSize; i++) {

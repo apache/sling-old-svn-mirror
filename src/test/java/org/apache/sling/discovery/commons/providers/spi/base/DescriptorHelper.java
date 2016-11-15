@@ -30,24 +30,23 @@ import org.apache.jackrabbit.commons.SimpleValueFactory;
 import org.apache.jackrabbit.oak.util.GenericDescriptors;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.discovery.commons.providers.spi.base.DiscoveryLiteDescriptor;
 
 public class DescriptorHelper {
 
     public static void setDiscoveryLiteDescriptor(ResourceResolverFactory factory, DiscoveryLiteDescriptorBuilder builder) throws Exception {
         setDescriptor(factory, DiscoveryLiteDescriptor.OAK_DISCOVERYLITE_CLUSTERVIEW, builder.asJson());
     }
-    
+
     public static void setDescriptor(ResourceResolverFactory factory, String key,
             String value) throws Exception {
-        ResourceResolver resourceResolver = factory.getAdministrativeResourceResolver(null);
+        ResourceResolver resourceResolver = factory.getServiceResourceResolver(null);
         try{
             Session session = resourceResolver.adaptTo(Session.class);
             if (session == null) {
                 return;
             }
             Repository repo = session.getRepository();
-            
+
             //<hack>
 //            Method setDescriptorMethod = repo.getClass().
 //                    getDeclaredMethod("setDescriptor", String.class, String.class);
@@ -67,7 +66,7 @@ public class DescriptorHelper {
                 descriptors.put(key, valueFactory.createValue(value), true, true);
             }
             //</hack>
-            
+
             //<verify-hack>
             assertEquals(value, repo.getDescriptor(key));
             //</verify-hack>
