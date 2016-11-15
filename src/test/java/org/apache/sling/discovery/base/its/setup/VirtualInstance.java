@@ -118,12 +118,13 @@ public class VirtualInstance {
 			stopping_ = true;
 			this.notifyAll();
 		}
-		
+
 		public boolean hasStopped() {
 		    return stopped_;
 		}
 
-		public void run() {
+		@Override
+        public void run() {
 		    try{
 		        doRun();
 		    } finally {
@@ -131,7 +132,7 @@ public class VirtualInstance {
                 logger.info("Instance ["+slingId+"] stopped.");
 		    }
 		}
-		
+
 		public void doRun() {
 			while(true) {
 				synchronized(this) {
@@ -157,7 +158,7 @@ public class VirtualInstance {
 		}
 
     }
-    
+
     public VirtualInstance(VirtualInstanceBuilder builder) throws Exception {
         this.builder = builder;
     	this.slingId = builder.getSlingId();
@@ -187,7 +188,7 @@ public class VirtualInstance {
         osgiMock.addServices(builder.getAdditionalServices(this));
 
         resourceResolver = resourceResolverFactory
-                .getAdministrativeResourceResolver(null);
+                .getServiceResourceResolver(null);
 
         if (builder.isResetRepo()) {
             //SLING-4587 : do resetRepo before creating the observationListener
@@ -199,11 +200,11 @@ public class VirtualInstance {
 
         osgiMock.activateAll();
     }
-    
+
     public void setDelay(String operationDescriptor, long delayMillis) {
         delay.setDelay(operationDescriptor, delayMillis);
     }
-    
+
     @Override
     public String toString() {
         return "a [Test]Instance[slingId="+slingId+", debugName="+debugName+"]";
@@ -357,7 +358,7 @@ public class VirtualInstance {
     public void dumpRepo() throws Exception {
         VirtualInstanceHelper.dumpRepo(resourceResolverFactory);
     }
-    
+
     public ResourceResolverFactory getResourceResolverFactory() {
         return resourceResolverFactory;
     }

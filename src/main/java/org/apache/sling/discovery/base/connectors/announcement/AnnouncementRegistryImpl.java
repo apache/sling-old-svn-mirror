@@ -62,17 +62,17 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     private SlingSettingsService settingsService;
 
     private String slingId;
-    
+
     @Reference
     private BaseConfig config;
-    
+
     public static AnnouncementRegistryImpl testConstructorAndActivate(ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService slingSettingsService, BaseConfig config) {
         AnnouncementRegistryImpl registry = testConstructor(resourceResolverFactory, slingSettingsService, config);
         registry.activate();
         return registry;
     }
-    
+
     public static AnnouncementRegistryImpl testConstructor(ResourceResolverFactory resourceResolverFactory,
             SlingSettingsService slingSettingsService, BaseConfig config) {
         AnnouncementRegistryImpl registry = new AnnouncementRegistryImpl();
@@ -81,22 +81,23 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         registry.config = config;
         return registry;
     }
-    
+
     @Activate
     protected void activate() {
         slingId = settingsService.getSlingId();
     }
-    
-    private final Map<String,CachedAnnouncement> ownAnnouncementsCache = 
+
+    private final Map<String,CachedAnnouncement> ownAnnouncementsCache =
             new HashMap<String,CachedAnnouncement>();
 
+    @Override
     public synchronized void unregisterAnnouncement(final String ownerId) {
         if (ownerId==null || ownerId.length()==0) {
             throw new IllegalArgumentException("ownerId must not be null or empty");
         }
         // remove from the cache - even if there's an error afterwards
         ownAnnouncementsCache.remove(ownerId);
-        
+
         if (resourceResolverFactory == null) {
             logger.error("unregisterAnnouncement: resourceResolverFactory is null");
             return;
@@ -104,7 +105,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             final String path = config.getClusterInstancesPath()
                     + "/"
@@ -134,10 +135,12 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         }
     }
 
+    @Override
     public synchronized Collection<Announcement> listLocalAnnouncements() {
         return fillWithCachedAnnouncements(new LinkedList<Announcement>());
     }
-    
+
+    @Override
     public synchronized Collection<CachedAnnouncement> listLocalIncomingAnnouncements() {
         Collection<CachedAnnouncement> result = new LinkedList<CachedAnnouncement>(ownAnnouncementsCache.values());
         for (Iterator<CachedAnnouncement> it = result.iterator(); it.hasNext();) {
@@ -153,7 +156,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         }
         return result;
     }
-    
+
     private final InstanceDescription getLocalInstanceDescription(final ClusterView localClusterView) {
         for (Iterator<InstanceDescription> it = localClusterView.getInstances().iterator(); it
                 .hasNext();) {
@@ -165,6 +168,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         return null;
     }
 
+    @Override
     public synchronized Collection<Announcement> listAnnouncementsInSameCluster(final ClusterView localClusterView) {
         logger.debug("listAnnouncementsInSameCluster: start. localClusterView: {}", localClusterView);
         if (localClusterView==null) {
@@ -175,7 +179,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         final InstanceDescription localInstance = getLocalInstanceDescription(localClusterView);
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             Resource clusterInstancesResource = ResourceHelper
                     .getOrCreateResource(
@@ -194,7 +198,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     fillWithCachedAnnouncements(incomingAnnouncements);
                     continue;
                 }
-                
+
                 //TODO: add ClusterView.contains(instanceSlingId) for convenience to next api change
                 if (!contains(localClusterView, instanceId)) {
                     logger.debug("listAnnouncementsInSameCluster: instance is not in my view, ignoring: {}", instanceId);
@@ -221,7 +225,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                                             String.class));
                     logger.debug("listAnnouncementsInSameCluster: found announcement: {}", topologyAnnouncement);
                     incomingAnnouncements.add(topologyAnnouncement);
-                    // SLING-3389: no longer check for expired announcements - 
+                    // SLING-3389: no longer check for expired announcements -
                     // instead make use of the fact that this instance
                     // has a clusterView and that every live instance
                     // is responsible of cleaning up expired announcements
@@ -253,7 +257,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     	}
         return incomingAnnouncements;
     }
-    
+
     private final Collection<Announcement> fillWithCachedAnnouncements(
             final Collection<Announcement> incomingAnnouncements) {
         for (Iterator<Entry<String, CachedAnnouncement>> it = ownAnnouncementsCache.entrySet().iterator(); it
@@ -280,6 +284,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         return false;
     }
 
+    @Override
     public synchronized boolean hasActiveAnnouncement(final String ownerId) {
         if (ownerId==null || ownerId.length()==0) {
             throw new IllegalArgumentException("ownerId must not be null or empty: "+ownerId);
@@ -288,10 +293,11 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         if (cachedAnnouncement==null) {
             return false;
         }
-        
+
         return !cachedAnnouncement.hasExpired();
     }
 
+    @Override
     public synchronized long registerAnnouncement(final Announcement topologyAnnouncement) {
         if (topologyAnnouncement==null) {
             throw new IllegalArgumentException("topologyAnnouncement must not be null");
@@ -304,8 +310,8 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             logger.error("registerAnnouncement: resourceResolverFactory is null");
             return -1;
         }
-        
-        final CachedAnnouncement cachedAnnouncement = 
+
+        final CachedAnnouncement cachedAnnouncement =
                 ownAnnouncementsCache.get(topologyAnnouncement.getOwnerId());
         if (cachedAnnouncement!=null) {
             if (logger.isDebugEnabled()) {
@@ -320,7 +326,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     return cachedAnnouncement.registerPing(topologyAnnouncement, config);
                 }
                 logger.debug("registerAnnouncement: incoming announcement differs from existing one!");
-                
+
             } catch(JSONException e) {
                 logger.error("registerAnnouncement: got JSONException while converting incoming announcement to JSON: "+e, e);
             }
@@ -364,7 +370,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             final Resource announcementsResource = ResourceHelper
                     .getOrCreateResource(
@@ -376,7 +382,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
 
             topologyAnnouncement.persistTo(announcementsResource);
             resourceResolver.commit();
-            ownAnnouncementsCache.put(topologyAnnouncement.getOwnerId(), 
+            ownAnnouncementsCache.put(topologyAnnouncement.getOwnerId(),
                     new CachedAnnouncement(topologyAnnouncement, config));
         } catch (LoginException e) {
             logger.error(
@@ -401,12 +407,13 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         return 0;
     }
 
-    public synchronized void addAllExcept(final Announcement target, final ClusterView clusterView, 
+    @Override
+    public synchronized void addAllExcept(final Announcement target, final ClusterView clusterView,
             final AnnouncementFilter filter) {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             final Resource clusterInstancesResource = ResourceHelper
                     .getOrCreateResource(
@@ -471,14 +478,15 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         }
     }
 
+    @Override
     public synchronized void checkExpiredAnnouncements() {
-        for (Iterator<Entry<String, CachedAnnouncement>> it = 
+        for (Iterator<Entry<String, CachedAnnouncement>> it =
                 ownAnnouncementsCache.entrySet().iterator(); it.hasNext();) {
             final Entry<String, CachedAnnouncement> entry = it.next();
             if (entry.getValue().hasExpired()) {
                 // then we have an expiry
                 it.remove();
-                
+
                 final String instanceId = entry.getKey();
                 logger.info("checkExpiredAnnouncements: topology connector of "+instanceId+
                         " (to me="+slingId+
@@ -496,7 +504,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         boolean requiresCommit = false;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
             final Resource announcementsResource = ResourceHelper
                     .getOrCreateResource(
                             resourceResolver,
@@ -510,7 +518,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             	final String ownerId = res.getName();
             	// ownerId is the slingId of the owner of the announcement (ie of the peer of the connector).
             	// let's check if the we have that owner's announcement in the cache
-            	
+
             	if (ownAnnouncementsCache.containsKey(ownerId)) {
             		// fine then, we'll leave this announcement untouched
             		continue;
@@ -518,7 +526,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             	// otherwise this announcement is likely from an earlier incarnation
             	// of this instance - hence stale - hence we must remove it now
             	//  (SLING-4139)
-            	ResourceHelper.deleteResource(resourceResolver, 
+            	ResourceHelper.deleteResource(resourceResolver,
             			res.getPath());
             	requiresCommit = true;
             }
@@ -548,8 +556,8 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
-            ResourceHelper.deleteResource(resourceResolver, 
+                    .getServiceResourceResolver(null);
+            ResourceHelper.deleteResource(resourceResolver,
                     config.getClusterInstancesPath()
                                 + "/"
                                 + slingId
@@ -575,6 +583,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         }
     }
 
+    @Override
     public synchronized Collection<InstanceDescription> listInstances(final ClusterView localClusterView) {
         logger.debug("listInstances: start. localClusterView: {}", localClusterView);
         final Collection<InstanceDescription> instances = new LinkedList<InstanceDescription>();
