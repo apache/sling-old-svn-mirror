@@ -313,7 +313,7 @@ public class JspServletOptions implements Options {
     }
 
     /**
-     * Allways return null for the compiler to use, assuming JDT is the default
+     * Always return null for the compiler to use, assuming JDT is the default
      * which we will never overwrite.
      */
     @Override
