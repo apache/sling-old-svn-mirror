@@ -26,8 +26,6 @@ import java.util.Map;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
-import org.osgi.framework.Constants;
-
 /**
  * The <code>JavaServletConfig</code>
  * is passed to the compiled servlets.
@@ -37,20 +35,10 @@ public class JavaServletConfig implements ServletConfig {
     /** The servlet context. */
     private final ServletContext servletContext;
 
-    /** The name of the servlet. */
-    private final String servletName;
-
     private final Map<String, String> initParams;
 
-    public JavaServletConfig(ServletContext servletContext, Map<String, Object> config) {
+    public JavaServletConfig(ServletContext servletContext, final Map<String, Object> config) {
         this.servletContext = servletContext;
-
-        // set the servlet name
-        if (config.get(Constants.SERVICE_DESCRIPTION) == null) {
-            servletName = "Java Script Handler";
-        } else{
-            servletName = config.get(Constants.SERVICE_DESCRIPTION).toString();
-        }
 
         // copy the "java." properties
         initParams = new HashMap<String, String>();
@@ -95,6 +83,6 @@ public class JavaServletConfig implements ServletConfig {
      */
     @Override
     public String getServletName() {
-        return servletName;
+        return JavaScriptEngineFactory.DESCRIPTION;
     }
 }
