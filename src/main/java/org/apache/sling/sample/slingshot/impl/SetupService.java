@@ -38,7 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The setup service sets up difference things.
+ * The setup service checks the resource types for the main folders,
+ * as some of them can't be set through initial content.
  */
 @Component
 public class SetupService {
