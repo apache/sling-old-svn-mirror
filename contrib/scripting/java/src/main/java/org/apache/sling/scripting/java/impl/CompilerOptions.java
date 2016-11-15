@@ -16,10 +16,7 @@
  */
 package org.apache.sling.scripting.java.impl;
 
-import java.util.Map;
-
 import org.apache.sling.commons.compiler.Options;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 
 public class CompilerOptions extends Options {
 
@@ -31,31 +28,23 @@ public class CompilerOptions extends Options {
      * Create an compiler options object using data available from
      * the component configuration.
      */
-    public static CompilerOptions createOptions(final Map<String, Object> props) {
+    public static CompilerOptions createOptions(final JavaScriptEngineFactory.Config config) {
         final String currentVersion = System.getProperty("java.specification.version");
         final CompilerOptions opts = new CompilerOptions();
 
-        final Boolean classDebugInfo = PropertiesUtil.toBoolean(
-                props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO), true);
-        opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo);
+        opts.put(Options.KEY_GENERATE_DEBUG_INFO, config.java_classdebuginfo());
 
-        final String sourceVM = PropertiesUtil.toString(
-                props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M), null);
-        opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.trim().length() > 0 ? sourceVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
+        opts.put(Options.KEY_SOURCE_VERSION, config.java_compilerSourceVM());
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_SOURCE_VERSION)) ) {
             opts.put(Options.KEY_SOURCE_VERSION, currentVersion);
         }
 
-        final String targetVM = PropertiesUtil.toString(
-                props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M), null);
-        opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.trim().length() > 0 ? targetVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
+        opts.put(Options.KEY_TARGET_VERSION, config.java_compilerTargetVM());
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_TARGET_VERSION)) ) {
             opts.put(Options.KEY_TARGET_VERSION, currentVersion);
         }
 
-        final String encoding = PropertiesUtil.toString(
-                props.get(JavaScriptEngineFactory.PROPERTY_ENCODING), null);
-        opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
+        opts.encoding = config.java_javaEncoding();
 
         opts.put(Options.KEY_IGNORE_WARNINGS, true);
 
