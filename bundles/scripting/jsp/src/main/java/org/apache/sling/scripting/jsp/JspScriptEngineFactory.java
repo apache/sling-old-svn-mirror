@@ -84,11 +84,11 @@ import org.slf4j.LoggerFactory;
            property = {
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                    Constants.SERVICE_DESCRIPTION + "=JSP Script Handler",
-                   ResourceChangeListener.PATHS + "=glob:/**/*.jsp",
-                   ResourceChangeListener.PATHS + "=glob:/**/*.jspf",
-                   ResourceChangeListener.PATHS + "=glob:/**/*.jspx",
-                   ResourceChangeListener.PATHS + "=glob:/**/*.tld",
-                   ResourceChangeListener.PATHS + "=glob:/**/*.tag",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jsp",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jspf",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jspx",
+                   ResourceChangeListener.PATHS + "=glob:**/*.tld",
+                   ResourceChangeListener.PATHS + "=glob:**/*.tag",
                    "felix.webconsole.label=slingjsp",
                    "felix.webconsole.title=JSP",
                    "felix.webconsole.category=Sling"
