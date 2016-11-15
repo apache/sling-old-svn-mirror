@@ -103,7 +103,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             logger.debug("sync: no syncToken applicable");
             callback.run();
         }
-        
+
         @Override
         public void cancelSync() {
             // cancelling not applicable
@@ -115,7 +115,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = TopologyEventListener.class)
     private TopologyEventListener[] eventListeners = new TopologyEventListener[0];
-    
+
     /**
      * All property providers.
      */
@@ -151,7 +151,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     @Reference
     private Config config;
-    
+
     @Reference
     private SyncTokenService syncTokenService;
 
@@ -162,15 +162,16 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 
     private ViewStateManager viewStateManager;
 
-    private final ReentrantLock viewStateManagerLock = new ReentrantLock(); 
-    
+    private final ReentrantLock viewStateManagerLock = new ReentrantLock();
+
     private final List<TopologyEventListener> pendingListeners = new LinkedList<TopologyEventListener>();
 
     private TopologyEventListener changePropagationListener = new TopologyEventListener() {
 
+        @Override
         public void handleTopologyEvent(TopologyEvent event) {
             HeartbeatHandler handler = heartbeatHandler;
-            if (activated && handler != null 
+            if (activated && handler != null
                     && (event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.PROPERTIES_CHANGED)) {
                 logger.info("changePropagationListener.handleTopologyEvent: topology changed - propagate through connectors");
                 handler.triggerAsyncConnectorPing();
@@ -179,8 +180,8 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
     };
 
     /** for testing only **/
-    public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory, 
-            AnnouncementRegistry announcementRegistry, 
+    public static BaseDiscoveryService testConstructor(ResourceResolverFactory resourceResolverFactory,
+            AnnouncementRegistry announcementRegistry,
             ConnectorRegistry connectorRegistry,
             ClusterViewServiceImpl clusterViewService,
             HeartbeatHandler heartbeatHandler,
@@ -225,11 +226,12 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             logger.warn("registerMBean: Unable to register DiscoveryServiceImpl MBean", t);
         }
     }
-    
+
+    @Override
     protected void handleIsolatedFromTopology() {
         if (heartbeatHandler!=null) {
             // SLING-5030 part 2: when we detect being isolated we should
-            // step at the end of the leader-election queue and 
+            // step at the end of the leader-election queue and
             // that can be achieved by resetting the leaderElectionId
             // (which will in turn take effect on the next round of
             // voting, or also double-checked when the local instance votes)
@@ -244,7 +246,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             }
         }
     }
-    
+
     /**
      * Activate this service
      */
@@ -287,7 +289,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             // the first TOPOLOGY_INIT and afterwards
             DefaultClusterView isolatedCluster = new DefaultClusterView(isolatedClusterId);
             Map<String, String> emptyProperties = new HashMap<String, String>();
-            DefaultInstanceDescription isolatedInstance = 
+            DefaultInstanceDescription isolatedInstance =
                     new DefaultInstanceDescription(isolatedCluster, true, true, slingId, emptyProperties);
             Collection<InstanceDescription> col = new ArrayList<InstanceDescription>();
             col.add(isolatedInstance);
@@ -327,7 +329,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
                 viewStateManager.bind(listener);
             }
             pendingListeners.clear();
-            
+
             viewStateManager.bind(changePropagationListener);
         } finally {
             if (viewStateManagerLock!=null) {
@@ -349,8 +351,8 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
                 }
             }
         }
-        
-        registerMBean(bundleContext);        
+
+        registerMBean(bundleContext);
 
         logger.debug("DiscoveryServiceImpl activated.");
     }
@@ -367,7 +369,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
                 viewStateManager.unbind(changePropagationListener);
                 viewStateManager.handleDeactivated();
             }
-            
+
             activated = false;
         } finally {
             if (viewStateManagerLock!=null) {
@@ -512,7 +514,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             Resource myInstance = ResourceHelper
                     .getOrCreateResource(
@@ -642,6 +644,7 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
 		/**
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
+        @Override
         public int compareTo(final ProviderInfo o) {
             // Sort by rank in ascending order.
             if (this.ranking < o.ranking) {
@@ -666,10 +669,10 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             return provider.hashCode();
         }
     }
-    
-    /** 
+
+    /**
      * only checks for local clusterView changes.
-     * thus eg avoids doing synchronized with annotationregistry 
+     * thus eg avoids doing synchronized with annotationregistry
      **/
     public void checkForLocalClusterViewChange() {
         viewStateManagerLock.lock();
@@ -772,20 +775,22 @@ public class DiscoveryServiceImpl extends BaseDiscoveryService {
             activated = false;
 		}
 	}
-	
+
+    @Override
     protected ClusterViewService getClusterViewService() {
         return clusterViewService;
     }
-    
+
     public ClusterViewServiceImpl getClusterViewServiceImpl() {
         return clusterViewService;
     }
 
+    @Override
     protected AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
 
-    /** for testing only 
+    /** for testing only
      * @return */
     protected ViewStateManager getViewStateManager() {
         return viewStateManager;

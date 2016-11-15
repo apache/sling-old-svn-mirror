@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.RootLogger;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.commons.testing.junit.categories.Slow;
 import org.apache.sling.discovery.TopologyEvent.Type;
@@ -56,14 +56,14 @@ public class RepositoryDelaysTest {
 
     @Before
     public void setUp() throws Exception {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         logLevel = discoveryLogger.getLevel();
-        discoveryLogger.setLevel(Level.TRACE);        
+        discoveryLogger.setLevel(Level.TRACE);
     }
-    
+
     @After
     public void teartDown() throws Throwable {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
         if (instance1!=null) {
             instance1.stopViewChecker();
@@ -76,7 +76,7 @@ public class RepositoryDelaysTest {
             instance2 = null;
         }
     }
-    
+
     /**
      * SLING-5195 : simulate slow session.saves that block
      * the calling thread for non-trivial amounts of time,
@@ -102,7 +102,7 @@ public class RepositoryDelaysTest {
                 .setConnectorPingInterval(1)
                 .setConnectorPingTimeout(3)
                 .build();
-        
+
         instance1.setDelay("pre.commit", 12000);
         instance1.startViewChecker(1);
         instance2.startViewChecker(1);
@@ -113,34 +113,34 @@ public class RepositoryDelaysTest {
         // should be init but alone
         TopologyView t1 = instance1.getDiscoveryService().getTopology();
         assertFalse(t1.isCurrent());
-        
+
         TopologyView t2 = instance2.getDiscoveryService().getTopology();
         assertTrue(t2.isCurrent());
         assertEquals(1, t2.getInstances().size());
-        
+
         instance1.setDelay("pre.commit", -1);
         Thread.sleep(3000);
 
         TopologyView t1b = instance1.getDiscoveryService().getTopology();
         assertTrue(t1b.isCurrent());
         assertEquals(2, t1b.getInstances().size());
-        
+
         TopologyView t2b = instance2.getDiscoveryService().getTopology();
         assertTrue(t2b.isCurrent());
         assertEquals(2, t2b.getInstances().size());
-        
+
         instance1.setDelay("pre.commit", 59876);
         instance2.setDelay("pre.commit", 60000);
         logger.info("<main> both instances marked as delaying 1min - but with new background checks we should go changing within 3sec");
         Thread.sleep(8000);
-        
+
         TopologyView t1c = instance1.getDiscoveryService().getTopology();
         assertFalse(t1c.isCurrent());
-        
+
         TopologyView t2c = instance2.getDiscoveryService().getTopology();
         assertFalse(t2c.isCurrent());
     }
-    
+
     /**
      * Tests whether the not-current view returned by getTopology()
      * matches what listeners get in TOPOLOGY_CHANGING - it should
@@ -148,7 +148,7 @@ public class RepositoryDelaysTest {
      */
     @Test
     public void testOldView() throws Throwable {
-        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        final org.apache.log4j.Logger discoveryLogger = RootLogger.getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(Level.INFO); // info should do
         FullJR2VirtualInstanceBuilder builder = newBuilder();
         builder.setDebugName("firstInstanceA")
@@ -178,7 +178,7 @@ public class RepositoryDelaysTest {
         t1 = instance1.getDiscoveryService().getTopology();
         assertTrue(t1.isCurrent()); // current it should now be
         assertEquals(1, t1.getInstances().size()); // and it must contain the local instance
-        
+
         logger.info("testOldView: creating instance2");
         l1.addExpected(Type.TOPOLOGY_CHANGING);
         FullJR2VirtualInstanceBuilder builder2 = newBuilder();
@@ -188,7 +188,7 @@ public class RepositoryDelaysTest {
                 .setMinEventDelay(3);
         instance2 = builder2.fullBuild();
         instance2.stopVoting();
-        
+
         logger.info("testOldView: instance2 created, now issuing one heartbeat with instance2 first, so that instance1 can take note of it");
         instance2.heartbeatsAndCheckView();
         logger.info("testOldView: now instance1 is also doing a heartbeat and should see that a new instance is there");
@@ -203,7 +203,7 @@ public class RepositoryDelaysTest {
         t1 = instance1.getDiscoveryService().getTopology();
         assertFalse(t1.isCurrent()); // current it should not be
         assertEquals(1, t1.getInstances().size()); // but it should still contain the local instance from before
-        
+
         l1.addExpected(Type.TOPOLOGY_CHANGED);
         logger.info("testOldView: now issuing 3 rounds of heartbeats/checks and expecting a TOPOLOGY_CHANGED then");
 
@@ -218,17 +218,17 @@ public class RepositoryDelaysTest {
         instance2.heartbeatsAndCheckView();
         instance1.heartbeatsAndCheckView();
         Thread.sleep(1200);
-        
+
         assertEquals(3, l1.getEvents().size()); // INIT, CHANGING and CHANGED
         assertEquals(0, l1.getRemainingExpectedCount()); // no remaining expected
         assertEquals(0, l1.getUnexpectedCount()); // and no unexpected
         t1 = instance1.getDiscoveryService().getTopology();
         assertTrue(t1.isCurrent()); // and we should be current again
         assertEquals(2, t1.getInstances().size()); // and contain both instances now
-        
+
         // timeout is set to 3sec, so we now do heartbeats for 4sec with only instance1
         // to let instance2 crash
-        
+
         // force instance1 to no longer analyze the votings
         // since stopVoting() only deactivates the listener, we also
         // have to set votingHandler of heartbeatHandler to null
@@ -245,5 +245,5 @@ public class RepositoryDelaysTest {
         assertFalse(t1.isCurrent()); // we should still be !current
         assertEquals(2, t1.getInstances().size()); // and contain both instances
     }
-    
+
 }
