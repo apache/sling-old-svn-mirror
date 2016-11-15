@@ -84,6 +84,8 @@ import org.slf4j.LoggerFactory;
            property = {
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                    Constants.SERVICE_DESCRIPTION + "=JSP Script Handler",
+                   ResourceChangeListener.CHANGES + "=CHANGED",
+                   ResourceChangeListener.CHANGES + "=REMOVED",
                    ResourceChangeListener.PATHS + "=glob:**/*.jsp",
                    ResourceChangeListener.PATHS + "=glob:**/*.jspf",
                    ResourceChangeListener.PATHS + "=glob:**/*.jspx",
