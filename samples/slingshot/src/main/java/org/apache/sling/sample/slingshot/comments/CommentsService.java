@@ -33,6 +33,12 @@ public interface CommentsService {
      */
     String getCommentsResourcePath(final Resource resource);
 
+    /**
+     * Add a comment to the resource
+     * @param resource The resource
+     * @param c The commoent
+     * @throws PersistenceException If the comment can't be added
+     */
     void addComment(final Resource resource, final Comment c)
     throws PersistenceException;
 }
