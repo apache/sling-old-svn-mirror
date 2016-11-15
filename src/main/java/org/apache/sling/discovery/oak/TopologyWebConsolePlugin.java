@@ -117,15 +117,15 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     private OakBacklogClusterSyncService clusterSyncService;
 
     private TopologyView currentView;
-    
+
     private List<String> discoveryLiteHistory = new LinkedList<String>();
 
-    /** 
+    /**
      * keeps hold of the last DiscoveryLiteDescriptor that was added
      * to the discoveryLiteHistory - in order to de-duplicate as we go
      */
     private DiscoveryLiteDescriptor lastDiscoveryLiteDescriptor = null;
-    
+
     @Override
     public String getLabel() {
         return LABEL;
@@ -190,6 +190,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
                 tv.findInstances(new InstanceFilter() {
 
+                    @Override
                     public boolean accept(InstanceDescription instance) {
                         String slingId = instance.getSlingId();
                     	if (logger.isDebugEnabled()) {
@@ -230,7 +231,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     }
 
     protected ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
 
     /**
@@ -289,7 +290,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         listIncomingTopologyConnectors(pw);
         listOutgoingTopologyConnectors(pw);
         pw.println("<br/>");
-        
+
         pw.println("<p class=\"statline ui-state-highlight\">Topology Change History</p>");
         pw.println("<pre>");
         for (Iterator<String> it = topologyLog
@@ -500,7 +501,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("</tbody>");
         pw.println("</table>");
     }
-    
+
     private String beautifiedDueTime(long secondsDue) {
         if (secondsDue<-1) {
             return "overdue";
@@ -586,13 +587,14 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * keep a truncated history of the log events for information purpose (to be shown in the webconsole)
      */
+    @Override
     public void handleTopologyEvent(final TopologyEvent event) {
         if (event.getType() == Type.PROPERTIES_CHANGED) {
             this.currentView = event.getNewView();
 
             StringBuilder sb = new StringBuilder();
             InstancesDiff instanceDiff = new InstancesDiff(event.getOldView(), event.getNewView());
-            
+
             // there shouldn't be any instances added, but for paranoia reason:
             Collection<InstanceDescription> added = instanceDiff.added().get();
             if (!added.isEmpty()) {
@@ -603,7 +605,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 }
                 sb.append(".");
             }
-            
+
             // there shouldn't be any instances removed as well, but again for paranoia reason:
             Collection<InstanceDescription> removed = instanceDiff.removed().get();
             if (!removed.isEmpty()) {
@@ -614,7 +616,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 }
                 sb.append(".");
             }
-            
+
             Set<InstanceDescription> newInstances = event.getNewView()
                     .getInstances();
             for (Iterator<InstanceDescription> it = newInstances.iterator(); it
@@ -641,7 +643,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         sb.append(", ");
                     }
                     sb.append("on instance "
-                            + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "") 
+                            + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "")
                             + ": " + diff + ". ");
                 }
             }
@@ -710,7 +712,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         }
                     }
                 }
-    
+
                 addEventLog(
                         event.getType(),
                         "old view: " + shortViewInfo(event.getOldView())
@@ -730,6 +732,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<InstanceDescription> foundInstances = view
                 .findInstances(new InstanceFilter() {
 
+                    @Override
                     public boolean accept(InstanceDescription instance) {
                         return instance.getSlingId().equals(slingId);
                     }
@@ -768,10 +771,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = 
+            DiscoveryLiteDescriptor descriptor =
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
 
-            if (lastDiscoveryLiteDescriptor!=null && 
+            if (lastDiscoveryLiteDescriptor!=null &&
                     descriptor.getDescriptorStr().equals(lastDiscoveryLiteDescriptor.getDescriptorStr())) {
                 // de-duplication - then there's nothing to update
                 return;
@@ -789,7 +792,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 resourceResolver.close();
             }
         }
-        
+
     }
 
     /**
