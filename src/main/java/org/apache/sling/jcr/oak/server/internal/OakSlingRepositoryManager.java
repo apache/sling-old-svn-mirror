@@ -99,9 +99,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     @Reference
     private ThreadPoolManager threadPoolManager = null;
 
-    @Reference
-    private LoginAdminWhitelist loginAdminWhitelist;
-
     private ThreadPool threadPool;
 
     private ServiceRegistration oakExecutorServiceReference;
@@ -121,9 +118,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     private SecurityProvider securityProvider = null;
 
     private ServiceRegistration nodeAggregatorRegistration;
-
-    public OakSlingRepositoryManager() {
-    }
 
     @Override
     protected ServiceUserMapper getServiceUserMapper() {
@@ -201,11 +195,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.oakExecutorServiceReference.unregister();
         this.oakExecutorServiceReference = null;
         ((JackrabbitRepository) repository).shutdown();
-    }
-
-    @Override
-    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
-        return loginAdminWhitelist.allowLoginAdministrative(bundle);
     }
 
     @Activate
