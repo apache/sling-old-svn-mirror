@@ -32,7 +32,6 @@ public class RequiredPropertyTypeMatcher extends AbstractPropertyMatcher impleme
 		super.index = index;
 	}
 	
-	@Override
 	public boolean match(PropertyDefinition propertyDefinition) {
 		String arrayValue = super.getArrayValue(idFields, index);
 		if (arrayValue!=null){

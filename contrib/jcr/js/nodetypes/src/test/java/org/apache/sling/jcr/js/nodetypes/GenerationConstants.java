@@ -21,6 +21,7 @@ package org.apache.sling.jcr.js.nodetypes;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * Used by generators to generate the right content and by the test cases to compare if the right content has been returned.
@@ -33,7 +34,7 @@ public class GenerationConstants {
 	private static Calendar maxDate = Calendar.getInstance();
 	static {
 		maxDate.clear();
-		maxDate.set(2012, 03, 01);
+		maxDate.set(2014, 07, 11);
 	}
 	public static final String CONSTRAINT_DATE = df.format(maxDate.getTime());
 	public static final String CONSTRAINT_DOUBLE = "[,5]";
@@ -45,10 +46,10 @@ public class GenerationConstants {
 	public static final String CONSTRAINT_REFERENCE = "nt:unstructured";
 	
 	
-	public static final Calendar DEFAULT_VALUE_CALENDAR = Calendar.getInstance();
+	public static final Calendar DEFAULT_VALUE_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 	static {
 		DEFAULT_VALUE_CALENDAR.clear();
-		DEFAULT_VALUE_CALENDAR.set(2012, 01, 01);	
+		DEFAULT_VALUE_CALENDAR.set(2014, 7, 10); // 10.8.2014	
 	}
 	public static final String DEFAULT_VALUE_BINARY = "/ntName/stringPropertyDef/Binary/true/true/true/true/VERSION/0.default_binary_value.bin";
 	public static final String DEFAULT_VALUE_STRING = "Default-String";

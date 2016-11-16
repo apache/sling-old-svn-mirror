@@ -4,13 +4,13 @@
       {
         "defaultValues": [
           {
-            "date": "2012-02-01T00:00:00.000+01:00",
+            "date": "2014-08-10T00:00:00.000Z",
             "type": "Date"
           }
         ],
         "requiredType": "Date",
         "valueConstraints": [
-          "2012-04-01T00:00:00Z"
+          "2014-08-11T00:00:00Z"
         ],
         "multiple": true,
         "autoCreated": true,

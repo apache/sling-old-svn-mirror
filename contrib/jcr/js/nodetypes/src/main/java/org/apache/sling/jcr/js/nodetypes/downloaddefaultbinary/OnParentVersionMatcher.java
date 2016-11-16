@@ -32,7 +32,6 @@ public class OnParentVersionMatcher extends AbstractPropertyMatcher implements P
 		super.index = index;
 	}
 	
-	@Override
 	public boolean match(PropertyDefinition propertyDefinition) {
 		String arrayValue = super.getArrayValue(idFields, index);
 		if (arrayValue!=null){
