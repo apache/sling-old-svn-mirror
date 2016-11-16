@@ -36,5 +36,5 @@
     org.apache.sling.commons.log.file="logs/sling-contextaware-config.log"
     org.apache.sling.commons.log.level="debug"
 
-  org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelist
     whitelist.bundles.additional=["org.apache.sling.junit.core"]

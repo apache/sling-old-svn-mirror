@@ -168,7 +168,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.jcr.oak.server.internal.LoginAdminWhitelist</classifier>
+      <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
