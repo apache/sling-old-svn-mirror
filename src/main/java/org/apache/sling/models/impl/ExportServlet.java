@@ -63,11 +63,11 @@ class ExportServlet extends SlingSafeMethodsServlet {
         try {
             exported = accessor.getExportedString(request, options, modelFactory, exporterName);
         } catch (ExportException e) {
-            logger.error("Could not get serializer requested by model.");
+            logger.error("Could not perform export with " + exporterName + " requested by model.", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         } catch (MissingExporterException e) {
-            logger.error("Could not get serialize model to JSON.", e);
+            logger.error("Could not get exporter " + exporterName + " requested by model.", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
