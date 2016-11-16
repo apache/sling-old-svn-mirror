@@ -6,6 +6,8 @@ def svnBase = "https://svn.apache.org/repos/asf/sling/trunk"
 //   - downstream (optional): list of downstream projects
 //   - archive (optional): list of archive patterns
 //   - extraGoalsParams (optional): additional string for the Maven goals to execute
+//   - rebuildNightly (optional): boolean, when enabled configures the build to run once every
+//                                24 hours,even if no changes are found in source control
 def modules = [
     [
         location: 'bundles/api'
@@ -250,7 +252,8 @@ def modules = [
         location: 'bundles/jcr/jcr-wrapper'
     ],
     [
-        location: 'bundles/jcr/oak-server'
+        location: 'bundles/jcr/oak-server',
+        rebuildNightly: true
     ],
     [
         location: 'bundles/jcr/registration'
@@ -883,6 +886,9 @@ for more details</p>''')
             triggers {
                 snapshotDependencies(true)
                 scm('H/15 * * * *')
+                if ( module.rebuildNightly ) {
+                    cron('@daily')
+                }
             }
 
             // timeout if the job takes 4 times longer than the average
