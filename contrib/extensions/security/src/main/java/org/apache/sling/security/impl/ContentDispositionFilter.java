@@ -219,6 +219,12 @@ public class ContentDispositionFilter implements Filter {
             this.resource = request.getResource();
         }
 
+        @Override
+        public void reset() {
+            request.removeAttribute(ATTRIBUTE_NAME);
+            super.reset();
+        }
+
         /**
          * @see javax.servlet.ServletResponseWrapper#setContentType(java.lang.String)
          */
