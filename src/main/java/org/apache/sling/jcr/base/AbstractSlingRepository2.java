@@ -373,11 +373,12 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         final boolean whitelisted = getSlingRepositoryManager().allowLoginAdministrativeForBundle(usingBundle);
 
         if(!whitelisted) {
-            logger.error("Bundle {} is NOT whitelisted to use SlingRepository.loginAdministrative", usingBundle.getSymbolicName());
-            throw new LoginException();
+            final String symbolicName = usingBundle.getSymbolicName();
+            logger.error("Bundle {} is NOT whitelisted to use SlingRepository.loginAdministrative", symbolicName);
+            throw new LoginException("Bundle " + symbolicName +" is NOT whitelisted");
         } else if (this.getSlingRepositoryManager().isDisableLoginAdministrative()) {
             logger.error("SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
-            throw new LoginException();
+            throw new LoginException("SlingRepository.loginAdministrative is disabled.");
         }
 
         logger.debug("SlingRepository.loginAdministrative is deprecated. Please use SlingRepository.loginService.");

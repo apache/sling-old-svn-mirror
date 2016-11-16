@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.base;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Dictionary;
 
@@ -26,6 +27,7 @@ import javax.jcr.Repository;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.SlingRepositoryInitializer;
 import org.apache.sling.jcr.base.internal.loader.Loader;
+import org.apache.sling.jcr.base.internal.LoginAdminWhitelist;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
@@ -101,6 +103,10 @@ public abstract class AbstractSlingRepositoryManager {
 
     private volatile Loader loader;
 
+    private volatile ServiceReference<LoginAdminWhitelist> whitelistRef;
+
+    private volatile LoginAdminWhitelist whitelist;
+
     private final Object repoInitLock = new Object();
 
     /**
@@ -151,7 +157,9 @@ public abstract class AbstractSlingRepositoryManager {
      * @return A boolean value indicating whether or not the bundle is allowed
      *         to use {@code loginAdministrative}.
      */
-    protected abstract boolean allowLoginAdministrativeForBundle(final Bundle bundle);
+    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
+        return whitelist.allowLoginAdministrative(bundle);
+    }
 
     /**
      * Creates the backing JCR repository instances. It is expected for this
@@ -322,6 +330,15 @@ public abstract class AbstractSlingRepositoryManager {
         this.defaultWorkspace = defaultWorkspace;
         this.disableLoginAdministrative = disableLoginAdministrative;
 
+        boolean enableWhitelist = !isAllowLoginAdministrativeForBundleOverridden();
+        if (enableWhitelist) {
+            this.whitelistRef = bundleContext.getServiceReference(LoginAdminWhitelist.class);
+            if (whitelistRef == null) {
+                throw new IllegalStateException("Whitelist must not be null");
+            }
+            this.whitelist = bundleContext.getService(whitelistRef);
+        }
+
         this.repoInitializerTracker = new ServiceTracker<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>(bundleContext, SlingRepositoryInitializer.class,
                 new ServiceTrackerCustomizer<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>() {
 
@@ -407,6 +424,23 @@ public abstract class AbstractSlingRepositoryManager {
         return false;
     }
 
+    // find out whether allowLoginAdministrativeForBundle is overridden
+    private boolean isAllowLoginAdministrativeForBundleOverridden() {
+        Class<?> clazz = getClass();
+        while (clazz != AbstractSlingRepositoryManager.class) {
+            final Method[] declaredMethods = clazz.getDeclaredMethods();
+            for (final Method method : declaredMethods) {
+                if (method.getName().equals("allowLoginAdministrativeForBundle")
+                        && method.getParameterTypes().length == 1
+                        && method.getParameterTypes()[0] == Bundle.class) {
+                    return true;
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return false;
+    }
+
     private void executeRepositoryInitializers(final SlingRepository repo) throws Exception {
         final SlingRepositoryInitializerInfo [] infos = repoInitializerTracker.getServices(new SlingRepositoryInitializerInfo[0]);
         if (infos == null || infos.length == 0) {
@@ -424,6 +458,12 @@ public abstract class AbstractSlingRepositoryManager {
      * This method must be called if overwritten by implementations !!
      */
     protected final void stop() {
+        if (whitelistRef != null) {
+            whitelist = null;
+            bundleContext.ungetService(whitelistRef);
+            whitelistRef = null;
+        }
+
         if(repoInitializerTracker != null) {
             repoInitializerTracker.close();
             repoInitializerTracker = null;
