@@ -91,18 +91,11 @@
 				<artifactId>maven-sling-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>install-bundle</id>
+						<id>validate-bundle</id>
 						<goals>
 							<goal>validate</goal>
-							<goal>install</goal>
 						</goals>
-						<configuration>
-							<mountByFS>false</mountByFS>
-							<slingUrl>http://localhost:8080/system/console</slingUrl>
-							<user>admin</user>
-							<password>admin</password>
-						</configuration>
-					</execution>
+				</execution>
 				</executions>
 			</plugin>
 			<plugin>
