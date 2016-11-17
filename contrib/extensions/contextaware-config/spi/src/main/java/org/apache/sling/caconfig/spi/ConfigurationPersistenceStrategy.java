@@ -21,6 +21,7 @@ package org.apache.sling.caconfig.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
@@ -40,7 +41,7 @@ public interface ConfigurationPersistenceStrategy {
      * @param resource Configuration resource
      * @return Transformed configuration resource. If null is returned this strategy does not support the given configuration resource.
      */
-    Resource getResource(@Nonnull Resource resource);
+    @CheckForNull Resource getResource(@Nonnull Resource resource);
     
     /**
      * Stores configuration data for a singleton configuration resource.
