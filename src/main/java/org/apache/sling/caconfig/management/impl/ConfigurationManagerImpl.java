@@ -22,14 +22,19 @@ import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.ResettableIterator;
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
-import org.apache.sling.caconfig.resource.ConfigurationResourceResolver;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
@@ -40,20 +45,35 @@ import org.osgi.service.component.annotations.Reference;
 public class ConfigurationManagerImpl implements ConfigurationManager {
     
     @Reference
-    private ConfigurationResourceResolver configurationResourceResolver;
-    @Reference
     private ConfigurationResourceResolvingStrategyMultiplexer configurationResourceResolvingStrategy;
     @Reference
     private ConfigurationMetadataProviderMultiplexer configurationMetadataProvider;
     @Reference
     private ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy;
+    @Reference
+    private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
 
+    @SuppressWarnings("unchecked")
     @Override
     public ConfigurationData get(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
-        Resource configResource = configurationResourceResolver.getResource(resource, CONFIGS_PARENT_NAME, configName);
+        Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
+                .getResourceInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
+        ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
+        Resource configResource = applyPersistenceAndInheritance(resettableConfigResourceInheritanceChain);
         if (configResource != null) {
-            return new ConfigurationDataImpl(configurationPersistenceStrategy.getResource(configResource), configMetadata);
+            // get writeback resource for "reverse inheritance detection"
+            Resource writebackConfigResource = null;
+            String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+            if (writebackConfigResourcePath != null) {
+                writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
+                if (writebackConfigResource != null) {
+                    writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                }
+            }
+            resettableConfigResourceInheritanceChain.reset();
+            return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
+                    applyPersistence(resettableConfigResourceInheritanceChain));
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
@@ -62,15 +82,62 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<ConfigurationData> getCollection(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
-        Collection<Resource> configResources = configurationResourceResolver.getResourceCollection(resource, CONFIGS_PARENT_NAME, configName);
+        String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
-        for (Resource configResource : configResources) {
-            configData.add(new ConfigurationDataImpl(configurationPersistenceStrategy.getResource(configResource), configMetadata));
+
+        Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
+                .getResourceCollectionInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
+        for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
+            ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
+            Resource configResource = applyPersistenceAndInheritance(resettableConfigResourceInheritanceChain);
+            if (configResource != null) {
+                // get writeback resource for "reverse inheritance detection"
+                Resource writebackConfigResource = null;
+                if (writebackConfigResourceCollectionParentPath != null) {
+                    resettableConfigResourceInheritanceChain.reset();
+                    Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
+                    writebackConfigResource = configResource.getResourceResolver().getResource(
+                            writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
+                    if (writebackConfigResource != null) {
+                        writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                    }
+                }
+                resettableConfigResourceInheritanceChain.reset();
+                configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
+                        applyPersistence(resettableConfigResourceInheritanceChain)));
+            }
         }
         return configData;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Iterator<Resource> applyPersistence(Iterator<Resource> configResourceInheritanceChain) {
+        if (configResourceInheritanceChain == null) {
+            return null;
+        }
+        return IteratorUtils.transformedIterator(configResourceInheritanceChain,
+                new Transformer() {
+                    @Override
+                    public Object transform(Object input) {
+                        return configurationPersistenceStrategy.getResource((Resource)input);
+                    }
+                });
+    }
+
+    private Resource applyPersistenceAndInheritance(Iterator<Resource> configResourceInheritanceChain) {
+        if (configResourceInheritanceChain == null) {
+            return null;
+        }
+        
+        // apply configuration persistence transformation
+        Iterator<Resource> transformedConfigResources = applyPersistence(configResourceInheritanceChain);
+        
+        // apply resource inheritance
+        return configurationInheritanceStrategy.getResource(transformedConfigResources);
     }
 
     @Override

@@ -40,35 +40,41 @@ public class ValueInfoImplTest {
     
     @Test
     public void testValueMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>("value", "/conf/test", propertyMetadata);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", propertyMetadata, null, null, null);
         
+        assertEquals("name1", underTest.getName());
         assertSame(propertyMetadata, underTest.getPropertyMetadata());
         assertEquals("value", underTest.getValue());
         assertEquals("value", underTest.getEffectiveValue());
-        assertEquals("/conf/test", underTest.getConfigSourcePath());
+        assertNull(underTest.getConfigSourcePath());
         assertFalse(underTest.isDefault());
+        assertFalse(underTest.isInherited());
     }
 
     @Test
     public void testNoValueMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>(null, "/conf/test", propertyMetadata);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", null, propertyMetadata, null, null, null);
         
+        assertEquals("name1", underTest.getName());
         assertSame(propertyMetadata, underTest.getPropertyMetadata());
         assertNull(underTest.getValue());
         assertEquals("defValue", underTest.getEffectiveValue());
-        assertEquals("/conf/test", underTest.getConfigSourcePath());
+        assertNull(underTest.getConfigSourcePath());
         assertTrue(underTest.isDefault());
+        assertFalse(underTest.isInherited());
     }
 
     @Test
     public void testValueNoMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>("value", "/conf/test", null);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", null, null, null, null);
         
+        assertEquals("name1", underTest.getName());
         assertNull(underTest.getPropertyMetadata());
         assertEquals("value", underTest.getValue());
         assertEquals("value", underTest.getEffectiveValue());
-        assertEquals("/conf/test", underTest.getConfigSourcePath());
+        assertNull(underTest.getConfigSourcePath());
         assertFalse(underTest.isDefault());
+        assertFalse(underTest.isInherited());
     }
 
 }

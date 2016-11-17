@@ -31,15 +31,25 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface ConfigurationData {
+    
+    /**
+     * Path of the configuration resource. The resource may not exist, in this case
+     * inherited or default values may be returned.
+     * If the configuration data is saved, this path is used.
+     * @return Configuration resource path or null if it cannot be determined
+     */
+    @CheckForNull String getResourcePath();
 
     /**
-     * List of property names defined in configuration metadata or values are defined for.
+     * List of effective property names defined in configuration metadata or values are defined for.
      * @return Property names
      */
     @Nonnull Set<String> getPropertyNames();
 
     /**
      * Configuration values stored for the given context path. No inherited values. No default values.
+     * The properties of the resource identified by {@link #getResourcePath()} are returned.
+     * If this resources does not exist, the map is empty.
      * @return Values
      */
     @Nonnull ValueMap getValues();
