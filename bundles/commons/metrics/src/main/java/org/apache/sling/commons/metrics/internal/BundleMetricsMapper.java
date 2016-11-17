@@ -19,10 +19,12 @@
 
 package org.apache.sling.commons.metrics.internal;
 
+import java.util.Hashtable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import com.codahale.metrics.DefaultObjectNameFactory;
@@ -35,6 +37,7 @@ import org.slf4j.LoggerFactory;
 class BundleMetricsMapper implements ObjectNameFactory{
     public static final String HEADER_DOMAIN_NAME = "Sling-Metrics-Domain";
     public static final String DEFAULT_DOMAIN_NAME = "org.apache.sling";
+    static final String JMX_TYPE_METRICS = "Metrics";
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ConcurrentMap<String, Bundle> metricToBundleMapping = new ConcurrentHashMap<>();
     private final MetricRegistry registry;
@@ -58,11 +61,20 @@ class BundleMetricsMapper implements ObjectNameFactory{
 
     @Override
     public ObjectName createName(String type, String domain, String name) {
-        String mappedDomainName = safeDomainName(getDomainName(name));
+        String mappedDomainName = JmxUtil.safeDomainName(getDomainName(name));
         if (mappedDomainName == null) {
             mappedDomainName = domain;
         }
-        return defaultFactory.createName(type, mappedDomainName, name);
+
+        Hashtable<String, String> table = new Hashtable<String, String>();
+        table.put("type", JMX_TYPE_METRICS);
+        table.put("name", JmxUtil.quoteValueIfRequired(name));
+        try {
+            return new ObjectName(mappedDomainName, table);
+        } catch (MalformedObjectNameException e) {
+            log.warn("Unable to register {} {}", type, name, e);
+            throw new RuntimeException(e);
+        }
     }
 
     private String getDomainName(String name) {
@@ -84,19 +96,4 @@ class BundleMetricsMapper implements ObjectNameFactory{
         return bundle.getSymbolicName();
     }
 
-    static String safeDomainName(String name){
-        if (name == null){
-            return null;
-        }
-
-        name = name.trim();
-
-        //Taken from javax.management.ObjectName.isDomain()
-        //Following are special chars in domain name
-        name = name.replace(':', '_');
-        name = name.replace('*', '_');
-        name = name.replace('?', '_');
-        name = name.replace('\n', '_');
-        return name;
-    }
 }

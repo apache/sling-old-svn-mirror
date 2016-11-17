@@ -66,12 +66,5 @@ public class BundleMetricsMapperTest {
         assertEquals("com.test", name.getDomain());
     }
 
-    @Test
-    public void safeDomainName() throws Exception{
-        assertEquals("com.foo", BundleMetricsMapper.safeDomainName("com.foo"));
-        assertEquals("com_foo", BundleMetricsMapper.safeDomainName("com:foo"));
-        assertEquals("com_foo", BundleMetricsMapper.safeDomainName("com?foo"));
-        assertEquals("com_foo", BundleMetricsMapper.safeDomainName("com*foo"));
-    }
 
 }
