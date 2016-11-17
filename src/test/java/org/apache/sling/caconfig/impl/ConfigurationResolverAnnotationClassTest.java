@@ -18,8 +18,8 @@
  */
 package org.apache.sling.caconfig.impl;
 
+import static org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
 import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
-import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
 import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -161,12 +161,11 @@ public class ConfigurationResolverAnnotationClassTest {
                 .siblingsMode()
                 .resource("1", "stringParam", "configValue1.1", "intParam", "111")
                 .resource("2", "stringParam", "configValue1.2", "intParam", "222")
-            .resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListConfig",
-                    PROPERTY_CONFIG_PROPERTY_INHERIT, true,
+            .resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListConfig",                    
                     PROPERTY_CONFIG_COLLECTION_INHERIT, true)
                 .siblingsMode()
-                .resource("2", "stringParam", "configValue2.2")
-                .resource("3", "stringParam", "configValue2.3", "intParam", "333");
+                .resource("2", "stringParam", "configValue2.2", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
+                .resource("3", "stringParam", "configValue2.3", "intParam", "333", PROPERTY_CONFIG_PROPERTY_INHERIT, true);
 
         List<ListConfig> cfgList = ImmutableList.copyOf(underTest.get(site1Page1).asCollection(ListConfig.class));
 

@@ -23,7 +23,6 @@ import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceN
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
@@ -257,7 +256,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
                 "enabled", false);
 
         assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
-        assertTrue(underTest.getResourceCollection(site1Page1, BUCKET, "feature").isEmpty());
+        assertNull(underTest.getResourceCollection(site1Page1, BUCKET, "feature"));
         assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }

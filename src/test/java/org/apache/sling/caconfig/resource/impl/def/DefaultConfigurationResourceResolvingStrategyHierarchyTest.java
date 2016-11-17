@@ -24,14 +24,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.hamcrest.ResourceCollectionMatchers;
+import org.apache.sling.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Tests with content and configurations that form a deeper nested hierarchy.
@@ -62,12 +68,10 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/content/tenant1/region1/site2", PROPERTY_CONFIG_REF, "/conf/brand1/tenant1/region1/site2");
         site1Page1 = context.create().resource("/content/tenant1/region1/site1/page1");
         site2Page1 = context.create().resource("/content/tenant1/region1/site2/page1");
-
     }
 
     @Test
     public void testGetResource() {
-        // build config resources
         context.build()
             .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgSite1")
             .resource("/conf/brand1/tenant1/region1/sling:test/cfgRegion1")
@@ -101,8 +105,30 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     }
 
     @Test
+    public void testGetResourceInheritanceChain() {
+        context.build()
+            .resource("/conf/brand1/tenant1/region1/site1/sling:test/test")
+            .resource("/conf/brand1/tenant1/sling:test/test")
+            .resource("/conf/global/sling:test/test")
+            .resource("/apps/conf/sling:test/test")
+            .resource("/libs/conf/sling:test/test");
+        
+        assertThat(underTest.getResourceInheritanceChain(site1Page1, BUCKET, "test"), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/region1/site1/sling:test/test",
+                "/conf/brand1/tenant1/sling:test/test",
+                "/conf/global/sling:test/test",
+                "/apps/conf/sling:test/test",
+                "/libs/conf/sling:test/test"));
+
+        assertThat(underTest.getResourceInheritanceChain(site2Page1, BUCKET, "test"), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/sling:test/test",
+                "/conf/global/sling:test/test",
+                "/apps/conf/sling:test/test",
+                "/libs/conf/sling:test/test"));
+    }
+
+    @Test
     public void testGetResourceCollectionWithInheritance() {
-        // build config resources
         context.build()
             .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("site1")
             .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("region1")
@@ -134,8 +160,46 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     }
 
     @Test
-    public void testGetResourceCollectionContentConfigRefInheritanceAndConfigResourceInheritance() {
+    public void testGetResourceCollectionInheritanceChain() {
+        context.build()
+            .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .siblingsMode()
+                .resource("item1")
+                .resource("item2")
+            .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .siblingsMode()
+                .resource("item1")
+                .resource("item3")
+            .resource("/conf/brand1/tenant1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .siblingsMode()
+                .resource("item4")
+            .resource("/conf/global/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+                .siblingsMode()
+                .resource("item1")
+            .resource("/libs/conf/sling:test/cfgCol")
+                .siblingsMode()
+                .resource("item2")
+                .resource("item3");
         
+        List<Iterator<Resource>> resources = ImmutableList.copyOf(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKET, "cfgCol"));
+        assertEquals(4, resources.size());
+        
+        assertThat(resources.get(0), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/region1/site1/sling:test/cfgCol/item1",
+                "/conf/brand1/tenant1/region1/sling:test/cfgCol/item1",
+                "/conf/global/sling:test/cfgCol/item1"));
+        assertThat(resources.get(1), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/region1/site1/sling:test/cfgCol/item2",
+                "/libs/conf/sling:test/cfgCol/item2"));
+        assertThat(resources.get(2), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/region1/sling:test/cfgCol/item3",
+                "/libs/conf/sling:test/cfgCol/item3"));
+        assertThat(resources.get(3), ResourceIteratorMatchers.paths(
+                "/conf/brand1/tenant1/sling:test/cfgCol/item4"));
+    }
+
+    @Test
+    public void testGetResourceCollectionContentConfigRefInheritanceAndConfigResourceInheritance() {
         context.build()
             .resource("/content/level1", PROPERTY_CONFIG_REF, "/conf/a1/a2")
             .resource("/content/level1/level2", PROPERTY_CONFIG_REF, "/conf/b1/b2")

@@ -23,7 +23,10 @@ import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Transformer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -33,26 +36,30 @@ import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassParser;
-import org.apache.sling.caconfig.resource.ConfigurationResourceResolver;
+import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private final Resource contentResource;
     private final ConfigurationResolver configurationResolver;
-    private final ConfigurationResourceResolver configurationResourceResolver;
+    private final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy;
     private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
+    private final ConfigurationInheritanceStrategy configurationInheritanceStrategy;
 
     private String configName;
 
     public ConfigurationBuilderImpl(final Resource resource,
             final ConfigurationResolver configurationResolver,
-            final ConfigurationResourceResolver configurationResourceResolver,
-            final ConfigurationPersistenceStrategy configurationPersistenceStrategy) {
+            final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy,
+            final ConfigurationPersistenceStrategy configurationPersistenceStrategy,
+            final ConfigurationInheritanceStrategy configurationInheritanceStrategy) {
         this.contentResource = resource;
         this.configurationResolver = configurationResolver;
-        this.configurationResourceResolver = configurationResourceResolver;
+        this.configurationResourceResolvingStrategy = configurationResourceResolvingStrategy;
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
+        this.configurationInheritanceStrategy = configurationInheritanceStrategy;
     }
 
     @Override
@@ -102,12 +109,13 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @return Converted singleton configuration
      */
     private <T> T getConfigResource(String name, Class<T> clazz, Converter<T> converter) {
-        Resource configResource = null;
+        Iterator<Resource> resourceInheritanceChain = null;
         if (this.contentResource != null) {
             validateConfigurationName(name);
-            configResource = this.configurationResourceResolver.getResource(this.contentResource, CONFIGS_PARENT_NAME, name);
+            resourceInheritanceChain = this.configurationResourceResolvingStrategy
+                    .getResourceInheritanceChain(this.contentResource, CONFIGS_PARENT_NAME, name);
         }
-        return convert(configResource, clazz, converter, name);
+        return convert(resourceInheritanceChain, clazz, converter, name, false);
     }
 
     /**
@@ -121,8 +129,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (this.contentResource != null) {
            validateConfigurationName(name);
            final Collection<T> result = new ArrayList<>();
-           for (final Resource rsrc : this.configurationResourceResolver.getResourceCollection(this.contentResource, CONFIGS_PARENT_NAME, name)) {
-               final T obj = convert(rsrc, clazz, converter, name + "/" + rsrc.getName());
+           for (final Iterator<Resource> resourceInheritanceChain : this.configurationResourceResolvingStrategy
+                   .getResourceCollectionInheritanceChain(this.contentResource, CONFIGS_PARENT_NAME, name)) {
+               final T obj = convert(resourceInheritanceChain, clazz, converter, name, true);
                if (obj != null) {
                    result.add(obj);
                }
@@ -134,12 +143,28 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         }
     }
     
-    private <T> T convert(Resource resource, Class<T> clazz, Converter<T> converter, String name) {
+    @SuppressWarnings("unchecked")
+    private <T> T convert(Iterator<Resource> resourceInhertianceChain, Class<T> clazz, Converter<T> converter,
+            String name, boolean appendResourceName) {
         Resource configResource = null;
-        if (resource != null) {
-            configResource = configurationPersistenceStrategy.getResource(resource);
+        String conversionName = name;
+        if (resourceInhertianceChain != null) {
+            // apply persistence transformation
+            Iterator<Resource> transformedResources = IteratorUtils.transformedIterator(resourceInhertianceChain,
+                    new Transformer() {
+                        @Override
+                        public Object transform(Object input) {
+                            return configurationPersistenceStrategy.getResource((Resource)input);
+                        }
+                    });
+            // apply resource inheritance
+            configResource = configurationInheritanceStrategy.getResource(transformedResources);
+            // build name
+            if (configResource != null && appendResourceName) {
+                conversionName = conversionName + "/" + configResource.getName();
+            }
         }
-        return converter.convert(configResource, clazz, name);
+        return converter.convert(configResource, clazz, conversionName);
     }
 
     // --- Annotation class support ---

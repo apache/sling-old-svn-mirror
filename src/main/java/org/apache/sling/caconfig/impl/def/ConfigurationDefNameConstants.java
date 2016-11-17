@@ -16,24 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.resource.impl.def;
+package org.apache.sling.caconfig.impl.def;
 
-public final class ConfigurationResourceNameConstants {
+public final class ConfigurationDefNameConstants {
 
-    private ConfigurationResourceNameConstants() {
+    private ConfigurationDefNameConstants() {
         // constants only
     }
 
     /**
-     * Property that points to the configuration path to be used.
-     * Additionally each resource having this property marks the beginning of a new context sub-tree.
+     * Boolean property that controls whether the properties (key/value pairs) of configuration resources
+     * should be inherited from the configuration hierarchy and merged.
      */
-    public static final String PROPERTY_CONFIG_REF = "sling:configRef";
-   
-    /**
-     * Boolean property that controls whether config resource collections should be merged on inheritance or not.
-     * Merging means merging the lists, not the list items (properties of the resources) itself.
-     */
-    public static final String PROPERTY_CONFIG_COLLECTION_INHERIT = "sling:configCollectionInherit";
+    public static final String PROPERTY_CONFIG_PROPERTY_INHERIT = "sling:configPropertyInherit";
 
 }

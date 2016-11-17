@@ -18,7 +18,7 @@
  */
 package org.apache.sling.caconfig.impl.def;
 
-import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
+import static org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
 import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
@@ -158,8 +158,8 @@ public class ConfigurationResolverPropertyInheritanceTest {
         context.build()
             .resource("/conf/global/sling:configs/test")
                 .resource("item1", "param1", "value1", "param2", "value2")
-            .resource("/conf/brand1/tenant1/region1/site1/sling:configs/test", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
-                .resource("item1", "param1", "value1a")
+            .resource("/conf/brand1/tenant1/region1/site1/sling:configs/test")
+                .resource("item1", "param1", "value1a", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
             .resource("/conf/brand1/tenant1/region1/site2/sling:configs/test")
                 .resource("item1", "param1", "value1b");
         
@@ -176,12 +176,12 @@ public class ConfigurationResolverPropertyInheritanceTest {
         context.build()
             .resource("/conf/global/sling:configs/test")
                 .resource("item1", "param1", "value1", "param4", "value4")
-            .resource("/conf/brand1/tenant1/sling:configs/test", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
-                .resource("item1", "param1", "value1a", "param3", "value3")
-            .resource("/conf/brand1/tenant1/region1/sling:configs/test", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
-                .resource("item1", "param1", "value1b", "param2", "value2")
-            .resource("/conf/brand1/tenant1/region1/site1/sling:configs/test", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
-                .resource("item1", "param1", "value1c")
+            .resource("/conf/brand1/tenant1/sling:configs/test")
+                .resource("item1", "param1", "value1a", "param3", "value3", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
+            .resource("/conf/brand1/tenant1/region1/sling:configs/test")
+                .resource("item1", "param1", "value1b", "param2", "value2", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
+            .resource("/conf/brand1/tenant1/region1/site1/sling:configs/test")
+                .resource("item1", "param1", "value1c", PROPERTY_CONFIG_PROPERTY_INHERIT, true)
             .resource("/conf/brand1/tenant1/region1/site2/sling:configs/test")
                 .resource("item1", "param1", "value1d");
         

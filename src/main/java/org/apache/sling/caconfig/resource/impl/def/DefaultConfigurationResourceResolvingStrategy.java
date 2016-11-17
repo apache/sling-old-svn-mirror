@@ -19,12 +19,9 @@
 package org.apache.sling.caconfig.resource.impl.def;
 
 import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT;
-import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,14 +30,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.PredicateUtils;
+import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.PathParentExpandIterator;
@@ -70,7 +70,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     public static @interface Config {
 
         @AttributeDefinition(name="Enabled",
-                description = "Enable this configuration resourcer resolving strategy.")
+                description = "Enable this configuration resource resolving strategy.")
         boolean enabled() default true;
 
         @AttributeDefinition(name="Configurations path",
@@ -86,10 +86,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                             + "always starting with " + PROPERTY_CONFIG_COLLECTION_INHERIT + ". Once a property with a value is found, that value is used and the following property names are skipped.")
         String[] configCollectionInheritancePropertyNames();
 
-        @AttributeDefinition(name="Config property inheritance property names",
-                description = "Additional property names to " + PROPERTY_CONFIG_PROPERTY_INHERIT + " to handle property inheritance. The names are used in the order defined, "
-                            + "always starting with " + PROPERTY_CONFIG_PROPERTY_INHERIT + ". Once a property with a value is found, that value is used and the following property names are skipped.")
-        String[] configPropertyInheritancePropertyNames();
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -276,56 +272,40 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     @Override
     public Resource getResource(final Resource contentResource, final String bucketName, final String configName) {
+        Iterator<Resource> resources = getResourceInheritanceChain(contentResource, bucketName, configName);
+        if (resources != null && resources.hasNext()) {
+            return resources.next();
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Iterator<Resource> getResourceInheritanceChainInternal(final String bucketName, final String configName,
+            final Iterator<String> paths, final ResourceResolver resourceResolver) {
+        final String name = bucketName + "/" + configName;
+
+        // find all matching items among all configured paths
+        Iterator<Resource> matchingResources = IteratorUtils.transformedIterator(paths, new Transformer() {
+            @Override
+            public Object transform(Object input) {
+                String path = (String)input;
+                return resourceResolver.getResource(buildResourcePath(path, name));
+            }
+        });
+        return IteratorUtils.filteredIterator(matchingResources, PredicateUtils.notNullPredicate());
+    }
+
+    @Override
+    public Iterator<Resource> getResourceInheritanceChain(Resource contentResource, String bucketName, String configName) {
         if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
             return null;
         }
-        String name = bucketName + "/" + configName;
+        final ResourceResolver resourceResolver = contentResource.getResourceResolver();
+        final String name = bucketName + "/" + configName;
         logger.debug("Searching {} for resource {}", name, contentResource.getPath());
 
-        // strategy: find first item among all configured paths
-        int idx = 1;
         Iterator<String> paths = getResolvePaths(contentResource, bucketName);
-        Resource configResource = null;
-        Map<String,Object> configValueMap = null;
-        boolean propertyInheritance = false;
-        while (paths.hasNext()) {
-            final String path = paths.next();
-            final Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
-            if (item != null) {
-                logger.debug("Resolved config item at [{}]: {}", idx, item.getPath());
-
-                if (propertyInheritance) {
-                    // merge property map with values from inheritance parent
-                    Map<String,Object> mergedValueMap = new HashMap<>(item.getValueMap());
-                    mergedValueMap.putAll(configValueMap);
-                    configValueMap = mergedValueMap;
-                }
-                else {
-                    configResource = item;
-                    configValueMap = item.getValueMap();
-                }
-
-                // check property inheritance mode on current level - should we check on next-highest level as well?
-                propertyInheritance = getBooleanValue(item.getValueMap(), PROPERTY_CONFIG_PROPERTY_INHERIT, config.configPropertyInheritancePropertyNames());
-                if (!propertyInheritance) {
-                    break;
-                }
-            }
-            idx++;
-        }
-
-        if (configResource == null) {
-            logger.debug("Could not resolve any config item for '{}' (or no permissions to read it)", name);
-            return null;
-        }
-
-        if (configValueMap instanceof ValueMap) {
-            // valuemap was not merged - return original resource with original valuemap
-            return configResource;
-        }
-        else {
-            return new ConfigurationResourceWrapper(configResource, new ValueMapDecorator(configValueMap));
-        }
+        return getResourceInheritanceChainInternal(bucketName, configName, paths, resourceResolver);
     }
 
     private boolean include(final List<CollectionInheritanceDecider> deciders,
@@ -349,31 +329,22 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         return result;
     }
 
-    @Override
-    public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
-        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
-            return Collections.emptyList();
-        }
+    private Collection<Resource> getResourceCollectionInternal(final String bucketName, final String configName,
+            Iterator<String> paths, ResourceResolver resourceResolver) {
         String name = bucketName + "/" + configName;
         if (logger.isTraceEnabled()) {
             logger.trace("- searching for list '{}'", name);
         }
 
         final Map<String,Resource> result = new LinkedHashMap<>();
-        final Map<String,Map<String,Object>> configValueMaps = new HashMap<>();
-
         final List<CollectionInheritanceDecider> deciders = this.collectionInheritanceDeciders;
         final Set<String> blockedItems = new HashSet<>();
 
         int idx = 1;
-        Iterator<String> paths = getResolvePaths(contentResource, bucketName);
-        boolean inheritCollection = false;
-        boolean inheritProperties = false;
         boolean inherit = false;
-        boolean propertyInheritanceApplied = false;
         while (paths.hasNext()) {
             final String path = paths.next();
-            Resource item = contentResource.getResourceResolver().getResource(buildResourcePath(path, name));
+            Resource item = resourceResolver.getResource(buildResourcePath(path, name));
             if (item != null) {
 
                 if (logger.isTraceEnabled()) {
@@ -381,26 +352,16 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 }
 
                 for (Resource child : item.getChildren()) {
-                    if (isValidResourceCollectionItem(child) && include(deciders, bucketName, child, blockedItems)) {
-                        if ((!inherit || inheritCollection) && !result.containsKey(child.getName())) {
-                            result.put(child.getName(), child);
-                            configValueMaps.put(child.getName(), child.getValueMap());
-                        }
-                        else if (inheritProperties && configValueMaps.containsKey(child.getName())) {
-                            // merge property map with values from inheritance parent
-                            Map<String,Object> mergedValueMap = new HashMap<>(child.getValueMap());
-                            mergedValueMap.putAll(configValueMaps.get(child.getName()));
-                            configValueMaps.put(child.getName(), mergedValueMap);
-                            propertyInheritanceApplied = true;
-                        }
-                    }
+                    if (isValidResourceCollectionItem(child)
+                            && !result.containsKey(child.getName())
+                            && include(deciders, bucketName, child, blockedItems)) {
+                        result.put(child.getName(), child);
+                   }
                 }
 
-                // check collection and property inheritance mode on current level - should we check on next-highest level as well?
+                // check collection inheritance mode on current level - should we check on next-highest level as well?
                 final ValueMap valueMap = item.getValueMap();
-                inheritCollection = getBooleanValue(valueMap, PROPERTY_CONFIG_COLLECTION_INHERIT, config.configCollectionInheritancePropertyNames());
-                inheritProperties = getBooleanValue(valueMap, PROPERTY_CONFIG_PROPERTY_INHERIT, config.configPropertyInheritancePropertyNames());
-                inherit = inheritCollection || inheritProperties;
+                inherit = getBooleanValue(valueMap, PROPERTY_CONFIG_COLLECTION_INHERIT, config.configCollectionInheritancePropertyNames());
                 if (!inherit) {
                     break;
                 }
@@ -417,23 +378,41 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             logger.trace("- final list has {} items", result.size());
         }
 
-        // replace config resources with wrappers with merged properties if property inheritance was applied
-        if (propertyInheritanceApplied) {
-            List<Resource> transformedResult = new ArrayList<>();
-            for (Map.Entry<String, Resource> entry : result.entrySet()) {
-                Map<String,Object> configValueMap = configValueMaps.get(entry.getKey());
-                if (configValueMap instanceof ValueMap) {
-                    transformedResult.add(entry.getValue());
-                }
-                else {
-                    transformedResult.add(new ConfigurationResourceWrapper(entry.getValue(), new ValueMapDecorator(configValueMap)));
-                }
+        return result.values();
+    }
+
+    @Override
+    public Collection<Resource> getResourceCollection(final Resource contentResource, final String bucketName, final String configName) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
+            return null;
+        }
+        Iterator<String> paths = getResolvePaths(contentResource, bucketName);
+        return getResourceCollectionInternal(bucketName, configName, paths, contentResource.getResourceResolver());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(final Resource contentResource,
+            final String bucketName, final String configName) {
+        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
+            return null;
+        }
+        final ResourceResolver resourceResolver = contentResource.getResourceResolver();
+        final List<String> paths = IteratorUtils.toList(getResolvePaths(contentResource, bucketName));
+        
+        // get resource collection with respect to collection inheritance
+        Collection<Resource> resourceCollection = getResourceCollectionInternal(bucketName, configName, paths.iterator(), resourceResolver);
+        
+        // get inheritance chain for each item found
+        // yes, this resolves the closest item twice, but is the easiest solution to combine both logic aspects
+        Iterator<Iterator<Resource>> result = IteratorUtils.transformedIterator(resourceCollection.iterator(), new Transformer() {
+            @Override
+            public Object transform(Object input) {
+                Resource item = (Resource)input;
+                return getResourceInheritanceChainInternal(bucketName, configName + "/" + item.getName(), paths.iterator(), resourceResolver);
             }
-            return transformedResult;
-        }
-        else {
-            return result.values();
-        }
+        });
+        return IteratorUtils.toList(result);
     }
 
     private boolean isValidResourceCollectionItem(Resource resource) {
@@ -468,28 +447,14 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             return configPath;
         }
         else {
-            logger.debug("No configuration path {}  foundfor resource {}.", name, contentResource.getPath());
+            logger.debug("No configuration path {} found for resource {}.", name, contentResource.getPath());
             return null;
         }
     }
 
     @Override
     public String getResourceCollectionParentPath(Resource contentResource, String bucketName, String configName) {
-        if (!isEnabledAndParamsValid(contentResource, bucketName, configName)) {
-            return null;
-        }
-        String name = bucketName + "/" + configName;
-
-        Iterator<String> configPaths = this.findConfigRefs(contentResource, bucketName);
-        if (configPaths.hasNext()) {
-            String configPath = buildResourcePath(configPaths.next(), name);
-            logger.debug("Building configuration collection parent path {} for resource {}: {}", name, contentResource.getPath(), configPath);
-            return configPath;
-        }
-        else {
-            logger.debug("No configuration collection parent path {}  foundfor resource {}.", name, contentResource.getPath());
-            return null;
-        }
+        return getResourcePath(contentResource, bucketName, configName);
     }
 
 }
