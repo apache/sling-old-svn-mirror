@@ -25,7 +25,12 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.MapperFeature;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.Order;
+import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.models.export.spi.ModelExporter;
 import org.apache.sling.models.factory.ExportException;
 
@@ -35,8 +40,13 @@ import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.sling.models.jacksonexporter.ModuleProvider;
+import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 
 @Component
 @Service
@@ -51,6 +61,10 @@ public class JacksonExporter implements ModelExporter {
     private static final String MAPPER_FEATURE_PREFIX = MapperFeature.class.getSimpleName() + ".";
 
     private static final int MAPPER_FEATURE_PREFIX_LENGTH = MAPPER_FEATURE_PREFIX.length();
+
+    @Reference(name = "moduleProvider", referenceInterface = ModuleProvider.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final @Nonnull RankedServices<ModuleProvider> moduleProviders = new RankedServices<ModuleProvider>(Order.ASCENDING);
 
     @Override
     public boolean isSupported(Class<?> clazz) {
@@ -81,6 +95,9 @@ public class JacksonExporter implements ModelExporter {
                 }
             }
         }
+        for (ModuleProvider moduleProvider : moduleProviders) {
+            mapper.registerModule(moduleProvider.getModule());
+        }
 
         if (clazz.equals(Map.class)) {
             return (T) mapper.convertValue(model, Map.class);
@@ -109,6 +126,14 @@ public class JacksonExporter implements ModelExporter {
         } else {
             return null;
         }
+    }
+
+    protected void bindModuleProvider(final ModuleProvider moduleProvider, final Map<String, Object> props) {
+        moduleProviders.bind(moduleProvider, props);
+    }
+
+    protected void unbindModuleProvider(final ModuleProvider moduleProvider, final Map<String, Object> props) {
+        moduleProviders.unbind(moduleProvider, props);
     }
 
     @Override
