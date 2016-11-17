@@ -33,11 +33,6 @@ import javax.management.MBeanServer;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
@@ -47,8 +42,13 @@ import org.apache.sling.commons.metrics.Metric;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
-@Component
+@Component(service = {}, immediate = true)
 public class MetricsServiceImpl implements MetricsService {
     private final List<ServiceRegistration> regs = new ArrayList<>();
     private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<>();
@@ -56,7 +56,7 @@ public class MetricsServiceImpl implements MetricsService {
     private final BundleMetricsMapper metricsMapper = new BundleMetricsMapper(registry);
     private GaugeManager gaugeManager;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private MBeanServer server;
 
     private JmxReporter reporter;
