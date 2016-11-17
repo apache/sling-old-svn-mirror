@@ -19,7 +19,8 @@
 
 package org.apache.sling.commons.metrics;
 
-import aQute.bnd.annotation.ConsumerType;
+
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A gauge metric is an instantaneous reading of a particular value. To instrument a queue's depth,

@@ -64,11 +64,21 @@
               org.apache.felix.inventory;version="[1.0.0,2)"
             </DynamicImport-Package>
           </instructions>
+          <!-- Export SCR metadata to classpath to have them available in unit tests -->
+          <exportScr>true</exportScr>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-scr-plugin</artifactId>
+        <executions>
+          <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+          <execution>
+            <id>scr-metadata</id>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+            <configuration>
+              <supportIncrementalBuild>true</supportIncrementalBuild>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -91,14 +101,10 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.cmpn</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -141,6 +147,7 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>1.10.19</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

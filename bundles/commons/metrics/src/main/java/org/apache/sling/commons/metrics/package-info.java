@@ -23,9 +23,7 @@
  * @version 1.0
  */
 @Version("1.1.0")
-@Export(optional = "provide:=true")
 package org.apache.sling.commons.metrics;
 
-import aQute.bnd.annotation.Export;
-import aQute.bnd.annotation.Version;
 
+import org.osgi.annotation.versioning.Version;

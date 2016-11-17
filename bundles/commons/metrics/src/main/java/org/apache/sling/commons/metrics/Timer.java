@@ -22,7 +22,8 @@ package org.apache.sling.commons.metrics;
 import java.io.Closeable;
 import java.util.concurrent.TimeUnit;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * A timer metric which aggregates timing durations and provides duration statistics.
