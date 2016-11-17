@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Queue;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.management.ObjectName;
 
@@ -50,7 +50,7 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
         this.context = context;
         this.queueCapacity = queueCapacity;
 
-        mBeans = new PriorityBlockingQueue<ServiceRegistration>(queueCapacity);
+        mBeans = new ArrayBlockingQueue<ServiceRegistration>(queueCapacity);
     }
 
     @Override
