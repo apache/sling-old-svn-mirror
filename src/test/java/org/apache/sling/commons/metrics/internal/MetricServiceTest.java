@@ -41,6 +41,7 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.apache.sling.commons.metrics.internal.BundleMetricsMapper.JMX_TYPE_METRICS;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -134,7 +135,7 @@ public class MetricServiceTest {
         Meter meter = service.meter("test");
         assertNotNull(meter);
         QueryExp q = Query.isInstanceOf(Query.value(JmxReporter.JmxMeterMBean.class.getName()));
-        Set<ObjectName> names = server.queryNames(new ObjectName("org.apache.sling:name=*"), q);
+        Set<ObjectName> names = server.queryNames(new ObjectName("org.apache.sling:name=*,type="+ JMX_TYPE_METRICS), q);
         assertThat(names, is(not(empty())));
 
         MockOsgi.deactivate(service, context.bundleContext());
