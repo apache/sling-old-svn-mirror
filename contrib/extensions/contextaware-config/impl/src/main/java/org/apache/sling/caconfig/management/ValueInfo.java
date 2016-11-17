@@ -19,6 +19,7 @@
 package org.apache.sling.caconfig.management;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.osgi.annotation.versioning.ProviderType;
@@ -30,6 +31,12 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ValueInfo<T> {
 
+    /**
+     * Property name.
+     * @return Property name.
+     */
+    @Nonnull String getName();
+    
     /**
      * Property metadata.
      * @return Property metadata. Null if no metadata exists.
@@ -62,8 +69,7 @@ public interface ValueInfo<T> {
     /**
      * @return true if the value is not defined for the current context path but inherited from upper levels.
      */
-    // for future use
-    //boolean isInherited();
+    boolean isInherited();
     
     /**
      * @return true if the value is overridden by an configuration override provider.

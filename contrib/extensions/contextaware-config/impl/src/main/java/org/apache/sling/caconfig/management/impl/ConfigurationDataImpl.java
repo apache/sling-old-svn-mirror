@@ -20,10 +20,14 @@ package org.apache.sling.caconfig.management.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.management.ConfigurationData;
@@ -33,22 +37,32 @@ import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
 final class ConfigurationDataImpl implements ConfigurationData {
     
-    private final ValueMap properties;
-    private final String configSourcePath;
     private final ConfigurationMetadata configMetadata;
+    private final Resource resolvedConfigurationResource;
+    private final Resource writebackConfigurationResource;
+    private final List<Resource> configurationResourceInheritanceChain;
     
-    public ConfigurationDataImpl(Resource configResource, ConfigurationMetadata configMetadata) {
-        this(configResource.getValueMap(), configResource.getPath(), configMetadata);
+    @SuppressWarnings("unchecked")
+    public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
+            Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
+            Iterator<Resource> configurationResourceInheritanceChain) {
+        this.configMetadata = configMetadata;
+        this.resolvedConfigurationResource = resolvedConfigurationResource;
+        this.writebackConfigurationResource = writebackConfigurationResource;
+        this.configurationResourceInheritanceChain = configurationResourceInheritanceChain != null
+                ? IteratorUtils.toList(configurationResourceInheritanceChain) : null;
     }
 
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata) {
-        this(ValueMap.EMPTY, null, configMetadata);
+        this(configMetadata, null, null, null);
     }
 
-    private ConfigurationDataImpl(ValueMap propertes, String configSourcePath, ConfigurationMetadata configMetadata) {
-        this.properties = propertes;
-        this.configSourcePath = configSourcePath;
-        this.configMetadata = configMetadata;
+    @Override
+    public String getResourcePath() {
+        if (writebackConfigurationResource != null) {
+            return writebackConfigurationResource.getPath();
+        }
+        return null;
     }
 
     @Override
@@ -57,13 +71,18 @@ final class ConfigurationDataImpl implements ConfigurationData {
         if (configMetadata != null) {
             propertyNames.addAll(configMetadata.getPropertyMetadata().keySet());
         }
-        propertyNames.addAll(properties.keySet());
+        if (resolvedConfigurationResource != null) {
+            propertyNames.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
+        }
         return propertyNames;
     }
 
     @Override
     public ValueMap getValues() {
-        return properties;
+        if (writebackConfigurationResource != null) {
+            return ResourceUtil.getValueMap(writebackConfigurationResource);
+        }
+        return ValueMap.EMPTY;
     }
 
     @Override
@@ -76,7 +95,9 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 }
             }
         }
-        props.putAll(properties);
+        if (resolvedConfigurationResource != null) {
+            props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
+        }
         return new ValueMapDecorator(props);
     }
 
@@ -85,13 +106,18 @@ final class ConfigurationDataImpl implements ConfigurationData {
     public ValueInfo<?> getValueInfo(String propertyName) {
         PropertyMetadata propertyMetadata = configMetadata != null ? configMetadata.getPropertyMetadata().get(propertyName) : null;
         Object value;
+        ValueMap properties = ResourceUtil.getValueMap(resolvedConfigurationResource);
         if (propertyMetadata != null) {
             value = properties.get(propertyName, propertyMetadata.getType());
         }
         else {
             value = properties.get(propertyName);
         }
-        return new ValueInfoImpl(value, configSourcePath, propertyMetadata);
+        return new ValueInfoImpl(propertyName, value,
+                propertyMetadata,
+                resolvedConfigurationResource,
+                writebackConfigurationResource,
+                configurationResourceInheritanceChain);
     }
 
 }

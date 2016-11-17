@@ -44,7 +44,6 @@ public class ConfigurationDataImplTest {
     private Resource configResource;
     private ConfigurationMetadata configMetadata;
     
-    
     @Before
     public void setUp() {
         configResource = context.create().resource("/conf/test",
@@ -59,8 +58,9 @@ public class ConfigurationDataImplTest {
 
     @Test
     public void testWithResourceMetadata() {
-        ConfigurationData underTest = new ConfigurationDataImpl(configResource, configMetadata);
+        ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null);
         
+        assertEquals(configResource.getPath(), underTest.getResourcePath());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), underTest.getPropertyNames());
         
         ValueMap values = underTest.getValues();
@@ -93,7 +93,7 @@ public class ConfigurationDataImplTest {
 
     @Test
     public void testWithResourceOnly() {
-        ConfigurationData underTest = new ConfigurationDataImpl(configResource, null);
+        ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null);
         
         assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());
         

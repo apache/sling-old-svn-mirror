@@ -18,24 +18,42 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.management.ValueInfo;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
 final class ValueInfoImpl<T> implements ValueInfo<T> {
     
+    private final String name;
     private final T value;
     private final T defaultValue;
-    private final String configSourcePath;
     private final PropertyMetadata<T> propertyMetadata;
+    private final Resource resolvedConfigurationResource;
+    private final Resource writebackConfigurationResource;
+    private final List<Resource> configurationResourceInheritanceChain;
     
-    public ValueInfoImpl(T value, String configSourcePath, PropertyMetadata<T> propertyMetadata) {
+    public ValueInfoImpl(String name, T value, PropertyMetadata<T> propertyMetadata,
+            Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
+            List<Resource> configurationResourceInheritanceChain) {
+        this.name = name;
         this.value = value;
         this.defaultValue = propertyMetadata != null ? propertyMetadata.getDefaultValue() : null;
-        this.configSourcePath = configSourcePath;
         this.propertyMetadata = propertyMetadata;
+        this.resolvedConfigurationResource = resolvedConfigurationResource;
+        this.writebackConfigurationResource = writebackConfigurationResource;
+        this.configurationResourceInheritanceChain = configurationResourceInheritanceChain;
     }
-
+    
+    @Override
+    public String getName() {
+        return name;
+    }
+ 
     @Override
     public PropertyMetadata<T> getPropertyMetadata() {
         return propertyMetadata;
@@ -53,7 +71,13 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
 
     @Override
     public String getConfigSourcePath() {
-        return configSourcePath;
+        if (value != null && resolvedConfigurationResource != null) {
+            Resource resource = getResourceFromInheritanceChain();
+            if (resource != null) {
+                return resource.getPath();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -61,4 +85,47 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         return value == null && defaultValue != null;
     }
 
+    @Override
+    public boolean isInherited() {
+        if (isDefault() || value == null) {
+            return false;
+        }
+        else if (resolvedConfigurationResource == null) {
+            return false;
+        }
+        else if (writebackConfigurationResource == null) {
+            return true;
+        }
+        else if (!StringUtils.equals(resolvedConfigurationResource.getPath(), writebackConfigurationResource.getPath())) {
+            return true;
+        }
+        else {
+            Resource inheritanceSource = getResourceFromInheritanceChain();
+            if (inheritanceSource != null) {
+                return !StringUtils.equals(resolvedConfigurationResource.getPath(), inheritanceSource.getPath());
+            }
+            else {
+                return false;
+            }
+        }
+    }
+    
+    private Resource getResourceFromInheritanceChain() {
+        if (configurationResourceInheritanceChain == null) {
+            return null;
+        }
+        return getResourceFromInheritanceChain(configurationResourceInheritanceChain.iterator());
+    }
+
+    private Resource getResourceFromInheritanceChain(Iterator<Resource> inheritanceChain) {
+        if (!inheritanceChain.hasNext()) {
+            return null;
+        }
+        Resource resource = inheritanceChain.next();
+        Object valueFromResource = resource.getValueMap().get(name, value.getClass());
+        if (valueFromResource != null) {
+            return resource;
+        }
+        return getResourceFromInheritanceChain(inheritanceChain);
+    }
 }
