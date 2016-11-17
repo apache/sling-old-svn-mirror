@@ -16,37 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.resource.impl.def;
+package org.apache.sling.caconfig.spi;
+
+import java.util.Iterator;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.api.resource.ValueMap;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Wrapper that returns an enhanced value map for the resource
- * providing a merged map with all inherited property values.
+ * Defines how (and if) resources in a resource hierarchy should inherit form each other.
+ * Primary use case is property inheritance over the inheritance chain.
  */
-class ConfigurationResourceWrapper extends ResourceWrapper {
-    
-    private final ValueMap props;
+@ConsumerType
+public interface ConfigurationInheritanceStrategy {
 
-    public ConfigurationResourceWrapper(Resource resource, ValueMap props) {
-        super(resource);
-        this.props = props;
-    }
+    /**
+     * Pick or merge resources for inheritance.
+     * @param configResources Iterator of configuration resources that form the inheritance hierarchy.
+     *     First resource is the "closest" match, the other resources may be used to inherit from.
+     * @return Inherited resource or null if this strategy does not support the given resources
+     */
+    @CheckForNull Resource getResource(@Nonnull Iterator<Resource> configResources);
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        if (type == ValueMap.class) {
-            return (AdapterType)props;
-        }
-        return super.adaptTo(type);
-    }
-
-    @Override
-    public ValueMap getValueMap() {
-        return props;
-    }
-    
 }

@@ -1,4 +1,4 @@
-    /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * SPI for applications hooking into the configuration resource infrastructure for parameterizing and customizing.
- */
-@org.osgi.annotation.versioning.Version("2.0.0")
-package org.apache.sling.caconfig.resource.spi;
+package org.apache.sling.caconfig.impl.def;
+
+public final class ConfigurationDefNameConstants {
+
+    private ConfigurationDefNameConstants() {
+        // constants only
+    }
+
+    /**
+     * Boolean property that controls whether the properties (key/value pairs) of configuration resources
+     * should be inherited from the configuration hierarchy and merged.
+     */
+    public static final String PROPERTY_CONFIG_PROPERTY_INHERIT = "sling:configPropertyInherit";
+
+}

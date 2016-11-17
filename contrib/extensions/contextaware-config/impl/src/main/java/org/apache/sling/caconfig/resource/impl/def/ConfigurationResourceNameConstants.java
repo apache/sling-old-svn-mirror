@@ -36,10 +36,4 @@ public final class ConfigurationResourceNameConstants {
      */
     public static final String PROPERTY_CONFIG_COLLECTION_INHERIT = "sling:configCollectionInherit";
 
-    /**
-     * Boolean property that controls whether the properties (key/value pairs) of configuration resources
-     * should be inherited from the configuration hierarchy and merged.
-     */
-    public static final String PROPERTY_CONFIG_PROPERTY_INHERIT = "sling:configPropertyInherit";
-
 }

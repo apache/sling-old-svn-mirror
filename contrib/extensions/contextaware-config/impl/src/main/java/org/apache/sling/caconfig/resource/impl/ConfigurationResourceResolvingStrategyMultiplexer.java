@@ -18,9 +18,8 @@
  */
 package org.apache.sling.caconfig.resource.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -71,15 +70,46 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
     }
 
     /**
-     * Merge the configuration resources from all implementations into a combined list.
+     * Gets the configuration resource collection from the first implementation that has an answer.
      */
     @Override
     public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
-        List<Resource> result = new ArrayList<>();
         for (ConfigurationResourceResolvingStrategy item : items) {
-            result.addAll(item.getResourceCollection(resource, bucketName, configName));
+            Collection<Resource> result = item.getResourceCollection(resource, bucketName, configName);
+            if (result != null) {
+                return result;
+            }
         }
-        return result;
+        return null;
+    }
+
+    /**
+     * Gets the configuration resource inheritance chain from the first implementation that has an answer.
+     */
+    @Override
+    public Iterator<Resource> getResourceInheritanceChain(Resource resource, String bucketName, String configName) {
+        for (ConfigurationResourceResolvingStrategy item : items) {
+            Iterator<Resource> result = item.getResourceInheritanceChain(resource, bucketName, configName);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets the configuration resource collection inheritance chains from the first implementation that has an answer.
+     */
+    @Override
+    public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(Resource resource, String bucketName,
+            String configName) {
+        for (ConfigurationResourceResolvingStrategy item : items) {
+            Collection<Iterator<Resource>> result = item.getResourceCollectionInheritanceChain(resource, bucketName, configName);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 
     /**

@@ -19,6 +19,7 @@
 package org.apache.sling.caconfig.resource.spi;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -46,7 +47,7 @@ public interface ConfigurationResourceResolvingStrategy {
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
-     * @return Configuration resource or {@code null}.
+     * @return Configuration resource or {@code null} if this strategy did not found matching resources.
      */
     @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
 
@@ -57,9 +58,33 @@ public interface ConfigurationResourceResolvingStrategy {
      *     it's configuration data grouped in a child resource of the configuration resource. This is what
      *     we call a "bucket", and the resource name is specified with this parameter.
      * @param configName Configuration name or relative path.
-     * @return Collection of configuration resources, the collection might be empty.
+     * @return Collection of configuration resources or {@code null} if this strategy did not found matching resources.
      */
-    @Nonnull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
+    @CheckForNull Collection<Resource> getResourceCollection(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
+
+    /**
+     * Get a context-aware singleton configuration resource inheritance chain defined by the given configuration name.
+     * The first item of the inheritance chain it the same resource returned by {@link #getResource(Resource, String, String)}.
+     * @param resource Context resource to fetch configuration for
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
+     *     it's configuration data grouped in a child resource of the configuration resource. This is what
+     *     we call a "bucket", and the resource name is specified with this parameter.
+     * @param configName Configuration name or relative path.
+     * @return Configuration resource inheritance chain or {@code null} if this strategy did not found matching resources.
+     */
+    @CheckForNull Iterator<Resource> getResourceInheritanceChain(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
+
+    /**
+     * Get a collection of context-aware configuration resource inheritance chains defined by the given configuration name.
+     * The first item of each inheritance chain is the same item returned by {@link #getResourceCollection(Resource, String, String)}.
+     * @param resource Context resource to fetch configuration for
+     * @param bucketName Configuration "bucket" name. Each high-level configuration resolver should store
+     *     it's configuration data grouped in a child resource of the configuration resource. This is what
+     *     we call a "bucket", and the resource name is specified with this parameter.
+     * @param configName Configuration name or relative path.
+     * @return Collection of configuration resource inheritance chains or {@code null} if this strategy did not found matching resources.
+     */
+    @CheckForNull Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(@Nonnull Resource resource, @Nonnull String bucketName, @Nonnull String configName);
 
     /**
      * Get the configuration resource path for storing configuration data for the given context resource and configuration name.
