@@ -121,29 +121,30 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 }
                                 ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                                 regs.add(reg);
-                            }
-                            String[] resourceTypes = annotation.resourceType();
-                            for (String resourceType : resourceTypes) {
-                                if (StringUtils.isNotEmpty(resourceType)) {
-                                    for (Class<?> adaptable : annotation.adaptables()) {
-                                        adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
-                                        ExportServlet.ExportedObjectAccessor accessor = null;
-                                        if (adaptable == Resource.class) {
-                                            accessor = ExportServlet.RESOURCE;
-                                        } else if (adaptable == SlingHttpServletRequest.class) {
-                                            accessor = ExportServlet.REQUEST;
-                                        }
-                                        Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
-                                        if (exporterAnnotation != null) {
-                                            registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
-                                        }
-                                        Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
-                                        if (exportersAnnotation != null) {
-                                            for (Exporter ann : exportersAnnotation.value()) {
-                                                registerExporter(bundle, implType, resourceType, ann, regs, accessor);
-                                            }
-                                        }
 
+                                String[] resourceTypes = annotation.resourceType();
+                                for (String resourceType : resourceTypes) {
+                                    if (StringUtils.isNotEmpty(resourceType)) {
+                                        for (Class<?> adaptable : annotation.adaptables()) {
+                                            adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
+                                            ExportServlet.ExportedObjectAccessor accessor = null;
+                                            if (adaptable == Resource.class) {
+                                                accessor = ExportServlet.RESOURCE;
+                                            } else if (adaptable == SlingHttpServletRequest.class) {
+                                                accessor = ExportServlet.REQUEST;
+                                            }
+                                            Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                                            if (exporterAnnotation != null) {
+                                                registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
+                                            }
+                                            Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                                            if (exportersAnnotation != null) {
+                                                for (Exporter ann : exportersAnnotation.value()) {
+                                                    registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                                                }
+                                            }
+
+                                        }
                                     }
                                 }
                             }

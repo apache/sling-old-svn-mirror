@@ -56,6 +56,7 @@ public class ExporterTest {
     private final String baseComponentPath = "/content/exp/baseComponent";
     private final String childComponentPath = "/content/exp/childComponent";
     private final String extendedComponentPath = "/content/exp/extendedComponent";
+    private final String interfaceComponentPath = "/content/exp/interfaceComponent";
     private Calendar testDate;
 
     @Before
@@ -87,6 +88,14 @@ public class ExporterTest {
             testDate.set(2015, 6, 29);
             properties.put("date", testDate);
             ResourceUtil.getOrCreateResource(adminResolver, extendedComponentPath, properties, null, false);
+            properties.clear();
+
+            properties.put("sampleValue", "interfaceTESTValue");
+            properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
+                    "sling/exp/interface");
+            ResourceUtil.getOrCreateResource(adminResolver, interfaceComponentPath, properties, null, false);
+            properties.clear();
+
             adminResolver.commit();
         } finally {
             if (adminResolver != null && adminResolver.isLive()) {
@@ -113,6 +122,13 @@ public class ExporterTest {
                     Collections.<String, String> emptyMap());
             Assert.assertTrue("JSON Data should contain the property value",
                     StringUtils.contains(jsonData, "extendedTESTValue"));
+
+            final Resource interfaceComponentResource = resolver.getResource(interfaceComponentPath);
+            Assert.assertNotNull(baseComponentResource);
+            jsonData = modelFactory.exportModelForResource(interfaceComponentResource, "jackson", String.class,
+                    Collections.<String, String> emptyMap());
+            Assert.assertTrue("JSON Data should contain the property value",
+                    StringUtils.contains(jsonData, "interfaceTESTValue"));
         } finally {
             if (resolver != null && resolver.isLive()) {
                 resolver.close();
@@ -155,6 +171,12 @@ public class ExporterTest {
             obj = new JSONObject(response.getStringWriter().toString());
             Assert.assertEquals(extendedComponentPath, obj.getString("id"));
             Assert.assertEquals(testDate.getTimeInMillis(), obj.getLong("date"));
+
+            response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(interfaceComponentPath + ".model.json"), response, resolver);
+            obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals(interfaceComponentPath, obj.getString("id"));
+            Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
         } finally {
             if (resolver != null && resolver.isLive()) {
                 resolver.close();
