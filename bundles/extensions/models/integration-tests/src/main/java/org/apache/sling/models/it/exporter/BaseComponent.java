@@ -20,6 +20,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Exporter;
+import org.apache.sling.models.annotations.ExporterOption;
 import org.apache.sling.models.annotations.Model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -48,5 +49,9 @@ public class BaseComponent {
     @JsonProperty(value="UPPER")
     public String getSampleValueToUpperCase() {
         return sampleValue.toUpperCase();
+    }
+
+    public Resource getResource() {
+        return resource;
     }
 }
