@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentMap;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import com.codahale.metrics.DefaultObjectNameFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ObjectNameFactory;
 import org.osgi.framework.Bundle;
@@ -41,7 +40,6 @@ class BundleMetricsMapper implements ObjectNameFactory{
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ConcurrentMap<String, Bundle> metricToBundleMapping = new ConcurrentHashMap<>();
     private final MetricRegistry registry;
-    private final ObjectNameFactory defaultFactory = new DefaultObjectNameFactory();
 
     BundleMetricsMapper(MetricRegistry registry) {
         this.registry = registry;
@@ -66,7 +64,7 @@ class BundleMetricsMapper implements ObjectNameFactory{
             mappedDomainName = domain;
         }
 
-        Hashtable<String, String> table = new Hashtable<String, String>();
+        Hashtable<String, String> table = new Hashtable<>();
         table.put("type", JMX_TYPE_METRICS);
         table.put("name", JmxUtil.quoteValueIfRequired(name));
         try {
