@@ -22,7 +22,7 @@
  *
  * @version 1.0
  */
-@Version("1.0")
+@Version("1.1.0")
 @Export(optional = "provide:=true")
 package org.apache.sling.commons.metrics;
 

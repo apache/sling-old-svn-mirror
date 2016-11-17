@@ -54,6 +54,7 @@ public class MetricsServiceImpl implements MetricsService {
     private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<>();
     private final MetricRegistry registry = new MetricRegistry();
     private final BundleMetricsMapper metricsMapper = new BundleMetricsMapper(registry);
+    private GaugeManager gaugeManager;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private MBeanServer server;
@@ -63,6 +64,8 @@ public class MetricsServiceImpl implements MetricsService {
     @Activate
     private void activate(BundleContext context, Map<String, Object> config) {
         enableJMXReporter();
+
+        gaugeManager = new GaugeManager(context, registry, metricsMapper);
 
         final Dictionary<String, String> svcProps = new Hashtable<>();
         svcProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Service");
@@ -83,6 +86,8 @@ public class MetricsServiceImpl implements MetricsService {
             reg.unregister();
         }
         regs.clear();
+
+        gaugeManager.close();
 
         metrics.clear();
 
