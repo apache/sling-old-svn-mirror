@@ -31,20 +31,25 @@ import javax.management.QueryExp;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.Gauge;
 import org.apache.sling.commons.metrics.Histogram;
 import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
+import org.apache.sling.testing.mock.osgi.MapUtil;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.osgi.framework.ServiceRegistration;
 
 import static org.apache.sling.commons.metrics.internal.BundleMetricsMapper.JMX_TYPE_METRICS;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -145,12 +150,38 @@ public class MetricServiceTest {
 
     }
 
+    @Test
+    public void gaugeRegistration() throws Exception{
+        activate();
+        ServiceRegistration<Gauge> reg = context.bundleContext().registerService(Gauge.class, new TestGauge(42),
+                MapUtil.toDictionary(Gauge.NAME, "foo"));
+
+        assertTrue(getRegistry().getGauges().containsKey("foo"));
+        assertEquals(42, getRegistry().getGauges().get("foo").getValue());
+
+        reg.unregister();
+        assertFalse(getRegistry().getGauges().containsKey("foo"));
+    }
+
     private MetricRegistry getRegistry(){
         return context.getService(MetricRegistry.class);
     }
 
     private void activate() {
         MockOsgi.activate(service, context.bundleContext(), Collections.<String, Object>emptyMap());
+    }
+
+    private static class TestGauge implements Gauge {
+        int value;
+
+        public TestGauge(int value){
+            this.value = value;
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
     }
 
 }
