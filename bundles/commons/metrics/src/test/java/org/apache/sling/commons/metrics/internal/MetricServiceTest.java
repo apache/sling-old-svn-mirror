@@ -58,7 +58,7 @@ public class MetricServiceTest {
 
     @After
     public void deactivate(){
-        MockOsgi.deactivate(service);
+        MockOsgi.deactivate(service, context.bundleContext());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class MetricServiceTest {
 
         assertNotNull(service.adaptTo(MetricRegistry.class));
 
-        MockOsgi.deactivate(service);
+        MockOsgi.deactivate(service, context.bundleContext());
 
         assertNull(context.getService(MetricRegistry.class));
         assertNull(context.getService(MetricsService.class));
@@ -137,7 +137,7 @@ public class MetricServiceTest {
         Set<ObjectName> names = server.queryNames(new ObjectName("org.apache.sling:name=*"), q);
         assertThat(names, is(not(empty())));
 
-        MockOsgi.deactivate(service);
+        MockOsgi.deactivate(service, context.bundleContext());
 
         names = server.queryNames(new ObjectName("org.apache.sling:name=*"), q);
         assertThat(names, is(empty()));
