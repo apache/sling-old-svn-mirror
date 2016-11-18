@@ -36,6 +36,7 @@ import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassParser;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
@@ -47,6 +48,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     private final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy;
     private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
     private final ConfigurationInheritanceStrategy configurationInheritanceStrategy;
+    private final ConfigurationOverrideManager configurationOverrideManager;
 
     private String configName;
 
@@ -54,12 +56,14 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             final ConfigurationResolver configurationResolver,
             final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy,
             final ConfigurationPersistenceStrategy configurationPersistenceStrategy,
-            final ConfigurationInheritanceStrategy configurationInheritanceStrategy) {
+            final ConfigurationInheritanceStrategy configurationInheritanceStrategy,
+            final ConfigurationOverrideManager configurationOverrideManager) {
         this.contentResource = resource;
         this.configurationResolver = configurationResolver;
         this.configurationResourceResolvingStrategy = configurationResourceResolvingStrategy;
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configurationInheritanceStrategy = configurationInheritanceStrategy;
+        this.configurationOverrideManager = configurationOverrideManager;
     }
 
     @Override
@@ -159,6 +163,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
                     });
             // apply resource inheritance
             configResource = configurationInheritanceStrategy.getResource(transformedResources);
+            // apply overrides
+            configResource = configurationOverrideManager.overrideProperties(contentResource.getPath(), name, configResource);
             // build name
             if (configResource != null && appendResourceName) {
                 conversionName = conversionName + "/" + configResource.getName();

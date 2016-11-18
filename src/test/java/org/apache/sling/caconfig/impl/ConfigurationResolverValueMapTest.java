@@ -30,6 +30,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
+import org.apache.sling.caconfig.override.impl.DummyConfigurationOverrideProvider;
+import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -99,6 +101,42 @@ public class ConfigurationResolverValueMapTest {
         assertEquals("configValue1.1", propsIterator.next().get("stringParam", String.class));
         assertEquals("configValue1.2", propsIterator.next().get("stringParam", String.class));
         assertEquals("configValue1.3", propsIterator.next().get("stringParam", String.class));
+    }
+
+    @Test
+    public void testConfigWithOverride() {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]sampleName={stringParam='override1',intParam=222}"));
+
+        context.build().resource("/conf/content/site1/sling:configs/sampleName", 
+                "stringParam", "configValue1",
+                "intParam", 111,
+                "boolParam", true);
+
+        ValueMap props = underTest.get(site1Page1).name("sampleName").asValueMap();
+
+        assertEquals("override1", props.get("stringParam", String.class));
+        assertEquals(222, (int)props.get("intParam", 0));
+        assertEquals(false, props.get("boolParam", false));
+    }
+
+    @Test
+    public void testConfigCollectionWithOverride() {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]sampleList/stringParam='override1'"));
+
+        context.build().resource("/conf/content/site1/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
+
+        Collection<ValueMap> propsList = underTest.get(site1Page1).name("sampleList").asValueMapCollection();
+
+        Iterator<ValueMap> propsIterator = propsList.iterator();
+        assertEquals("override1", propsIterator.next().get("stringParam", String.class));
+        assertEquals("override1", propsIterator.next().get("stringParam", String.class));
+        assertEquals("override1", propsIterator.next().get("stringParam", String.class));
     }
 
     @Test

@@ -24,14 +24,25 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ValueInfoImplTest {
     
     private PropertyMetadata<String> propertyMetadata;
+    
+    @Mock
+    private Resource contextResource;
+    @Mock
+    private ConfigurationOverrideManager configurationOverrideManager;
 
     @Before
     public void setUp() {
@@ -40,20 +51,23 @@ public class ValueInfoImplTest {
     
     @Test
     public void testValueMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", propertyMetadata, null, null, null);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", propertyMetadata, null, null, null,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals("name1", underTest.getName());
         assertSame(propertyMetadata, underTest.getPropertyMetadata());
-        assertEquals("value", underTest.getValue());
+        assertNull(underTest.getValue());
         assertEquals("value", underTest.getEffectiveValue());
         assertNull(underTest.getConfigSourcePath());
         assertFalse(underTest.isDefault());
         assertFalse(underTest.isInherited());
+        assertFalse(underTest.isOverridden());
     }
 
     @Test
     public void testNoValueMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", null, propertyMetadata, null, null, null);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", null, propertyMetadata, null, null, null,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals("name1", underTest.getName());
         assertSame(propertyMetadata, underTest.getPropertyMetadata());
@@ -62,19 +76,22 @@ public class ValueInfoImplTest {
         assertNull(underTest.getConfigSourcePath());
         assertTrue(underTest.isDefault());
         assertFalse(underTest.isInherited());
+        assertFalse(underTest.isOverridden());
     }
 
     @Test
     public void testValueNoMetadata() {
-        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", null, null, null, null);
+        ValueInfo<String> underTest = new ValueInfoImpl<>("name1", "value", null, null, null, null,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals("name1", underTest.getName());
         assertNull(underTest.getPropertyMetadata());
-        assertEquals("value", underTest.getValue());
+        assertNull(underTest.getValue());
         assertEquals("value", underTest.getEffectiveValue());
         assertNull(underTest.getConfigSourcePath());
         assertFalse(underTest.isDefault());
         assertFalse(underTest.isInherited());
+        assertFalse(underTest.isOverridden());
     }
 
 }

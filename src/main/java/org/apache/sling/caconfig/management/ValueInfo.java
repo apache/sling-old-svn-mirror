@@ -74,13 +74,6 @@ public interface ValueInfo<T> {
     /**
      * @return true if the value is overridden by an configuration override provider.
      */
-    // for future use
-    //boolean isOverridden();
-    
-    /**
-     * @return true if this value is locked on a higher level and is not allowed to be overridden.
-     */
-    // for future use
-    //boolean isLocked();
+    boolean isOverridden();
     
 }

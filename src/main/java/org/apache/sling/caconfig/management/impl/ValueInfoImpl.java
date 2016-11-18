@@ -18,13 +18,16 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
 final class ValueInfoImpl<T> implements ValueInfo<T> {
@@ -36,10 +39,14 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     private final Resource resolvedConfigurationResource;
     private final Resource writebackConfigurationResource;
     private final List<Resource> configurationResourceInheritanceChain;
+    private final Resource contextResource;
+    private final String configName;
+    private final ConfigurationOverrideManager configurationOverrideManager;
     
     public ValueInfoImpl(String name, T value, PropertyMetadata<T> propertyMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
-            List<Resource> configurationResourceInheritanceChain) {
+            List<Resource> configurationResourceInheritanceChain,
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
         this.name = name;
         this.value = value;
         this.defaultValue = propertyMetadata != null ? propertyMetadata.getDefaultValue() : null;
@@ -47,6 +54,9 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         this.resolvedConfigurationResource = resolvedConfigurationResource;
         this.writebackConfigurationResource = writebackConfigurationResource;
         this.configurationResourceInheritanceChain = configurationResourceInheritanceChain;
+        this.contextResource = contextResource;
+        this.configName = configName;
+        this.configurationOverrideManager = configurationOverrideManager;
     }
     
     @Override
@@ -59,9 +69,18 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         return propertyMetadata;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T getValue() {
-        return value;
+        if (writebackConfigurationResource == null) {
+            return null;
+        }
+        else if (propertyMetadata != null) {
+            return writebackConfigurationResource.getValueMap().get(name, propertyMetadata.getType());
+        }
+        else {
+            return (T)writebackConfigurationResource.getValueMap().get(name);
+        }
     }
 
     @Override
@@ -128,4 +147,21 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         }
         return getResourceFromInheritanceChain(inheritanceChain);
     }
+
+    @Override
+    public boolean isOverridden() {
+        if (contextResource == null) {
+            return false;
+        }
+        Map<String,Object> overrideProperties = configurationOverrideManager.overrideProperties(
+                    contextResource.getPath(), configName, Collections.<String,Object>emptyMap());
+        if (overrideProperties != null) {
+            return overrideProperties.containsKey(name)
+                    || (getValue() != null && value == null);
+        }
+        else {
+            return false;
+        }
+    }
+
 }

@@ -22,6 +22,7 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 
@@ -41,6 +42,7 @@ public final class ConfigurationTestUtils {
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationOverrideManager());
         return context.registerInjectActivateService(new ConfigurationResolverImpl());
     }
     

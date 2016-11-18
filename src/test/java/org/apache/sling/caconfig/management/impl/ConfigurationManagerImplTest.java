@@ -38,7 +38,9 @@ import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
+import org.apache.sling.caconfig.override.impl.DummyConfigurationOverrideProvider;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
+import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -197,6 +199,25 @@ public class ConfigurationManagerImplTest {
     }
 
     @Test
+    public void testGet_WithOverride() {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]" + CONFIG_NAME + "={prop1='override1'}"));
+        
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NAME);
+        assertNotNull(configData);
+
+        assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
+        assertEquals("value1", configData.getValues().get("prop1", String.class));
+        assertEquals("override1", configData.getEffectiveValues().get("prop1", String.class));
+        assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", 0));
+
+        assertFalse(configData.getValueInfo("prop1").isInherited());
+        assertTrue(configData.getValueInfo("prop1").isOverridden());
+        assertFalse(configData.getValueInfo("prop3").isInherited());
+        assertFalse(configData.getValueInfo("prop3").isOverridden());
+    }
+
+    @Test
     public void testGet_NoConfigResource() {
         ConfigurationData configData = underTest.get(contextResourceNoConfig, CONFIG_NAME);
         assertNotNull(configData);
@@ -327,6 +348,37 @@ public class ConfigurationManagerImplTest {
         assertEquals(configPath2, configData2.getValueInfo("prop4").getConfigSourcePath());
         assertFalse(configData2.getValueInfo("prop3").isInherited());
         assertNull(configData2.getValueInfo("prop3").getConfigSourcePath());
+    }
+
+    @Test
+    public void testGetCollection_WithOverride() {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]" + CONFIG_COL_NAME + "/prop1='override1'"));
+        
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResource, CONFIG_COL_NAME));
+        assertEquals(2, configDatas.size());
+
+        ConfigurationData configData1 = configDatas.get(0);
+        assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData1.getPropertyNames());
+        assertEquals("value1", configData1.getValues().get("prop1", String.class));
+        assertEquals("override1", configData1.getEffectiveValues().get("prop1", String.class));
+        assertEquals((Integer)5, configData1.getEffectiveValues().get("prop3", 0));
+
+        assertFalse(configData1.getValueInfo("prop1").isInherited());
+        assertTrue(configData1.getValueInfo("prop1").isOverridden());
+        assertFalse(configData1.getValueInfo("prop3").isInherited());
+        assertFalse(configData1.getValueInfo("prop3").isOverridden());
+        
+        ConfigurationData configData2 = configDatas.get(1);
+        assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), configData2.getPropertyNames());
+        assertNull(configData2.getValues().get("prop1", String.class));
+        assertEquals("override1", configData2.getEffectiveValues().get("prop1", String.class));
+        assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
+
+        assertFalse(configData2.getValueInfo("prop1").isInherited());
+        assertTrue(configData2.getValueInfo("prop1").isOverridden());
+        assertFalse(configData2.getValueInfo("prop3").isInherited());
+        assertFalse(configData2.getValueInfo("prop3").isOverridden());
     }
 
     @Test

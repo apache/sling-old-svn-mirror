@@ -22,6 +22,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -31,17 +32,18 @@ public class ConfigurationResolverImpl implements ConfigurationResolver {
 
     @Reference
     private ConfigurationResourceResolvingStrategyMultiplexer configurationResourceResolvingStrategy;
-
     @Reference
     private ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy;
-    
     @Reference
     private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
+    @Reference
+    private ConfigurationOverrideManager configurationOverrideManager;
     
     @Override
     public ConfigurationBuilder get(Resource resource) {
         return new ConfigurationBuilderImpl(resource, this,
-                configurationResourceResolvingStrategy, configurationPersistenceStrategy, configurationInheritanceStrategy);
+                configurationResourceResolvingStrategy, configurationPersistenceStrategy,
+                configurationInheritanceStrategy, configurationOverrideManager);
     }
 
 }

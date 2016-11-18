@@ -26,20 +26,29 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ConfigurationDataImplTest {
     
     @Rule
     public SlingContext context = new SlingContext();
+    @Mock
+    private Resource contextResource;
+    @Mock
+    private ConfigurationOverrideManager configurationOverrideManager;
     
     private Resource configResource;
     private ConfigurationMetadata configMetadata;
@@ -58,7 +67,8 @@ public class ConfigurationDataImplTest {
 
     @Test
     public void testWithResourceMetadata() {
-        ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null);
+        ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals(configResource.getPath(), underTest.getResourcePath());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), underTest.getPropertyNames());
@@ -93,7 +103,8 @@ public class ConfigurationDataImplTest {
 
     @Test
     public void testWithResourceOnly() {
-        ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null);
+        ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());
         
@@ -118,7 +129,8 @@ public class ConfigurationDataImplTest {
 
     @Test
     public void testMetadataOnly() {
-        ConfigurationData underTest = new ConfigurationDataImpl(configMetadata);
+        ConfigurationData underTest = new ConfigurationDataImpl(configMetadata,
+                contextResource, "test", configurationOverrideManager);
         
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), underTest.getPropertyNames());
         

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.caconfig.impl.ConfigurationResourceWrapper;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
