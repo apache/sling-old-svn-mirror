@@ -39,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.DefaultMaven;
 import org.apache.maven.Maven;
+import org.apache.maven.archetype.ArchetypeManager;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -149,8 +150,10 @@ public class EmbeddedArchetypeInstaller {
             archetype.setGroupId(groupId);
             archetype.setArtifactId(artifactId);
             archetype.setVersion(version);
-            org.apache.maven.archetype.Archetype archetyper = MavenPluginActivator.getDefault().getArchetype();
-            archetyper.updateLocalCatalog(archetype);
+            // Archetype has been renamed to ArchetypeManager in
+            // https://github.com/apache/maven-archetype/commit/c7321c93ab5fc27d9e8fccd4a69ee5bdd18c9c60
+            ArchetypeManager archetypeManager = MavenPluginActivator.getDefault().getArchetypeManager().getArchetyper();
+            archetypeManager.updateLocalCatalog(archetype);
         } catch (CoreException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
