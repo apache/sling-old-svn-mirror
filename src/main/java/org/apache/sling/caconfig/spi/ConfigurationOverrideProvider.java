@@ -18,30 +18,28 @@
  */
 package org.apache.sling.caconfig.spi;
 
-import java.util.SortedSet;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Allows applications to provide the necessary metadata for configurations.
+ * Provide information to override configuration data.
  */
 @ConsumerType
-public interface ConfigurationMetadataProvider {
+public interface ConfigurationOverrideProvider {
 
     /**
-     * Get all configuration names.
-     * @return Configuration names
+     * Get override strings. Syntax examples:
+     * <ul>
+     * <li><code>{configName}/{propertyName}={propertyJsonValue}</code></li>
+     * <li><code>{configName}={propertyJsonObject}</code></li>
+     * <li><code>[{contextPath}]{configName}/{propertyName}={propertyJsonValue}</code></li>
+     * <li><code>[{contextPath}]{configName}={propertyJsonObject}</code></li>
+     * </ul>
+     * @return Override strings
      */
-    @Nonnull SortedSet<String> getConfigurationNames();
-
-    /**
-     * Get configuration metadata.
-     * @param configName Configuration name
-     * @return Configuration metadata or null if none exists for the given name.
-     */
-    ConfigurationMetadata getConfigurationMetadata(String configName);
+    @Nonnull Collection<String> getOverrideStrings();
 
 }
