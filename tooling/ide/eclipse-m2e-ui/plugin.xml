@@ -53,13 +53,13 @@
                 class="org.apache.sling.ide.eclipse.m2e.internal.MavenBundlePluginProjectConfigurator"
                 id="org.apache.sling.ide.eclipse.m2e.bundlePluginProjectConfigurator"
                 name="Sling Bundle Configurator (for maven-bundle-plugin)"
-                secondaryTo="org.eclipse.m2e.jdt.javaConfigurator">
+                runsBefore="maven-bundle-plugin">
         </configurator>
         <configurator
                 class="org.apache.sling.ide.eclipse.m2e.internal.BndMavenPluginProjectConfigurator"
                 id="org.apache.sling.ide.eclipse.m2e.bndPluginProjectConfigurator"
                 name="Sling Bundle Configurator (for bnd-maven-plugin)"
-                secondaryTo="org.eclipse.m2e.jdt.javaConfigurator">
+                runsAfter="org.eclipse.m2e.jdt.javaConfigurator?">
         </configurator>
         <configurator 
                 id="org.apache.sling.ide.eclipse.m2e.configurator"

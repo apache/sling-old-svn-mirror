@@ -22,6 +22,8 @@ import org.apache.maven.model.PluginExecution;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.ide.log.Logger;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.eclipse.m2e.core.internal.lifecyclemapping.LifecycleMappingFactory;
+
 
 public class MavenBundlePluginProjectConfigurator extends AbstractBundleProjectConfigurator {
 
@@ -29,6 +31,12 @@ public class MavenBundlePluginProjectConfigurator extends AbstractBundleProjectC
      *  the plugin ID consists of <code>groupId:artifactId</code>, see {@link Plugin#constructKey(String, String)}
      */
     private static final String MAVEN_BUNDLE_PLUGIN_KEY ="org.apache.felix:maven-bundle-plugin";
+    
+    /**
+     * The configurator id used in <a href="https://github.com/tesla/m2eclipse-tycho/blob/master/org.sonatype.tycho.m2e/lifecycle-mapping-metadata.xml">m2e-tycho</a>.
+     * @see <a href="https://github.com/tesla/m2eclipse-tycho">m2eclipse-tycho Github</a>
+     */
+    private static final String M2E_TYCHO_EXTENSION_PROJECT_CONFIGURATOR_ID = "maven-bundle-plugin";
     
     public MavenBundlePluginProjectConfigurator() {
         super(false); // this configurator is only bound to goal "bundle" which is not supposed to be executed in
@@ -42,6 +50,12 @@ public class MavenBundlePluginProjectConfigurator extends AbstractBundleProjectC
             logger.warn("maven-bundle-plugin not configured!");
             return false;
         } else {
+            // check if m2elipse-tycho is already installed (which supports incremental builds for "bundle" packagings
+            if (LifecycleMappingFactory.createProjectConfigurator(M2E_TYCHO_EXTENSION_PROJECT_CONFIGURATOR_ID) != null) {
+                logger.trace("Project configurator with id '" + M2E_TYCHO_EXTENSION_PROJECT_CONFIGURATOR_ID + "' found -> m2e-tycho installed.");
+                return true;
+            }
+            
             String version = bundlePlugin.getVersion();
             if (version == null) {
                 logger.warn("Could not retrieve used version of maven-bundle-plugin!");
@@ -63,15 +77,14 @@ public class MavenBundlePluginProjectConfigurator extends AbstractBundleProjectC
                     if (supportIncrementalBuildConfiguration == null || !Boolean.parseBoolean(supportIncrementalBuildConfiguration.getValue())) {
                         logger.warn("Although using maven-bundle-plugin in a version >= 3.2.0, the incremental build support was not enabled.");
                     } else if (exportScrConfiguration == null || !Boolean.parseBoolean(exportScrConfiguration.getValue())) {
-                        logger.warn("Although using maven-bundle-plugin in a version >= 3.2.0, component descriptors are not exported (exportScr=false) .");
+                        logger.warn("Although using maven-bundle-plugin in a version >= 3.2.0 with incremental build support enabled, component descriptors are not exported (exportScr=false) .");
                     } else {
                         logger.trace("Using maven-bundle-plugin in a version >= 3.2.0 with the incremental build support correctly enabled.");
                         return true;
                     }
                 }
             } else {
-                logger.warn("maven-bundle-plugin in a version < 3.2.0 does not support incremental builds.");
-                return false;
+                logger.warn("maven-bundle-plugin in a version < 3.2.0 does not natively support incremental builds.");
             }
         }
         return false;
