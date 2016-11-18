@@ -98,11 +98,8 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
     private final void registerDistributionPackageMBean(long start, DistributionPackage distributionPackage) {
         long processingTime = System.currentTimeMillis() - start;
 
-        DistributionPackageMBean mBean = new DistributionPackageMBeanImpl(distributionPackage.getId(),
+        DistributionPackageMBean mBean = new DistributionPackageMBeanImpl(distributionPackage,
                                                                           wrapped.getType(),
-                                                                          distributionPackage.getInfo().getPaths(),
-                                                                          distributionPackage.getInfo().getRequestType().name(),
-                                                                          distributionPackage.getSize(),
                                                                           processingTime);
 
         Dictionary<String, String> mbeanProps = new Hashtable<String, String>();

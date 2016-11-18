@@ -92,6 +92,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
 
         for (String pattern : ignoredPathsPatterns) {
             if (path.matches(pattern)) {
+                log.debug("path {} ignored", path);
                 return true;
             }
         }
