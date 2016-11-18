@@ -212,7 +212,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.threadPool = threadPoolManager.get("oak-observation");
         this.nodeAggregatorRegistration = bundleContext.registerService(NodeAggregator.class.getName(), getNodeAggregator(), null);
 
-        super.start(bundleContext, new AbstractSlingRepositoryManager.Config(defaultWorkspace, disableLoginAdministrative));
+        super.start(bundleContext, new Config(defaultWorkspace, disableLoginAdministrative));
     }
 
     @Deactivate
