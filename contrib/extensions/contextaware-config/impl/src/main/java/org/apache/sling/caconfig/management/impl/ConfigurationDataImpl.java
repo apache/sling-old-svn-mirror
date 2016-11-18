@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
@@ -41,20 +42,29 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private final Resource resolvedConfigurationResource;
     private final Resource writebackConfigurationResource;
     private final List<Resource> configurationResourceInheritanceChain;
+    private final Resource contextResource;
+    private final String configName;
+    private final ConfigurationOverrideManager configurationOverrideManager;
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
-            Iterator<Resource> configurationResourceInheritanceChain) {
+            Iterator<Resource> configurationResourceInheritanceChain,
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
         this.configMetadata = configMetadata;
         this.resolvedConfigurationResource = resolvedConfigurationResource;
         this.writebackConfigurationResource = writebackConfigurationResource;
         this.configurationResourceInheritanceChain = configurationResourceInheritanceChain != null
                 ? IteratorUtils.toList(configurationResourceInheritanceChain) : null;
+        this.contextResource = contextResource;
+        this.configName = configName;
+        this.configurationOverrideManager = configurationOverrideManager;
     }
 
-    public ConfigurationDataImpl(ConfigurationMetadata configMetadata) {
-        this(configMetadata, null, null, null);
+    public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
+        this(configMetadata, null, null, null,
+                contextResource, configName, configurationOverrideManager);
     }
 
     @Override
@@ -117,7 +127,10 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 propertyMetadata,
                 resolvedConfigurationResource,
                 writebackConfigurationResource,
-                configurationResourceInheritanceChain);
+                configurationResourceInheritanceChain,
+                contextResource,
+                configName,
+                configurationOverrideManager);
     }
 
 }

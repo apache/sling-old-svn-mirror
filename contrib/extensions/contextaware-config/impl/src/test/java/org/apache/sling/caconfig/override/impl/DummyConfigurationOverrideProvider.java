@@ -16,32 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.spi;
+package org.apache.sling.caconfig.override.impl;
 
-import java.util.SortedSet;
+import java.util.Collection;
+import java.util.List;
 
-import javax.annotation.Nonnull;
+import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 
-import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
-import org.osgi.annotation.versioning.ConsumerType;
+import com.google.common.collect.ImmutableList;
 
-/**
- * Allows applications to provide the necessary metadata for configurations.
- */
-@ConsumerType
-public interface ConfigurationMetadataProvider {
+public class DummyConfigurationOverrideProvider implements ConfigurationOverrideProvider {
+    
+    private final List<String> overrideStrings;
+    
+    public DummyConfigurationOverrideProvider(String... overrideStrings) {
+        this.overrideStrings = ImmutableList.copyOf(overrideStrings);
+    }
 
-    /**
-     * Get all configuration names.
-     * @return Configuration names
-     */
-    @Nonnull SortedSet<String> getConfigurationNames();
-
-    /**
-     * Get configuration metadata.
-     * @param configName Configuration name
-     * @return Configuration metadata or null if none exists for the given name.
-     */
-    ConfigurationMetadata getConfigurationMetadata(String configName);
+    @Override
+    public Collection<String> getOverrideStrings() {
+        return overrideStrings;
+    }
 
 }

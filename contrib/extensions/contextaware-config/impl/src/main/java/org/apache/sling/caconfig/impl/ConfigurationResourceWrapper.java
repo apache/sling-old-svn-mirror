@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.impl.def;
+package org.apache.sling.caconfig.impl;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceWrapper;
@@ -26,13 +26,22 @@ import org.apache.sling.api.resource.ValueMap;
  * Wrapper that returns an enhanced value map for the resource
  * providing a merged map with all inherited property values.
  */
-class ConfigurationResourceWrapper extends ResourceWrapper {
+public final class ConfigurationResourceWrapper extends ResourceWrapper {
     
     private final ValueMap props;
 
     public ConfigurationResourceWrapper(Resource resource, ValueMap props) {
-        super(resource);
+        super(unwrap(resource));
         this.props = props;
+    }
+    
+    private static Resource unwrap(Resource resource) {
+        if (resource instanceof ConfigurationResourceWrapper) {
+            return ((ConfigurationResourceWrapper)resource).getResource();
+        }
+        else {
+            return resource;
+        }
     }
 
     @SuppressWarnings("unchecked")
