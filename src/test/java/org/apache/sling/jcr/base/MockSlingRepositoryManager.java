@@ -98,6 +98,6 @@ public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
     }
 
     public void activate(BundleContext context) {
-        start(context, null, loginAdminDisabled);
+        start(context, new Config(null, loginAdminDisabled));
     }
 }
