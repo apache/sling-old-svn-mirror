@@ -348,7 +348,7 @@ public abstract class AbstractSlingRepositoryManager {
          * @param disableLoginAdministrative Whether to disable the
          *            {@code SlingRepository.loginAdministrative} method or not.
          */
-        protected Config(String defaultWorkspace, boolean disableLoginAdministrative) {
+        public Config(String defaultWorkspace, boolean disableLoginAdministrative) {
             this.defaultWorkspace = defaultWorkspace;
             this.disableLoginAdministrative = disableLoginAdministrative;
         }
