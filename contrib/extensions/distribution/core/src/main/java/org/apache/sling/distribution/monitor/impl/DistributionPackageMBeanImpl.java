@@ -18,40 +18,30 @@
  */
 package org.apache.sling.distribution.monitor.impl;
 
+import org.apache.sling.distribution.packaging.DistributionPackage;
+
 /**
  * Implementation of {@link DistributionPackageMBean}
  */
 public final class DistributionPackageMBeanImpl implements DistributionPackageMBean {
 
-    private final String id;
+    private final DistributionPackage distributionPackage;
 
     private final String type;
 
-    private final String[] paths;
-
-    private final String requestType;
-
-    private final long size;
-
     private final long processingTime;
 
-    public DistributionPackageMBeanImpl(String id,
+    public DistributionPackageMBeanImpl(DistributionPackage distributionPackage,
                                         String type,
-                                        String[] paths,
-                                        String requestType,
-                                        long size,
                                         long processingTime) {
-        this.id = id;
+        this.distributionPackage = distributionPackage;
         this.type = type;
-        this.paths = paths;
-        this.requestType = requestType;
-        this.size = size;
         this.processingTime = processingTime;
     }
 
     @Override
     public String getId() {
-        return id;
+        return distributionPackage.getId();
     }
 
     @Override
@@ -61,17 +51,17 @@ public final class DistributionPackageMBeanImpl implements DistributionPackageMB
 
     @Override
     public String[] getPaths() {
-        return paths;
+        return distributionPackage.getInfo().getPaths();
     }
 
     @Override
     public String getRequestType() {
-        return requestType;
+        return distributionPackage.getInfo().getRequestType().name().toLowerCase();
     }
 
     @Override
     public long getSize() {
-        return size;
+        return distributionPackage.getSize();
     }
 
     @Override
