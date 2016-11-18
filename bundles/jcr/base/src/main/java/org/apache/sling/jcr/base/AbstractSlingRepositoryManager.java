@@ -21,6 +21,7 @@ package org.apache.sling.jcr.base;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jcr.Repository;
 
@@ -103,7 +104,7 @@ public abstract class AbstractSlingRepositoryManager {
 
     private volatile Loader loader;
 
-    private volatile ServiceReference<LoginAdminWhitelist> whitelistRef;
+    private volatile ServiceTracker<LoginAdminWhitelist, LoginAdminWhitelist> whitelistTracker;
 
     private volatile LoginAdminWhitelist whitelist;
 
@@ -300,11 +301,12 @@ public abstract class AbstractSlingRepositoryManager {
     // --------- SCR integration -----------------------------------------------
 
     /**
-     * This method actually starts the backing repository instannce and
-     * registeres the repository service.
+     * This method was deprecated with the introduction of asynchronous repository registration. With
+     * asynchronous registration a boolean return value can no longer be guaranteed, as registration
+     * may happen after the method returns.
      * <p>
-     * Multiple subsequent calls to this method without calling {@link #stop()}
-     * first have no effect.
+     * Instead a {@link org.osgi.framework.ServiceListener} for {@link SlingRepository} may be
+     * registered to get informed about its successful registration.
      *
      * @param bundleContext The {@code BundleContext} to register the repository
      *            service (and optionally more services required to operate the
@@ -315,29 +317,66 @@ public abstract class AbstractSlingRepositoryManager {
      * @param disableLoginAdministrative Whether to disable the
      *            {@code SlingRepository.loginAdministrative} method or not.
      * @return {@code true} if the repository has been started and the service
-     *         is registered.
+     *         is registered; {@code false} if the service has not been registered,
+     *         which may indicate that startup was unsuccessful OR that it is happening
+     *         asynchronously. A more reliable way to determin availability of the
+     *         {@link SlingRepository} as a service is using a
+     *         {@link org.osgi.framework.ServiceListener}.
+     * @deprecated use {@link #start(BundleContext, AbstractSlingRepositoryManager.Config)} instead.
      */
+    @Deprecated
     protected final boolean start(final BundleContext bundleContext, final String defaultWorkspace,
-            final boolean disableLoginAdministrative) {
+                                  final boolean disableLoginAdministrative) {
+        start(bundleContext, new Config(defaultWorkspace, disableLoginAdministrative));
+        return isRepositoryServiceRegistered();
+    }
+
+    /**
+     * Configuration pojo to be passed to the {@link #start(BundleContext, Config)} method.
+     */
+    protected static final class Config {
+
+        protected final String defaultWorkspace;
+
+        protected final boolean disableLoginAdministrative;
+
+        /**
+         * @param defaultWorkspace The name of the default workspace to use to
+         *            login. This may be {@code null} to have the actual repository
+         *            instance define its own default
+         *
+         * @param disableLoginAdministrative Whether to disable the
+         *            {@code SlingRepository.loginAdministrative} method or not.
+         */
+        protected Config(String defaultWorkspace, boolean disableLoginAdministrative) {
+            this.defaultWorkspace = defaultWorkspace;
+            this.disableLoginAdministrative = disableLoginAdministrative;
+        }
+    }
+
+    /**
+     * This method actually starts the backing repository instannce and
+     * registeres the repository service.
+     * <p>
+     * Multiple subsequent calls to this method without calling {@link #stop()}
+     * first have no effect.
+     *
+     * @param bundleContext The {@code BundleContext} to register the repository
+     *            service (and optionally more services required to operate the
+     *            repository)
+     * @param config The configuration to apply to this instance.
+     */
+    protected final void start(final BundleContext bundleContext, final Config config) {
 
         // already setup ?
         if (this.bundleContext != null) {
             log.debug("start: Repository already started and registered");
-            return true;
+            return;
         }
 
         this.bundleContext = bundleContext;
-        this.defaultWorkspace = defaultWorkspace;
-        this.disableLoginAdministrative = disableLoginAdministrative;
-
-        boolean enableWhitelist = !isAllowLoginAdministrativeForBundleOverridden();
-        if (enableWhitelist) {
-            this.whitelistRef = bundleContext.getServiceReference(LoginAdminWhitelist.class);
-            if (whitelistRef == null) {
-                throw new IllegalStateException("Whitelist must not be null");
-            }
-            this.whitelist = bundleContext.getService(whitelistRef);
-        }
+        this.defaultWorkspace = config.defaultWorkspace;
+        this.disableLoginAdministrative = config.disableLoginAdministrative;
 
         this.repoInitializerTracker = new ServiceTracker<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>(bundleContext, SlingRepositoryInitializer.class,
                 new ServiceTrackerCustomizer<SlingRepositoryInitializer, SlingRepositoryInitializerInfo>() {
@@ -377,6 +416,46 @@ public abstract class AbstractSlingRepositoryManager {
         });
         this.repoInitializerTracker.open();
 
+        boolean enableWhitelist = !isAllowLoginAdministrativeForBundleOverridden();
+        final CountDownLatch waitForWhitelist = new CountDownLatch(enableWhitelist ? 1 : 0);
+        if (enableWhitelist) {
+            whitelistTracker = new ServiceTracker<LoginAdminWhitelist, LoginAdminWhitelist>(bundleContext, LoginAdminWhitelist.class, null) {
+                @Override
+                public LoginAdminWhitelist addingService(final ServiceReference<LoginAdminWhitelist> reference) {
+                    whitelist = bundleContext.getService(reference);
+                    waitForWhitelist.countDown();
+                    return whitelist;
+                }
+            };
+            whitelistTracker.open();
+        }
+
+        if (waitForWhitelist.getCount() > 0) {
+            // start repository asynchronously to allow LoginAdminWhitelist to become available
+            // NOTE: making this conditional allows tests to register a mock whitelist before
+            // activating the RepositoryManager, so they don't need to deal with async startup
+            new Thread("Apache Sling Repository Startup Thread") {
+                @Override
+                public void run() {
+                    try {
+                        waitForWhitelist.await();
+                        initializeAndRegisterRepositoryService();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException("Interrupted while waiting for LoginAdminWhitelist", e);
+                    }
+                }
+            }.start();
+        } else {
+            initializeAndRegisterRepositoryService();
+        }
+    }
+
+    private boolean isRepositoryServiceRegistered() {
+        return repositoryService != null;
+    }
+
+    private void initializeAndRegisterRepositoryService() {
+        Throwable t = null;
         try {
             log.debug("start: calling acquireRepository()");
             Repository newRepo = this.acquireRepository();
@@ -392,17 +471,11 @@ public abstract class AbstractSlingRepositoryManager {
                     this.loader = new Loader(this.masterSlingRepository, this.bundleContext);
 
                     log.debug("start: calling SlingRepositoryInitializer");
-                    Throwable t = null;
                     try {
                         executeRepositoryInitializers(this.masterSlingRepository);
-                    } catch(Exception e) {
+                    } catch(Throwable e) {
                         t = e;
-                    } catch(Error e) {
-                        t = e;
-                    }
-                    if(t != null) {
                         log.error("Exception in a SlingRepositoryInitializer, SlingRepository service registration aborted", t);
-                        return false;
                     }
 
                     log.debug("start: calling registerService()");
@@ -410,18 +483,17 @@ public abstract class AbstractSlingRepositoryManager {
 
                     log.debug("start: registerService() successful, registration=" + repositoryService);
                 }
-                return true;
             }
-        } catch (Throwable t) {
+        } catch (Throwable e) {
             // consider an uncaught problem an error
-            log.error("start: Uncaught Throwable trying to access Repository, calling stopRepository()", t);
-
-            // repository might be partially started, stop anything left
-            stop();
+            log.error("start: Uncaught Throwable trying to access Repository, calling stopRepository()", e);
+            t = e;
+        } finally {
+            if (t != null) {
+                // repository might be partially started, stop anything left
+                stop();
+            }
         }
-
-        // fallback to failure to start the repository
-        return false;
     }
 
     // find out whether allowLoginAdministrativeForBundle is overridden
@@ -458,10 +530,46 @@ public abstract class AbstractSlingRepositoryManager {
      * This method must be called if overwritten by implementations !!
      */
     protected final void stop() {
-        if (whitelistRef != null) {
-            whitelist = null;
-            bundleContext.ungetService(whitelistRef);
-            whitelistRef = null;
+
+        // ensure the repository is really disposed off
+        if (repository != null || isRepositoryServiceRegistered()) {
+            log.info("stop: Repository still running, forcing shutdown");
+
+            // make sure we are not concurrently unregistering the repository
+            synchronized (repoInitLock) {
+                try {
+                    if (isRepositoryServiceRegistered()) {
+                        try {
+                            log.debug("stop: Unregistering SlingRepository service, registration=" + repositoryService);
+                            unregisterService(repositoryService);
+                        } catch (Throwable t) {
+                            log.info("stop: Uncaught problem unregistering the repository service", t);
+                        }
+                        repositoryService = null;
+                    }
+
+                    if (repository != null) {
+                        Repository oldRepo = repository;
+                        repository = null;
+
+                        // stop loader
+                        if (this.loader != null) {
+                            this.loader.dispose();
+                            this.loader = null;
+                        }
+                        // destroy repository
+                        this.destroy(this.masterSlingRepository);
+
+                        try {
+                            disposeRepository(oldRepo);
+                        } catch (Throwable t) {
+                            log.info("stop: Uncaught problem disposing the repository", t);
+                        }
+                    }
+                } catch (Throwable t) {
+                    log.warn("stop: Unexpected problem stopping repository", t);
+                }
+            }
         }
 
         if(repoInitializerTracker != null) {
@@ -469,42 +577,10 @@ public abstract class AbstractSlingRepositoryManager {
             repoInitializerTracker = null;
         }
 
-        // ensure the repository is really disposed off
-        if (repository != null || repositoryService != null) {
-            log.info("stop: Repository still running, forcing shutdown");
-
-            try {
-                if (repositoryService != null) {
-                    try {
-                        log.debug("stop: Unregistering SlingRepository service, registration=" + repositoryService);
-                        unregisterService(repositoryService);
-                    } catch (Throwable t) {
-                        log.info("stop: Uncaught problem unregistering the repository service", t);
-                    }
-                    repositoryService = null;
-                }
-
-                if (repository != null) {
-                    Repository oldRepo = repository;
-                    repository = null;
-
-                    // stop loader
-                    if ( this.loader != null ) {
-                        this.loader.dispose();
-                        this.loader = null;
-                    }
-                    // destroy repository
-                    this.destroy(this.masterSlingRepository);
-
-                    try {
-                        disposeRepository(oldRepo);
-                    } catch (Throwable t) {
-                        log.info("stop: Uncaught problem disposing the repository", t);
-                    }
-                }
-            } catch (Throwable t) {
-                log.warn("stop: Unexpected problem stopping repository", t);
-            }
+        if (whitelistTracker != null) {
+            whitelist = null;
+            whitelistTracker.close();
+            whitelistTracker = null;
         }
 
         this.repositoryService = null;
