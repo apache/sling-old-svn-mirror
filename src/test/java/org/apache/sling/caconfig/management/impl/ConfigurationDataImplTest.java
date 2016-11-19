@@ -68,7 +68,10 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceMetadata() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null,
-                contextResource, "test", configurationOverrideManager);
+                contextResource, "test", configurationOverrideManager, true);
+        
+        assertEquals("test", underTest.getConfigName());
+        assertEquals(configResource.getName(), underTest.getCollectionItemName());
         
         assertEquals(configResource.getPath(), underTest.getResourcePath());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), underTest.getPropertyNames());
@@ -104,7 +107,10 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null,
-                contextResource, "test", configurationOverrideManager);
+                contextResource, "test", configurationOverrideManager, false);
+        
+        assertEquals("test", underTest.getConfigName());
+        assertNull(underTest.getCollectionItemName());
         
         assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());
         
@@ -130,7 +136,10 @@ public class ConfigurationDataImplTest {
     @Test
     public void testMetadataOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata,
-                contextResource, "test", configurationOverrideManager);
+                contextResource, "test", configurationOverrideManager, false);
+        
+        assertEquals("test", underTest.getConfigName());
+        assertNull(underTest.getCollectionItemName());
         
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), underTest.getPropertyNames());
         

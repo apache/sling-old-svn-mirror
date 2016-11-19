@@ -25,6 +25,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -63,15 +64,18 @@ public interface ConfigurationManager {
      * Write configuration data collection using the inner-most context path as reference.
      * @param resource Context resource
      * @param configName Configuration name
-     * @param values Value collection to be stored. All existing collection entries on this context path level are erased and replaced with the new ones.
+     * @param resourceCollectionItems Resource collection items to be stored.
+     *      All existing collection entries on this context path level are erased and replaced with the new ones.
      */
-    void persistCollection(@Nonnull Resource resource, @Nonnull String configName, @Nonnull Collection<Map<String,Object>> values);
+    void persistCollection(@Nonnull Resource resource, @Nonnull String configName,
+            @Nonnull Collection<ResourceCollectionItem> resourceCollectionItems);
     
     /**
      * Creates a new empty configuration data item for a configuration data collection for the given configuration name.
+     * @param resource Context resource
      * @param configName Configuration name
      * @return Configuration data. Is null when no configuration metadata exists.
      */
-    @CheckForNull ConfigurationData newCollectionItem(@Nonnull String configName);
+    @CheckForNull ConfigurationData newCollectionItem(@Nonnull Resource resource, @Nonnull String configName);
     
 }

@@ -33,6 +33,18 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface ConfigurationData {
     
     /**
+     * Get configuration name.
+     * @return Configuration name
+     */
+    @Nonnull String getConfigName();
+
+    /**
+     * In case of configuration resource collection, this returns the collection item resource name.
+     * @return Item resource name or null if it is a singleton resource.
+     */
+    @CheckForNull String getCollectionItemName();
+
+    /**
      * Path of the configuration resource. The resource may not exist, in this case
      * inherited or default values may be returned.
      * If the configuration data is saved, this path is used.

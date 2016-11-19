@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,8 +60,9 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     public void testWithNoStrategies() {
         assertNull(underTest.getResource(resource1));
         assertFalse(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", 
-                ImmutableList.<Map<String,Object>>of(resource1.getValueMap(), resource2.getValueMap())));
+        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
+                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
+                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
     }
 
     @Test
@@ -70,8 +72,9 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         Resource result = underTest.getResource(resource1);
         assertSame(resource1, result);
         assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", 
-                ImmutableList.<Map<String,Object>>of(resource1.getValueMap(), resource2.getValueMap())));
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
+                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
+                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
     }
     
     @Test
@@ -89,7 +92,7 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
             }
             @Override
             public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-                    Collection<Map<String,Object>> propertiesCollection) {
+                    Collection<ResourceCollectionItem> resourceCollectionItems) {
                 return false;
             }
         }, Constants.SERVICE_RANKING, 2000);
@@ -106,7 +109,7 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
             }
             @Override
             public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-                    Collection<Map<String,Object>> propertiesCollection) {
+                    Collection<ResourceCollectionItem> resourceCollectionItems) {
                 return true;
             }
 
@@ -115,9 +118,9 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         Resource result = underTest.getResource(resource1);
         assertSame(resource2, result);
         assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", 
-                ImmutableList.<Map<String,Object>>of(resource1.getValueMap(), resource2.getValueMap())));
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
+                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
+                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
     }
-    
 
 }
