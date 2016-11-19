@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.override.impl;
+package org.apache.sling.caconfig.impl.override;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

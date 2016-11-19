@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.override.impl;
+package org.apache.sling.caconfig.impl.override;
 
-import static org.apache.sling.caconfig.override.impl.SystemPropertyConfigurationOverrideProvider.SYSTEM_PROPERTY_PREFIX;
+import static org.apache.sling.caconfig.impl.override.SystemPropertyConfigurationOverrideProvider.SYSTEM_PROPERTY_PREFIX;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;

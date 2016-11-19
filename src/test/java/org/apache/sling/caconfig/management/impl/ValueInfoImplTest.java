@@ -25,8 +25,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ValueInfo;
-import org.apache.sling.caconfig.override.impl.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.junit.Before;
 import org.junit.Test;

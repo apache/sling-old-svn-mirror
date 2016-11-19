@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
-import org.apache.sling.caconfig.override.impl.DummyConfigurationOverrideProvider;
+import org.apache.sling.caconfig.impl.override.DummyConfigurationOverrideProvider;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;

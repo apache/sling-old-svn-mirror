@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.override.impl;
+package org.apache.sling.caconfig.impl.override;
 
 import java.util.ArrayList;
 import java.util.Arrays;
