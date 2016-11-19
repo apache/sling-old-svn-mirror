@@ -136,6 +136,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public void run() {
+        clearDisposalCallbackRegistryQueue();
+    }
+
+    private void clearDisposalCallbackRegistryQueue() {
         java.lang.ref.Reference<?> ref = queue.poll();
         while (ref != null) {
             log.debug("calling disposal for {}.", ref.toString());
@@ -944,6 +948,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Deactivate
     protected void deactivate() {
+        this.clearDisposalCallbackRegistryQueue();
         this.listener.unregisterAll();
         this.adapterImplementations.removeAll();
         if (jobRegistration != null) {
