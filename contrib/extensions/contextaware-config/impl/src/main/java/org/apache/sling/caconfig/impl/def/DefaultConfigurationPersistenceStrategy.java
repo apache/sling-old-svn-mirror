@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -83,16 +84,15 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
 
     @Override
     public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-            Collection<Map<String,Object>> propertiesCollection) {
+            Collection<ResourceCollectionItem> resourceCollectionItems) {
         if (!config.enabled()) {
             return false;
         }
         Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, ValueMap.EMPTY);
         deleteChildren(configResourceParent);
-        int index = 0;
-        for (Map<String,Object> properties : propertiesCollection) {
-            String path = configResourceParent.getPath() + "/" + (index++);
-            getOrCreateResource(resourceResolver, path, properties);
+        for (ResourceCollectionItem item : resourceCollectionItems) {
+            String path = configResourceParent.getPath() + "/" + item.getCollectionItemName();
+            getOrCreateResource(resourceResolver, path, item.getValues());
         }
         return true;
     }

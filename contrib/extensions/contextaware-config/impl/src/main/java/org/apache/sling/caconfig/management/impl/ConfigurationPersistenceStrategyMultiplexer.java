@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.osgi.service.component.annotations.Component;
@@ -87,9 +88,9 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
      */
     @Override
     public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-            Collection<Map<String,Object>> propertiesCollection) {
+            Collection<ResourceCollectionItem> resourceCollectionItems) {
         for (ConfigurationPersistenceStrategy item : items) {
-            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, propertiesCollection)) {
+            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, resourceCollectionItems)) {
                 return true;
             }
         }

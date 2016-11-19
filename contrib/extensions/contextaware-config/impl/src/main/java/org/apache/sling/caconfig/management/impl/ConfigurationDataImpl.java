@@ -45,12 +45,14 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private final Resource contextResource;
     private final String configName;
     private final ConfigurationOverrideManager configurationOverrideManager;
+    private final boolean configResourceCollection;
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
             Iterator<Resource> configurationResourceInheritanceChain,
-            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager,
+            boolean configResourceCollection) {
         this.configMetadata = configMetadata;
         this.resolvedConfigurationResource = resolvedConfigurationResource;
         this.writebackConfigurationResource = writebackConfigurationResource;
@@ -59,12 +61,26 @@ final class ConfigurationDataImpl implements ConfigurationData {
         this.contextResource = contextResource;
         this.configName = configName;
         this.configurationOverrideManager = configurationOverrideManager;
+        this.configResourceCollection = configResourceCollection;
     }
 
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
-            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager,
+            boolean configResourceCollection) {
         this(configMetadata, null, null, null,
-                contextResource, configName, configurationOverrideManager);
+                contextResource, configName, configurationOverrideManager,
+                configResourceCollection);
+    }
+    
+    @Override
+    public String getConfigName() {
+        return configName;
+    }
+
+    @Override
+    public String getCollectionItemName() {
+        return (configResourceCollection && resolvedConfigurationResource != null)
+                ? resolvedConfigurationResource.getName() : null;
     }
 
     @Override

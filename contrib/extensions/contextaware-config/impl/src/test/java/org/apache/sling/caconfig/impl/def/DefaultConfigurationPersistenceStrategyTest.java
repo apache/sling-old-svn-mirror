@@ -24,11 +24,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,9 +78,9 @@ public class DefaultConfigurationPersistenceStrategyTest {
         ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         // store new config collection items
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<Map<String,Object>>of(
-                ImmutableMap.<String,Object>of("prop1", "value1"),
-                ImmutableMap.<String,Object>of("prop2", 5)
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.of(
+                new ResourceCollectionItem("0", ImmutableMap.<String,Object>of("prop1", "value1")),
+                new ResourceCollectionItem("1", ImmutableMap.<String,Object>of("prop2", 5))
         )));
         context.resourceResolver().commit();
         
@@ -93,7 +92,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertEquals((Integer)5, props1.get("prop2", Integer.class));
 
         // remove config collection items
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<Map<String,Object>>of()));
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<ResourceCollectionItem>of()));
         context.resourceResolver().commit();
 
         resource = context.resourceResolver().getResource("/conf/test");
@@ -109,7 +108,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertNull(underTest.getResource(resource));
 
         assertFalse(underTest.persist(context.resourceResolver(), "/conf/test", ImmutableMap.<String,Object>of()));
-        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<Map<String,Object>>of()));
+        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<ResourceCollectionItem>of()));
     }
 
 }

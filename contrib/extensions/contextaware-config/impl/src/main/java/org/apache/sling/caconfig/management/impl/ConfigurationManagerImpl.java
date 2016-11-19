@@ -38,6 +38,7 @@ import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,12 +78,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             resettableConfigResourceInheritanceChain.reset();
             return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                     applyPersistence(resettableConfigResourceInheritanceChain),
-                    resource, configName, configurationOverrideManager);
+                    resource, configName, configurationOverrideManager, false);
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
             return new ConfigurationDataImpl(configMetadata,
-                    resource, configName, configurationOverrideManager);
+                    resource, configName, configurationOverrideManager, false);
         }
         return null;
     }
@@ -114,7 +115,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 resettableConfigResourceInheritanceChain.reset();
                 configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                         applyPersistence(resettableConfigResourceInheritanceChain),
-                        resource, configName, configurationOverrideManager));
+                        resource, configName, configurationOverrideManager, true));
             }
         }
         return configData;
@@ -161,22 +162,22 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
 
     @Override
-    public void persistCollection(Resource resource, String configName, Collection<Map<String,Object>> values) {
+    public void persistCollection(Resource resource, String configName, Collection<ResourceCollectionItem> resourceCollectionItems) {
         String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
         }
-        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, values)) {
+        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, resourceCollectionItems)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
     }
 
     @Override
-    public ConfigurationData newCollectionItem(String configName) {
+    public ConfigurationData newCollectionItem(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         if (configMetadata != null) {
             return new ConfigurationDataImpl(configMetadata,
-                    null, configName, configurationOverrideManager);
+                    resource, configName, configurationOverrideManager, true);
         }
         return null;
     }

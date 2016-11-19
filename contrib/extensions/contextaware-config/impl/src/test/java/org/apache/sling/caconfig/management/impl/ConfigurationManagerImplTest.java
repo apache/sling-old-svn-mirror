@@ -30,7 +30,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -41,6 +40,7 @@ import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -432,9 +432,9 @@ public class ConfigurationManagerImplTest {
 
     @Test
     public void testPersistCollection() throws Exception {
-        underTest.persistCollection(contextResourceNoConfig, CONFIG_COL_NAME, ImmutableList.<Map<String,Object>>of(
-                ImmutableMap.<String, Object>of("prop1", "value1"),
-                ImmutableMap.<String, Object>of("prop2", 5)
+        underTest.persistCollection(contextResourceNoConfig, CONFIG_COL_NAME, ImmutableList.of(
+                new ResourceCollectionItem("0",  ImmutableMap.<String, Object>of("prop1", "value1")),
+                new ResourceCollectionItem("1", ImmutableMap.<String, Object>of("prop2", 5))
         ));
         context.resourceResolver().commit();
 
@@ -449,7 +449,7 @@ public class ConfigurationManagerImplTest {
 
     @Test
     public void testNewCollectionItem() {
-        ConfigurationData newItem = underTest.newCollectionItem(CONFIG_COL_NAME);
+        ConfigurationData newItem = underTest.newCollectionItem(contextResource, CONFIG_COL_NAME);
         assertNotNull(newItem);
         assertEquals((Integer)5, newItem.getEffectiveValues().get("prop3", 0));
     }
@@ -458,7 +458,7 @@ public class ConfigurationManagerImplTest {
     public void testNewCollectionItem_NoConfigMetadata() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_COL_NAME)).thenReturn(null);
 
-        ConfigurationData newItem = underTest.newCollectionItem(CONFIG_COL_NAME);
+        ConfigurationData newItem = underTest.newCollectionItem(contextResource, CONFIG_COL_NAME);
         assertNull(newItem);
     }
 

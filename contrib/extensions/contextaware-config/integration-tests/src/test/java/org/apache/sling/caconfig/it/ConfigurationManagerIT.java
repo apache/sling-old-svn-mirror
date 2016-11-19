@@ -38,6 +38,7 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.it.example.SimpleConfig;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
+import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
@@ -138,10 +139,10 @@ public class ConfigurationManagerIT {
         Map<String,Object> values2 = new HashMap<>();
         values2.put("intParam", 55);
         values2.put("boolParam", true);
-        List<Map<String,Object>> values = new ArrayList<>();
-        values.add(values1);
-        values.add(values2);
-        configManager.persistCollection(resourcePage1, CONFIG_NAME, values);
+        List<ResourceCollectionItem> items = new ArrayList<>();
+        items.add(new ResourceCollectionItem("item1", values1));
+        items.add(new ResourceCollectionItem("item2", values2));
+        configManager.persistCollection(resourcePage1, CONFIG_NAME, items);
         resourceResolver.commit();
         
         // read config via configuration resolver
