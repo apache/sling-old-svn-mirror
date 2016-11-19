@@ -49,7 +49,8 @@ public interface ConfigurationPersistenceStrategy {
      * @param resourceResolver Resource resolver
      * @param configResourcePath Path to store configuration data to. The resource (and it's parents) may not exist and may have to be created. 
      * @param properties Configuration properties
-     * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy (but in case of error throw an exception).
+     * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
+     *      (but in case of error throw an exception).
      */
     boolean persist(@Nonnull ResourceResolver resourceResolver,
             @Nonnull String configResourcePath, @Nonnull Map<String,Object> properties);
@@ -58,11 +59,14 @@ public interface ConfigurationPersistenceStrategy {
      * Stores configuration data for a configuration resource collection.
      * The changes are written using the given resource resolver. They are not committed, this is left to the caller.
      * @param resourceResolver Resource resolver
-     * @param configResourceCollectionParentPath Parent path to store configuration collection data to. The resource (and it's parents) may not exist and may have to be created. 
-     * @param propertiesCollection Configuration properties
-     * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy (but in case of error throw an exception).
+     * @param configResourceCollectionParentPath Parent path to store configuration collection data to.
+     *      The resource (and it's parents) may not exist and may have to be created. 
+     * @param resourceCollectionItems Resource collection items to be stored.
+     *      All existing collection entries on this context path level are erased and replaced with the new ones.
+     * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
+     *      (but in case of error throw an exception).
      */
     boolean persistCollection(@Nonnull ResourceResolver resourceResolver,
-            @Nonnull String configResourceCollectionParentPath, @Nonnull Collection<Map<String,Object>> propertiesCollection);
+            @Nonnull String configResourceCollectionParentPath, @Nonnull Collection<ResourceCollectionItem> resourceCollectionItems);
     
 }
