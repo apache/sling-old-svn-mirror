@@ -153,9 +153,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     private static final int DEFAULT_MAX_RECURSION_DEPTH = 20;
 
+    private static final long DEFAULT_CLEANUP_JOB_PERIOD = 30l;
+
     @Property(label = "Maximum Recursion Depth", description = "Maximum depth adaptation will be attempted.", intValue = DEFAULT_MAX_RECURSION_DEPTH)
     private static final String PROP_MAX_RECURSION_DEPTH = "max.recursion.depth";
 
+    @Property(label = "Cleanup Job Period", description = "Period at which OSGi service references from ThreadLocals will be cleaned up.", longValue = DEFAULT_CLEANUP_JOB_PERIOD)
+    private static final String PROP_CLEANUP_JOB_PERIOD = "cleanup.job.period";
 
     private final @Nonnull ConcurrentMap<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
     private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<Injector>();
@@ -929,7 +933,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         properties.put(Constants.SERVICE_DESCRIPTION, "Sling Models OSGi Service Disposal Job");
         properties.put("scheduler.name", "Sling Models OSGi Service Disposal Job");
         properties.put("scheduler.concurrent", false);
-        properties.put("scheduler.period", 30L);
+        properties.put("scheduler.period", PropertiesUtil.toLong(props.get(PROP_CLEANUP_JOB_PERIOD), DEFAULT_CLEANUP_JOB_PERIOD));
 
         this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
