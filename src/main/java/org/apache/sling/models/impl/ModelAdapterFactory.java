@@ -923,6 +923,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         Hashtable<Object, Object> properties = new Hashtable<Object, Object>();
         properties.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         properties.put(Constants.SERVICE_DESCRIPTION, "Sling Models OSGi Service Disposal Job");
+        properties.put("scheduler.name", "Sling Models OSGi Service Disposal Job");
         properties.put("scheduler.concurrent", false);
         properties.put("scheduler.period", 30L);
 
