@@ -117,7 +117,7 @@ public class ImplementsExtendsTest {
 
         // simulate bundle add for ModelPackageBundleListener
         Dictionary<String, String> headers = new Hashtable<String,String>();
-        headers.put(ModelPackageBundleListener.HEADER, "org.apache.sling.models.testmodels.classes.implextend");
+        headers.put(ModelPackageBundleListener.PACKAGE_HEADER, "org.apache.sling.models.testmodels.classes.implextend");
         when(bundle.getHeaders()).thenReturn(headers);
 
         Vector<URL> classUrls = new Vector<URL>();

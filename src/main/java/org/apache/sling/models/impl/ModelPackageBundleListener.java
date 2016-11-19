@@ -49,7 +49,8 @@ import javax.servlet.Servlet;
 
 public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
-    static final String HEADER = "Sling-Model-Packages";
+    static final String PACKAGE_HEADER = "Sling-Model-Packages";
+    static final String CLASSES_HEADER = "Sling-Model-Classes";
     
     /**
      * Service registration property for the adapter condition.
@@ -86,9 +87,8 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
 
         Dictionary<?, ?> headers = bundle.getHeaders();
-        String packageList = PropertiesUtil.toString(headers.get(HEADER), null);
+        String packageList = PropertiesUtil.toString(headers.get(PACKAGE_HEADER), null);
         if (packageList != null) {
-
             packageList = StringUtils.deleteWhitespace(packageList);
             String[] packages = packageList.split(",");
             for (String singlePackage : packages) {
@@ -104,60 +104,73 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 while (classUrls.hasMoreElements()) {
                     URL url = classUrls.nextElement();
                     String className = toClassName(url);
-                    try {
-                        Class<?> implType = bundle.loadClass(className);
-                        Model annotation = implType.getAnnotation(Model.class);
-                        if (annotation != null) {
-                            
-                            // get list of adapters from annotation - if not given use annotated class itself
-                            Class<?>[] adapterTypes = annotation.adapters();
-                            if (adapterTypes.length == 0) {
-                                adapterTypes = new Class<?>[] { implType };
-                            }
-                            // register adapter only if given adapters are valid
-                            if (validateAdapterClasses(implType, adapterTypes)) {
-                                for (Class<?> adapterType : adapterTypes) {
-                                    adapterImplementations.add(adapterType, implType);
-                                }
-                                ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
-                                regs.add(reg);
-
-                                String[] resourceTypes = annotation.resourceType();
-                                for (String resourceType : resourceTypes) {
-                                    if (StringUtils.isNotEmpty(resourceType)) {
-                                        for (Class<?> adaptable : annotation.adaptables()) {
-                                            adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
-                                            ExportServlet.ExportedObjectAccessor accessor = null;
-                                            if (adaptable == Resource.class) {
-                                                accessor = ExportServlet.RESOURCE;
-                                            } else if (adaptable == SlingHttpServletRequest.class) {
-                                                accessor = ExportServlet.REQUEST;
-                                            }
-                                            Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
-                                            if (exporterAnnotation != null) {
-                                                registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
-                                            }
-                                            Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
-                                            if (exportersAnnotation != null) {
-                                                for (Exporter ann : exportersAnnotation.value()) {
-                                                    registerExporter(bundle, implType, resourceType, ann, regs, accessor);
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                }
-                            }
-
-                        }
-                    } catch (ClassNotFoundException e) {
-                        log.warn("Unable to load class", e);
-                    }
+                    analyzeClass(bundle, className, regs);
 
                 }
             }
         }
+        String classesList = PropertiesUtil.toString(headers.get(CLASSES_HEADER), null);
+        if (classesList != null) {
+            classesList = StringUtils.deleteWhitespace(classesList);
+            String[] classes = classesList.split(",");
+            for (String className : classes) {
+                analyzeClass(bundle, className, regs);
+            }
+        }
+
         return regs.toArray(new ServiceRegistration[0]);
+    }
+
+    private void analyzeClass(Bundle bundle, String className, List<ServiceRegistration> regs) {
+        try {
+            Class<?> implType = bundle.loadClass(className);
+            Model annotation = implType.getAnnotation(Model.class);
+            if (annotation != null) {
+
+                // get list of adapters from annotation - if not given use annotated class itself
+                Class<?>[] adapterTypes = annotation.adapters();
+                if (adapterTypes.length == 0) {
+                    adapterTypes = new Class<?>[] { implType };
+                }
+                // register adapter only if given adapters are valid
+                if (validateAdapterClasses(implType, adapterTypes)) {
+                    for (Class<?> adapterType : adapterTypes) {
+                        adapterImplementations.add(adapterType, implType);
+                    }
+                    ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
+                    regs.add(reg);
+
+                    String[] resourceTypes = annotation.resourceType();
+                    for (String resourceType : resourceTypes) {
+                        if (StringUtils.isNotEmpty(resourceType)) {
+                            for (Class<?> adaptable : annotation.adaptables()) {
+                                adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
+                                ExportServlet.ExportedObjectAccessor accessor = null;
+                                if (adaptable == Resource.class) {
+                                    accessor = ExportServlet.RESOURCE;
+                                } else if (adaptable == SlingHttpServletRequest.class) {
+                                    accessor = ExportServlet.REQUEST;
+                                }
+                                Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                                if (exporterAnnotation != null) {
+                                    registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
+                                }
+                                Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                                if (exportersAnnotation != null) {
+                                    for (Exporter ann : exportersAnnotation.value()) {
+                                        registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+            }
+        } catch (ClassNotFoundException e) {
+            log.warn("Unable to load class", e);
+        }
     }
 
     @Override
