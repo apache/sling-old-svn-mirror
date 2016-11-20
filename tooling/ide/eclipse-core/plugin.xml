@@ -283,9 +283,13 @@
                      caseSensitive="false"
                      ext="xml">
                </fileext>
-               <!--only enable for sling.content projects -->
-               <facet id="sling.content"/>
             </rules>
+         </include>
+         <include>
+             <rules>
+                <!--only enable for sling.content projects -->
+                <facet id="sling.content"/>
+             </rules>
          </include>
          <exclude>
             <rules>
