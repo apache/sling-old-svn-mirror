@@ -120,7 +120,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
         return (AbstractNewMavenBasedSlingApplicationWizard) super.getWizard();
     }
 
-	public void createControl(Composite parent) {
+	@Override
+    public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
@@ -133,7 +134,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    useDefaultWorkspaceLocationButton
 	        .setText("Use default Workspace location");
 	    useDefaultWorkspaceLocationButton.addSelectionListener(new SelectionAdapter() {
-	      public void widgetSelected(SelectionEvent e) {
+	      @Override
+        public void widgetSelected(SelectionEvent e) {
 	        boolean inWorkspace = useDefaultWorkspaceLocationButton.getSelection();
 	        locationLabel.setEnabled(!inWorkspace);
 	        locationCombo.setEnabled(!inWorkspace);
@@ -153,7 +155,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    GridData locationComboData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 	    locationCombo.setLayoutData(locationComboData);
 	    locationCombo.addModifyListener(new ModifyListener() {
-	      public void modifyText(ModifyEvent e) {
+	      @Override
+        public void modifyText(ModifyEvent e) {
 	    	  dialogChanged();
 	      }
 	    });
@@ -164,7 +167,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    locationBrowseButton.setLayoutData(locationBrowseButtonData);
 	    locationBrowseButton.setText("Browse...");
 	    locationBrowseButton.addSelectionListener(new SelectionAdapter() {
-	      public void widgetSelected(SelectionEvent e) {
+	      @Override
+        public void widgetSelected(SelectionEvent e) {
 	        DirectoryDialog dialog = new DirectoryDialog(getShell());
 	        dialog.setText("Select Location");
 
@@ -340,9 +344,6 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
             monitor.worked(1);
 
-            // optionally allow the parent to install any archetypes
-            getWizard().installArchetypes();
-
             Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
             monitor.worked(2);
             ArrayList<Archetype> candidates = new ArrayList<>();
@@ -387,6 +388,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             if (changed || archetypesMap.isEmpty()) {
                 logger.trace("Triggering refresh since changed is true");
                 Display.getDefault().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         Set<String> keys = archetypesMap.keySet();
                         knownArchetypes.removeAll();

@@ -39,8 +39,8 @@ import org.eclipse.wst.server.core.IServer;
 public abstract class AbstractNewMavenBasedSlingApplicationWizard extends AbstractNewSlingApplicationWizard {
 	private ChooseArchetypeWizardPage chooseArchetypePage;
 	private ArchetypeParametersWizardPage archetypeParametersPage;
-	public abstract void installArchetypes();
-	public abstract boolean acceptsArchetype(Archetype archetype2);
+
+    public abstract boolean acceptsArchetype(Archetype archetype);
 
 	/**
 	 * Constructor for AbstractNewMavenBasedSlingApplicationWizard.
@@ -55,7 +55,8 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
 	/**
 	 * Adding the page to the wizard.
 	 */
-	public void addPages() {
+	@Override
+    public void addPages() {
 		chooseArchetypePage = new ChooseArchetypeWizardPage(this);
 		addPage(chooseArchetypePage);
 		archetypeParametersPage = createArchetypeParametersWizardPage();
@@ -71,7 +72,8 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
 		return chooseArchetypePage;
 	}
 
-	protected List<IProject> createProjects(IProgressMonitor monitor) throws CoreException {
+	@Override
+    protected List<IProject> createProjects(IProgressMonitor monitor) throws CoreException {
 
         IPath location = chooseArchetypePage.getLocation();
         Archetype archetype = chooseArchetypePage.getSelectedArchetype();
@@ -99,6 +101,7 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
 
     }
 
+    @Override
     protected Projects configureCreatedProjects(List<IProject> createdProjects, IProgressMonitor monitor)
             throws CoreException {
 
