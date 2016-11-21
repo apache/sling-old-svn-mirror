@@ -32,8 +32,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Map;
 
-import static javax.xml.bind.JAXBIntrospector.getValue;
-
 public class ResourceSerializer extends JsonSerializer<Resource> implements ResolvableSerializer {
 
     private final int maxRecursionLevels;
