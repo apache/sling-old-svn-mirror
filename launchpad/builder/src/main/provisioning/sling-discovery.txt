@@ -1,0 +1,46 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+#
+[feature name=sling-event]
+
+[artifacts]
+    org.apache.sling/org.apache.sling.discovery.api/1.0.4
+    org.apache.sling/org.apache.sling.discovery.support/1.0.0
+    org.apache.sling/org.apache.sling.discovery.commons/1.0.18
+    org.apache.sling/org.apache.sling.discovery.base/1.1.6
+    org.apache.sling/org.apache.sling.discovery.oak/1.2.16
+
+[:repoinit]
+    create service user sling-discovery
+
+    create path (sling:Folder) /var/discovery
+    create path (sling:Folder) /var/discovery/oak
+
+    set ACL for sling-discovery
+        allow   jcr:read,rep:write    on /var/discovery
+    end
+
+
+[configurations]
+    org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-sling.discovery
+        user.mapping=[
+            "org.apache.sling.discovery.commons\=sling-discovery",
+            "org.apache.sling.discovery.base\=sling-discovery",
+            "org.apache.sling.discovery.oak\=sling-discovery"
+        ]
