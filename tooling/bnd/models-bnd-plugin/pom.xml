@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.bnd.models</artifactId>
     <packaging>jar</packaging>
     <version>1.0.1-SNAPSHOT</version>
-    <name>Apache Sling Models BND Plugin</name>
-    <description>This BND plugin detected all Sling Models classes and adds a bundle header 'Sling-Model-Classes' containing their names.</description>
+    <name>Apache Sling Models bnd Plugin</name>
+    <description>This bnd plugin detected all Sling Models classes and adds a bundle header 'Sling-Model-Classes' containing their names.</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/bnd/models-bnd-plugin</connection>
