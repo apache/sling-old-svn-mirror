@@ -240,7 +240,7 @@
      	   name="Sling content project Java EE filter"
      	   class="org.apache.sling.ide.eclipse.ui.nav.ContentViewerFilter"
            id="org.apache.sling.ide.eclipse-ui.javaEEFilter"
-           description="Hides Java EE deployment descriptors for content projects."
+           description="Hides multiple Java EE contributions for Sling content projects."
            activeByDefault="true">
       </commonFilter>
       <navigatorContent

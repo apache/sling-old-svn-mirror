@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.ViewerFilter;;
 
 /**
  * The <tt>ContentViewerFilter</tt> ensures that Sling content projects do not have 
- * the 'Deployment Descriptor' contribution present.
+ * the various WST-specific contributions present.
  *
  */
 public class ContentViewerFilter extends ViewerFilter {
@@ -39,6 +39,8 @@ public class ContentViewerFilter extends ViewerFilter {
             case "org.eclipse.jst.j2ee.webapplication.internal.impl.WebAppImpl":
             case "org.eclipse.jst.jee.ui.internal.navigator.web.WebAppProvider":
             case "org.eclipse.jst.jee.ui.internal.navigator.LoadingGroupProvider":
+            case "org.eclipse.jst.ws.jaxws.dom.integration.navigator.DOMAdapterFactoryContentProvider$LoadingWsProject":
+            case "org.eclipse.m2e.wtp.internal.WTPResourcesNode":                
 
                 IProject project = getProjectFromParent(parentElement);
                 
