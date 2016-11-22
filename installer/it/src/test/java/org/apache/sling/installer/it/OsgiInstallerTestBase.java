@@ -494,10 +494,6 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
     	// optional debugging
     	final String paxDebugLevel = System.getProperty("pax.exam.log.level", "INFO");
-    	final String paxDebugPort = System.getProperty("pax.exam.debug.port");
-    	if(paxDebugPort != null && paxDebugPort.length() > 0) {
-        	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort;
-    	}
 
     	String localRepo = System.getProperty("maven.repo.local", "");
 
