@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
@@ -34,6 +33,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     
     private final String name;
     private final T value;
+    private final T effectiveValue;
     private final T defaultValue;
     private final PropertyMetadata<T> propertyMetadata;
     private final Resource resolvedConfigurationResource;
@@ -43,12 +43,13 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     private final String configName;
     private final ConfigurationOverrideManager configurationOverrideManager;
     
-    public ValueInfoImpl(String name, T value, PropertyMetadata<T> propertyMetadata,
+    public ValueInfoImpl(String name, T value, T effectiveValue, PropertyMetadata<T> propertyMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
             List<Resource> configurationResourceInheritanceChain,
             Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
         this.name = name;
         this.value = value;
+        this.effectiveValue = effectiveValue;
         this.defaultValue = propertyMetadata != null ? propertyMetadata.getDefaultValue() : null;
         this.propertyMetadata = propertyMetadata;
         this.resolvedConfigurationResource = resolvedConfigurationResource;
@@ -69,28 +70,19 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         return propertyMetadata;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public T getValue() {
-        if (writebackConfigurationResource == null) {
-            return null;
-        }
-        else if (propertyMetadata != null) {
-            return writebackConfigurationResource.getValueMap().get(name, propertyMetadata.getType());
-        }
-        else {
-            return (T)writebackConfigurationResource.getValueMap().get(name);
-        }
+        return value;
     }
 
     @Override
     public T getEffectiveValue() {
-        return ObjectUtils.defaultIfNull(value, defaultValue);
+        return effectiveValue;
     }
 
     @Override
     public String getConfigSourcePath() {
-        if (value != null && resolvedConfigurationResource != null) {
+        if (effectiveValue != null && resolvedConfigurationResource != null) {
             Resource resource = getResourceFromInheritanceChain();
             if (resource != null) {
                 return resource.getPath();
@@ -101,12 +93,20 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
 
     @Override
     public boolean isDefault() {
-        return value == null && defaultValue != null;
+        if (defaultValue == null) {
+            return false;
+        }
+        if (resolvedConfigurationResource == null) {
+            return true;
+        }
+        else {
+            return !resolvedConfigurationResource.getValueMap().containsKey(name);
+        }
     }
 
     @Override
     public boolean isInherited() {
-        if (isDefault() || value == null) {
+        if (isDefault() || effectiveValue == null) {
             return false;
         }
         else if (resolvedConfigurationResource == null) {
@@ -141,7 +141,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
             return null;
         }
         Resource resource = inheritanceChain.next();
-        Object valueFromResource = resource.getValueMap().get(name, value.getClass());
+        Object valueFromResource = resource.getValueMap().get(name, effectiveValue.getClass());
         if (valueFromResource != null) {
             return resource;
         }
@@ -157,7 +157,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
                     contextResource.getPath(), configName, Collections.<String,Object>emptyMap());
         if (overrideProperties != null) {
             return overrideProperties.containsKey(name)
-                    || (getValue() != null && value == null);
+                    || (getValue() != null && effectiveValue == null);
         }
         else {
             return false;
