@@ -223,11 +223,11 @@ class OverrideStringParser {
      * @return true if item is valid
      */
     private static boolean isValid(OverrideItem item, String overrideString) {
-        if (item.getPath() != null && (!StringUtils.startsWith(item.getPath(), "/") || StringUtils.contains(item.getPath(), "."))) {
+        if (item.getPath() != null && (!StringUtils.startsWith(item.getPath(), "/") || StringUtils.contains(item.getPath(), ".."))) {
             log.warn("Ignore config override string - invalid path: {}", overrideString);
             return false;
         }
-        if (StringUtils.startsWith(item.getConfigName(), "/") || StringUtils.contains(item.getConfigName(), ".")) {
+        if (StringUtils.startsWith(item.getConfigName(), "/") || StringUtils.contains(item.getConfigName(), "..")) {
             log.warn("Ignore config override string - invalid configName: {}", overrideString);
             return false;
         }
