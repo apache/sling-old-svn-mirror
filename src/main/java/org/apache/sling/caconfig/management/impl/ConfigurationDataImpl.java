@@ -18,6 +18,7 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ValueInfo;
@@ -51,6 +53,12 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private Set<String> propertyNamesCache;
     private ValueMap valuesCache;
     private ValueMap effectiveValuesCache;
+    
+    private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
+            "jcr:primaryType",
+            "sling:resourceType",
+            ConfigurationDefNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT
+            ));
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
@@ -93,6 +101,9 @@ final class ConfigurationDataImpl implements ConfigurationData {
         if (writebackConfigurationResource != null) {
             return writebackConfigurationResource.getPath();
         }
+        if (resolvedConfigurationResource != null) {
+            return resolvedConfigurationResource.getPath();
+        }
         return null;
     }
 
@@ -106,6 +117,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 propertyNamesCache.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
             }
+            propertyNamesCache.removeAll(PROPERTIES_TO_IGNORE);
         }
         return propertyNamesCache;
     }
@@ -113,12 +125,12 @@ final class ConfigurationDataImpl implements ConfigurationData {
     @Override
     public ValueMap getValues() {
         if (valuesCache == null) {
+            Map<String,Object> props = new HashMap<>();
             if (writebackConfigurationResource != null) {
-                valuesCache = ResourceUtil.getValueMap(writebackConfigurationResource);
+                props.putAll( ResourceUtil.getValueMap(writebackConfigurationResource));
             }
-            else {
-                valuesCache = ValueMap.EMPTY;
-            }
+            removeIgnoredProperties(props);
+            valuesCache = new ValueMapDecorator(props);
         }
         return valuesCache;
     }
@@ -137,9 +149,16 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
             }
+            removeIgnoredProperties(props);
             effectiveValuesCache = new ValueMapDecorator(props);
         }
         return effectiveValuesCache;
+    }
+    
+    private void removeIgnoredProperties(Map<String,Object> props) {
+        for (String propertyName : PROPERTIES_TO_IGNORE) {
+            props.remove(propertyName);
+        }
     }
 
     @SuppressWarnings("unchecked")

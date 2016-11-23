@@ -61,24 +61,27 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public ConfigurationData get(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        Resource configResource = null;
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
                 .getResourceInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
-        ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-        Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
-        if (configResource != null) {
-            // get writeback resource for "reverse inheritance detection"
-            Resource writebackConfigResource = null;
-            String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
-            if (writebackConfigResourcePath != null) {
-                writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
-                if (writebackConfigResource != null) {
-                    writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+        if (configResourceInheritanceChain != null) {
+            ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
+            configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
+            if (configResource != null) {
+                // get writeback resource for "reverse inheritance detection"
+                Resource writebackConfigResource = null;
+                String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+                if (writebackConfigResourcePath != null) {
+                    writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
+                    if (writebackConfigResource != null) {
+                        writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                    }
                 }
+                resettableConfigResourceInheritanceChain.reset();
+                return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
+                        applyPersistence(resettableConfigResourceInheritanceChain),
+                        resource, configName, configurationOverrideManager, false);
             }
-            resettableConfigResourceInheritanceChain.reset();
-            return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
-                    applyPersistence(resettableConfigResourceInheritanceChain),
-                    resource, configName, configurationOverrideManager, false);
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
@@ -97,25 +100,27 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
         Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
                 .getResourceCollectionInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
-        for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
-            ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-            Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
-            if (configResource != null) {
-                // get writeback resource for "reverse inheritance detection"
-                Resource writebackConfigResource = null;
-                if (writebackConfigResourceCollectionParentPath != null) {
-                    resettableConfigResourceInheritanceChain.reset();
-                    Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
-                    writebackConfigResource = configResource.getResourceResolver().getResource(
-                            writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
-                    if (writebackConfigResource != null) {
-                        writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+        if (configResourceInheritanceChains != null) {
+            for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
+                ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
+                Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
+                if (configResource != null) {
+                    // get writeback resource for "reverse inheritance detection"
+                    Resource writebackConfigResource = null;
+                    if (writebackConfigResourceCollectionParentPath != null) {
+                        resettableConfigResourceInheritanceChain.reset();
+                        Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
+                        writebackConfigResource = configResource.getResourceResolver().getResource(
+                                writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
+                        if (writebackConfigResource != null) {
+                            writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                        }
                     }
+                    resettableConfigResourceInheritanceChain.reset();
+                    configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
+                            applyPersistence(resettableConfigResourceInheritanceChain),
+                            resource, configName, configurationOverrideManager, true));
                 }
-                resettableConfigResourceInheritanceChain.reset();
-                configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
-                        applyPersistence(resettableConfigResourceInheritanceChain),
-                        resource, configName, configurationOverrideManager, true));
             }
         }
         return configData;

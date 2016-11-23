@@ -161,4 +161,24 @@ public class ConfigurationDataImplTest {
         assertEquals((Integer)5, prop3.getEffectiveValue());
     }
 
+    @Test
+    public void testIgnoreProperties() {
+        Resource resource = context.create().resource("/conf/testIgnoreProps",
+                "prop1", "value1",
+                "prop4", true,
+                "jcr:primaryType", "myType",
+                "sling:resourceType", "my/type");
+
+        ConfigurationData underTest = new ConfigurationDataImpl(null, resource, resource, null,
+                contextResource, "test", configurationOverrideManager, false);
+        
+        assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());
+        
+        assertNull(underTest.getValues().get("jcr:primaryType"));
+        assertNull(underTest.getEffectiveValues().get("jcr:primaryType"));
+
+        assertNull(underTest.getValues().get("sling:resourceType"));
+        assertNull(underTest.getEffectiveValues().get("sling:resourceType"));
+    }
+
 }

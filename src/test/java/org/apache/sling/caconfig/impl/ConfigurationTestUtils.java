@@ -37,10 +37,23 @@ public final class ConfigurationTestUtils {
      * @param context Sling context
      */
     public static ConfigurationResolver registerConfigurationResolver(SlingContext context) {
-        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);        
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
+        context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationOverrideManager());
+        return context.registerInjectActivateService(new ConfigurationResolverImpl());
+    }
+    
+    /**
+     * Register all services for {@link ConfigurationResolver}
+     * without the default implementations of the multiplexed services.
+     * @param context Sling context
+     */
+    public static ConfigurationResolver registerConfigurationResolverWithoutDefaultImpl(SlingContext context) {
+        ConfigurationResourceTestUtils.registerConfigurationResourceResolverWithoutDefaultImpl(context);
+        context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationOverrideManager());
         return context.registerInjectActivateService(new ConfigurationResolverImpl());

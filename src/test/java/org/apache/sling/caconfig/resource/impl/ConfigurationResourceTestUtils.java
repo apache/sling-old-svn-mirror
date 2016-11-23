@@ -41,4 +41,15 @@ public final class ConfigurationResourceTestUtils {
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
     
+    /**
+     * Register all services for {@link ConfigurationResourceResolver}
+     * without the default implementations of the multiplexed services.
+     * @param context Sling context
+     */
+    public static ConfigurationResourceResolver registerConfigurationResourceResolverWithoutDefaultImpl(SlingContext context) {
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
+        return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
+    }
+    
 }
