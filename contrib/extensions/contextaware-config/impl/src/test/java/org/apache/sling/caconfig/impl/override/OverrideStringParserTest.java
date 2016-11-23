@@ -77,17 +77,17 @@ public class OverrideStringParserTest {
     @Test
     public void testBasicTypesArray() {
         List<OverrideItem> result = parse(
-                "configName/param1=[\"v1a\",\"v1b\"]",
-                "configName/param2=['v2a','v2b']",
-                "configName/param3=[555,666]",
-                "configName/param4=[1.23,2.34]",
-                "configName/param5=[true,false]",
-                "configName/param6=[]");
+                "config.name/param1=[\"v1a\",\"v1b\"]",
+                "config.name/param2=['v2a','v2b']",
+                "config.name/param3=[555,666]",
+                "config.name/param4=[1.23,2.34]",
+                "config.name/param5=[true,false]",
+                "config.name/param6=[]");
         
         assertEquals(1, result.size());
         OverrideItem item = result.get(0);
         assertNull(item.getPath());
-        assertEquals("configName", item.getConfigName());
+        assertEquals("config.name", item.getConfigName());
         for (Map.Entry<String,Object> entry : item.getProperties().entrySet()) {
             assertArrayEquals("array " + entry.getKey(), (Object[])BASICTYPES_ARRAY_MAP.get(entry.getKey()), (Object[])item.getProperties().get(entry.getKey()));
         }
@@ -188,7 +188,7 @@ public class OverrideStringParserTest {
     public void testInvalidSyntax() {
         List<OverrideItem> result = parse(
                 "/configName/param1=\"value1\"",
-                "configName/./param1=\"value1\"",
+                "configName/../param1=\"value1\"",
                 "[/a/b]=\"value1\"",
                 "[/a/b]configName=\"value1\"",
                 "[/a/../b]configName/param1=\"value1\"",
