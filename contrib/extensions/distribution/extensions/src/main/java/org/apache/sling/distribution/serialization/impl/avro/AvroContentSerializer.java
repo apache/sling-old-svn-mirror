@@ -28,15 +28,11 @@ import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -49,14 +45,14 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportFilter;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +65,6 @@ public class AvroContentSerializer implements DistributionContentSerializer {
 
     private final String name;
     private final Schema schema;
-    private final Set<String> ignoredProperties;
-    private final Set<String> ignoredNodeNames;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.sss+hh:mm");
 
     public AvroContentSerializer(String name) {
@@ -79,26 +73,11 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Set<String> iProps = new HashSet<String>();
-        iProps.add(JcrConstants.JCR_FROZENMIXINTYPES);
-        iProps.add(JcrConstants.JCR_FROZENPRIMARYTYPE);
-        iProps.add(JcrConstants.JCR_FROZENUUID);
-        iProps.add(JcrConstants.JCR_VERSIONHISTORY);
-        iProps.add(JcrConstants.JCR_BASEVERSION);
-        iProps.add(JcrConstants.JCR_PREDECESSORS);
-        iProps.add(JcrConstants.JCR_SUCCESSORS);
-        iProps.add(JcrConstants.JCR_ISCHECKEDOUT);
-        iProps.add(JcrConstants.JCR_UUID);
-        ignoredProperties = Collections.unmodifiableSet(iProps);
-
-        Set<String> iNames = new HashSet<String>();
-        iNames.add("rep:policy");
-        ignoredNodeNames = Collections.unmodifiableSet(iNames);
         this.name = name;
     }
 
     @Override
-    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
+    public void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions options, OutputStream outputStream) throws DistributionException {
 
         DatumWriter<AvroShallowResource> datumWriter = new SpecificDatumWriter<AvroShallowResource>(AvroShallowResource.class);
         DataFileWriter<AvroShallowResource> writer = new DataFileWriter<AvroShallowResource>(datumWriter);
@@ -109,9 +88,12 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         }
 
         try {
-            for (String path : request.getPaths()) {
+            DistributionExportFilter filter = options.getFilter();
+            for (DistributionExportFilter.TreeFilter treeFilter : filter.getNodeFilters()) {
+                String path = treeFilter.getPath();
                 Resource resource = resourceResolver.getResource(path);
-                AvroShallowResource avroShallowResource = getAvroShallowResource(request, path, resource);
+                AvroShallowResource avroShallowResource = getAvroShallowResource(treeFilter, filter.getPropertyFilter(),
+                        resource);
                 writer.append(avroShallowResource);
             }
             outputStream.flush();
@@ -145,15 +127,23 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         return name;
     }
 
-    private AvroShallowResource getAvroShallowResource(DistributionRequest request, String path, Resource resource) throws IOException {
+    @Override
+    public boolean isRequestFiltering() {
+        return false;
+    }
+
+    private AvroShallowResource getAvroShallowResource(DistributionExportFilter.TreeFilter nodeFilter,
+                                                       DistributionExportFilter.TreeFilter propertyFilter,
+                                                       Resource resource) throws IOException {
         AvroShallowResource avroShallowResource = new AvroShallowResource();
         avroShallowResource.setName("avro_" + System.nanoTime());
-        avroShallowResource.setPath(path);
+        avroShallowResource.setPath(resource.getPath());
         avroShallowResource.setResourceType(resource.getResourceType());
         ValueMap valueMap = resource.getValueMap();
         Map<CharSequence, Object> map = new HashMap<CharSequence, Object>();
         for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
-            if (!ignoredProperties.contains(entry.getKey())) {
+            String property = entry.getKey();
+            if (propertyFilter.matches(property)) {
                 Object value = entry.getValue();
                 if (value instanceof GregorianCalendar) {
                     value = dateFormat.format(((GregorianCalendar) value).getTime());
@@ -163,50 +153,19 @@ public class AvroContentSerializer implements DistributionContentSerializer {
                 } else if (value instanceof InputStream) {
                     value = ByteBuffer.wrap(IOUtils.toByteArray(((InputStream) value)));
                 }
-                map.put(entry.getKey(), value);
+                map.put(property, value);
             }
         }
         avroShallowResource.setValueMap(map);
         List<AvroShallowResource> children = new LinkedList<AvroShallowResource>();
-        boolean deep = request.isDeep(path);
-        String[] filters = request.getFilters(path);
-        if (deep) {
-            for (Resource child : resource.getChildren()) {
-                String childPath = child.getPath();
-                if (!ignoredNodeNames.contains(child.getName())) {
-                    children.add(getAvroShallowResource(request, childPath, child));
-                }
-            }
-        } else {
-            for (Resource child : resource.getChildren()) {
-                String childPath = child.getPath();
-                if (filtersAllow(filters, childPath) && !ignoredNodeNames.contains(child.getName())) {
-                    children.add(getAvroShallowResource(request, childPath, child));
-                }
+        for (Resource child : resource.getChildren()) {
+            if (nodeFilter.matches(child.getPath())) {
+                children.add(getAvroShallowResource(nodeFilter, propertyFilter, child));
             }
         }
         avroShallowResource.setChildren(children);
         return avroShallowResource;
     }
-
-    private boolean filtersAllow(String[] filters, String path) {
-        boolean allowed = false;
-        for (String pattern : filters) {
-            if (pattern.startsWith("+")) {
-                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
-                    allowed = true;
-                }
-            } else if (pattern.startsWith("-")) {
-                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
-                    allowed = false;
-                }
-            } else {
-                allowed = Pattern.compile(pattern).matcher(path).matches();
-            }
-        }
-        return allowed;
-    }
-
 
     private Collection<AvroShallowResource> readAvroResources(byte[] bytes) throws IOException {
         DatumReader<AvroShallowResource> datumReader = new SpecificDatumReader<AvroShallowResource>(AvroShallowResource.class);

@@ -19,33 +19,30 @@
 package org.apache.sling.distribution.serialization.impl.kryo;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportFilter;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,43 +55,27 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;
-    private final Set<String> ignoredProperties;
-    private final Set<String> ignoredNodeNames;
 
     public KryoContentSerializer(String name) {
         this.name = name;
-
-        Set<String> iProps = new HashSet<String>();
-        iProps.add(JcrConstants.JCR_FROZENMIXINTYPES);
-        iProps.add(JcrConstants.JCR_FROZENPRIMARYTYPE);
-        iProps.add(JcrConstants.JCR_FROZENUUID);
-        iProps.add(JcrConstants.JCR_VERSIONHISTORY);
-        iProps.add(JcrConstants.JCR_BASEVERSION);
-        iProps.add(JcrConstants.JCR_PREDECESSORS);
-        iProps.add(JcrConstants.JCR_SUCCESSORS);
-        iProps.add(JcrConstants.JCR_ISCHECKEDOUT);
-        iProps.add(JcrConstants.JCR_UUID);
-        ignoredProperties = Collections.unmodifiableSet(iProps);
-
-        Set<String> iNames = new HashSet<String>();
-        iNames.add("rep:policy");
-        ignoredNodeNames = Collections.unmodifiableSet(iNames);
     }
 
     @Override
-    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
+    public void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions options, OutputStream outputStream) throws DistributionException {
+
+        DistributionExportFilter filter = options.getFilter();
 
         Kryo kryo = new Kryo();
         kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
+        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer(filter.getPropertyFilter()));
         kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
-        String[] paths = request.getPaths();
+
         Output output = new Output(outputStream);
         LinkedList<Resource> resources = new LinkedList<Resource>();
-        for (String p : paths) {
-            Resource resource = resourceResolver.getResource(p);
+        for (DistributionExportFilter.TreeFilter nodeFilter : filter.getNodeFilters()) {
+            Resource resource = resourceResolver.getResource(nodeFilter.getPath());
             if (resource != null) {
-                addResource(request, resources, resource);
+                addResource(nodeFilter, resources, resource);
             }
         }
         kryo.writeObject(output, resources);
@@ -106,7 +87,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     public void importFromStream(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
         Kryo kryo = new Kryo();
         kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer());
+        kryo.addDefaultSerializer(Resource.class, new ResourceSerializer(null));
         kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
         try {
             Input input = new Input(stream);
@@ -124,6 +105,11 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isRequestFiltering() {
+        return false;
     }
 
     private void persistResource(@Nonnull ResourceResolver resourceResolver, Resource resource) throws PersistenceException {
@@ -156,6 +142,12 @@ public class KryoContentSerializer implements DistributionContentSerializer {
 
     private class ResourceSerializer extends Serializer<Resource> {
 
+        private final DistributionExportFilter.TreeFilter propertyFilter;
+
+        private ResourceSerializer(@Nullable DistributionExportFilter.TreeFilter propertyFilter) {
+            this.propertyFilter = propertyFilter;
+        }
+
         @Override
         public void write(Kryo kryo, Output output, Resource resource) {
             ValueMap valueMap = resource.getValueMap();
@@ -165,7 +157,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
 
             HashMap map = new HashMap<String, Object>();
             for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
-                if (!ignoredProperties.contains(entry.getKey())) {
+                if (propertyFilter == null || propertyFilter.matches(entry.getKey())) {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -234,44 +226,15 @@ public class KryoContentSerializer implements DistributionContentSerializer {
         }
     }
 
-    private void addResource(DistributionRequest request, LinkedList<Resource> resources, Resource resource) {
+    private void addResource(DistributionExportFilter.TreeFilter nodeFilter, LinkedList<Resource> resources, Resource resource) {
         resources.add(resource);
-        String path = resource.getPath();
-        boolean deep = request.isDeep(path);
-        String[] filters = request.getFilters(path);
-        if (deep) {
-            for (Resource child : resource.getChildren()) {
-                if (!ignoredNodeNames.contains(resource.getName())) {
-                    addResource(request, resources, child);
-                }
-            }
-        } else {
-            for (Resource child : resource.getChildren()) {
-                String childPath = child.getPath();
-                if (filtersAllow(filters, childPath) && !ignoredNodeNames.contains(child.getName())) {
-                    addResource(request, resources, child);
-                }
+        for (Resource child : resource.getChildren()) {
+            if (nodeFilter.matches(child.getPath())) {
+                addResource(nodeFilter, resources, child);
             }
         }
 
-    }
 
-    private boolean filtersAllow(String[] filters, String path) {
-        boolean allowed = false;
-        for (String pattern : filters) {
-            if (pattern.startsWith("+")) {
-                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
-                    allowed = true;
-                }
-            } else if (pattern.startsWith("-")) {
-                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
-                    allowed = false;
-                }
-            } else {
-                allowed = Pattern.compile(pattern).matcher(path).matches();
-            }
-        }
-        return allowed;
     }
 
 

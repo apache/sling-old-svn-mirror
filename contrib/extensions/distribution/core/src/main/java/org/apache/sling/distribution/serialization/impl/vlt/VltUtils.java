@@ -146,7 +146,7 @@ public class VltUtils {
         props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
         props.setProperty(VaultPackage.NAME_NAME, packageName);
         props.setProperty(VaultPackage.NAME_VERSION, packageVersion);
-    	props.setProperty(PackageProperties.NAME_USE_BINARY_REFERENCES, String.valueOf(useBinaryReferences));
+        props.setProperty(PackageProperties.NAME_USE_BINARY_REFERENCES, String.valueOf(useBinaryReferences));
         inf.setProperties(props);
 
         opts.setMetaInf(inf);
@@ -170,7 +170,6 @@ public class VltUtils {
             for (String currentRoot : packageRoots) {
                 boolean filtersHaveCommonRoot = true;
 
-
                 for (PathFilterSet filterSet : filterSets) {
                     String filterSetRoot = filterSet.getRoot();
 
@@ -184,16 +183,13 @@ public class VltUtils {
                     break;
                 }
             }
-
         }
-
 
         if (packageRoot == null || !packageRoot.startsWith("/")) {
             packageRoot = "/";
         }
 
         return packageRoot;
-
     }
 
     public static ImportOptions getImportOptions(AccessControlHandling aclHandling, ImportMode importMode, int autosaveThreshold) {
@@ -273,7 +269,7 @@ public class VltUtils {
     }
 
     public static File getTempFolder(String tempFolderPath) {
-        File directory = null;
+        File directory;
         try {
             directory = new File(tempFolderPath);
             if (!directory.exists() || !directory.isDirectory()) {
@@ -378,7 +374,7 @@ public class VltUtils {
     }
 
     private static PathFilterSet.Entry<DefaultPathFilter> extractPathPattern(String pattern) {
-        PathFilterSet.Entry<DefaultPathFilter> result = null;
+        PathFilterSet.Entry<DefaultPathFilter> result;
         if (pattern.startsWith("+")) {
             result = new PathFilterSet.Entry<DefaultPathFilter>(new DefaultPathFilter(pattern.substring(1)), true);
         } else if (pattern.startsWith("-")) {

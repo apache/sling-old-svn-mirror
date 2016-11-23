@@ -29,9 +29,9 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(metatype = true,
         label = "Apache Sling Distribution Packaging - Kryo Serialization Format Factory",
-        description = "OSGi configuration for Kryo formatas",
+        description = "OSGi configuration for Kryo serializers",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -70,8 +70,8 @@ public class KryoDistributionContentSerializerFactory implements DistributionCon
 
 
     @Override
-    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
-        format.exportToStream(resourceResolver, request, outputStream);
+    public void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions options, OutputStream outputStream) throws DistributionException {
+        format.exportToStream(resourceResolver, options, outputStream);
     }
 
     @Override
@@ -82,5 +82,10 @@ public class KryoDistributionContentSerializerFactory implements DistributionCon
     @Override
     public String getName() {
         return format.getName();
+    }
+
+    @Override
+    public boolean isRequestFiltering() {
+        return format.isRequestFiltering();
     }
 }

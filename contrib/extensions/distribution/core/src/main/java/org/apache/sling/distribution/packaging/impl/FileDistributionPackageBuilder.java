@@ -19,9 +19,7 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
-import static org.apache.sling.distribution.util.impl.DigestUtils.openDigestOutputStream;
-import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMessage;
-
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,9 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nonnull;
+import java.util.NavigableMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -40,9 +38,14 @@ import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportFilter;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.distribution.util.impl.DigestUtils.openDigestOutputStream;
+import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMessage;
 
 /**
  * A {@link DistributionPackageBuilder} based on files.
@@ -53,19 +56,24 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
     private final File tempDirectory;
     private final String digestAlgorithm;
     private final DistributionContentSerializer distributionContentSerializer;
+    private final NavigableMap<String, List<String>> nodeFilters;
+    private final NavigableMap<String, List<String>> propertyFilters;
 
     public FileDistributionPackageBuilder(String type,
                                           DistributionContentSerializer distributionContentSerializer,
                                           String tempFilesFolder,
-                                          String digestAlgorithm) {
+                                          String digestAlgorithm, String[] nodeFilters,
+                                          String[] propertyFilters) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
+        this.nodeFilters = VltUtils.parseFilters(nodeFilters);
+        this.propertyFilters = VltUtils.parseFilters(propertyFilters);
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.digestAlgorithm = digestAlgorithm;
     }
 
     @Override
-    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
+    protected DistributionPackage createPackageForAdd(@Nonnull ResourceResolver resourceResolver, @Nonnull final DistributionRequest request) throws DistributionException {
         DistributionPackage distributionPackage;
         OutputStream outputStream = null;
         String digestMessage = null;
@@ -80,7 +88,9 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
                 outputStream = new FileOutputStream(file);
             }
 
-            distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
+            final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters) : null;
+            DistributionExportOptions distributionExportOptions = new DistributionExportOptions(request, filter);
+            distributionContentSerializer.exportToStream(resourceResolver, distributionExportOptions, outputStream);
             outputStream.flush();
 
             if (digestAlgorithm != null) {
@@ -137,7 +147,6 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
             throws DistributionException {
         try {
             distributionContentSerializer.importFromStream(resourceResolver, inputStream);
-
             return true;
         } finally {
             IOUtils.closeQuietly(inputStream);

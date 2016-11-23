@@ -20,11 +20,16 @@ package org.apache.sling.distribution.serialization.impl.avro;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.List;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.serialization.DistributionExportFilter;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.junit.Before;
@@ -52,14 +57,39 @@ public class AvroContentSerializerTest {
     }
 
     @Test
-    public void testExtract() throws Exception {
+    public void testExtractDeep() throws Exception {
+        AvroContentSerializer avroContentSerializer = new AvroContentSerializer("avro");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, "/libs");
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        NavigableMap<String, List<String>> nodeFilters = new TreeMap<String, List<String>>();
+        NavigableMap<String, List<String>> propertyFilters = new TreeMap<String, List<String>>();
+        try {
+            DistributionExportFilter filter = DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters);
+            avroContentSerializer.exportToStream(resourceResolver, new DistributionExportOptions(request, filter), outputStream);
+            byte[] bytes = outputStream.toByteArray();
+            assertNotNull(bytes);
+            assertTrue(bytes.length > 0);
+        } finally {
+            outputStream.close();
+        }
+    }
+
+    @Test
+    public void testExtractShallow() throws Exception {
         AvroContentSerializer avroContentSerializer = new AvroContentSerializer("avro");
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/libs");
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        avroContentSerializer.exportToStream(resourceResolver, request, outputStream);
-        byte[] bytes = outputStream.toByteArray();
-        assertNotNull(bytes);
-        assertTrue(bytes.length > 0);
+        NavigableMap<String, List<String>> nodeFilters = new TreeMap<String, List<String>>();
+        NavigableMap<String, List<String>> propertyFilters = new TreeMap<String, List<String>>();
+        try {
+            DistributionExportFilter filter = DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters);
+            avroContentSerializer.exportToStream(resourceResolver, new DistributionExportOptions(request, filter), outputStream);
+            byte[] bytes = outputStream.toByteArray();
+            assertNotNull(bytes);
+            assertTrue(bytes.length > 0);
+        } finally {
+            outputStream.close();
+        }
     }
 
     @Test

@@ -25,9 +25,12 @@ import static org.apache.sling.distribution.util.impl.DigestUtils.readDigestMess
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -41,6 +44,8 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportFilter;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.serialization.impl.vlt.VltUtils;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
@@ -59,6 +64,8 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     private final MemoryUnit memoryUnit;
     private final boolean useOffHeapMemory;
     private final String digestAlgorithm;
+    private final NavigableMap<String, List<String>> nodeFilters;
+    private final NavigableMap<String, List<String>> propertyFilters;
 
     public ResourceDistributionPackageBuilder(String type,
                                               DistributionContentSerializer distributionContentSerializer,
@@ -66,9 +73,12 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
                                               int fileThreshold,
                                               MemoryUnit memoryUnit,
                                               boolean useOffHeapMemory,
-                                              String digestAlgorithm) {
+                                              String digestAlgorithm, String[] nodeFilters,
+                                              String[] propertyFilters) {
         super(type);
         this.distributionContentSerializer = distributionContentSerializer;
+        this.nodeFilters = VltUtils.parseFilters(nodeFilters);
+        this.propertyFilters = VltUtils.parseFilters(propertyFilters);
         this.packagesPath = PREFIX_PATH + type + "/data";
         this.tempDirectory = VltUtils.getTempFolder(tempFilesFolder);
         this.fileThreshold = fileThreshold;
@@ -90,9 +100,9 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
                 outputStream = new FileBackedMemoryOutputStream(fileThreshold, memoryUnit, useOffHeapMemory, tempDirectory, "distrpck-create-", "." + getType());
                 if (digestAlgorithm != null) {
                     digestStream = openDigestOutputStream(outputStream, digestAlgorithm);
-                    distributionContentSerializer.exportToStream(resourceResolver, request, digestStream);
+                    export(resourceResolver, request, digestStream);
                 } else {
-                    distributionContentSerializer.exportToStream(resourceResolver, request, outputStream);
+                    export(resourceResolver, request, outputStream);
                 }
                 outputStream.flush();
 
@@ -123,6 +133,12 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         }
 
         return distributionPackage;
+    }
+
+    private void export(@Nonnull ResourceResolver resourceResolver, @Nonnull final DistributionRequest request, OutputStream outputStream) throws DistributionException {
+        final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters) : null;
+        DistributionExportOptions distributionExportOptions = new DistributionExportOptions(request, filter);
+        distributionContentSerializer.exportToStream(resourceResolver, distributionExportOptions, outputStream);
     }
 
     @Override

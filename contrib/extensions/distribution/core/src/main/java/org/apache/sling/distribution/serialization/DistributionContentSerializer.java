@@ -23,7 +23,6 @@ import java.io.OutputStream;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 
 /**
@@ -34,24 +33,32 @@ public interface DistributionContentSerializer {
 
     /**
      * extracts the resources identified by the given request into the given outputStream
-     * @param resourceResolver the user resource resolver
-     * @param request a distribution request
+     * @param resourceResolver the resource resolver used to access resources to export
+     * @param exportOptions export options
      * @param outputStream the output stream
      * @throws DistributionException if extraction fails for some reason
      */
-    void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException;
+    void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions exportOptions,
+                        OutputStream outputStream) throws DistributionException;
 
     /**
      * imports the given stream
-     * @param resourceResolver the user resource resolver
-     * @param stream the stream to import
+     * @param resourceResolver the resource resolver used to write resources
+     * @param inputStream the stream to import
      * @throws DistributionException if importing fails for some reason
      */
-    void importFromStream(ResourceResolver resourceResolver, InputStream stream) throws DistributionException;
+    void importFromStream(ResourceResolver resourceResolver, InputStream inputStream) throws DistributionException;
 
     /**
      * retrieve the name of this content serializer
      * @return the name of this content serializer
      */
     String getName();
+
+    /**
+     * whether or not this {@link DistributionContentSerializer} can build package filters for including / excluding
+     * certain resources / attributes directly from a {@link org.apache.sling.distribution.DistributionRequest}
+     * @return {@code true} if it can build filters from a request, {@code false} otherwise
+     */
+    boolean isRequestFiltering();
 }
