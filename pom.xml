@@ -199,6 +199,8 @@
         <module>installer/factories/deploymentpck</module>
         <module>installer/factories/subsystem_base</module>
         <module>installer/factories/subsystems</module>
+        <module>installer/factories/model</module>
+        <module>installer/factories/packages</module>
         <module>installer/hc</module>
         <module>installer/it</module>
 
