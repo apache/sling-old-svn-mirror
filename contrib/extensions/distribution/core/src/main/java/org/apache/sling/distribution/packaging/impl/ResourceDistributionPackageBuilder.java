@@ -136,7 +136,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
     private void export(@Nonnull ResourceResolver resourceResolver, @Nonnull final DistributionRequest request, OutputStream outputStream) throws DistributionException {
-        final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters) : null;
+        final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? null : DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters);
         DistributionExportOptions distributionExportOptions = new DistributionExportOptions(request, filter);
         distributionContentSerializer.exportToStream(resourceResolver, distributionExportOptions, outputStream);
     }
