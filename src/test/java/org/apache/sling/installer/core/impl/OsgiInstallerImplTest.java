@@ -131,7 +131,8 @@ public class OsgiInstallerImplTest {
         assertDataFiles(A, B, C);
         
         installer.registerResources(SCHEME, mockBundles(C, D));
-        // TODO this is wrong, should be C, D
-        assertDataFiles(B, D);
+        // TODO B should be gone...not critical but suboptimal,
+        // we might need to review this private files logic more broadly
+        assertDataFiles(B, C, D);
     }
 }

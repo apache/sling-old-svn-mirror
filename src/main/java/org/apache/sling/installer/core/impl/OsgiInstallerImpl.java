@@ -504,17 +504,25 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      *  data file, or delete it if it's not needed anymore.
      */
     private void prepareToRemove(InternalResource existing, Collection<InternalResource> incoming) {
-        // check if we got the same resource
-        if ( existing.getPrivateCopyOfFile() != null ) {
-            boolean found = false;
+        if(existing.getPrivateCopyOfFile() != null) {
             for(final InternalResource r : incoming) {
-                if ( r.getURL().equals(existing.getURL()) && r.getPrivateCopyOfFile() == null ) {
-                    found = true;
-                    r.setPrivateCopyOfFile(existing.getPrivateCopyOfFile());
+                if(r.getURL().equals(existing.getURL())) {
+                    // We have a resource r in "incoming" that's the same as "existing"
+                    if(r.getPrivateCopyOfFile() == null) {
+                        // New one has not data file, use the existing one
+                        logger.debug("{} has no private data file, using the one from {}", r.getURL(), existing.getURL());
+                        r.setPrivateCopyOfFile(existing.getPrivateCopyOfFile());
+                        existing.setPrivateCopyOfFile(null);
+                    } else if(r.getPrivateCopyOfFile().equals(existing.getPrivateCopyOfFile())) {
+                        logger.debug("{} has same private data file as existing resource, keeping it", r.getURL());
+                        existing.setPrivateCopyOfFile(null);
+                    }
                     break;
                 }
             }
-            if ( !found ) {
+            
+            if(existing.getPrivateCopyOfFile() != null) {
+                logger.debug("Private data file not needed anymore, deleting it: {}", existing.getURL());
                 existing.getPrivateCopyOfFile().delete();
             }
         }
