@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
@@ -46,6 +47,10 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private final String configName;
     private final ConfigurationOverrideManager configurationOverrideManager;
     private final boolean configResourceCollection;
+    
+    private Set<String> propertyNamesCache;
+    private ValueMap valuesCache;
+    private ValueMap effectiveValuesCache;
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
@@ -93,38 +98,48 @@ final class ConfigurationDataImpl implements ConfigurationData {
 
     @Override
     public Set<String> getPropertyNames() {
-        Set<String> propertyNames = new HashSet<>();
-        if (configMetadata != null) {
-            propertyNames.addAll(configMetadata.getPropertyMetadata().keySet());
+        if (propertyNamesCache == null) {
+            propertyNamesCache = new HashSet<>();
+            if (configMetadata != null) {
+                propertyNamesCache.addAll(configMetadata.getPropertyMetadata().keySet());
+            }
+            if (resolvedConfigurationResource != null) {
+                propertyNamesCache.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
+            }
         }
-        if (resolvedConfigurationResource != null) {
-            propertyNames.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
-        }
-        return propertyNames;
+        return propertyNamesCache;
     }
 
     @Override
     public ValueMap getValues() {
-        if (writebackConfigurationResource != null) {
-            return ResourceUtil.getValueMap(writebackConfigurationResource);
+        if (valuesCache == null) {
+            if (writebackConfigurationResource != null) {
+                valuesCache = ResourceUtil.getValueMap(writebackConfigurationResource);
+            }
+            else {
+                valuesCache = ValueMap.EMPTY;
+            }
         }
-        return ValueMap.EMPTY;
+        return valuesCache;
     }
 
     @Override
     public ValueMap getEffectiveValues() {
-        Map<String,Object> props = new HashMap<>();
-        if (configMetadata != null) {
-            for (PropertyMetadata<?> propertyMetadata : configMetadata.getPropertyMetadata().values()) {
-                if (propertyMetadata.getDefaultValue() != null) {
-                    props.put(propertyMetadata.getName(), propertyMetadata.getDefaultValue());
+        if (effectiveValuesCache == null) {
+            Map<String,Object> props = new HashMap<>();
+            if (configMetadata != null) {
+                for (PropertyMetadata<?> propertyMetadata : configMetadata.getPropertyMetadata().values()) {
+                    if (propertyMetadata.getDefaultValue() != null) {
+                        props.put(propertyMetadata.getName(), propertyMetadata.getDefaultValue());
+                    }
                 }
             }
+            if (resolvedConfigurationResource != null) {
+                props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
+            }
+            effectiveValuesCache = new ValueMapDecorator(props);
         }
-        if (resolvedConfigurationResource != null) {
-            props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
-        }
-        return new ValueMapDecorator(props);
+        return effectiveValuesCache;
     }
 
     @SuppressWarnings("unchecked")
@@ -132,15 +147,16 @@ final class ConfigurationDataImpl implements ConfigurationData {
     public ValueInfo<?> getValueInfo(String propertyName) {
         PropertyMetadata propertyMetadata = configMetadata != null ? configMetadata.getPropertyMetadata().get(propertyName) : null;
         Object value;
-        ValueMap properties = ResourceUtil.getValueMap(resolvedConfigurationResource);
+        Object effectiveValue;
         if (propertyMetadata != null) {
-            value = properties.get(propertyName, propertyMetadata.getType());
+            value = getValues().get(propertyName, propertyMetadata.getType());
+            effectiveValue = getEffectiveValues().get(propertyName, ClassUtils.primitiveToWrapper(propertyMetadata.getType()));
         }
         else {
-            value = properties.get(propertyName);
+            value = getValues().get(propertyName);
+            effectiveValue = getEffectiveValues().get(propertyName);
         }
-        return new ValueInfoImpl(propertyName, value,
-                propertyMetadata,
+        return new ValueInfoImpl(propertyName, value, effectiveValue, propertyMetadata,
                 resolvedConfigurationResource,
                 writebackConfigurationResource,
                 configurationResourceInheritanceChain,
