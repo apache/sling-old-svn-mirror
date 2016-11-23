@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
@@ -459,37 +460,26 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     public void registerResources(final String scheme, final InstallableResource[] resources) {
         this.listener.start();
         try {
-            List<InternalResource> registeredResources = this.createResources(scheme, resources);
-            if ( registeredResources == null ) {
+            List<InternalResource> incomingResources = this.createResources(scheme, resources);
+            if ( incomingResources == null ) {
                 // create empty list to make processing easier
-                registeredResources = new ArrayList<InternalResource>();
+                incomingResources = new ArrayList<>();
             }
             logger.debug("Registered new resource scheme: {}", scheme);
             synchronized (this.resourcesLock) {
-                this.newResourcesSchemes.put(scheme, registeredResources);
+                this.newResourcesSchemes.put(scheme, incomingResources);
 
-                // now update resources and removed resources and remove all for this scheme!
+                // Update new/removed resources
                 final String prefix = scheme + ':';
-                // added resources
 
+                // newResources are the ones that arrived (via updateResources IIUC)
+                // since the last call to this method. Here we remove all newResources
+                // that match our prefix, as the incoming ones replace them
                 final Iterator<InternalResource> rsrcIter = this.newResources.iterator();
                 while ( rsrcIter.hasNext() ) {
                     final InternalResource rsrc = rsrcIter.next();
                     if ( rsrc.getURL().startsWith(prefix) ) {
-                        // check if we got the same resource
-                        if ( rsrc.getPrivateCopyOfFile() != null ) {
-                            boolean found = false;
-                            for(final InternalResource newRsrc : registeredResources) {
-                                if ( newRsrc.getURL().equals(rsrc.getURL()) && newRsrc.getPrivateCopyOfFile() == null ) {
-                                    found = true;
-                                    newRsrc.setPrivateCopyOfFile(rsrc.getPrivateCopyOfFile());
-                                    break;
-                                }
-                            }
-                            if ( !found ) {
-                                rsrc.getPrivateCopyOfFile().delete();
-                            }
-                        }
+                        prepareToRemove(rsrc, incomingResources);
                         rsrcIter.remove();
                     }
                 }
@@ -509,7 +499,27 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             this.closeInputStreams(resources);
         }
     }
-
+    
+    /** When a resource from "incoming" is about to replace "existing", we might need to transfer their private
+     *  data file, or delete it if it's not needed anymore.
+     */
+    private void prepareToRemove(InternalResource existing, Collection<InternalResource> incoming) {
+        // check if we got the same resource
+        if ( existing.getPrivateCopyOfFile() != null ) {
+            boolean found = false;
+            for(final InternalResource r : incoming) {
+                if ( r.getURL().equals(existing.getURL()) && r.getPrivateCopyOfFile() == null ) {
+                    found = true;
+                    r.setPrivateCopyOfFile(existing.getPrivateCopyOfFile());
+                    break;
+                }
+            }
+            if ( !found ) {
+                existing.getPrivateCopyOfFile().delete();
+            }
+        }
+    }
+    
     private void mergeNewlyRegisteredResources() {
         synchronized ( this.resourcesLock ) {
             for(final Map.Entry<String, List<InternalResource>> entry : this.newResourcesSchemes.entrySet()) {
