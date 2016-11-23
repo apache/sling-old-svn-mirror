@@ -24,6 +24,9 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.Constants;
 
+/**
+ * Test {@link ConfigurationManagerImpl} with custom persistence.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationManagerImplCustomPersistenceTest extends ConfigurationManagerImplTest {
     

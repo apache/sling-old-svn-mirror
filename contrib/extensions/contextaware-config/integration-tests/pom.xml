@@ -246,5 +246,17 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
+    
+    <profiles>
+        <!-- Start on port 8080 and keep running -->
+        <profile>
+            <id>run8080</id>
+            <properties>
+                <launchpad.keep.running>true</launchpad.keep.running>
+                <launchpad.debug>true</launchpad.debug>
+                <http.port>8080</http.port>
+            </properties>            
+        </profile>
+    </profiles>
+    
 </project>

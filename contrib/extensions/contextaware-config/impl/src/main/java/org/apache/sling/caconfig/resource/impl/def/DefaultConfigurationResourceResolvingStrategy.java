@@ -100,10 +100,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             fieldOption=FieldOption.REPLACE)
     private volatile List<CollectionInheritanceDecider> collectionInheritanceDeciders;
 
-    Config getConfiguration() {
-        return this.config;
-    }
-
     @Activate
     private void activate(final Config config) {
         this.config = config;

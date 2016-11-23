@@ -38,3 +38,17 @@
 
   org.apache.sling.jcr.base.internal.LoginAdminWhitelist
     whitelist.bundles.additional=["org.apache.sling.junit.core"]
+
+  org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-sling-caconfig
+    user.mapping=[
+      "org.apache.sling.caconfig.impl\=sling-caconfig"
+    ]
+
+[:repoinit]
+    create service user sling-caconfig
+
+    create path (sling:Folder) /conf
+
+    set ACL for sling-caconfig
+        allow   jcr:read    on /
+    end
