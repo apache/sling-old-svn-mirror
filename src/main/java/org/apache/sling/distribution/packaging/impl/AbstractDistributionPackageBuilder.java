@@ -26,9 +26,13 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
@@ -64,7 +68,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         DistributionPackage distributionPackage;
 
         request = VltUtils.sanitizeRequest(request);
-
 
         if (DistributionRequestType.ADD.equals(request.getRequestType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
@@ -197,9 +200,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
-
     }
-
 
     @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
@@ -221,6 +222,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
+            // this is needed in order to avoid loops in sync case when there're deletions, otherwise it could work with sling resources
             DistributionJcrUtils.setDoNotDistribute(session);
         } else {
             throw new RepositoryException("could not obtain a session from calling user " + resourceResolver.getUserID());
@@ -255,5 +257,63 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     @CheckForNull
     protected abstract DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);
+
+    /**
+     * extract the set of paths of resources that should be included in the package
+     * @param request the request
+     * @param resourceResolver the resource resolver used to browse the resource tree
+     * @return a set of paths
+     */
+    protected Set<String> readPaths(DistributionRequest request, ResourceResolver resourceResolver) {
+        Set<String> paths = new HashSet<String>();
+
+        for (String path : request.getPaths()) {
+            paths.add(path);
+            Resource resource = resourceResolver.getResource(path);
+            if (request.isDeep(path)) {
+                addSubtree(paths, resource);
+            } else {
+                for (Resource child : resource.getChildren()) {
+                    addFilteredPaths(request, child, paths);
+                }
+            }
+        }
+        return paths;
+    }
+
+    private void addFilteredPaths(DistributionRequest request, Resource resource, Set<String> paths) {
+        String path = resource.getPath();
+        if (filtersAllow(request.getFilters(path), path)) {
+            paths.add(path);
+            for (Resource child : resource.getChildren()) {
+                addFilteredPaths(request, child, paths);
+            }
+        }
+    }
+
+    private boolean filtersAllow(String[] filters, String path) {
+        boolean allowed = false;
+        for (String pattern : filters) {
+            if (pattern.startsWith("+")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = true;
+                }
+            } else if (pattern.startsWith("-")) {
+                if (Pattern.compile(pattern.substring(1)).matcher(path).matches()) {
+                    allowed = false;
+                }
+            } else {
+                allowed = Pattern.compile(pattern).matcher(path).matches();
+            }
+        }
+        return allowed;
+    }
+
+    private void addSubtree(Set<String> paths, Resource resource) {
+        for (Resource r : resource.getChildren()) {
+            paths.add(r.getPath());
+            addSubtree(paths, r);
+        }
+    }
 
 }

@@ -40,10 +40,10 @@ import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,14 +83,14 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     }
 
     @Override
-    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
+    public void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions exportOptions, OutputStream outputStream) throws DistributionException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
             String packageGroup = PACKAGE_GROUP;
             String packageName = TYPE + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(request, nodeFilters, propertyFilters);
+            WorkspaceFilter filter = VltUtils.createFilter(exportOptions.getRequest(), nodeFilters, propertyFilters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
@@ -171,5 +171,10 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isRequestFiltering() {
+        return true;
     }
 }
