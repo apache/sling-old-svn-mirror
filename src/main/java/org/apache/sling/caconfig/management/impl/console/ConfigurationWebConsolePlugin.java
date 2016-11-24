@@ -49,18 +49,21 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Web console plugin to test configuration resolution.
+ */
 @Component(service=Servlet.class,
-           property={Constants.SERVICE_DESCRIPTION + "=Apache Sling Context-Aware Configuration Resolver Web Console Plugin",
-                   WebConsoleConstants.PLUGIN_LABEL + "=" + ConfigurationResolverWebConsolePlugin.LABEL,
-                   WebConsoleConstants.PLUGIN_TITLE + "=" + ConfigurationResolverWebConsolePlugin.TITLE,
+           property={Constants.SERVICE_DESCRIPTION + "=Apache Sling Context-Aware Configuration Web Console Plugin",
+                   WebConsoleConstants.PLUGIN_LABEL + "=" + ConfigurationWebConsolePlugin.LABEL,
+                   WebConsoleConstants.PLUGIN_TITLE + "=" + ConfigurationWebConsolePlugin.TITLE,
                    WebConsoleConstants.PLUGIN_CATEGORY + "=Sling"})
 @SuppressWarnings("serial")
-public class ConfigurationResolverWebConsolePlugin extends AbstractWebConsolePlugin {
+public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
 
-    public static final String LABEL = "slingcaconfigresolver";
+    public static final String LABEL = "slingcaconfig";
     public static final String TITLE = "Context-Aware Configuration";
     
-    private static final Logger log = LoggerFactory.getLogger(ConfigurationResolverWebConsolePlugin.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationWebConsolePlugin.class);
     
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ResourceResolverFactory resolverFactory;
