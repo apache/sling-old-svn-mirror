@@ -22,7 +22,7 @@ import javax.servlet.ServletRequestListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverProvider;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
