@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+/** TODO move this to a testing utilities module? */
 public class ConfigAnnotationUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigAnnotationUtil.class);
