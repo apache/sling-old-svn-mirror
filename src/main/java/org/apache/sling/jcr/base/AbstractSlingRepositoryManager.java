@@ -416,6 +416,10 @@ public abstract class AbstractSlingRepositoryManager {
         });
         this.repoInitializerTracker.open();
 
+        // If allowLoginAdministrativeForBundle is overridden we assume we don't need
+        // a LoginAdminWhitelist service - that's the case if the derived class
+        // implements its own strategy and the LoginAdminWhitelist interface is
+        // not exported by this bundle anyway, so cannot be implemented differently.
         boolean enableWhitelist = !isAllowLoginAdministrativeForBundleOverridden();
         final CountDownLatch waitForWhitelist = new CountDownLatch(enableWhitelist ? 1 : 0);
         if (enableWhitelist) {
