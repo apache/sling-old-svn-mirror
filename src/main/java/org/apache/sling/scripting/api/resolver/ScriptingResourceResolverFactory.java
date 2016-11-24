@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.api;
+package org.apache.sling.scripting.api.resolver;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -37,6 +37,9 @@ public interface ScriptingResourceResolverFactory {
      * ResourceResolver} should not be closed by consumers (calling {@link ResourceResolver#close} doesn't do anything), since this
      * service will handle the closing operation automatically. The {@code ResourceResolver} will be shared between scripting
      * dependencies that render parts of the response for the same request.</p>
+     *
+     * <p><b>NOTE:</b> Usage of this {@link ResourceResolver} outside of a Servlet Request API context might lead to improper cleaning
+     * (e.g. reusing the same resolver for multiple threads).</p>
      */
     ResourceResolver getRequestScopedResourceResolver();
 
