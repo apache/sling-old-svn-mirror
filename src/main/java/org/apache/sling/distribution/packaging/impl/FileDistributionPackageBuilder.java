@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.packaging.impl;
 
+import static java.util.UUID.randomUUID;
+
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -81,7 +83,7 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
         final File file;
 
         try {
-            file = File.createTempFile("distrpck-create-" + System.nanoTime(), "." + getType(), tempDirectory);
+            file = File.createTempFile("distrpck-create-" + randomUUID(), "." + getType(), tempDirectory);
             if (digestAlgorithm != null) {
                 outputStream = openDigestOutputStream(new FileOutputStream(file), digestAlgorithm);
             } else {
