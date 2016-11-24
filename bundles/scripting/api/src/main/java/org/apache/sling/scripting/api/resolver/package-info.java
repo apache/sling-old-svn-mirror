@@ -14,7 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-@Version("2.3.0")
-package org.apache.sling.scripting.api;
+/**
+ * <p>The {@code org.apache.sling.scripting.api.resolver} package provides a unified API for scripting bundles that need to perform script
+ * resolution across the {@link org.apache.sling.api.resource.Resource} space.</p>
+ *
+ * <p>Some API methods might indicate that they are <i>request-bound</i>. In this case it should be noted that <i>usage outside of the
+ * context of a Servlet API Request might lead to improper cleaning of objects whose life-cycle should not be longer than the request to
+ * which they're bound to (for example per-thread objects)</i>.</p>
+ *
+ * <p>This package depends on the {@link org.apache.sling.api.resource} API, version 2.9.0 (bundle {@code org.apache.sling.api}, version
+ * 2.11.0).</p>
+ */
+@Version("1.0.0")
+package org.apache.sling.scripting.api.resolver;
 
 import org.osgi.annotation.versioning.Version;
