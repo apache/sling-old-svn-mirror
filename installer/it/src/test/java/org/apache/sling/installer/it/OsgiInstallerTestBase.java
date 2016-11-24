@@ -74,7 +74,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
 	public final static String JAR_EXT = ".jar";
 	private volatile int packageRefreshEventsCount;
-	private volatile ServiceTracker configAdminTracker;
+	private volatile ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> configAdminTracker;
 
 	protected volatile OsgiInstaller installer;
 
@@ -102,11 +102,10 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     /**
      * Helper method to get a service of the given type
      */
-    @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
-    	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
+    	final ServiceReference<T> ref = bundleContext.getServiceReference(clazz);
     	assertNotNull("getService(" + clazz.getName() + ") must find ServiceReference", ref);
-    	final T result = (T)(bundleContext.getService(ref));
+    	final T result = bundleContext.getService(ref);
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
     }
@@ -120,7 +119,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
     @Before
     public void setup() {
-        configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+        configAdminTracker = new ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>(bundleContext, ConfigurationAdmin.class, null);
         configAdminTracker.open();
     }
 
@@ -444,7 +443,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
     	boolean isPresent;
     	do {
-    		result = (ConfigurationAdmin)configAdminTracker.getService();
+    		result = configAdminTracker.getService();
     		isPresent = result != null;
     		if ( shouldBePresent == isPresent ) {
     		    return result;
