@@ -23,6 +23,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverProvider;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,9 +34,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-        name = "Apache Sling Scripting Resource Resolver Factory",
         service = {ScriptingResourceResolverProvider.class, ServletRequestListener.class},
-        configurationPid = "org.apache.sling.scripting.core.impl.ScriptingResourceResolverProviderImpl"
+        property = {
+                Constants.SERVICE_DESCRIPTION + "=Apache Sling Scripting Resource Resolver Provider",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+        }
+
 )
 @Designate(
         ocd = ScriptingResourceResolverProviderImpl.Configuration.class
@@ -51,8 +55,8 @@ public class ScriptingResourceResolverProviderImpl implements ScriptingResourceR
     private ResourceResolverFactory rrf;
 
     @ObjectClassDefinition(
-            name = "Apache Sling Scripting Resource Resolver Factory Configuration",
-            description = "The Apache Sling Scripting Resource Resolver Factory can be used by scripting bundles to obtain resource " +
+            name = "Apache Sling Scripting Resource Resolver Provider Configuration",
+            description = "The Apache Sling Scripting Resource Resolver Provider can be used by scripting bundles to obtain resource " +
                     "resolvers for solving scripting dependencies."
     )
     @interface Configuration {
