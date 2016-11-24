@@ -24,10 +24,15 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionExportFilter;
 import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.testing.resourceresolver.MockHelper;
@@ -80,4 +85,76 @@ public class KryoContentSerializerTest {
         InputStream inputStream = getClass().getResourceAsStream("/kryo/dp.kryo");
         kryoContentSerializer.importFromStream(resourceResolver, inputStream);
     }
+
+    @Test
+    public void testBuildAndInstallOnSingleDeepPath() throws Exception {
+        String type = "kryo";
+        DistributionContentSerializer contentSerializer = new KryoContentSerializer(type);
+        String tempFilesFolder = "target";
+        String[] nodeFilters = new String[0];
+        String[] propertyFilters = new String[0];
+        DistributionPackageBuilder packageBuilder = new FileDistributionPackageBuilder(type, contentSerializer,
+                tempFilesFolder, null, nodeFilters, propertyFilters);
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, "/libs");
+        DistributionPackage distributionPackage = packageBuilder.createPackage(resourceResolver, request);
+
+        Resource resource = resourceResolver.getResource("/libs/sub");
+        resourceResolver.delete(resource);
+        resourceResolver.commit();
+
+        assertTrue(packageBuilder.installPackage(resourceResolver, distributionPackage));
+
+        assertNotNull(resourceResolver.getResource("/libs"));
+        assertNotNull(resourceResolver.getResource("/libs/sub"));
+        assertNotNull(resourceResolver.getResource("/libs/sameLevel"));
+    }
+
+    @Test
+    public void testBuildAndInstallOnSingleShallowPath() throws Exception {
+        String type = "kryo";
+        DistributionContentSerializer contentSerializer = new KryoContentSerializer(type);
+        String tempFilesFolder = "target";
+        String[] nodeFilters = new String[0];
+        String[] propertyFilters = new String[0];
+        DistributionPackageBuilder packageBuilder = new FileDistributionPackageBuilder(type, contentSerializer,
+                tempFilesFolder, null, nodeFilters, propertyFilters);
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/libs/sub");
+        DistributionPackage distributionPackage = packageBuilder.createPackage(resourceResolver, request);
+
+        Resource resource = resourceResolver.getResource("/libs/sub");
+        resourceResolver.delete(resource);
+        resourceResolver.commit();
+
+        assertTrue(packageBuilder.installPackage(resourceResolver, distributionPackage));
+
+        assertNotNull(resourceResolver.getResource("/libs"));
+        assertNotNull(resourceResolver.getResource("/libs/sub"));
+        assertNotNull(resourceResolver.getResource("/libs/sameLevel"));
+    }
+
+    @Test
+    public void testBuildAndInstallOnMultipleShallowPaths() throws Exception {
+        String type = "kryo";
+        DistributionContentSerializer contentSerializer = new KryoContentSerializer(type);
+        String tempFilesFolder = "target";
+        String[] nodeFilters = new String[0];
+        String[] propertyFilters = new String[0];
+        DistributionPackageBuilder packageBuilder = new FileDistributionPackageBuilder(type, contentSerializer,
+                tempFilesFolder, null, nodeFilters, propertyFilters);
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/libs/sub", "/libs/sameLevel");
+        DistributionPackage distributionPackage = packageBuilder.createPackage(resourceResolver, request);
+
+        Resource resource = resourceResolver.getResource("/libs/sub");
+        resourceResolver.delete(resource);
+        resource = resourceResolver.getResource("/libs/sameLevel");
+        resourceResolver.delete(resource);
+        resourceResolver.commit();
+
+        assertTrue(packageBuilder.installPackage(resourceResolver, distributionPackage));
+
+        assertNotNull(resourceResolver.getResource("/libs"));
+        assertNotNull(resourceResolver.getResource("/libs/sub"));
+        assertNotNull(resourceResolver.getResource("/libs/sameLevel"));
+    }
+
 }

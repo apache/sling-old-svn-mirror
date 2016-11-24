@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.serialization;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,10 +43,12 @@ public class DistributionExportFilter {
         // can only be constructed by #createFilter
     }
 
+    @Nonnull
     public Set<TreeFilter> getNodeFilters() {
         return nodeFilters;
     }
 
+    @Nonnull
     public TreeFilter getPropertyFilter() {
         return propertyFilter;
     }
@@ -157,6 +160,7 @@ public class DistributionExportFilter {
             excludes.add(path);
         }
 
+        @Nonnull
         public String getPath() {
             return path;
         }
