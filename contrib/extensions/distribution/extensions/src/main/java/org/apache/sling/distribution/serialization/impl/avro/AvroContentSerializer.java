@@ -172,12 +172,7 @@ public class AvroContentSerializer implements DistributionContentSerializer {
         DataFileReader<AvroShallowResource> dataFileReader = new DataFileReader<AvroShallowResource>(new SeekableByteArrayInput(bytes), datumReader);
         Collection<AvroShallowResource> avroResources = new LinkedList<AvroShallowResource>();
         try {
-            AvroShallowResource avroResource = null;
-            while (dataFileReader.hasNext()) {
-// Reuse avroResource object by passing it to next(). This saves us from
-// allocating and garbage collecting many objects for files with
-// many items.
-                avroResource = dataFileReader.next(avroResource);
+            for (AvroShallowResource avroResource : dataFileReader) {
                 avroResources.add(avroResource);
             }
         } finally {
