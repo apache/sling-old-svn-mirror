@@ -88,7 +88,7 @@ public class FileDistributionPackageBuilder extends AbstractDistributionPackageB
                 outputStream = new FileOutputStream(file);
             }
 
-            final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters) : null;
+            final DistributionExportFilter filter = distributionContentSerializer.isRequestFiltering() ? null : DistributionExportFilter.createFilter(request, nodeFilters, propertyFilters);
             DistributionExportOptions distributionExportOptions = new DistributionExportOptions(request, filter);
             distributionContentSerializer.exportToStream(resourceResolver, distributionExportOptions, outputStream);
             outputStream.flush();
