@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -87,7 +88,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	/** Counters, used for statistics and testing */
-	private final long [] counters = new long[COUNTERS_COUNT];
+	private final AtomicLongArray counters = new AtomicLongArray(COUNTERS_COUNT);
 	public static final int SCAN_FOLDERS_COUNTER = 0;
     public static final int UPDATE_FOLDERS_LIST_COUNTER = 1;
     public static final int RUN_LOOP_COUNTER = 2;
@@ -320,7 +321,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 }
             }
             logger.info("Background thread {} done", Thread.currentThread().getName());
-            counters[RUN_LOOP_COUNTER] = -1;
+            counters.set(RUN_LOOP_COUNTER, -1);
         }
 
         public InstallerConfig getConfiguration() {
@@ -528,9 +529,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     session.refresh(false);
                     didRefresh = true;
                 }
-                counters[SCAN_FOLDERS_COUNTER]++;
-                
-                new RuntimeException("SCAN_FOLDERS_COUNTER is now " + counters[SCAN_FOLDERS_COUNTER]).printStackTrace();
+                counters.incrementAndGet(SCAN_FOLDERS_COUNTER);
                 
                 final WatchedFolder.ScanResult sr = wf.scan();
                 boolean toDo = false;
@@ -556,7 +555,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     didRefresh = true;
                 }
                 updateFoldersListTimer.reset();
-                counters[UPDATE_FOLDERS_LIST_COUNTER]++;
+                counters.incrementAndGet(UPDATE_FOLDERS_LIST_COUNTER);
                 final List<String> toRemove = updateFoldersList(cfg, session);
                 if ( toRemove.size() > 0 ) {
                     logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
@@ -579,7 +578,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 }
             }
         }
-        counters[RUN_LOOP_COUNTER]++;
+        counters.incrementAndGet(RUN_LOOP_COUNTER);
     }
 
     boolean scanningIsPaused(final InstallerConfig cfg, final Session session) throws RepositoryException {
@@ -599,8 +598,8 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         return false;
     }
 
-    long [] getCounters() {
-        return counters;
+    long getCounterValue(int key) {
+        return counters.get(key);
     }
 
     /**
