@@ -27,8 +27,8 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.sling.caconfig.resource.spi.CollectionInheritanceDecider;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
@@ -48,15 +48,14 @@ import org.osgi.service.component.annotations.Component;
 /**
  * Web console configuration printer.
  */
-@Component(service=ConfigurationPrinter.class,
-property={Constants.SERVICE_DESCRIPTION + "=Apache Sling Context-Aware Configuration Resolver Console Configuration Printer",
-        WebConsoleConstants.PLUGIN_LABEL + "=" + CAConfigConfigurationPrinter.LABEL,
-        WebConsoleConstants.PLUGIN_TITLE + "=" + CAConfigConfigurationPrinter.TITLE,
-        WebConsoleConstants.CONFIG_PRINTER_MODES + "=" + ConfigurationPrinter.MODE_ALWAYS})
-@SuppressWarnings("deprecation")
-public class CAConfigConfigurationPrinter implements ConfigurationPrinter {
+@Component(service=InventoryPrinter.class,
+property={Constants.SERVICE_DESCRIPTION + "=Apache Sling Context-Aware Configuration Resolver Console Inventory Printer",
+        InventoryPrinter.NAME + "=" + CAConfigInventoryPrinter.NAME,
+        InventoryPrinter.TITLE + "=" + CAConfigInventoryPrinter.TITLE,
+        InventoryPrinter.FORMAT + "=TEXT"})
+public class CAConfigInventoryPrinter implements InventoryPrinter {
 
-    public static final String LABEL = "slingcaconfig";
+    public static final String NAME = "slingcaconfig";
     public static final String TITLE = "Sling Context-Aware Configuration";
     
     private BundleContext bundleContext;
@@ -67,12 +66,11 @@ public class CAConfigConfigurationPrinter implements ConfigurationPrinter {
     }
     
     @Override
-    public String getTitle() {
-        return TITLE;
-    }
+    public void print(PrintWriter pw, Format format, boolean isZip) {
+        if (format != Format.TEXT) {
+            return;
+        }
 
-    @Override
-    public void printConfiguration(PrintWriter pw) {
         printSPISection(pw, ContextPathStrategy.class, "Context Path Strategies");
         printSPISection(pw, ConfigurationResourceResolvingStrategy.class, "Configuration Resource Resolving Strategies");
         printSPISection(pw, CollectionInheritanceDecider.class, "Collection Inheritance Deciders");

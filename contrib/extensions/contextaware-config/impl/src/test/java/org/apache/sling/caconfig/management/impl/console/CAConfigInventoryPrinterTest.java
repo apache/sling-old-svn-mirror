@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.felix.inventory.Format;
 import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
@@ -46,7 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CAConfigConfigurationPrinterTest {
+public class CAConfigInventoryPrinterTest {
     
     private static final String SAMPLE_CONFIG_NAME = "sample.config.Name";
     private static final String SAMPLE_OVERRIDE_STRING = "[/sample]override/string='abc'";
@@ -59,7 +60,7 @@ public class CAConfigConfigurationPrinterTest {
     @Mock
     private ConfigurationOverrideProvider configurationOverrideProvider;
     
-    private CAConfigConfigurationPrinter underTest;
+    private CAConfigInventoryPrinter underTest;
     
     @Before
     public void setUp() {
@@ -67,7 +68,7 @@ public class CAConfigConfigurationPrinterTest {
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         context.registerService(ConfigurationOverrideProvider.class, configurationOverrideProvider);
         ConfigurationTestUtils.registerConfigurationResolver(context);
-        underTest = context.registerInjectActivateService(new CAConfigConfigurationPrinter());
+        underTest = context.registerInjectActivateService(new CAConfigInventoryPrinter());
     
         ConfigurationMetadata configMetadata = new ConfigurationMetadata(SAMPLE_CONFIG_NAME);
         configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
@@ -83,7 +84,7 @@ public class CAConfigConfigurationPrinterTest {
     @Test
     public void testPrintConfiguration() {
         StringWriter sw = new StringWriter();
-        underTest.printConfiguration(new PrintWriter(sw));
+        underTest.print(new PrintWriter(sw), Format.TEXT, false);
         String result = sw.toString();
         
         // test existance of some strategy names
