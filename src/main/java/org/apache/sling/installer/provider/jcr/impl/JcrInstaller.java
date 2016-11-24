@@ -209,7 +209,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
             try {
                 // open session
-                session = repository.loginAdministrative(repository.getDefaultWorkspace());
+                session = repository.loginService(repository.getDefaultWorkspace(), null);
 
                 for (final String path : cfg.getRoots()) {
                     listeners.add(new RootFolderListener(session, path, updateFoldersListTimer, cfg));
@@ -417,7 +417,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         Session s = null;
 
         try {
-            s = repository.loginAdministrative(repository.getDefaultWorkspace());
+            s = repository.loginService(null, repository.getDefaultWorkspace());
             if (!s.itemExists(rootPath) || !s.getItem(rootPath).isNode() ) {
                 logger.info("Bundles root node {} not found, ignored", rootPath);
             } else {
@@ -529,6 +529,9 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     didRefresh = true;
                 }
                 counters[SCAN_FOLDERS_COUNTER]++;
+                
+                new RuntimeException("SCAN_FOLDERS_COUNTER is now " + counters[SCAN_FOLDERS_COUNTER]).printStackTrace();
+                
                 final WatchedFolder.ScanResult sr = wf.scan();
                 boolean toDo = false;
                 if ( sr.toAdd.size() > 0 ) {
@@ -643,7 +646,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
             logger.debug("Removing artifact at {}", path);
             Session session = null;
             try {
-                session = this.repository.loginAdministrative(null);
+                session = this.repository.loginService(null, null);
                 if ( session.itemExists(path) ) {
                     session.getItem(path).remove();
                     session.save();
@@ -720,7 +723,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
         Session session = null;
         try {
-            session = this.repository.loginAdministrative(null);
+            session = this.repository.loginService(null, null);
 
             final String path;
             boolean resourceIsMoved = true;
