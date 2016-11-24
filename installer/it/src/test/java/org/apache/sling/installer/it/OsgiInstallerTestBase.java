@@ -61,10 +61,10 @@ import org.osgi.framework.Version;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for OsgiInstaller testing */
@@ -184,8 +184,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
 
-        final PackageAdmin pa = getService(PackageAdmin.class);
-        pa.refreshPackages(null);
+        bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkWiring.class).refreshBundles(null);
 
         try {
             while(true) {
