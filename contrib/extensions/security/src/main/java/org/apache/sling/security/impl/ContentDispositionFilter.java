@@ -33,52 +33,23 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true,
-description = "Request filter adding Content Disposition attachment for certain paths/content types",
-label=" Apache Sling Content Disposition Filter")
-@Service(value = Filter.class)
-@Properties({
-        @Property(name = "sling.filter.scope", value = { "request" }, propertyPrivate = true),
-        @Property(name = "service.ranking", intValue = -25000, propertyPrivate = true) })
+@Component(property={"sling.filter.scope=request", "service.ranking:Integer=25000"})
+@Designate(ocd=ContentDispositionFilterConfiguration.class)
 public class ContentDispositionFilter implements Filter {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    @Property(label = "Content Disposition Paths",
-            description = "These paths are checked by the filter. "+
-                    "Each entry is of the form 'path [ \":\" CSV of excluded content types ]'. " +
-                    "Invalid entries are logged and ignored."
-                    , unbounded = PropertyUnbounded.ARRAY, value = { "" })
-    private static final String PROP_CONTENT_DISPOSTION_PATHS = "sling.content.disposition.paths";
-
-    @Property(label = "Content Disposition Excluded Paths",
-            description = "These paths are excluded by the filter. "+
-                    "Each entry is of the form 'path'. "
-                    , unbounded = PropertyUnbounded.ARRAY, value = { "" })
-    private static final String PROP_CONTENT_DISPOSTION_EXCLUDED_PATHS = "sling.content.disposition.excluded.paths";
-
-    private static final boolean DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = false;
-    @Property(boolValue = DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS ,
-              label = "Enable Content Disposition for all paths",
-              description ="This flag controls whether to enable" +
-                      " Content Disposition for all paths, except for the excluded paths defined by sling.content.disposition.excluded.paths")
-    private static final String PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS = "sling.content.disposition.all.paths";
 
     /**
      * Set of paths
@@ -97,14 +68,14 @@ public class ContentDispositionFilter implements Filter {
     private boolean enableContentDispositionAllPaths;
 
     @Activate
-    private void activate(final Map<String, Object> props) {
-        String[] contentDispostionProps = PropertiesUtil.toStringArray(props.get(PROP_CONTENT_DISPOSTION_PATHS));
+    private void activate(ContentDispositionFilterConfiguration configuration) {
+        String[] contentDispositionPathsConfiguredValue = configuration.sling_content_disposition_paths();
 
         Set<String> paths = new HashSet<String>();
         List<String> pfxs = new ArrayList<String>();
         Map<String, Set<String>> contentTypesMap = new HashMap<String, Set<String>>();
 
-        for (String path : contentDispostionProps) {
+        for (String path : contentDispositionPathsConfiguredValue) {
             path = path.trim();
             if (path.length() > 0) {
                 int idx = path.indexOf('*');
@@ -112,7 +83,7 @@ public class ContentDispositionFilter implements Filter {
 
                 if (colonIdx > -1 && colonIdx < idx) {
                     // ':'  in paths is not allowed
-                    logger.info("':' in paths is not allowed.");
+                    logger.info("wildcard ('*') in content type is not allowed, but found content type with value '{}'", path.substring(colonIdx));
                 } else {
                     String p = null;
                     if (idx >= 0) {
@@ -145,10 +116,10 @@ public class ContentDispositionFilter implements Filter {
         contentDispositionPathsPfx = pfxs.toArray(new String[pfxs.size()]);
         contentTypesMapping = contentTypesMap.isEmpty()?Collections.<String, Set<String>>emptyMap(): contentTypesMap;
 
-        enableContentDispositionAllPaths =  PropertiesUtil.toBoolean(props.get(PROP_ENABLE_CONTENT_DISPOSTION_ALL_PATHS),DEFAULT_ENABLE_CONTENT_DISPOSTION_ALL_PATHS);
+        enableContentDispositionAllPaths =  configuration.sling_content_disposition_all_paths();
 
 
-        String[] contentDispostionExcludedPathsArray = PropertiesUtil.toStringArray(props.get(PROP_CONTENT_DISPOSTION_EXCLUDED_PATHS));
+        String[] contentDispostionExcludedPathsArray = configuration.sling_content_disposition_excluded_paths();
 
         contentDispositionExcludedPaths = new HashSet<String>(Arrays.asList(contentDispostionExcludedPathsArray));
 
