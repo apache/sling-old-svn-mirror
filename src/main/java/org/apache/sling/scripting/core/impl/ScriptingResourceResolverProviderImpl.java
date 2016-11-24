@@ -22,7 +22,7 @@ import javax.servlet.ServletRequestListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverFactory;
+import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,15 +34,15 @@ import org.slf4j.LoggerFactory;
 
 @Component(
         name = "Apache Sling Scripting Resource Resolver Factory",
-        service = {ScriptingResourceResolverFactory.class, ServletRequestListener.class},
-        configurationPid = "org.apache.sling.scripting.core.impl.ScriptingResourceResolverFactoryImpl"
+        service = {ScriptingResourceResolverProvider.class, ServletRequestListener.class},
+        configurationPid = "org.apache.sling.scripting.core.impl.ScriptingResourceResolverProviderImpl"
 )
 @Designate(
-        ocd = ScriptingResourceResolverFactoryImpl.Configuration.class
+        ocd = ScriptingResourceResolverProviderImpl.Configuration.class
 )
-public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceResolverFactory, ServletRequestListener {
+public class ScriptingResourceResolverProviderImpl implements ScriptingResourceResolverProvider, ServletRequestListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptingResourceResolverFactoryImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptingResourceResolverProviderImpl.class);
 
     private final ThreadLocal<ScriptingResourceResolver> perThreadResourceResolver = new ThreadLocal<>();
     private boolean logStackTraceOnResolverClose;
@@ -82,15 +82,6 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
             }
         }
         return threadResolver;
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        try {
-            return rrf.getServiceResourceResolver(null);
-        } catch (LoginException e) {
-            throw new IllegalStateException("Unable to retrieve a scripting resource resolver.", e);
-        }
     }
 
     @Override
