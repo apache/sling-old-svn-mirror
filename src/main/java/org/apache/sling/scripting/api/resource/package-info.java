@@ -26,6 +26,6 @@
  * 2.11.0).</p>
  */
 @Version("1.0.0")
-package org.apache.sling.scripting.api.resolver;
+package org.apache.sling.scripting.api.resource;
 
 import org.osgi.annotation.versioning.Version;
