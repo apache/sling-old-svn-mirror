@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution.serialization;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import java.io.OutputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,7 +34,7 @@ public final class DistributionExportOptions {
     private final DistributionRequest request;
     private final DistributionExportFilter filter;
 
-    public DistributionExportOptions(DistributionRequest request, DistributionExportFilter filter) {
+    public DistributionExportOptions(@Nullable DistributionRequest request, @Nullable DistributionExportFilter filter) {
         this.request = request;
         this.filter = filter;
     }
@@ -41,6 +43,7 @@ public final class DistributionExportOptions {
      * get the distribution request
      * @return the distribution request
      */
+    @CheckForNull
     public DistributionRequest getRequest() {
         return request;
     }
@@ -49,6 +52,7 @@ public final class DistributionExportOptions {
      * get the export filter
      * @return the export filter
      */
+    @CheckForNull
     public DistributionExportFilter getFilter() {
         return filter;
     }
