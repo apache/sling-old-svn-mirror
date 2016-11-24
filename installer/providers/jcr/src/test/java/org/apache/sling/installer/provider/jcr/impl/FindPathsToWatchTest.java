@@ -18,52 +18,19 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 
-import javax.jcr.Session;
-
-import org.apache.sling.commons.testing.jcr.EventHelper;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.api.SlingRepository;
+import org.junit.Test;
 
 /** Verify that the JcrInstaller finds all folders that must
  *  be watched, including those created after it starts
  */
-public class FindPathsToWatchTest extends RepositoryTestBase {
-
-    public static final long TIMEOUT = 5000L;
-
-    SlingRepository repo;
-    Session session;
-    private EventHelper eventHelper;
-    private ContentHelper contentHelper;
-    private JcrInstaller installer;
-    private MockOsgiInstaller osgiInstaller;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        repo = getRepository();
-        session = repo.loginAdministrative(repo.getDefaultWorkspace());
-        eventHelper = new EventHelper(session);
-        contentHelper = new ContentHelper(session);
-        contentHelper.cleanupContent();
-        contentHelper.setupContent();
-        osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        contentHelper.cleanupContent();
-        session.logout();
-        eventHelper = null;
-        contentHelper = null;
-        installer.deactivate(MiscUtil.getMockComponentContext());
-        MiscUtil.waitForInstallerThread(installer, TIMEOUT);
-    }
-
+public class FindPathsToWatchTest extends JcrInstallTestBase {
+    
     private boolean isWatched(String path, Collection<WatchedFolder> wfList) {
         for(WatchedFolder wf : wfList ) {
             if(wf.getPath().equals(path)) {
@@ -73,6 +40,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         return false;
     }
 
+    @Test
     public void testInitialFind() throws Exception {
         final Collection<WatchedFolder> wf = MiscUtil.getWatchedFolders(installer);
         assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, wf.size());
@@ -83,6 +51,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         }
     }
 
+    @Test
     public void testNewWatchedFolderDetection() throws Exception {
         final String newPaths [] = {
                 "/libs/tnwf/install",
@@ -122,6 +91,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
                MiscUtil.getWatchedFolders(installer).size());
     }
 
+    @Test
     public void testDeleteWatchedFolders() throws Exception {
         assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, MiscUtil.getWatchedFolders(installer).size());
         contentHelper.cleanupContent();

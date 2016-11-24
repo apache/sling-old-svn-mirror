@@ -18,6 +18,9 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import static org.junit.Assert.assertFalse;
+
+import org.junit.Test;
 
 /** Test that changes in folders to watch are correctly detected,
  *  including when root folders are created or deleted
@@ -28,6 +31,7 @@ public class FolderDetectionTest extends JcrInstallTestBase {
         return false;
     }
 
+    @Test
     public void testCreateAndDeleteLibs() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         assertRegistered("Before test", res, false);
@@ -47,6 +51,7 @@ public class FolderDetectionTest extends JcrInstallTestBase {
         assertRegistered("After deleting libs", res, false);
     }
 
+    @Test
     public void testMoveLibsToFoo() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         assertRegistered("Before test", res, false);
@@ -79,6 +84,7 @@ public class FolderDetectionTest extends JcrInstallTestBase {
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
     }
 
+    @Test
     public void testMoveLibsToApps() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         final String appsRes = "/apps/foo/install/somefile.jar";

@@ -19,53 +19,38 @@
 package org.apache.sling.installer.provider.jcr.impl;
 
 
-import javax.jcr.Node;
-import javax.jcr.Session;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.sling.commons.testing.jcr.EventHelper;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.api.SlingRepository;
+import javax.jcr.Node;
+
 import org.junit.Test;
 
 /** Verify that JcrInstaller scans folders only when needed */
-public class ScanningLoopTest extends RepositoryTestBase {
-    public static final long TIMEOUT = 5000L;
-
-    private JcrInstaller installer;
-    private SlingRepository repository;
-    private MockOsgiInstaller osgiInstaller;
-    private ContentHelper contentHelper;
-    private Session session;
-    private EventHelper eventHelper;
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        repository = getRepository();
-        osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repository, osgiInstaller);
-        session = repository.loginAdministrative(repository.getDefaultWorkspace());
-        eventHelper = new EventHelper(session);
-        contentHelper = new ContentHelper(session);
-        contentHelper.setupFolders();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        installer.deactivate(MiscUtil.getMockComponentContext());
-        MiscUtil.waitForInstallerThread(installer, TIMEOUT);
-        installer = null;
-        contentHelper.cleanupContent();
-        contentHelper.deleteQuietly(JcrInstaller.PAUSE_SCAN_NODE_PATH);
-        if(session != null) {
-            session.logout();
-            session = null;
-        }
-    }
+public class ScanningLoopTest extends JcrInstallTestBase {
 
     private void assertCounter(int index, long value) {
-        assertEquals("Counter " + index, value, installer.getCounters()[index]);
+        
+        String label;
+        switch (index ) {
+            case JcrInstaller.RUN_LOOP_COUNTER:
+                label = "RUN_LOOP_COUNTER";
+                break;
+            case JcrInstaller.SCAN_FOLDERS_COUNTER:
+                label = "SCAN_FOLDERS_COUNTER";
+                break;
+                
+            case JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER:
+                label = "UPDATE_FOLDERS_LIST_COUNTER";
+                break;
+            
+            default:
+                label = "Unknown (" + index +")";
+                break;
+        }
+        
+        assertEquals("Counter " + label, value, installer.getCounters()[index]);
     }
 
     private void assertIdle() throws Exception {
@@ -87,10 +72,12 @@ public class ScanningLoopTest extends RepositoryTestBase {
         assertIdle();
     }
 
+    @Test
     public void testDefaultScanPauseFalse() throws Exception{
         assertFalse(installer.scanningIsPaused(installer.getConfiguration(), installer.getSession()));
     }
 
+    @Test
     public void testPauseScan() throws Exception{
         assertFalse(installer.scanningIsPaused(installer.getConfiguration(), installer.getSession()));
 
@@ -127,6 +114,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         assertIdle();
     }
 
+    @Test
     public void testAddContentOutside() throws Exception {
         final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
         final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
@@ -140,6 +128,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         assertCounter(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER, uc);
     }
 
+    @Test
     public void testDeleteFile() throws Exception {
         contentHelper.setupContent();
         eventHelper.waitForEvents(TIMEOUT);
@@ -156,6 +145,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         assertIdle();
     }
 
+    @Test
     public void testDeleteLibsFolder() throws Exception {
         contentHelper.setupContent();
         eventHelper.waitForEvents(TIMEOUT);
