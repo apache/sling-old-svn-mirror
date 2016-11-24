@@ -54,6 +54,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationManagerImplTest {
@@ -130,6 +131,7 @@ public class ConfigurationManagerImplTest {
                 "prop2", new PropertyMetadata<>("prop2", String.class),
                 "prop3", new PropertyMetadata<>("prop3", 5)));
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_COL_NAME)).thenReturn(configMetadata);
+        when(configurationMetadataProvider.getConfigurationNames()).thenReturn(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME));
     }
     
     protected String getConfigPropertiesPath(String path) {
@@ -460,6 +462,16 @@ public class ConfigurationManagerImplTest {
 
         ConfigurationData newItem = underTest.newCollectionItem(contextResource, CONFIG_COL_NAME);
         assertNull(newItem);
+    }
+
+    @Test
+    public void testGetConfigurationNames() {
+        assertEquals(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME), underTest.getConfigurationNames());
+    }
+
+    @Test
+    public void testGetConfigurationMetadata() throws Exception {
+        assertEquals(CONFIG_NAME, underTest.getConfigurationMetadata(CONFIG_NAME).getName());
     }
 
 }

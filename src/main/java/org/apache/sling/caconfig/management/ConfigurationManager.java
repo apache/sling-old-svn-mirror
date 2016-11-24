@@ -20,12 +20,14 @@ package org.apache.sling.caconfig.management;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.SortedSet;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.spi.ResourceCollectionItem;
+import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -77,5 +79,19 @@ public interface ConfigurationManager {
      * @return Configuration data. Is null when no configuration metadata exists.
      */
     @CheckForNull ConfigurationData newCollectionItem(@Nonnull Resource resource, @Nonnull String configName);
+    
+    /**
+     * Get all configuration names.
+     * The results of all configuration metadata provider implementations are merged.
+     * @return Configuration names
+     */
+    @Nonnull SortedSet<String> getConfigurationNames();
+
+    /**
+     * Get configuration metadata from any configuration metadata provider.
+     * @param configName Configuration name
+     * @return Configuration metadata or null if none exists for the given name.
+     */
+    @CheckForNull ConfigurationMetadata getConfigurationMetadata(String configName);
     
 }
