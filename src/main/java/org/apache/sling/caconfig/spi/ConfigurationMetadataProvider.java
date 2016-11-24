@@ -20,6 +20,7 @@ package org.apache.sling.caconfig.spi;
 
 import java.util.SortedSet;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
@@ -42,6 +43,6 @@ public interface ConfigurationMetadataProvider {
      * @param configName Configuration name
      * @return Configuration metadata or null if none exists for the given name.
      */
-    ConfigurationMetadata getConfigurationMetadata(String configName);
+    @CheckForNull ConfigurationMetadata getConfigurationMetadata(String configName);
 
 }
