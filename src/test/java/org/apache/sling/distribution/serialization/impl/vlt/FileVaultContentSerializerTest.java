@@ -82,8 +82,6 @@ public class FileVaultContentSerializerTest {
         FileVaultContentSerializer fileVaultContentSerializer = new FileVaultContentSerializer("vlt", packaging, importMode,
                 aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, threshold);
 
-        List<String> paths = new LinkedList<String>();
-        paths.add("/libs");
         ResourceResolver sessionResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
 
