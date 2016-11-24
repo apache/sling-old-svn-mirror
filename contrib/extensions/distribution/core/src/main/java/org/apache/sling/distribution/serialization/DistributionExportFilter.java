@@ -184,6 +184,16 @@ public class DistributionExportFilter {
             return match;
         }
 
+        @Override
+        public String toString() {
+            return "TreeFilter{" +
+                    "path='" + path + '\'' +
+                    ", includes=" + includes +
+                    ", excludes=" + excludes +
+                    ", deepIncludes=" + deepIncludes +
+                    '}';
+        }
+
         private static class Entry {
             private final String path;
             private final boolean include;
@@ -203,5 +213,11 @@ public class DistributionExportFilter {
         }
     }
 
-
+    @Override
+    public String toString() {
+        return "DistributionExportFilter{" +
+                "nodeFilters=" + nodeFilters +
+                ", propertyFilter=" + propertyFilter +
+                '}';
+    }
 }
