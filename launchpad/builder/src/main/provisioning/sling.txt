@@ -158,3 +158,8 @@
     user.mapping=[
       "org.apache.sling.xss\=sling-xss"
     ]
+
+  org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr-install
+    user.mapping=[
+      "org.apache.sling.installer.provider.jcr\=sling-jcr-install"
+    ]
