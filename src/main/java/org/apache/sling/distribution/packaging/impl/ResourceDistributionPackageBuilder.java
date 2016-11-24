@@ -40,6 +40,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -211,6 +212,10 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         Resource r = resourceResolver.getResource(parent, name);
         if (r != null) {
             resourceResolver.delete(r);
+        } else {
+            // check parent is there at least
+            Resource parentResource = ResourceUtil.getOrCreateResource(resourceResolver, parent.getPath(), "nt:unstructured", "nt:unstructured", true);
+            log.debug("created parent {}", parentResource.getPath());
         }
 
         Resource resource = resourceResolver.create(parent, name, props);
