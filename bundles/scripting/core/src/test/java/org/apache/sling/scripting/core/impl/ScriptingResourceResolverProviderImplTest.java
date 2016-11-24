@@ -41,11 +41,11 @@ import org.mockito.stubbing.Answer;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ScriptingResourceResolverFactoryImplTest {
+public class ScriptingResourceResolverProviderImplTest {
 
     private static final int MAX_CONCURRENT_RESOLVERS = 200;
     private static final int RESOLVER_REUSE_FOR_SAME_THREAD = 100;
-    private ScriptingResourceResolverFactoryImpl scriptingResourceResolverFactory;
+    private ScriptingResourceResolverProviderImpl scriptingResourceResolverFactory;
     private Set<ResourceResolver> delegates;
 
     @Before
@@ -60,7 +60,7 @@ public class ScriptingResourceResolverFactoryImplTest {
                 return delegate;
             }
         });
-        scriptingResourceResolverFactory = new ScriptingResourceResolverFactoryImpl();
+        scriptingResourceResolverFactory = new ScriptingResourceResolverProviderImpl();
         Whitebox.setInternalState(scriptingResourceResolverFactory, "rrf", rrf);
     }
 
@@ -101,14 +101,14 @@ public class ScriptingResourceResolverFactoryImplTest {
 
     }
 
-    private Callable<ResourceResolver> createCallable(final ScriptingResourceResolverFactoryImpl scriptingResourceResolverFactory) {
+    private Callable<ResourceResolver> createCallable(final ScriptingResourceResolverProviderImpl scriptingResourceResolverFactory) {
         return new Callable<ResourceResolver>() {
             @Override
             public ResourceResolver call() {
                 ResourceResolver resourceResolver = scriptingResourceResolverFactory.getRequestScopedResourceResolver();
                 for (int i = 0; i < RESOLVER_REUSE_FOR_SAME_THREAD; i++) {
                     ResourceResolver subsequentResolver = scriptingResourceResolverFactory.getRequestScopedResourceResolver();
-                    assertEquals("Expected that subsequent calls to ScriptingResourceResolverFactory#getRequestScopedResourceResolver() " +
+                    assertEquals("Expected that subsequent calls to ScriptingResourceResolverProvider#getRequestScopedResourceResolver() " +
                             "from the same thread will not create additional resolvers.", resourceResolver, subsequentResolver);
                 }
                 scriptingResourceResolverFactory.requestDestroyed(mock(ServletRequestEvent.class));

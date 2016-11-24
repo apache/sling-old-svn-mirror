@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverFactory;
+import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +136,7 @@ public class ScriptingResourceResolver implements ResourceResolver {
     @Override
     public void close() {
         LOGGER.warn("Attempted to call close on the scripting per-request resource resolver. This is handled automatically by the {}.",
-                ScriptingResourceResolverFactory.class.getName());
+                ScriptingResourceResolverProvider.class.getName());
         if (shouldLogClosing) {
             StringWriter writer = new StringWriter();
             Throwable t = new Throwable();

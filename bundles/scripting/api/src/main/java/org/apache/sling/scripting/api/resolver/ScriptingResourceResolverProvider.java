@@ -16,19 +16,18 @@
  ******************************************************************************/
 package org.apache.sling.scripting.api.resolver;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The {@code ScriptingResourceResolverFactory} provides methods to obtain {@link ResourceResolver}s that can be used by scripting
+ * The {@code ScriptingResourceResolverProvider} provides methods to obtain {@link ResourceResolver}s that can be used by scripting
  * bundles to perform their script resolution operations.
  *
- * @since 2.4.0
+ * @since 1.0.0
  */
 @ProviderType
-public interface ScriptingResourceResolverFactory {
+public interface ScriptingResourceResolverProvider {
 
     /**
      * <p>Provides a request-scoped {@link ResourceResolver} with only read access to the search paths.</p>
@@ -42,13 +41,4 @@ public interface ScriptingResourceResolverFactory {
      * (e.g. reusing the same resolver for multiple threads).</p>
      */
     ResourceResolver getRequestScopedResourceResolver();
-
-    /**
-     * Provides a {@link ResourceResolver} with only read access to the search paths. Once you're done processing {@link Resource}s with
-     * this {@code ResourceResolver} make sure to close it (or use it in a
-     * <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html"><code>try-with-resources</code><a/>
-     * block).
-     */
-    ResourceResolver getResourceResolver();
-
 }
