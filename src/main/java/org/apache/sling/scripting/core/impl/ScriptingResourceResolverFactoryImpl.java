@@ -16,12 +16,13 @@
  ******************************************************************************/
 package org.apache.sling.scripting.core.impl;
 
-import org.apache.sling.api.request.SlingRequestEvent;
-import org.apache.sling.api.request.SlingRequestListener;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.scripting.api.ScriptingResourceResolverFactory;
+import org.apache.sling.scripting.api.resolver.ScriptingResourceResolverFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,17 +34,17 @@ import org.slf4j.LoggerFactory;
 
 @Component(
         name = "Apache Sling Scripting Resource Resolver Factory",
-        service = {ScriptingResourceResolverFactory.class, SlingRequestListener.class},
+        service = {ScriptingResourceResolverFactory.class, ServletRequestListener.class},
         configurationPid = "org.apache.sling.scripting.core.impl.ScriptingResourceResolverFactoryImpl"
 )
 @Designate(
         ocd = ScriptingResourceResolverFactoryImpl.Configuration.class
 )
-public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceResolverFactory, SlingRequestListener {
+public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceResolverFactory, ServletRequestListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptingResourceResolverFactoryImpl.class);
 
-    private static final ThreadLocal<ScriptingResourceResolver> perThreadResourceResolver = new ThreadLocal<>();
+    private final ThreadLocal<ScriptingResourceResolver> perThreadResourceResolver = new ThreadLocal<>();
     private boolean logStackTraceOnResolverClose;
 
     @Reference
@@ -63,25 +64,21 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
         )
         boolean log_stacktrace_onclose() default false;
 
-
     }
 
     @Override
     public ResourceResolver getRequestScopedResourceResolver() {
         ScriptingResourceResolver threadResolver = perThreadResourceResolver.get();
         if (threadResolver == null) {
-            // no per thread; need to synchronize access
-            synchronized (perThreadResourceResolver) {
-                try {
-                    ResourceResolver delegate = rrf.getServiceResourceResolver(null);
-                    threadResolver = new ScriptingResourceResolver(logStackTraceOnResolverClose, delegate);
-                    perThreadResourceResolver.set(threadResolver);
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Setting per thread resource resolver for thread {}.", Thread.currentThread().getName());
-                    }
-                } catch (LoginException e) {
-                    throw new IllegalStateException("Cannot create per thread resource resolver.", e);
+            try {
+                ResourceResolver delegate = rrf.getServiceResourceResolver(null);
+                threadResolver = new ScriptingResourceResolver(logStackTraceOnResolverClose, delegate);
+                perThreadResourceResolver.set(threadResolver);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Setting per thread resource resolver for thread {}.", Thread.currentThread().getName());
                 }
+            } catch (LoginException e) {
+                throw new IllegalStateException("Cannot create per thread resource resolver.", e);
             }
         }
         return threadResolver;
@@ -97,16 +94,19 @@ public class ScriptingResourceResolverFactoryImpl implements ScriptingResourceRe
     }
 
     @Override
-    public void onEvent(SlingRequestEvent sre) {
-        if (sre.getType().equals(SlingRequestEvent.EventType.EVENT_DESTROY)) {
-            ScriptingResourceResolver scriptingResourceResolver = perThreadResourceResolver.get();
-            if (scriptingResourceResolver != null) {
-                scriptingResourceResolver._close();
-                perThreadResourceResolver.remove();
-            }
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Removing per thread resource resolver for thread {}.", Thread.currentThread().getName());
-            }
+    public void requestInitialized(ServletRequestEvent sre) {
+        // we don't care about this event; the request scoped resource resolver is created lazily
+    }
+
+    @Override
+    public void requestDestroyed(ServletRequestEvent sre) {
+        ScriptingResourceResolver scriptingResourceResolver = perThreadResourceResolver.get();
+        if (scriptingResourceResolver != null) {
+            scriptingResourceResolver._close();
+            perThreadResourceResolver.remove();
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Removing per thread resource resolver for thread {}.", Thread.currentThread().getName());
         }
     }
 

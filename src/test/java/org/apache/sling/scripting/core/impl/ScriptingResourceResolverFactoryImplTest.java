@@ -18,6 +18,7 @@ package org.apache.sling.scripting.core.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,10 +26,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestEvent;
 
-import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -51,7 +50,7 @@ public class ScriptingResourceResolverFactoryImplTest {
 
     @Before
     public void setUp() throws LoginException {
-        delegates = new HashSet<>();
+        delegates = Collections.synchronizedSet(new HashSet<ResourceResolver>());
         ResourceResolverFactory rrf = mock(ResourceResolverFactory.class);
         when(rrf.getServiceResourceResolver(null)).thenAnswer(new Answer<ResourceResolver>() {
             @Override
@@ -75,9 +74,7 @@ public class ScriptingResourceResolverFactoryImplTest {
     public void testGetRequestScopedResourceResolver() throws Exception {
         ResourceResolver resourceResolver = scriptingResourceResolverFactory.getRequestScopedResourceResolver();
         assertEquals("sling-scripting", resourceResolver.getUserID());
-        SlingRequestEvent sre2 = new SlingRequestEvent(mock(ServletContext.class), mock(ServletRequest.class), SlingRequestEvent.EventType
-                .EVENT_DESTROY);
-        scriptingResourceResolverFactory.onEvent(sre2);
+        scriptingResourceResolverFactory.requestDestroyed(mock(ServletRequestEvent.class));
         assertEquals(1, delegates.size());
         for (ResourceResolver delegate : delegates) {
             verify(delegate).close();
@@ -114,8 +111,7 @@ public class ScriptingResourceResolverFactoryImplTest {
                     assertEquals("Expected that subsequent calls to ScriptingResourceResolverFactory#getRequestScopedResourceResolver() " +
                             "from the same thread will not create additional resolvers.", resourceResolver, subsequentResolver);
                 }
-                scriptingResourceResolverFactory.onEvent(new SlingRequestEvent(mock(ServletContext.class), mock(ServletRequest.class),
-                            SlingRequestEvent.EventType.EVENT_DESTROY));
+                scriptingResourceResolverFactory.requestDestroyed(mock(ServletRequestEvent.class));
                 return resourceResolver;
             }
         };
