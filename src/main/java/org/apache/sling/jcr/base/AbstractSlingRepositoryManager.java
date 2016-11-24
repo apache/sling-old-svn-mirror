@@ -497,14 +497,20 @@ public abstract class AbstractSlingRepositoryManager {
     }
 
     // find out whether allowLoginAdministrativeForBundle is overridden
+    // by iterating through the super classes of the implementation
+    // class and search for the class which defines the method
+    // "allowLoginAdministrativeForBundle". If we don't find
+    // the method before hitting AbstractSlingRepositoryManager
+    // we know that our implementation is inherited.
+    // Note: clazz.get(Declared)Method(name, parameterTypes).getDeclaringClass()
+    // does not yield the same results and is therefore no fitting substitute.
     private boolean isAllowLoginAdministrativeForBundleOverridden() {
         Class<?> clazz = getClass();
         while (clazz != AbstractSlingRepositoryManager.class) {
             final Method[] declaredMethods = clazz.getDeclaredMethods();
             for (final Method method : declaredMethods) {
                 if (method.getName().equals("allowLoginAdministrativeForBundle")
-                        && method.getParameterTypes().length == 1
-                        && method.getParameterTypes()[0] == Bundle.class) {
+                        && Arrays.equals(method.getParameterTypes(), new Class<?>[]{Bundle.class})) {
                     return true;
                 }
             }
