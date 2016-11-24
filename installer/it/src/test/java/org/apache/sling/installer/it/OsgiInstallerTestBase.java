@@ -479,16 +479,6 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected Option[] defaultConfiguration() {
-    	String vmOpt = "-Dosgi.installer.testing";
-
-    	// This runs in the VM that runs the build, but the tests run in another one.
-    	// Make all osgi.installer.* system properties available to OSGi framework VM
-    	for(Object o : System.getProperties().keySet()) {
-    		final String key = (String)o;
-    		if(key.startsWith("osgi.installer.")) {
-    			vmOpt += " -D" + key + "=" + System.getProperty(key);
-    		}
-    	}
 
     	// optional debugging
     	final String paxDebugLevel = System.getProperty("pax.exam.log.level", "INFO");
