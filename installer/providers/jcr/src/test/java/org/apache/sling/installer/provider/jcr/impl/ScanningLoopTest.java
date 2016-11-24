@@ -50,19 +50,19 @@ public class ScanningLoopTest extends JcrInstallTestBase {
                 break;
         }
         
-        assertEquals("Counter " + label, value, installer.getCounters()[index]);
+        assertEquals("Counter " + label, value, installer.getCounterValue(index));
     }
 
     private void assertIdle() throws Exception {
-        final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
-        final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
+        final long sf = installer.getCounterValue(JcrInstaller.SCAN_FOLDERS_COUNTER);
+        final long uc = installer.getCounterValue(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertCounter(JcrInstaller.SCAN_FOLDERS_COUNTER, sf);
         assertCounter(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER, uc);
     }
 
     private void assertEvents(String info, long oldCount, int counterIndex) {
-        final long newCount = installer.getCounters()[counterIndex];
+        final long newCount = installer.getCounterValue(counterIndex);
         assertTrue(info + " (old=" + oldCount + ", new=" + newCount + ")", newCount > oldCount);
     }
 
@@ -88,13 +88,13 @@ public class ScanningLoopTest extends JcrInstallTestBase {
         eventHelper.waitForEvents(TIMEOUT);
 
         assertTrue(installer.scanningIsPaused(installer.getConfiguration(), installer.getSession()));
-        final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
-        final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
+        final long sf = installer.getCounterValue(JcrInstaller.SCAN_FOLDERS_COUNTER);
+        final long uc = installer.getCounterValue(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
 
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
 
         //Counters should not have changed as no scanning being performed
-        assertEquals(sf, installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER]);
+        assertEquals(sf, installer.getCounterValue(JcrInstaller.SCAN_FOLDERS_COUNTER));
 
         //Now lets resume again
         testNode.remove();
@@ -116,8 +116,8 @@ public class ScanningLoopTest extends JcrInstallTestBase {
 
     @Test
     public void testAddContentOutside() throws Exception {
-        final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
-        final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
+        final long sf = installer.getCounterValue(JcrInstaller.SCAN_FOLDERS_COUNTER);
+        final long uc = installer.getCounterValue(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
 
         contentHelper.createOrUpdateFile("/" + System.currentTimeMillis());
         eventHelper.waitForEvents(TIMEOUT);
@@ -135,7 +135,7 @@ public class ScanningLoopTest extends JcrInstallTestBase {
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertIdle();
 
-        final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
+        final long sf = installer.getCounterValue(JcrInstaller.SCAN_FOLDERS_COUNTER);
         contentHelper.delete(contentHelper.FAKE_RESOURCES[0]);
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
@@ -152,7 +152,7 @@ public class ScanningLoopTest extends JcrInstallTestBase {
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertIdle();
 
-        final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
+        final long uc = installer.getCounterValue(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
         contentHelper.delete("/libs");
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
@@ -160,10 +160,5 @@ public class ScanningLoopTest extends JcrInstallTestBase {
                 uc,  JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
 
         assertIdle();
-    }
-
-    private static String getParentPath(String absPath){
-        int pos = absPath.lastIndexOf('/');
-        return absPath.substring(0, pos);
     }
 }

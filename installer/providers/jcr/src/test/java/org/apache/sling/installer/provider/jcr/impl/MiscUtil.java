@@ -32,7 +32,7 @@ class MiscUtil {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
         long cycles = 0;
         while(System.currentTimeMillis() < endTime) {
-            cycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] - initialCycleCount;
+            cycles = installer.getCounterValue(JcrInstaller.RUN_LOOP_COUNTER) - initialCycleCount;
             if(cycles >= expectedCycles) {
                 return;
             }
@@ -49,7 +49,7 @@ class MiscUtil {
 
     /** Wait long enough for all changes in content to be processed by JcrInstaller */
     static void waitAfterContentChanges(EventHelper eventHelper, JcrInstaller installer) throws Exception {
-        final long startCycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER];
+        final long startCycles = installer.getCounterValue(JcrInstaller.RUN_LOOP_COUNTER);
 
         // First wait for all JCR events to be delivered
         eventHelper.waitForEvents(5000L);
@@ -64,7 +64,7 @@ class MiscUtil {
     static void waitForInstallerThread(JcrInstaller installer, long timeoutMsec) throws Exception {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
         while(System.currentTimeMillis() < endTime) {
-            if(installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] == -1) {
+            if(installer.getCounterValue(JcrInstaller.RUN_LOOP_COUNTER) == -1) {
                 return;
             }
         }
