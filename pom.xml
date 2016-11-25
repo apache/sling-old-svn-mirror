@@ -127,24 +127,28 @@
             <version>3.2.1</version>
             <scope>compile</scope>
         </dependency>
+        
+        <!-- web console dependencies -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
             <version>4.2.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.inventory</artifactId>
             <version>1.0.4</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.xss</artifactId>
             <version>1.0.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
+        
+        <!-- test dependencies -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
