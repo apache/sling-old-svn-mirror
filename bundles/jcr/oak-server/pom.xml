@@ -277,7 +277,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.resourceresolver</artifactId>
-      <version>1.5.2</version>
+      <version>1.5.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
