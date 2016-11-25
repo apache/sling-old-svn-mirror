@@ -30,7 +30,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public final class ConfigurationMetadata extends AbstractMetadata {
 
-    private boolean isList;
+    private boolean collection;
     private Map<String,PropertyMetadata<?>> propertyMetadata;
 
     /**
@@ -44,21 +44,21 @@ public final class ConfigurationMetadata extends AbstractMetadata {
      * @return true if configuration is singleton
      */
     public boolean isSingleton() {
-        return !isList;
+        return !collection;
     }
     
     /**
-     * @return true if configuration is list
+     * @return true if configuration is collection
      */
-    public boolean isList() {
-        return isList;
+    public boolean isCollection() {
+        return collection;
     }
 
     /**
-     * @param isList true if configuration is list
+     * @param isList true if configuration is collection
      */
-    public void setList(boolean isList) {
-        this.isList = isList;
+    public void setCollection(boolean value) {
+        this.collection = value;
     }
 
     /**
