@@ -53,7 +53,7 @@
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.19-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.resource/2.8.1-SNAPSHOT
-    org.apache.sling/org.apache.sling.launchpad.content/2.0.8
+    org.apache.sling/org.apache.sling.launchpad.content/2.0.9-SNAPSHOT
     org.apache.sling/org.apache.sling.models.api/1.2.2
     org.apache.sling/org.apache.sling.models.impl/1.2.8
     # We need resource resolver 1.5.4
