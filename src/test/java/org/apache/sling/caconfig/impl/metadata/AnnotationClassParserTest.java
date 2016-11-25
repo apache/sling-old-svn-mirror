@@ -31,6 +31,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.example.AllTypesConfig;
+import org.apache.sling.caconfig.example.ListConfig;
 import org.apache.sling.caconfig.example.MetadataSimpleConfig;
 import org.apache.sling.caconfig.example.SimpleConfig;
 import org.apache.sling.caconfig.example.WithoutAnnotationConfig;
@@ -79,6 +80,7 @@ public class AnnotationClassParserTest {
         assertEquals("Simple configuration", metadata.getLabel());
         assertEquals("This is a configuration example with additional metadata.", metadata.getDescription());
         assertEquals(ImmutableMap.of("param1", "value1", "param2", "123"), metadata.getProperties());
+        assertFalse(metadata.isCollection());
         
         Collection<PropertyMetadata<?>> propertyMetadataList = metadata.getPropertyMetadata().values();
         assertEquals(3, propertyMetadataList.size());
@@ -103,6 +105,14 @@ public class AnnotationClassParserTest {
                 assertFalse((Boolean)propertyMetadata.getDefaultValue());
             }
         }
+    }
+    
+    @Test
+    public void testBuildConfigurationMetadata_List() {
+        ConfigurationMetadata metadata = buildConfigurationMetadata(ListConfig.class);
+        
+        assertEquals(ListConfig.class.getName(), metadata.getName());
+        assertTrue(metadata.isCollection());
     }
     
     @Test
