@@ -145,6 +145,10 @@
     org.apache.sling.commons.log.file="logs/request.log"
     org.apache.sling.commons.log.level="info"
 
+  # whitelist composum bundles
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelist
+    whitelist.bundles.additional=["com.composum.core.commons"]
+
   # WebDAV servlet requires config now
   org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet
     dav.root="/dav"
