@@ -53,6 +53,8 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageP
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
 import org.apache.sling.resourceresolver.impl.providers.tree.Node;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -693,9 +695,14 @@ public class ResourceResolverControl {
         } else {
             if ( this.resourceTypeResourceResolver == null ) {
                 try {
-                    this.resourceTypeResourceResolver = factory.getAdministrativeResourceResolver(null);
+                    // make sure we're getting the resourceTypeResourceResolver on behalf of
+                    // the resourceresolver bundle
+                    final Bundle bundle = FrameworkUtil.getBundle(ResourceResolverControl.class);
+                    final Map<String, Object> authenticationInfo =
+                            Collections.<String, Object>singletonMap(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
+                    this.resourceTypeResourceResolver = factory.getAdministrativeResourceResolver(authenticationInfo);
                 } catch (final LoginException e) {
-                    // we simply ignore this and return null
+                    throw new IllegalStateException("Failed to create resource-type ResourceResolver", e);
                 }
             }
             return this.resourceTypeResourceResolver;
