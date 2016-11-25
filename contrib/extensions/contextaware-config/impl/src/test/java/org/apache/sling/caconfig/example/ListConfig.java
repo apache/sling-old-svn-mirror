@@ -20,7 +20,7 @@ package org.apache.sling.caconfig.example;
 
 import org.apache.sling.caconfig.annotation.Configuration;
 
-@Configuration
+@Configuration(collection = true)
 public @interface ListConfig {
 
     String stringParam();

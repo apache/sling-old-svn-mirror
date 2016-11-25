@@ -125,6 +125,7 @@ public final class AnnotationClassParser {
         configMetadata.setLabel(emptyToNull(configAnnotation.label()));
         configMetadata.setDescription(emptyToNull(configAnnotation.description()));
         configMetadata.setProperties(propsArrayToMap(configAnnotation.property()));
+        configMetadata.setCollection(configAnnotation.collection());
 
         // property metadata
         Map<String,PropertyMetadata<?>> propertyMetadataList = new HashMap<>();

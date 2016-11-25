@@ -35,18 +35,18 @@ public class ConfigurationMetadataTest {
         ConfigurationMetadata underTest = new ConfigurationMetadata("name1");
         assertEquals("name1", underTest.getName());
         assertTrue(underTest.isSingleton());
-        assertFalse(underTest.isList());
+        assertFalse(underTest.isCollection());
         
         underTest.setLabel("label1");
         underTest.setDescription("desc1");
-        underTest.setList(true);
+        underTest.setCollection(true);
         Map<String,String> props = ImmutableMap.of("p1", "v1");
         underTest.setProperties(props);
         
         assertEquals("label1", underTest.getLabel());
         assertEquals("desc1", underTest.getDescription());
         assertFalse(underTest.isSingleton());
-        assertTrue(underTest.isList());
+        assertTrue(underTest.isCollection());
         assertEquals(props, underTest.getProperties());
     }
 
