@@ -475,6 +475,41 @@ public class ResourceUtil {
     }
 
     /**
+     * Returns <code>true</code> if the given resource type are equal.
+     * 
+     * In case the value of any of the given resource types 
+     * starts with one of the resource resolver's search paths
+     * it is converted to a relative resource type by stripping off 
+     * the resource resolver's search path before doing the comparison.
+     *
+     * @param resourceType A resource type
+     * @param anotherResourceType Another resource type to compare with {@link resourceType}.
+     * @return <code>true</code> if the resource type equals the given resource type.
+     * @since 2.10.0
+     */
+    public static boolean areResourceTypesEqual(@Nonnull String resourceType, @Nonnull String anotherResourceType, @Nonnull String[] searchPath) {
+        return relativizeResourceType(resourceType, searchPath).equals(relativizeResourceType(anotherResourceType, searchPath));
+    }
+
+    /**
+     * Makes the given resource type relative by stripping off any prefix which equals one of the given search paths.
+     * In case the given resource type does not start with any of the given search paths it is returned unmodified.
+     * @param resourceType the resourceType to relativize.
+     * @param searchPath the search paths to strip off from the given resource type.
+     * @return the relative resource type
+     */
+    public static String relativizeResourceType(@Nonnull String resourceType, @Nonnull String[] searchPath) {
+        if (resourceType.startsWith("/")) {
+            for (String prefix : searchPath) {
+                if (resourceType.startsWith(prefix)) {
+                    return resourceType.substring(prefix.length());
+                }
+            }
+        }
+        return resourceType;
+    }
+
+    /**
      * Return an iterator for objects of the specified type. A new iterator is
      * returned which tries to adapt the provided resources to the given type
      * (using {@link Resource#adaptTo(Class)}. If a resource in the original

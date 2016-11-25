@@ -698,6 +698,11 @@ public interface ResourceResolver extends Adaptable, Closeable {
     /**
      * Returns <code>true</code> if the resource type or any of the resource's
      * super type(s) equals the given resource type.
+     * 
+     * In case the type of the given resource or the given resource type is absolute (i.e. start with a "/") 
+     * and starts with one of the resource resolver's search paths
+     * it is converted to relative resource types by stripping off the resource resolver's search path 
+     * before doing the comparison.
      *
      * @param resource The resource to check
      * @param resourceType The resource type to check this resource against.
