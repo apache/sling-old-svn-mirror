@@ -59,7 +59,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             "org.apache.sling.discovery.oak",
             "org.apache.sling.extensions.webconsolesecurityprovider",
             "org.apache.sling.i18n",
-            "org.apache.sling.installer.provider.jcr",
             "org.apache.sling.jcr.base",
             "org.apache.sling.jcr.contentloader",
             "org.apache.sling.jcr.davex",
