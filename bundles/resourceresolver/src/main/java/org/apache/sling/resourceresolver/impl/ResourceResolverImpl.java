@@ -1311,13 +1311,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
              // Check if the resource is of the given type. This method first checks the
              // resource type of the resource, then its super resource type and continues
              //  to go up the resource super type hierarchy.
-             if (resourceType.equals(resource.getResourceType())) {
+             if (ResourceUtil.areResourceTypesEqual(resourceType, resource.getResourceType(), getSearchPath())) {
                  result = true;
              } else {
                  Set<String> superTypesChecked = new HashSet<String>();
                  String superType = this.getParentResourceType(resource);
                  while (!result && superType != null) {
-                     if (resourceType.equals(superType)) {
+                     if (ResourceUtil.areResourceTypesEqual(resourceType, superType, getSearchPath())) {
                          result = true;
                      } else {
                          superTypesChecked.add(superType);
