@@ -108,9 +108,6 @@ def modules = [
         location: 'bundles/extensions/event'
     ],
     [
-        location: 'bundles/extensions/explorer'
-    ],
-    [
         location: 'bundles/extensions/feature-flags'
     ],
     [
