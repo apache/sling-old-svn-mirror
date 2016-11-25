@@ -68,8 +68,16 @@ class UserVisitor extends DoNothingVisitor {
         final String id = u.getUsername();
         try {
             if(!UserUtil.serviceExists(session, id)) {
-                log.info("Creating user {}", id);
-                UserUtil.createUser(session, id, u.getPassword());
+                final String pwd = u.getPassword();
+                if(pwd != null) {
+                    // TODO we might revise this warning once we're able
+                    // to create users by providing their encoded password
+                    // using u.getPasswordEncoding - for now I think only cleartext works
+                    log.warn("Creating user {} with cleartext password - should NOT be used on production systems", id);
+                } else {
+                    log.info("Creating user {}", id);
+                }
+                UserUtil.createUser(session, id, pwd);
             } else {
                 log.info("User {} already exists, no changes made", id);
             }
