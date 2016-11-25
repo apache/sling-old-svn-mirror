@@ -113,7 +113,6 @@
     org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.4
     org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
-    org.apache.sling/org.apache.sling.extensions.explorer/1.0.4
     io.dropwizard.metrics/metrics-core/3.1.0
     org.apache.sling/org.apache.sling.commons.metrics/1.0.1-SNAPSHOT
     com.google.guava/guava/15.0
