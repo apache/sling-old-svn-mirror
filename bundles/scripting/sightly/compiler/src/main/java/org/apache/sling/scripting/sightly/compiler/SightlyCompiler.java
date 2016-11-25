@@ -103,8 +103,8 @@ public final class SightlyCompiler {
 
         // register filters
         final List<Filter> filters = new ArrayList<>(5);
-        filters.add(FormatFilter.getInstance());
         filters.add(I18nFilter.getInstance());
+        filters.add(FormatFilter.getInstance());
         filters.add(JoinFilter.getInstance());
         filters.add(URIManipulationFilter.getInstance());
         filters.add(XSSFilter.getInstance());

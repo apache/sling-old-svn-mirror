@@ -18,6 +18,8 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.filter;
 
+import java.util.Map;
+
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
@@ -32,6 +34,7 @@ public final class I18nFilter extends AbstractFilter {
     public static final String I18N_OPTION = "i18n";
     public static final String HINT_OPTION = "hint";
     public static final String LOCALE_OPTION = "locale";
+    public static final String FORMAT_LOCALE_OPTION = "formatLocale";
     public static final String BASENAME_OPTION = "basename";
 
     private static final class I18nFilterLoader {
@@ -55,9 +58,11 @@ public final class I18nFilter extends AbstractFilter {
                 == ExpressionContext.PLUGIN_DATA_SLY_TEMPLATE || expressionContext == ExpressionContext.PLUGIN_DATA_SLY_CALL) {
             return expression;
         }
+        Map <String, ExpressionNode> options = getFilterOptions(expression, HINT_OPTION, LOCALE_OPTION, BASENAME_OPTION);
         ExpressionNode translation = new RuntimeCall(RuntimeFunction.I18N, expression.getRoot(), new MapLiteral
-                (getFilterOptions(expression, HINT_OPTION, LOCALE_OPTION, BASENAME_OPTION)));
+                (options));
         expression.removeOption(I18N_OPTION);
+        expression.getOptions().put(FORMAT_LOCALE_OPTION, options.get(LOCALE_OPTION));
         return expression.withNode(translation);
     }
 }

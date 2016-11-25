@@ -26,5 +26,15 @@
         "jcr:primaryType": "sling:MessageEntry",
         "sling:key"      : "the bank",
         "sling:message"  : "das Ufer"
+    },
+    "MMMMM"         : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "MMMMM",
+        "sling:message"  : "EEEEEE"
+    },
+    "number"        : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "##",
+        "sling:message"  : "##.###"
     }
 }

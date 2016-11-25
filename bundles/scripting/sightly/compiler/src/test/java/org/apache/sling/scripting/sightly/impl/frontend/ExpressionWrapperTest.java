@@ -74,7 +74,7 @@ public class ExpressionWrapperTest {
         interpolation.addExpression(new Expression(new StringConstant("hello"), options));
         ExpressionWrapper wrapper = new ExpressionWrapper(filters);
         Expression result = wrapper.transform(interpolation, MarkupContext.TEXT, ExpressionContext.TEXT);
-        List<ExpressionNode> xssArguments = runEmptyOptionsAndXSSAssertions(result);
+        List<ExpressionNode> xssArguments = runOptionsAndXSSAssertions(result, 1);
         RuntimeCall i18n = (RuntimeCall) xssArguments.get(0);
         assertEquals("Expected to I18n runtime function call.", RuntimeFunction.I18N, i18n.getFunctionName());
     }
@@ -90,7 +90,7 @@ public class ExpressionWrapperTest {
         interpolation.addExpression(new Expression(new StringConstant("Hello {0} {1}"), options));
         ExpressionWrapper wrapper = new ExpressionWrapper(filters);
         Expression result = wrapper.transform(interpolation, MarkupContext.TEXT, ExpressionContext.TEXT);
-        List<ExpressionNode> xssArguments = runEmptyOptionsAndXSSAssertions(result);
+        List<ExpressionNode> xssArguments = runOptionsAndXSSAssertions(result, 0);
         RuntimeCall format = (RuntimeCall) xssArguments.get(0);
         assertEquals(RuntimeFunction.FORMAT, format.getFunctionName());
     }
@@ -106,7 +106,7 @@ public class ExpressionWrapperTest {
         interpolation.addExpression(new Expression(new ArrayLiteral(array), options));
         ExpressionWrapper wrapper = new ExpressionWrapper(filters);
         Expression result = wrapper.transform(interpolation, MarkupContext.TEXT, ExpressionContext.TEXT);
-        List<ExpressionNode> xssArguments = runEmptyOptionsAndXSSAssertions(result);
+        List<ExpressionNode> xssArguments = runOptionsAndXSSAssertions(result, 0);
         RuntimeCall join = (RuntimeCall) xssArguments.get(0);
         assertEquals(RuntimeFunction.JOIN, join.getFunctionName());
     }
@@ -142,13 +142,13 @@ public class ExpressionWrapperTest {
                         options));
         ExpressionWrapper wrapper = new ExpressionWrapper(filters);
         Expression result = wrapper.transform(interpolation, MarkupContext.TEXT, ExpressionContext.TEXT);
-        List<ExpressionNode> xssArguments = runEmptyOptionsAndXSSAssertions(result);
+        List<ExpressionNode> xssArguments = runOptionsAndXSSAssertions(result, 0);
         RuntimeCall join = (RuntimeCall) xssArguments.get(0);
         assertEquals(RuntimeFunction.URI_MANIPULATION, join.getFunctionName());
     }
 
-    private List<ExpressionNode> runEmptyOptionsAndXSSAssertions(Expression result) {
-        assertTrue("Expected empty options map for expression after processing.", result.getOptions().isEmpty());
+    private List<ExpressionNode> runOptionsAndXSSAssertions(Expression result, int expectedOptions) {
+        assertEquals("Options map size for expression after processing is different from expected.", expectedOptions, result.getOptions().size());
         RuntimeCall xss = (RuntimeCall) result.getRoot();
         assertEquals("Expected XSS escaping applied to expression.", RuntimeFunction.XSS, xss.getFunctionName());
         return xss.getArguments();
