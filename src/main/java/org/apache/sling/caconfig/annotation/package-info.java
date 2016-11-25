@@ -19,5 +19,5 @@
 /**
  * Annotations for context-aware configurations.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
+@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.sling.caconfig.annotation;

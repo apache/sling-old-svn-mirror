@@ -50,4 +50,9 @@ public @interface Configuration {
      */
     String[] property() default {};
     
+    /**
+     * @return Indicates that this definition should be used for configuration collections.
+     */
+    boolean collection() default false;
+
 }
