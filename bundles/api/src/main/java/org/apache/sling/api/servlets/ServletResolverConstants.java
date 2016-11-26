@@ -16,50 +16,59 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.internal;
+package org.apache.sling.api.servlets;
+
+import javax.servlet.ServletConfig;
 
 /**
- * @deprecated Use the constants from {@link org.apache.sling.api.servlets.ServletResolverConstants}
+ * Service registration properties and common values used for registering a Sling Servlet.
+ * 
+ * @see <a href="http://sling.apache.org/documentation/the-sling-engine/servlets.html">Servlets and Scripts</a>
+ * @since 2.2.0
  */
-@Deprecated
-public class ServletResolverConstants {
+public final class ServletResolverConstants {
 
     /**
      * The name of the service registration property of a servlet registered as
      * a service providing the absolute paths under which the servlet is
-     * accessible as a resource (value is "sling.servlet.paths")
+     * accessible as a resource (value is "sling.servlet.paths").
+     * A relative path is made absolute by prefixing it with the value set through the 
+     * {#link SLING_SERVLET_PREFIX} property. 
      * <p>
      * The type of this property is a String or String[] (array of strings)
-     * denoting the absolute path(s) under the servlet is registered in the
+     * denoting the path(s) under which the servlet is registered in the
      * resource tree.
      * <p>
      * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
-     * property must be set, or the servlet is ignored. If both are set, the
-     * servlet is registered using both ways.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_PATHS}
+     * property must be set or the servlet is ignored. 
+     * If both are set the servlet is registered using both ways.
+     * A servlet using this property might be ignored unless its path is included 
+     * in the Execution Paths {@code servletresolver.paths} configuration setting of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service.
      */
-    @Deprecated
     public static final String SLING_SERVLET_PATHS = "sling.servlet.paths";
 
     /**
      * The name of the service registration property of a servlet registered as
      * a service containing the resource type(s) supported by the servlet (value
      * is "sling.servlet.resourceTypes").
+     * A relative resource type is made absolute by prefixing it with the value set through the 
+     * {#link SLING_SERVLET_PREFIX} property. 
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types.
      * <p>
      * Either this property or the {@link #SLING_SERVLET_PATHS} property must be
-     * set, or the servlet is ignored. If both are set, the servlet is
-     * registered using both ways.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_RESOURCE_TYPES}
+     * set, or the servlet is ignored.
+     * If both are set, the servlet is registered using both ways.
      */
-    @Deprecated
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
 
     /**
      * The name of the service registration property of a servlet registered as
      * a service providing the prefix/index to be used to register this servlet.
+     * It only is applied as prefix to {@link #SLING_SERVLET_PATHS} and 
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} in case they do not start with a "/".
+     * <p>
      * If the value of this property is a number, it defines the index of the search
      * path entries from the resource resolver. The defined search path is used as
      * a prefix to mount this servlet. The number can be -1 which always points to the
@@ -70,13 +79,11 @@ public class ServletResolverConstants {
      * If the value of this property is a string starting with "/", this value is applied
      * as a prefix, regardless of the configured search paths!
      * If the value is anything else, it is ignored.
-     * If this property is not specified, it defaults to the default configuration of the
-     * sling servlet resolver.
+     * If this property is not specified, the configuration of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service is used.
+     * In case even that one is not set "/" is used as prefix.
      * <p>
      * The type of this property is either String or a Number.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_PREFIX}
      */
-    @Deprecated
     public static final String SLING_SERVLET_PREFIX = "sling.servlet.prefix";
 
     /**
@@ -90,65 +97,33 @@ public class ServletResolverConstants {
      * denoting the resource types. This property is ignored if the
      * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property is
      * optional and ignored if not set.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_SELECTORS}
      */
-    @Deprecated
     public static final String SLING_SERVLET_SELECTORS = "sling.servlet.selectors";
 
     /**
-     * The name of the service registration property of a Servlet registered as
+     * The name of the service registration property of a servlet registered as
      * a service containing the request URL extensions supported by the servlet
      * for GET requests (value is "sling.servlet.extensions").
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
-     * the {@link #SLING_SERVLET_METHODS} is optional and ignored if not set.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_EXTENSIONS}
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. 
+     * Otherwise this property is optional and ignored if not set.
      */
-    @Deprecated
     public static final String SLING_SERVLET_EXTENSIONS = "sling.servlet.extensions";
 
     /**
-     * The name of the service registration property of a Servlet registered as
+     * The name of the service registration property of a servlet registered as
      * a service containing the request methods supported by the servlet (value
-     * is "sling.servlet.methods").
+     * is "sling.servlet.methods"). The value may be one of the HTTP methods or "*" for all methods.
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
-     * the {@link #SLING_SERVLET_EXTENSIONS} is optional and ignored if not set.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_METHODS}
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. 
+     * Otherwise this property is optional and assumed to be {@code GET} and {@code HEAD} if not set.
+     * @see <a href="https://tools.ietf.org/html/rfc7231#section-4.3">HTTP 1.1 Spec Methods</a>
      */
-    @Deprecated
     public static final String SLING_SERVLET_METHODS = "sling.servlet.methods";
-
-    /**
-     * The resource type of a registered servlet used as the default servlet if
-     * no other servlet or script could be selected (value is
-     * "sling/servlet/default"). If no servlet is registered under this name,
-     * the {@link org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet} is
-     * used.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_RESOURCE_TYPE}
-     */
-    @Deprecated
-    public static final String DEFAULT_SERVLET_NAME = "sling/servlet/default";
-
-    /**
-     * The resource used to select error handlers (value is
-     * "sling/servlet/errorhandler").
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_ERROR_HANDLER_RESOURCE_TYPE}
-     */
-    @Deprecated
-    public static final String ERROR_HANDLER_PATH = "sling/servlet/errorhandler";
-
-    /**
-     * The "method" name of an error handler used as the default (value is
-     * "default").
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_ERROR_HANDLER_METHOD}
-     */
-    @Deprecated
-    public static final String DEFAULT_ERROR_HANDLER_NAME = "default";
 
     /**
      * The name of the service registration property of a Servlet registered as
@@ -157,8 +132,31 @@ public class ServletResolverConstants {
      * <code>component.name</code> property or the <code>service.pid</code>
      * is used. If none of the three properties is defined, the Servlet is
      * ignored.
-     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_NAME}
+     * @see {@link ServletConfig#getServletName()}
      */
-    @Deprecated
-    public static final String SLING_SERLVET_NAME = "sling.core.servletName";
+    public static final String SLING_SERVLET_NAME = "sling.core.servletName";
+
+    /**
+     * The resource type of a registered servlet used as the default servlet if
+     * no other (more specific) servlet or script could be selected (value is
+     * "sling/servlet/default"). If no servlet is registered under this name,
+     * the {@link org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet} is
+     * used.
+     * @see <a href="http://sling.apache.org/documentation/the-sling-engine/servlets.html#default-servlets">Default Servlet(s)</a>
+     */
+    public static final String DEFAULT_RESOURCE_TYPE = "sling/servlet/default";
+
+    /**
+     * The resource type used to select error handlers (value is
+     * "sling/servlet/errorhandler").
+     * @see <a href="http://sling.apache.org/documentation/the-sling-engine/errorhandling.html">Errorhandling</a>
+     */
+    public static final String DEFAULT_ERROR_HANDLER_RESOURCE_TYPE = "sling/servlet/errorhandler";
+
+    /**
+     * The HTTP "method" name of an error handler used as the default (value is
+     * "default").
+     * @see <a href="http://sling.apache.org/documentation/the-sling-engine/errorhandling.html#default-handler">Default Error Handle</a>
+     */
+    public static final String DEFAULT_ERROR_HANDLER_METHOD = "default";
 }
