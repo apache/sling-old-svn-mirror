@@ -18,6 +18,10 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
+/**
+ * @deprecated Use the constants from {@link org.apache.sling.api.servlets.ServletResolverConstants}
+ */
+@Deprecated
 public class ServletResolverConstants {
 
     /**
@@ -32,7 +36,9 @@ public class ServletResolverConstants {
      * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
      * property must be set, or the servlet is ignored. If both are set, the
      * servlet is registered using both ways.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_PATHS}
      */
+    @Deprecated
     public static final String SLING_SERVLET_PATHS = "sling.servlet.paths";
 
     /**
@@ -46,7 +52,9 @@ public class ServletResolverConstants {
      * Either this property or the {@link #SLING_SERVLET_PATHS} property must be
      * set, or the servlet is ignored. If both are set, the servlet is
      * registered using both ways.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_RESOURCE_TYPES}
      */
+    @Deprecated
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
 
     /**
@@ -66,7 +74,9 @@ public class ServletResolverConstants {
      * sling servlet resolver.
      * <p>
      * The type of this property is either String or a Number.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_PREFIX}
      */
+    @Deprecated
     public static final String SLING_SERVLET_PREFIX = "sling.servlet.prefix";
 
     /**
@@ -80,7 +90,9 @@ public class ServletResolverConstants {
      * denoting the resource types. This property is ignored if the
      * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property is
      * optional and ignored if not set.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_SELECTORS}
      */
+    @Deprecated
     public static final String SLING_SERVLET_SELECTORS = "sling.servlet.selectors";
 
     /**
@@ -92,7 +104,9 @@ public class ServletResolverConstants {
      * denoting the resource types. This property is ignored if the
      * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
      * the {@link #SLING_SERVLET_METHODS} is optional and ignored if not set.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_EXTENSIONS}
      */
+    @Deprecated
     public static final String SLING_SERVLET_EXTENSIONS = "sling.servlet.extensions";
 
     /**
@@ -104,7 +118,9 @@ public class ServletResolverConstants {
      * denoting the resource types. This property is ignored if the
      * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
      * the {@link #SLING_SERVLET_EXTENSIONS} is optional and ignored if not set.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_METHODS}
      */
+    @Deprecated
     public static final String SLING_SERVLET_METHODS = "sling.servlet.methods";
 
     /**
@@ -113,19 +129,25 @@ public class ServletResolverConstants {
      * "sling/servlet/default"). If no servlet is registered under this name,
      * the {@link org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet} is
      * used.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_RESOURCE_TYPE}
      */
+    @Deprecated
     public static final String DEFAULT_SERVLET_NAME = "sling/servlet/default";
 
     /**
      * The resource used to select error handlers (value is
      * "sling/servlet/errorhandler").
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_ERROR_HANDLER_RESOURCE_TYPE}
      */
+    @Deprecated
     public static final String ERROR_HANDLER_PATH = "sling/servlet/errorhandler";
 
     /**
      * The "method" name of an error handler used as the default (value is
      * "default").
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#DEFAULT_ERROR_HANDLER_METHOD}
      */
+    @Deprecated
     public static final String DEFAULT_ERROR_HANDLER_NAME = "default";
 
     /**
@@ -135,6 +157,8 @@ public class ServletResolverConstants {
      * <code>component.name</code> property or the <code>service.pid</code>
      * is used. If none of the three properties is defined, the Servlet is
      * ignored.
+     * @deprecated Use {@link org.apache.sling.api.servlets.ServletResolverConstants#SLING_SERVLET_NAME}
      */
+    @Deprecated
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
 }
