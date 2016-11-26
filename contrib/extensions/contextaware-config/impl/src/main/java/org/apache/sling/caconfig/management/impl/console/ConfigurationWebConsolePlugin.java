@@ -107,7 +107,14 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
 
     private void printResolutionTestTool(HttpServletRequest request, PrintWriter pw) {
         final String path = this.getParameter(request, "path", null);
-        final String configName = this.getParameter(request, "configName", null);
+        String configNameOther = this.getParameter(request, "configNameOther", null);
+        String configName = this.getParameter(request, "configName", null);
+        if (configName == null) {
+            configName = configNameOther;
+        }
+        else {
+            configNameOther = null;
+        }
         final boolean resourceCollection = BooleanUtils.toBoolean(this.getParameter(request, "resourceCollection", "false"));
 
         ResourceResolver resolver = null;
@@ -136,7 +143,10 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
             textField(pw, "Content Path", "path", path, alertMessage);
             
             tableRows(pw);
-            textField(pw, "Config Name", "configName", configName);
+            selectField(pw, "Config Name", "configName", configName, configurationManager.getConfigurationNames());
+            
+            tableRows(pw);
+            textField(pw, "Other Config Name", "configNameOther", configNameOther);
             
             tableRows(pw);
             checkboxField(pw, "Resource collection", "resourceCollection", resourceCollection);
@@ -265,6 +275,27 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
         for (String alertMessage : alertMessages) {
             alertDiv(pw, alertMessage);
         }
+        pw.println("</td>");
+    }
+    
+    private void selectField(PrintWriter pw, String label, String fieldName, String value, Collection<String> options) {
+        pw.print("<td style='width:20%'>");
+        pw.print(xss.encodeForHTMLAttr(label));
+        pw.println("</td>");
+        pw.print("<td><select name='");
+        pw.print(xss.encodeForHTMLAttr(fieldName));
+        pw.print("' style='width:100%'>");
+        pw.print("<option value=''>(please select)</option>");
+        for (String option : options) {
+            pw.print("<option");
+            if (StringUtils.equals(option, value)) {
+                pw.print(" selected");
+            }
+            pw.print(">");
+            pw.print(xss.encodeForHTMLAttr(option));
+            pw.print("</option>");
+        }
+        pw.print("</select>");
         pw.println("</td>");
     }
     
