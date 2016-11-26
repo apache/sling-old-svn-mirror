@@ -42,6 +42,7 @@ public final class ServletResolverConstants {
      * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
      * property must be set or the servlet is ignored. 
      * If both are set the servlet is registered using both ways.
+     * <p>
      * A servlet using this property might be ignored unless its path is included 
      * in the Execution Paths {@code servletresolver.paths} configuration setting of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service.
      */
@@ -69,20 +70,20 @@ public final class ServletResolverConstants {
      * It only is applied as prefix to {@link #SLING_SERVLET_PATHS} and 
      * {@link #SLING_SERVLET_RESOURCE_TYPES} in case they do not start with a "/".
      * <p>
-     * If the value of this property is a number, it defines the index of the search
+     * <ul>
+     * <li>If the value of this property is a number, it defines the index of the search
      * path entries from the resource resolver. The defined search path is used as
      * a prefix to mount this servlet. The number can be -1 which always points to the
      * last search entry. If the specified value is higher than than the highest index
      * of the search paths, the last entry is used. The index starts with 0.
      * If the value of this property is a string and parseable as a number, the above
-     * logic is used.
-     * If the value of this property is a string starting with "/", this value is applied
-     * as a prefix, regardless of the configured search paths!
-     * If the value is anything else, it is ignored.
+     * logic is used.</li>
+     * <li>If the value of this property is a string starting with "/", this value is applied
+     * as a prefix, regardless of the configured search paths!</li>
+     * <li>If the value is anything else, it is ignored.</li>
+     * </ul>
      * If this property is not specified, the configuration of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service is used.
      * In case even that one is not set "/" is used as prefix.
-     * <p>
-     * The type of this property is either String or a Number.
      */
     public static final String SLING_SERVLET_PREFIX = "sling.servlet.prefix";
 
