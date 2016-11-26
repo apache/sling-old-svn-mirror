@@ -33,7 +33,7 @@ public final class ServletResolverConstants {
      * a service providing the absolute paths under which the servlet is
      * accessible as a resource (value is "sling.servlet.paths").
      * A relative path is made absolute by prefixing it with the value set through the 
-     * {#link SLING_SERVLET_PREFIX} property. 
+     * {@link #SLING_SERVLET_PREFIX} property. 
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the path(s) under which the servlet is registered in the
@@ -52,7 +52,7 @@ public final class ServletResolverConstants {
      * a service containing the resource type(s) supported by the servlet (value
      * is "sling.servlet.resourceTypes").
      * A relative resource type is made absolute by prefixing it with the value set through the 
-     * {#link SLING_SERVLET_PREFIX} property. 
+     * {@link #SLING_SERVLET_PREFIX} property. 
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types.
