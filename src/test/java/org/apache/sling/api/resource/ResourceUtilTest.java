@@ -416,21 +416,4 @@ public class ResourceUtilTest {
     @Test public void testFindResourceSuperType() {
         assertNull(ResourceUtil.findResourceSuperType(null));
     }
-
-    @Test public void testAreResourceTypesEqual() {
-        assertTrue(ResourceUtil.areResourceTypesEqual("some/type", "/apps/some/type", new String[]{"/apps/", "/libs/"}));
-        assertTrue(ResourceUtil.areResourceTypesEqual("/apps/some/type", "some/type", new String[]{"/apps/", "/libs/"}));
-        assertTrue(ResourceUtil.areResourceTypesEqual("/apps/some/type", "/apps/some/type", new String[]{"/apps/", "/libs/"}));
-        assertTrue(ResourceUtil.areResourceTypesEqual("some/type", "some/type", new String[]{"/apps/", "/libs/"}));
-        assertTrue(ResourceUtil.areResourceTypesEqual("/apps/some/type", "/libs/some/type", new String[]{"/apps/", "/libs/"}));
-        assertFalse(ResourceUtil.areResourceTypesEqual("/apps/some/type", "/libs/some/type", new String[]{}));
-    }
-
-    @Test public void testRelativizeResourceType() {
-        assertEquals("relative/type", ResourceUtil.relativizeResourceType("relative/type", new String[]{"/apps/", "/libs/"}));
-        assertEquals("relative/type", ResourceUtil.relativizeResourceType("/apps/relative/type", new String[]{"/apps/", "/libs/"}));
-        assertEquals("relative/type", ResourceUtil.relativizeResourceType("/libs/relative/type", new String[]{"/apps/", "/libs/"}));
-        assertEquals("", ResourceUtil.relativizeResourceType("/apps/", new String[]{"/apps/", "/libs/"}));
-        assertEquals("/some/prefix/type", ResourceUtil.relativizeResourceType("/some/prefix/type", new String[]{"/apps/", "/libs/"}));
-    }
 }
