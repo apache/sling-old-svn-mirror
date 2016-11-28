@@ -34,7 +34,7 @@ public class Service implements TestRule {
 
     private final Class<?> serviceClass;
 
-    private Object service;
+    private ServiceGetter<?> serviceGetter;
 
     public Service(Class<?> serviceClass) {
         this.serviceClass = serviceClass;
@@ -54,17 +54,12 @@ public class Service implements TestRule {
                     base.evaluate();
                     return;
                 }
-                
-                final ServiceGetter sg = new ServiceGetter(bundleContext, serviceClass, null);
-                Service.this.service = serviceClass.cast(sg.service);
 
+                serviceGetter = ServiceGetter.create(bundleContext, serviceClass, null);
                 try {
                     base.evaluate();
                 } finally {
-                    Service.this.service = null;
-                    if(sg.serviceReference != null) {
-                        bundleContext.ungetService(sg.serviceReference);
-                    }
+                    serviceGetter.close();
                 }
             }
 
@@ -79,7 +74,7 @@ public class Service implements TestRule {
      * @return The service object.
      */
     public <T> T getService(Class<T> serviceClass) {
-        return serviceClass.cast(service);
+        return serviceClass.cast(serviceGetter.getService());
     }
 
 }
