@@ -168,10 +168,15 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
 
     @Override
     protected DistributionPackage getPackageInternal(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        Resource resource = resourceResolver.getResource(id);
-        if (resource != null) {
-            return new ResourceDistributionPackage(resource, getType(), resourceResolver, null, null);
-        } else {
+        try {
+            Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
+            Resource packageResource = packagesRoot.getChild(id);
+            if (packageResource == null) {
+                return null;
+            } else {
+                return new ResourceDistributionPackage(packageResource, getType(), resourceResolver, null, null);
+            }
+        } catch (PersistenceException e) {
             return null;
         }
     }
@@ -214,7 +219,8 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             resourceResolver.delete(r);
         } else {
             // check parent is there at least
-            Resource parentResource = ResourceUtil.getOrCreateResource(resourceResolver, parent.getPath(), "nt:unstructured", "nt:unstructured", true);
+            Resource parentResource = ResourceUtil.getOrCreateResource(resourceResolver, parent.getPath(), "nt:unstructured",
+                    "nt:unstructured", true);
             log.debug("created parent {}", parentResource.getPath());
         }
 

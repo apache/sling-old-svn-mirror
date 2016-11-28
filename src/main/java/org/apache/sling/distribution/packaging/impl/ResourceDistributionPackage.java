@@ -52,7 +52,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
                                 ResourceResolver resourceResolver,
                                 @Nullable String digestAlgorithm,
                                 @Nullable String digestMessage) {
-        super(resource.getPath() + '-' + randomUUID(), type, digestAlgorithm, digestMessage);
+        super(resource.getName(), type, digestAlgorithm, digestMessage);
         this.resourceResolver = resourceResolver;
         ValueMap valueMap = resource.getValueMap();
         assert type.equals(valueMap.get("type")) : "wrong resource type";
