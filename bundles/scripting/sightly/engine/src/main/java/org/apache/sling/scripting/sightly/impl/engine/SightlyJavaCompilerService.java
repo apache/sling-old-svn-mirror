@@ -36,9 +36,10 @@ import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.scripting.sightly.impl.utils.ScriptUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -73,6 +74,9 @@ public class SightlyJavaCompilerService {
     @Reference
     private SightlyEngineConfiguration sightlyEngineConfiguration = null;
 
+    @Reference
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider = null;
+
     private Options options;
 
     /**
@@ -85,14 +89,13 @@ public class SightlyJavaCompilerService {
      * @return object instance of the requested class
      */
     public Object getInstance(RenderContext renderContext, String className) {
-        RenderContextImpl rci = (RenderContextImpl) renderContext;
         LOG.debug("Attempting to load class {}.", className);
         if (className.contains(".")) {
             if (resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(className) > 0) {
                 // it looks like the POJO comes from the repo and it was changed since it was last loaded
                 LOG.debug("Class {} identifies a POJO from the repository that was changed since the last time it was instantiated.",
                         className);
-                Object result = compileRepositoryJavaClass(rci.getScriptResourceResolver(), className);
+                Object result = compileRepositoryJavaClass(scriptingResourceResolverProvider.getRequestScopedResourceResolver(), className);
                 resourceBackedPojoChangeMonitor.clearJavaUseObject(className);
                 return result;
             }
@@ -103,10 +106,14 @@ public class SightlyJavaCompilerService {
             } catch (Exception e) {
                 // the object definitely doesn't come from a bundle so we should attempt to compile it from the repo
                 LOG.debug("Class {} identifies a POJO from the repository and it needs to be compiled.", className);
-                return compileRepositoryJavaClass(rci.getScriptResourceResolver(), className);
+                return compileRepositoryJavaClass(scriptingResourceResolverProvider.getRequestScopedResourceResolver(), className);
             }
         } else {
-            Resource pojoResource = rci.resolveScript(className + ".java");
+            Resource pojoResource = ScriptUtils.resolveScript(
+                    scriptingResourceResolverProvider.getRequestScopedResourceResolver(),
+                    renderContext,
+                    className + ".java"
+            );
             if (pojoResource != null) {
                 SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, pojoResource.getPath());
                 String fqcn = sourceIdentifier.getFullyQualifiedClassName();

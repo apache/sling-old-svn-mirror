@@ -18,17 +18,14 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.js.impl;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
@@ -79,7 +76,6 @@ public class JsUseProvider implements UseProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsUseProvider.class);
     private static final String JS_ENGINE_NAME = "javascript";
     private static final JsValueAdapter jsValueAdapter = new JsValueAdapter(new AsyncExtractor());
-    private static final String SLING_SCRIPTING_USER = "sling-scripting";
 
     @Reference
     private ScriptEngineManager scriptEngineManager = null;
@@ -88,7 +84,7 @@ public class JsUseProvider implements UseProvider {
     private ProxyAsyncScriptableFactory proxyAsyncScriptableFactory = null;
 
     @Reference
-    private ResourceResolverFactory rrf = null;
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
@@ -102,29 +98,19 @@ public class JsUseProvider implements UseProvider {
         }
         SlingScriptHelper scriptHelper = Utils.getHelper(globalBindings);
         JsEnvironment environment = null;
-        ResourceResolver slingScriptingResolver = null;
         try {
             environment = new JsEnvironment(jsEngine);
             environment.initialize();
-            Map<String, Object> authenticationInfo = new HashMap<String, Object>() {{
-                put(ResourceResolverFactory.SUBSERVICE, SLING_SCRIPTING_USER);
-            }};
-            slingScriptingResolver = rrf.getServiceResourceResolver(authenticationInfo);
+            ResourceResolver slingScriptingResolver = scriptingResourceResolverProvider.getRequestScopedResourceResolver();
             Resource callerScript = slingScriptingResolver.getResource(scriptHelper.getScript().getScriptResource().getPath());
             Resource scriptResource = Utils.getScriptResource(callerScript, identifier, globalBindings);
             globalBindings.put(ScriptEngine.FILENAME, scriptResource.getPath());
             proxyAsyncScriptableFactory.registerProxies(globalBindings);
             AsyncContainer asyncContainer = environment.runResource(scriptResource, globalBindings, arguments);
             return ProviderOutcome.success(jsValueAdapter.adapt(asyncContainer));
-        } catch (LoginException e) {
-            LOGGER.error("Cannot obtain a resource resolver backed by the " + SLING_SCRIPTING_USER + " service user.", e);
-            return ProviderOutcome.failure(e);
         } finally {
             if (environment != null) {
                 environment.cleanup();
-            }
-            if (slingScriptingResolver != null) {
-                slingScriptingResolver.close();
             }
         }
     }

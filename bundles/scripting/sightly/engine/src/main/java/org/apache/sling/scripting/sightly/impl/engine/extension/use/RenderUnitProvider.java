@@ -31,13 +31,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyCompiledScript;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngine;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.apache.sling.scripting.sightly.impl.utils.ScriptUtils;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -84,14 +85,17 @@ public class RenderUnitProvider implements UseProvider {
     @Reference
     private ScriptEngineManager scriptEngineManager;
 
+    @Reference
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
+
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
         if (identifier.endsWith("." + SightlyScriptEngineFactory.EXTENSION)) {
-            RenderContextImpl rci  = (RenderContextImpl) renderContext;
             Bindings globalBindings = renderContext.getBindings();
             SlingScriptHelper sling = BindingsUtils.getHelper(globalBindings);
             SlingHttpServletRequest request = BindingsUtils.getRequest(globalBindings);
-            final Resource renderUnitResource = rci.resolveScript(identifier);
+            final Resource renderUnitResource = ScriptUtils.resolveScript(scriptingResourceResolverProvider
+                    .getRequestScopedResourceResolver(), renderContext, identifier);
             if (renderUnitResource == null) {
                 Resource caller = ResourceResolution.getResourceForRequest(request.getResourceResolver(), request);
                 if (caller != null) {

@@ -109,15 +109,13 @@ public class PerformanceIT {
             HttpStatus.SC_OK);
     }
 
-    // modified threshold to 12 because of SLING-6156; will be restored by SLING-6166
-    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 12)
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
     public void test6SlyJSAsync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-async&count=" + CONTENT_LOOP_COUNT,
                 HttpStatus.SC_OK);
     }
 
-    // modified threshold to 12 because of SLING-6156; will be restored by SLING-6166
-    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 12)
+    @PerformanceTest(runinvocations = INVOCATIONS, warmupinvocations = WARMUP_INVOCATIONS, threshold = 4)
     public void test7SlyJSSync() {
         getStringContent("/sightlyperf/loop.html?selector=sly-js-sync&count=" + CONTENT_LOOP_COUNT,
             HttpStatus.SC_OK);

@@ -20,6 +20,8 @@
 # Dependencies
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.scripting.api/2.1.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.core/2.0.43-SNAPSHOT
   org.apache.sling/org.apache.sling.scripting.sightly.compiler
   org.apache.sling/org.apache.sling.scripting.sightly.compiler.java
   org.apache.sling/org.apache.sling.scripting.sightly
