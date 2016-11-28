@@ -19,6 +19,7 @@
 package org.apache.sling.caconfig.spi.metadata;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.util.Map;
 
@@ -40,10 +41,14 @@ public class PropertyMetadataTest {
         Map<String,String> props = ImmutableMap.of("p1", "v1");
         underTest.setProperties(props);
         
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata("test");
+        underTest.setConfigurationMetadata(configMetadata);
+        
         assertEquals("label1", underTest.getLabel());
         assertEquals("desc1", underTest.getDescription());
         assertEquals("value1", underTest.getDefaultValue());
         assertEquals(props, underTest.getProperties());
+        assertSame(configMetadata, underTest.getConfigurationMetadata());
     }
 
     @Test

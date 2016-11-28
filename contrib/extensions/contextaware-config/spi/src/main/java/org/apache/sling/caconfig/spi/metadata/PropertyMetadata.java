@@ -52,6 +52,7 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
     
     private final Class<T> type;
     private T defaultValue;
+    private ConfigurationMetadata configurationMetadata;
 
     /**
      * @param name Property name
@@ -121,6 +122,20 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
      */
     public void setDefaultValue(T value) {
         this.defaultValue = value;
+    }
+    
+    /**
+     * @return Metadata for nested configuration
+     */
+    public ConfigurationMetadata getConfigurationMetadata() {
+        return configurationMetadata;
+    }
+
+    /**
+     * @param configurationMetadata Metadata for nested configuration
+     */
+    public void setConfigurationMetadata(ConfigurationMetadata configurationMetadata) {
+        this.configurationMetadata = configurationMetadata;
     }
 
     @Override

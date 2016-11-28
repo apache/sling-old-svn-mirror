@@ -58,8 +58,8 @@ final class ConfigurationProxy {
     public @Nonnull static <T> T get(@Nullable Resource resource, @Nonnull Class<T> clazz, ChildResolver childResolver) {
 
         // only annotation interface classes are supported
-        if (!AnnotationClassParser.isContextAwareConfig(clazz)) {
-            throw new ConfigurationResolveException("Annotation interface class with @Configuration annotation expected: " + clazz.getName());
+        if (!clazz.isAnnotation()) {
+            throw new ConfigurationResolveException("Annotation interface class expected: " + clazz.getName());
         }
 
         // create dynamic proxy for annotation class accessing underlying resource properties
@@ -101,7 +101,7 @@ final class ConfigurationProxy {
             if (isArray) {
                 componentType = targetType.getComponentType();
             }
-            if (AnnotationClassParser.isContextAwareConfig(componentType)) {
+            if (componentType.isAnnotation()) {
                 if (isArray) {
                     Collection<?> listItems = childResolver.getChildren(propName, componentType);
                     return listItems.toArray((Object[])Array.newInstance(componentType, listItems.size()));
