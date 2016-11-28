@@ -28,5 +28,7 @@ public @interface NestedConfig {
     SimpleConfig subConfig();
     
     ListConfig[] subListConfig();
+
+    WithoutAnnotationConfig subConfigWithoutAnnotation();    
     
 }

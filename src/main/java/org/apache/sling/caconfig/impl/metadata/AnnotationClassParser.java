@@ -128,22 +128,54 @@ public final class AnnotationClassParser {
         configMetadata.setCollection(configAnnotation.collection());
 
         // property metadata
+        configMetadata.setPropertyMetadata(buildConfigurationMetadata_PropertyMetadata(clazz));
+        
+        return configMetadata;
+    }
+    
+    /**
+     * Build configuration metadata by parsing the given annotation interface class which is used for nested configurations.
+     * @param clazz Configuration annotation class
+     * @return Configuration metadata
+     */
+    private static ConfigurationMetadata buildConfigurationMetadata_Nested(Class<?> clazz) {
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata("{" + clazz.getName() + "}");
+
+        // property metadata
+        configMetadata.setPropertyMetadata(buildConfigurationMetadata_PropertyMetadata(clazz));
+        
+        return configMetadata;
+    }
+    
+    private static Map<String,PropertyMetadata<?>> buildConfigurationMetadata_PropertyMetadata(Class<?> clazz) {
         Map<String,PropertyMetadata<?>> propertyMetadataList = new HashMap<>();
         Method[] propertyMethods = clazz.getDeclaredMethods();
         for (Method propertyMethod : propertyMethods) {
             PropertyMetadata<?> propertyMetadata = buildPropertyMetadata(propertyMethod, propertyMethod.getReturnType());
             propertyMetadataList.put(propertyMetadata.getName(), propertyMetadata);
         }
-        configMetadata.setPropertyMetadata(propertyMetadataList);
-        
-        return configMetadata;
+        return propertyMetadataList;
     }
     
     @SuppressWarnings("unchecked")
     private static <T> PropertyMetadata<T> buildPropertyMetadata(Method propertyMethod, Class<T> type) {
         String propertyName = getPropertyName(propertyMethod.getName());
-        PropertyMetadata<T> propertyMetadata = new PropertyMetadata<>(propertyName, type);
-        propertyMetadata.setDefaultValue((T)propertyMethod.getDefaultValue());
+        
+        PropertyMetadata propertyMetadata;
+        if (type.isArray() && type.getComponentType().isAnnotation()) {
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type.getComponentType());
+            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata[].class);
+            propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
+        }
+        else if (type.isAnnotation()) {
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type);
+            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata.class);
+            propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
+        }
+        else {
+            propertyMetadata = new PropertyMetadata<>(propertyName, type);            
+            propertyMetadata.setDefaultValue((T)propertyMethod.getDefaultValue());
+        }
         
         Property propertyAnnotation = propertyMethod.getAnnotation(Property.class);
         if (propertyAnnotation != null) {            

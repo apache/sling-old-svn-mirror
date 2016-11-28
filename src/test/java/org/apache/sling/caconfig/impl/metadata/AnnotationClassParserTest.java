@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
@@ -33,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.example.AllTypesConfig;
 import org.apache.sling.caconfig.example.ListConfig;
 import org.apache.sling.caconfig.example.MetadataSimpleConfig;
+import org.apache.sling.caconfig.example.NestedConfig;
 import org.apache.sling.caconfig.example.SimpleConfig;
 import org.apache.sling.caconfig.example.WithoutAnnotationConfig;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
@@ -98,11 +100,14 @@ public class AnnotationClassParserTest {
                 assertTrue(propertyMetadata.getProperties().isEmpty());
                 assertEquals(5, propertyMetadata.getDefaultValue());
             }
-            else if (StringUtils.equals(propertyMetadata.getName(), "booleanParam")) {
+            else if (StringUtils.equals(propertyMetadata.getName(), "boolParam")) {
                 assertNull(propertyMetadata.getLabel());
                 assertNull(propertyMetadata.getDescription());
                 assertTrue(propertyMetadata.getProperties().isEmpty());
-                assertFalse((Boolean)propertyMetadata.getDefaultValue());
+                assertNull(propertyMetadata.getDefaultValue());
+            }
+            else {
+                fail("Unexpected property name: " + propertyMetadata.getName());
             }
         }
     }
@@ -124,6 +129,43 @@ public class AnnotationClassParserTest {
         assertNull(metadata.getDescription());
         assertTrue(metadata.getProperties().isEmpty());
         assertEquals(20, metadata.getPropertyMetadata().size());
+    }
+    
+    @Test
+    public void testBuildConfigurationMetadata_Nested() {
+        ConfigurationMetadata metadata = buildConfigurationMetadata(NestedConfig.class);
+        
+        assertEquals(NestedConfig.class.getName(), metadata.getName());
+
+        Collection<PropertyMetadata<?>> propertyMetadataList = metadata.getPropertyMetadata().values();
+        assertEquals(4, propertyMetadataList.size());
+        
+        for (PropertyMetadata<?> propertyMetadata : propertyMetadataList) {
+            if (StringUtils.equals(propertyMetadata.getName(), "stringParam")) {
+                assertEquals(String.class, propertyMetadata.getType());
+            }
+            else if (StringUtils.equals(propertyMetadata.getName(), "subConfig")) {
+                assertEquals(ConfigurationMetadata.class, propertyMetadata.getType());
+                
+                ConfigurationMetadata subConfigMetadata = propertyMetadata.getConfigurationMetadata();
+                assertEquals(3, subConfigMetadata.getPropertyMetadata().size());
+            }
+            else if (StringUtils.equals(propertyMetadata.getName(), "subListConfig")) {
+                assertEquals(ConfigurationMetadata[].class, propertyMetadata.getType());
+
+                ConfigurationMetadata subListConfigMetadata = propertyMetadata.getConfigurationMetadata(); 
+                assertEquals(2, subListConfigMetadata.getPropertyMetadata().size());
+            }
+            else if (StringUtils.equals(propertyMetadata.getName(), "subConfigWithoutAnnotation")) {
+                assertEquals(ConfigurationMetadata.class, propertyMetadata.getType());
+
+                ConfigurationMetadata subConfigWithoutAnnotationMetadata = propertyMetadata.getConfigurationMetadata(); 
+                assertEquals(1, subConfigWithoutAnnotationMetadata.getPropertyMetadata().size());
+            }
+            else {
+                fail("Unexpected property name: " + propertyMetadata.getName());
+            }
+        }
     }
     
     @Test(expected = IllegalArgumentException.class)

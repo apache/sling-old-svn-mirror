@@ -46,6 +46,7 @@ import org.apache.sling.caconfig.example.ListConfig;
 import org.apache.sling.caconfig.example.NestedConfig;
 import org.apache.sling.caconfig.example.SimpleConfig;
 import org.apache.sling.caconfig.example.SpecialNamesConfig;
+import org.apache.sling.caconfig.example.WithoutAnnotationConfig;
 import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
@@ -154,7 +155,8 @@ public class ConfigurationProxyTest {
             .resource("/test/subConfig", "stringParam", "v2", "intParam", 444, "boolParam", true)
             .resource("/test/subListConfig/1", "stringParam", "v3.1")
             .resource("/test/subListConfig/2", "stringParam", "v3.2")
-            .resource("/test/subListConfig/3", "stringParam", "v3.3");
+            .resource("/test/subListConfig/3", "stringParam", "v3.3")
+            .resource("/test/subConfigWithoutAnnotation", "stringParam", "v4");
 
         Resource resource = context.resourceResolver().getResource("/test");
         
@@ -172,6 +174,9 @@ public class ConfigurationProxyTest {
         assertEquals("v3.1", listConfig[0].stringParam());
         assertEquals("v3.2", listConfig[1].stringParam());
         assertEquals("v3.3", listConfig[2].stringParam());
+
+        WithoutAnnotationConfig subConfigWithoutAnnotation = cfg.subConfigWithoutAnnotation();
+        assertEquals("v4", subConfigWithoutAnnotation.stringParam());
     }
 
     @Test(expected=ConfigurationResolveException.class)
