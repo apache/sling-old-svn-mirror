@@ -104,7 +104,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     private static final String ENCODING = "UTF-8";
 
     /** Default regexp for watched folders */
-    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install|config$";
+    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/(install|config)$";
 
     /**
      * ComponentContext property that overrides the folder name regexp
@@ -505,13 +505,13 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                                 "JCR Provider scanning would not be performed", cfg.getPauseScanNodePath());
                         pauseMessageLogged = true;
                     }
-                    
+
                     try {
                         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC);
                     } catch(InterruptedException ignored) {
                         logger.debug("InterruptedException in scanningIsPaused block");
                     }
-                    
+
                     return;
                 } else if (pauseMessageLogged) {
                     pauseMessageLogged = false;
@@ -530,7 +530,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     didRefresh = true;
                 }
                 counters.incrementAndGet(SCAN_FOLDERS_COUNTER);
-                
+
                 final WatchedFolder.ScanResult sr = wf.scan();
                 boolean toDo = false;
                 if ( sr.toAdd.size() > 0 ) {
