@@ -16,25 +16,10 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-[feature name=launchpad-testing]
-# Dependencies
-[artifacts]
-  org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
-  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
-
+[feature name=sling]
 # additional configuration for testing
 [configurations]
-  integrationTestsConfig
-    message="This test config should be loaded at startup"
 
-  org.apache.sling.servlets.resolver.SlingServletResolver
-    # Set the servlet resolver's cache size to zero for testing
-    servletresolver.cacheSize=I"0"
-
- # Test repository initialization from provisioning model
- # No need to test all repoinit statements, this is done
- # by the repoinit it module
- [:repoinit]
-create path /repoinit/provisioningModelTest
-
-create service user provisioningModelUser
+  # kept in a feature named 'sling' due to SLING-6332
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelist [mode=merge]
+    whitelist.bundles.regexp="org.apache.sling.(launchpad|junit).*"
