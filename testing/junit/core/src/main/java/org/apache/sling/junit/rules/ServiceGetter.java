@@ -17,61 +17,71 @@
 
 package org.apache.sling.junit.rules;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.io.Closeable;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Implements the logic used to get a service */
-class ServiceGetter {
-    final ServiceReference serviceReference;
-    final Object service;
+class ServiceGetter<T> implements Closeable {
+
+    private final ServiceTracker tracker;
+    private final BundleContext bundleContext;
+
+    public static <T> ServiceGetter<T> create(BundleContext bundleContext, Class<T> serviceClass, String ldapFilter) {
+        return new ServiceGetter<T>(bundleContext, serviceClass, ldapFilter);
+    }
 
     @SuppressWarnings("unchecked")
-    ServiceGetter(BundleContext bundleContext, Class<?> serviceClass, String ldapFilter) {
-        Object s;
-        
+    private ServiceGetter(BundleContext bundleContext, Class<T> serviceClass, String ldapFilter) {
         if (serviceClass.equals(BundleContext.class)) {
             // Special case to provide the BundleContext to tests
-            s = serviceClass.cast(bundleContext);
-            serviceReference = null;
+            this.bundleContext = bundleContext;
+            this.tracker = null;
         } else {
-            if(ldapFilter != null && !ldapFilter.isEmpty()) {
-                try {
-                    final ServiceReference [] services = bundleContext.getServiceReferences(serviceClass.getName(), ldapFilter);
-                    if(services == null) {
-                        serviceReference = null;
-                    } else {
-                        // Prefer services which have a higher ranking
-                        final List<ServiceReference> sorted = Arrays.asList(services);
-                        Collections.sort(sorted);
-                        serviceReference = sorted.get(sorted.size() - 1);
-                    }
-                } catch (InvalidSyntaxException e) {
-                    throw new IllegalStateException("Invalid filter syntax:" + ldapFilter, e);
-                }
+            this.bundleContext = null;
+            final String classFilter = String.format("(%s=%s)", Constants.OBJECTCLASS, serviceClass.getName());
+            final String combinedFilter;
+            if (ldapFilter == null || ldapFilter.trim().length() == 0) {
+                combinedFilter = classFilter;
             } else {
-                serviceReference = bundleContext.getServiceReference(serviceClass.getName());
+                combinedFilter = String.format("(&%s%s)", classFilter, ldapFilter);
             }
-            
-            if (serviceReference == null) {
-                throw new IllegalStateException(
-                        "unable to get a service reference, class=" + serviceClass.getName() + ", filter='" + ldapFilter + "'");
+            final Filter filter;
+            try {
+                filter = FrameworkUtil.createFilter(combinedFilter);
+                tracker = new ServiceTracker(bundleContext, filter, null);
+                tracker.open();
+            } catch (InvalidSyntaxException e) {
+                throw new IllegalArgumentException("Syntax of argument ldapFilter is invalid", e);
             }
-
-            final Object service = bundleContext.getService(serviceReference);
-
-            if (service == null) {
-                throw new IllegalStateException(
-                        "unable to get an instance of the service");
-            }
-
-            s = serviceClass.cast(service);
         }
-        
-        service = s;
+    }
+
+    public T getService() {
+        if (tracker == null) {
+            return (T)bundleContext;
+        } else {
+            return (T)tracker.getService();
+        }
+    }
+
+    public T getService(long timeout) throws InterruptedException {
+        if (tracker == null) {
+            return (T)bundleContext;
+        } else {
+            return (T)tracker.waitForService(timeout);
+        }
+    }
+
+    @Override
+    public void close() {
+        if (tracker != null) {
+            tracker.close();
+        }
     }
 }

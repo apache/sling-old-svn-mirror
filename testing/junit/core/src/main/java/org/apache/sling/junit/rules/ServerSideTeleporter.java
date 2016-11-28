@@ -23,25 +23,25 @@ import org.apache.sling.junit.Activator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.InvalidSyntaxException;
 
 /** Server-side variant of the TeleporterRule, which provides
  *  access to OSGi services for convenience, but does not do
  *  much more.
  */
 class ServerSideTeleporter extends TeleporterRule {
-    private final List<ServiceReference> toUnget = new ArrayList<ServiceReference>();
+    private final List<ServiceGetter<?>> serviceGettersToClose = new ArrayList<ServiceGetter<?>>();
     private final BundleContext bundleContext;
     private final Bundle bundleUnderTest;
-    
+
     private static final int WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS = 10;
-    
+
     ServerSideTeleporter(Class<?> classUnderTest) {
         bundleContext = Activator.getBundleContext();
         if (bundleContext == null) {
             throw new IllegalStateException("Null BundleContext, should not happen when this class is used");
         }
-        
+
         Bundle bundle = FrameworkUtil.getBundle(classUnderTest);
         if (bundle == null) {
             bundle = bundleContext.getBundle();
@@ -52,9 +52,9 @@ class ServerSideTeleporter extends TeleporterRule {
     @Override
     protected void after() {
         super.after();
-        for(ServiceReference r : toUnget) {
-            if(r != null) {
-                bundleContext.ungetService(r);
+        for(ServiceGetter<?> serviceGetter : serviceGettersToClose) {
+            if(serviceGetter != null) {
+                serviceGetter.close();
             }
         }
     }
@@ -68,32 +68,25 @@ class ServerSideTeleporter extends TeleporterRule {
             configuredTimeout = Integer.toString(WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS);
         }
         final long timeout = System.currentTimeMillis() + Integer.parseInt(configuredTimeout) * 1000;
-        
-        while (System.currentTimeMillis() < timeout) {
-            try {
-                T service = getServiceInternal(serviceClass, ldapFilter);
-                if (service != null) {
-                    return service;
-                }
+        try {
+            T service = getServiceInternal(serviceClass, ldapFilter, timeout);
+            if (service != null) {
+                return service;
             }
-            catch (IllegalStateException ex) {
-                // ignore, try again
-            }
-            try {
-                Thread.sleep(50L);
-            }
-            catch (InterruptedException ex) {
-                // ignore
-            }
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(
+                    "unable to get a service reference before timeout, class=" + serviceClass.getName() + ", filter='" + ldapFilter + "'", e);
+        } catch (InvalidSyntaxException e) {
+            throw new IllegalArgumentException("Invalid syntax for argument ldapFilter", e);
         }
         throw new IllegalStateException(
                 "unable to get a service reference, class=" + serviceClass.getName() + ", filter='" + ldapFilter + "'");
     }
 
-    private <T> T getServiceInternal (Class<T> serviceClass, String ldapFilter) {
-        final ServiceGetter sg = new ServiceGetter(bundleContext, serviceClass, ldapFilter);
-        toUnget.add(sg.serviceReference);
-        return serviceClass.cast(sg.service);
+    private <T> T getServiceInternal (Class<T> serviceClass, String ldapFilter, long timeoutMs)
+            throws InterruptedException, InvalidSyntaxException {
+        ServiceGetter<T> serviceGetter = ServiceGetter.create(bundleContext, serviceClass, ldapFilter);
+        serviceGettersToClose.add(serviceGetter);
+        return serviceGetter.getService(timeoutMs);
     }
-
 }
