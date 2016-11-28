@@ -22,8 +22,7 @@
  * context of a Servlet API Request might lead to improper cleaning of objects whose life-cycle should not be longer than the request to
  * which they're bound to (for example per-thread objects)</i>.</p>
  *
- * <p>This package depends on the {@link org.apache.sling.api.resource} API, version 2.9.0 (bundle {@code org.apache.sling.api}, version
- * 2.11.0).</p>
+ * <p>This package depends on the {@link org.apache.sling.api.resource} API, version >= 2.10.0.</p>
  */
 @Version("1.0.0")
 package org.apache.sling.scripting.api.resource;
