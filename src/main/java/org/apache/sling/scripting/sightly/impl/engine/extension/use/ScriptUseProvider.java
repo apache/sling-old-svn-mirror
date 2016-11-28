@@ -25,14 +25,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.apache.sling.scripting.sightly.impl.utils.ScriptUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -76,16 +78,19 @@ public class ScriptUseProvider implements UseProvider {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptUseProvider.class);
 
+    @Reference
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
+
     @Override
     public ProviderOutcome provide(String scriptName, RenderContext renderContext, Bindings arguments) {
-        RenderContextImpl rci = (RenderContextImpl) renderContext;
-        Bindings globalBindings = rci.getBindings();
+        Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = BindingsUtils.merge(globalBindings, arguments);
         String extension = scriptExtension(scriptName);
         if (extension == null || extension.equals(SightlyScriptEngineFactory.EXTENSION)) {
             return ProviderOutcome.failure();
         }
-        Resource scriptResource = rci.resolveScript(scriptName);
+        Resource scriptResource = ScriptUtils.resolveScript(scriptingResourceResolverProvider.getRequestScopedResourceResolver(),
+                renderContext, scriptName);
         if (scriptResource == null) {
             log.debug("Path does not match an existing resource: {}", scriptName);
             return ProviderOutcome.failure();

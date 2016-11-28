@@ -44,16 +44,11 @@ public class RenderContextImpl implements RenderContext {
     private static final AbstractRuntimeObjectModel OBJECT_MODEL = new SlingRuntimeObjectModel();
 
     private final Bindings bindings;
-    private final ResourceResolver scriptResourceResolver;
     private final ExtensionRegistryService extensionRegistryService;
-    private final SlingScriptHelper sling;
 
     public RenderContextImpl(ScriptContext scriptContext) {
         bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-        scriptResourceResolver = (ResourceResolver) scriptContext.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
-                SlingScriptConstants.SLING_SCOPE);
-        sling = BindingsUtils.getHelper(bindings);
-        extensionRegistryService = sling.getService(ExtensionRegistryService.class);
+        extensionRegistryService = BindingsUtils.getHelper(bindings).getService(ExtensionRegistryService.class);
     }
 
     @Override
@@ -78,21 +73,6 @@ public class RenderContextImpl implements RenderContext {
             throw new SightlyException("Runtime extension is not available: " + functionName);
         }
         return extension.call(this, arguments);
-    }
-
-    public ResourceResolver getScriptResourceResolver() {
-        return scriptResourceResolver;
-    }
-
-    public Resource resolveScript(String scriptIdentifier) {
-        SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
-        Resource caller = ResourceResolution.getResourceForRequest(scriptResourceResolver, request);
-        Resource result = ResourceResolution.getResourceFromSearchPath(caller, scriptIdentifier);
-        if (result == null) {
-            caller = sling.getScript().getScriptResource();
-            result = ResourceResolution.getResourceFromSearchPath(caller, scriptIdentifier);
-        }
-        return result;
     }
 
 }
