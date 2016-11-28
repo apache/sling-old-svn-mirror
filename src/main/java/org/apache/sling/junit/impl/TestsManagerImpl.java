@@ -19,13 +19,18 @@ package org.apache.sling.junit.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.junit.Activator;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.SlingTestContextProvider;
 import org.apache.sling.junit.TestSelector;
@@ -33,7 +38,9 @@ import org.apache.sling.junit.TestsManager;
 import org.apache.sling.junit.TestsProvider;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.util.tracker.ServiceTracker;
@@ -43,9 +50,19 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 public class TestsManagerImpl implements TestsManager {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final Logger log = LoggerFactory.getLogger(TestsManagerImpl.class);
+
+    // the inactivity timeout is the maximum time after the last bundle became active
+    // before waiting for more bundles to become active should be aborted
+    private static final int DEFAULT_SYSTEM_STARTUP_INACTIVITY_TIMEOUT_SECONDS = 10;
+
+    private static volatile boolean waitForSystemStartup = true;
+
     private ServiceTracker tracker;
+
     private int lastTrackingCount = -1;
+
     private BundleContext bundleContext;
     
     // List of providers
@@ -170,6 +187,7 @@ public class TestsManagerImpl implements TestsManager {
 
     public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception {
         renderer.title(2, "Running tests");
+        waitForSystemStartup();
         final JUnitCore junit = new JUnitCore();
         
         // Create a test context if we don't have one yet
@@ -211,5 +229,51 @@ public class TestsManagerImpl implements TestsManager {
                 + ", followed by the appropriate extension, like 'com.example.foo.tests.html'";
         renderer.info("note", note);
         renderer.list("testNames", testNames);
+    }
+
+
+    public static void waitForSystemStartup() {
+        if (waitForSystemStartup) {
+            waitForSystemStartup = false;
+            final BundleContext bundleContext = Activator.getBundleContext();
+            final Set<Bundle> bundlesToWaitFor = new HashSet<Bundle>();
+            for (final Bundle bundle : bundleContext.getBundles()) {
+                if (bundle.getState() != Bundle.ACTIVE && !isFragment(bundle)) {
+                    bundlesToWaitFor.add(bundle);
+                }
+            }
+
+            // wait max inactivityTimeout after the last bundle became active before giving up
+            long inactivityTimeout = TimeUnit.SECONDS.toMillis(DEFAULT_SYSTEM_STARTUP_INACTIVITY_TIMEOUT_SECONDS);
+            long lastChange = System.currentTimeMillis();
+            while (!bundlesToWaitFor.isEmpty() || (lastChange + inactivityTimeout < System.currentTimeMillis())) {
+                log.info("Waiting for the following bundles to start: {}", bundlesToWaitFor);
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                Iterator<Bundle> bundles = bundlesToWaitFor.iterator();
+                while (bundles.hasNext()) {
+                    Bundle bundle = bundles.next();
+                    if (bundle.getState() == Bundle.ACTIVE) {
+                        bundles.remove();
+                        log.debug("Bundle {} has become active", bundle.getSymbolicName());
+                        lastChange = System.currentTimeMillis();
+                    }
+                }
+            }
+
+            if (!bundlesToWaitFor.isEmpty()) {
+                log.warn("Waited {} seconds but the following bundles are not yet started: {}",
+                        DEFAULT_SYSTEM_STARTUP_INACTIVITY_TIMEOUT_SECONDS, bundlesToWaitFor);
+            } else {
+                log.info("All bundles are active, starting to run tests.");
+            }
+        }
+    }
+
+    private static boolean isFragment(final Bundle bundle) {
+        return bundle.getHeaders().get(Constants.FRAGMENT_HOST) != null;
     }
 }
