@@ -17,9 +17,10 @@
 #  under the License.
 #
 [feature name=sling]
+
 # additional configuration for testing
 [configurations]
 
   # kept in a feature named 'sling' due to SLING-6332
   org.apache.sling.jcr.base.internal.LoginAdminWhitelist [mode=merge]
-    whitelist.bundles.regexp="org.apache.sling.(launchpad|junit).*"
+    whitelist.bundles.regexp="^org\\.apache\\.sling\\.junit(\\..*)?$"
