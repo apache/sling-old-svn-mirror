@@ -27,6 +27,7 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -37,7 +38,10 @@ import org.slf4j.LoggerFactory;
         service = {ScriptingResourceResolverProvider.class, ServletRequestListener.class},
         property = {
                 Constants.SERVICE_DESCRIPTION + "=Apache Sling Scripting Resource Resolver Provider",
-                Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME +
+                        "=*)",
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER + "=true"
         }
 
 )
@@ -79,7 +83,7 @@ public class ScriptingResourceResolverProviderImpl implements ScriptingResourceR
                 threadResolver = new ScriptingResourceResolver(logStackTraceOnResolverClose, delegate);
                 perThreadResourceResolver.set(threadResolver);
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Setting per thread resource resolver for thread {}.", Thread.currentThread().getName());
+                    LOGGER.debug("Set per thread resource resolver for thread {}.", Thread.currentThread().getId());
                 }
             } catch (LoginException e) {
                 throw new IllegalStateException("Cannot create per thread resource resolver.", e);
@@ -99,10 +103,11 @@ public class ScriptingResourceResolverProviderImpl implements ScriptingResourceR
         if (scriptingResourceResolver != null) {
             scriptingResourceResolver._close();
             perThreadResourceResolver.remove();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Removed per thread resource resolver for thread {}.", Thread.currentThread().getId());
+            }
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Removing per thread resource resolver for thread {}.", Thread.currentThread().getName());
-        }
+
     }
 
     @Activate
