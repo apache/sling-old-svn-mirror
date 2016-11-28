@@ -68,26 +68,17 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
 
     @Override
     public DistributionPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
-        long start = System.currentTimeMillis();
-        DistributionPackage distributionPackage = wrapped.readPackage(resourceResolver, stream);
-        registerDistributionPackageMBean(start, distributionPackage);
-        return distributionPackage;
+        return wrapped.readPackage(resourceResolver, stream);
     }
 
     @Override
     public DistributionPackage getPackage(ResourceResolver resourceResolver, String id) throws DistributionException {
-        long start = System.currentTimeMillis();
-        DistributionPackage distributionPackage = wrapped.getPackage(resourceResolver, id);
-        registerDistributionPackageMBean(start, distributionPackage);
-        return distributionPackage;
+        return wrapped.getPackage(resourceResolver, id);
     }
 
     @Override
     public boolean installPackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionException {
-        long start = System.currentTimeMillis();
-        boolean installed = wrapped.installPackage(resourceResolver, distributionPackage);
-        registerDistributionPackageMBean(start, distributionPackage);
-        return installed;
+        return wrapped.installPackage(resourceResolver, distributionPackage);
     }
 
     @Override
