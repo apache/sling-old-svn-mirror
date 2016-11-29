@@ -86,7 +86,7 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
         return wrapped.installPackage(resourceResolver, stream);
     }
 
-    private final void registerDistributionPackageMBean(long start, DistributionPackage distributionPackage) {
+    private void registerDistributionPackageMBean(long start, DistributionPackage distributionPackage) {
         long processingTime = System.currentTimeMillis() - start;
 
         DistributionPackageMBean mBean = new DistributionPackageMBeanImpl(distributionPackage,
