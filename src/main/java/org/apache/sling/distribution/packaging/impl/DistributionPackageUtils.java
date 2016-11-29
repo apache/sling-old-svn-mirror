@@ -237,6 +237,7 @@ public class DistributionPackageUtils {
             if (bytesRead > 0 && buffer[0] > 0 && META_START.equals(s)) {
                 ObjectInputStream stream = getSafeObjectInputStream(inputStream);
 
+                @SuppressWarnings("unchecked") // by design
                 HashMap<String, Object> map = (HashMap<String, Object>) stream.readObject();
                 info.putAll(map);
             } else {
@@ -295,7 +296,7 @@ public class DistributionPackageUtils {
         Node content = JcrUtils.getOrAddNode(file, Node.JCR_CONTENT, NodeType.NT_RESOURCE);
         Binary binary = parent.getSession().getValueFactory().createBinary(stream);
         content.setProperty(Property.JCR_DATA, binary);
-        Node refs = JcrUtils.getOrAddNode(parent, "refs", NodeType.NT_UNSTRUCTURED);
+        JcrUtils.getOrAddNode(parent, "refs", NodeType.NT_UNSTRUCTURED);
     }
 
 
@@ -346,23 +347,30 @@ public class DistributionPackageUtils {
         }
 
         synchronized (filelock) {
+            ObjectInputStream inputStream = null;
+            ObjectOutputStream outputStream = null;
             try {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set;
 
                 if (file.exists()) {
-                    ObjectInputStream inputStream = getSafeObjectInputStream(new FileInputStream(file));
-                    set = (HashSet<String>) inputStream.readObject();
-                    IOUtils.closeQuietly(inputStream);
+                    inputStream = getSafeObjectInputStream(new FileInputStream(file));
+                    @SuppressWarnings("unchecked") // type is known by sedign
+                    HashSet<String> fromStreamSet = (HashSet<String>) inputStream.readObject();
+                    set = fromStreamSet;
+                } else {
+                    set = new HashSet<String>();
                 }
 
                 set.addAll(Arrays.asList(holderNames));
 
-                ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+                outputStream = new ObjectOutputStream(new FileOutputStream(file));
                 outputStream.writeObject(set);
-                IOUtils.closeQuietly(outputStream);
 
             } catch (ClassNotFoundException e) {
                 log.error("Cannot release file", e);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+                IOUtils.closeQuietly(outputStream);
             }
         }
 
@@ -375,14 +383,19 @@ public class DistributionPackageUtils {
         }
 
         synchronized (filelock) {
+            ObjectInputStream inputStream = null;
+            ObjectOutputStream outputStream = null;
             try {
 
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set;
 
                 if (file.exists()) {
-                    ObjectInputStream inputStream = getSafeObjectInputStream(new FileInputStream(file));
-                    set = (HashSet<String>) inputStream.readObject();
-                    IOUtils.closeQuietly(inputStream);
+                    inputStream = getSafeObjectInputStream(new FileInputStream(file));
+                    @SuppressWarnings("unchecked") //type is known by design
+                    HashSet<String> fromStreamSet = (HashSet<String>) inputStream.readObject();
+                    set = fromStreamSet;
+                } else {
+                    set = new HashSet<String>();
                 }
 
                 set.removeAll(Arrays.asList(holderNames));
@@ -392,12 +405,14 @@ public class DistributionPackageUtils {
                     return true;
                 }
 
-                ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+                outputStream = new ObjectOutputStream(new FileOutputStream(file));
                 outputStream.writeObject(set);
-                IOUtils.closeQuietly(outputStream);
             }
             catch (ClassNotFoundException e) {
                 log.error("Cannot release file", e);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+                IOUtils.closeQuietly(outputStream);
             }
         }
         return false;
@@ -405,7 +420,7 @@ public class DistributionPackageUtils {
 
     private static ObjectInputStream getSafeObjectInputStream(InputStream inputStream) throws IOException {
 
-        final Class[] acceptedClasses = new Class[] {
+        final Class<?>[] acceptedClasses = new Class<?>[] {
                 HashMap.class, HashSet.class,
                 String.class, String[].class,
                 Long.class,
@@ -419,7 +434,7 @@ public class DistributionPackageUtils {
             @Override
             protected Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
                 String className = osc.getName();
-                for (Class clazz : acceptedClasses) {
+                for (Class<?> clazz : acceptedClasses) {
                     if (clazz.getName().equals(className)) {
                         return super.resolveClass(osc);
                     }

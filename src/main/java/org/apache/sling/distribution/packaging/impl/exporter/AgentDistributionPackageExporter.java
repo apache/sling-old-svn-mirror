@@ -92,10 +92,11 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
                 if (packageBuilder != null) {
                     distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getPackageId());
-                    distributionPackage.getInfo().putAll(info);
-
-                    log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
+                        distributionPackage.getInfo().putAll(info);
+
+                        log.debug("item {} fetched from the queue", info);
+
                         packageProcessor.process(new AgentDistributionPackage(distributionPackage, queue, entry.getId()));
                     } else {
                         log.warn("cannot get package {}", info);

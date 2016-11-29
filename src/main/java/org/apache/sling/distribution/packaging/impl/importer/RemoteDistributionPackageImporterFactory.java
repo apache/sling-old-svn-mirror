@@ -18,9 +18,10 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -30,17 +31,15 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * OSGi configuration factory for {@link RemoteDistributionPackageImporter}s.
@@ -53,9 +52,6 @@ import org.slf4j.LoggerFactory;
 @Service(value = DistributionPackageImporter.class)
 @Property(name="webconsole.configurationFactory.nameHint", value="Importer name: {name}")
 public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
 
     /**
      * name of this importer.
