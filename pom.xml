@@ -50,7 +50,7 @@
     <properties>
         <site.jira.version.id>12314286</site.jira.version.id>
         <site.javadoc.exclude>**.internal.**</site.javadoc.exclude>
-        <oak.version>1.5.14</oak.version>
+        <oak.version>1.5.13</oak.version>
         <jackrabbit.version>2.13.4</jackrabbit.version>
     </properties>
 
