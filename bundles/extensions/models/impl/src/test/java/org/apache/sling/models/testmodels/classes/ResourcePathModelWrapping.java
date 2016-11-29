@@ -26,18 +26,18 @@ import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 @Model(adaptables = { Resource.class, SlingHttpServletRequest.class })
 public class ResourcePathModelWrapping {
 
-	@ResourcePath(path = "/some/path")
-	private Resource[] fromPath;
+    @ResourcePath(path = "/some/path")
+    private Resource[] fromPath;
 
-	@ResourcePath(name = "propertyWithSeveralPaths")
-	private Resource[] multipleResources;
+    @ResourcePath(name = "propertyWithSeveralPaths")
+    private Resource[] multipleResources;
 
-	public Resource[] getFromPath() {
-		return fromPath;
-	}
+    public Resource[] getFromPath() {
+        return fromPath;
+    }
 
-	public Resource[] getMultipleResources() {
-		return this.multipleResources;
-	}
+    public Resource[] getMultipleResources() {
+        return this.multipleResources;
+    }
 
 }
