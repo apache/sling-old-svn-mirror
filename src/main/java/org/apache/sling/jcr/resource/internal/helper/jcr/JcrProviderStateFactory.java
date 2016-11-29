@@ -50,7 +50,7 @@ public class JcrProviderStateFactory {
 
     private final Logger logger = LoggerFactory.getLogger(JcrProviderStateFactory.class);
 
-    private final ServiceReference<SlingRepository> repositoryReference;
+    private final ServiceReference repositoryReference;
 
     private final SlingRepository repository;
 
@@ -58,7 +58,7 @@ public class JcrProviderStateFactory {
 
     private final PathMapper pathMapper;
 
-    public JcrProviderStateFactory(final ServiceReference<SlingRepository> repositoryReference,
+    public JcrProviderStateFactory(final ServiceReference repositoryReference,
             final SlingRepository repository,
             final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
             final PathMapper pathMapper) {
@@ -67,8 +67,8 @@ public class JcrProviderStateFactory {
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
         this.pathMapper = pathMapper;
     }
-
-    /** Get the calling Bundle from auth info, fail if not provided
+    
+    /** Get the calling Bundle from auth info, fail if not provided 
      *  @throws LoginException if no calling bundle info provided
      */
     @CheckForNull
@@ -98,7 +98,7 @@ public class JcrProviderStateFactory {
             final Bundle bundle = extractCallingBundle(authenticationInfo);
             if (bundle != null) {
                 bc = bundle.getBundleContext();
-                final SlingRepository repo = bc.getService(repositoryReference);
+                final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
                 if (repo == null) {
                     logger.warn("Cannot login {} because cannot get SlingRepository on behalf of bundle {} ({})",
                             isLoginAdministrative ? "admin" : "service",

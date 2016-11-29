@@ -60,7 +60,6 @@ import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -81,8 +80,7 @@ import org.slf4j.LoggerFactory;
                    ResourceProvider.PROPERTY_ADAPTABLE + ":Boolean=true",
                    ResourceProvider.PROPERTY_ATTRIBUTABLE + ":Boolean=true",
                    ResourceProvider.PROPERTY_REFRESHABLE + ":Boolean=true",
-                   ResourceProvider.PROPERTY_AUTHENTICATE + "=" + ResourceProvider.AUTHENTICATE_REQUIRED,
-                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+                   ResourceProvider.PROPERTY_AUTHENTICATE + "=" + ResourceProvider.AUTHENTICATE_REQUIRED
            })
 public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
@@ -113,7 +111,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     private volatile JcrListenerBaseConfig listenerConfig;
 
     /** The JCR observation listeners. */
-    private final Map<ObserverConfiguration, Closeable> listeners = new HashMap<>();
+    private volatile Map<ObserverConfiguration, Closeable> listeners = new HashMap<>();
 
     private volatile SlingRepository repository;
 
@@ -192,13 +190,11 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
      */
     private void registerListeners() {
         if ( this.repository != null ) {
-            logger.debug("Registering resource listeners...");
             try {
                 this.listenerConfig = new JcrListenerBaseConfig(this.getProviderContext().getObservationReporter(),
                     this.pathMapper,
                     this.repository);
                 for(final ObserverConfiguration config : this.getProviderContext().getObservationReporter().getObserverConfigurations()) {
-                    logger.debug("Registering listener for {}", config.getPaths());
                     final Closeable listener = new JcrResourceListener(this.listenerConfig,
                             config);
                     this.listeners.put(config, listener);
@@ -206,7 +202,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             } catch (final RepositoryException e) {
                 throw new SlingException("Can't create the JCR event listener.", e);
             }
-            logger.debug("Registered resource listeners");
         }
     }
 
@@ -214,10 +209,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
      * Unregister all observation listeners.
      */
     private void unregisterListeners() {
-        logger.debug("Unregistering resource listeners...");
         for(final Closeable c : this.listeners.values()) {
             try {
-                logger.debug("Removing listener for {}", ((JcrResourceListener)c).getConfig().getPaths());
                 c.close();
             } catch (final IOException e) {
                 // ignore this as the method above does not throw it
@@ -232,7 +225,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             }
             this.listenerConfig = null;
         }
-        logger.debug("Unregistered resource listeners");
     }
 
     /**
@@ -243,7 +235,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             this.unregisterListeners();
             this.registerListeners();
         } else {
-            logger.debug("Updating resource listeners...");
             final Map<ObserverConfiguration, Closeable> oldMap = new HashMap<>(this.listeners);
             this.listeners.clear();
             try {
@@ -251,10 +242,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                     // check if such a listener already exists
                     Closeable listener = oldMap.remove(config);
                     if ( listener == null ) {
-                        logger.debug("Registering listener for {}", config.getPaths());
                         listener = new JcrResourceListener(this.listenerConfig, config);
                     } else {
-                        logger.debug("Updating listener for {}", config.getPaths());
                         ((JcrResourceListener)listener).update(config);
                     }
                     this.listeners.put(config, listener);
@@ -264,13 +253,11 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             }
             for(final Closeable c : oldMap.values()) {
                 try {
-                    logger.debug("Removing listener for {}", ((JcrResourceListener)c).getConfig().getPaths());
                     c.close();
                 } catch (final IOException e) {
                     // ignore this as the method above does not throw it
                 }
             }
-            logger.debug("Updated resource listeners");
         }
     }
 

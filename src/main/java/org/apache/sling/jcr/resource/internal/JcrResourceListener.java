@@ -30,12 +30,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
@@ -61,21 +64,8 @@ public class JcrResourceListener implements EventListener, Closeable {
         this.baseConfig.register(this, config);
     }
 
-    /**
-     * Update the observation configuration.
-     *
-     * @param cfg The updated config
-     */
     public void update(final ObserverConfiguration cfg) {
         this.config = cfg;
-    }
-
-    /**
-     * Get the observation configuration
-     * @return The observation configuration
-     */
-    public ObserverConfiguration getConfig() {
-        return this.config;
     }
 
     /**
@@ -96,55 +86,39 @@ public class JcrResourceListener implements EventListener, Closeable {
         final Map<String, ResourceChange> changedEvents = new HashMap<String, ResourceChange>();
         final Map<String, ResourceChange> removedEvents = new HashMap<String, ResourceChange>();
 
+        AtomicBoolean refreshedSession = new AtomicBoolean(false);
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
 
-            final String identifier;
-            final String path;
             try {
-                identifier = event.getIdentifier();
-                path =  event.getPath();
-            } catch (final RepositoryException e) {
-                // event.getPath or event.getIdentifier threw an exception
-                // there is nothing we can do about it anyway
-                continue;
-            }
+                final String eventPath = event.getPath();
+                final int type = event.getType();
 
-            final String eventPath = (identifier != null && identifier.startsWith("/") ? identifier : path);
-            final int type = event.getType();
-
-            if ( type == PROPERTY_ADDED && path.endsWith("/jcr:primaryType") ) {
-                final int lastSlash = path.lastIndexOf('/');
-                final String rsrcPath = path.substring(0, lastSlash);
-
-                // add is stronger than update
-                changedEvents.remove(rsrcPath);
-                addedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.ADDED));
-            } else if ( type == PROPERTY_ADDED
+                if ( type == PROPERTY_ADDED
                      || type == PROPERTY_REMOVED
                      || type == PROPERTY_CHANGED ) {
-                final String rsrcPath;
-                if ( identifier == null || !identifier.startsWith("/") ) {
                     final int lastSlash = eventPath.lastIndexOf('/');
-                    rsrcPath = eventPath.substring(0, lastSlash);
-                } else {
-                    rsrcPath = eventPath;
-                }
-                if ( !addedEvents.containsKey(rsrcPath)
-                  && !removedEvents.containsKey(rsrcPath)
-                  && !changedEvents.containsKey(rsrcPath) ) {
+                    final String rsrcPath = stripNtFilePath(eventPath.substring(0, lastSlash), refreshedSession);
+                    if ( !addedEvents.containsKey(rsrcPath)
+                      && !removedEvents.containsKey(rsrcPath)
+                      && !changedEvents.containsKey(rsrcPath) ) {
 
-                    changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
+                        changedEvents.put(rsrcPath, createResourceChange(event, rsrcPath, ChangeType.CHANGED));
+                    }
+                } else {
+                    if ( type == NODE_ADDED ) {
+                        // add is stronger than update
+                        changedEvents.remove(eventPath);
+                        addedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.ADDED));
+                    } else if ( type == NODE_REMOVED) {
+                        // remove is stronger than add and change
+                        addedEvents.remove(eventPath);
+                        changedEvents.remove(eventPath);
+                        removedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.REMOVED));
+                    }
                 }
-            } else if ( type == NODE_ADDED ) {
-                // add is stronger than update
-                changedEvents.remove(eventPath);
-                addedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.ADDED));
-            } else if ( type == NODE_REMOVED) {
-                // remove is stronger than add and change
-                addedEvents.remove(eventPath);
-                changedEvents.remove(eventPath);
-                removedEvents.put(eventPath, createResourceChange(event, eventPath, ChangeType.REMOVED));
+            } catch (final RepositoryException e) {
+                this.baseConfig.getLogger().error("Error during modification: {}", e);
             }
         }
 
@@ -178,8 +152,31 @@ public class JcrResourceListener implements EventListener, Closeable {
         return false;
     }
 
+    private static final String JCR_CONTENT_POSTFIX = "/" + JcrConstants.JCR_CONTENT;
+
+    private String stripNtFilePath(final String path, final AtomicBoolean refreshedSession) {
+        if (!path.endsWith(JCR_CONTENT_POSTFIX)) {
+            return path;
+        }
+        try {
+            if ( refreshedSession.compareAndSet(false, true) ) {
+                baseConfig.getSession().refresh(false);
+            }
+            final Node node = baseConfig.getSession().getNode(path);
+            final Node parent = node.getParent();
+            if (parent.isNodeType(JcrConstants.NT_FILE)) {
+                return parent.getPath();
+            } else {
+                return path;
+            }
+        } catch (final RepositoryException e) {
+            return path;
+        }
+    }
+
     @Override
     public String toString() {
         return "JcrResourceListener [" + config + "]";
     }
+
 }

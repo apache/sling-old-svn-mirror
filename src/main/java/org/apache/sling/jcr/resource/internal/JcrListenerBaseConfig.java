@@ -25,13 +25,13 @@ import java.util.Set;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEventFilter;
 import org.apache.jackrabbit.api.observation.JackrabbitObservationManager;
-import org.apache.jackrabbit.oak.jcr.observation.filter.FilterFactory;
-import org.apache.jackrabbit.oak.jcr.observation.filter.OakEventFilter;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -63,7 +63,6 @@ public class JcrListenerBaseConfig implements Closeable {
     throws RepositoryException {
         this.pathMapper = pathMapper;
         this.reporter = reporter;
-        // The session should have read access on the whole repository
         this.session = repository.loginAdministrative(repository.getDefaultWorkspace());
     }
 
@@ -76,47 +75,107 @@ public class JcrListenerBaseConfig implements Closeable {
         this.session.logout();
     }
 
-    /**
-     * Register a JCR event listener
-     * @param listener The listener
-     * @param config The configuration
-     * @throws RepositoryException If registration fails.
-     */
-    public void register(final EventListener listener, final ObserverConfiguration config)
+    public void register(final JcrResourceListener listener, final ObserverConfiguration config)
     throws RepositoryException {
         final ObservationManager mgr = this.session.getWorkspace().getObservationManager();
         if ( mgr instanceof JackrabbitObservationManager ) {
-            final OakEventFilter filter = FilterFactory.wrap(new JackrabbitEventFilter());
+            final JackrabbitEventFilter filter = new JackrabbitEventFilter();
+
             // paths
             final Set<String> paths = config.getPaths().toStringSet();
-            int globCount = 0, pathCount = 0;
+            final String[] pathArray = new String[paths.size()];
+            int i=0;
+            // remove global prefix
+            boolean hasGlob = false;
             for(final String p : paths) {
                 if ( p.startsWith(Path.GLOB_PREFIX )) {
-                    globCount++;
-                } else {
-                    pathCount++;
+                    hasGlob = true;
                 }
+                pathArray[i] = (p.startsWith(Path.GLOB_PREFIX) ? p.substring(Path.GLOB_PREFIX.length()) : p);
+                i++;
             }
-            final String[] pathArray = pathCount > 0 ? new String[pathCount] : null;
-            final String[] globArray = globCount > 0 ? new String[globCount] : null;
-            pathCount = 0;
-            globCount = 0;
+            final EventListener regListener;
+            if ( hasGlob ) {
+                // TODO we can't use glob patterns directly here
+                filter.setAbsPath("/");
+                regListener = new EventListener() {
 
-            // create arrays and remove global prefix
-            for(final String p : paths) {
-                if ( p.startsWith(Path.GLOB_PREFIX )) {
-                    globArray[globCount] = p.substring(Path.GLOB_PREFIX.length());
-                    globCount++;
-                } else {
-                    pathArray[pathCount] = p;
-                    pathCount++;
-                }
-            }
-            if ( globArray != null ) {
-                filter.withIncludeGlobPaths(globArray);
-            }
-            if ( pathArray != null ) {
+                    @Override
+                    public void onEvent(final EventIterator events) {
+                        listener.onEvent(new EventIterator() {
+
+                            Event next = seek();
+
+                            private Event seek() {
+                                while ( events.hasNext() ) {
+                                    final Event e = events.nextEvent();
+                                    String path = null;
+                                    try {
+                                        path = e.getPath();
+                                        if ( e.getType() == Event.PROPERTY_ADDED
+                                                || e.getType() == Event.PROPERTY_CHANGED
+                                                || e.getType() == Event.PROPERTY_REMOVED ) {
+                                                  path = ResourceUtil.getParent(path);
+                                        }
+                                        if ( config.getPaths().matches(path) != null ) {
+                                            return e;
+                                        }
+                                        if ( path.endsWith("/jcr:content") && config.getPaths().matches(path.substring(0, path.length() - 12)) != null ) {
+                                            return e;
+
+                                        }
+                                    } catch (RepositoryException e1) {
+                                        // ignore
+                                    }
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            public void remove() {
+                                // we don't support this -> NOP
+                            }
+
+                            @Override
+                            public Object next() {
+                                return nextEvent();
+                            }
+
+                            @Override
+                            public boolean hasNext() {
+                                return next != null;
+                            }
+
+                            @Override
+                            public void skip(long skipNum) {
+                                // we don't support this -> NOP
+                            }
+
+                            @Override
+                            public long getSize() {
+                                // we don't support this -> 0
+                                return 0;
+                            }
+
+                            @Override
+                            public long getPosition() {
+                                // we don't support this -> 0
+                                return 0;
+                            }
+
+                            @Override
+                            public Event nextEvent() {
+                                final Event result = next;
+                                next = seek();
+                                return result;
+                            }
+                        });
+                    }
+                };
+
+            } else {
                 filter.setAdditionalPaths(pathArray);
+                regListener = listener;
             }
             filter.setIsDeep(true);
 
@@ -132,24 +191,13 @@ public class JcrListenerBaseConfig implements Closeable {
             // types
             filter.setEventTypes(this.getTypes(config));
 
-            // nt:file handling
-            filter.withNodeTypeAggregate(new String[] {"nt:file"}, new String[] {"", "jcr:content"});
-
-            // anchestor removes
-            filter.withIncludeAncestorsRemove();
-
-            ((JackrabbitObservationManager)mgr).addEventListener(listener, filter);
+            ((JackrabbitObservationManager)mgr).addEventListener(regListener, filter);
         } else {
             throw new RepositoryException("Observation manager is not a JackrabbitObservationManager");
         }
 
     }
 
-    /**
-     * Get the event types based on the configuraiton
-     * @param c The configuration
-     * @return The event type mask
-     */
     private int getTypes(final ObserverConfiguration c) {
         int result = 0;
         for (ChangeType t : c.getChangeTypes()) {
@@ -172,27 +220,27 @@ public class JcrListenerBaseConfig implements Closeable {
         return result;
     }
 
-    /**
-     * Unregister the listener.
-     * @param listener The listener
-     */
-    public void unregister(final EventListener listener) {
+    public void unregister(final JcrResourceListener listener) {
         try {
             this.session.getWorkspace().getObservationManager().removeEventListener(listener);
-        } catch (final RepositoryException e) {
+        } catch (RepositoryException e) {
             logger.warn("Unable to remove session listener: " + this, e);
         }
     }
 
-    /**
-     * The observation reporter
-     * @return The observation reporter.
-     */
+    public Logger getLogger() {
+        return this.logger;
+    }
+
     public ObservationReporter getReporter() {
         return this.reporter;
     }
 
     public PathMapper getPathMapper() {
         return this.pathMapper;
+    }
+
+    public Session getSession() {
+        return this.session;
     }
 }
