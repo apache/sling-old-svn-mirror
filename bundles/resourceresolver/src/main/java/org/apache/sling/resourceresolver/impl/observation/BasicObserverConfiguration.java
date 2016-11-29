@@ -166,8 +166,12 @@ public class BasicObserverConfiguration implements ObserverConfiguration {
 
     @Override
     public String toString() {
+        String excludedPathsToString = String.valueOf(excludedPaths);
+        if (excludedPathsToString.length() > 100) {
+            excludedPathsToString = excludedPathsToString.substring(0, 99) + "... (" + (excludedPathsToString.length() - 99) + " chars cut)";
+        }
         return "BasicObserverConfiguration [includeExternal=" + includeExternal + ", paths=" + paths
-                + ", excludedPaths=" + excludedPaths + ", propertyNamesHint=" + propertyNamesHint + ", changeTypes="
+                + ", excludedPaths=" + excludedPathsToString + ", propertyNamesHint=" + propertyNamesHint + ", changeTypes="
                 + changeTypes + ", listeners=" + listeners + "]";
     }
 }
