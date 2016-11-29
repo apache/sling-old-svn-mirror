@@ -23,7 +23,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverWrapper;
+import org.apache.sling.api.wrappers.ResourceResolverWrapper;
 import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
