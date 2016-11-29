@@ -42,7 +42,7 @@ public class DiscoveryLiteDescriptor {
         }
         String descriptorStr = session.getRepository().getDescriptor(DiscoveryLiteDescriptor.OAK_DISCOVERYLITE_CLUSTERVIEW);
         if (descriptorStr == null) {
-            throw new Exception("No Descriptor value available");
+            throw new Exception("No value available for descriptor " + OAK_DISCOVERYLITE_CLUSTERVIEW);
         }
         JSONObject descriptor = new JSONObject(descriptorStr);
         return new DiscoveryLiteDescriptor(descriptor);
