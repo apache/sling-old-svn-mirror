@@ -50,8 +50,8 @@
     <properties>
         <site.jira.version.id>12314286</site.jira.version.id>
         <site.javadoc.exclude>**.internal.**</site.javadoc.exclude>
-        <oak.version>1.5.13</oak.version>
-        <jackrabbit.version>2.13.4</jackrabbit.version>
+        <oak.version>1.3.10</oak.version>
+        <jackrabbit.version>2.11.2</jackrabbit.version>
     </properties>
 
     <build>
@@ -133,13 +133,6 @@
             <version>${jackrabbit.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>oak-jcr</artifactId>
-            <version>${oak.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
@@ -252,6 +245,12 @@
             <groupId>junit-addons</groupId>
             <artifactId>junit-addons</artifactId>
             <version>1.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-jcr</artifactId>
+            <version>${oak.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
