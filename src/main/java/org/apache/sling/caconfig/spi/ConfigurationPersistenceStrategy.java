@@ -18,9 +18,6 @@
  */
 package org.apache.sling.caconfig.spi;
 
-import java.util.Collection;
-import java.util.Map;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -61,7 +58,7 @@ public interface ConfigurationPersistenceStrategy {
      *      (but in case of error throw an exception).
      */
     boolean persist(@Nonnull ResourceResolver resourceResolver,
-            @Nonnull String configResourcePath, @Nonnull Map<String,Object> properties);
+            @Nonnull String configResourcePath, @Nonnull ConfigurationPersistData data);
     
     /**
      * Stores configuration data for a configuration resource collection.
@@ -75,6 +72,6 @@ public interface ConfigurationPersistenceStrategy {
      *      (but in case of error throw an exception).
      */
     boolean persistCollection(@Nonnull ResourceResolver resourceResolver,
-            @Nonnull String configResourceCollectionParentPath, @Nonnull Collection<ResourceCollectionItem> resourceCollectionItems);
+            @Nonnull String configResourceCollectionParentPath, @Nonnull ConfigurationCollectionPersistData data);
     
 }
