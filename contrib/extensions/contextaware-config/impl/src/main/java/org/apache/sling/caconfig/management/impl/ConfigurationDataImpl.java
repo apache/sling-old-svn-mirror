@@ -93,7 +93,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 contextResource, configName,
                 configurationManager, configurationOverrideManager,
                 configurationPersistenceStrategy,
-                configResourceCollection, "*");
+                configResourceCollection, null);
     }
     
     void setConfigMetadata(ConfigurationMetadata configMetadata) {
