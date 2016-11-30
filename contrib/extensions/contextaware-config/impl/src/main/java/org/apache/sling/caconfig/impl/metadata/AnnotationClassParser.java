@@ -138,8 +138,8 @@ public final class AnnotationClassParser {
      * @param clazz Configuration annotation class
      * @return Configuration metadata
      */
-    private static ConfigurationMetadata buildConfigurationMetadata_Nested(Class<?> clazz) {
-        ConfigurationMetadata configMetadata = new ConfigurationMetadata("{" + clazz.getName() + "}");
+    private static ConfigurationMetadata buildConfigurationMetadata_Nested(Class<?> clazz, String configName) {
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata(configName);
 
         // property metadata
         configMetadata.setPropertyMetadata(buildConfigurationMetadata_PropertyMetadata(clazz));
@@ -163,12 +163,12 @@ public final class AnnotationClassParser {
         
         PropertyMetadata propertyMetadata;
         if (type.isArray() && type.getComponentType().isAnnotation()) {
-            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type.getComponentType());
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type.getComponentType(), propertyName);
             propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata[].class);
             propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
         }
         else if (type.isAnnotation()) {
-            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type);
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type, propertyName);
             propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata.class);
             propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
         }

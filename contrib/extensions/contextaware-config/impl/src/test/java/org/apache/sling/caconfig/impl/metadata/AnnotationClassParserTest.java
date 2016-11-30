@@ -148,18 +148,21 @@ public class AnnotationClassParserTest {
                 assertEquals(ConfigurationMetadata.class, propertyMetadata.getType());
                 
                 ConfigurationMetadata subConfigMetadata = propertyMetadata.getConfigurationMetadata();
+                assertEquals("subConfig", subConfigMetadata.getName());
                 assertEquals(3, subConfigMetadata.getPropertyMetadata().size());
             }
             else if (StringUtils.equals(propertyMetadata.getName(), "subListConfig")) {
                 assertEquals(ConfigurationMetadata[].class, propertyMetadata.getType());
 
                 ConfigurationMetadata subListConfigMetadata = propertyMetadata.getConfigurationMetadata(); 
+                assertEquals("subListConfig", subListConfigMetadata.getName());
                 assertEquals(2, subListConfigMetadata.getPropertyMetadata().size());
             }
             else if (StringUtils.equals(propertyMetadata.getName(), "subConfigWithoutAnnotation")) {
                 assertEquals(ConfigurationMetadata.class, propertyMetadata.getType());
 
                 ConfigurationMetadata subConfigWithoutAnnotationMetadata = propertyMetadata.getConfigurationMetadata(); 
+                assertEquals("subConfigWithoutAnnotation", subConfigWithoutAnnotationMetadata.getName());
                 assertEquals(1, subConfigWithoutAnnotationMetadata.getPropertyMetadata().size());
             }
             else {

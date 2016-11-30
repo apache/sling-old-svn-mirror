@@ -51,6 +51,15 @@ public class DefaultConfigurationPersistenceStrategyTest {
     }
 
     @Test
+    public void testGetResourcePath() {
+        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        
+        String path = "/conf/test";
+        String result = underTest.getResourcePath(path);
+        assertEquals(path, result);
+    }
+
+    @Test
     public void testPersist() throws Exception {
         ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
@@ -106,6 +115,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
         
         Resource resource = context.create().resource("/conf/test");
         assertNull(underTest.getResource(resource));
+        assertNull(underTest.getResourcePath(resource.getPath()));
 
         assertFalse(underTest.persist(context.resourceResolver(), "/conf/test", ImmutableMap.<String,Object>of()));
         assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/test", ImmutableList.<ResourceCollectionItem>of()));

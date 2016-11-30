@@ -24,9 +24,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationData;
+import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -49,12 +52,17 @@ public class ConfigurationDataImplTest {
     private Resource contextResource;
     @Mock
     private ConfigurationOverrideManager configurationOverrideManager;
+    @Mock
+    private ConfigurationManager configurationManager;
+    private ConfigurationPersistenceStrategy configurationPersistenceStrategy;
     
     private Resource configResource;
     private ConfigurationMetadata configMetadata;
     
     @Before
     public void setUp() {
+        configurationPersistenceStrategy = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        
         configResource = context.create().resource("/conf/test",
                 "prop1", "value1",
                 "prop4", true);
@@ -68,10 +76,11 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceMetadata() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null,
-                contextResource, "test", configurationOverrideManager, true);
+                contextResource, "test", configurationManager, configurationOverrideManager, configurationPersistenceStrategy,
+                true, "item1");
         
         assertEquals("test", underTest.getConfigName());
-        assertEquals(configResource.getName(), underTest.getCollectionItemName());
+        assertEquals("item1", underTest.getCollectionItemName());
         
         assertEquals(configResource.getPath(), underTest.getResourcePath());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), underTest.getPropertyNames());
@@ -107,7 +116,8 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null,
-                contextResource, "test", configurationOverrideManager, false);
+                contextResource, "test", configurationManager, configurationOverrideManager, configurationPersistenceStrategy,
+                false, null);
         
         assertEquals("test", underTest.getConfigName());
         assertNull(underTest.getCollectionItemName());
@@ -136,10 +146,11 @@ public class ConfigurationDataImplTest {
     @Test
     public void testMetadataOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata,
-                contextResource, "test", configurationOverrideManager, false);
+                contextResource, "test", configurationManager, configurationOverrideManager, configurationPersistenceStrategy,
+                false);
         
         assertEquals("test", underTest.getConfigName());
-        assertNull(underTest.getCollectionItemName());
+        assertEquals("*", underTest.getCollectionItemName());
         
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), underTest.getPropertyNames());
         
@@ -170,7 +181,8 @@ public class ConfigurationDataImplTest {
                 "sling:resourceType", "my/type");
 
         ConfigurationData underTest = new ConfigurationDataImpl(null, resource, resource, null,
-                contextResource, "test", configurationOverrideManager, false);
+                contextResource, "test", configurationManager, configurationOverrideManager, configurationPersistenceStrategy,
+                false, null);
         
         assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());
         

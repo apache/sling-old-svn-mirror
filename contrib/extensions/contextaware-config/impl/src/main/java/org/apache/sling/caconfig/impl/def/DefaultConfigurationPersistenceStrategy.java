@@ -74,6 +74,14 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
+    public String getResourcePath(String resourcePath) {
+        if (!config.enabled()) {
+            return null;
+        }
+        return resourcePath;
+    }
+
+    @Override
     public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
         if (!config.enabled()) {
             return false;

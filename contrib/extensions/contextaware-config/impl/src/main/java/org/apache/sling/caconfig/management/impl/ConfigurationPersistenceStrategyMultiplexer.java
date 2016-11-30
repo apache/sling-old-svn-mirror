@@ -70,6 +70,17 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
         return null;
     }
 
+    @Override
+    public String getResourcePath(String resourcePath) {
+        for (ConfigurationPersistenceStrategy item : items) {
+            String result = item.getResourcePath(resourcePath);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
     /**
      * Persist configuration data with the first implementation that accepts it.
      */

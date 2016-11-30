@@ -140,15 +140,15 @@ public class ConfigurationResolverCustomPersistenceTest {
     @Test
     public void testConfig_Nested() {
         context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.NestedConfig")
-            .siblingsMode()
             .resource("jcr:content", "stringParam", "configValue3")
-            .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
-            .hierarchyMode()
-            .resource("subListConfig")
-            .siblingsMode()
-                .resource("1/jcr:content", "stringParam", "configValue2.1")
-                .resource("2/jcr:content", "stringParam", "configValue2.2")
-                .resource("3/jcr:content", "stringParam", "configValue2.3");
+                .siblingsMode()
+                .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
+                .hierarchyMode()
+                .resource("subListConfig")
+                    .siblingsMode()
+                    .resource("1/jcr:content", "stringParam", "configValue2.1")
+                    .resource("2/jcr:content", "stringParam", "configValue2.2")
+                    .resource("3/jcr:content", "stringParam", "configValue2.3");
 
         NestedConfig cfg = underTest.get(site1Page1).as(NestedConfig.class);
 
