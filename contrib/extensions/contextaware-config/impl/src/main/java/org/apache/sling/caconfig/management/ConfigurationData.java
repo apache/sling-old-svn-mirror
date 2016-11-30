@@ -45,10 +45,7 @@ public interface ConfigurationData {
     @CheckForNull String getCollectionItemName();
 
     /**
-     * Path of the configuration resource. The resource may not exist, in this case
-     * inherited or default values may be returned.
-     * If the configuration data is saved, this path is used.
-     * @return Configuration resource path or null if it cannot be determined
+     * @return Path of the configuration resource or null if it cannot be determined.
      */
     @CheckForNull String getResourcePath();
 

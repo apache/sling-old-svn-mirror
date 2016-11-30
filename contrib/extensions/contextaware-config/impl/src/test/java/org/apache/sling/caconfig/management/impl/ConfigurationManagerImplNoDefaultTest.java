@@ -98,7 +98,7 @@ public class ConfigurationManagerImplNoDefaultTest {
     
     @Test
     public void testGet_NoConfigResource() {
-        ConfigurationData configData = underTest.get(contextResourceNoConfig, CONFIG_NAME);
+        ConfigurationData configData = underTest.getConfiguration(contextResourceNoConfig, CONFIG_NAME);
         assertNotNull(configData);
 
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
@@ -113,13 +113,13 @@ public class ConfigurationManagerImplNoDefaultTest {
     public void testGet_NoConfigResource_NoConfigMetadata() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(null);
 
-        ConfigurationData configData = underTest.get(contextResourceNoConfig, CONFIG_NAME);
+        ConfigurationData configData = underTest.getConfiguration(contextResourceNoConfig, CONFIG_NAME);
         assertNull(configData);
     }
 
     @Test
     public void testGetCollection_NoConfigResources() {
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResourceNoConfig, CONFIG_COL_NAME));
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationCollection(contextResourceNoConfig, CONFIG_COL_NAME).getItems());
         assertEquals(0, configDatas.size());
     }
 
@@ -127,7 +127,7 @@ public class ConfigurationManagerImplNoDefaultTest {
     public void testGetCollection_NoConfigResources_NoConfigMetadata() {
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_COL_NAME)).thenReturn(null);
 
-        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getCollection(contextResourceNoConfig, CONFIG_COL_NAME));
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationCollection(contextResourceNoConfig, CONFIG_COL_NAME).getItems());
         assertEquals(0, configDatas.size());
     }
 

@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
@@ -61,10 +60,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private ValueMap effectiveValuesCache;
     
     private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
-            "jcr:primaryType",
-            "sling:resourceType",
-            ConfigurationDefNameConstants.PROPERTY_CONFIG_PROPERTY_INHERIT
-            ));
+            "jcr:primaryType"));
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
@@ -200,14 +196,14 @@ final class ConfigurationDataImpl implements ConfigurationData {
                     nestedConfigName = configurationPersistenceStrategy.getResourcePath(configName) + "/" + nestedConfigMetadata.getName();
                 }
                 if (propertyMetadata.getType().equals(ConfigurationMetadata.class)) {
-                    ConfigurationData configData = configurationManager.get(contextResource, nestedConfigName);
+                    ConfigurationData configData = configurationManager.getConfiguration(contextResource, nestedConfigName);
                     if (configData != null) {
                         ((ConfigurationDataImpl)configData).setConfigMetadata(nestedConfigMetadata);
                     }
                     props.put(propertyMetadata.getName(), configData);
                 }
                 else if (propertyMetadata.getType().equals(ConfigurationMetadata[].class)) {
-                    Collection<ConfigurationData> configDatas = configurationManager.getCollection(contextResource, nestedConfigName);
+                    Collection<ConfigurationData> configDatas = configurationManager.getConfigurationCollection(contextResource, nestedConfigName).getItems();
                     for (ConfigurationData configData : configDatas) {
                         ((ConfigurationDataImpl)configData).setConfigMetadata(nestedConfigMetadata);
                     }

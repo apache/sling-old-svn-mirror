@@ -177,8 +177,7 @@ public class ConfigurationDataImplTest {
         Resource resource = context.create().resource("/conf/testIgnoreProps",
                 "prop1", "value1",
                 "prop4", true,
-                "jcr:primaryType", "myType",
-                "sling:resourceType", "my/type");
+                "jcr:primaryType", "myType");
 
         ConfigurationData underTest = new ConfigurationDataImpl(null, resource, resource, null,
                 contextResource, "test", configurationManager, configurationOverrideManager, configurationPersistenceStrategy,
@@ -188,9 +187,6 @@ public class ConfigurationDataImplTest {
         
         assertNull(underTest.getValues().get("jcr:primaryType"));
         assertNull(underTest.getEffectiveValues().get("jcr:primaryType"));
-
-        assertNull(underTest.getValues().get("sling:resourceType"));
-        assertNull(underTest.getEffectiveValues().get("sling:resourceType"));
     }
 
 }

@@ -38,7 +38,8 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.it.example.SimpleConfig;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
@@ -82,7 +83,7 @@ public class ConfigurationManagerIT {
     
     @Test
     public void testNonExistingConfig() throws Exception {
-        ConfigurationData config = configManager.get(resourcePage1, CONFIG_NAME);
+        ConfigurationData config = configManager.getConfiguration(resourcePage1, CONFIG_NAME);
         assertNotNull(config);
 
         ValueMap props = config.getEffectiveValues();
@@ -99,7 +100,7 @@ public class ConfigurationManagerIT {
                 "intParam", 123,
                 "boolParam", true);
         
-        ConfigurationData config = configManager.get(resourcePage1, CONFIG_NAME);
+        ConfigurationData config = configManager.getConfiguration(resourcePage1, CONFIG_NAME);
         assertNotNull(config);
         
         ValueMap props = config.getEffectiveValues();
@@ -117,7 +118,7 @@ public class ConfigurationManagerIT {
         values.put("stringParamDefault", "valueB");
         values.put("intParam", 55);
         values.put("boolParam", true);
-        configManager.persist(resourcePage1, CONFIG_NAME, values);
+        configManager.persistConfiguration(resourcePage1, CONFIG_NAME, new ConfigurationPersistData(values));
         resourceResolver.commit();
         
         // read config via configuration resolver
@@ -139,10 +140,10 @@ public class ConfigurationManagerIT {
         Map<String,Object> values2 = new HashMap<>();
         values2.put("intParam", 55);
         values2.put("boolParam", true);
-        List<ResourceCollectionItem> items = new ArrayList<>();
-        items.add(new ResourceCollectionItem("item1", values1));
-        items.add(new ResourceCollectionItem("item2", values2));
-        configManager.persistCollection(resourcePage1, CONFIG_NAME, items);
+        List<ConfigurationPersistData> items = new ArrayList<>();
+        items.add(new ConfigurationPersistData(values1).collectionItemName("item1"));
+        items.add(new ConfigurationPersistData(values2).collectionItemName("item2"));
+        configManager.persistConfigurationCollection(resourcePage1, CONFIG_NAME, new ConfigurationCollectionPersistData(items));
         resourceResolver.commit();
         
         // read config via configuration resolver

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -30,9 +29,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 
 /**
  * This is a variant of {@link org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy}
@@ -55,20 +55,29 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     }
 
     @Override
-    public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
-        getOrCreateResource(resourceResolver, configResourcePath + "/" + CHILD_NODE_NAME, properties);
+    public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+            ConfigurationPersistData data) {
+        getOrCreateResource(resourceResolver, configResourcePath + "/" + CHILD_NODE_NAME, data.getProperties());
         return true;
     }
 
     @Override
     public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-            Collection<ResourceCollectionItem> resourceCollectionItems) {
+            ConfigurationCollectionPersistData data) {
         Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, ValueMap.EMPTY);
+        
+        // delete existing children and create new ones
         deleteChildren(configResourceParent);
-        for (ResourceCollectionItem item : resourceCollectionItems) {
+        for (ConfigurationPersistData item : data.getItems()) {
             String path = configResourceParent.getPath() + "/" + item.getCollectionItemName() + "/" + CHILD_NODE_NAME;
-            getOrCreateResource(resourceResolver, path, item.getValues());
+            getOrCreateResource(resourceResolver, path, item.getProperties());
         }
+        
+        // if resource collection parent properties are given replace them as well
+        if (data.getProperties() != null) {
+            replaceProperties(configResourceParent, data.getProperties());
+        }
+        
         return true;
     }
     
@@ -97,9 +106,9 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     
     private void replaceProperties(Resource resource, Map<String,Object> properties) {
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
-        // remove all existing properties that do not have jcr: or sling: namespace
+        // remove all existing properties that do not have jcr: namespace
         for (String propertyName : new HashSet<>(modValueMap.keySet())) {
-            if (StringUtils.startsWith(propertyName, "jcr:") || StringUtils.startsWith(propertyName, "sling:")) {
+            if (StringUtils.startsWith(propertyName, "jcr:")) {
                 continue;
             }
             modValueMap.remove(propertyName);

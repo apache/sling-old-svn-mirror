@@ -18,40 +18,29 @@
  */
 package org.apache.sling.caconfig.spi;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
 import java.util.Map;
 
-import org.osgi.annotation.versioning.ProviderType;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-/**
- * Name and values for persisting resource collection items.
- */
-@ProviderType
-public final class ResourceCollectionItem {
-    
-    private final String collectionItemName;
-    private final Map<String,Object> values;
-    
-    /**
-     * @param collectionItemName Resource collection item name
-     * @param values Values
-     */
-    public ResourceCollectionItem(String collectionItemName, Map<String, Object> values) {
-        this.collectionItemName = collectionItemName;
-        this.values = values;
-    }
+@RunWith(MockitoJUnitRunner.class)
+public class ConfigurationPersistDataTest {
 
-    /**
-     * @return Resource collection item name
-     */
-    public String getCollectionItemName() {
-        return collectionItemName;
-    }
+    @Mock
+    private Map<String,Object> props;
 
-    /**
-     * @return Values
-     */
-    public Map<String, Object> getValues() {
-        return values;
+    @Test
+    public void testGetProperties() {
+        ConfigurationPersistData underTest = new ConfigurationPersistData(props)
+                .collectionItemName("item1");
+        
+        assertSame(props, underTest.getProperties());
+        assertEquals("item1", underTest.getCollectionItemName());
     }
 
 }

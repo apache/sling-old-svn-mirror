@@ -165,10 +165,10 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
                 // resolve configuration
                 Collection<ConfigurationData> configDatas;
                 if (resourceCollection) {
-                    configDatas = configurationManager.getCollection(contentResource, configName);
+                    configDatas = configurationManager.getConfigurationCollection(contentResource, configName).getItems();
                 }
                 else {
-                    ConfigurationData configData = configurationManager.get(contentResource, configName);
+                    ConfigurationData configData = configurationManager.getConfiguration(contentResource, configName);
                     if (configData != null) {
                         configDatas = Collections.singletonList(configData);
                     }
