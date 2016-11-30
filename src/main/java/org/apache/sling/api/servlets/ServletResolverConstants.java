@@ -44,7 +44,8 @@ public final class ServletResolverConstants {
      * If both are set the servlet is registered using both ways.
      * <p>
      * A servlet using this property might be ignored unless its path is included 
-     * in the Execution Paths {@code servletresolver.paths} configuration setting of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service.
+     * in the Execution Paths {@code servletresolver.paths} configuration setting of the
+     * {@code org.apache.sling.servlets.resolver.internal.SlingServletResolver} service.
      */
     public static final String SLING_SERVLET_PATHS = "sling.servlet.paths";
 
@@ -65,11 +66,12 @@ public final class ServletResolverConstants {
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
 
     /**
+     * <p>
      * The name of the service registration property of a servlet registered as
      * a service providing the prefix/index to be used to register this servlet.
      * It only is applied as prefix to {@link #SLING_SERVLET_PATHS} and 
      * {@link #SLING_SERVLET_RESOURCE_TYPES} in case they do not start with a "/".
-     * <p>
+     * </p>
      * <ul>
      * <li>If the value of this property is a number, it defines the index of the search
      * path entries from the resource resolver. The defined search path is used as
@@ -82,7 +84,8 @@ public final class ServletResolverConstants {
      * as a prefix, regardless of the configured search paths!</li>
      * <li>If the value is anything else, it is ignored.</li>
      * </ul>
-     * If this property is not specified, the configuration of the {@link org.apache.sling.servlets.resolver.internal.SlingServletResolver} service is used.
+     * If this property is not specified, the configuration of the {@code org.apache.sling.servlets.resolver.internal.SlingServletResolver}
+     * service is used.
      * In case even that one is not set "/" is used as prefix.
      */
     public static final String SLING_SERVLET_PREFIX = "sling.servlet.prefix";
@@ -133,7 +136,7 @@ public final class ServletResolverConstants {
      * <code>component.name</code> property or the <code>service.pid</code>
      * is used. If none of the three properties is defined, the Servlet is
      * ignored.
-     * @see {@link ServletConfig#getServletName()}
+     * @see ServletConfig#getServletName()
      */
     public static final String SLING_SERVLET_NAME = "sling.core.servletName";
 
@@ -141,7 +144,7 @@ public final class ServletResolverConstants {
      * The resource type of a registered servlet used as the default servlet if
      * no other (more specific) servlet or script could be selected (value is
      * "sling/servlet/default"). If no servlet is registered under this name,
-     * the {@link org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet} is
+     * the {@code org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet} is
      * used.
      * @see <a href="http://sling.apache.org/documentation/the-sling-engine/servlets.html#default-servlets">Default Servlet(s)</a>
      */
