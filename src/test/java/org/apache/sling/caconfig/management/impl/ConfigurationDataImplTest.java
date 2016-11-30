@@ -150,7 +150,7 @@ public class ConfigurationDataImplTest {
                 false);
         
         assertEquals("test", underTest.getConfigName());
-        assertEquals("*", underTest.getCollectionItemName());
+        assertNull(underTest.getCollectionItemName());
         
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), underTest.getPropertyNames());
         
