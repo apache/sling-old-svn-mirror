@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
-public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory {
+public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory, ValuePreparer {
 
     private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
@@ -64,7 +64,9 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
     }
 
     private SlingBindings getBindings(Object adaptable) {
-        if (adaptable instanceof ServletRequest) {
+        if (adaptable instanceof SlingBindings) {
+            return (SlingBindings) adaptable;
+        } else if (adaptable instanceof ServletRequest) {
             ServletRequest request = (ServletRequest) adaptable;
             return (SlingBindings) request.getAttribute(SlingBindings.class.getName());
         } else {
@@ -80,6 +82,11 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
             return new ScriptVariableAnnotationProcessor(annotation);
         }
         return null;
+    }
+
+    @Override
+    public Object prepareValue(Object adaptable) {
+        return getBindings(adaptable);
     }
 
     private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {

@@ -14,35 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.testmodels.classes.constructorinjection;
+package org.apache.sling.models.impl.injectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.models.annotations.Model;
-import org.slf4j.Logger;
+public interface ValuePreparer {
 
-@Model(adaptables = SlingHttpServletRequest.class)
-public class BindingsModel {
-
-    private final SlingScriptHelper sling;
-
-
-    @Inject
-    private Logger log;
-
-    @Inject
-    public BindingsModel(@Named("sling") SlingScriptHelper sling) {
-        this.sling = sling;
-    }
-
-    public SlingScriptHelper getSling() {
-        return sling;
-    }
-
-    public Logger getLog() {
-        return log;
-    }
+    @CheckForNull Object prepareValue(@Nonnull Object adaptable);
 }
