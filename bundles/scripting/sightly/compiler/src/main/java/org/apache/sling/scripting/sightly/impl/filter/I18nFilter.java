@@ -34,7 +34,6 @@ public final class I18nFilter extends AbstractFilter {
     public static final String I18N_OPTION = "i18n";
     public static final String HINT_OPTION = "hint";
     public static final String LOCALE_OPTION = "locale";
-    public static final String FORMAT_LOCALE_OPTION = "formatLocale";
     public static final String BASENAME_OPTION = "basename";
 
     private static final class I18nFilterLoader {
@@ -62,7 +61,7 @@ public final class I18nFilter extends AbstractFilter {
         ExpressionNode translation = new RuntimeCall(RuntimeFunction.I18N, expression.getRoot(), new MapLiteral
                 (options));
         expression.removeOption(I18N_OPTION);
-        expression.getOptions().put(FORMAT_LOCALE_OPTION, options.get(LOCALE_OPTION));
+        expression.getOptions().put(FormatFilter.FORMAT_LOCALE_OPTION, options.get(LOCALE_OPTION));
         return expression.withNode(translation);
     }
 }
