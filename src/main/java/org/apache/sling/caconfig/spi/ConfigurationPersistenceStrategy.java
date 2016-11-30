@@ -44,6 +44,14 @@ public interface ConfigurationPersistenceStrategy {
     @CheckForNull Resource getResource(@Nonnull Resource resource);
     
     /**
+     * Allows the strategy to transform the given configuration resource path according to it's persistent strategies,
+     * e.g. fetching the data from a child resource instead of the given resource. 
+     * @param resource Configuration resource path
+     * @return Transformed configuration resource path. If null is returned this strategy does not support the given configuration resource path.
+     */
+    @CheckForNull String getResourcePath(@Nonnull String resourcePath);
+    
+    /**
      * Stores configuration data for a singleton configuration resource.
      * The changes are written using the given resource resolver. They are not committed, this is left to the caller.
      * @param resourceResolver Resource resolver
