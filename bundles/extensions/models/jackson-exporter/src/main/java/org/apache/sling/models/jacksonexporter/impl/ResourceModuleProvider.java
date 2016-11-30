@@ -34,7 +34,7 @@ import java.util.Map;
     description = "Provider of a Jackson Module which enables support for proper serialization of Resource objects")
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = true)
-public class ResourceModelProvider implements ModuleProvider {
+public class ResourceModuleProvider implements ModuleProvider {
 
     private static final int DEFAULT_MAX_RECURSION_LEVELS = -1;
 
