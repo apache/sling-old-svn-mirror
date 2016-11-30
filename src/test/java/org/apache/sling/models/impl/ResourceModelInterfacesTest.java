@@ -87,6 +87,8 @@ public class ResourceModelInterfacesTest {
         assertNull(model.getSecond());
         assertEquals("third-value", model.getThirdProperty());
         assertTrue(model.isFourth());
+
+        verify(res, times(1)).adaptTo(ValueMap.class);
     }
 
     @Test

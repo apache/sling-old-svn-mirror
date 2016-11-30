@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
 @SuppressWarnings("deprecation")
-public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory {
+public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory, ValuePreparer {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
 
@@ -131,6 +131,11 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
             Array.set(wrapperArray, i, Array.get(primitiveArray, i));
         }
         return wrapperArray;
+    }
+
+    @Override
+    public Object prepareValue(final Object adaptable) {
+        return getValueMap(adaptable);
     }
 
     @Override

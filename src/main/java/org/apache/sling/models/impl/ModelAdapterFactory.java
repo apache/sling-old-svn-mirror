@@ -43,6 +43,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -73,6 +74,7 @@ import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.factory.PostConstructException;
 import org.apache.sling.models.factory.ValidationException;
+import org.apache.sling.models.impl.injectors.ValuePreparer;
 import org.apache.sling.models.impl.model.ConstructorParameter;
 import org.apache.sling.models.impl.model.InjectableElement;
 import org.apache.sling.models.impl.model.InjectableField;
@@ -108,6 +110,9 @@ import org.slf4j.LoggerFactory;
 })
 @SuppressWarnings("deprecation")
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
+
+    // hard code this value since we always know exactly how many there are
+    private static final int VALUE_PREPARERS_COUNT = 2;
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
 
@@ -402,7 +407,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private
     @CheckForNull
     RuntimeException injectElement(final InjectableElement element, final Object adaptable,
-                                   final @Nonnull DisposalCallbackRegistry registry, final InjectCallback callback) {
+                                   final @Nonnull DisposalCallbackRegistry registry, final InjectCallback callback,
+                                   final @Nonnull Map<ValuePreparer, Object> preparedValues) {
 
         InjectAnnotationProcessor annotationProcessor = null;
         String source = element.getSource();
@@ -425,7 +431,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
 
         String name = getName(element, annotationProcessor);
-        Object injectionAdaptable = getAdaptable(adaptable, element, annotationProcessor);
+        final Object injectionAdaptable = getAdaptable(adaptable, element, annotationProcessor);
 
         RuntimeException lastInjectionException = null;
         if (injectionAdaptable != null) {
@@ -445,7 +451,29 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             // find the right injector
             for (Injector injector : injectorsToProcess) {
                 if (name != null || injector instanceof AcceptsNullName) {
-                    Object value = injector.getValue(injectionAdaptable, name, element.getType(), element.getAnnotatedElement(), registry);
+                    Object preparedValue = injectionAdaptable;
+
+                    // only do the ValuePreparer optimization for the original adaptable
+                    if (injector instanceof ValuePreparer && adaptable == injectionAdaptable) {
+                        final ValuePreparer preparer = (ValuePreparer) injector;
+                        Object fromMap = preparedValues.get(preparer);
+                        if (fromMap != null) {
+                            if (ObjectUtils.NULL.equals(fromMap)) {
+                                preparedValue = null;
+                            } else {
+                                preparedValue = fromMap;
+                            }
+                        } else {
+                            preparedValue = preparer.prepareValue(injectionAdaptable);
+                            if (preparedValue == null) {
+                                preparedValues.put(preparer, ObjectUtils.NULL);
+                            } else {
+                                preparedValues.put(preparer, preparedValue);
+                            }
+                        }
+                    }
+
+                    Object value = injector.getValue(preparedValue, name, element.getType(), element.getAnnotatedElement(), registry);
                     if (value != null) {
                         lastInjectionException = callback.inject(element, value);
                         if (lastInjectionException == null) {
@@ -503,9 +531,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         DisposalCallbackRegistryImpl registry = new DisposalCallbackRegistryImpl();
         registerCallbackRegistry(handler, registry);
 
+        final Map<ValuePreparer, Object> preparedValues = new HashMap<ValuePreparer, Object>(VALUE_PREPARERS_COUNT);
+
         MissingElementsException missingElements = new MissingElementsException("Could not create all mandatory methods for interface of model " + modelClass);
         for (InjectableMethod method : injectableMethods) {
-            RuntimeException t = injectElement(method, adaptable, registry, callback);
+            RuntimeException t = injectElement(method, adaptable, registry, callback, preparedValues);
             if (t != null) {
                 missingElements.addMissingElementExceptions(new MissingElementException(method.getAnnotatedElement(), t));
             }
@@ -531,6 +561,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return new Result<ModelType>(new ModelClassException("Unable to find a useable constructor for model " + modelClass.getType()));
         }
 
+        final Map<ValuePreparer, Object> preparedValues = new HashMap<ValuePreparer, Object>(VALUE_PREPARERS_COUNT);
+
         final ModelType object;
         if (constructorToUse.getConstructor().getParameterTypes().length == 0) {
             // no parameters for constructor injection? instantiate it right away
@@ -539,7 +571,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             // instantiate with constructor injection
             // if this fails, make sure resources that may be claimed by injectors are cleared up again
             try {
-                Result<ModelType> result = newInstanceWithConstructorInjection(constructorToUse, adaptable, modelClass, registry);
+                Result<ModelType> result = newInstanceWithConstructorInjection(constructorToUse, adaptable, modelClass, registry, preparedValues);
                 if (!result.wasSuccessful()) {
                     registry.onDisposed();
                     return result;
@@ -564,8 +596,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         InjectableField[] injectableFields = modelClass.getInjectableFields();
         MissingElementsException missingElements = new MissingElementsException("Could not inject all required fields into " + modelClass.getType());
+
         for (InjectableField field : injectableFields) {
-            RuntimeException t = injectElement(field, adaptable, registry, callback);
+            RuntimeException t = injectElement(field, adaptable, registry, callback, preparedValues);
             if (t != null) {
                 missingElements.addMissingElementExceptions(new MissingElementException(field.getAnnotatedElement(), t));
             }
@@ -618,7 +651,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     private <ModelType> Result<ModelType> newInstanceWithConstructorInjection(final ModelClassConstructor<ModelType> constructor, final Object adaptable,
-            final ModelClass<ModelType> modelClass, final DisposalCallbackRegistry registry)
+            final ModelClass<ModelType> modelClass, final DisposalCallbackRegistry registry, final @Nonnull Map<ValuePreparer, Object> preparedValues)
             throws InstantiationException, InvocationTargetException, IllegalAccessException {
         ConstructorParameter[] parameters = constructor.getConstructorParameters();
 
@@ -627,7 +660,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         MissingElementsException missingElements = new MissingElementsException("Required constructor parameters were not able to be injected on model " + modelClass.getType());
         for (int i = 0; i < parameters.length; i++) {
-            RuntimeException t = injectElement(parameters[i], adaptable, registry, callback);
+            RuntimeException t = injectElement(parameters[i], adaptable, registry, callback, preparedValues);
             if (t != null) {
                 missingElements.addMissingElementExceptions(new MissingElementException(parameters[i].getAnnotatedElement(), t));
             }
