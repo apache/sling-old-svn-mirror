@@ -312,7 +312,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.5-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
