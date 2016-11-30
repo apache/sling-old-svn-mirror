@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.MapperFeature;
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -41,8 +40,6 @@ import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.sling.models.jacksonexporter.ModuleProvider;
-import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,15 +61,15 @@ public class JacksonExporter implements ModelExporter {
 
     @Reference(name = "moduleProvider", referenceInterface = ModuleProvider.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<ModuleProvider> moduleProviders = new RankedServices<ModuleProvider>(Order.ASCENDING);
+    private final RankedServices<ModuleProvider> moduleProviders = new RankedServices<ModuleProvider>(Order.ASCENDING);
 
     @Override
-    public boolean isSupported(Class<?> clazz) {
+    public boolean isSupported(@Nonnull Class<?> clazz) {
         return clazz.equals(String.class) || clazz.equals(Map.class);
     }
 
     @Override
-    public <T> T export(Object model, Class<T> clazz, Map<String, String> options)
+    public <T> T export(@Nonnull Object model, @Nonnull Class<T> clazz, @Nonnull Map<String, String> options)
             throws ExportException {
         ObjectMapper mapper = new ObjectMapper();
         for (Map.Entry<String, String> optionEntry : options.entrySet()) {
@@ -137,14 +134,14 @@ public class JacksonExporter implements ModelExporter {
     }
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "jackson";
     }
 
     private static class EscapeCloseScriptBlocks extends CharacterEscapes {
         private final int[] escapes;
 
-        public EscapeCloseScriptBlocks() {
+        EscapeCloseScriptBlocks() {
             int[] baseEscapes = standardAsciiEscapesForJSON();
             baseEscapes['<'] = CharacterEscapes.ESCAPE_STANDARD;
             baseEscapes['>'] = CharacterEscapes.ESCAPE_STANDARD;
