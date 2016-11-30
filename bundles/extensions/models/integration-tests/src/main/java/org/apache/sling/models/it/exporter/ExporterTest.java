@@ -57,6 +57,9 @@ public class ExporterTest {
     private final String childComponentPath = "/content/exp/childComponent";
     private final String extendedComponentPath = "/content/exp/extendedComponent";
     private final String interfaceComponentPath = "/content/exp/interfaceComponent";
+    private final String baseRequestComponentPath = "/content/exp-request/baseComponent";
+    private final String extendedRequestComponentPath = "/content/exp-request/extendedComponent";
+    private final String interfaceRequestComponentPath = "/content/exp-request/interfaceComponent";
     private Calendar testDate;
 
     @Before
@@ -69,6 +72,10 @@ public class ExporterTest {
             properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
                     "sling/exp/base");
             ResourceUtil.getOrCreateResource(adminResolver, baseComponentPath, properties, null, false);
+
+            properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
+                    "sling/exp-request/base");
+            ResourceUtil.getOrCreateResource(adminResolver, baseRequestComponentPath, properties, null, false);
             properties.clear();
 
             properties.put("sampleValue", "childTESTValue");
@@ -88,12 +95,20 @@ public class ExporterTest {
             testDate.set(2015, 6, 29);
             properties.put("date", testDate);
             ResourceUtil.getOrCreateResource(adminResolver, extendedComponentPath, properties, null, false);
+
+            properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
+                    "sling/exp-request/extended");
+            ResourceUtil.getOrCreateResource(adminResolver, extendedRequestComponentPath, properties, null, false);
             properties.clear();
 
             properties.put("sampleValue", "interfaceTESTValue");
             properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
                     "sling/exp/interface");
             ResourceUtil.getOrCreateResource(adminResolver, interfaceComponentPath, properties, null, false);
+
+            properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
+                    "sling/exp-request/interface");
+            ResourceUtil.getOrCreateResource(adminResolver, interfaceRequestComponentPath, properties, null, false);
             properties.clear();
 
             adminResolver.commit();
@@ -155,7 +170,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testServlets() throws Exception {
+    public void testResourceServlets() throws Exception {
         ResourceResolver resolver = null;
         try {
             resolver = rrFactory.getAdministrativeResourceResolver(null);
@@ -169,13 +184,47 @@ public class ExporterTest {
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(extendedComponentPath + ".model.json"), response, resolver);
             obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(extendedComponentPath, obj.getString("id"));
             Assert.assertEquals(testDate.getTimeInMillis(), obj.getLong("date"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(interfaceComponentPath + ".model.json"), response, resolver);
             obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(interfaceComponentPath, obj.getString("id"));
+            Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
+        } finally {
+            if (resolver != null && resolver.isLive()) {
+                resolver.close();
+            }
+        }
+    }
+
+    @Test
+    public void testRequestServlets() throws Exception {
+        ResourceResolver resolver = null;
+        try {
+            resolver = rrFactory.getAdministrativeResourceResolver(null);
+            FakeResponse response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(baseRequestComponentPath + ".model.json"), response, resolver);
+            JSONObject obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
+            Assert.assertEquals("BASETESTVALUE", obj.getString("UPPER"));
+            Assert.assertEquals(baseRequestComponentPath, obj.getString("id"));
+
+            response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(extendedRequestComponentPath + ".model.json"), response, resolver);
+            obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
+            Assert.assertEquals(extendedRequestComponentPath, obj.getString("id"));
+            Assert.assertEquals(testDate.getTimeInMillis(), obj.getLong("date"));
+
+            response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(interfaceRequestComponentPath + ".model.json"), response, resolver);
+            obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
+            Assert.assertEquals(interfaceRequestComponentPath, obj.getString("id"));
             Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
         } finally {
             if (resolver != null && resolver.isLive()) {

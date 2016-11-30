@@ -1161,9 +1161,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             throw new ModelClassException("Could find model registered for request path: " + request.getServletPath());
         }
         Result<?> result = internalCreateModel(request, clazz);
-        handleAndExportResult(result, name, targetClass, options);
-        // unreachable
-        return null;
+        return handleAndExportResult(result, name, targetClass, options);
     }
 
     private <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
