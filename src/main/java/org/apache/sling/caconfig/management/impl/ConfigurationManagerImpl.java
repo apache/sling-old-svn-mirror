@@ -81,13 +81,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 resettableConfigResourceInheritanceChain.reset();
                 return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                         applyPersistence(resettableConfigResourceInheritanceChain),
-                        resource, configName, configurationOverrideManager, false);
+                        resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, false, null);
             }
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
             return new ConfigurationDataImpl(configMetadata,
-                    resource, configName, configurationOverrideManager, false);
+                    resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, false);
         }
         return null;
     }
@@ -105,12 +105,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
                 ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
                 Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
+                resettableConfigResourceInheritanceChain.reset();
+                Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
                 if (configResource != null) {
                     // get writeback resource for "reverse inheritance detection"
                     Resource writebackConfigResource = null;
                     if (writebackConfigResourceCollectionParentPath != null) {
-                        resettableConfigResourceInheritanceChain.reset();
-                        Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
                         writebackConfigResource = configResource.getResourceResolver().getResource(
                                 writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
                         if (writebackConfigResource != null) {
@@ -120,7 +120,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     resettableConfigResourceInheritanceChain.reset();
                     configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                             applyPersistence(resettableConfigResourceInheritanceChain),
-                            resource, configName, configurationOverrideManager, true));
+                            resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy,
+                            true, untransformedConfigResource.getName()));
                 }
             }
         }
@@ -183,7 +184,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         if (configMetadata != null) {
             return new ConfigurationDataImpl(configMetadata,
-                    resource, configName, configurationOverrideManager, true);
+                    resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, true);
         }
         return null;
     }

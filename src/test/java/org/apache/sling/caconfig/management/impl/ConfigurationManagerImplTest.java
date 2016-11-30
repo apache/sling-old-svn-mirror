@@ -71,10 +71,10 @@ public class ConfigurationManagerImplTest {
     private Resource contextResourceLevel2;
     private Resource contextResourceLevel3;
     private Resource contextResourceNoConfig;
-    private ConfigurationMetadata configMetadata;
     
     private static final String CONFIG_NAME = "testConfig";
     private static final String CONFIG_COL_NAME = "testConfigCol";
+    private static final String CONFIG_NESTED_NAME = "testConfigNested";
    
     @Before
     public void setUp() {
@@ -92,49 +92,91 @@ public class ConfigurationManagerImplTest {
         contextResourceNoConfig = context.create().resource("/content/testNoConfig",
                 PROPERTY_CONFIG_REF, "/conf/testNoConfig");
         
-        context.create().resource(getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME),
+        context.create().resource(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME),
                 "prop1", "value1",
                 "prop4", true);
-        context.create().resource(getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
                 "prop1", "value1");
-        context.create().resource(getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2"),
+        context.create().resource(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2"),
                 "prop4", true);
         
         // test fixture with resource collection inheritance on level 2
         context.create().resource("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME,
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
-        context.create().resource(getConfigPropertiesPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigPropsPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
                 "prop1", "value1_level2");
         
         // test fixture with property inheritance and resource collection inheritance on level 3
-        context.create().resource(getConfigPropertiesPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME),
+        context.create().resource(getConfigPropsPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME),
                 "prop4", false,
                 "prop5", "value5_level3",
                 PROPERTY_CONFIG_PROPERTY_INHERIT, true);
         context.create().resource("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME,
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
-        context.create().resource(getConfigPropertiesPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigPropsPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1"),
                 "prop4", false,
                 "prop5", "value5_level3",
                 PROPERTY_CONFIG_PROPERTY_INHERIT, true);
 
-        configMetadata = new ConfigurationMetadata(CONFIG_NAME);
+        // test fixture nested configuration
+        context.create().resource(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NESTED_NAME),
+                "prop1", "value1",
+                "prop4", true);
+        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/global/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NESTED_NAME) + "/propSub"),
+                "prop1", "propSubValue1",
+                "prop4", true);
+        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NESTED_NAME) + "/propSubList/item1"),
+                "prop1", "propSubListValue1.1");
+        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NESTED_NAME) + "/propSubList/item2"),
+                "prop1", "propSubListValue1.2");
+        context.create().resource(getConfigPropsPath(getConfigPropsPath(getConfigPropsPath("/conf/global/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NESTED_NAME) + "/propSubList/item1") + "/propSub"),
+                "prop1", "propSubList1_proSubValue1",
+                "prop4", true);
+        
+        
+        // config metadata singleton config
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata(CONFIG_NAME);
         configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
                 "prop1", new PropertyMetadata<>("prop1", "defValue"),
                 "prop2", new PropertyMetadata<>("prop2", String.class),
                 "prop3", new PropertyMetadata<>("prop3", 5)));
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
 
+        // config metadata config collection
         configMetadata = new ConfigurationMetadata(CONFIG_COL_NAME);
         configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
                 "prop1", new PropertyMetadata<>("prop1", "defValue"),
                 "prop2", new PropertyMetadata<>("prop2", String.class),
                 "prop3", new PropertyMetadata<>("prop3", 5)));
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_COL_NAME)).thenReturn(configMetadata);
-        when(configurationMetadataProvider.getConfigurationNames()).thenReturn(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME));
+
+        // config metadata nested config
+        configMetadata = new ConfigurationMetadata(CONFIG_NESTED_NAME);
+        configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
+                "prop1", new PropertyMetadata<>("prop1", "defValue"),
+                "propSub", new PropertyMetadata<>("propSub", ConfigurationMetadata.class),
+                "propSubList", new PropertyMetadata<>("propSubList", ConfigurationMetadata[].class)));
+        ConfigurationMetadata propSubMetadata = new ConfigurationMetadata("propSub");
+        propSubMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
+                "prop1", new PropertyMetadata<>("prop1", "defValue"),
+                "prop2", new PropertyMetadata<>("prop2", String.class),
+                "prop3", new PropertyMetadata<>("prop3", 5)));
+        ConfigurationMetadata propSubListMetadata = new ConfigurationMetadata("propSubList");
+        propSubListMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
+                "prop1", new PropertyMetadata<>("prop1", String.class),
+                "propSub", new PropertyMetadata<>("propSub", ConfigurationMetadata.class)));
+        configMetadata.getPropertyMetadata().get("propSub").setConfigurationMetadata(propSubMetadata);
+        configMetadata.getPropertyMetadata().get("propSubList").setConfigurationMetadata(propSubListMetadata);
+        propSubListMetadata.getPropertyMetadata().get("propSub").setConfigurationMetadata(propSubMetadata);
+
+        when(configurationMetadataProvider.getConfigurationNames()).thenReturn(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME, CONFIG_NESTED_NAME));
+        
+        
+        when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NESTED_NAME)).thenReturn(configMetadata);
+
     }
     
-    protected String getConfigPropertiesPath(String path) {
+    protected String getConfigPropsPath(String path) {
         return path;
     }
     
@@ -161,7 +203,7 @@ public class ConfigurationManagerImplTest {
         assertEquals("value1", configData.getEffectiveValues().get("prop1", String.class));
         assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", 0));
 
-        String configPath = getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
+        String configPath = getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
         assertEquals(configPath, configData.getValueInfo("prop1").getConfigSourcePath());
         assertTrue(configData.getValueInfo("prop1").isInherited());
         assertFalse(configData.getValueInfo("prop3").isInherited());
@@ -186,8 +228,8 @@ public class ConfigurationManagerImplTest {
         assertFalse(configData.getEffectiveValues().get("prop4", Boolean.class));
         assertEquals("value5_level3", configData.getEffectiveValues().get("prop5", String.class));
 
-        String configPath = getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
-        String configPathLevel3 = getConfigPropertiesPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
+        String configPath = getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
+        String configPathLevel3 = getConfigPropsPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
         assertTrue(configData.getValueInfo("prop1").isInherited());
         assertEquals(configPath, configData.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData.getValueInfo("prop2").isInherited());
@@ -261,6 +303,7 @@ public class ConfigurationManagerImplTest {
         assertEquals(2, configDatas.size());
 
         ConfigurationData configData1 = configDatas.get(0);
+        assertEquals("1", configData1.getCollectionItemName());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData1.getPropertyNames());
         assertEquals("value1", configData1.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData1.getEffectiveValues().get("prop3", 0));
@@ -269,6 +312,7 @@ public class ConfigurationManagerImplTest {
         assertFalse(configData1.getValueInfo("prop3").isInherited());
         
         ConfigurationData configData2 = configDatas.get(1);
+        assertEquals("2", configData2.getCollectionItemName());
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3", "prop4"), configData2.getPropertyNames());
         assertNull(configData2.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
@@ -288,7 +332,7 @@ public class ConfigurationManagerImplTest {
         assertEquals("value1_level2", configData1.getEffectiveValues().get("prop1", String.class));
         assertEquals((Integer)5, configData1.getEffectiveValues().get("prop3", 0));
 
-        String configPath1 = getConfigPropertiesPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
+        String configPath1 = getConfigPropsPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
         assertFalse(configData1.getValueInfo("prop1").isInherited());
         assertEquals(configPath1, configData1.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData1.getValueInfo("prop3").isInherited());
@@ -299,7 +343,7 @@ public class ConfigurationManagerImplTest {
         assertNull(configData2.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
 
-        String configPath2 = getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2");
+        String configPath2 = getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2");
         assertTrue(configData2.getValueInfo("prop4").isInherited());
         assertEquals(configPath2, configData2.getValueInfo("prop4").getConfigSourcePath());
         assertFalse(configData2.getValueInfo("prop3").isInherited());
@@ -327,8 +371,8 @@ public class ConfigurationManagerImplTest {
         assertFalse(configData1.getEffectiveValues().get("prop4", Boolean.class));
         assertEquals("value5_level3", configData1.getEffectiveValues().get("prop5", String.class));
 
-        String configPathLevel2 = getConfigPropertiesPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
-        String configPathLevel3 = getConfigPropertiesPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
+        String configPathLevel2 = getConfigPropsPath("/conf/test/level2/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
+        String configPathLevel3 = getConfigPropsPath("/conf/test/level2/level3/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
         assertTrue(configData1.getValueInfo("prop1").isInherited());
         assertEquals(configPathLevel2, configData1.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData1.getValueInfo("prop2").isInherited());
@@ -345,7 +389,7 @@ public class ConfigurationManagerImplTest {
         assertNull(configData2.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
 
-        String configPath2 = getConfigPropertiesPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2");
+        String configPath2 = getConfigPropsPath("/conf/test/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/2");
         assertTrue(configData2.getValueInfo("prop4").isInherited());
         assertEquals(configPath2, configData2.getValueInfo("prop4").getConfigSourcePath());
         assertFalse(configData2.getValueInfo("prop3").isInherited());
@@ -427,7 +471,7 @@ public class ConfigurationManagerImplTest {
                 ImmutableMap.<String, Object>of("prop1", "value1"));
         context.resourceResolver().commit();
 
-        String configPath = getConfigPropertiesPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
+        String configPath = getConfigPropsPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_NAME);
         ValueMap props = context.resourceResolver().getResource(configPath).getValueMap();
         assertEquals("value1", props.get("prop1"));
     }
@@ -440,11 +484,11 @@ public class ConfigurationManagerImplTest {
         ));
         context.resourceResolver().commit();
 
-        String configPath0 = getConfigPropertiesPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/0");
+        String configPath0 = getConfigPropsPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/0");
         ValueMap props0 = context.resourceResolver().getResource(configPath0).getValueMap();
         assertEquals("value1", props0.get("prop1"));
 
-        String configPath1 = getConfigPropertiesPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
+        String configPath1 = getConfigPropsPath("/conf/testNoConfig/" + CONFIGS_PARENT_NAME + "/" + CONFIG_COL_NAME + "/1");
         ValueMap props1 = context.resourceResolver().getResource(configPath1).getValueMap();
         assertEquals((Integer)5, props1.get("prop2"));
     }
@@ -466,12 +510,58 @@ public class ConfigurationManagerImplTest {
 
     @Test
     public void testGetConfigurationNames() {
-        assertEquals(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME), underTest.getConfigurationNames());
+        assertEquals(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME, CONFIG_NESTED_NAME), underTest.getConfigurationNames());
     }
 
     @Test
-    public void testGetConfigurationMetadata() throws Exception {
+    public void testGetConfigurationMetadata() {
         assertEquals(CONFIG_NAME, underTest.getConfigurationMetadata(CONFIG_NAME).getName());
+    }
+
+    @Test
+    public void testGetNested() {
+        ConfigurationData configData = underTest.get(contextResource, CONFIG_NESTED_NAME);
+        assertNotNull(configData);
+
+        assertEquals(ImmutableSet.of("prop1", "propSub", "propSubList", "prop4"), configData.getPropertyNames());
+        assertEquals("value1", configData.getValues().get("prop1", String.class));
+        assertEquals("value1", configData.getEffectiveValues().get("prop1", String.class));
+        assertEquals(true, configData.getValues().get("prop4", false));
+        assertEquals(true, configData.getEffectiveValues().get("prop4", false));
+        
+        assertEquals(ConfigurationMetadata.class, configData.getValueInfo("propSub").getPropertyMetadata().getType());
+        assertEquals(ConfigurationMetadata[].class, configData.getValueInfo("propSubList").getPropertyMetadata().getType());
+        
+        ConfigurationData subData = configData.getValues().get("propSub", ConfigurationData.class);
+        ConfigurationData subDataEffective = configData.getEffectiveValues().get("propSub", ConfigurationData.class);
+        assertNotNull(subData);
+        assertNotNull(subDataEffective);
+        
+        assertNull(subData.getValues().get("prop1", String.class));
+        assertEquals("propSubValue1", subData.getEffectiveValues().get("prop1", String.class));
+        assertNull(subData.getValues().get("prop4", String.class));
+        assertEquals(true, subData.getEffectiveValues().get("prop4", false));
+        
+        ConfigurationData[] subListData = configData.getValues().get("propSubList", ConfigurationData[].class);
+        ConfigurationData[] subListDataEffective = configData.getEffectiveValues().get("propSubList", ConfigurationData[].class);
+        assertNotNull(subListData);
+        assertNotNull(subListDataEffective);
+        
+        assertEquals(2, subListData.length);
+        assertEquals("propSubListValue1.1", subListData[0].getValues().get("prop1", String.class));
+        assertEquals("propSubListValue1.1", subListData[0].getEffectiveValues().get("prop1", String.class));
+        assertEquals("propSubListValue1.2", subListData[1].getValues().get("prop1", String.class));
+        assertEquals("propSubListValue1.2", subListData[1].getEffectiveValues().get("prop1", String.class));
+        
+        ConfigurationData subListDataItem1Sub = subListData[0].getValues().get("propSub", ConfigurationData.class);
+        ConfigurationData subListDataItem1SubEffecive = subListData[0].getEffectiveValues().get("propSub", ConfigurationData.class);
+        assertNotNull(subListDataItem1Sub);
+        assertNotNull(subListDataItem1SubEffecive);
+
+        assertNull(subListDataItem1Sub.getValues().get("prop1", String.class));
+        assertEquals("propSubList1_proSubValue1", subListDataItem1Sub.getEffectiveValues().get("prop1", String.class));
+        assertNull(subListDataItem1Sub.getValues().get("prop4", String.class));
+        assertEquals(true, subListDataItem1Sub.getEffectiveValues().get("prop4", false));
     }
 
 }

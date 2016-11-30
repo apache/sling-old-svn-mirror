@@ -38,7 +38,7 @@ public class ConfigurationManagerImplCustomPersistenceTest extends Configuration
     }
 
     @Override
-    protected String getConfigPropertiesPath(String path) {
+    protected String getConfigPropsPath(String path) {
         return path + "/jcr:content";
     }
 

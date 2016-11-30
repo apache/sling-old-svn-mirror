@@ -42,14 +42,21 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     
     private static final String DEFAULT_RESOURCE_TYPE = JcrConstants.NT_UNSTRUCTURED;
     
+    private static final String CHILD_NODE_NAME = "jcr:content";
+    
     @Override
     public Resource getResource(Resource resource) {
-        return resource.getChild("jcr:content");
+        return resource.getChild(CHILD_NODE_NAME);
+    }
+
+    @Override
+    public String getResourcePath(String resourcePath) {
+        return resourcePath + "/" + CHILD_NODE_NAME;
     }
 
     @Override
     public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
-        getOrCreateResource(resourceResolver, configResourcePath + "/jcr:content", properties);
+        getOrCreateResource(resourceResolver, configResourcePath + "/" + CHILD_NODE_NAME, properties);
         return true;
     }
 
@@ -59,7 +66,7 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
         Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, ValueMap.EMPTY);
         deleteChildren(configResourceParent);
         for (ResourceCollectionItem item : resourceCollectionItems) {
-            String path = configResourceParent.getPath() + "/" + item.getCollectionItemName() + "/jcr:content";
+            String path = configResourceParent.getPath() + "/" + item.getCollectionItemName() + "/" + CHILD_NODE_NAME;
             getOrCreateResource(resourceResolver, path, item.getValues());
         }
         return true;

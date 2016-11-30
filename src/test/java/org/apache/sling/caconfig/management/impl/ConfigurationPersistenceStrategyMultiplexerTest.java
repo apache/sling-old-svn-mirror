@@ -18,6 +18,7 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -59,6 +60,7 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     @Test
     public void testWithNoStrategies() {
         assertNull(underTest.getResource(resource1));
+        assertNull(underTest.getResourcePath(resource1.getPath()));
         assertFalse(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
         assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
                         new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
@@ -69,8 +71,8 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     public void testWithDefaultStrategy() {
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
 
-        Resource result = underTest.getResource(resource1);
-        assertSame(resource1, result);
+        assertSame(resource1, underTest.getResource(resource1));
+        assertEquals(resource1.getPath(), underTest.getResourcePath(resource1.getPath()));
         assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
         assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
                         new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
@@ -85,6 +87,10 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
             @Override
             public Resource getResource(Resource resource) {
                 return resource2;
+            }
+            @Override
+            public String getResourcePath(String resourcePath) {
+                return resource2.getPath();
             }
             @Override
             public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
@@ -104,6 +110,10 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
                 return resource1;
             }
             @Override
+            public String getResourcePath(String resourcePath) {
+                return resource1.getPath();
+            }
+            @Override
             public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
                 return false;
             }
@@ -115,8 +125,8 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
 
         }, Constants.SERVICE_RANKING, 1000);
         
-        Resource result = underTest.getResource(resource1);
-        assertSame(resource2, result);
+        assertSame(resource2, underTest.getResource(resource1));
+        assertEquals(resource2.getPath(), underTest.getResourcePath(resource1.getPath()));
         assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
         assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
                         new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),

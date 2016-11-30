@@ -202,7 +202,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         public T convert(final Resource resource, final Class<T> clazz, final String name) {
             return ConfigurationProxy.get(resource, clazz, new ChildResolver() {
                 private ConfigurationBuilder getConfiguration(String configName) {
-                    String childName = name + "/" + configName;
+                    String childName = configurationPersistenceStrategy.getResourcePath(name) + "/" + configName;
                     return configurationResolver.get(contentResource).name(childName);
                 }
                 @Override
