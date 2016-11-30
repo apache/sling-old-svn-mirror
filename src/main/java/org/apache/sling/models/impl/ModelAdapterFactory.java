@@ -458,18 +458,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                         final ValuePreparer preparer = (ValuePreparer) injector;
                         Object fromMap = preparedValues.get(preparer);
                         if (fromMap != null) {
-                            if (ObjectUtils.NULL.equals(fromMap)) {
-                                preparedValue = null;
-                            } else {
-                                preparedValue = fromMap;
-                            }
+                            preparedValue = fromMap;
                         } else {
                             preparedValue = preparer.prepareValue(injectionAdaptable);
-                            if (preparedValue == null) {
-                                preparedValues.put(preparer, ObjectUtils.NULL);
-                            } else {
-                                preparedValues.put(preparer, preparedValue);
-                            }
+                            preparedValues.put(preparer, preparedValue);
                         }
                     }
 
