@@ -18,13 +18,13 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.osgi.service.component.annotations.Component;
@@ -85,9 +85,10 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
      * Persist configuration data with the first implementation that accepts it.
      */
     @Override
-    public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
+    public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+            ConfigurationPersistData data) {
         for (ConfigurationPersistenceStrategy item : items) {
-            if (item.persist(resourceResolver, configResourcePath, properties)) {
+            if (item.persist(resourceResolver, configResourcePath, data)) {
                 return true;
             }
         }
@@ -99,9 +100,9 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
      */
     @Override
     public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-            Collection<ResourceCollectionItem> resourceCollectionItems) {
+            ConfigurationCollectionPersistData data) {
         for (ConfigurationPersistenceStrategy item : items) {
-            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, resourceCollectionItems)) {
+            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, data)) {
                 return true;
             }
         }

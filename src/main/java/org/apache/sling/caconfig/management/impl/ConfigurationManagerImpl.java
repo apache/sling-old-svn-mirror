@@ -35,11 +35,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
+import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,7 +62,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ConfigurationData get(Resource resource, String configName) {
+    public ConfigurationData getConfiguration(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         Resource configResource = null;
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
@@ -94,11 +96,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<ConfigurationData> getCollection(Resource resource, String configName) {
+    public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
         ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
+        // get configuration resource items
         Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
                 .getResourceCollectionInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourceInheritanceChains != null) {
@@ -125,7 +128,22 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 }
             }
         }
-        return configData;
+        
+        // get properties of parent resource of the current level
+        Map<String,Object> resourceCollectionParentProps = null;
+        if (writebackConfigResourceCollectionParentPath != null) {
+            Resource writebackConfigResourceCollectionParent = resource.getResourceResolver().getResource(writebackConfigResourceCollectionParentPath);
+            if (writebackConfigResourceCollectionParent != null) {
+                resourceCollectionParentProps = writebackConfigResourceCollectionParent.getValueMap();
+            }
+        }
+        
+        return new ConfigurationCollectionDataImpl(
+                configName,
+                configData,
+                writebackConfigResourceCollectionParentPath,
+                resourceCollectionParentProps
+                );
     }
     
     @SuppressWarnings("unchecked")
@@ -158,23 +176,23 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
 
     @Override
-    public void persist(Resource resource, String configName, Map<String,Object> values) {
+    public void persistConfiguration(Resource resource, String configName, ConfigurationPersistData data) {
         String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
         }
-        if (!configurationPersistenceStrategy.persist(resource.getResourceResolver(), configResourcePath, values)) {
+        if (!configurationPersistenceStrategy.persist(resource.getResourceResolver(), configResourcePath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
     }
 
     @Override
-    public void persistCollection(Resource resource, String configName, Collection<ResourceCollectionItem> resourceCollectionItems) {
+    public void persistConfigurationCollection(Resource resource, String configName, ConfigurationCollectionPersistData data) {
         String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
         }
-        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, resourceCollectionItems)) {
+        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
     }

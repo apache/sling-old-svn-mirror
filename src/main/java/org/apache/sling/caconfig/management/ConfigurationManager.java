@@ -18,15 +18,14 @@
  */
 package org.apache.sling.caconfig.management;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.SortedSet;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -44,7 +43,7 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @return Configuration data. Is null when no configuration resource found and no configuration metadata exists.
      */
-    @CheckForNull ConfigurationData get(@Nonnull Resource resource, @Nonnull String configName);
+    @CheckForNull ConfigurationData getConfiguration(@Nonnull Resource resource, @Nonnull String configName);
 
     /**
      * Get configuration data collection for the given context resource and configuration name.
@@ -52,7 +51,7 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @return Configuration data collection. Is empty when no configuration resources found.
      */
-    @Nonnull Collection<ConfigurationData> getCollection(@Nonnull Resource resource, @Nonnull String configName);
+    @Nonnull ConfigurationCollectionData getConfigurationCollection(@Nonnull Resource resource, @Nonnull String configName);
     
     /**
      * Write configuration to repository data using the inner-most context path as reference.
@@ -60,7 +59,8 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @param values Values to be stored. All existing properties are erased and replaced with the new ones.
      */
-    void persist(@Nonnull Resource resource, @Nonnull String configName, @Nonnull Map<String,Object> values);
+    void persistConfiguration(@Nonnull Resource resource, @Nonnull String configName,
+            @Nonnull ConfigurationPersistData data);
 
     /**
      * Write configuration data collection using the inner-most context path as reference.
@@ -69,8 +69,8 @@ public interface ConfigurationManager {
      * @param resourceCollectionItems Resource collection items to be stored.
      *      All existing collection entries on this context path level are erased and replaced with the new ones.
      */
-    void persistCollection(@Nonnull Resource resource, @Nonnull String configName,
-            @Nonnull Collection<ResourceCollectionItem> resourceCollectionItems);
+    void persistConfigurationCollection(@Nonnull Resource resource, @Nonnull String configName,
+            @Nonnull ConfigurationCollectionPersistData data);
     
     /**
      * Creates a new empty configuration data item for a configuration data collection for the given configuration name.

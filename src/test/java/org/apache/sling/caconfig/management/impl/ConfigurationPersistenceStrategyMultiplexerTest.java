@@ -24,14 +24,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
-import org.apache.sling.caconfig.spi.ResourceCollectionItem;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,10 +59,11 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     public void testWithNoStrategies() {
         assertNull(underTest.getResource(resource1));
         assertNull(underTest.getResourcePath(resource1.getPath()));
-        assertFalse(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
-                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
-                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
+        assertFalse(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
+                        new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
     }
 
     @Test
@@ -73,10 +72,11 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
 
         assertSame(resource1, underTest.getResource(resource1));
         assertEquals(resource1.getPath(), underTest.getResourcePath(resource1.getPath()));
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
-                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
-                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
+        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
+                        new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
     }
     
     @Test
@@ -93,12 +93,13 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
                 return resource2.getPath();
             }
             @Override
-            public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
+            public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+                    ConfigurationPersistData data) {
                 return true;
             }
             @Override
-            public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-                    Collection<ResourceCollectionItem> resourceCollectionItems) {
+            public boolean persistCollection(ResourceResolver resourceResolver,
+                    String configResourceCollectionParentPath, ConfigurationCollectionPersistData data) {
                 return false;
             }
         }, Constants.SERVICE_RANKING, 2000);
@@ -114,12 +115,13 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
                 return resource1.getPath();
             }
             @Override
-            public boolean persist(ResourceResolver resourceResolver, String configResourcePath, Map<String,Object> properties) {
+            public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+                    ConfigurationPersistData data) {
                 return false;
             }
             @Override
-            public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
-                    Collection<ResourceCollectionItem> resourceCollectionItems) {
+            public boolean persistCollection(ResourceResolver resourceResolver,
+                    String configResourceCollectionParentPath, ConfigurationCollectionPersistData data) {
                 return true;
             }
 
@@ -127,10 +129,11 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         
         assertSame(resource2, underTest.getResource(resource1));
         assertEquals(resource2.getPath(), underTest.getResourcePath(resource1.getPath()));
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", resource1.getValueMap()));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol", ImmutableList.of(
-                        new ResourceCollectionItem(resource1.getName(), resource1.getValueMap()),
-                        new ResourceCollectionItem(resource2.getName(), resource2.getValueMap()))));
+        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
+                        new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
     }
 
 }
