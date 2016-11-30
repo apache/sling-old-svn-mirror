@@ -27,6 +27,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -59,6 +60,9 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
 
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
+        if (adaptable == ObjectUtils.NULL) {
+            return null;
+        }
         ValueMap map = getValueMap(adaptable);
         if (map == null) {
             return null;
@@ -135,7 +139,8 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
 
     @Override
     public Object prepareValue(final Object adaptable) {
-        return getValueMap(adaptable);
+        Object prepared = getValueMap(adaptable);
+        return prepared != null ? prepared : ObjectUtils.NULL;
     }
 
     @Override

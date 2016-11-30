@@ -19,7 +19,18 @@ package org.apache.sling.models.impl.injectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+/**
+ * Optimization interface for Injectors which wish to avoid repeated accessing of some object
+ * based on the adaptable. If an Injector implements this interface, it must also be prepared
+ * to handle the case where ObjectUtils.NULL is passed as the adaptable.
+ */
 public interface ValuePreparer {
 
-    @CheckForNull Object prepareValue(@Nonnull Object adaptable);
+    /**
+     * Prepare a value from the adaptable.
+     *
+     * @param adaptable the adaptable
+     * @return a prepared value or ObjectUtils.NULL if a value is not preparable
+     */
+    @Nonnull Object prepareValue(@Nonnull Object adaptable);
 }

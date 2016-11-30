@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -51,6 +52,9 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
 
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
+        if (adaptable == ObjectUtils.NULL) {
+            return null;
+        }
         SlingBindings bindings = getBindings(adaptable);
         if (bindings == null) {
             return null;
@@ -86,7 +90,8 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
 
     @Override
     public Object prepareValue(Object adaptable) {
-        return getBindings(adaptable);
+        Object prepared = getBindings(adaptable);
+        return prepared != null ? prepared : ObjectUtils.NULL;
     }
 
     private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
