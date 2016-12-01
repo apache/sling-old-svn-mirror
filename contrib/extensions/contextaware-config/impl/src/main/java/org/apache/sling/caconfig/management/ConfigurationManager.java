@@ -92,6 +92,13 @@ public interface ConfigurationManager {
      * @param configName Configuration name
      * @return Configuration metadata or null if none exists for the given name.
      */
-    @CheckForNull ConfigurationMetadata getConfigurationMetadata(String configName);
+    @CheckForNull ConfigurationMetadata getConfigurationMetadata(@Nonnull String configName);
+    
+    /**
+     * Rewrite given resource path or configuration name according to current persistence strategies.
+     * @param configResourcePath Resource path or config name
+     * @return Rewritten resoure path or config name
+     */
+    @CheckForNull String getPersistenceResourcePath(@Nonnull String configResourcePath);
     
 }

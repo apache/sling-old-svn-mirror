@@ -44,7 +44,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -77,18 +76,18 @@ public class ConfigurationManagerImplNoDefaultTest {
         contextResourceNoConfig = context.create().resource("/content/testNoConfig",
                 PROPERTY_CONFIG_REF, "/conf/testNoConfig");
         
-        configMetadata = new ConfigurationMetadata(CONFIG_NAME);
-        configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
-                "prop1", new PropertyMetadata<>("prop1", "defValue"),
-                "prop2", new PropertyMetadata<>("prop2", String.class),
-                "prop3", new PropertyMetadata<>("prop3", 5)));
+        configMetadata = new ConfigurationMetadata(CONFIG_NAME, ImmutableList.<PropertyMetadata<?>>of(
+                new PropertyMetadata<>("prop1", "defValue"),
+                new PropertyMetadata<>("prop2", String.class),
+                new PropertyMetadata<>("prop3", 5)),
+                false);
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_NAME)).thenReturn(configMetadata);
 
-        configMetadata = new ConfigurationMetadata(CONFIG_COL_NAME);
-        configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
-                "prop1", new PropertyMetadata<>("prop1", "defValue"),
-                "prop2", new PropertyMetadata<>("prop2", String.class),
-                "prop3", new PropertyMetadata<>("prop3", 5)));
+        configMetadata = new ConfigurationMetadata(CONFIG_COL_NAME, ImmutableList.<PropertyMetadata<?>>of(
+                new PropertyMetadata<>("prop1", "defValue"),
+                new PropertyMetadata<>("prop2", String.class),
+                new PropertyMetadata<>("prop3", 5)),
+                true);
         when(configurationMetadataProvider.getConfigurationMetadata(CONFIG_COL_NAME)).thenReturn(configMetadata);
     }
     

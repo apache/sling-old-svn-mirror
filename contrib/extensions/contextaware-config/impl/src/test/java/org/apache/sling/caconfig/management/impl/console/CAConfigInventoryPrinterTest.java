@@ -43,7 +43,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -70,11 +69,11 @@ public class CAConfigInventoryPrinterTest {
         ConfigurationTestUtils.registerConfigurationResolver(context);
         underTest = context.registerInjectActivateService(new CAConfigInventoryPrinter());
     
-        ConfigurationMetadata configMetadata = new ConfigurationMetadata(SAMPLE_CONFIG_NAME);
-        configMetadata.setPropertyMetadata(ImmutableMap.<String,PropertyMetadata<?>>of(
-                "prop1", new PropertyMetadata<>("prop1", "defValue"),
-                "prop2", new PropertyMetadata<>("prop2", String.class),
-                "prop3", new PropertyMetadata<>("prop3", 5)));
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata(SAMPLE_CONFIG_NAME, ImmutableList.<PropertyMetadata<?>>of(
+                new PropertyMetadata<>("prop1", "defValue"),
+                new PropertyMetadata<>("prop2", String.class),
+                new PropertyMetadata<>("prop3", 5)),
+                false);
         when(configurationMetadataProvider.getConfigurationMetadata(SAMPLE_CONFIG_NAME)).thenReturn(configMetadata);
         when(configurationMetadataProvider.getConfigurationNames()).thenReturn(ImmutableSortedSet.of(SAMPLE_CONFIG_NAME));
         

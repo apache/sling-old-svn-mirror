@@ -29,11 +29,13 @@ import java.util.TreeSet;
 
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
+import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ConfigurationMetadataProviderMultiplexerTest {
@@ -89,7 +91,7 @@ public class ConfigurationMetadataProviderMultiplexerTest {
     private void registerConfigurationMetadataProvider(String... names) {
         final Map<String,ConfigurationMetadata> metadata = new HashMap<>();
         for (String name : names) {
-            metadata.put(name, new ConfigurationMetadata(name));
+            metadata.put(name, new ConfigurationMetadata(name, ImmutableList.<PropertyMetadata<?>>of(), false));
         }
         context.registerService(ConfigurationMetadataProvider.class, new ConfigurationMetadataProvider() {
             @Override

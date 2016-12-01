@@ -43,7 +43,7 @@ public interface ConfigurationPersistenceStrategy {
     /**
      * Allows the strategy to transform the given configuration resource path according to it's persistent strategies,
      * e.g. fetching the data from a child resource instead of the given resource. 
-     * @param resource Configuration resource path
+     * @param resource Configuration resource path or part of it (e.g. config name)
      * @return Transformed configuration resource path. If null is returned this strategy does not support the given configuration resource path.
      */
     @CheckForNull String getResourcePath(@Nonnull String resourcePath);

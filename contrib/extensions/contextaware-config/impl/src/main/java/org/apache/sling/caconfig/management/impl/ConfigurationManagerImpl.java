@@ -31,6 +31,7 @@ import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.ResettableIterator;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ListIteratorWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
@@ -39,10 +40,12 @@ import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
+import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
+import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -63,7 +66,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @SuppressWarnings("unchecked")
     @Override
     public ConfigurationData getConfiguration(Resource resource, String configName) {
-        ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        ConfigNameUtil.ensureValidConfigName(configName);
+        ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         Resource configResource = null;
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
                 .getResourceInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
@@ -97,7 +101,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @SuppressWarnings("unchecked")
     @Override
     public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
-        ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        ConfigNameUtil.ensureValidConfigName(configName);
+        ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
@@ -177,6 +182,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @Override
     public void persistConfiguration(Resource resource, String configName, ConfigurationPersistData data) {
+        ConfigNameUtil.ensureValidConfigName(configName);
         String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
@@ -188,6 +194,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @Override
     public void persistConfigurationCollection(Resource resource, String configName, ConfigurationCollectionPersistData data) {
+        ConfigNameUtil.ensureValidConfigName(configName);
         String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
@@ -199,7 +206,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @Override
     public ConfigurationData newCollectionItem(Resource resource, String configName) {
-        ConfigurationMetadata configMetadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        ConfigNameUtil.ensureValidConfigName(configName);
+        ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         if (configMetadata != null) {
             return new ConfigurationDataImpl(configMetadata,
                     resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, true);
@@ -214,7 +222,70 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
 
     @Override
     public ConfigurationMetadata getConfigurationMetadata(String configName) {
-        return configurationMetadataProvider.getConfigurationMetadata(configName);
+        ConfigNameUtil.ensureValidConfigName(configName);
+        ConfigurationMetadata metadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        if (metadata != null) {
+            return metadata;
+        }
+        
+        // if no metadata found with direct match try to resolve nested configuration metadata references
+        for (String partialConfigName : ConfigNameUtil.getAllPartialConfigNameVariations(configName)) {
+            ConfigurationMetadata partialConfigMetadata = getConfigurationMetadata(partialConfigName);
+            if (partialConfigMetadata != null) {
+                ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, configName, partialConfigName);
+                if (nestedConfigMetadata != null) {
+                    return nestedConfigMetadata;
+                }
+            }
+        }
+        return null;
+    }
+    
+    private ConfigurationMetadata getNestedConfigurationMetadata(ConfigurationMetadata configMetadata, String configName, String partialConfigName) {
+        if (StringUtils.startsWith(configName, partialConfigName + "/")) {
+            String prefixToRemove;
+            if (configMetadata.isCollection()) {
+                String collectionItemName = StringUtils.substringBefore(StringUtils.substringAfter(configName, partialConfigName + "/"), "/");
+                prefixToRemove = configurationPersistenceStrategy.getResourcePath(partialConfigName + "/" + collectionItemName) + "/";
+            }
+            else {
+                prefixToRemove = configurationPersistenceStrategy.getResourcePath(partialConfigName) + "/";
+            }
+            String remainingConfigName = StringUtils.substringAfter(configName, prefixToRemove);
+            // try direct match
+            ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, remainingConfigName);
+            if (nestedConfigMetadata != null) {
+                return nestedConfigMetadata;
+            }
+            // try to find partial match for deeper nestings
+            for (String partialRemainingConfigName : ConfigNameUtil.getAllPartialConfigNameVariations(remainingConfigName)) {
+                ConfigurationMetadata partialConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, partialRemainingConfigName);
+                if (partialConfigMetadata != null) {
+                    nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, remainingConfigName, partialRemainingConfigName);
+                    if (nestedConfigMetadata != null) {
+                        return nestedConfigMetadata;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    private ConfigurationMetadata getNestedConfigurationMetadataFromProperty(ConfigurationMetadata partialConfigMetadata, String configName) {
+        for (PropertyMetadata<?> propertyMetadata : partialConfigMetadata.getPropertyMetadata().values()) {
+            if (propertyMetadata.isNestedConfiguration()) {
+                ConfigurationMetadata nestedConfigMetadata = propertyMetadata.getConfigurationMetadata();
+                if (StringUtils.equals(configName, nestedConfigMetadata.getName())) {
+                    return nestedConfigMetadata;
+                }
+            }
+        }
+        return null;
     }
 
+    @Override
+    public String getPersistenceResourcePath(String configResourcePath) {
+        return configurationPersistenceStrategy.getResourcePath(configResourcePath);
+    }
+    
 }

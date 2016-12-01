@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.resource.ConfigurationResourceResolver;
+import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,11 +40,13 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
 
     @Override
     public Resource getResource(Resource resource, String bucketName, String configName) {
+        ConfigNameUtil.ensureValidConfigName(configName);
         return configurationResourceResolvingStrategy.getResource(resource, bucketName, configName);
     }
 
     @Override
     public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
+        ConfigNameUtil.ensureValidConfigName(configName);
         return configurationResourceResolvingStrategy.getResourceCollection(resource, bucketName, configName);
     }
 
@@ -67,5 +70,5 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
         }
         return contextPaths;
     }
-
+    
 }
