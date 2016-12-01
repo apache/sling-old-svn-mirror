@@ -21,16 +21,22 @@ package org.apache.sling.models.impl;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.script.SimpleBindings;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.models.factory.ExportException;
 import org.apache.sling.models.factory.MissingExporterException;
 import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +64,7 @@ class ExportServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
         Map<String, String> options = createOptionMap(request);
-
+        addScriptBindings(request, response);
         String exported;
         try {
             exported = accessor.getExportedString(request, options, modelFactory, exporterName);
@@ -117,5 +123,26 @@ class ExportServlet extends SlingSafeMethodsServlet {
             return modelFactory.exportModelForRequest(request, exporterName, String.class, options);
         }
     };
+
+    private void addScriptBindings(SlingHttpServletRequest request, SlingHttpServletResponse response) {
+        BundleContext bundleContext = FrameworkUtil.getBundle(ExportServlet.class).getBundleContext();
+        try {
+            SimpleBindings bindings = new SimpleBindings();
+            bindings.put(SlingBindings.REQUEST, request);
+            bindings.put(SlingBindings.RESPONSE, response);
+            bindings.put(SlingBindings.RESOURCE, request.getResource());
+            bindings.put(SlingBindings.SLING, new ExporterScriptingHelper(request, response));
+            ServiceReference[] serviceReferences = bundleContext.getAllServiceReferences(BindingsValuesProvider.class.getName(), null);
+            for (ServiceReference serviceReference : serviceReferences) {
+                BindingsValuesProvider bindingsValuesProvider = (BindingsValuesProvider) bundleContext.getService(serviceReference);
+                bindingsValuesProvider.addBindings(bindings);
+            }
+            SlingBindings slingBindings = new SlingBindings();
+            slingBindings.putAll(bindings);
+            request.setAttribute(SlingBindings.class.getName(), slingBindings);
+        } catch (InvalidSyntaxException e) {
+            logger.error(e.getMessage());
+        }
+    }
 
 }
