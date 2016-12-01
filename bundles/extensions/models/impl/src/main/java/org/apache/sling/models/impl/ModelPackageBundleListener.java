@@ -35,6 +35,7 @@ import org.apache.sling.models.annotations.Exporter;
 import org.apache.sling.models.annotations.ExporterOption;
 import org.apache.sling.models.annotations.Exporters;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -45,6 +46,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptEngineFactory;
 import javax.servlet.Servlet;
 
 public class ModelPackageBundleListener implements BundleTrackerCustomizer {
@@ -71,13 +73,20 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
     private final ModelAdapterFactory factory;
     
     private final AdapterImplementations adapterImplementations;
+
+    private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
+
+    private final ScriptEngineFactory scriptEngineFactory;
     
     public ModelPackageBundleListener(BundleContext bundleContext,
-            ModelAdapterFactory factory,
-            AdapterImplementations adapterImplementations) {
+                                      ModelAdapterFactory factory,
+                                      AdapterImplementations adapterImplementations,
+                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext) {
         this.bundleContext = bundleContext;
         this.factory = factory;
         this.adapterImplementations = adapterImplementations;
+        this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
+        this.scriptEngineFactory = new ExporterScriptEngineFactory(bundleContext.getBundle());
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
@@ -147,9 +156,9 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
                                 ExportServlet.ExportedObjectAccessor accessor = null;
                                 if (adaptable == Resource.class) {
-                                    accessor = ExportServlet.RESOURCE;
+                                    accessor = ExportServlet.RESOURCE_ACCESSOR;
                                 } else if (adaptable == SlingHttpServletRequest.class) {
-                                    accessor = ExportServlet.REQUEST;
+                                    accessor = ExportServlet.REQUEST_ACCESSOR;
                                 }
                                 Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
                                 if (exporterAnnotation != null) {
@@ -255,11 +264,12 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
     }
 
 
-    private void registerExporter(Bundle bundle, Class<?> implType, String resourceType, Exporter exporterAnnotation, List<ServiceRegistration> regs,
-                                  ExportServlet.ExportedObjectAccessor accessor) {
+    private void registerExporter(Bundle bundle, Class<?> annotatedClass, String resourceType, Exporter exporterAnnotation,
+                                  List<ServiceRegistration> regs, ExportServlet.ExportedObjectAccessor accessor) {
         if (accessor != null) {
             Map<String, String> baseOptions = getOptions(exporterAnnotation);
-            ExportServlet servlet = new ExportServlet(factory, exporterAnnotation.selector(), exporterAnnotation.name(), accessor, baseOptions);
+            ExportServlet servlet = new ExportServlet(bundle.getBundleContext(), factory, bindingsValuesProvidersByContext,
+                    scriptEngineFactory, annotatedClass, exporterAnnotation.selector(), exporterAnnotation.name(), accessor, baseOptions);
             Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
             registrationProps.put("sling.servlet.resourceTypes", resourceType);
             registrationProps.put("sling.servlet.selectors", exporterAnnotation.selector());

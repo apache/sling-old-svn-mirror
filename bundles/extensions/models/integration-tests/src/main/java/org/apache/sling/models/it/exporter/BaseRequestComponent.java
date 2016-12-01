@@ -27,6 +27,7 @@ import org.apache.sling.models.annotations.injectorspecific.SlingObject;
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @Model(adaptables = { SlingHttpServletRequest.class }, resourceType = "sling/exp-request/base")
 @Exporter(name = "jackson", extensions = "json")
@@ -37,6 +38,9 @@ public class BaseRequestComponent {
 
     @Inject @Via("resource")
     private String sampleValue;
+
+    @Inject
+    private Map<String, Object> testBindingsObject;
 
     private final SlingHttpServletRequest request;
 
@@ -59,6 +63,10 @@ public class BaseRequestComponent {
 
     public Resource getResource() {
         return resource;
+    }
+
+    public Map<String, Object> getTestBindingsObject() {
+        return testBindingsObject;
     }
 
     public SlingHttpServletRequest getSlingHttpServletRequest() {

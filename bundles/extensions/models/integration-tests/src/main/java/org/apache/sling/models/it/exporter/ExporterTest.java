@@ -211,6 +211,9 @@ public class ExporterTest {
             JSONObject obj = new JSONObject(response.getStringWriter().toString());
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("BASETESTVALUE", obj.getString("UPPER"));
+            Assert.assertTrue(obj.has("testBindingsObject"));
+            JSONObject testBindingsObject = obj.getJSONObject("testBindingsObject");
+            Assert.assertEquals("value", testBindingsObject.getString("name"));
             Assert.assertEquals(baseRequestComponentPath, obj.getString("id"));
 
             response = new FakeResponse();

@@ -29,6 +29,7 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.SlingObject;
 import org.apache.sling.models.impl.injectors.SlingObjectInjector;
 import org.apache.sling.models.testutil.ModelAdapterFactoryUtil;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,12 +51,15 @@ public class StaticInjectionAPFLoadOrderTest {
     private SlingHttpServletRequest request;
     @Mock
     private ResourceResolver resourceResolver;
+
+    @Mock
+    private BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
     
     private ModelAdapterFactory factory;
     
     @Before
     public void setUp() {
-        registerModelAdapterFactory();
+        registerServices();
     }
     
     /**
@@ -112,7 +116,8 @@ public class StaticInjectionAPFLoadOrderTest {
         assertTrue(createModel().hasResourceResolver());
     }
     
-    private void registerModelAdapterFactory() {
+    private void registerServices() {
+        context.registerService(BindingsValuesProvidersByContext.class, bindingsValuesProvidersByContext);
         factory = context.registerInjectActivateService(new ModelAdapterFactory());
     }
 

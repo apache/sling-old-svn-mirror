@@ -25,13 +25,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 class FakeRequest implements HttpServletRequest {
 
     private final String path;
+
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
 
     FakeRequest(String path) {
         this.path = path;
@@ -164,7 +168,7 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public Object getAttribute(String name) {
-        return null;
+        return attributes.get(name);
     }
 
     @Override
@@ -214,7 +218,7 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public Map getParameterMap() {
-        return null;
+        return Collections.EMPTY_MAP;
     }
 
     @Override
@@ -254,12 +258,12 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public void setAttribute(String name, Object o) {
-
+        attributes.put(name, o);
     }
 
     @Override
     public void removeAttribute(String name) {
-
+        attributes.remove(name);
     }
 
     @Override
