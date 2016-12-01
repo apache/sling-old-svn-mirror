@@ -19,8 +19,11 @@
 package org.apache.sling.caconfig.impl.metadata;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -119,16 +122,14 @@ public final class AnnotationClassParser {
             throw new IllegalArgumentException("Class has not @Configuration annotation: " + clazz.getName());
         }
         
-        // configuration metadata
+        // configuration metadata and property metadata
         String configName = getConfigurationName(clazz, configAnnotation);
-        ConfigurationMetadata configMetadata = new ConfigurationMetadata(configName);
-        configMetadata.setLabel(emptyToNull(configAnnotation.label()));
-        configMetadata.setDescription(emptyToNull(configAnnotation.description()));
-        configMetadata.setProperties(propsArrayToMap(configAnnotation.property()));
-        configMetadata.setCollection(configAnnotation.collection());
-
-        // property metadata
-        configMetadata.setPropertyMetadata(buildConfigurationMetadata_PropertyMetadata(clazz));
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata(configName,
+                buildConfigurationMetadata_PropertyMetadata(clazz),
+                configAnnotation.collection())
+                .label(emptyToNull(configAnnotation.label()))
+                .description(emptyToNull(configAnnotation.description()))
+                .properties(propsArrayToMap(configAnnotation.property()));
         
         return configMetadata;
     }
@@ -138,21 +139,18 @@ public final class AnnotationClassParser {
      * @param clazz Configuration annotation class
      * @return Configuration metadata
      */
-    private static ConfigurationMetadata buildConfigurationMetadata_Nested(Class<?> clazz, String configName) {
-        ConfigurationMetadata configMetadata = new ConfigurationMetadata(configName);
-
-        // property metadata
-        configMetadata.setPropertyMetadata(buildConfigurationMetadata_PropertyMetadata(clazz));
-        
-        return configMetadata;
+    private static ConfigurationMetadata buildConfigurationMetadata_Nested(Class<?> clazz, String configName, boolean collection) {
+        return new ConfigurationMetadata(configName,
+                buildConfigurationMetadata_PropertyMetadata(clazz),
+                collection);
     }
     
-    private static Map<String,PropertyMetadata<?>> buildConfigurationMetadata_PropertyMetadata(Class<?> clazz) {
-        Map<String,PropertyMetadata<?>> propertyMetadataList = new HashMap<>();
+    private static Collection<PropertyMetadata<?>> buildConfigurationMetadata_PropertyMetadata(Class<?> clazz) {
+        List<PropertyMetadata<?>> propertyMetadataList = new ArrayList<>();
         Method[] propertyMethods = clazz.getDeclaredMethods();
         for (Method propertyMethod : propertyMethods) {
             PropertyMetadata<?> propertyMetadata = buildPropertyMetadata(propertyMethod, propertyMethod.getReturnType());
-            propertyMetadataList.put(propertyMetadata.getName(), propertyMetadata);
+            propertyMetadataList.add(propertyMetadata);
         }
         return propertyMetadataList;
     }
@@ -161,34 +159,34 @@ public final class AnnotationClassParser {
     private static <T> PropertyMetadata<T> buildPropertyMetadata(Method propertyMethod, Class<T> type) {
         String propertyName = getPropertyName(propertyMethod.getName());
         
-        PropertyMetadata propertyMetadata;
+        PropertyMetadata<?> propertyMetadata;
         if (type.isArray() && type.getComponentType().isAnnotation()) {
-            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type.getComponentType(), propertyName);
-            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata[].class);
-            propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type.getComponentType(), propertyName, true);
+            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata[].class)
+                    .configurationMetadata(nestedConfigMetadata);
         }
         else if (type.isAnnotation()) {
-            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type, propertyName);
-            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata.class);
-            propertyMetadata.setConfigurationMetadata(nestedConfigMetadata);
+            ConfigurationMetadata nestedConfigMetadata = buildConfigurationMetadata_Nested(type, propertyName, false);
+            propertyMetadata = new PropertyMetadata<>(propertyName, ConfigurationMetadata.class)
+                    .configurationMetadata(nestedConfigMetadata);
         }
         else {
-            propertyMetadata = new PropertyMetadata<>(propertyName, type);            
-            propertyMetadata.setDefaultValue((T)propertyMethod.getDefaultValue());
+            propertyMetadata = new PropertyMetadata<>(propertyName, type)            
+                    .defaultValue((T)propertyMethod.getDefaultValue());
         }
         
         Property propertyAnnotation = propertyMethod.getAnnotation(Property.class);
         if (propertyAnnotation != null) {            
-            propertyMetadata.setLabel(emptyToNull(propertyAnnotation.label()));
-            propertyMetadata.setDescription(emptyToNull(propertyAnnotation.description()));
-            propertyMetadata.setProperties(propsArrayToMap(propertyAnnotation.property()));
+            propertyMetadata.label(emptyToNull(propertyAnnotation.label()))
+                .description(emptyToNull(propertyAnnotation.description()))
+                .properties(propsArrayToMap(propertyAnnotation.property()));
         }
         else {
             Map<String,String> emptyMap = Collections.emptyMap();
-            propertyMetadata.setProperties(emptyMap);
+            propertyMetadata.properties(emptyMap);
         }
         
-        return propertyMetadata;
+        return (PropertyMetadata)propertyMetadata;
     }
     
     private static String emptyToNull(String value) {

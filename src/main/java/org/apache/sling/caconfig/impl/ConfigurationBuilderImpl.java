@@ -27,7 +27,6 @@ import java.util.Iterator;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.Transformer;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
@@ -37,6 +36,7 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassParser;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
+import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
@@ -68,23 +68,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     @Override
     public ConfigurationBuilder name(String configName) {
-        if (!isNameValid(configName)) {
-            throw new IllegalArgumentException("Invalid configuration name: " + configName);
-        }
+        ConfigNameUtil.ensureValidConfigName(configName);
         this.configName = configName;
         return this;
-    }
-
-    /**
-     * Check the name.
-     * A name must not be null and relative.
-     * @param name The name
-     * @return {@code true} if it is valid
-     */
-    private boolean isNameValid(final String name) {
-        return !StringUtils.isBlank(name)
-                && !StringUtils.startsWith(name, "/")
-                && !StringUtils.contains(name, "../");
     }
 
     /**

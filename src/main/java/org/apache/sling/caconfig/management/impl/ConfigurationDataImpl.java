@@ -43,7 +43,7 @@ import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
 final class ConfigurationDataImpl implements ConfigurationData {
     
-    private ConfigurationMetadata configMetadata;
+    private final ConfigurationMetadata configMetadata;
     private final Resource resolvedConfigurationResource;
     private final Resource writebackConfigurationResource;
     private final List<Resource> configurationResourceInheritanceChain;
@@ -94,10 +94,6 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 configurationManager, configurationOverrideManager,
                 configurationPersistenceStrategy,
                 configResourceCollection, null);
-    }
-    
-    void setConfigMetadata(ConfigurationMetadata configMetadata) {
-        this.configMetadata = configMetadata;
     }
     
     @Override
@@ -186,8 +182,8 @@ final class ConfigurationDataImpl implements ConfigurationData {
             return;
         }
         for (PropertyMetadata<?> propertyMetadata : configMetadata.getPropertyMetadata().values()) {
-            ConfigurationMetadata nestedConfigMetadata = propertyMetadata.getConfigurationMetadata();
-            if (nestedConfigMetadata != null) {
+            if (propertyMetadata.isNestedConfiguration()) {
+                ConfigurationMetadata nestedConfigMetadata = propertyMetadata.getConfigurationMetadata();
                 String nestedConfigName;
                 if (configResourceCollection) {
                     nestedConfigName = configurationPersistenceStrategy.getResourcePath(configName + "/" + getCollectionItemName()) + "/" + nestedConfigMetadata.getName();
@@ -197,16 +193,10 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 }
                 if (propertyMetadata.getType().equals(ConfigurationMetadata.class)) {
                     ConfigurationData configData = configurationManager.getConfiguration(contextResource, nestedConfigName);
-                    if (configData != null) {
-                        ((ConfigurationDataImpl)configData).setConfigMetadata(nestedConfigMetadata);
-                    }
                     props.put(propertyMetadata.getName(), configData);
                 }
                 else if (propertyMetadata.getType().equals(ConfigurationMetadata[].class)) {
                     Collection<ConfigurationData> configDatas = configurationManager.getConfigurationCollection(contextResource, nestedConfigName).getItems();
-                    for (ConfigurationData configData : configDatas) {
-                        ((ConfigurationDataImpl)configData).setConfigMetadata(nestedConfigMetadata);
-                    }
                     props.put(propertyMetadata.getName(), configDatas.toArray(new ConfigurationData[configDatas.size()]));
                 }
             }
@@ -220,8 +210,15 @@ final class ConfigurationDataImpl implements ConfigurationData {
         Object value;
         Object effectiveValue;
         if (propertyMetadata != null) {
-            value = getValues().get(propertyName, propertyMetadata.getType());
-            effectiveValue = getEffectiveValues().get(propertyName, ClassUtils.primitiveToWrapper(propertyMetadata.getType()));
+            Class<?> type = ClassUtils.primitiveToWrapper(propertyMetadata.getType());
+            if (type == ConfigurationMetadata.class) {
+                type = ConfigurationData.class;
+            }
+            else if (type == ConfigurationMetadata[].class) {
+                type = ConfigurationData[].class;
+            }
+            value = getValues().get(propertyName, type);
+            effectiveValue = getEffectiveValues().get(propertyName, type);
         }
         else {
             value = getValues().get(propertyName);
@@ -244,5 +241,5 @@ final class ConfigurationDataImpl implements ConfigurationData {
             return configMetadata.getPropertyMetadata().get(propertyName);
         }
     }
-
+    
 }
