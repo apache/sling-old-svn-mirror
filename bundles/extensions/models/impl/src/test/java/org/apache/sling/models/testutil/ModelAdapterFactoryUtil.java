@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -33,6 +34,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 /**
  * Helper methods for simulating sling models bundle events
@@ -91,6 +93,16 @@ public final class ModelAdapterFactoryUtil {
                 }
             }
             return urls.elements();
+        }
+
+        @Override
+        public Map getSignerCertificates(int i) {
+            return null;
+        }
+
+        @Override
+        public Version getVersion() {
+            return null;
         }
 
         @Override
