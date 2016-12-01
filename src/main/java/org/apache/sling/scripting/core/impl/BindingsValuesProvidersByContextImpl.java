@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 
 /** Our default {@link BindingsValuesProvidersByContext} implementation */
 @Component
-@Service
+@Service(BindingsValuesProvidersByContext.class)
 public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvidersByContext, ServiceTrackerCustomizer {
 
     private final Map<String, ContextBvpCollector> customizers = new HashMap<String, ContextBvpCollector>();
