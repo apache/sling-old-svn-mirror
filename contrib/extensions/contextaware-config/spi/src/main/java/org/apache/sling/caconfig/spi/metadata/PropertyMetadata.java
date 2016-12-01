@@ -79,10 +79,34 @@ public final class PropertyMetadata<T> extends AbstractMetadata<PropertyMetadata
     }
     
     private static Class<?> typeToPrimitive(Class<?> clazz) {
-        if (clazz != String.class && !clazz.isPrimitive()) {
-            Class<?> type = ClassUtils.wrapperToPrimitive(clazz);
-            if (type != null) {
-                return type;
+        if (clazz.isArray()) {
+            if (ClassUtils.isPrimitiveWrapper(clazz.getComponentType())) {
+                if (clazz == Integer[].class) {
+                    return int[].class;
+                }
+                if (clazz == Long[].class) {
+                    return long[].class;
+                }
+                if (clazz == Double[].class) {
+                    return double[].class;
+                }
+                if (clazz == Boolean[].class) {
+                    return boolean[].class;
+                }
+            }
+        }
+        else if (ClassUtils.isPrimitiveWrapper(clazz)) {
+            if (clazz == Integer.class) {
+                return int.class;
+            }
+            if (clazz == Long.class) {
+                return long.class;
+            }
+            if (clazz == Double.class) {
+                return double.class;
+            }
+            if (clazz == Boolean.class) {
+                return boolean.class;
             }
         }
         return clazz;
