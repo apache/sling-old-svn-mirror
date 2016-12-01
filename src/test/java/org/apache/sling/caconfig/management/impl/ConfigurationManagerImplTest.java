@@ -564,8 +564,8 @@ public class ConfigurationManagerImplTest {
         assertEquals(ImmutableSet.of("prop1", "propSub", "propSubList", "prop4"), configData.getPropertyNames());
         assertEquals("value1", configData.getValues().get("prop1", String.class));
         assertEquals("value1", configData.getEffectiveValues().get("prop1", String.class));
-        assertEquals(true, configData.getValues().get("prop4", false));
-        assertEquals(true, configData.getEffectiveValues().get("prop4", false));
+        assertTrue(configData.getValues().get("prop4", false));
+        assertTrue(configData.getEffectiveValues().get("prop4", false));
         
         assertEquals(ConfigurationMetadata.class, configData.getValueInfo("propSub").getPropertyMetadata().getType());
         assertEquals(ConfigurationMetadata[].class, configData.getValueInfo("propSubList").getPropertyMetadata().getType());
@@ -583,8 +583,8 @@ public class ConfigurationManagerImplTest {
 
         assertNull(subData.getValues().get("prop1", String.class));
         assertEquals("propSubValue1", subData.getEffectiveValues().get("prop1", String.class));
-        assertNull(subData.getValues().get("prop4", String.class));
-        assertEquals(true, subData.getEffectiveValues().get("prop4", false));
+        assertFalse(subData.getValues().get("prop4", false));
+        assertTrue(subData.getEffectiveValues().get("prop4", false));
         
         // propSub/propSubLevel2
         ConfigurationData subDataLevel2 = subData.getValues().get("propSubLevel2", ConfigurationData.class);
@@ -597,8 +597,8 @@ public class ConfigurationManagerImplTest {
 
         assertNull(subDataLevel2.getValues().get("prop1", String.class));
         assertEquals("propSubLevel2Value1", subDataLevel2.getEffectiveValues().get("prop1", String.class));
-        assertNull(subDataLevel2.getValues().get("prop4", String.class));
-        assertEquals(true, subDataLevel2.getEffectiveValues().get("prop4", false));
+        assertFalse(subDataLevel2.getValues().get("prop4", false));
+        assertTrue(subDataLevel2.getEffectiveValues().get("prop4", false));
         
         // propSubList
         ConfigurationData[] subListData = configData.getValues().get("propSubList", ConfigurationData[].class);
@@ -622,8 +622,8 @@ public class ConfigurationManagerImplTest {
 
         assertNull(subListDataItem1Sub.getValues().get("prop1", String.class));
         assertEquals("propSubList1_proSubValue1", subListDataItem1Sub.getEffectiveValues().get("prop1", String.class));
-        assertNull(subListDataItem1Sub.getValues().get("prop4", String.class));
-        assertEquals(true, subListDataItem1Sub.getEffectiveValues().get("prop4", false));
+        assertFalse(subListDataItem1Sub.getValues().get("prop4", false));
+        assertTrue(subListDataItem1Sub.getEffectiveValues().get("prop4", false));
     }
 
     @Test
@@ -744,4 +744,40 @@ public class ConfigurationManagerImplTest {
         assertEquals(getConfigPropsPath("a/b"), underTest.getPersistenceResourcePath("a/b"));
     }
         
+    @Test
+    public void testPersistConfiguration_Nested() throws Exception {
+        underTest.persistConfiguration(contextResourceLevel2, getConfigPropsPath(getConfigPropsPath(CONFIG_NESTED_NAME)
+                + "/propSub") + "/propSubLevel2",
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1_persist")));
+        context.resourceResolver().commit();
+
+        ConfigurationData configData = underTest.getConfiguration(contextResourceLevel2, CONFIG_NESTED_NAME);
+        ConfigurationData subData = configData.getValues().get("propSub", ConfigurationData.class);
+        ConfigurationData subDataLevel2 = subData.getValues().get("propSubLevel2", ConfigurationData.class);
+
+        assertEquals("value1_persist", subDataLevel2.getValues().get("prop1", String.class));
+        assertEquals("value1_persist", subDataLevel2.getEffectiveValues().get("prop1", String.class));
+        assertFalse(subDataLevel2.getValues().get("prop4", false));
+        assertFalse(subDataLevel2.getEffectiveValues().get("prop4", false));
+    }
+
+    @Test
+    public void testPersistConfigurationCollection_Nested() throws Exception {
+        underTest.persistConfigurationCollection(contextResourceLevel2, getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSubList",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1_persist")).collectionItemName("item1"),
+                        new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value2_persist")).collectionItemName("item2"),
+                        new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value3_persist")).collectionItemName("item3"))
+        ));
+        context.resourceResolver().commit();
+
+        ConfigurationData configData = underTest.getConfiguration(contextResourceLevel2, CONFIG_NESTED_NAME);
+        ConfigurationData[] subListData = configData.getValues().get("propSubList", ConfigurationData[].class);
+        
+        assertEquals(3, subListData.length);
+        assertEquals("value1_persist", subListData[0].getValues().get("prop1", String.class));
+        assertEquals("value2_persist", subListData[1].getValues().get("prop1", String.class));
+        assertEquals("value3_persist", subListData[2].getValues().get("prop1", String.class));
+    }
+
 }
