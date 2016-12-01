@@ -66,6 +66,18 @@ public class PropertyMetadataTest {
     }
 
     @Test
+    public void testAllowedTypesConverted() {
+        assertEquals(int.class, new PropertyMetadata<>("name1", Integer.class).getType());
+        assertEquals(int[].class, new PropertyMetadata<>("name1", Integer[].class).getType());
+        assertEquals(long.class, new PropertyMetadata<>("name1", Long.class).getType());
+        assertEquals(long[].class, new PropertyMetadata<>("name1", Long[].class).getType());
+        assertEquals(double.class, new PropertyMetadata<>("name1", Double.class).getType());
+        assertEquals(double[].class, new PropertyMetadata<>("name1", Double[].class).getType());
+        assertEquals(boolean.class, new PropertyMetadata<>("name1", Boolean.class).getType());
+        assertEquals(boolean[].class, new PropertyMetadata<>("name1", Boolean[].class).getType());
+    }
+
+    @Test
     public void testNestedConfiguration() {
         new PropertyMetadata<>("name1", ConfigurationMetadata.class);
         new PropertyMetadata<>("name1", ConfigurationMetadata[].class);
