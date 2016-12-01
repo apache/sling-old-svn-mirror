@@ -26,28 +26,51 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class ConfigurationMetadataTest {
 
     @Test
     public void testProps() {
-        ConfigurationMetadata underTest = new ConfigurationMetadata("name1");
+        ConfigurationMetadata underTest = new ConfigurationMetadata("name1", ImmutableList.<PropertyMetadata<?>>of(), false);
         assertEquals("name1", underTest.getName());
         assertTrue(underTest.isSingleton());
         assertFalse(underTest.isCollection());
         
-        underTest.setLabel("label1");
-        underTest.setDescription("desc1");
-        underTest.setCollection(true);
         Map<String,String> props = ImmutableMap.of("p1", "v1");
-        underTest.setProperties(props);
+        underTest.label("label1")
+            .description("desc1")
+            .properties(props);
         
         assertEquals("label1", underTest.getLabel());
         assertEquals("desc1", underTest.getDescription());
+        assertEquals(props, underTest.getProperties());
+    }
+
+    @Test
+    public void testCollectionProps() {
+        ConfigurationMetadata underTest = new ConfigurationMetadata("name1", ImmutableList.<PropertyMetadata<?>>of(), true);
+        assertEquals("name1", underTest.getName());
         assertFalse(underTest.isSingleton());
         assertTrue(underTest.isCollection());
-        assertEquals(props, underTest.getProperties());
+    }
+
+    @Test
+    public void testPropertyMap() {
+        ConfigurationMetadata underTest = new ConfigurationMetadata("name1", ImmutableList.<PropertyMetadata<?>>of(
+                new PropertyMetadata<>("prop1", "devValue"),
+                new PropertyMetadata<>("prop2", 5)), false);
+        assertEquals(2, underTest.getPropertyMetadata().size());
+        assertTrue(underTest.getPropertyMetadata().containsKey("prop1"));
+        assertTrue(underTest.getPropertyMetadata().containsKey("prop2"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDuplicateKey() {
+        new ConfigurationMetadata("name1", ImmutableList.<PropertyMetadata<?>>of(
+                new PropertyMetadata<>("prop1", "devValue"),
+                new PropertyMetadata<>("prop1", 5)), false);
     }
 
 }

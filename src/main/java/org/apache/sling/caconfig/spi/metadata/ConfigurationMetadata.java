@@ -18,6 +18,8 @@
  */
 package org.apache.sling.caconfig.spi.metadata;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -28,16 +30,31 @@ import org.osgi.annotation.versioning.ProviderType;
  * Defines a configuration.
  */
 @ProviderType
-public final class ConfigurationMetadata extends AbstractMetadata {
+public final class ConfigurationMetadata extends AbstractMetadata<ConfigurationMetadata> {
 
-    private boolean collection;
-    private Map<String,PropertyMetadata<?>> propertyMetadata;
+    private final Map<String,PropertyMetadata<?>> propertyMetadata;
+    private final boolean collection;
 
     /**
      * @param name Configuration name
      */
-    public ConfigurationMetadata(@Nonnull String name) {
+    public ConfigurationMetadata(@Nonnull String name,
+            Collection<PropertyMetadata<?>> propertyMetadata,
+            boolean collection) {
         super(name);
+        this.propertyMetadata = toMap(propertyMetadata);
+        this.collection = collection;
+    }
+    
+    private static Map<String,PropertyMetadata<?>> toMap(Collection<PropertyMetadata<?>> propertyMetadata) {
+        Map<String,PropertyMetadata<?>> map = new HashMap<>();
+        for (PropertyMetadata<?> item : propertyMetadata) {
+            if (map.containsKey(item.getName())) {
+                throw new IllegalArgumentException("Duplicate property name: " + item.getName());
+            }
+            map.put(item.getName(), item);
+        }
+        return map;
     }
     
     /**
@@ -55,24 +72,10 @@ public final class ConfigurationMetadata extends AbstractMetadata {
     }
 
     /**
-     * @param isList true if configuration is collection
-     */
-    public void setCollection(boolean value) {
-        this.collection = value;
-    }
-
-    /**
      * @return Configuration properties
      */
     public Map<String,PropertyMetadata<?>> getPropertyMetadata() {
         return this.propertyMetadata;
-    }
-
-    /**
-     * @param propertyMetadata Configuration properties
-     */
-    public void setPropertyMetadata(Map<String,PropertyMetadata<?>> propertyMetadata) {
-        this.propertyMetadata = propertyMetadata;
     }
 
 }

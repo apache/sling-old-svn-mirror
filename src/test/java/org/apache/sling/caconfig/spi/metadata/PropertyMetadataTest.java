@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class PropertyMetadataTest {
@@ -35,14 +36,13 @@ public class PropertyMetadataTest {
         assertEquals("name1", underTest.getName());
         assertEquals(String.class, underTest.getType());
         
-        underTest.setLabel("label1");
-        underTest.setDescription("desc1");
-        underTest.setDefaultValue("value1");
+        ConfigurationMetadata configMetadata = new ConfigurationMetadata("test", ImmutableList.<PropertyMetadata<?>>of(), false);
         Map<String,String> props = ImmutableMap.of("p1", "v1");
-        underTest.setProperties(props);
-        
-        ConfigurationMetadata configMetadata = new ConfigurationMetadata("test");
-        underTest.setConfigurationMetadata(configMetadata);
+        underTest.label("label1")
+            .description("desc1")
+            .defaultValue("value1")
+            .properties(props)
+            .configurationMetadata(configMetadata);
         
         assertEquals("label1", underTest.getLabel());
         assertEquals("desc1", underTest.getDescription());

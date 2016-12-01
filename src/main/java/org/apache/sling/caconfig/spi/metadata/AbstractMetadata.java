@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 /**
  * Common properties for configuration and properties.
  */
-abstract class AbstractMetadata {
+abstract class AbstractMetadata<T> {
 
     private final String name;
     private String label;
@@ -55,9 +55,12 @@ abstract class AbstractMetadata {
 
     /**
      * @param label Label
+     * @return this;
      */
-    public void setLabel(String label) {
+    @SuppressWarnings("unchecked")
+    public T label(String label) {
         this.label = label;
+        return (T)this;
     }
 
     /**
@@ -69,9 +72,12 @@ abstract class AbstractMetadata {
 
     /**
      * @param description Description
+     * @return this;
      */
-    public void setDescription(String description) {
+    @SuppressWarnings("unchecked")
+    public T description(String description) {
         this.description = description;
+        return (T)this;
     }
 
     /**
@@ -83,9 +89,12 @@ abstract class AbstractMetadata {
     
     /**
      * @param properties Further properties for documentation and configuration of behavior in configuration editor.
+     * @return this;
      */
-    public void setProperties(Map<String,String> properties) {
+    @SuppressWarnings("unchecked")
+    public T properties(Map<String,String> properties) {
         this.properties = properties;
+        return (T)this;
     }
     
     @Override

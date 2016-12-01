@@ -33,7 +33,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @param <T> Property value type
  */
 @ProviderType
-public final class PropertyMetadata<T> extends AbstractMetadata {
+public final class PropertyMetadata<T> extends AbstractMetadata<PropertyMetadata<T>> {
 
     // these are all types supported for fields of annotation classes (plus class which indicates nested configurations)
     private static final Class<?>[] SUPPORTED_TYPES_ARRAY = {
@@ -119,9 +119,11 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
     
     /**
      * @param value Default value if parameter is not set for configuration
+     * @return this;
      */
-    public void setDefaultValue(T value) {
+    public PropertyMetadata<T> defaultValue(T value) {
         this.defaultValue = value;
+        return this;
     }
     
     /**
@@ -133,9 +135,20 @@ public final class PropertyMetadata<T> extends AbstractMetadata {
 
     /**
      * @param configurationMetadata Metadata for nested configuration
+     * @return this;
      */
-    public void setConfigurationMetadata(ConfigurationMetadata configurationMetadata) {
+    public PropertyMetadata<T> configurationMetadata(ConfigurationMetadata configurationMetadata) {
         this.configurationMetadata = configurationMetadata;
+        return this;
+    }
+    
+    /**
+     * @return true if this property describes a nested configuration.
+     *   In this case it is ensured configuration metadata is present, and the type is ConfigurationMetadata or ConfigurationMetadata[].
+     */
+    public boolean isNestedConfiguration() {
+        return configurationMetadata != null
+                && (this.type.equals(ConfigurationMetadata.class) || this.type.equals(ConfigurationMetadata[].class));
     }
 
     @Override
