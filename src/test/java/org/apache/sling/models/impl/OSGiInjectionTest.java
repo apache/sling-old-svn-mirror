@@ -220,6 +220,7 @@ public class OSGiInjectionTest {
         verify(bundleContext).addBundleListener(any(BundleListener.class));
         verify(bundleContext).registerService(eq(Object.class.getName()), any(Object.class), any(Dictionary.class));
         verify(bundleContext).getBundles();
+        verify(bundleContext).getBundle();
         verifyNoMoreInteractions(res, bundleContext);
     }
 

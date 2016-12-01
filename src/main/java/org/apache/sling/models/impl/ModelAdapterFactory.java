@@ -43,7 +43,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -91,6 +90,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -192,6 +192,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Reference(name = "modelExporter", cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,
             referenceInterface = ModelExporter.class)
     private final @Nonnull RankedServices<ModelExporter> modelExporters = new RankedServices<ModelExporter>();
+
+    @Reference
+    private BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
 
     ModelPackageBundleListener listener;
 
@@ -962,7 +965,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
-        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations);
+        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations, bindingsValuesProvidersByContext);
 
         Hashtable<Object, Object> printerProps = new Hashtable<Object, Object>();
         printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");

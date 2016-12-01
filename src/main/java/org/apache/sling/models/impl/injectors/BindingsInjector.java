@@ -59,12 +59,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         if (bindings == null) {
             return null;
         }
-        if (type instanceof Class<?>) {
-            return bindings.get(name);
-        } else {
-            log.debug("BindingsInjector doesn't support non-class type {}", type);
-            return null;
-        }
+        return bindings.get(name);
     }
 
     private SlingBindings getBindings(Object adaptable) {

@@ -19,39 +19,75 @@
 package org.apache.sling.models.impl;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import javax.script.ScriptEngineFactory;
+import javax.script.SimpleBindings;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.models.factory.ExportException;
 import org.apache.sling.models.factory.MissingExporterException;
 import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
+import org.apache.sling.scripting.core.ScriptHelper;
+import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.api.scripting.SlingBindings.*;
 
 @SuppressWarnings("serial")
 class ExportServlet extends SlingSafeMethodsServlet {
 
-    private static final Logger logger = LoggerFactory.getLogger(ExportServlet.class);
+    private final Logger logger;
+
+    /** The context string to use to select BindingsValuesProviders */
+    private static final String BINDINGS_CONTEXT = BindingsValuesProvider.DEFAULT_CONTEXT;
+
+    /** embed this value so as to avoid a dependency on a newer Sling API than otherwise necessary. */
+    private static final String RESOLVER = "resolver";
+
+    /** The set of protected keys. */
+    private static final Set<String> PROTECTED_KEYS =
+            new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, RESOLVER, OUT, LOG));
 
     private final String exporterName;
     private final String registeredSelector;
+    private final BundleContext bundleContext;
     private final ModelFactory modelFactory;
+    private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
+    private final ScriptEngineFactory scriptEngineFactory;
     private final ExportedObjectAccessor accessor;
     private final Map<String, String> baseOptions;
 
-    public ExportServlet(ModelFactory modelFactory, String registeredSelector, String exporterName, ExportedObjectAccessor accessor,
+    public ExportServlet(BundleContext bundleContext, ModelFactory modelFactory,
+                         BindingsValuesProvidersByContext bindingsValuesProvidersByContext, ScriptEngineFactory scriptFactory,
+                         Class<?> annotatedClass, String registeredSelector, String exporterName, ExportedObjectAccessor accessor,
                          Map<String, String> baseOptions) {
+        this.bundleContext = bundleContext;
         this.modelFactory = modelFactory;
+        this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
+        this.scriptEngineFactory = scriptFactory;
         this.registeredSelector = registeredSelector;
         this.exporterName = exporterName;
         this.accessor = accessor;
         this.baseOptions = baseOptions;
+
+        String loggerName = ExportServlet.class.getName() + "." + annotatedClass.getName();
+        this.logger = LoggerFactory.getLogger(loggerName);
     }
 
     @Override
@@ -59,24 +95,65 @@ class ExportServlet extends SlingSafeMethodsServlet {
             throws ServletException, IOException {
         Map<String, String> options = createOptionMap(request);
 
-        String exported;
+        ScriptHelper scriptHelper = new ScriptHelper(bundleContext, null, request, response);
+
         try {
-            exported = accessor.getExportedString(request, options, modelFactory, exporterName);
-        } catch (ExportException e) {
-            logger.error("Could not perform export with " + exporterName + " requested by model.", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            return;
-        } catch (MissingExporterException e) {
-            logger.error("Could not get exporter " + exporterName + " requested by model.", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            return;
+            addScriptBindings(scriptHelper, request, response);
+            String exported;
+            try {
+                exported = accessor.getExportedString(request, options, modelFactory, exporterName);
+            } catch (ExportException e) {
+                logger.error("Could not perform export with " + exporterName + " requested by model.", e);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return;
+            } catch (MissingExporterException e) {
+                logger.error("Could not get exporter " + exporterName + " requested by model.", e);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return;
+            }
+            if (exported == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            response.setContentType(request.getResponseContentType());
+            response.getWriter().write(exported);
+
+        } finally {
+            scriptHelper.cleanup();
         }
-        if (exported == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
+    }
+
+    private void addScriptBindings(SlingScriptHelper scriptHelper, SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws IOException {
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.put(SLING, scriptHelper);
+        bindings.put(RESOURCE, request.getResource());
+        bindings.put(RESOLVER, request.getResource().getResourceResolver());
+        bindings.put(REQUEST, request);
+        bindings.put(RESPONSE, response);
+        bindings.put(READER, request.getReader());
+        bindings.put(OUT, response.getWriter());
+        bindings.put(LOG, logger);
+
+        final Collection<BindingsValuesProvider> bindingsValuesProviders =
+                bindingsValuesProvidersByContext.getBindingsValuesProviders(scriptEngineFactory, BINDINGS_CONTEXT);
+
+        if (!bindingsValuesProviders.isEmpty()) {
+            Set<String> protectedKeys = new HashSet<String>();
+            protectedKeys.addAll(PROTECTED_KEYS);
+
+            ProtectedBindings protectedBindings = new ProtectedBindings(bindings, protectedKeys);
+            for (BindingsValuesProvider provider : bindingsValuesProviders) {
+                provider.addBindings(protectedBindings);
+            }
+
         }
-        response.setContentType(request.getResponseContentType());
-        response.getWriter().write(exported);
+
+        SlingBindings slingBindings = new SlingBindings();
+        slingBindings.putAll(bindings);
+
+        request.setAttribute(SlingBindings.class.getName(), slingBindings);
+
     }
 
     private Map<String, String> createOptionMap(SlingHttpServletRequest request) {
@@ -104,14 +181,14 @@ class ExportServlet extends SlingSafeMethodsServlet {
         String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException;
     }
 
-    public static final ExportedObjectAccessor RESOURCE = new ExportedObjectAccessor() {
+    public static final ExportedObjectAccessor RESOURCE_ACCESSOR = new ExportedObjectAccessor() {
         @Override
         public String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException {
             return modelFactory.exportModelForResource(request.getResource(), exporterName, String.class, options);
         }
     };
 
-    public static final ExportedObjectAccessor REQUEST = new ExportedObjectAccessor() {
+    public static final ExportedObjectAccessor REQUEST_ACCESSOR = new ExportedObjectAccessor() {
         @Override
         public String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException {
             return modelFactory.exportModelForRequest(request, exporterName, String.class, options);
