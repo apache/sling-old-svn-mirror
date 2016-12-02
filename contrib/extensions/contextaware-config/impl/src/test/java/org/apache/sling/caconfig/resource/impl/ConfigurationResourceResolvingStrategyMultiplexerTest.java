@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
@@ -58,7 +59,7 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     @Before
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
-        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
         underTest = context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
 
         // content resources

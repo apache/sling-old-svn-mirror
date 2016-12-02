@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.resource.impl;
+package org.apache.sling.caconfig.management.impl;
 
 import static org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants.PROPERTY_CONFIG_REF;
 import static org.apache.sling.caconfig.resource.impl.util.ContextResourceTestUtil.toContextResourceIterator;
@@ -38,19 +38,19 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class ContextPathStrategyMultiplexerTest {
+public class ContextPathStrategyMultiplexerImplTest {
 
     @Rule
     public SlingContext context = new SlingContext();
     
-    private ContextPathStrategyMultiplexer underTest;
+    private ContextPathStrategyMultiplexerImpl underTest;
     
     private Resource site1Page1;
     private Resource site2Page1;
 
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
 
         // content resources that form a deeper hierarchy
         context.build()

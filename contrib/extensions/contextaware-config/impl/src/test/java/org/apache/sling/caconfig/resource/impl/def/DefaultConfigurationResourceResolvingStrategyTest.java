@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.hamcrest.ResourceCollectionMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -49,7 +49,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
     @Before
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
-        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
 
         // content resources
         context.build()

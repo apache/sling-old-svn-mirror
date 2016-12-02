@@ -41,7 +41,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.PathParentExpandIterator;
 import org.apache.sling.caconfig.resource.spi.CollectionInheritanceDecider;
@@ -118,19 +119,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             // finally add the global fallbacks
             new ArrayIterator(this.config.fallbackPaths())
         );
-    }
-
-    /**
-     * Check the name.
-     * A name must not be null and relative.
-     * @param name The name
-     * @return {@code true} if it is valid
-     */
-    private boolean checkName(final String name) {
-        if (name == null || name.isEmpty() || name.startsWith("/") || name.contains("../") ) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -259,7 +247,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isEnabledAndParamsValid(final Resource contentResource, final String bucketName, final String configName) {
-        return config.enabled() && contentResource != null && checkName(bucketName) && checkName(configName);
+        return config.enabled() && contentResource != null && ConfigNameUtil.isValid(bucketName) && ConfigNameUtil.isValid(configName);
     }
 
     private String buildResourcePath(String path, String name) {

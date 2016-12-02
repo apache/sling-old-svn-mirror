@@ -18,6 +18,7 @@
  */
 package org.apache.sling.caconfig.resource.impl;
 
+import org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.ConfigurationResourceResolver;
 import org.apache.sling.caconfig.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.impl.def.DefaultContextPathStrategy;
@@ -35,7 +36,7 @@ public final class ConfigurationResourceTestUtils {
      */
     public static ConfigurationResourceResolver registerConfigurationResourceResolver(SlingContext context) {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
-        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
         context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
         context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
@@ -47,7 +48,7 @@ public final class ConfigurationResourceTestUtils {
      * @param context Sling context
      */
     public static ConfigurationResourceResolver registerConfigurationResourceResolverWithoutDefaultImpl(SlingContext context) {
-        context.registerInjectActivateService(new ContextPathStrategyMultiplexer());
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
         context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
