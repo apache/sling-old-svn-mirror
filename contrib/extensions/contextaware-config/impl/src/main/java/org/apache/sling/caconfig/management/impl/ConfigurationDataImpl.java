@@ -18,7 +18,6 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,9 +57,6 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private Set<String> propertyNamesCache;
     private ValueMap valuesCache;
     private ValueMap effectiveValuesCache;
-    
-    private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
-            "jcr:primaryType"));
     
     @SuppressWarnings("unchecked")
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
@@ -127,7 +123,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 propertyNamesCache.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
             }
-            removeIgnoredProperties(propertyNamesCache);
+            PropertiesFilter.removeIgnoredProperties(propertyNamesCache);
         }
         return propertyNamesCache;
     }
@@ -139,7 +135,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (writebackConfigurationResource != null) {
                 props.putAll( ResourceUtil.getValueMap(writebackConfigurationResource));
             }
-            removeIgnoredProperties(props);
+            PropertiesFilter.removeIgnoredProperties(props);
             resolveNestedConfigs(props);
             valuesCache = new ValueMapDecorator(props);
         }
@@ -160,23 +156,13 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
             }
-            removeIgnoredProperties(props);
+            PropertiesFilter.removeIgnoredProperties(props);
             resolveNestedConfigs(props);
             effectiveValuesCache = new ValueMapDecorator(props);
         }
         return effectiveValuesCache;
     }
-    
-    private void removeIgnoredProperties(Set<String> propertyNames) {
-        propertyNames.removeAll(PROPERTIES_TO_IGNORE);
-    }
-
-    private void removeIgnoredProperties(Map<String,Object> props) {
-        for (String propertyName : PROPERTIES_TO_IGNORE) {
-            props.remove(propertyName);
-        }
-    }
-    
+        
     private void resolveNestedConfigs(Map<String,Object> props) {
         if (configMetadata == null) {
             return;

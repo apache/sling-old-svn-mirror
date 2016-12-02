@@ -31,22 +31,23 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.common.collect.ImmutableMap;
+
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationCollectionDataImplTest {
     
     @Mock
     private Collection<ConfigurationData> items;
-    @Mock
-    private Map<String, Object> props;
 
     @Test
     public void testProperties() {
+        Map<String,Object> props = ImmutableMap.<String,Object>of("jcr:primaryType", "test", "prop1", "value1"); 
         ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", items, "/path1", props);
         
         assertEquals("name1", underTest.getConfigName());;
         assertSame(items, underTest.getItems());
         assertEquals("/path1", underTest.getResourcePath());
-        assertSame(props, underTest.getProperties());
+        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1"), underTest.getProperties());
     }
 
 }
