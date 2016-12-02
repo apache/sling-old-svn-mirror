@@ -524,7 +524,7 @@ final class OsgiMetadataUtil {
                     return item;
                 }
             }
-            return null;
+            return FieldCollectionType.SERVICE;
         }
 
     }
