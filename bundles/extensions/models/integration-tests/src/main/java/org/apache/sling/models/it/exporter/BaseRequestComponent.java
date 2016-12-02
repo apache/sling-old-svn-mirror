@@ -42,6 +42,9 @@ public class BaseRequestComponent {
     @Inject
     private Map<String, Object> testBindingsObject;
 
+    @Inject
+    private Map<String, Object> testBindingsObject2;
+
     private final SlingHttpServletRequest request;
 
     public BaseRequestComponent(SlingHttpServletRequest request) {
@@ -67,6 +70,10 @@ public class BaseRequestComponent {
 
     public Map<String, Object> getTestBindingsObject() {
         return testBindingsObject;
+    }
+
+    public Map<String, Object> getTestBindingsObject2() {
+        return testBindingsObject2;
     }
 
     public SlingHttpServletRequest getSlingHttpServletRequest() {

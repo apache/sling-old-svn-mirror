@@ -214,6 +214,9 @@ public class ExporterTest {
             Assert.assertTrue(obj.has("testBindingsObject"));
             JSONObject testBindingsObject = obj.getJSONObject("testBindingsObject");
             Assert.assertEquals("value", testBindingsObject.getString("name"));
+            Assert.assertTrue(obj.has("testBindingsObject2"));
+            JSONObject testBindingsObject2 = obj.getJSONObject("testBindingsObject2");
+            Assert.assertEquals("value2", testBindingsObject2.getString("name2"));
             Assert.assertEquals(baseRequestComponentPath, obj.getString("id"));
 
             response = new FakeResponse();
