@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.resource.impl;
+package org.apache.sling.caconfig.management.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ResourceEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.ResourcePathCollatingIterator;
 import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
@@ -48,7 +49,7 @@ reference={
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ContextPathStrategyMultiplexer implements ContextPathStrategy {
+public class ContextPathStrategyMultiplexerImpl implements ContextPathStrategyMultiplexer {
     
     private RankedServices<ContextPathStrategy> items = new RankedServices<>(Order.DESCENDING);
         
