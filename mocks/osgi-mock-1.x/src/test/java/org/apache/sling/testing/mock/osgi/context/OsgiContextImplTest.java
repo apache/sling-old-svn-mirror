@@ -94,13 +94,17 @@ public class OsgiContextImplTest {
 
     @Test
     public void testRegisterMultipleServices() {
+        Set[] serviceResults = context.getServices(Set.class, null);
+        assertEquals(0, serviceResults.length);
+
         Set<String> myService1 = new HashSet<String>();
         context.registerService(Set.class, myService1);
         Set<String> myService2 = new HashSet<String>();
         context.registerService(Set.class, myService2);
 
         // expected: descending order because ordering descending by service id
-        Set[] serviceResults = context.getServices(Set.class, null);
+        serviceResults = context.getServices(Set.class, null);
+        assertEquals(2, serviceResults.length);
         assertSame(myService1, serviceResults[1]);
         assertSame(myService2, serviceResults[0]);
     }
