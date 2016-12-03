@@ -16,26 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.osgi.junit;
+package org.apache.sling.testing.mock.osgi.context;
 
-final class CallbackParams {
+import aQute.bnd.annotation.ConsumerType;
 
-    ContextCallback[] beforeSetUpCallback;
-    ContextCallback[] afterSetUpCallback;
-    ContextCallback[] beforeTearDownCallback;
-    ContextCallback[] afterTearDownCallback;
-    
-    CallbackParams() {
-        // no callbacks
-    }
-    
-    CallbackParams(ContextCallback afterSetUpCallback) {
-        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
-    }
-    
-    CallbackParams(ContextCallback afterSetUpCallback, ContextCallback beforeTearDownCallback) {
-        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
-        this.beforeTearDownCallback = new ContextCallback[] { beforeTearDownCallback }; 
-    }
-    
+/**
+ * Callback interface for application-specific setup and teardown operations to
+ * customize the mock context.
+ * @param <T> Context
+ */
+@ConsumerType
+public interface ContextCallback<T extends OsgiContextImpl> {
+
+    /**
+     * Execute callback action
+     * @param context OSGi context
+     * @throws Exception exception
+     */
+    void execute(T context) throws Exception;
+
 }

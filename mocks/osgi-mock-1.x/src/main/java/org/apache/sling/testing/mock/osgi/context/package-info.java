@@ -19,5 +19,5 @@
 /**
  * OSGi context implementation for unit tests.
  */
-@aQute.bnd.annotation.Version("1.1")
+@aQute.bnd.annotation.Version("1.2")
 package org.apache.sling.testing.mock.osgi.context;

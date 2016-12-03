@@ -39,9 +39,12 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.reflections.Reflections;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Helper methos for simulating sling models bundle events.
  */
+@ProviderType
 final class ModelAdapterFactoryUtil {
     
     static {

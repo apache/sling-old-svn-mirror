@@ -18,12 +18,15 @@
  */
 package org.apache.sling.testing.mock.sling.junit;
 
-import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
- * Callback-interface for application-specific setup and teardown operations to
+ * Callback interface for application-specific setup and teardown operations to
  * customize the {@link SlingContext} JUnit rule.
  */
+@ConsumerType
 public interface SlingContextCallback extends ContextCallback<SlingContext> {
 
     // specialized version of ContextCallback

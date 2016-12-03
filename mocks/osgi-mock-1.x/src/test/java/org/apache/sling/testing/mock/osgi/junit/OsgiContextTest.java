@@ -37,6 +37,7 @@ public class OsgiContextTest {
     private final OsgiContextCallback contextAfterTeardown = mock(OsgiContextCallback.class);
 
     // Run all unit tests for each resource resolver types listed here
+    @SuppressWarnings("unchecked")
     @Rule
     public OsgiContext context = new OsgiContextBuilder()
         .beforeSetUp(contextBeforeSetup)

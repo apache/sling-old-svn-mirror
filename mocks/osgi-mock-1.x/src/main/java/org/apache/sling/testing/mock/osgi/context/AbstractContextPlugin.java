@@ -16,28 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.junit;
+package org.apache.sling.testing.mock.osgi.context;
 
-import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
+import aQute.bnd.annotation.ConsumerType;
 
-final class CallbackParams {
+/**
+ * Default implementation of {@link ContextPlugin}.
+ * @param <T> Context
+ */
+@ConsumerType
+public abstract class AbstractContextPlugin<T extends OsgiContextImpl> implements ContextPlugin<T> {
 
-    ContextCallback[] beforeSetUpCallback;
-    ContextCallback[] afterSetUpCallback;
-    ContextCallback[] beforeTearDownCallback;
-    ContextCallback[] afterTearDownCallback;
-    
-    CallbackParams() {
-        // no callbacks
+    @Override
+    public void beforeSetUp(T context) throws Exception {
+        // can be overridden by subclasses
     }
-    
-    CallbackParams(ContextCallback afterSetUpCallback) {
-        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+
+    @Override
+    public void afterSetUp(T context) throws Exception {
+        // can be overridden by subclasses
     }
-    
-    CallbackParams(ContextCallback afterSetUpCallback, ContextCallback beforeTearDownCallback) {
-        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
-        this.beforeTearDownCallback = new ContextCallback[] { beforeTearDownCallback }; 
+
+    @Override
+    public void beforeTearDown(T context) throws Exception {
+        // can be overridden by subclasses
+    }
+
+    @Override
+    public void afterTearDown(T context) throws Exception {
+        // can be overridden by subclasses
     }
     
 }

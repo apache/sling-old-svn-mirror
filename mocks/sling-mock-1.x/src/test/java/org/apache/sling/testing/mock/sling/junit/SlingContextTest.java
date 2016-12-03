@@ -46,6 +46,7 @@ public class SlingContextTest {
     private final SlingContextCallback contextAfterTeardown = mock(SlingContextCallback.class);
 
     // Run all unit tests for each resource resolver types listed here
+    @SuppressWarnings("unchecked")
     @Rule
     public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
         .beforeSetUp(contextBeforeSetup)
