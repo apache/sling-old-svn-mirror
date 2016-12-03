@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.sling.junit;
 
 import java.util.Map;
 
+import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 
 /**
@@ -27,11 +28,8 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
  */
 public final class SlingContextBuilder {
     
+    private final CallbackParams callbackParams = new CallbackParams();
     private ResourceResolverType resourceResolverType;
-    private SlingContextCallback beforeSetUpCallback;
-    private SlingContextCallback afterSetUpCallback;
-    private SlingContextCallback beforeTearDownCallback;
-    private SlingContextCallback afterTearDownCallback;
     private Map<String, Object> resourceResolverFactoryActivatorProps;
     
     /**
@@ -57,11 +55,19 @@ public final class SlingContextBuilder {
     }
     
     /**
+     * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
+     * @return this
+     */
+    public SlingContextBuilder setUp(ContextCallback... afterSetUpCallback) {
+        return afterSetUp(afterSetUpCallback);
+    }
+
+    /**
      * @param beforeSetUpCallback Allows the application to register an own callback function that is called before the built-in setup rules are executed.
      * @return this
      */
-    public SlingContextBuilder beforeSetUp(SlingContextCallback beforeSetUpCallback) {
-        this.beforeSetUpCallback = beforeSetUpCallback;
+    public SlingContextBuilder beforeSetUp(ContextCallback... beforeSetUpCallback) {
+        callbackParams.beforeSetUpCallback = beforeSetUpCallback;
         return this;
     }
 
@@ -69,8 +75,8 @@ public final class SlingContextBuilder {
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      * @return this
      */
-    public SlingContextBuilder afterSetUp(SlingContextCallback afterSetUpCallback) {
-        this.afterSetUpCallback = afterSetUpCallback;
+    public SlingContextBuilder afterSetUp(ContextCallback... afterSetUpCallback) {
+        callbackParams.afterSetUpCallback = afterSetUpCallback;
         return this;
     }
 
@@ -78,8 +84,16 @@ public final class SlingContextBuilder {
      * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
      * @return this
      */
-    public SlingContextBuilder beforeTearDown(SlingContextCallback beforeTearDownCallback) {
-        this.beforeTearDownCallback = beforeTearDownCallback;
+    public SlingContextBuilder tearDown(ContextCallback... beforeTearDownCallback) {
+        return beforeTearDown(beforeTearDownCallback);
+    }
+
+    /**
+     * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
+     * @return this
+     */
+    public SlingContextBuilder beforeTearDown(ContextCallback... beforeTearDownCallback) {
+        callbackParams.beforeTearDownCallback = beforeTearDownCallback;
         return this;
     }
 
@@ -87,8 +101,8 @@ public final class SlingContextBuilder {
      * @param afterTearDownCallback Allows the application to register an own callback function that is after before the built-in teardown rules are executed.
      * @return this
      */
-    public SlingContextBuilder afterTearDown(SlingContextCallback afterTearDownCallback) {
-        this.afterTearDownCallback = afterTearDownCallback;
+    public SlingContextBuilder afterTearDown(ContextCallback... afterTearDownCallback) {
+        callbackParams.afterTearDownCallback = afterTearDownCallback;
         return this;
     }
 
@@ -106,8 +120,7 @@ public final class SlingContextBuilder {
      * @return Build {@link SlingContext} instance.
      */
     public SlingContext build() {
-        return new SlingContext(this.beforeSetUpCallback, this.afterSetUpCallback,
-                this.beforeTearDownCallback, this.afterTearDownCallback,
+        return new SlingContext(this.callbackParams,
                 this.resourceResolverFactoryActivatorProps,
                 this.resourceResolverType);
     }
