@@ -45,6 +45,7 @@
         <module>impl</module>
         <module>integration-tests</module>
         <module>tooling/bnd-plugin</module>
+        <module>testing/mocks/caconfig-mock-plugin</module>
     </modules>
     
     <build>
