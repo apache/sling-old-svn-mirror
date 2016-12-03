@@ -201,6 +201,7 @@ public class MockAdapterManagerImpl implements AdapterManager {
 
     /**
      * Bind a new adapter factory.
+     * @param reference Service reference
      */
     protected void bindAdapterFactory(final ServiceReference reference) {
         boolean create = true;
@@ -219,6 +220,7 @@ public class MockAdapterManagerImpl implements AdapterManager {
 
     /**
      * Unbind a adapter factory.
+     * @param reference Service reference
      */
     protected void unbindAdapterFactory(final ServiceReference reference) {
         unregisterAdapterFactory(reference);
