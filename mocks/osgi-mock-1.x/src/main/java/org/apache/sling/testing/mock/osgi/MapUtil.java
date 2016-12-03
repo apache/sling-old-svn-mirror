@@ -37,6 +37,8 @@ public final class MapUtil {
 
     /**
      * Convert map to dictionary.
+     * @param <T> Key
+     * @param <U> Value
      * @param map Map
      * @return Dictionary
      */
@@ -49,6 +51,8 @@ public final class MapUtil {
 
     /**
      * Convert Dictionary to map
+     * @param <T> Key
+     * @param <U> Value
      * @param dictionary Dictionary
      * @return Map
      */

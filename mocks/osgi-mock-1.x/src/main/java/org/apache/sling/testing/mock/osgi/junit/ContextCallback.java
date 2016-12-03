@@ -22,13 +22,13 @@ import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 
 /**
  * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link SlingContext} JUnit rule.
+ * customize the {@link OsgiContext} JUnit rule.
  */
 public interface ContextCallback<T extends OsgiContextImpl> {
 
     /**
      * Execute callback action
-     * @param context Sling context
+     * @param context OSGi context
      * @throws Exception exception
      */
     void execute(T context) throws Exception;
