@@ -20,22 +20,26 @@ package org.apache.sling.testing.mock.sling.junit;
 
 import java.util.Map;
 
-import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextPlugins;
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.context.SlingContextImpl;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * JUnit rule for setting up and tearing down Sling context objects for unit tests.
  * You can use {@link SlingContextBuilder} alternatively to the constructors on this class - it offers
  * more options and fine-grained control about setting up the test context.
  */
+@ProviderType
 public final class SlingContext extends SlingContextImpl implements TestRule {
 
-    private final CallbackParams callbackParams;
+    private final ContextPlugins plugins;
     private final TestRule delegate;
 
     /**
@@ -43,7 +47,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
      * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
      */
     public SlingContext() {
-        this(new CallbackParams(), null, null);
+        this(new ContextPlugins(), null, null);
     }
 
     /**
@@ -51,59 +55,65 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
      * @param resourceResolverType Resource resolver type.
      */
     public SlingContext(final ResourceResolverType resourceResolverType) {
-        this(new CallbackParams(), null, resourceResolverType);
+        this(new ContextPlugins(), null, resourceResolverType);
     }
 
     /**
      * Initialize Sling context with default resource resolver type:
      * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
+     * @param <T> context type
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      */
-    public SlingContext(final ContextCallback<?> afterSetUpCallback) {
-        this(new CallbackParams(afterSetUpCallback), null, null);
+    public <T extends OsgiContextImpl> SlingContext(final ContextCallback<T> afterSetUpCallback) {
+        this(new ContextPlugins(afterSetUpCallback), null, null);
     }
 
     /**
      * Initialize Sling context with resource resolver type.
+     * @param <T> context type
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      * @param resourceResolverType Resource resolver type.
      */
-    public SlingContext(final ContextCallback<?> afterSetUpCallback, final ResourceResolverType resourceResolverType) {
-        this(new CallbackParams(afterSetUpCallback), null, resourceResolverType);
+    public <T extends OsgiContextImpl> SlingContext(final ContextCallback<T> afterSetUpCallback, final ResourceResolverType resourceResolverType) {
+        this(new ContextPlugins(afterSetUpCallback), null, resourceResolverType);
     }
 
     /**
      * Initialize Sling context with default resource resolver type:
      * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
+     * @param <U> context type
+     * @param <V> context type
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
      */
-    public SlingContext(final ContextCallback<?> afterSetUpCallback, final ContextCallback<?> beforeTearDownCallback) {
-        this(new CallbackParams(afterSetUpCallback, beforeTearDownCallback), null, null);
+    public <U extends OsgiContextImpl, V extends OsgiContextImpl> SlingContext(final ContextCallback<U> afterSetUpCallback, final ContextCallback<V> beforeTearDownCallback) {
+        this(new ContextPlugins(afterSetUpCallback, beforeTearDownCallback), null, null);
     }
     
     /**
      * Initialize Sling context with resource resolver type.
+     * @param <U> context type
+     * @param <V> context type
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
      * @param resourceResolverType Resource resolver type.
      */
-    public SlingContext(final ContextCallback<?> afterSetUpCallback, final ContextCallback<?> beforeTearDownCallback,
+    public <U extends OsgiContextImpl, V extends OsgiContextImpl> SlingContext(final ContextCallback<U> afterSetUpCallback, final ContextCallback<V> beforeTearDownCallback,
             final ResourceResolverType resourceResolverType) {
-        this(new CallbackParams(afterSetUpCallback, beforeTearDownCallback), null, resourceResolverType);
+        this(new ContextPlugins(afterSetUpCallback, beforeTearDownCallback), null, resourceResolverType);
     }
     
     /**
      * Initialize Sling context with resource resolver type.
-     * @param callbackParams Callback parameters
+     * @param contextPlugins Context plugins
      * @param resourceResolverFactoryActivatorProps Allows to override OSGi configuration parameters for the Resource Resolver Factory Activator service.
      * @param resourceResolverType Resource resolver type.
      */
-    SlingContext(final CallbackParams callbackParams,
+    SlingContext(final ContextPlugins contextPlugins,
             final Map<String, Object> resourceResolverFactoryActivatorProps,
             final ResourceResolverType resourceResolverType) {
 
-        this.callbackParams = callbackParams;
+        this.plugins = contextPlugins;
         setResourceResolverFactoryActivatorProps(resourceResolverFactoryActivatorProps);
 
         // set resource resolver type in parent context
@@ -113,16 +123,16 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
         this.delegate = new ExternalResource() {
             @Override
             protected void before() {
-                SlingContext.this.executeBeforeSetUpCallback();
+                plugins.executeBeforeSetUpCallback(SlingContext.this);
                 SlingContext.this.setUp();
-                SlingContext.this.executeAfterSetUpCallback();
+                plugins.executeAfterSetUpCallback(SlingContext.this);
             }
 
             @Override
             protected void after() {
-                SlingContext.this.executeBeforeTearDownCallback();
+                plugins.executeBeforeTearDownCallback(SlingContext.this);
                 SlingContext.this.tearDown();
-                SlingContext.this.executeAfterTearDownCallback();
+                plugins.executeAfterTearDownCallback(SlingContext.this);
             }
         };
     }
@@ -130,58 +140,6 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     @Override
     public Statement apply(final Statement base, final Description description) {
         return this.delegate.apply(base, description);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void executeBeforeSetUpCallback() {
-        if (callbackParams.beforeSetUpCallback != null) {
-            try {
-                for (ContextCallback callback : callbackParams.beforeSetUpCallback) {
-                    callback.execute(this);
-                }
-            } catch (Throwable ex) {
-                throw new RuntimeException("Before setup failed: " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void executeAfterSetUpCallback() {
-        if (callbackParams.afterSetUpCallback != null) {
-            try {
-                for (ContextCallback callback : callbackParams.afterSetUpCallback) {
-                    callback.execute(this);
-                }
-            } catch (Throwable ex) {
-                throw new RuntimeException("After setup failed: " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void executeBeforeTearDownCallback() {
-        if (callbackParams.beforeTearDownCallback != null) {
-            try {
-                for (ContextCallback callback : callbackParams.beforeTearDownCallback) {
-                    callback.execute(this);
-                }
-            } catch (Throwable ex) {
-                throw new RuntimeException("Before teardown failed: " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void executeAfterTearDownCallback() {
-        if (callbackParams.afterTearDownCallback != null) {
-            try {
-                for (ContextCallback callback : callbackParams.afterTearDownCallback) {
-                    callback.execute(this);
-                }
-            } catch (Throwable ex) {
-                throw new RuntimeException("After teardown failed: " + ex.getMessage(), ex);
-            }
-        }
     }
 
 }

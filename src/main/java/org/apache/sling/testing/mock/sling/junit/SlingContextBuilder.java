@@ -20,15 +20,20 @@ package org.apache.sling.testing.mock.sling.junit;
 
 import java.util.Map;
 
-import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextPlugin;
+import org.apache.sling.testing.mock.osgi.context.ContextPlugins;
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Builder class for creating {@link SlingContext} instances with different sets of parameters.
  */
+@ProviderType
 public final class SlingContextBuilder {
     
-    private final CallbackParams callbackParams = new CallbackParams();
+    private final ContextPlugins plugins = new ContextPlugins();
     private ResourceResolverType resourceResolverType;
     private Map<String, Object> resourceResolverFactoryActivatorProps;
     
@@ -55,54 +60,57 @@ public final class SlingContextBuilder {
     }
     
     /**
-     * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
+     * @param <T> context type
+     * @param plugin Context plugin which listens to context lifecycle events.
      * @return this
      */
-    public SlingContextBuilder setUp(ContextCallback... afterSetUpCallback) {
-        return afterSetUp(afterSetUpCallback);
+    @SafeVarargs
+    public final <T extends OsgiContextImpl> SlingContextBuilder plugin(ContextPlugin<T>... plugin) {
+        plugins.addPlugin(plugin);
+        return this;
     }
 
     /**
+     * @param <T> context type
      * @param beforeSetUpCallback Allows the application to register an own callback function that is called before the built-in setup rules are executed.
      * @return this
      */
-    public SlingContextBuilder beforeSetUp(ContextCallback... beforeSetUpCallback) {
-        callbackParams.beforeSetUpCallback = beforeSetUpCallback;
+    @SafeVarargs
+    public final <T extends OsgiContextImpl> SlingContextBuilder beforeSetUp(ContextCallback<T>... beforeSetUpCallback) {
+        plugins.addBeforeSetUpCallback(beforeSetUpCallback);
         return this;
     }
 
     /**
+     * @param <T> context type
      * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      * @return this
      */
-    public SlingContextBuilder afterSetUp(ContextCallback... afterSetUpCallback) {
-        callbackParams.afterSetUpCallback = afterSetUpCallback;
+    @SafeVarargs
+    public final <T extends OsgiContextImpl> SlingContextBuilder afterSetUp(ContextCallback<T>... afterSetUpCallback) {
+        plugins.addAfterSetUpCallback(afterSetUpCallback);
         return this;
     }
 
     /**
+     * @param <T> context type
      * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
      * @return this
      */
-    public SlingContextBuilder tearDown(ContextCallback... beforeTearDownCallback) {
-        return beforeTearDown(beforeTearDownCallback);
-    }
-
-    /**
-     * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
-     * @return this
-     */
-    public SlingContextBuilder beforeTearDown(ContextCallback... beforeTearDownCallback) {
-        callbackParams.beforeTearDownCallback = beforeTearDownCallback;
+    @SafeVarargs
+    public final <T extends OsgiContextImpl> SlingContextBuilder beforeTearDown(ContextCallback<T>... beforeTearDownCallback) {
+        plugins.addBeforeTearDownCallback(beforeTearDownCallback);
         return this;
     }
 
     /**
+     * @param <T> context type
      * @param afterTearDownCallback Allows the application to register an own callback function that is after before the built-in teardown rules are executed.
      * @return this
      */
-    public SlingContextBuilder afterTearDown(ContextCallback... afterTearDownCallback) {
-        callbackParams.afterTearDownCallback = afterTearDownCallback;
+    @SafeVarargs
+    public final <T extends OsgiContextImpl> SlingContextBuilder afterTearDown(ContextCallback<T>... afterTearDownCallback) {
+        plugins.addAfterTearDownCallback(afterTearDownCallback);
         return this;
     }
 
@@ -120,7 +128,7 @@ public final class SlingContextBuilder {
      * @return Build {@link SlingContext} instance.
      */
     public SlingContext build() {
-        return new SlingContext(this.callbackParams,
+        return new SlingContext(this.plugins,
                 this.resourceResolverFactoryActivatorProps,
                 this.resourceResolverType);
     }
