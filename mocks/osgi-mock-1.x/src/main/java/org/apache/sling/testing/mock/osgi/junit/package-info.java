@@ -19,5 +19,5 @@
 /**
  * Rule for providing easy access to OSGi context in JUnit tests.
  */
-@aQute.bnd.annotation.Version("1.1")
+@aQute.bnd.annotation.Version("2.0")
 package org.apache.sling.testing.mock.osgi.junit;

@@ -20,12 +20,24 @@ package org.apache.sling.testing.mock.sling.junit;
 
 import org.apache.sling.testing.mock.osgi.junit.ContextCallback;
 
-/**
- * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link SlingContext} JUnit rule.
- */
-public interface SlingContextCallback extends ContextCallback<SlingContext> {
+final class CallbackParams {
 
-    // specialized version of ContextCallback
-
+    ContextCallback[] beforeSetUpCallback;
+    ContextCallback[] afterSetUpCallback;
+    ContextCallback[] beforeTearDownCallback;
+    ContextCallback[] afterTearDownCallback;
+    
+    CallbackParams() {
+        // no callbacks
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback, ContextCallback beforeTearDownCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+        this.beforeTearDownCallback = new ContextCallback[] { beforeTearDownCallback }; 
+    }
+    
 }
