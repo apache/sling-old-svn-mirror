@@ -71,7 +71,7 @@ public class ContextPluginsTest {
     @Test
     public void testExecuteBeforeSetUpCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addPlugin(plugin1, plugin2);
+        underTest.addPlugin(plugin1, plugin2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -85,7 +85,7 @@ public class ContextPluginsTest {
     @Test
     public void testExecuteAfterSetUpCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addPlugin(plugin1, plugin2);
+        underTest.addPlugin(plugin1, plugin2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -99,7 +99,7 @@ public class ContextPluginsTest {
     @Test
     public void testExecuteBeforeTearDownCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addPlugin(plugin1, plugin2);
+        underTest.addPlugin(plugin1, plugin2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -113,7 +113,7 @@ public class ContextPluginsTest {
     @Test
     public void testExecuteAfterTearDownCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addPlugin(plugin1, plugin2);
+        underTest.addPlugin(plugin1, plugin2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -127,7 +127,7 @@ public class ContextPluginsTest {
     @Test
     public void testAddBeforeSetUpCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addBeforeSetUpCallback(callback1, callback2);
+        underTest.addBeforeSetUpCallback(callback1, callback2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -139,7 +139,7 @@ public class ContextPluginsTest {
     @Test
     public void testAddAfterSetUpCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addAfterSetUpCallback(callback1, callback2);
+        underTest.addAfterSetUpCallback(callback1, callback2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -151,7 +151,7 @@ public class ContextPluginsTest {
     @Test
     public void testAddBeforeTearDownCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addBeforeTearDownCallback(callback1, callback2);
+        underTest.addBeforeTearDownCallback(callback1, callback2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
@@ -163,7 +163,7 @@ public class ContextPluginsTest {
     @Test
     public void testAddAfterTearDownCallback() throws Exception {
         ContextPlugins underTest = new ContextPlugins();
-        underTest.addAfterTearDownCallback(callback1, callback2);
+        underTest.addAfterTearDownCallback(callback1, callback2, null);
         
         assertEquals(2, underTest.getPlugins().size());
         
