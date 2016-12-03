@@ -16,8 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Rule for providing easy access to OSGi context in JUnit tests.
- */
-@org.osgi.annotation.versioning.Version("2.0")
 package org.apache.sling.testing.mock.osgi.junit;
+
+final class CallbackParams {
+
+    ContextCallback[] beforeSetUpCallback;
+    ContextCallback[] afterSetUpCallback;
+    ContextCallback[] beforeTearDownCallback;
+    ContextCallback[] afterTearDownCallback;
+    
+    CallbackParams() {
+        // no callbacks
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback, ContextCallback beforeTearDownCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+        this.beforeTearDownCallback = new ContextCallback[] { beforeTearDownCallback }; 
+    }
+    
+}

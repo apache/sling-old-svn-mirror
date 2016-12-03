@@ -16,8 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Rule for providing easy access to OSGi context in JUnit tests.
- */
-@org.osgi.annotation.versioning.Version("2.0")
 package org.apache.sling.testing.mock.osgi.junit;
+
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
+
+/**
+ * Callback-interface for application-specific setup and teardown operations to
+ * customize the {@link SlingContext} JUnit rule.
+ */
+public interface ContextCallback<T extends OsgiContextImpl> {
+
+    /**
+     * Execute callback action
+     * @param context Sling context
+     * @throws Exception exception
+     */
+    void execute(T context) throws Exception;
+
+}
