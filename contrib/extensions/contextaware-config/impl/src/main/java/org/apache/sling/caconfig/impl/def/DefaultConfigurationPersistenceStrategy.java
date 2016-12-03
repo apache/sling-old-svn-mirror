@@ -88,6 +88,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             return false;
         }
         getOrCreateResource(resourceResolver, configResourcePath, data.getProperties());
+        commit(resourceResolver);
         return true;
     }
 
@@ -111,6 +112,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             replaceProperties(configResourceParent, data.getProperties());
         }
         
+        commit(resourceResolver);
         return true;
     }
     
@@ -147,6 +149,15 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             modValueMap.remove(propertyName);
         }
         modValueMap.putAll(properties);
+    }
+    
+    private void commit(ResourceResolver resourceResolver) {
+        try {
+            resourceResolver.commit();
+        }
+        catch (PersistenceException ex) {
+            throw new ConfigurationPersistenceException("Unable to save configuration: " + ex.getMessage(), ex);
+        }
     }
 
 }
