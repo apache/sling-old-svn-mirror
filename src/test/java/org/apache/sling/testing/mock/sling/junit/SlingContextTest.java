@@ -24,9 +24,6 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
-
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -63,7 +60,7 @@ public class SlingContextTest {
         .build();
 
     @Before
-    public void setUp() throws IOException, PersistenceException {
+    public void setUp() throws Exception {
         verify(contextBeforeSetup).execute(context);
         verify(contextAfterSetup).execute(context);
     }
