@@ -16,14 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.osgi.junit;
+package org.apache.sling.testing.mock.osgi.context;
 
-import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link OsgiContext} JUnit rule.
+ * Callback interface for application-specific setup and teardown operations to
+ * customize the mock context.
+ * @param <T> Context
  */
+@ConsumerType
 public interface ContextCallback<T extends OsgiContextImpl> {
 
     /**
