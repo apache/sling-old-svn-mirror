@@ -31,12 +31,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Manages unique root paths in JCR repository.
  * This is important for resource resolver types like JCR_JACKRABBIT  
  * where the repository is not cleaned for each test run. This class provides
  * unique root paths for each run, and cleans them up when done.
  */
+@ConsumerType
 public class UniqueRoot {
     
     private final SlingContextImpl context;

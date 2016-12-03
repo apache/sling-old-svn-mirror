@@ -26,9 +26,12 @@ import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.osgi.framework.BundleContext;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Create resolve resolver instance and initialize it depending on it's type.
  */
+@ProviderType
 final class ContextResourceResolverFactory {
 
     private ContextResourceResolverFactory() {
