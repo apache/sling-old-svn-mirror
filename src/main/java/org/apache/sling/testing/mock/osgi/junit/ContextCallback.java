@@ -18,12 +18,19 @@
  */
 package org.apache.sling.testing.mock.osgi.junit;
 
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
+
 /**
  * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link OsgiContext} JUnit rule.
+ * customize the {@link SlingContext} JUnit rule.
  */
-public interface OsgiContextCallback extends ContextCallback<OsgiContext> {
+public interface ContextCallback<T extends OsgiContextImpl> {
 
-    // specialized version of ContextCallback
-    
+    /**
+     * Execute callback action
+     * @param context Sling context
+     * @throws Exception exception
+     */
+    void execute(T context) throws Exception;
+
 }

@@ -18,12 +18,24 @@
  */
 package org.apache.sling.testing.mock.osgi.junit;
 
-/**
- * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link OsgiContext} JUnit rule.
- */
-public interface OsgiContextCallback extends ContextCallback<OsgiContext> {
+final class CallbackParams {
 
-    // specialized version of ContextCallback
+    ContextCallback[] beforeSetUpCallback;
+    ContextCallback[] afterSetUpCallback;
+    ContextCallback[] beforeTearDownCallback;
+    ContextCallback[] afterTearDownCallback;
+    
+    CallbackParams() {
+        // no callbacks
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+    }
+    
+    CallbackParams(ContextCallback afterSetUpCallback, ContextCallback beforeTearDownCallback) {
+        this.afterSetUpCallback = new ContextCallback[] { afterSetUpCallback }; 
+        this.beforeTearDownCallback = new ContextCallback[] { beforeTearDownCallback }; 
+    }
     
 }

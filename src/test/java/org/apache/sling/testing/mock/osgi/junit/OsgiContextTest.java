@@ -22,8 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,16 +31,24 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class OsgiContextTest {
 
-    private final OsgiContextCallback contextSetup = mock(OsgiContextCallback.class);
-    private final OsgiContextCallback contextTeardown = mock(OsgiContextCallback.class);
+    private final OsgiContextCallback contextBeforeSetup = mock(OsgiContextCallback.class);
+    private final OsgiContextCallback contextAfterSetup = mock(OsgiContextCallback.class);
+    private final OsgiContextCallback contextBeforeTeardown = mock(OsgiContextCallback.class);
+    private final OsgiContextCallback contextAfterTeardown = mock(OsgiContextCallback.class);
 
     // Run all unit tests for each resource resolver types listed here
     @Rule
-    public OsgiContext context = new OsgiContext(contextSetup, contextTeardown);
+    public OsgiContext context = new OsgiContextBuilder()
+        .beforeSetUp(contextBeforeSetup)
+        .afterSetUp(contextAfterSetup)
+        .beforeTearDown(contextBeforeTeardown)
+        .afterTearDown(contextAfterTeardown)
+        .build();
 
     @Before
-    public void setUp() throws IOException {
-        verify(contextSetup).execute(context);
+    public void setUp() throws Exception {
+        verify(contextBeforeSetup).execute(context);
+        verify(contextAfterSetup).execute(context);
     }
 
     @Test
