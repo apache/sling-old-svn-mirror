@@ -24,11 +24,13 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.BundleContext;
 
 /**
  * Create resolve resolver instance and initialize it depending on it's type.
  */
+@ProviderType
 final class ContextResourceResolverFactory {
 
     private ContextResourceResolverFactory() {

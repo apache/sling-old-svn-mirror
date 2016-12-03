@@ -34,6 +34,7 @@ import java.util.Vector;
 
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -45,6 +46,7 @@ import org.reflections.Reflections;
 /**
  * Helper methos for simulating sling models bundle events.
  */
+@ProviderType
 final class ModelAdapterFactoryUtil {
     
     static {

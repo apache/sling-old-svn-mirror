@@ -26,6 +26,7 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
  * where the repository is not cleaned for each test run. This class provides
  * unique root paths for each run, and cleans them up when done.
  */
+@ConsumerType
 public class UniqueRoot {
     
     private final SlingContextImpl context;
