@@ -70,6 +70,9 @@ public final class ContextPlugins {
     @SafeVarargs
     public final <T extends OsgiContextImpl> void addPlugin(ContextPlugin<T>... plugin) {
         for (final ContextPlugin<T> item : plugin) {
+            if (item == null) {
+                continue;
+            }
             plugins.add(item);
         }
     }
@@ -82,6 +85,9 @@ public final class ContextPlugins {
     @SafeVarargs
     public final <T extends OsgiContextImpl> void addBeforeSetUpCallback(final ContextCallback<T>... beforeSetUpCallback) {
         for (final ContextCallback<T> item : beforeSetUpCallback) {
+            if (item == null) {
+                continue;
+            }
             plugins.add(new AbstractContextPlugin<T>() {
                 @Override
                 public void beforeSetUp(T context) throws Exception {
@@ -103,6 +109,9 @@ public final class ContextPlugins {
     @SafeVarargs
     public final <T extends OsgiContextImpl> void addAfterSetUpCallback(final ContextCallback<T>... afterSetUpCallback) {
         for (final ContextCallback<T> item : afterSetUpCallback) {
+            if (item == null) {
+                continue;
+            }
             plugins.add(new AbstractContextPlugin<T>() {
                 @Override
                 public void afterSetUp(T context) throws Exception {
@@ -124,6 +133,9 @@ public final class ContextPlugins {
     @SafeVarargs
     public final <T extends OsgiContextImpl> void addBeforeTearDownCallback(final ContextCallback<T>... beforeTearDownCallback) {
         for (final ContextCallback<T> item : beforeTearDownCallback) {
+            if (item == null) {
+                continue;
+            }
             plugins.add(new AbstractContextPlugin<T>() {
                 @Override
                 public void beforeTearDown(T context) throws Exception {
@@ -145,6 +157,9 @@ public final class ContextPlugins {
     @SafeVarargs
     public final <T extends OsgiContextImpl> void addAfterTearDownCallback(final ContextCallback<T>... afterTearDownCallback) {
         for (final ContextCallback<T> item : afterTearDownCallback) {
+            if (item == null) {
+                continue;
+            }
             plugins.add(new AbstractContextPlugin<T>() {
                 @Override
                 public void afterTearDown(T context) throws Exception {
