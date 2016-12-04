@@ -16,8 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Mock implementation of selected OSGi APIs.
- */
-@org.osgi.annotation.versioning.Version("3.2")
 package org.apache.sling.testing.mock.osgi;
+
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
+
+import org.junit.Test;
+import org.osgi.framework.Constants;
+
+public class ManifestScannerTest {
+
+    /**
+     * Test some MANIFEST entries from commons-io:commons-io:2.4
+     */
+    @Test
+    public void testGetValues() {
+        Collection<String> bundleSymbolicNames = ManifestScanner.getValues(Constants.BUNDLE_SYMBOLICNAME);
+        assertTrue(bundleSymbolicNames.contains("org.apache.commons.io"));
+
+        Collection<String> includeResource = ManifestScanner.getValues("Include-Resource");
+        assertTrue(includeResource.contains("META-INF/LICENSE.txt=LICENSE.txt"));
+        assertTrue(includeResource.contains("META-INF/NOTICE.txt=NOTICE.txt"));
+    }
+
+}
