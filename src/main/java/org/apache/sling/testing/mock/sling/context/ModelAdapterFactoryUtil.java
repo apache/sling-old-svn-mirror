@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -218,7 +219,7 @@ final class ModelAdapterFactoryUtil {
 
         @Override
         public Dictionary getHeaders() {
-            Dictionary<String, Object> headers = new Hashtable<String, Object>();
+            Dictionary<String, String> headers = new Hashtable<String, String>();
             headers.put(PACKAGE_HEADER, MAGIC_STRING);
             return headers;
         }
@@ -347,6 +348,21 @@ final class ModelAdapterFactoryUtil {
 
         // this is part of org.osgi 4.2.0
         public Version getVersion() {
+            return null;
+        }
+
+        // this is part of osgi 5/6
+        public int compareTo(Bundle o) {
+            return 0;
+        }
+
+        // this is part of osgi 5/6
+        public <A> A adapt(Class<A> type) {
+            return null;
+        }
+
+        // this is part of osgi 5/6
+        public File getDataFile(String filename) {
             return null;
         }
 
