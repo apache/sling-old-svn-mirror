@@ -176,6 +176,9 @@ public class SlingContextImpl extends OsgiContextImpl {
         registerService(SlingSettingsService.class, new MockSlingSettingService(DEFAULT_RUN_MODES));
         registerService(MimeTypeService.class, new MockMimeTypeService());
         registerInjectActivateService(new ResourceBuilderFactoryService());
+        
+        // scan for models defined via bundle headers in classpath
+        ModelAdapterFactoryUtil.addModelsForManifestEntries(this.bundleContext());
     }
 
     /**
@@ -358,12 +361,37 @@ public class SlingContextImpl extends OsgiContextImpl {
     }
 
     /**
-     * Scan classpaths for given package name (and sub packages) to scan for and
+     * Search classpath for given java package names (and sub packages) to scan for and
      * register all classes with @Model annotation.
-     * @param packageName Java package name
+     * @param packageNames Java package name
      */
     public final void addModelsForPackage(String packageName) {
-        ModelAdapterFactoryUtil.addModelsForPackage(packageName, bundleContext());
+        ModelAdapterFactoryUtil.addModelsForPackages(bundleContext(),  packageName);
+    }
+
+    /**
+     * Search classpath for given java package names (and sub packages) to scan for and
+     * register all classes with @Model annotation.
+     * @param packageNames Java package names
+     */
+    public final void addModelsForPackage(String... packageNames) {
+        ModelAdapterFactoryUtil.addModelsForPackages(bundleContext(), packageNames);
+    }
+
+    /**
+     * Search classpath for given class names to scan for and register all classes with @Model annotation.
+     * @param classNames Java class names
+     */
+    public final void addModelsForClasses(String... classNames) {
+        ModelAdapterFactoryUtil.addModelsForClasses(bundleContext(), classNames);
+    }
+
+    /**
+     * Search classpath for given class names to scan for and register all classes with @Model annotation.
+     * @param classNames Java class names
+     */
+    public final void addModelsForClasses(Class... classes) {
+        ModelAdapterFactoryUtil.addModelsForClasses(bundleContext(), classes);
     }
 
     /**
