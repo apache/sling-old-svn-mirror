@@ -19,15 +19,15 @@
     </parent>
 
     <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Models Model Exporter - Jackson</name>
     <description>Apache Sling Models Client Model Exporter - Jackson</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.models.jacksonexporter-1.0.6</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.models.jacksonexporter-1.0.6</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.models.jacksonexporter-1.0.6</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/jackson-exporter</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/jackson-exporter</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/models/jackson-exporter</url>
     </scm>
     <build>
         <plugins>
