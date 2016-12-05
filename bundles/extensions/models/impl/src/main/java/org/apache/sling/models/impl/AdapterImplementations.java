@@ -19,6 +19,7 @@
 package org.apache.sling.models.impl;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -328,5 +329,13 @@ final class AdapterImplementations {
             }
         }
         return modelClass;
+    }
+
+    Map<String, Class<?>> getResourceTypeMappingsForRequests() {
+        return Collections.unmodifiableMap(resourceTypeMappingsForRequests);
+    }
+
+    Map<String, Class<?>> getResourceTypeMappingsForResources() {
+        return Collections.unmodifiableMap(resourceTypeMappingsForResources);
     }
 }
