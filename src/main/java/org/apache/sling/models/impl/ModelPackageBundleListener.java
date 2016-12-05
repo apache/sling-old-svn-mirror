@@ -53,6 +53,9 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     static final String PACKAGE_HEADER = "Sling-Model-Packages";
     static final String CLASSES_HEADER = "Sling-Model-Classes";
+
+    static final String PROP_EXPORTER_SERVLET_CLASS = "sling.models.exporter.servlet.class";
+    static final String PROP_EXPORTER_SERVLET_NAME = "sling.models.exporter.servlet.name";
     
     /**
      * Service registration property for the adapter condition.
@@ -274,6 +277,8 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
             registrationProps.put("sling.servlet.resourceTypes", resourceType);
             registrationProps.put("sling.servlet.selectors", exporterAnnotation.selector());
             registrationProps.put("sling.servlet.extensions", exporterAnnotation.extensions());
+            registrationProps.put(PROP_EXPORTER_SERVLET_CLASS, annotatedClass.getName());
+            registrationProps.put(PROP_EXPORTER_SERVLET_NAME, exporterAnnotation.name());
 
             log.info("registering servlet for {}, {}, {}", new Object[]{resourceType, exporterAnnotation.selector(), exporterAnnotation.extensions()});
 

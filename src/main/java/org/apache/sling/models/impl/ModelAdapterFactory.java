@@ -975,7 +975,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         printerProps.put("felix.webconsole.configprinter.modes", "always");
 
         this.configPrinterRegistration = bundleContext.registerService(Object.class.getName(),
-                new ModelConfigurationPrinter(this), printerProps);
+                new ModelConfigurationPrinter(this, bundleContext, adapterImplementations), printerProps);
     }
 
     @Deactivate
