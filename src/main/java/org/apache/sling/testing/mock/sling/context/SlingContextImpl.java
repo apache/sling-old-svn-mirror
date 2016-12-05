@@ -363,7 +363,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     /**
      * Search classpath for given java package names (and sub packages) to scan for and
      * register all classes with @Model annotation.
-     * @param packageNames Java package name
+     * @param packageName Java package name
      */
     public final void addModelsForPackage(String packageName) {
         ModelAdapterFactoryUtil.addModelsForPackages(bundleContext(),  packageName);
@@ -388,7 +388,7 @@ public class SlingContextImpl extends OsgiContextImpl {
 
     /**
      * Search classpath for given class names to scan for and register all classes with @Model annotation.
-     * @param classNames Java class names
+     * @param classes Java classes
      */
     public final void addModelsForClasses(Class... classes) {
         ModelAdapterFactoryUtil.addModelsForClasses(bundleContext(), classes);
