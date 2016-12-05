@@ -59,11 +59,12 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     public void testWithNoStrategies() {
         assertNull(underTest.getResource(resource1));
         assertNull(underTest.getResourcePath(resource1.getPath()));
-        assertFalse(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
-        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+        assertFalse(underTest.persistConfiguration(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertFalse(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/testCol",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
                         new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
+        assertFalse(underTest.deleteConfiguration(context.resourceResolver(), "/conf/test1"));
     }
 
     @Test
@@ -72,11 +73,12 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
 
         assertSame(resource1, underTest.getResource(resource1));
         assertEquals(resource1.getPath(), underTest.getResourcePath(resource1.getPath()));
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+        assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/testCol",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
                         new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
+        assertTrue(underTest.deleteConfiguration(context.resourceResolver(), "/conf/test1"));
     }
     
     @Test
@@ -93,13 +95,17 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
                 return resource2.getPath();
             }
             @Override
-            public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+            public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
                     ConfigurationPersistData data) {
                 return true;
             }
             @Override
-            public boolean persistCollection(ResourceResolver resourceResolver,
+            public boolean persistConfigurationCollection(ResourceResolver resourceResolver,
                     String configResourceCollectionParentPath, ConfigurationCollectionPersistData data) {
+                return false;
+            }
+            @Override
+            public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
                 return false;
             }
         }, Constants.SERVICE_RANKING, 2000);
@@ -115,13 +121,17 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
                 return resource1.getPath();
             }
             @Override
-            public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+            public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
                     ConfigurationPersistData data) {
                 return false;
             }
             @Override
-            public boolean persistCollection(ResourceResolver resourceResolver,
+            public boolean persistConfigurationCollection(ResourceResolver resourceResolver,
                     String configResourceCollectionParentPath, ConfigurationCollectionPersistData data) {
+                return true;
+            }
+            @Override
+            public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
                 return true;
             }
 
@@ -129,11 +139,12 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         
         assertSame(resource2, underTest.getResource(resource1));
         assertEquals(resource2.getPath(), underTest.getResourcePath(resource1.getPath()));
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/testCol",
+        assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/testCol",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(resource1.getValueMap()).collectionItemName(resource1.getName()),
                         new ConfigurationPersistData(resource2.getValueMap()).collectionItemName(resource2.getName())))));
+        assertTrue(underTest.deleteConfiguration(context.resourceResolver(), "/conf/test1"));
     }
 
 }

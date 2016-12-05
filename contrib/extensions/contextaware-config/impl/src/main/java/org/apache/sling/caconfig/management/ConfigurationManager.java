@@ -54,7 +54,7 @@ public interface ConfigurationManager {
     @Nonnull ConfigurationCollectionData getConfigurationCollection(@Nonnull Resource resource, @Nonnull String configName);
     
     /**
-     * Write configuration to repository data using the inner-most context path as reference.
+     * Write configuration data to repository using the inner-most context path as reference.
      * @param resource Context resource
      * @param configName Configuration name
      * @param values Values to be stored. All existing properties are erased and replaced with the new ones.
@@ -79,6 +79,13 @@ public interface ConfigurationManager {
      * @return Configuration data. Is null when no configuration metadata exists.
      */
     @CheckForNull ConfigurationData newCollectionItem(@Nonnull Resource resource, @Nonnull String configName);
+
+    /**
+     * Delete configuration or configuration collection data from repository using the inner-most context path as reference.
+     * @param resource Context resource
+     * @param configName Configuration name
+     */
+    void deleteConfiguration(@Nonnull Resource resource, @Nonnull String configName);
     
     /**
      * Get all configuration names.

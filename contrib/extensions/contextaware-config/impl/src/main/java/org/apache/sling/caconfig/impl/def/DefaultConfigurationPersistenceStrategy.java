@@ -82,7 +82,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
-    public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+    public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
             ConfigurationPersistData data) {
         if (!config.enabled()) {
             return false;
@@ -93,7 +93,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
-    public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
+    public boolean persistConfigurationCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
             ConfigurationCollectionPersistData data) {
         if (!config.enabled()) {
             return false;
@@ -112,6 +112,24 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             replaceProperties(configResourceParent, data.getProperties());
         }
         
+        commit(resourceResolver);
+        return true;
+    }
+
+    @Override
+    public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
+        if (!config.enabled()) {
+            return false;
+        }
+        Resource resource = resourceResolver.getResource(configResourcePath);
+        if (resource != null) {
+            try {
+                resourceResolver.delete(resource);
+            }
+            catch (PersistenceException ex) {
+                throw new ConfigurationPersistenceException("Unable to delete configuration at " + configResourcePath, ex);
+            }
+        }
         commit(resourceResolver);
         return true;
     }

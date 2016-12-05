@@ -63,11 +63,11 @@ public class DefaultConfigurationPersistenceStrategyTest {
     }
 
     @Test
-    public void testPersist() throws Exception {
+    public void testPersistConfiguration() throws Exception {
         ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         // store config data
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test",
+        assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test",
                 new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1", "prop2", 5))));
         context.resourceResolver().commit();
         
@@ -76,7 +76,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertEquals((Integer)5, props.get("prop2", Integer.class));
 
         // remove config data
-        assertTrue(underTest.persist(context.resourceResolver(), "/conf/test",
+        assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test",
                 new ConfigurationPersistData(ImmutableMap.<String,Object>of())));
         context.resourceResolver().commit();
 
@@ -84,14 +84,16 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertNull(props.get("prop1", String.class));
         assertNull(props.get("prop2", Integer.class));
         
+        underTest.deleteConfiguration(context.resourceResolver(), "/conf/test");
+        assertNull(context.resourceResolver().getResource("/conf/test"));
     }
 
     @Test
-    public void testPersistCollection() throws Exception {
+    public void testPersistConfigurationCollection() throws Exception {
         ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         // store new config collection items
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test",
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                 new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1")).collectionItemName("0"),
                 new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop2", 5)).collectionItemName("1"))
@@ -111,12 +113,15 @@ public class DefaultConfigurationPersistenceStrategyTest {
                 "sling:resourceType", "/a/b/c"));
 
         // remove config collection items
-        assertTrue(underTest.persistCollection(context.resourceResolver(), "/conf/test",
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
                 new ConfigurationCollectionPersistData(ImmutableList.<ConfigurationPersistData>of())));
         context.resourceResolver().commit();
 
         resource = context.resourceResolver().getResource("/conf/test");
         assertEquals(0, ImmutableList.copyOf(resource.getChildren()).size());
+
+        underTest.deleteConfiguration(context.resourceResolver(), "/conf/test");
+        assertNull(context.resourceResolver().getResource("/conf/test"));
     }
 
     @Test
@@ -128,10 +133,11 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertNull(underTest.getResource(resource));
         assertNull(underTest.getResourcePath(resource.getPath()));
 
-        assertFalse(underTest.persist(context.resourceResolver(), "/conf/test",
+        assertFalse(underTest.persistConfiguration(context.resourceResolver(), "/conf/test",
                 new ConfigurationPersistData(ImmutableMap.<String,Object>of())));
-        assertFalse(underTest.persistCollection(context.resourceResolver(), "/conf/test",
+        assertFalse(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
                 new ConfigurationCollectionPersistData(ImmutableList.<ConfigurationPersistData>of())));
+        assertFalse(underTest.deleteConfiguration(context.resourceResolver(), "/conf/test"));
     }
 
 }

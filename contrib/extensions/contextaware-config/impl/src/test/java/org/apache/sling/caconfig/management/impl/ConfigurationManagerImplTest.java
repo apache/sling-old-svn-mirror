@@ -780,4 +780,28 @@ public class ConfigurationManagerImplTest {
         assertEquals("value3_persist", subListData[2].getValues().get("prop1", String.class));
     }
 
+    @Test
+    public void testDeleteConfiguration() throws Exception {
+        underTest.deleteConfiguration(contextResource, CONFIG_NAME);
+        
+        ConfigurationData configData = underTest.getConfiguration(contextResource, CONFIG_NAME);
+        assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
+
+        assertNull(configData.getValues().get("prop1", String.class));
+        assertEquals("defValue", configData.getEffectiveValues().get("prop1", String.class));
+        assertNull(configData.getValues().get("prop2", String.class));
+        assertNull(configData.getEffectiveValues().get("prop2", String.class));
+        assertNull(configData.getValues().get("prop3", Integer.class));
+        assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", Integer.class));
+    }
+
+    @Test
+    public void testDeleteConfigurationCollection() throws Exception {
+        underTest.deleteConfiguration(contextResource, CONFIG_COL_NAME);
+        
+        ConfigurationCollectionData configCollectionData = underTest.getConfigurationCollection(contextResource, CONFIG_COL_NAME);
+        List<ConfigurationData> configDatas = ImmutableList.copyOf(configCollectionData.getItems());
+        assertEquals(0, configDatas.size());
+    }
+
 }

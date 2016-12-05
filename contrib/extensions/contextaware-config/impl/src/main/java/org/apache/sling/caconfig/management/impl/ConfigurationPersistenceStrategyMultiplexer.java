@@ -85,10 +85,10 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
      * Persist configuration data with the first implementation that accepts it.
      */
     @Override
-    public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+    public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
             ConfigurationPersistData data) {
         for (ConfigurationPersistenceStrategy item : items) {
-            if (item.persist(resourceResolver, configResourcePath, data)) {
+            if (item.persistConfiguration(resourceResolver, configResourcePath, data)) {
                 return true;
             }
         }
@@ -99,14 +99,26 @@ public class ConfigurationPersistenceStrategyMultiplexer implements Configuratio
      * Persist configuration data with the first implementation that accepts it.
      */
     @Override
-    public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
+    public boolean persistConfigurationCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
             ConfigurationCollectionPersistData data) {
         for (ConfigurationPersistenceStrategy item : items) {
-            if (item.persistCollection(resourceResolver, configResourceCollectionParentPath, data)) {
+            if (item.persistConfigurationCollection(resourceResolver, configResourceCollectionParentPath, data)) {
                 return true;
             }
         }
         return false;
     }
+
+    @Override
+    public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
+        for (ConfigurationPersistenceStrategy item : items) {
+            if (item.deleteConfiguration(resourceResolver, configResourcePath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
 
 }

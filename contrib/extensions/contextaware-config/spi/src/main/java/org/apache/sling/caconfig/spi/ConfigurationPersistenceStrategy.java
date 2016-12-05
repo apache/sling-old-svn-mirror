@@ -55,9 +55,9 @@ public interface ConfigurationPersistenceStrategy {
      * @param configResourcePath Path to store configuration data to. The resource (and it's parents) may not exist and may have to be created. 
      * @param properties Configuration properties
      * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
-     *      (but in case of error throw an exception).
+     *      (in case of error throw an exception).
      */
-    boolean persist(@Nonnull ResourceResolver resourceResolver,
+    boolean persistConfiguration(@Nonnull ResourceResolver resourceResolver,
             @Nonnull String configResourcePath, @Nonnull ConfigurationPersistData data);
     
     /**
@@ -69,9 +69,18 @@ public interface ConfigurationPersistenceStrategy {
      * @param resourceCollectionItems Resource collection items to be stored.
      *      All existing collection entries on this context path level are erased and replaced with the new ones.
      * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
-     *      (but in case of error throw an exception).
+     *      (in case of error throw an exception).
      */
-    boolean persistCollection(@Nonnull ResourceResolver resourceResolver,
+    boolean persistConfigurationCollection(@Nonnull ResourceResolver resourceResolver,
             @Nonnull String configResourceCollectionParentPath, @Nonnull ConfigurationCollectionPersistData data);
+ 
+    /**
+     * Delete configuration or configuration collection data from repository using the inner-most context path as reference.
+     * @param resourceResolver Resource resolver
+     * @param configResourcePath Path to store configuration data to. The resource (and it's parents) may not exist and may have to be created. 
+     * @return true if the data was delete. false if deleting the data was not accepted by this persistence strategy
+     *      (in case of error throw an exception).
+     */
+    boolean deleteConfiguration(@Nonnull ResourceResolver resourceResolver, @Nonnull String configResourcePath);
     
 }
