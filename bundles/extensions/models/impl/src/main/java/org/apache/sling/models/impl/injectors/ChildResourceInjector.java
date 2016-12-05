@@ -62,11 +62,11 @@ public class ChildResourceInjector extends AbstractInjector implements Injector,
         return null;
     }
 
-    private Object getValue(Resource adaptable, Type declaredType) {
+    private Object getValue(Resource child, Type declaredType) {
         if (declaredType instanceof Class) {
-            return adaptable;
+            return child;
         } else if (isDeclaredTypeCollection(declaredType)) {
-            return getResultList(adaptable, declaredType);
+            return getResultList(child, declaredType);
         } else {
             return null;
         }
