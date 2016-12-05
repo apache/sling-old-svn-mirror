@@ -210,7 +210,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
             try {
                 // open session
-                session = repository.loginService(repository.getDefaultWorkspace(), null);
+                session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
 
                 for (final String path : cfg.getRoots()) {
                     listeners.add(new RootFolderListener(session, path, updateFoldersListTimer, cfg));
@@ -418,7 +418,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         Session s = null;
 
         try {
-            s = repository.loginService(null, repository.getDefaultWorkspace());
+            s = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
             if (!s.itemExists(rootPath) || !s.getItem(rootPath).isNode() ) {
                 logger.info("Bundles root node {} not found, ignored", rootPath);
             } else {
@@ -645,7 +645,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
             logger.debug("Removing artifact at {}", path);
             Session session = null;
             try {
-                session = this.repository.loginService(null, null);
+                session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
                 if ( session.itemExists(path) ) {
                     session.getItem(path).remove();
                     session.save();
@@ -722,7 +722,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
         Session session = null;
         try {
-            session = this.repository.loginService(null, null);
+            session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
 
             final String path;
             boolean resourceIsMoved = true;
