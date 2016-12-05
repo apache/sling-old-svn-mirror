@@ -187,7 +187,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
         }
-        if (!configurationPersistenceStrategy.persist(resource.getResourceResolver(), configResourcePath, data)) {
+        if (!configurationPersistenceStrategy.persistConfiguration(resource.getResourceResolver(), configResourcePath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
     }
@@ -199,7 +199,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
         }
-        if (!configurationPersistenceStrategy.persistCollection(resource.getResourceResolver(), configResourceParentPath, data)) {
+        if (!configurationPersistenceStrategy.persistConfigurationCollection(resource.getResourceResolver(), configResourceParentPath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
     }
@@ -215,6 +215,18 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         return null;
     }
 
+    @Override
+    public void deleteConfiguration(Resource resource, String configName) {
+        ConfigNameUtil.ensureValidConfigName(configName);
+        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+        if (configResourcePath == null) {
+            throw new ConfigurationPersistenceException("Unable to delete configuration: Configuration resolving strategy returned no path.");
+        }
+        if (!configurationPersistenceStrategy.deleteConfiguration(resource.getResourceResolver(), configResourcePath)) {
+            throw new ConfigurationPersistenceException("Unable to delete configuration: No persistence strategy found.");
+        }
+    }
+    
     @Override
     public SortedSet<String> getConfigurationNames() {
         return configurationMetadataProvider.getConfigurationNames();
@@ -287,5 +299,5 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     public String getPersistenceResourcePath(String configResourcePath) {
         return configurationPersistenceStrategy.getResourcePath(configResourcePath);
     }
-    
+
 }

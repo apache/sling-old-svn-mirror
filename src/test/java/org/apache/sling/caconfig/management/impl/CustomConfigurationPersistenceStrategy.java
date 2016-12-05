@@ -55,14 +55,15 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     }
 
     @Override
-    public boolean persist(ResourceResolver resourceResolver, String configResourcePath,
+    public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
             ConfigurationPersistData data) {
         getOrCreateResource(resourceResolver, configResourcePath + "/" + CHILD_NODE_NAME, data.getProperties());
+        commit(resourceResolver);
         return true;
     }
 
     @Override
-    public boolean persistCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
+    public boolean persistConfigurationCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
             ConfigurationCollectionPersistData data) {
         Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, ValueMap.EMPTY);
         
@@ -78,9 +79,25 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
             replaceProperties(configResourceParent, data.getProperties());
         }
         
+        commit(resourceResolver);
         return true;
     }
     
+    @Override
+    public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
+        Resource resource = resourceResolver.getResource(configResourcePath);
+        if (resource != null) {
+            try {
+                resourceResolver.delete(resource);
+            }
+            catch (PersistenceException ex) {
+                throw new ConfigurationPersistenceException("Unable to delete configuration at " + configResourcePath, ex);
+            }
+        }
+        commit(resourceResolver);
+        return true;
+    }
+
     private Resource getOrCreateResource(ResourceResolver resourceResolver, String path, Map<String,Object> properties) {
         try {
             Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_TYPE, false);
@@ -114,6 +131,15 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
             modValueMap.remove(propertyName);
         }
         modValueMap.putAll(properties);
+    }
+
+    private void commit(ResourceResolver resourceResolver) {
+        try {
+            resourceResolver.commit();
+        }
+        catch (PersistenceException ex) {
+            throw new ConfigurationPersistenceException("Unable to save configuration: " + ex.getMessage(), ex);
+        }
     }
 
 }
