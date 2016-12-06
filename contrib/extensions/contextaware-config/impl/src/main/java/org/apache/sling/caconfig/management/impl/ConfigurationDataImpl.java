@@ -18,6 +18,7 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -196,12 +197,15 @@ final class ConfigurationDataImpl implements ConfigurationData {
         Object value;
         Object effectiveValue;
         if (propertyMetadata != null) {
-            Class<?> type = ClassUtils.primitiveToWrapper(propertyMetadata.getType());
+            Class<?> type = propertyMetadata.getType();
             if (type == ConfigurationMetadata.class) {
                 type = ConfigurationData.class;
             }
             else if (type == ConfigurationMetadata[].class) {
                 type = ConfigurationData[].class;
+            }
+            else {
+                type = primitiveToWrapper(type);
             }
             value = getValues().get(propertyName, type);
             effectiveValue = getEffectiveValues().get(propertyName, type);
@@ -217,6 +221,15 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 contextResource,
                 configName,
                 configurationOverrideManager);
+    }
+    
+    private Class<?> primitiveToWrapper(Class<?> type) {
+        if (type.isArray()) {
+            return Array.newInstance(ClassUtils.primitiveToWrapper(type.getComponentType()), 0).getClass();
+        }
+        else {
+            return ClassUtils.primitiveToWrapper(type);
+        }
     }
     
     private PropertyMetadata<?> getPropertyMetadata(String propertyName) {
