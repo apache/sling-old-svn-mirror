@@ -20,12 +20,14 @@ package org.apache.sling.testing.mock.caconfig;
 
 import static org.apache.sling.testing.mock.caconfig.ContextPlugins.CACONFIG;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
+import org.apache.sling.testing.mock.caconfig.example.SimpleConfig;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.junit.SlingContextBuilder;
 import org.junit.Before;
@@ -47,22 +49,35 @@ public class ContextPluginsTest {
     public void setUp() {
         context.create().resource("/content/site1", "sling:configRef", "/conf/site1");
         contextResource = context.create().resource("/content/site1/page1");
-    }
-    
-    @Test
-    public void testPlugin() {
         
+        // register configuration annotation class
+        MockContextAwareConfig.registerAnnotationClasses(context.bundleContext(), SimpleConfig.class);
+
         // write config
         ConfigurationManager configManager = context.getService(ConfigurationManager.class);
         configManager.persistConfiguration(contextResource, CONFIG_NAME, 
                 new ConfigurationPersistData(ImmutableMap.<String, Object>of(
-                        "prop1", "value1",
-                        "prop2", 123)));
-        
+                        "stringParam", "value1",
+                        "intParam", 123,
+                        "boolParam", true)));
+    }
+    
+    @Test
+    public void testValueMap() {
         // read config
         ValueMap props = contextResource.adaptTo(ConfigurationBuilder.class).name(CONFIG_NAME).asValueMap();
-        assertEquals("value1", props.get("prop1", String.class));
-        assertEquals((Integer)123, props.get("prop2", Integer.class));
+        assertEquals("value1", props.get("stringParam", String.class));
+        assertEquals((Integer)123, props.get("intParam", Integer.class));
+        assertTrue(props.get("boolParam", Boolean.class));
+    }
+
+    @Test
+    public void testAnnotationClass() {
+        // read config
+        SimpleConfig config = contextResource.adaptTo(ConfigurationBuilder.class).as(SimpleConfig.class);
+        assertEquals("value1", config.stringParam());
+        assertEquals(123, config.intParam());
+        assertTrue(config.boolParam());
     }
 
 }

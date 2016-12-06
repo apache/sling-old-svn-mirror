@@ -23,6 +23,7 @@ import org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexe
 import org.apache.sling.caconfig.impl.ConfigurationResolverImpl;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.impl.metadata.AnnotationClassConfigurationMetadataProvider;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.impl.ConfigurationManagerImpl;
@@ -35,10 +36,12 @@ import org.apache.sling.caconfig.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.osgi.context.AbstractContextPlugin;
 import org.apache.sling.testing.mock.osgi.context.ContextPlugin;
 import org.apache.sling.testing.mock.sling.context.SlingContextImpl;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Mock context plugins.
  */
+@ProviderType
 public final class ContextPlugins {
 
   private ContextPlugins() {
@@ -56,6 +59,9 @@ public final class ContextPlugins {
         registerConfigurationManagement(context);
         registerConfigurationResourceResolverDefaultImpl(context);
         registerConfigurationResolverDefaultImpl(context);
+        
+        // Scan MANIFEST.MF in the classpath and automatically register all Configuration annotation classes found.
+        ConfigurationMetadataUtil.addAnnotationClassesForManifestEntries(context.bundleContext());
     }
   };
 
@@ -115,6 +121,7 @@ public final class ContextPlugins {
   private static void registerConfigurationManagement(SlingContextImpl context) {
       context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
       context.registerInjectActivateService(new ConfigurationManagerImpl());
+      context.registerInjectActivateService(new AnnotationClassConfigurationMetadataProvider());
   }
   
 }
