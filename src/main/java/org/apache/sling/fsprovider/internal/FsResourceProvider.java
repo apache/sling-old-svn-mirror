@@ -92,7 +92,7 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         @AttributeDefinition(name = "Provider Root",
                 description = "Location in the virtual resource tree where the " +
                 "filesystem resources are mapped in. This property must not be an empty string.")
-        String provider_roots();
+        String provider_root();
     }
 
     // The location in the resource tree where the resources are mapped
@@ -215,7 +215,7 @@ public class FsResourceProvider extends ResourceProvider<Object> {
     // ---------- SCR Integration
     @Activate
     protected void activate(BundleContext bundleContext, final Config config) {
-        String providerRoot = config.provider_roots();
+        String providerRoot = config.provider_root();
         if (providerRoot == null || providerRoot.length() == 0) {
             throw new IllegalArgumentException("provider.root property must be set");
         }
