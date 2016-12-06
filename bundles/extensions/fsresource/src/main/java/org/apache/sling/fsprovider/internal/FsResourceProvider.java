@@ -71,9 +71,12 @@ public class FsResourceProvider extends ResourceProvider<Object> {
          * files and folders mapped into the resource tree (value is
          * "provider.file").
          */
-        @AttributeDefinition(name = "Provider Root",
-                description = "Location in the virtual resource tree where the " +
-                              "filesystem resources are mapped in. This property must not be an empty string.")
+        @AttributeDefinition(name = "Filesystem Root",
+                description = "Filesystem directory mapped to the virtual " +
+                        "resource tree. This property must not be an empty string. If the path is " +
+                        "relative it is resolved against sling.home or the current working directory. " +
+                        "The path may be a file or folder. If the path does not address an existing " +
+                        "file or folder, an empty folder is created.")
         String provider_file();
 
         /**
@@ -86,13 +89,10 @@ public class FsResourceProvider extends ResourceProvider<Object> {
              "(the default is 1000). If a change is detected, resource events are sent through the event admin.")
         long provider_checkinterval() default 1000;
 
-        @AttributeDefinition(name = "Filesystem Root",
-                description = "Filesystem directory mapped to the virtual " +
-                              "resource tree. This property must not be an empty string. If the path is " +
-                              "relative it is resolved against sling.home or the current working directory. " +
-                              "The path may be a file or folder. If the path does not address an existing " +
-                              "file or folder, an empty folder is created.")
-        String provider_root();
+        @AttributeDefinition(name = "Provider Root",
+                description = "Location in the virtual resource tree where the " +
+                "filesystem resources are mapped in. This property must not be an empty string.")
+        String provider_roots();
     }
 
     // The location in the resource tree where the resources are mapped
@@ -215,7 +215,7 @@ public class FsResourceProvider extends ResourceProvider<Object> {
     // ---------- SCR Integration
     @Activate
     protected void activate(BundleContext bundleContext, final Config config) {
-        String providerRoot = config.provider_root();
+        String providerRoot = config.provider_roots();
         if (providerRoot == null || providerRoot.length() == 0) {
             throw new IllegalArgumentException("provider.root property must be set");
         }
