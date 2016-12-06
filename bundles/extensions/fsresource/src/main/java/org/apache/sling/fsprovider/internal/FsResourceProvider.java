@@ -56,8 +56,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
            configurationPolicy=ConfigurationPolicy.REQUIRE,
            property={
                    Constants.SERVICE_DESCRIPTION + "=Sling Filesystem Resource Provider",
-                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
-                   "webconsole.configurationFactory.nameHint=Root paths: {" + ResourceProvider.PROPERTY_ROOT + "}"
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
 @Designate(ocd=FsResourceProvider.Config.class, factory=true)
 public class FsResourceProvider extends ResourceProvider<Object> {
@@ -93,6 +92,11 @@ public class FsResourceProvider extends ResourceProvider<Object> {
                 description = "Location in the virtual resource tree where the " +
                 "filesystem resources are mapped in. This property must not be an empty string.")
         String provider_root();
+        
+        /**
+         * Internal Name hint for web console.
+         */
+        String webconsole_configurationFactory_nameHint() default "Root path: {" + ResourceProvider.PROPERTY_ROOT + "}";
     }
 
     // The location in the resource tree where the resources are mapped
