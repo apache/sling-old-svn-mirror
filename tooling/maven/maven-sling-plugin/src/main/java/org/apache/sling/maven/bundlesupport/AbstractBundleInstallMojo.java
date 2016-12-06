@@ -20,7 +20,6 @@ package org.apache.sling.maven.bundlesupport;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,7 +32,6 @@ import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.FileRequestEntity;
@@ -50,13 +48,11 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.commons.osgi.ManifestHeader.Entry;
-import org.codehaus.plexus.util.StringUtils;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
