@@ -402,10 +402,17 @@ public class StartMojo extends AbstractMojo {
 
         // If the current project is a slingstart project, use its JAR artifact
         if (this.project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART)) {
-            final File jarFile = project.getArtifact().getFile();
-            if (jarFile.exists()) {
+            File jarFile = project.getArtifact().getFile();
+            if (jarFile != null && jarFile.exists()) {
                 getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
                 return jarFile;
+            }
+            else {
+                jarFile = new File(project.getBuild().getDirectory(), project.getBuild().getFinalName() + ".jar");
+                if (jarFile.exists()) {
+                    getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
+                    return jarFile;
+                }
             }
         }
 
