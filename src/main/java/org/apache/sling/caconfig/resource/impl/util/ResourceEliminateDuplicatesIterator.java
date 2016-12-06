@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.FilterIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
 
 /**
@@ -33,11 +34,13 @@ public class ResourceEliminateDuplicatesIterator extends FilterIterator {
 
     public ResourceEliminateDuplicatesIterator(Iterator<ContextResource> iterator) {
         super(iterator, new Predicate() {
-            private final Set<String> resourcePaths = new HashSet<>();
+            private final Set<String> keys = new HashSet<>();
             
             @Override
             public boolean evaluate(Object object) {
-                return resourcePaths.add(((ContextResource)object).getResource().getPath());
+                ContextResource contextResource = (ContextResource)object;
+                String key = contextResource.getResource().getPath() + "#" + StringUtils.defaultString(contextResource.getConfigRef());
+                return keys.add(key);
             }
             
         });
