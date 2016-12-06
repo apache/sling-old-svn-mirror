@@ -18,7 +18,6 @@
  */
 package org.apache.sling.caconfig.resource.impl.util;
 
-import static org.apache.sling.caconfig.resource.impl.util.ContextResourceTestUtil.toContextResourceIterator;
 import static org.apache.sling.caconfig.resource.impl.util.ContextResourceTestUtil.toResourceIterator;
 import static org.junit.Assert.assertThat;
 
@@ -26,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.caconfig.resource.spi.ContextResource;
 import org.apache.sling.hamcrest.ResourceIteratorMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
@@ -42,21 +43,24 @@ public class ResourceEliminateDuplicatesIteratorTest {
     @Test
     public void testIterator() {
         context.build()
-            .resource("/conf/a")
-            .resource("/conf/a/b")
-            .resource("/conf/a/b/c");
+            .resource("/content/a")
+            .resource("/content/a/b")
+            .resource("/content/a/b/c");
         
-        List<Resource> list = ImmutableList.of(
-                context.resourceResolver().getResource("/conf/a"), 
-                context.resourceResolver().getResource("/conf/a/b"),
-                context.resourceResolver().getResource("/conf/a"),
-                context.resourceResolver().getResource("/conf/a/b/c"));
+        ResourceResolver rr = context.resourceResolver();
+        List<ContextResource> list = ImmutableList.of(
+                new ContextResource(rr.getResource("/content/a"), "/conf/a"), 
+                new ContextResource(rr.getResource("/content/a/b"), "/conf/a/b"),
+                new ContextResource(rr.getResource("/content/a"), "/conf/a"),
+                new ContextResource(rr.getResource("/content/a"), null),
+                new ContextResource(rr.getResource("/content/a/b/c"), "/conf/a/b"));
         
-        Iterator<Resource> result = toResourceIterator(new ResourceEliminateDuplicatesIterator(toContextResourceIterator(list.iterator())));
+        Iterator<Resource> result = toResourceIterator(new ResourceEliminateDuplicatesIterator(list.iterator()));
         assertThat(result, ResourceIteratorMatchers.paths(
-                "/conf/a",
-                "/conf/a/b",
-                "/conf/a/b/c"));
+                "/content/a",
+                "/content/a/b",
+                "/content/a",
+                "/content/a/b/c"));
     }
 
 }

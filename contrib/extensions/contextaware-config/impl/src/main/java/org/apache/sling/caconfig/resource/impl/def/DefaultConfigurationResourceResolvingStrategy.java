@@ -31,9 +31,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ArrayIterator;
+import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -130,8 +132,15 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     private Iterator<String> findConfigRefs(final Resource startResource, final String bucketName) {
         final String notAllowedPostfix = "/" + bucketName;
 
-        // collect all context path resources
-        final Iterator<ContextResource> contextResources = contextPathStrategy.findContextResources(startResource);
+        // collect all context path resources (but filter out those without config reference)
+        final Iterator<ContextResource> contextResources = new FilterIterator(contextPathStrategy.findContextResources(startResource),
+                new Predicate() {
+                    @Override
+                    public boolean evaluate(Object object) {
+                        ContextResource contextResource = (ContextResource)object;
+                        return StringUtils.isNotBlank(contextResource.getConfigRef());
+                    }
+                });
 
         // get config resource path for each context resource, filter out items where not reference could be resolved
         final Iterator<String> configPaths = new Iterator<String>() {

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.collections.iterators.CollatingIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
 
 /**
@@ -37,7 +38,11 @@ public class ResourcePathCollatingIterator extends CollatingIterator {
         public int compare(ContextResource o1, ContextResource o2) {
             Integer length1 = o1.getResource().getPath().length();
             Integer length2 = o2.getResource().getPath().length();
-            return length2.compareTo(length1);
+            int result = length2.compareTo(length1);
+            if (result == 0) {
+                result = StringUtils.defaultString(o1.getConfigRef()).compareTo(StringUtils.defaultString(o2.getConfigRef()));
+            }
+            return result;
         }
     };
 
