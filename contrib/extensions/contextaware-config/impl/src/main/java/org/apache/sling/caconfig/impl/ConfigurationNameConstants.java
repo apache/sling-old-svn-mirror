@@ -25,9 +25,9 @@ public final class ConfigurationNameConstants {
     }
 
     /**
-     * Resource name for configuration data (configuration with key/value pairs).
+     * Bucket name for configuration data (configuration with key/value pairs).
      */
-    public static final String CONFIGS_PARENT_NAME = "sling:configs";
+    public static final String CONFIGS_BUCKET_NAME = "sling:configs";
 
     /**
      * Bundle header defining list of class names with all configuration annotation classes in this bundle.

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.caconfig.impl;
 
-import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_PARENT_NAME;
+import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_BUCKET_NAME;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -103,7 +103,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (this.contentResource != null) {
             validateConfigurationName(name);
             resourceInheritanceChain = this.configurationResourceResolvingStrategy
-                    .getResourceInheritanceChain(this.contentResource, CONFIGS_PARENT_NAME, name);
+                    .getResourceInheritanceChain(this.contentResource, CONFIGS_BUCKET_NAME, name);
         }
         return convert(resourceInheritanceChain, clazz, converter, name, false);
     }
@@ -120,7 +120,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
            validateConfigurationName(name);
            final Collection<T> result = new ArrayList<>();
            for (final Iterator<Resource> resourceInheritanceChain : this.configurationResourceResolvingStrategy
-                   .getResourceCollectionInheritanceChain(this.contentResource, CONFIGS_PARENT_NAME, name)) {
+                   .getResourceCollectionInheritanceChain(this.contentResource, CONFIGS_BUCKET_NAME, name)) {
                final T obj = convert(resourceInheritanceChain, clazz, converter, name, true);
                if (obj != null) {
                    result.add(obj);
