@@ -49,7 +49,7 @@ import org.osgi.framework.Version;
 import org.reflections.Reflections;
 
 /**
- * Helper methos for simulating sling models bundle events.
+ * Helper methods for registering Sling Models from the classpath.
  */
 final class ModelAdapterFactoryUtil {
     
