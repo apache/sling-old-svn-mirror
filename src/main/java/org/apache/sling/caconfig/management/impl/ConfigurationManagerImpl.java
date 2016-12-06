@@ -18,7 +18,7 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
-import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_PARENT_NAME;
+import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_BUCKET_NAME;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,14 +70,14 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         Resource configResource = null;
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
-                .getResourceInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
+                .getResourceInheritanceChain(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourceInheritanceChain != null) {
             ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
             configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
             if (configResource != null) {
                 // get writeback resource for "reverse inheritance detection"
                 Resource writebackConfigResource = null;
-                String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+                String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_BUCKET_NAME, configName);
                 if (writebackConfigResourcePath != null) {
                     writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
                     if (writebackConfigResource != null) {
@@ -103,12 +103,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
-        String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
+        String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_BUCKET_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
         // get configuration resource items
         Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
-                .getResourceCollectionInheritanceChain(resource, CONFIGS_PARENT_NAME, configName);
+                .getResourceCollectionInheritanceChain(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourceInheritanceChains != null) {
             for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
                 ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
@@ -183,7 +183,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public void persistConfiguration(Resource resource, String configName, ConfigurationPersistData data) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
         }
@@ -195,7 +195,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public void persistConfigurationCollection(Resource resource, String configName, ConfigurationCollectionPersistData data) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_PARENT_NAME, configName);
+        String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
         }
@@ -218,7 +218,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public void deleteConfiguration(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_PARENT_NAME, configName);
+        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to delete configuration: Configuration resolving strategy returned no path.");
         }
