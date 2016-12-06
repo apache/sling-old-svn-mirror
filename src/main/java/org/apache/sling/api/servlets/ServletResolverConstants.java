@@ -18,8 +18,6 @@
  */
 package org.apache.sling.api.servlets;
 
-import javax.servlet.ServletConfig;
-
 /**
  * Service registration properties and common values used for registering a Sling Servlet.
  * 
