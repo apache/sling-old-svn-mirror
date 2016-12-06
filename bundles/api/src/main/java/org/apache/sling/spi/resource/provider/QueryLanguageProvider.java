@@ -22,11 +22,8 @@ import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-
 import org.osgi.annotation.versioning.ConsumerType;
 
 

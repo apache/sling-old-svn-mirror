@@ -18,8 +18,6 @@
  */
 package org.apache.sling.api;
 
-import org.apache.sling.api.resource.observation.ResourceChangeListener;
-
 /**
  * The <code>SlingConstants</code> interface provides some symbolic constants
  * for well known constant strings in Sling. Even though these constants will
