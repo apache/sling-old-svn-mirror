@@ -87,5 +87,34 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+    
+    <profiles>
+        
+        <!-- Test with Sling CAConfig Impl/SPI 1.1 -->
+        <profile>
+            <id>caconfig-1.1</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.caconfig.api</artifactId>
+                    <version>1.0.0</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.caconfig.spi</artifactId>
+                    <version>1.1.0</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.caconfig.impl</artifactId>
+                    <version>1.1.0</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+    </profiles>
 
 </project>

@@ -22,11 +22,13 @@ import static org.apache.sling.testing.mock.caconfig.ContextPlugins.CACONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.management.ConfigurationManager;
-import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.testing.mock.caconfig.example.SimpleConfig;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.junit.SlingContextBuilder;
@@ -54,12 +56,44 @@ public class ContextPluginsTest {
         MockContextAwareConfig.registerAnnotationClasses(context.bundleContext(), SimpleConfig.class);
 
         // write config
-        ConfigurationManager configManager = context.getService(ConfigurationManager.class);
-        configManager.persistConfiguration(contextResource, CONFIG_NAME, 
-                new ConfigurationPersistData(ImmutableMap.<String, Object>of(
+        writeConfig(contextResource, CONFIG_NAME, ImmutableMap.<String, Object>of(
                         "stringParam", "value1",
                         "intParam", 123,
-                        "boolParam", true)));
+                        "boolParam", true));
+    }
+    
+    /**
+     * Write configuration for impl 1.2
+     */
+    private void writeConfig(Resource contextResource, String configName, Map<String,Object> props) {
+        try {
+            Class<?> configurationPersistDataClass;
+            try {
+                configurationPersistDataClass = Class.forName("org.apache.sling.caconfig.spi.ConfigurationPersistData");
+            }
+            catch (ClassNotFoundException e) {
+                // fallback to caconfig impl 1.1
+                writeConfigImpl11(contextResource, configName, props);
+                return;
+            }
+
+            Object persistData = configurationPersistDataClass.getConstructor(Map.class).newInstance(props);
+            ConfigurationManager configManager = context.getService(ConfigurationManager.class);
+            Method persistMethod = ConfigurationManager.class.getMethod("persistConfiguration", Resource.class, String.class, configurationPersistDataClass);
+            persistMethod.invoke(configManager, contextResource, configName, persistData);
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    /**
+     * Fallback: Write configuration for impl 1.1
+     */
+    private void writeConfigImpl11(Resource contextResource, String configName, Map<String,Object> props) throws Exception {
+        ConfigurationManager configManager = context.getService(ConfigurationManager.class);
+        Method persistMethod = ConfigurationManager.class.getMethod("persist", Resource.class, String.class, Map.class);
+        persistMethod.invoke(configManager, contextResource, configName, props);
     }
     
     @Test
