@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource.path;
 
+import java.util.UUID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -86,6 +87,8 @@ public class PathTest {
     }
 
     @Test public void testIllegalArgumentException() {
+        final Path path = new Path("/libs/foo");
+        
         try {
             new Path("foo");
             fail();
@@ -94,6 +97,13 @@ public class PathTest {
         }
         try {
             new Path("glob:foo");
+            fail();
+        } catch ( final IllegalArgumentException iae) {
+            // this should happen!
+        }
+        
+        try {
+            path.matches("invalid-no-slash");
             fail();
         } catch ( final IllegalArgumentException iae) {
             // this should happen!
@@ -110,5 +120,33 @@ public class PathTest {
         final Path glob = new Path("glob:/*/foo");
         assertTrue(glob.matches("glob:/*/foo"));
         assertFalse(glob.matches("glob:/*/**/foo"));
+    }
+    
+    @Test public void testIsPatternWithGlob() {
+        assertTrue(new Path("glob:/*/foo").isPattern());
+    }
+    
+    @Test public void testIsPatternWithPath() {
+        assertFalse(new Path("/libs/foo").isPattern());
+    }
+    
+    @Test public void testEquals() {
+        final Path path = new Path("/foo/bar");
+        assertTrue(path.equals(path));
+        assertFalse(path.equals(null));
+        assertFalse(path.equals("a string"));
+    }
+    
+    @Test public void testCompareTo() {
+        final Path p1 = new Path("/1");
+        final Path p2 = new Path("/2");
+        assertTrue(p1.compareTo(p2) < 0);
+        assertTrue(p2.compareTo(p1) > 0);
+        assertTrue(p1.compareTo(p1) == 0);
+    }
+    
+    @Test public void testToString() {
+        final Path path = new Path("/" + UUID.randomUUID());
+        assertTrue(path.toString().contains(path.getPath()));
     }
 }
