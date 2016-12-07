@@ -83,7 +83,8 @@ public class ConfigurationManagerImplTest {
     public void setUp() {
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
-        ConfigurationTestUtils.registerConfigurationResolver(context);
+        ConfigurationTestUtils.registerConfigurationResolver(context,
+                "configBucketNames", getAlternativeBucketNames());
         underTest = context.registerInjectActivateService(new ConfigurationManagerImpl());
         
         contextResource = context.create().resource("/content/test",
@@ -104,7 +105,7 @@ public class ConfigurationManagerImplTest {
                 "prop4", true);
         
         // test fixture with resource collection inheritance on level 2
-        context.create().resource("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME,
+        context.create().resource(getConfigCollectionParentPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME),
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
         context.create().resource(getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME + "/1"),
                 "prop1", "value1_level2");
@@ -114,7 +115,7 @@ public class ConfigurationManagerImplTest {
                 "prop4", false,
                 "prop5", "value5_level3",
                 PROPERTY_CONFIG_PROPERTY_INHERIT, true);
-        context.create().resource("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME,
+        context.create().resource(getConfigCollectionParentPath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME),
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
         context.create().resource(getConfigPropsPath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME + "/1"),
                 "prop4", false,
@@ -197,6 +198,18 @@ public class ConfigurationManagerImplTest {
     
     protected String getConfigPropsPath(String path) {
         return path;
+    }
+    
+    protected String getConfigPropsPersistPath(String path) {
+        return path;
+    }
+    
+    protected String getConfigCollectionParentPath(String path) {
+        return path;
+    }
+    
+    protected String[] getAlternativeBucketNames() {
+        return new String[0];
     }
     
     @Test
@@ -506,7 +519,7 @@ public class ConfigurationManagerImplTest {
                 new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1")));
         context.resourceResolver().commit();
 
-        String configPath = getConfigPropsPath("/conf/testNoConfig/sling:configs/" + CONFIG_NAME);
+        String configPath = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_NAME);
         ValueMap props = context.resourceResolver().getResource(configPath).getValueMap();
         assertEquals("value1", props.get("prop1"));
     }
@@ -520,11 +533,11 @@ public class ConfigurationManagerImplTest {
         ));
         context.resourceResolver().commit();
 
-        String configPath0 = getConfigPropsPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/0");
+        String configPath0 = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/0");
         ValueMap props0 = context.resourceResolver().getResource(configPath0).getValueMap();
         assertEquals("value1", props0.get("prop1"));
 
-        String configPath1 = getConfigPropsPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/1");
+        String configPath1 = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/1");
         ValueMap props1 = context.resourceResolver().getResource(configPath1).getValueMap();
         assertEquals((Integer)5, props1.get("prop2"));
     }

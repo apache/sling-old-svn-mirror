@@ -34,6 +34,7 @@ import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer;
+import org.apache.sling.caconfig.impl.ConfigurationResourceResolverConfig;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
@@ -62,6 +63,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
     @Reference
     private ConfigurationOverrideManager configurationOverrideManager;
+    @Reference
+    private ConfigurationResourceResolverConfig configurationResourceResolverConfig;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -69,21 +72,29 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigNameUtil.ensureValidConfigName(configName);
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         Resource configResource = null;
+        
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
-                .getResourceInheritanceChain(resource, CONFIGS_BUCKET_NAME, configName);
+                .getResourceInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), configName);;
+        
         if (configResourceInheritanceChain != null) {
             ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
             configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
             if (configResource != null) {
                 // get writeback resource for "reverse inheritance detection"
                 Resource writebackConfigResource = null;
-                String writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_BUCKET_NAME, configName);
-                if (writebackConfigResourcePath != null) {
-                    writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
-                    if (writebackConfigResource != null) {
-                        writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                
+                String writebackConfigResourcePath = null;
+                for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
+                    writebackConfigResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, configBucketName, configName);
+                    if (writebackConfigResourcePath != null) {
+                        writebackConfigResource = resource.getResourceResolver().getResource(writebackConfigResourcePath);
+                        if (writebackConfigResource != null) {
+                            writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                            break;
+                        }
                     }
                 }
+                
                 resettableConfigResourceInheritanceChain.reset();
                 return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                         applyPersistence(resettableConfigResourceInheritanceChain),
@@ -103,12 +114,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
-        String writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_BUCKET_NAME, configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
         // get configuration resource items
         Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
-                .getResourceCollectionInheritanceChain(resource, CONFIGS_BUCKET_NAME, configName);
+                    .getResourceCollectionInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), configName);   
+
+        String writebackConfigResourceCollectionParentPath = null;
         if (configResourceInheritanceChains != null) {
             for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
                 ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
@@ -118,13 +130,19 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 if (configResource != null) {
                     // get writeback resource for "reverse inheritance detection"
                     Resource writebackConfigResource = null;
-                    if (writebackConfigResourceCollectionParentPath != null) {
-                        writebackConfigResource = configResource.getResourceResolver().getResource(
-                                writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
-                        if (writebackConfigResource != null) {
-                            writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                    
+                    for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
+                        writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, configBucketName, configName);
+                        if (writebackConfigResourceCollectionParentPath != null) {
+                            writebackConfigResource = configResource.getResourceResolver().getResource(
+                                    writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
+                            if (writebackConfigResource != null) {
+                                writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                                break;
+                            }
                         }
                     }
+                    
                     resettableConfigResourceInheritanceChain.reset();
                     configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                             applyPersistence(resettableConfigResourceInheritanceChain),
@@ -218,12 +236,20 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public void deleteConfiguration(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, CONFIGS_BUCKET_NAME, configName);
-        if (configResourcePath == null) {
-            throw new ConfigurationPersistenceException("Unable to delete configuration: Configuration resolving strategy returned no path.");
+        
+        // try to delete from all config bucket names
+        boolean foundAnyPath = false;
+        for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
+            String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, configBucketName, configName);
+            if (configResourcePath != null) {
+                foundAnyPath = true;
+                if (!configurationPersistenceStrategy.deleteConfiguration(resource.getResourceResolver(), configResourcePath)) {
+                    throw new ConfigurationPersistenceException("Unable to delete configuration: No persistence strategy found.");
+                }
+            }
         }
-        if (!configurationPersistenceStrategy.deleteConfiguration(resource.getResourceResolver(), configResourcePath)) {
-            throw new ConfigurationPersistenceException("Unable to delete configuration: No persistence strategy found.");
+        if (!foundAnyPath) {
+            throw new ConfigurationPersistenceException("Unable to delete configuration: Configuration resolving strategy returned no path.");
         }
     }
     

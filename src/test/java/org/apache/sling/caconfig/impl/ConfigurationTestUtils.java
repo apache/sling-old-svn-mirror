@@ -36,14 +36,14 @@ public final class ConfigurationTestUtils {
      * Register all services for {@link ConfigurationResolver}.
      * @param context Sling context
      */
-    public static ConfigurationResolver registerConfigurationResolver(SlingContext context) {
+    public static ConfigurationResolver registerConfigurationResolver(SlingContext context, Object... properties) {
         ConfigurationResourceTestUtils.registerConfigurationResourceResolver(context);        
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationOverrideManager());
-        return context.registerInjectActivateService(new ConfigurationResolverImpl());
+        return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }
     
     /**
@@ -51,12 +51,12 @@ public final class ConfigurationTestUtils {
      * without the default implementations of the multiplexed services.
      * @param context Sling context
      */
-    public static ConfigurationResolver registerConfigurationResolverWithoutDefaultImpl(SlingContext context) {
+    public static ConfigurationResolver registerConfigurationResolverWithoutDefaultImpl(SlingContext context, Object... properties) {
         ConfigurationResourceTestUtils.registerConfigurationResourceResolverWithoutDefaultImpl(context);
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationOverrideManager());
-        return context.registerInjectActivateService(new ConfigurationResolverImpl());
+        return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }
     
 }

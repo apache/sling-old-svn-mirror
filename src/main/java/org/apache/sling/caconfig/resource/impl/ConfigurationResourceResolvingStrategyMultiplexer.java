@@ -59,9 +59,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
      * Gets the configuration resource from the first implementation that has an answer.
      */
     @Override
-    public Resource getResource(Resource resource, String bucketName, String configName) {
+    public Resource getResource(Resource resource, Collection<String> bucketNames, String configName) {
         for (ConfigurationResourceResolvingStrategy item : items) {
-            Resource result = item.getResource(resource, bucketName, configName);
+            Resource result = item.getResource(resource, bucketNames, configName);
             if (result != null) {
                 return result;
             }
@@ -73,9 +73,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
      * Gets the configuration resource collection from the first implementation that has an answer.
      */
     @Override
-    public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
+    public Collection<Resource> getResourceCollection(Resource resource, Collection<String> bucketNames, String configName) {
         for (ConfigurationResourceResolvingStrategy item : items) {
-            Collection<Resource> result = item.getResourceCollection(resource, bucketName, configName);
+            Collection<Resource> result = item.getResourceCollection(resource, bucketNames, configName);
             if (result != null) {
                 return result;
             }
@@ -87,9 +87,9 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
      * Gets the configuration resource inheritance chain from the first implementation that has an answer.
      */
     @Override
-    public Iterator<Resource> getResourceInheritanceChain(Resource resource, String bucketName, String configName) {
+    public Iterator<Resource> getResourceInheritanceChain(Resource resource, Collection<String> bucketNames, String configName) {
         for (ConfigurationResourceResolvingStrategy item : items) {
-            Iterator<Resource> result = item.getResourceInheritanceChain(resource, bucketName, configName);
+            Iterator<Resource> result = item.getResourceInheritanceChain(resource, bucketNames, configName);
             if (result != null) {
                 return result;
             }
@@ -101,10 +101,10 @@ public class ConfigurationResourceResolvingStrategyMultiplexer implements Config
      * Gets the configuration resource collection inheritance chains from the first implementation that has an answer.
      */
     @Override
-    public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(Resource resource, String bucketName,
+    public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(Resource resource, Collection<String> bucketNames,
             String configName) {
         for (ConfigurationResourceResolvingStrategy item : items) {
-            Collection<Iterator<Resource>> result = item.getResourceCollectionInheritanceChain(resource, bucketName, configName);
+            Collection<Iterator<Resource>> result = item.getResourceCollectionInheritanceChain(resource, bucketNames, configName);
             if (result != null) {
                 return result;
             }

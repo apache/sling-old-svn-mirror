@@ -20,6 +20,7 @@ package org.apache.sling.caconfig.resource.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,13 +43,13 @@ public class ConfigurationResourceResolverImpl implements ConfigurationResourceR
     @Override
     public Resource getResource(Resource resource, String bucketName, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        return configurationResourceResolvingStrategy.getResource(resource, bucketName, configName);
+        return configurationResourceResolvingStrategy.getResource(resource, Collections.singleton(bucketName), configName);
     }
 
     @Override
     public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
-        return configurationResourceResolvingStrategy.getResourceCollection(resource, bucketName, configName);
+        return configurationResourceResolvingStrategy.getResourceCollection(resource, Collections.singleton(bucketName), configName);
     }
 
     @Override

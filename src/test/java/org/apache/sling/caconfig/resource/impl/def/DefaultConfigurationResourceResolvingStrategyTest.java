@@ -24,6 +24,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
@@ -36,6 +39,7 @@ import org.junit.Test;
 public class DefaultConfigurationResourceResolvingStrategyTest {
 
     private static final String BUCKET = "sling:test";
+    private static final Collection<String> BUCKETS = Collections.singleton(BUCKET);
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -73,8 +77,8 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/conf/site1/sling:test/test")
             .resource("/libs/conf/sling:test/test");
 
-        assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKET, "test").getPath());
-        assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKET, "test").getPath());
+        assertEquals("/conf/site1/sling:test/test", underTest.getResource(site1Page1, BUCKETS, "test").getPath());
+        assertEquals("/libs/conf/sling:test/test", underTest.getResource(site2Page1, BUCKETS, "test").getPath());
     }
 
     @Test
@@ -86,8 +90,8 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/conf/main/sub/sling:test/test")
             .resource("/conf/main/sub/deep/sling:test/test");
 
-        assertEquals("/conf/main/sub/sling:test/test", underTest.getResource(subPage, BUCKET, "test").getPath());
-        assertEquals("/conf/main/sub/deep/sling:test/test", underTest.getResource(deepPage, BUCKET, "test").getPath());
+        assertEquals("/conf/main/sub/sling:test/test", underTest.getResource(subPage, BUCKETS, "test").getPath());
+        assertEquals("/conf/main/sub/deep/sling:test/test", underTest.getResource(deepPage, BUCKETS, "test").getPath());
     }
 
     /**
@@ -106,10 +110,10 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/apps/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/feature/b");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c"));
 
-        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d"));
     }
@@ -128,10 +132,10 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/libs/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/feature/b");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/apps/conf/sling:test/feature/a"));
 
-        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/apps/conf/sling:test/feature/a"));
     }
 
@@ -153,11 +157,11 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/apps/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/feature/b");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a"));
 
-        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
                 "/apps/conf/sling:test/feature/a"));
@@ -184,12 +188,12 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/libs/conf/sling:test/feature")
                 .resource("b");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a",
                 "/libs/conf/sling:test/feature/b"));
 
-        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d",
                 "/apps/conf/sling:test/feature/a",
@@ -212,10 +216,10 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/apps/conf/sling:test/feature/a")
             .resource("/libs/conf/sling:test/feature", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("b");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/c"));
 
-        assertThat(underTest.getResourceCollection(site2Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site2Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site2/sling:test/feature/c",
                 "/conf/site2/sling:test/feature/d"));
     }
@@ -233,7 +237,7 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
             .resource("/conf/site1/sling:test/feature/b")
             .resource("/conf/site2/sling:test/feature/jcr:content");
 
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths(
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths(
                 "/conf/site1/sling:test/feature/a",
                 "/conf/site1/sling:test/feature/b"));
     }
@@ -255,8 +259,8 @@ public class DefaultConfigurationResourceResolvingStrategyTest {
         ConfigurationResourceResolvingStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
                 "enabled", false);
 
-        assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
-        assertNull(underTest.getResourceCollection(site1Page1, BUCKET, "feature"));
+        assertNull(underTest.getResource(site1Page1, BUCKETS, "test"));
+        assertNull(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"));
         assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
     }

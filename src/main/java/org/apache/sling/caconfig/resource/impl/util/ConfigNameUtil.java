@@ -18,6 +18,8 @@
  */
 package org.apache.sling.caconfig.resource.impl.util;
 
+import java.util.Collection;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,6 +41,23 @@ public final class ConfigNameUtil {
         return !StringUtils.isBlank(configName)
                 && !StringUtils.startsWith(configName, "/")
                 && !StringUtils.contains(configName, "../");
+    }
+    
+    /**
+     * Check if the config name is valid.
+     * @param configNames The names
+     * @return {@code true} if it is valid
+     */
+    public static boolean isValid(final Collection<String> configNames) {
+        if (configNames == null) {
+            return false;
+        }
+        for (String configName : configNames) {
+            if (!isValid(configName)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     /**

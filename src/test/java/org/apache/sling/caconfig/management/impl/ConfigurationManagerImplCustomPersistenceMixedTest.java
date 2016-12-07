@@ -18,24 +18,18 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.Constants;
 
 /**
- * Test {@link ConfigurationManagerImpl} with custom persistence with mixed bucked names (primary, alternative).
+ * Test {@link ConfigurationManagerImpl} with custom persistence.
  */
-@Ignore  // TODO: does this test makes sense?
 @RunWith(MockitoJUnitRunner.class)
-public class ConfigurationManagerImplCustomPersistenceTest extends ConfigurationManagerImplTest {
-    
-    private static AtomicInteger COUNTER = new AtomicInteger();
+public class ConfigurationManagerImplCustomPersistenceMixedTest extends ConfigurationManagerImplTest {
     
     @Before
     public void setUpCustomPersistence() {
@@ -46,7 +40,7 @@ public class ConfigurationManagerImplCustomPersistenceTest extends Configuration
 
     @Override
     protected String getConfigPropsPath(String path) {
-        return StringUtils.replace(path + "/jcr:content", "/sling:configs/", "/" + getIteratingBucketName() + "/");
+        return StringUtils.replace(path + "/jcr:content", "/sling:configs/", "/settings/");
     }
 
     @Override
@@ -61,20 +55,7 @@ public class ConfigurationManagerImplCustomPersistenceTest extends Configuration
 
     @Override
     protected String getConfigCollectionParentPath(String path) {
-        return StringUtils.replace(path, "/sling:configs/", "/" + getIteratingBucketName() + "/");
-    }
-    
-    /**
-     * @return On or another bucket name changing each call.
-     */
-    private String getIteratingBucketName() {
-        int count = COUNTER.getAndIncrement();
-        if (count % 2 == 0) {
-            return "sling:configs";
-        }
-        else {
-            return "settings";
-        }
+        return StringUtils.replace(path, "/sling:configs/", "/settings/");
     }
     
 }

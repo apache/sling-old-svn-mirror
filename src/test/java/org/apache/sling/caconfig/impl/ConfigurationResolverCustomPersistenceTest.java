@@ -56,7 +56,9 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Before
     public void setUp() {
-        underTest = ConfigurationTestUtils.registerConfigurationResolver(context);
+        // custom config with defines alternative bucket name "settings"
+        underTest = ConfigurationTestUtils.registerConfigurationResolver(context,
+                "configBucketNames", "settings");
 
         // custom strategy which redirects all config resources to a jcr:content subnode
         context.registerService(ConfigurationPersistenceStrategy.class,
@@ -94,7 +96,7 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Test
     public void testConfig_Simple() {
-        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.SimpleConfig/jcr:content",
+        context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.SimpleConfig/jcr:content",
                 "stringParam", "configValue1",
                 "intParam", 111,
                 "boolParam", true);
@@ -108,7 +110,7 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Test
     public void testConfig_SimpleWithName() {
-        context.build().resource("/conf/content/site1/sling:configs/sampleName/jcr:content",
+        context.build().resource("/conf/content/site1/settings/sampleName/jcr:content",
                 "stringParam", "configValue1.1",
                 "intParam", 1111,
                 "boolParam", true);
@@ -122,7 +124,7 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Test
     public void testConfig_List() {
-        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListConfig")
+        context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.ListConfig")
             .siblingsMode()
             .resource("1/jcr:content", "stringParam", "configValue1.1")
             .resource("2/jcr:content", "stringParam", "configValue1.2")
@@ -139,7 +141,7 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Test
     public void testConfig_Nested() {
-        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.NestedConfig")
+        context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.NestedConfig")
             .resource("jcr:content", "stringParam", "configValue3")
                 .siblingsMode()
                 .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
