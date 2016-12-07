@@ -54,6 +54,7 @@ public class PathTest {
         assertTrue(path_1.matches("/apps/project/a.html"));
         assertTrue(path_1.matches("/apps/project/1/a.html"));
         assertTrue(path_1.matches("/apps/project/1/2/a.html"));
+        assertTrue(path_1.matches("/apps/project/1/2/3/4/5/6/7/8/9/a.html"));
         assertFalse(path_1.matches("/apps/a.html"));
         assertFalse(path_1.matches("/apps/project/a.html/b"));
 
@@ -68,6 +69,9 @@ public class PathTest {
         assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/.html"));
         assertFalse(path_3.matches("/a/m-p/$structure/1/[cmp]/html"));
         assertFalse(path_3.matches("/a/m-p/$structure/[cmp]/test.html"));
+        
+        // TODO this should be assertTrue?? as per SLING-6350
+        assertFalse(path_3.matches("/a/m-p/$structure/1/2/3/4/5/6[cmp]/test.html"));
     }
 
     @Test public void testPatternRootMatching() {
@@ -84,6 +88,14 @@ public class PathTest {
         assertTrue(path.matches("glob:/*/myproject"));
         assertTrue(path.matches("glob:/*/*project"));
         assertTrue(path.matches("glob:/*/*project/**.html"));
+        assertTrue(path.matches("glob:/**/myproject"));
+        assertTrue(path.matches("glob:/**/myproject/*.jsp"));
+        
+        // TODO this should be assertTrue?? as per SLING-6350
+        assertFalse(path.matches("glob:/**"));
+        
+        // TODO this should be assertTrue?? as per SLING-6350
+        assertFalse(path.matches("glob:/**/*.jsp"));
     }
 
     @Test public void testIllegalArgumentException() {
