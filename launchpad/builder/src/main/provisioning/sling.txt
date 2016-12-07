@@ -144,9 +144,27 @@
     org.apache.sling.commons.log.file="logs/request.log"
     org.apache.sling.commons.log.level="info"
 
-  # whitelist composum bundles
-  org.apache.sling.jcr.base.internal.LoginAdminWhitelist
-    whitelist.bundles.additional=["com.composum.core.commons"]
+  # TODO: remove bundles as their dependency on admin login is fixed, see SLING-5355 for linked issues
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling
+    whitelist.name="sling"
+    whitelist.bundles=[
+      "org.apache.sling.discovery.commons",\
+      "org.apache.sling.discovery.base",\
+      "org.apache.sling.discovery.oak",\
+      "org.apache.sling.extensions.webconsolesecurityprovider",\
+      "org.apache.sling.i18n",\
+      "org.apache.sling.jcr.base",\
+      "org.apache.sling.jcr.contentloader",\
+      "org.apache.sling.jcr.davex",\
+      "org.apache.sling.jcr.jackrabbit.usermanager",\
+      "org.apache.sling.jcr.oak.server",\
+      "org.apache.sling.jcr.repoinit",\
+      "org.apache.sling.jcr.resource",\
+      "org.apache.sling.jcr.webconsole",\
+      "org.apache.sling.resourceresolver",\
+      "org.apache.sling.servlets.post",\
+      "org.apache.sling.servlets.resolver",\
+    ]
 
   # WebDAV servlet requires config now
   org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet
