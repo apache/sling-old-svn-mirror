@@ -18,8 +18,8 @@
  */
 package org.apache.sling.jcr.base.internal;
 
-import java.util.Arrays;
-import java.util.TreeSet;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.apache.sling.jcr.api.SlingRepository;
@@ -28,6 +28,10 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,9 +59,34 @@ public class LoginAdminWhitelist {
 
     private volatile ConfigurationState config;
 
-    @Activate @Modified
+    // for backwards compatibility only
+    private volatile WhitelistFragment defaultFragment;
+
+    // for backwards compatibility only
+    private volatile WhitelistFragment additionalFragment;
+
+    private final List<WhitelistFragment> whitelistFragments = new CopyOnWriteArrayList<>();
+
+    @Reference(
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            policyOption = ReferencePolicyOption.GREEDY
+    ) @SuppressWarnings("unused")
+    void bindWhitelistFragment(WhitelistFragment fragment) {
+        whitelistFragments.add(fragment);
+        LOG.info("WhitelistFragment added '{}'", fragment);
+    }
+
+    @SuppressWarnings("unused")
+    void unbindWhitelistFragment(WhitelistFragment fragment) {
+        whitelistFragments.remove(fragment);
+        LOG.info("WhitelistFragment removed '{}'", fragment);
+    }
+
+    @Activate @Modified @SuppressWarnings("unused")
     void configure(LoginAdminWhitelistConfiguration configuration) {
         this.config = new ConfigurationState(configuration);
+        backwardsCompatibility(configuration);
     }
 
     public boolean allowLoginAdministrative(Bundle b) {
@@ -72,36 +101,37 @@ public class LoginAdminWhitelist {
         }
 
         final String bsn = b.getSymbolicName();
+
         if(localConfig.whitelistRegexp != null && localConfig.whitelistRegexp.matcher(bsn).matches()) {
             LOG.debug("{} is whitelisted to use loginAdministrative, by regexp", bsn);
             return true;
-        } else if(localConfig.whitelistedBsn.contains(bsn)) {
-            LOG.debug("{} is whitelisted to use loginAdministrative, by explicit whitelist", bsn);
-            return true;
         }
+
+        for (final WhitelistFragment fragment : whitelistFragments) {
+            if (fragment.allows(bsn)) {
+                LOG.debug("{} is whitelisted to use loginAdministrative, by whitelist fragment '{}'",
+                        bsn, fragment);
+                return true;
+            }
+        }
+
         LOG.debug("{} is not whitelisted to use loginAdministrative", bsn);
         return false;
     }
 
     // encapsulate configuration state for atomic configuration updates
     private static class ConfigurationState {
-        private final TreeSet<String> whitelistedBsn;
-        private final Pattern whitelistRegexp;
+
         private final boolean bypassWhitelist;
 
-        private ConfigurationState(final LoginAdminWhitelistConfiguration config) {
-            whitelistedBsn = new TreeSet<String>();
-            if (config.whitelist_bundles_default() != null) { // null check due to FELIX-5404
-                whitelistedBsn.addAll(Arrays.asList(config.whitelist_bundles_default()));
-            }
-            if (config.whitelist_bundles_additional() != null) {
-                whitelistedBsn.addAll(Arrays.asList(config.whitelist_bundles_additional()));
-            }
+        private final Pattern whitelistRegexp;
 
+        private ConfigurationState(final LoginAdminWhitelistConfiguration config) {
             final String regexp = config.whitelist_bundles_regexp();
             if(regexp.trim().length() > 0) {
                 whitelistRegexp = Pattern.compile(regexp);
-                LOG.warn("A whitelist.bundles.regexp is configured, this is NOT RECOMMENDED for production: {}", whitelistRegexp);
+                LOG.warn("A whitelist.bundles.regexp is configured, this is NOT RECOMMENDED for production: {}",
+                        whitelistRegexp);
             } else {
                 whitelistRegexp = null;
             }
@@ -112,9 +142,30 @@ public class LoginAdminWhitelist {
                 LOG.warn("All bundles are allowed to use loginAdministrative due to the 'bypass whitelist' " +
                         "configuration of this service. This is NOT RECOMMENDED, for security reasons."
                 );
-            } else {
-                LOG.info("bypassWhitelist=false, whitelisted BSNs({})={}", whitelistedBsn.size(), whitelistedBsn);
             }
+        }
+    }
+
+    @SuppressWarnings("deprecated")
+    private void backwardsCompatibility(final LoginAdminWhitelistConfiguration configuration) {
+        if (defaultFragment != null) {
+            unbindWhitelistFragment(defaultFragment);
+        }
+        if (additionalFragment != null) {
+            unbindWhitelistFragment(additionalFragment);
+        }
+        final String[] defaultBsns = configuration.whitelist_bundles_default();
+        if (defaultBsns != null && defaultBsns.length != 0) {
+            LOG.warn("Using deprecated configuration property 'whitelist.bundles.default'");
+            defaultFragment = new WhitelistFragment("deprecated-whitelist.bundles.default", defaultBsns);
+            bindWhitelistFragment(defaultFragment);
+        }
+
+        final String[] additionalBsns = configuration.whitelist_bundles_additional();
+        if (additionalBsns != null && additionalBsns.length != 0) {
+            LOG.warn("Using deprecated configuration property 'whitelist.bundles.additional'");
+            additionalFragment = new WhitelistFragment("deprecated-whitelist.bundles.additional", additionalBsns);
+            bindWhitelistFragment(additionalFragment);
         }
     }
 }

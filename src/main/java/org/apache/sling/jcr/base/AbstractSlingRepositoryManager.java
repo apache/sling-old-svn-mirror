@@ -106,8 +106,6 @@ public abstract class AbstractSlingRepositoryManager {
 
     private volatile ServiceTracker<LoginAdminWhitelist, LoginAdminWhitelist> whitelistTracker;
 
-    private volatile LoginAdminWhitelist whitelist;
-
     private final Object repoInitLock = new Object();
 
     /**
@@ -159,7 +157,7 @@ public abstract class AbstractSlingRepositoryManager {
      *         to use {@code loginAdministrative}.
      */
     protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
-        return whitelist.allowLoginAdministrative(bundle);
+        return whitelistTracker.getService().allowLoginAdministrative(bundle);
     }
 
     /**
@@ -426,9 +424,11 @@ public abstract class AbstractSlingRepositoryManager {
             whitelistTracker = new ServiceTracker<LoginAdminWhitelist, LoginAdminWhitelist>(bundleContext, LoginAdminWhitelist.class, null) {
                 @Override
                 public LoginAdminWhitelist addingService(final ServiceReference<LoginAdminWhitelist> reference) {
-                    whitelist = bundleContext.getService(reference);
-                    waitForWhitelist.countDown();
-                    return whitelist;
+                    try {
+                        return super.addingService(reference);
+                    } finally {
+                        waitForWhitelist.countDown();
+                    }
                 }
             };
             whitelistTracker.open();
@@ -588,7 +588,6 @@ public abstract class AbstractSlingRepositoryManager {
         }
 
         if (whitelistTracker != null) {
-            whitelist = null;
             whitelistTracker.close();
             whitelistTracker = null;
         }

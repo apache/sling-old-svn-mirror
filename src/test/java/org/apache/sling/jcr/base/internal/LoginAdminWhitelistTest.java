@@ -35,8 +35,6 @@ import org.osgi.service.cm.ConfigurationException;
 
 public class LoginAdminWhitelistTest {
 
-    private static final String TYPICAL_DEFAULT_ALLOWED_BSN = "org.apache.sling.jcr.base";
-
     private LoginAdminWhitelist whitelist;
 
     @Before
@@ -58,22 +56,6 @@ public class LoginAdminWhitelistTest {
         }
         return result;
     }
- 
-    @Test
-    public void testDefaultConfig() throws ConfigurationException {
-        final LoginAdminWhitelistConfiguration config = config(null, null, null, null);
-        whitelist.configure(config);
-
-        for(String bsn : config.whitelist_bundles_default()) {
-            assertAdminLogin(bsn, true);
-        }
-        
-        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, true);
-        
-        for(String bsn : randomBsn()) {
-            assertAdminLogin(bsn, false);
-        }
-    }
 
     @Test
     public void testBypassWhitelist() throws ConfigurationException {
@@ -90,12 +72,13 @@ public class LoginAdminWhitelistTest {
                 "bundle1", "bundle2"
         };
         whitelist.configure(config(null, null, allowed, null));
-        
-        assertAdminLogin("bundle1", true);
-        assertAdminLogin("bundle2", true);
+
         assertAdminLogin("foo.1.bar", false);
-        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, false);
-        
+
+        for(String bsn : allowed) {
+            assertAdminLogin(bsn, true);
+        }
+
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, false);
         }
@@ -108,16 +91,13 @@ public class LoginAdminWhitelistTest {
         };
         final LoginAdminWhitelistConfiguration config = config(null, null, null, allowed);
         whitelist.configure(config);
-        
-        assertAdminLogin("bundle5", true);
-        assertAdminLogin("bundle6", true);
-        assertAdminLogin("foo.1.bar", false);
-        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, true);
 
-        for(String bsn : config.whitelist_bundles_default()) {
+        assertAdminLogin("foo.1.bar", false);
+
+        for(String bsn : allowed) {
             assertAdminLogin(bsn, true);
         }
-        
+
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, false);
         }
@@ -130,7 +110,6 @@ public class LoginAdminWhitelistTest {
         assertAdminLogin("defB", true);
         assertAdminLogin("addB", true);
         assertAdminLogin("foo.1.bar", false);
-        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, false);
         
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, false);
@@ -143,17 +122,55 @@ public class LoginAdminWhitelistTest {
                 "bundle3", "bundle4"
         };
         whitelist.configure(config(null, "foo.*bar", allowed, null));
-        
-        assertAdminLogin("bundle3", true);
-        assertAdminLogin("bundle4", true);
+
         assertAdminLogin("foo.2.bar", true);
         assertAdminLogin("foo.somethingElse.bar", true);
-        assertAdminLogin(TYPICAL_DEFAULT_ALLOWED_BSN, false);
+
+        for(String bsn : allowed) {
+            assertAdminLogin(bsn, true);
+        }
         
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, false);
         }
     }
+
+
+    @Test
+    public void testWhitelistFragment() throws ConfigurationException {
+        final String [] allowed1 = randomBsn().toArray(new String[0]);
+        final String [] allowed2 = randomBsn().toArray(new String[0]);
+
+        final WhitelistFragment testFragment1 = new WhitelistFragment("test1", allowed1);
+        final WhitelistFragment testFragment2 = new WhitelistFragment("test2", allowed2);
+
+        whitelist.configure(config(null, null, null, null));
+        whitelist.bindWhitelistFragment(testFragment1);
+        whitelist.bindWhitelistFragment(testFragment2);
+
+        for(String bsn : allowed1) {
+            assertAdminLogin(bsn, true);
+        }
+
+        for(String bsn : allowed2) {
+            assertAdminLogin(bsn, true);
+        }
+
+        for(String bsn : randomBsn()) {
+            assertAdminLogin(bsn, false);
+        }
+
+        whitelist.unbindWhitelistFragment(testFragment1);
+
+        for(String bsn : allowed1) {
+            assertAdminLogin(bsn, false);
+        }
+
+        for(String bsn : allowed2) {
+            assertAdminLogin(bsn, true);
+        }
+    }
+
 
     private LoginAdminWhitelistConfiguration config(final Boolean bypass, final String regexp, final String[] defaultBSNs, final String[] additionalBSNs) throws ConfigurationException {
         final Hashtable<String, Object> props = new Hashtable<>();

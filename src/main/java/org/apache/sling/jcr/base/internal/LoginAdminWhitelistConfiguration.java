@@ -27,10 +27,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 )
 @interface LoginAdminWhitelistConfiguration {
 
-    /** Need to allow for bypassing the whitelist, for backwards
-     *  compatibility with previous Sling versions which didn't
-     *  implement it. Setting this to true is not recommended
-     *  and logged as a warning.
+    /**
+     * Need to allow for bypassing the whitelist, for backwards
+     * compatibility with previous Sling versions which didn't
+     * implement it. Setting this to true is not recommended
+     * and logged as a warning.
      */
     @AttributeDefinition(
         name = "Bypass the whitelist",
@@ -40,41 +41,35 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     )
     boolean whitelist_bypass() default false;
 
-    @AttributeDefinition(
-        name = "Whitelist regexp",
-        description = "Regular expression for bundle symbolic names for which loginAdministrative() " +
-                      "is allowed. NOT recommended for production use, but useful for testing with " +
-                      "generated bundles."
-    )
+    /**
+     * Regular expression for bundle symbolic names for which loginAdministrative()
+     * is allowed. NOT recommended for production use, but useful for testing with
+     * generated bundles.
+     * <br>
+     * Note that this property is hidden in order not to advertise its presence,
+     * because it is intended only for testing purposes. Specifically for use-cases
+     * like Pax-Exam, where bundles are generated on the fly and the bundle symbolic
+     * name cannot be predicted, but follows a predictable pattern.
+     *
+     * @return The configured regular exression.
+     */
     String whitelist_bundles_regexp() default "";
 
-    @AttributeDefinition(
-        name = "Default whitelisted BSNs",
-        description = "Default list of bundle symbolic names for which loginAdministrative() is allowed."
-    )
-    String[] whitelist_bundles_default() default {
-            // TODO: remove bundles as their dependency on admin login is fixed, see SLING-5355 for linked issues
-            "org.apache.sling.discovery.commons",
-            "org.apache.sling.discovery.base",
-            "org.apache.sling.discovery.oak",
-            "org.apache.sling.extensions.webconsolesecurityprovider",
-            "org.apache.sling.i18n",
-            "org.apache.sling.jcr.base",
-            "org.apache.sling.jcr.contentloader",
-            "org.apache.sling.jcr.davex",
-            "org.apache.sling.jcr.jackrabbit.usermanager",
-            "org.apache.sling.jcr.oak.server",
-            "org.apache.sling.jcr.repoinit",
-            "org.apache.sling.jcr.resource",
-            "org.apache.sling.jcr.webconsole",
-            "org.apache.sling.resourceresolver",
-            "org.apache.sling.servlets.post", // remove when 2.3.16 is released
-            "org.apache.sling.servlets.resolver"
-    };
+    /**
+     * Default list of bundle symbolic names for which loginAdministrative() is allowed.
+     *
+     * @return The default whitelisted BSNs
+     * @deprecated use {@link WhitelistFragment} configurations instead
+     */
+    @Deprecated
+    String[] whitelist_bundles_default() default {};
 
-    @AttributeDefinition(
-        name = "Additional whitelisted BSNs",
-        description = "Additional list of bundle symbolic names for which loginAdministrative() is allowed."
-    )
+    /**
+     * Additional list of bundle symbolic names for which loginAdministrative() is allowed.
+     *
+     * @return Additional whitelisted BSNs
+     * @deprecated use {@link WhitelistFragment} configurations instead
+     */
+    @Deprecated
     String[] whitelist_bundles_additional() default {};
 }
