@@ -48,6 +48,7 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     
     private static final String BUCKET = "sling:test";
     private static final Collection<String> BUCKETS = Collections.singleton(BUCKET);
+    private static final String PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM = "custom:configCollectionInherit";
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -61,7 +62,8 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
         context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
-        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
+        underTest = context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy(),
+                "configCollectionInheritancePropertyNames", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM);
 
         // content resources that form a deeper hierarchy
         context.build()
@@ -136,8 +138,8 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/conf/brand1/tenant1/region1/site1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("site1")
             .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("region1")
             .resource("/conf/brand1/tenant1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("tenant1")
-            .resource("/conf/brand1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("brand1")
-            .resource("/conf/global/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("confGlobal")
+            .resource("/conf/brand1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM, true).resource("brand1")
+            .resource("/conf/global/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM, true).resource("confGlobal")
             .resource("/apps/conf/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("appsGlobal")
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal1")
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal2");
@@ -169,7 +171,7 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
                 .siblingsMode()
                 .resource("item1")
                 .resource("item2")
-            .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true)
+            .resource("/conf/brand1/tenant1/region1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM, true)
                 .siblingsMode()
                 .resource("item1")
                 .resource("item3")
@@ -207,9 +209,9 @@ public class DefaultConfigurationResourceResolvingStrategyHierarchyTest {
             .resource("/content/level1", PROPERTY_CONFIG_REF, "/conf/a1/a2")
             .resource("/content/level1/level2", PROPERTY_CONFIG_REF, "/conf/b1/b2")
             .resource("/conf/a1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("a1")
-            .resource("/conf/a1/a2/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("a1_a2")
+            .resource("/conf/a1/a2/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM, true).resource("a1_a2")
             .resource("/conf/b1/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("b1")
-            .resource("/conf/b1/b2/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("b1_b2")
+            .resource("/conf/b1/b2/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT_CUSTOM, true).resource("b1_b2")
             .resource("/conf/global/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("confGlobal")
             .resource("/apps/conf/sling:test/cfgCol", PROPERTY_CONFIG_COLLECTION_INHERIT, true).resource("appsGlobal")
             .resource("/libs/conf/sling:test/cfgCol/libsGlobal");

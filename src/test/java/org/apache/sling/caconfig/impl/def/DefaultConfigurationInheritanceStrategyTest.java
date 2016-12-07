@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,18 +35,17 @@ import com.google.common.collect.ImmutableList;
 
 public class DefaultConfigurationInheritanceStrategyTest {
     
+    private static final String PROPERTY_CONFIG_PROPERTY_INHERIT_CUSTOM = "custom:configPropertyInherit";
+    
     @Rule
     public SlingContext context = new SlingContext();
     
     private ConfigurationInheritanceStrategy underTest;
     
-    @Before
-    public void setUp() {
-        underTest = context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
-    }
-
     @Test
     public void testWithoutPropertyMerging() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
+
         Iterator<Resource> resources = ImmutableList.of(
                 context.create().resource("/conf/resource1", "prop1", "value1a", "prop2", "value2a"),
                 context.create().resource("/conf/resource2", "prop2", "value2b", "prop3", "value3b"),
@@ -65,9 +63,11 @@ public class DefaultConfigurationInheritanceStrategyTest {
 
     @Test
     public void testWithPropertyMerging() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy(),
+                "configPropertyInheritancePropertyNames", PROPERTY_CONFIG_PROPERTY_INHERIT_CUSTOM);
         Iterator<Resource> resources = ImmutableList.of(
                 context.create().resource("/conf/resource1", "prop1", "value1a", "prop2", "value2a", PROPERTY_CONFIG_PROPERTY_INHERIT, true),
-                context.create().resource("/conf/resource2", "prop2", "value2b", "prop3", "value3b", PROPERTY_CONFIG_PROPERTY_INHERIT, true),
+                context.create().resource("/conf/resource2", "prop2", "value2b", "prop3", "value3b", PROPERTY_CONFIG_PROPERTY_INHERIT_CUSTOM, true),
                 context.create().resource("/conf/resource3", "prop4", "value4b")
                 ).iterator();
         
@@ -82,6 +82,8 @@ public class DefaultConfigurationInheritanceStrategyTest {
 
     @Test
     public void testWithPartialPropertyMerging() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
+
         Iterator<Resource> resources = ImmutableList.of(
                 context.create().resource("/conf/resource1", "prop1", "value1a", "prop2", "value2a", PROPERTY_CONFIG_PROPERTY_INHERIT, true),
                 context.create().resource("/conf/resource2", "prop2", "value2b", "prop3", "value3b"),
@@ -95,6 +97,21 @@ public class DefaultConfigurationInheritanceStrategyTest {
         assertEquals("value2a", props.get("prop2", String.class));
         assertEquals("value3b", props.get("prop3", String.class));
         assertNull(props.get("prop4", String.class));        
+    }
+
+    @Test
+    public void testDisabled() {
+        underTest = context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy(),
+                "enabled", false);
+
+        Iterator<Resource> resources = ImmutableList.of(
+                context.create().resource("/conf/resource1", "prop1", "value1a", "prop2", "value2a", PROPERTY_CONFIG_PROPERTY_INHERIT, true),
+                context.create().resource("/conf/resource2", "prop2", "value2b", "prop3", "value3b", PROPERTY_CONFIG_PROPERTY_INHERIT, true),
+                context.create().resource("/conf/resource3", "prop4", "value4b")
+                ).iterator();
+        
+        Resource inherited = underTest.getResource(resources);
+        assertNull(inherited);
     }
 
 }
