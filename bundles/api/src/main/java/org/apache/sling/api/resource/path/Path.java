@@ -111,9 +111,11 @@ public class Path implements Comparable<Path> {
     public boolean matches(final String otherPath) {
         if ( otherPath.startsWith(GLOB_PREFIX) ) {
             if ( this.isPattern ) {
-                // both are patterns, then they must be equal
+                // both are patterns, then they must be equal.
+                // need to compare Pattern.pattern() as that class does
+                // not implement a semantic equals(...) method
                 final Path oPath = new Path(otherPath);
-                return this.regexPattern.equals(oPath.regexPattern);
+                return this.regexPattern.pattern().equals(oPath.regexPattern.pattern());
             }
 
             // this is path, provided argument is a pattern

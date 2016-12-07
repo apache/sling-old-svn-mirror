@@ -106,4 +106,9 @@ public class PathTest {
         assertTrue(path.matches("/libs/foo"));
         assertFalse(path.matches("/lib"));
     }
+    @Test public void testGlobPatternsMatch() {
+        final Path glob = new Path("glob:/*/foo");
+        assertTrue(glob.matches("glob:/*/foo"));
+        assertFalse(glob.matches("glob:/*/**/foo"));
+    }
 }
