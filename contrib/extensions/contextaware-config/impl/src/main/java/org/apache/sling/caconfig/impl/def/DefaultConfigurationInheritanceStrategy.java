@@ -27,7 +27,9 @@ import java.util.Map;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.impl.ConfigurationResourceWrapper;
+import org.apache.sling.caconfig.resource.impl.util.PropertyUtil;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
@@ -52,8 +54,18 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
     
     }
 
+    private Config config;
+
+    @Activate
+    private void activate(final Config config) {
+        this.config = config;
+    }
+    
     @Override
     public Resource getResource(Iterator<Resource> configResources) {
+        if (!config.enabled()) {
+            return null;
+        }
         if (!configResources.hasNext()) {
             return null;
         }
@@ -66,7 +78,8 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
     }
     
     private boolean isPropertyInheritance(Resource resource) {
-        return resource.getValueMap().get(PROPERTY_CONFIG_PROPERTY_INHERIT, false);
+        return PropertyUtil.getBooleanValueAdditionalKeys(resource.getValueMap(), PROPERTY_CONFIG_PROPERTY_INHERIT,
+                config.configPropertyInheritancePropertyNames());
     }
     
     private Map<String,Object> getInheritedProperties(Map<String,Object> parentProps, Iterator<Resource> inheritanceChain) {
@@ -85,4 +98,3 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
     }
 
 }
- 

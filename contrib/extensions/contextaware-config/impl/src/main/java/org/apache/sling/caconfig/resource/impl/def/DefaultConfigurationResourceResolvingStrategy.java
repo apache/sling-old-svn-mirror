@@ -38,7 +38,6 @@ import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -48,6 +47,7 @@ import org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.PathParentExpandIterator;
+import org.apache.sling.caconfig.resource.impl.util.PropertyUtil;
 import org.apache.sling.caconfig.resource.spi.CollectionInheritanceDecider;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.spi.ContextResource;
@@ -376,7 +376,8 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
                 // check collection inheritance mode on current level - should we check on next-highest level as well?
                 final ValueMap valueMap = item.getValueMap();
-                inherit = getBooleanValue(valueMap, PROPERTY_CONFIG_COLLECTION_INHERIT, config.configCollectionInheritancePropertyNames());
+                inherit = PropertyUtil.getBooleanValueAdditionalKeys(valueMap, PROPERTY_CONFIG_COLLECTION_INHERIT,
+                        config.configCollectionInheritancePropertyNames());
                 if (!inherit) {
                     break;
                 }
@@ -445,19 +446,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     private boolean isValidResourceCollectionItem(Resource resource) {
         // do not include jcr:content nodes in resource collection list
         return !StringUtils.equals(resource.getName(), "jcr:content");
-    }
-
-    private boolean getBooleanValue(final ValueMap valueMap, final String key, final String[] additionalKeys) {
-        Boolean result = valueMap.get(key, Boolean.class);
-        if ( result == null && !ArrayUtils.isEmpty(additionalKeys) ) {
-            for(final String name : additionalKeys) {
-                result = valueMap.get(name, Boolean.class);
-                if ( result != null ) {
-                    break;
-                }
-            }
-        }
-        return result == null ? false : result.booleanValue();
     }
 
     @Override
