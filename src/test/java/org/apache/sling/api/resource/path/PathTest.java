@@ -74,6 +74,36 @@ public class PathTest {
         );
     }
 
+    @Test public void testSymmetry() {
+        final String glob = "glob:/apps/**/*.html";
+        
+        final String [] matching = {
+            "/apps/project/a.html", 
+            "/apps/project/1/a.html",
+            "/apps/project/1/2/a.html",
+            "/apps/project/1/2/3/4/5/6/7/8/9/a.html"
+        };
+        
+        final String [] nonMatching = {
+            "/apps/a.html",
+            "/apps/project/a.html/b"
+        };
+        
+        assertMatch(new Path(glob), matching);
+        assertNoMatch(new Path(glob), nonMatching);
+        
+        // TODO this would demonstrate that matching is symmetric, but it's not
+//        for(String s : matching) {
+//            final Path p = new Path(s);
+//            assertMatch(p, glob);
+//        }
+//        
+//        for(String s : nonMatching) {
+//            final Path p = new Path(s);
+//            assertNoMatch(p, glob);
+//        }
+    }
+    
     @Test public void testPatternMatchingA() {
         final Path p = new Path("glob:/apps/**/*.html");
         
