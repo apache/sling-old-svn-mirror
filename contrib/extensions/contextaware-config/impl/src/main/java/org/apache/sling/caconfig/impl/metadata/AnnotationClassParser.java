@@ -147,12 +147,17 @@ public final class AnnotationClassParser {
     }
     
     private static Collection<PropertyMetadata<?>> buildConfigurationMetadata_PropertyMetadata(Class<?> clazz) {
+        // sort properties by order number, or alternatively by label, name
         SortedSet<PropertyMetadata<?>> propertyMetadataSet = new TreeSet<>(new Comparator<PropertyMetadata<?>>() {
             @Override
             public int compare(PropertyMetadata<?> o1, PropertyMetadata<?> o2) {
-              String sort1 = StringUtils.defaultString(o1.getLabel(), o1.getName());
-              String sort2 = StringUtils.defaultString(o2.getLabel(), o2.getName());
-              return sort1.compareTo(sort2);
+                int compare = Integer.compare(o1.getOrder(), o2.getOrder());
+                if (compare == 0) {
+                    String sort1 = StringUtils.defaultString(o1.getLabel(), o1.getName());
+                    String sort2 = StringUtils.defaultString(o2.getLabel(), o2.getName());
+                    compare = sort1.compareTo(sort2);
+                }
+                return compare;
             }
           });
         Method[] propertyMethods = clazz.getDeclaredMethods();
@@ -187,7 +192,8 @@ public final class AnnotationClassParser {
         if (propertyAnnotation != null) {            
             propertyMetadata.label(emptyToNull(propertyAnnotation.label()))
                 .description(emptyToNull(propertyAnnotation.description()))
-                .properties(propsArrayToMap(propertyAnnotation.property()));
+                .properties(propsArrayToMap(propertyAnnotation.property()))
+                .order(propertyAnnotation.order());
         }
         else {
             Map<String,String> emptyMap = Collections.emptyMap();
