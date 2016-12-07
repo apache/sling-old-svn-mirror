@@ -64,14 +64,12 @@ public class PathTest {
 
         final Path path_3 = new Path("glob:/a/m-p/$structure/**/[cmp]/*.html");
         assertTrue(path_3.matches("/a/m-p/$structure/1/2/3/[cmp]/test.html"));
+        assertTrue(path_3.matches("/a/m-p/$structure/1/2/3/4/5/6/[cmp]/test.html"));
         assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/test.html"));
         assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/te-[s]t$.html"));
         assertTrue(path_3.matches("/a/m-p/$structure/1/[cmp]/.html"));
         assertFalse(path_3.matches("/a/m-p/$structure/1/[cmp]/html"));
         assertFalse(path_3.matches("/a/m-p/$structure/[cmp]/test.html"));
-        
-        // TODO this should be assertTrue?? as per SLING-6350
-        assertFalse(path_3.matches("/a/m-p/$structure/1/2/3/4/5/6[cmp]/test.html"));
     }
 
     @Test public void testPatternRootMatching() {
