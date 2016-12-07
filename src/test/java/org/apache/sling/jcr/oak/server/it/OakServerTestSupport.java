@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.oak.server.it;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,15 +42,18 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.BundleContext;
 
+import static java.util.Arrays.asList;
 import static org.apache.sling.testing.paxexam.SlingOptions.jackrabbitSling;
 import static org.apache.sling.testing.paxexam.SlingOptions.scr;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingJcr;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingJcrRepoinit;
 import static org.apache.sling.testing.paxexam.SlingOptions.tikaSling;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class OakServerTestSupport extends TestSupport {
@@ -170,7 +174,6 @@ public abstract class OakServerTestSupport extends TestSupport {
         final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
         final String slingHome = String.format("%s/sling", workingDirectory());
         final String repositoryHome = String.format("%s/repository", slingHome);
-        final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             scr(),
             slingJcr(),
@@ -184,9 +187,9 @@ public abstract class OakServerTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(SlingOptions.versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
             // repoinit (temp)
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.1.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.1.1-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.4.4"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.1.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.1.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.7.0"),
             newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
@@ -197,7 +200,17 @@ public abstract class OakServerTestSupport extends TestSupport {
             newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
                 .put("references", new String[]{repoinit})
                 .asOption(),
-            getWhitelistRegexpOption()
+            getWhitelistRegexpOption(),
+            // To generate the list of whitelisted bundles after a failed test-run:
+            // grep -R 'NOT white' target/failsafe-reports/ | awk -F': Bundle ' '{print substr($2, 1, index($2, " is NOT "))}' | sort -u
+            factoryConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment")
+                .put("whitelist.bundles", new String[]{
+                    "org.apache.sling.jcr.oak.server",
+                    "org.apache.sling.jcr.contentloader",
+                    "org.apache.sling.jcr.resource",
+                    "org.apache.sling.resourceresolver"
+                })
+                .asOption()
         );
     }
 
