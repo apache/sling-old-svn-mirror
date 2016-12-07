@@ -37,7 +37,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @Designate(ocd=DefaultConfigurationInheritanceStrategy.Config.class)
 public class DefaultConfigurationInheritanceStrategy implements ConfigurationInheritanceStrategy {
 
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Inheritance Strategy",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Default Inheritance Strategy",
             description="Standardized resource inheritance for configurations.")
     public static @interface Config {
     

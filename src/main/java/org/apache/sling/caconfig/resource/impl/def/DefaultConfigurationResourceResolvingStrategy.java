@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 @Designate(ocd=DefaultConfigurationResourceResolvingStrategy.Config.class)
 public class DefaultConfigurationResourceResolvingStrategy implements ConfigurationResourceResolvingStrategy {
 
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Resource Resolving Strategy",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Default Resource Resolving Strategy",
                            description="Standardized access to configurations in the resource tree.")
     public static @interface Config {
 

@@ -48,7 +48,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @Designate(ocd=DefaultConfigurationPersistenceStrategy.Config.class)
 public class DefaultConfigurationPersistenceStrategy implements ConfigurationPersistenceStrategy {
 
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Configuration Resource Persistence Strategy",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Default Resource Persistence Strategy",
             description="Directly uses configuration resources for storing configuration data.")
     static @interface Config {
         
