@@ -45,4 +45,9 @@ public @interface Property {
      */
     String[] property() default {};
     
+    /**
+     * @return Number to control property order in configuration editor.
+     */
+    int order() default 0;
+    
 }
