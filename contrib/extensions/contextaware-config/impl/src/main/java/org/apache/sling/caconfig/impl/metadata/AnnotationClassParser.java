@@ -19,12 +19,13 @@
 package org.apache.sling.caconfig.impl.metadata;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -146,13 +147,20 @@ public final class AnnotationClassParser {
     }
     
     private static Collection<PropertyMetadata<?>> buildConfigurationMetadata_PropertyMetadata(Class<?> clazz) {
-        List<PropertyMetadata<?>> propertyMetadataList = new ArrayList<>();
+        SortedSet<PropertyMetadata<?>> propertyMetadataSet = new TreeSet<>(new Comparator<PropertyMetadata<?>>() {
+            @Override
+            public int compare(PropertyMetadata<?> o1, PropertyMetadata<?> o2) {
+              String sort1 = StringUtils.defaultString(o1.getLabel(), o1.getName());
+              String sort2 = StringUtils.defaultString(o2.getLabel(), o2.getName());
+              return sort1.compareTo(sort2);
+            }
+          });
         Method[] propertyMethods = clazz.getDeclaredMethods();
         for (Method propertyMethod : propertyMethods) {
             PropertyMetadata<?> propertyMetadata = buildPropertyMetadata(propertyMethod, propertyMethod.getReturnType());
-            propertyMetadataList.add(propertyMetadata);
+            propertyMetadataSet.add(propertyMetadata);
         }
-        return propertyMetadataList;
+        return propertyMetadataSet;
     }
     
     @SuppressWarnings("unchecked")
