@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jcr.Repository;
 
@@ -326,6 +327,15 @@ public abstract class AbstractSlingRepositoryManager {
     protected final boolean start(final BundleContext bundleContext, final String defaultWorkspace,
                                   final boolean disableLoginAdministrative) {
         start(bundleContext, new Config(defaultWorkspace, disableLoginAdministrative));
+        long end = System.currentTimeMillis() + 5000; // wait up to 5 seconds for repository registration
+        while (!isRepositoryServiceRegistered() && end > System.currentTimeMillis()) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
         return isRepositoryServiceRegistered();
     }
 
@@ -434,24 +444,20 @@ public abstract class AbstractSlingRepositoryManager {
             whitelistTracker.open();
         }
 
-        if (waitForWhitelist.getCount() > 0) {
-            // start repository asynchronously to allow LoginAdminWhitelist to become available
-            // NOTE: making this conditional allows tests to register a mock whitelist before
-            // activating the RepositoryManager, so they don't need to deal with async startup
-            new Thread("Apache Sling Repository Startup Thread") {
-                @Override
-                public void run() {
-                    try {
-                        waitForWhitelist.await();
-                        initializeAndRegisterRepositoryService();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException("Interrupted while waiting for LoginAdminWhitelist", e);
-                    }
+        // start repository asynchronously to allow LoginAdminWhitelist to become available
+        // NOTE: making this conditional allows tests to register a mock whitelist before
+        // activating the RepositoryManager, so they don't need to deal with async startup
+        new Thread("Apache Sling Repository Startup Thread") {
+            @Override
+            public void run() {
+                try {
+                    waitForWhitelist.await();
+                    initializeAndRegisterRepositoryService();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted while waiting for LoginAdminWhitelist", e);
                 }
-            }.start();
-        } else {
-            initializeAndRegisterRepositoryService();
-        }
+            }
+        }.start();
     }
 
     private boolean isRepositoryServiceRegistered() {
