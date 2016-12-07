@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.example.AllTypesConfig;
@@ -41,6 +42,7 @@ import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class AnnotationClassParserTest {
@@ -84,32 +86,26 @@ public class AnnotationClassParserTest {
         assertEquals(ImmutableMap.of("param1", "value1", "param2", "123"), metadata.getProperties());
         assertFalse(metadata.isCollection());
         
-        Collection<PropertyMetadata<?>> propertyMetadataList = metadata.getPropertyMetadata().values();
+        List<PropertyMetadata<?>> propertyMetadataList = ImmutableList.copyOf(metadata.getPropertyMetadata().values());
         assertEquals(3, propertyMetadataList.size());
         
-        for (PropertyMetadata<?> propertyMetadata : propertyMetadataList) {
-            if (StringUtils.equals(propertyMetadata.getName(), "stringParam")) {
-                assertEquals("String Param", propertyMetadata.getLabel());
-                assertEquals("Enter strings here.", propertyMetadata.getDescription());
-                assertEquals(ImmutableMap.of("p1", "v1"), propertyMetadata.getProperties());
-                assertNull(propertyMetadata.getDefaultValue());
-            }
-            else if (StringUtils.equals(propertyMetadata.getName(), "intParam")) {
-                assertEquals("Integer Param", propertyMetadata.getLabel());
-                assertNull(propertyMetadata.getDescription());
-                assertTrue(propertyMetadata.getProperties().isEmpty());
-                assertEquals(5, propertyMetadata.getDefaultValue());
-            }
-            else if (StringUtils.equals(propertyMetadata.getName(), "boolParam")) {
-                assertNull(propertyMetadata.getLabel());
-                assertNull(propertyMetadata.getDescription());
-                assertTrue(propertyMetadata.getProperties().isEmpty());
-                assertNull(propertyMetadata.getDefaultValue());
-            }
-            else {
-                fail("Unexpected property name: " + propertyMetadata.getName());
-            }
-        }
+        PropertyMetadata<?> stringParam = propertyMetadataList.get(0);
+        assertEquals("String Param", stringParam.getLabel());
+        assertEquals("Enter strings here.", stringParam.getDescription());
+        assertEquals(ImmutableMap.of("p1", "v1"), stringParam.getProperties());
+        assertNull(stringParam.getDefaultValue());
+
+        PropertyMetadata<?> intParam = propertyMetadataList.get(1);
+        assertEquals("Integer Param", intParam.getLabel());
+        assertNull(intParam.getDescription());
+        assertTrue(intParam.getProperties().isEmpty());
+        assertEquals(5, intParam.getDefaultValue());
+
+        PropertyMetadata<?> boolParam = propertyMetadataList.get(2);
+        assertNull(boolParam.getLabel());
+        assertNull(boolParam.getDescription());
+        assertTrue(boolParam.getProperties().isEmpty());
+        assertNull(boolParam.getDefaultValue());
     }
     
     @Test
