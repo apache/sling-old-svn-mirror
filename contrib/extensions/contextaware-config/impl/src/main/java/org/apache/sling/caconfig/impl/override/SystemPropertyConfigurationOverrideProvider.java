@@ -44,7 +44,7 @@ public final class SystemPropertyConfigurationOverrideProvider implements Config
      */
     public static final String SYSTEM_PROPERTY_PREFIX = "sling.caconfig.override.";
 
-    @ObjectClassDefinition(name = "Apache Sling Context-Aware System Property Configuration Override Provider",
+    @ObjectClassDefinition(name = "Apache Sling Context-Aware Configuration Override Provider: System Properties",
             description = "Allows to override configuration property values from system environment properties.")
     public static @interface Config {
 

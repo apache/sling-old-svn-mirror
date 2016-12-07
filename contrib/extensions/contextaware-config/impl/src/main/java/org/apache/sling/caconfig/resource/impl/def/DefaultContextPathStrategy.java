@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @Designate(ocd=DefaultContextPathStrategy.Config.class)
 public class DefaultContextPathStrategy implements ContextPathStrategy {
 
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Default Context Path Strategy",
+    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Default Context Path Strategy",
             description="Detects context path by existence of " + PROPERTY_CONFIG_REF + " properties.")
     public static @interface Config {
 
