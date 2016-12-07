@@ -19,7 +19,7 @@
 package org.apache.sling.caconfig.spi.metadata;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -47,7 +47,7 @@ public final class ConfigurationMetadata extends AbstractMetadata<ConfigurationM
     }
     
     private static Map<String,PropertyMetadata<?>> toMap(Collection<PropertyMetadata<?>> propertyMetadata) {
-        Map<String,PropertyMetadata<?>> map = new HashMap<>();
+        Map<String,PropertyMetadata<?>> map = new LinkedHashMap<>();
         for (PropertyMetadata<?> item : propertyMetadata) {
             if (map.containsKey(item.getName())) {
                 throw new IllegalArgumentException("Duplicate property name: " + item.getName());
