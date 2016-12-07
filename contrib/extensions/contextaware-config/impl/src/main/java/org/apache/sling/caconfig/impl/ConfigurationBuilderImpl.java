@@ -18,8 +18,6 @@
  */
 package org.apache.sling.caconfig.impl;
 
-import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_BUCKET_NAME;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +47,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
     private final ConfigurationInheritanceStrategy configurationInheritanceStrategy;
     private final ConfigurationOverrideManager configurationOverrideManager;
+    private final Collection<String> configBucketNames;
 
     private String configName;
 
@@ -57,13 +56,15 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy,
             final ConfigurationPersistenceStrategy configurationPersistenceStrategy,
             final ConfigurationInheritanceStrategy configurationInheritanceStrategy,
-            final ConfigurationOverrideManager configurationOverrideManager) {
+            final ConfigurationOverrideManager configurationOverrideManager,
+            final Collection<String> configBucketNames) {
         this.contentResource = resource;
         this.configurationResolver = configurationResolver;
         this.configurationResourceResolvingStrategy = configurationResourceResolvingStrategy;
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configurationInheritanceStrategy = configurationInheritanceStrategy;
         this.configurationOverrideManager = configurationOverrideManager;
+        this.configBucketNames = configBucketNames;
     }
 
     @Override
@@ -103,7 +104,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (this.contentResource != null) {
             validateConfigurationName(name);
             resourceInheritanceChain = this.configurationResourceResolvingStrategy
-                    .getResourceInheritanceChain(this.contentResource, CONFIGS_BUCKET_NAME, name);
+                    .getResourceInheritanceChain(this.contentResource, configBucketNames, name);
         }
         return convert(resourceInheritanceChain, clazz, converter, name, false);
     }
@@ -119,11 +120,14 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         if (this.contentResource != null) {
            validateConfigurationName(name);
            final Collection<T> result = new ArrayList<>();
-           for (final Iterator<Resource> resourceInheritanceChain : this.configurationResourceResolvingStrategy
-                   .getResourceCollectionInheritanceChain(this.contentResource, CONFIGS_BUCKET_NAME, name)) {
-               final T obj = convert(resourceInheritanceChain, clazz, converter, name, true);
-               if (obj != null) {
-                   result.add(obj);
+           Collection<Iterator<Resource>> resourceInheritanceChains = this.configurationResourceResolvingStrategy
+                   .getResourceCollectionInheritanceChain(this.contentResource, configBucketNames, name);;
+           if (resourceInheritanceChains != null) {
+               for (final Iterator<Resource> resourceInheritanceChain : resourceInheritanceChains) {
+                   final T obj = convert(resourceInheritanceChain, clazz, converter, name, true);
+                   if (obj != null) {
+                       result.add(obj);
+                   }
                }
            }
            return result;

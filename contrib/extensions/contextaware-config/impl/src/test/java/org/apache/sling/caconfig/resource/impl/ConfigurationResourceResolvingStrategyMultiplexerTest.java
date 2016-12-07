@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
@@ -48,6 +49,7 @@ import com.google.common.collect.Iterators;
 public class ConfigurationResourceResolvingStrategyMultiplexerTest {
 
     private static final String BUCKET = "sling:test";
+    private static final Collection<String> BUCKETS = Collections.singleton(BUCKET);
     
     @Rule
     public SlingContext context = new SlingContext();
@@ -86,11 +88,11 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     
     @Test
     public void testWithNoStrategies() {
-        assertNull(underTest.getResource(site1Page1, BUCKET, "test"));
-        assertNull(underTest.getResourceCollection(site1Page1, BUCKET, "feature"));
+        assertNull(underTest.getResource(site1Page1, BUCKETS, "test"));
+        assertNull(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"));
 
-        assertNull(underTest.getResourceInheritanceChain(site1Page1, BUCKET, "test"));
-        assertNull(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKET, "feature"));
+        assertNull(underTest.getResourceInheritanceChain(site1Page1, BUCKETS, "test"));
+        assertNull(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKETS, "feature"));
 
         assertNull(underTest.getResourcePath(site1Page1, BUCKET, "test"));
         assertNull(underTest.getResourceCollectionParentPath(site1Page1, BUCKET, "feature"));
@@ -100,14 +102,14 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     public void testWithDefaultStrategy() {
         context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
 
-        assertThat(underTest.getResource(site1Page1, BUCKET, "test"), ResourceMatchers.path("/conf/site1/sling:test/test"));
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+        assertThat(underTest.getResource(site1Page1, BUCKETS, "test"), ResourceMatchers.path("/conf/site1/sling:test/test"));
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
                 "/libs/conf/sling:test/feature/b"));
 
-        assertThat(first(underTest.getResourceInheritanceChain(site1Page1, BUCKET, "test")), ResourceMatchers.path("/conf/site1/sling:test/test"));
-        assertThat(first(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKET, "feature")), ResourceCollectionMatchers.paths( 
+        assertThat(first(underTest.getResourceInheritanceChain(site1Page1, BUCKETS, "test")), ResourceMatchers.path("/conf/site1/sling:test/test"));
+        assertThat(first(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKETS, "feature")), ResourceCollectionMatchers.paths( 
                 "/conf/site1/sling:test/feature/c",
                 "/apps/conf/sling:test/feature/a", 
                 "/libs/conf/sling:test/feature/b"));
@@ -122,21 +124,21 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         // strategy 1
         context.registerService(ConfigurationResourceResolvingStrategy.class, new ConfigurationResourceResolvingStrategy() {
             @Override
-            public Resource getResource(Resource resource, String bucketName, String configName) {
+            public Resource getResource(Resource resource, Collection<String> bucketNames, String configName) {
                 return context.resourceResolver().getResource("/conf/site1/sling:test/test");
             }
             @Override
-            public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
+            public Collection<Resource> getResourceCollection(Resource resource, Collection<String> bucketNames, String configName) {
                 return ImmutableList.copyOf(context.resourceResolver().getResource("/conf/site1/sling:test/feature").listChildren());
             }
             @Override
-            public Iterator<Resource> getResourceInheritanceChain(Resource resource, String bucketName, String configName) {
-                return Iterators.singletonIterator(getResource(resource, bucketName, configName));
+            public Iterator<Resource> getResourceInheritanceChain(Resource resource, Collection<String> bucketNames, String configName) {
+                return Iterators.singletonIterator(getResource(resource, bucketNames, configName));
             }
             @Override
             public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(Resource resource,
-                    String bucketName, String configName) {
-                return Collections2.transform(getResourceCollection(resource, bucketName, configName), new Function<Resource, Iterator<Resource>>() {
+                    Collection<String> bucketNames, String configName) {
+                return Collections2.transform(getResourceCollection(resource, bucketNames, configName), new Function<Resource, Iterator<Resource>>() {
                     @Override
                     public Iterator<Resource> apply(Resource input) {
                         return Iterators.singletonIterator(input);
@@ -156,21 +158,21 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
         // strategy 2
         context.registerService(ConfigurationResourceResolvingStrategy.class, new ConfigurationResourceResolvingStrategy() {
             @Override
-            public Resource getResource(Resource resource, String bucketName, String configName) {
+            public Resource getResource(Resource resource, Collection<String> bucketNames, String configName) {
                 return context.resourceResolver().getResource("/libs/conf/sling:test/test");
             }
             @Override
-            public Collection<Resource> getResourceCollection(Resource resource, String bucketName, String configName) {
+            public Collection<Resource> getResourceCollection(Resource resource, Collection<String> bucketNames, String configName) {
                 return ImmutableList.copyOf(context.resourceResolver().getResource("/libs/conf/sling:test/feature").listChildren());
             }
             @Override
-            public Iterator<Resource> getResourceInheritanceChain(Resource resource, String bucketName, String configName) {
-                return Iterators.singletonIterator(getResource(resource, bucketName, configName));
+            public Iterator<Resource> getResourceInheritanceChain(Resource resource, Collection<String> bucketNames, String configName) {
+                return Iterators.singletonIterator(getResource(resource, bucketNames, configName));
             }
             @Override
             public Collection<Iterator<Resource>> getResourceCollectionInheritanceChain(Resource resource,
-                    String bucketName, String configName) {
-                return Collections2.transform(getResourceCollection(resource, bucketName, configName), new Function<Resource, Iterator<Resource>>() {
+                    Collection<String> bucketNames, String configName) {
+                return Collections2.transform(getResourceCollection(resource, bucketNames, configName), new Function<Resource, Iterator<Resource>>() {
                     @Override
                     public Iterator<Resource> apply(Resource input) {
                         return Iterators.singletonIterator(input);
@@ -187,12 +189,12 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
             }
         }, Constants.SERVICE_RANKING, 1000);
         
-        assertThat(underTest.getResource(site1Page1, BUCKET, "test"), ResourceMatchers.path("/conf/site1/sling:test/test"));
-        assertThat(underTest.getResourceCollection(site1Page1, BUCKET, "feature"), ResourceCollectionMatchers.paths( 
+        assertThat(underTest.getResource(site1Page1, BUCKETS, "test"), ResourceMatchers.path("/conf/site1/sling:test/test"));
+        assertThat(underTest.getResourceCollection(site1Page1, BUCKETS, "feature"), ResourceCollectionMatchers.paths( 
                 "/conf/site1/sling:test/feature/c"));
         
-        assertThat(first(underTest.getResourceInheritanceChain(site1Page1, BUCKET, "test")), ResourceMatchers.path("/conf/site1/sling:test/test"));
-        assertThat(first(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKET, "feature")), ResourceCollectionMatchers.paths( 
+        assertThat(first(underTest.getResourceInheritanceChain(site1Page1, BUCKETS, "test")), ResourceMatchers.path("/conf/site1/sling:test/test"));
+        assertThat(first(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKETS, "feature")), ResourceCollectionMatchers.paths( 
                 "/conf/site1/sling:test/feature/c"));
         
         assertEquals("/conf/site1/sling:test/test", underTest.getResourcePath(site1Page1, BUCKET, "test"));
@@ -209,7 +211,7 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     }
     
     private Collection<Resource> first(Collection<Iterator<Resource>> resources) {
-        return Collections2.transform(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKET, "feature"),
+        return Collections2.transform(underTest.getResourceCollectionInheritanceChain(site1Page1, BUCKETS, "feature"),
                 new Function<Iterator<Resource>, Resource>() {
                 @Override
                 public Resource apply(Iterator<Resource> input) {

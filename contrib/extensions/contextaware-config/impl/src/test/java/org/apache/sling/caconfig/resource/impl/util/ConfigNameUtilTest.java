@@ -22,7 +22,11 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
+
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class ConfigNameUtilTest {
 
@@ -33,11 +37,18 @@ public class ConfigNameUtilTest {
         assertTrue(ConfigNameUtil.isValid("a/b/c"));
         assertTrue(ConfigNameUtil.isValid("a/jcr:content/b/c"));
 
-        assertFalse(ConfigNameUtil.isValid(null));
+        assertTrue(ConfigNameUtil.isValid(ImmutableList.<String>of()));
+        assertTrue(ConfigNameUtil.isValid(ImmutableList.of("a")));
+        assertTrue(ConfigNameUtil.isValid(ImmutableList.of("a", "a/b", "a/b/c")));
+        
+        assertFalse(ConfigNameUtil.isValid((String)null));
         assertFalse(ConfigNameUtil.isValid(""));
         assertFalse(ConfigNameUtil.isValid("/a"));
         assertFalse(ConfigNameUtil.isValid("/a/b/c"));
         assertFalse(ConfigNameUtil.isValid("a/b/../c"));
+
+        assertFalse(ConfigNameUtil.isValid((Collection<String>)null));
+        assertFalse(ConfigNameUtil.isValid(ImmutableList.of("a", "/a")));
     }
 
     @Test
