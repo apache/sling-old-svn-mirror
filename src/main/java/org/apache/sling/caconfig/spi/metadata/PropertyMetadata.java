@@ -53,6 +53,7 @@ public final class PropertyMetadata<T> extends AbstractMetadata<PropertyMetadata
     private final Class<T> type;
     private T defaultValue;
     private ConfigurationMetadata configurationMetadata;
+    private int order;
 
     /**
      * @param name Property name
@@ -151,6 +152,22 @@ public final class PropertyMetadata<T> extends AbstractMetadata<PropertyMetadata
     }
     
     /**
+     * @return Number to control property order in configuration editor.
+     */
+    public int getOrder() {
+        return order;
+    }
+
+    /**
+     * @param value Number to control property order in configuration editor.
+     * @return this
+     */
+    public PropertyMetadata<T> order(int value) {
+        this.order = value;
+        return this;
+    }
+
+    /**
      * @return Metadata for nested configuration
      */
     public ConfigurationMetadata getConfigurationMetadata() {
@@ -174,7 +191,7 @@ public final class PropertyMetadata<T> extends AbstractMetadata<PropertyMetadata
         return configurationMetadata != null
                 && (this.type.equals(ConfigurationMetadata.class) || this.type.equals(ConfigurationMetadata[].class));
     }
-
+    
     @Override
     public String toString() {
         return getName() + "[" + this.type.getSimpleName() + "]";
