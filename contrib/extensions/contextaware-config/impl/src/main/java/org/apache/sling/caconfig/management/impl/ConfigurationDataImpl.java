@@ -21,11 +21,12 @@ package org.apache.sling.caconfig.management.impl;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang3.ClassUtils;
@@ -117,12 +118,12 @@ final class ConfigurationDataImpl implements ConfigurationData {
     @Override
     public Set<String> getPropertyNames() {
         if (propertyNamesCache == null) {
-            propertyNamesCache = new HashSet<>();
+            propertyNamesCache = new LinkedHashSet<>();
             if (configMetadata != null) {
                 propertyNamesCache.addAll(configMetadata.getPropertyMetadata().keySet());
             }
             if (resolvedConfigurationResource != null) {
-                propertyNamesCache.addAll(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet());
+                propertyNamesCache.addAll(new TreeSet<>(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet()));
             }
             PropertiesFilter.removeIgnoredProperties(propertyNamesCache);
         }
