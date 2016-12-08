@@ -34,6 +34,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service=ConfigurationInheritanceStrategy.class)
 @Designate(ocd=DefaultConfigurationInheritanceStrategy.Config.class)
@@ -56,6 +58,8 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
 
     private Config config;
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationInheritanceStrategy.class);
+    
     @Activate
     private void activate(final Config config) {
         this.config = config;
@@ -87,6 +91,7 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
             return parentProps;
         }
         Resource next = inheritanceChain.next();
+        log.trace("Property inheritance: Merge with properties from {}", next.getPath());
         Map<String,Object> merged = new HashMap<>(next.getValueMap());
         merged.putAll(parentProps);
         if (isPropertyInheritance(next)) {

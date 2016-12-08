@@ -60,7 +60,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
         String[] configRefPropertyNames();
     }
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final Logger log = LoggerFactory.getLogger(DefaultContextPathStrategy.class);
 
     private volatile Config config;
 
@@ -120,7 +120,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             while (resource != null) {
                 String configRef = getConfigRef(resource);
                 if (configRef != null) {
-                    log.trace("Found context path '{}'.", resource.getPath());
+                    log.trace("Found context path {}, configRef {}", resource.getPath(), configRef);
                     return new ContextResource(resource, configRef);
                 }
                 // if getParent() returns null, stop

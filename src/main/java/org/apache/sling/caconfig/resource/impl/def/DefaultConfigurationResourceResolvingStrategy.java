@@ -92,7 +92,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
 
     }
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationResourceResolvingStrategy.class);
 
     private volatile Config config;
 
@@ -157,7 +157,9 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                     if ( useFromRelativePathsWith != null ) {
                         final ContextResource contextResource = relativePaths.remove(relativePaths.size() - 1);
                         val = checkPath(contextResource, useFromRelativePathsWith + "/" + contextResource.getConfigRef(), bucketNames);
-
+                        if (val != null) {
+                            log.trace("Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
+                        }
                         if ( relativePaths.isEmpty() ) {
                             useFromRelativePathsWith = null;
                         }
@@ -171,8 +173,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                         }
 
                         if (val != null) {
-                            logger.trace("Reference '{}' found at {}",
-                                    contextResource.getConfigRef(), contextResource.getResource().getPath());
                             final boolean isAbsolute = val.startsWith("/");
                             if ( isAbsolute && !relativePaths.isEmpty() ) {
                                 useFromRelativePathsWith = val;
@@ -182,10 +182,14 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                                 val = null;
                             }
                         }
+                        
+                        if (val != null) {
+                            log.trace("Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
+                        }
                     }
                 }
                 if ( val == null && !relativePaths.isEmpty() ) {
-                    logger.error("Relative references not used as no absolute reference was found: {}", relativePaths);
+                    log.error("Relative references not used as no absolute reference was found: {}", relativePaths);
                 }
                 return val;
             }
@@ -222,20 +226,20 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         for (String bucketName : bucketNames) {
             String notAllowedPostfix = "/" + bucketName;
             if (ref != null && ref.endsWith(notAllowedPostfix)) {
-                logger.warn("Ignoring reference to {} from {} - Probably misconfigured as it ends with '{}'",
+                log.warn("Ignoring reference to {} from {} - Probably misconfigured as it ends with '{}'",
                         contextResource.getConfigRef(), contextResource.getResource().getPath(), notAllowedPostfix);
                 ref = null;
             }
         }
         
         if (ref != null && !isAllowedConfigPath(ref)) {
-            logger.warn("Ignoring reference to {} from {} - not in allowed paths.",
+            log.warn("Ignoring reference to {} from {} - not in allowed paths.",
                     contextResource.getConfigRef(), contextResource.getResource().getPath());
             ref = null;
         }
 
         if (ref != null && isFallbackConfigPath(ref)) {
-            logger.warn("Ignoring reference to {} from {} - already a fallback path.",
+            log.warn("Ignoring reference to {} from {} - already a fallback path.",
                     contextResource.getConfigRef(), contextResource.getResource().getPath());
             ref = null;
         }
@@ -244,9 +248,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
     }
 
     private boolean isAllowedConfigPath(String path) {
-        if (logger.isTraceEnabled()) {
-            logger.trace("- checking if '{}' starts with {}", path, config.configPath());
-        }
         return path.startsWith(config.configPath() + "/");
     }
 
@@ -289,6 +290,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                     final String name = bucketName + "/" + configName;
                     Resource resource = resourceResolver.getResource(buildResourcePath(path, name));
                     if (resource != null) {
+                        log.trace("Matching config resource for inheritance chain: {}", resource.getPath());
                         return resource;
                     }
                 }
@@ -322,9 +324,13 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             for(int i=deciders.size()-1;i>=0;i--) {
                 final InheritanceDecision decision = deciders.get(i).decide(resource, bucketName);
                 if ( decision == InheritanceDecision.EXCLUDE ) {
+                    log.trace("Block resource collection inheritance for bucket {}, resource {} because {} retruned EXCLUDE.",
+                            bucketName, resource.getPath(), deciders.get(i));
                     result = false;
                     break;
                 } else if ( decision == InheritanceDecision.BLOCK ) {
+                    log.trace("Block resource collection inheritance for bucket {}, resource {} because {} retruned BLOCK.",
+                            bucketName, resource.getPath(), deciders.get(i));
                     result = false;
                     blockedItems.add(resource.getName());
                     break;
@@ -341,7 +347,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         final List<CollectionInheritanceDecider> deciders = this.collectionInheritanceDeciders;
         final Set<String> blockedItems = new HashSet<>();
 
-        int idx = 1;
         boolean inherit = false;
         while (paths.hasNext()) {
             final String path = paths.next();
@@ -350,10 +355,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             String bucketNameUsed = null;
             for (String bucketName : bucketNames) {
                 String name = bucketName + "/" + configName;
-                if (logger.isTraceEnabled()) {
-                    logger.trace("- searching for list '{}'", name);
-                }
-                
                 item = resourceResolver.getResource(buildResourcePath(path, name));
                 if (item != null) {
                     bucketNameUsed = bucketName;
@@ -362,14 +363,12 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             }
 
             if (item != null) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("+ resolved config item at [{}]: {}", idx, item.getPath());
-                }
-
+                log.trace("Check children of collection parent resource {}", item.getPath());
                 for (Resource child : item.getChildren()) {
                     if (isValidResourceCollectionItem(child)
                             && !result.containsKey(child.getName())
                             && include(deciders, bucketNameUsed, child, blockedItems)) {
+                        log.trace("Found collection resource item {}", item.getPath());
                         result.put(child.getName(), child);
                    }
                 }
@@ -382,17 +381,6 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                     break;
                 }
             }
-            else {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("- no item '{}' under config '{}'", StringUtils.join(bucketNames, ","), path);
-                }
-            }
-            
-            idx++;
-        }
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("- final list has {} items", result.size());
         }
 
         return result.values();
@@ -458,11 +446,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         Iterator<String> configPaths = this.findConfigRefs(contentResource, Collections.singleton(bucketName));
         if (configPaths.hasNext()) {
             String configPath = buildResourcePath(configPaths.next(), name);
-            logger.debug("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
+            log.trace("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
             return configPath;
         }
         else {
-            logger.debug("No configuration path {} found for resource {}.", name, contentResource.getPath());
+            log.trace("No configuration path {} found for resource {}.", name, contentResource.getPath());
             return null;
         }
     }

@@ -42,6 +42,7 @@ import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
+import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
@@ -49,6 +50,8 @@ import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = ConfigurationManager.class)
 public class ConfigurationManagerImpl implements ConfigurationManager {
@@ -66,10 +69,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Reference
     private ConfigurationResourceResolverConfig configurationResourceResolverConfig;
 
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationManagerImpl.class);
+    
     @SuppressWarnings("unchecked")
     @Override
     public ConfigurationData getConfiguration(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
+        if (log.isDebugEnabled()) {
+            log.debug("Get configuration for context path {}, name '{}', class {}", resource.getPath(), configName);
+        }
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         Resource configResource = null;
         
@@ -95,6 +103,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     }
                 }
                 
+                if (log.isTraceEnabled() && configResource != null) {
+                    log.trace("Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
+                            + MapUtil.traceOutput(configResource.getValueMap()) + ", "
+                            + "writeback config resource: " + writebackConfigResourcePath);
+                }
                 resettableConfigResourceInheritanceChain.reset();
                 return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                         applyPersistence(resettableConfigResourceInheritanceChain),
@@ -113,6 +126,9 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Override
     public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
+        if (log.isDebugEnabled()) {
+            log.debug("Get configuration collection for context path {}, name '{}', class {}", resource.getPath(), configName);
+        }
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
@@ -131,11 +147,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     // get writeback resource for "reverse inheritance detection"
                     Resource writebackConfigResource = null;
                     
+                    String writebackConfigResourcePath = null;
                     for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
                         writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, configBucketName, configName);
                         if (writebackConfigResourceCollectionParentPath != null) {
-                            writebackConfigResource = configResource.getResourceResolver().getResource(
-                                    writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName());
+                            writebackConfigResourcePath = writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName();
+                            writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
                             if (writebackConfigResource != null) {
                                 writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
                                 break;
@@ -143,6 +160,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                         }
                     }
                     
+                    if (log.isTraceEnabled() && configResource != null) {
+                        log.trace("Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
+                                + MapUtil.traceOutput(configResource.getValueMap()) + ", "
+                                + "writeback config resource: " + writebackConfigResourcePath);
+                    }
                     resettableConfigResourceInheritanceChain.reset();
                     configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                             applyPersistence(resettableConfigResourceInheritanceChain),
@@ -205,6 +227,9 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         if (configResourcePath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: Configuration resolving strategy returned no path.");
         }
+        if (log.isDebugEnabled()) {
+            log.debug("Persist configuration for context path {}, name '{}' to {}", resource.getPath(), configName, configResourcePath);
+        }
         if (!configurationPersistenceStrategy.persistConfiguration(resource.getResourceResolver(), configResourcePath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
         }
@@ -216,6 +241,9 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         String configResourceParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, CONFIGS_BUCKET_NAME, configName);
         if (configResourceParentPath == null) {
             throw new ConfigurationPersistenceException("Unable to persist configuration collection: Configuration resolving strategy returned no parent path.");
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Persist configuration collection for context path {}, name '{}' to {}", resource.getPath(), configName, configResourceParentPath);
         }
         if (!configurationPersistenceStrategy.persistConfigurationCollection(resource.getResourceResolver(), configResourceParentPath, data)) {
             throw new ConfigurationPersistenceException("Unable to persist configuration: No persistence strategy found.");
@@ -243,6 +271,9 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             String configResourcePath = configurationResourceResolvingStrategy.getResourcePath(resource, configBucketName, configName);
             if (configResourcePath != null) {
                 foundAnyPath = true;
+                if (log.isDebugEnabled()) {
+                    log.debug("Delete configuration for context path {}, name '{}' from {}", resource.getPath(), configName, configResourcePath);
+                }
                 if (!configurationPersistenceStrategy.deleteConfiguration(resource.getResourceResolver(), configResourcePath)) {
                     throw new ConfigurationPersistenceException("Unable to delete configuration: No persistence strategy found.");
                 }
@@ -263,6 +294,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigNameUtil.ensureValidConfigName(configName);
         ConfigurationMetadata metadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         if (metadata != null) {
+            log.trace("Configuration metadata found for: {}", configName);
             return metadata;
         }
         
@@ -272,10 +304,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             if (partialConfigMetadata != null) {
                 ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, configName, partialConfigName);
                 if (nestedConfigMetadata != null) {
+                    log.trace("Nested configuration metadata found for: {}", configName);
                     return nestedConfigMetadata;
                 }
             }
         }
+
+        log.trace("No configuration metadata found for: {}", configName);
         return null;
     }
     

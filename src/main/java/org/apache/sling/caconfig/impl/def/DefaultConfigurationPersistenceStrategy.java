@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
@@ -39,6 +40,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The default persistence strategy is quite simple: directly use the configuration resources.
@@ -60,6 +63,8 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     private volatile Config config;
+    
+    private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationPersistenceStrategy.class);
     
     @Activate
     private void activate(ComponentContext componentContext, Config config) {
@@ -125,6 +130,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         Resource resource = resourceResolver.getResource(configResourcePath);
         if (resource != null) {
             try {
+                log.trace("Delete resource {}", resource.getPath());
                 resourceResolver.delete(resource);
             }
             catch (PersistenceException ex) {
@@ -150,6 +156,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         ResourceResolver resourceResolver = resource.getResourceResolver();
         try {
             for (Resource child : resource.getChildren()) {
+                log.trace("Delete resource {}", child.getPath());
                 resourceResolver.delete(child);
             }
         }
@@ -159,6 +166,9 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
     
     private void replaceProperties(Resource resource, Map<String,Object> properties) {
+        if (log.isTraceEnabled()) {
+            log.trace("Replace properties of resource {} with {}", resource.getPath(), MapUtil.traceOutput(properties));
+        }
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
         // remove all existing properties that are not filterd
         Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());

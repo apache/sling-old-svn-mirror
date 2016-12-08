@@ -35,9 +35,12 @@ import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassParser;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
+import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
@@ -51,6 +54,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private String configName;
 
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationBuilderImpl.class);
+    
     public ConfigurationBuilderImpl(final Resource resource,
             final ConfigurationResolver configurationResolver,
             final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy,
@@ -160,6 +165,10 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
                 conversionName = conversionName + "/" + configResource.getName();
             }
         }
+        if (log.isTraceEnabled() && configResource != null) {
+            log.trace("Found config resource for context path " + contentResource.getPath() + ": " + configResource.getPath() + " "
+                    + MapUtil.traceOutput(configResource.getValueMap()));
+        }
         return converter.convert(configResource, clazz, conversionName);
     }
 
@@ -168,12 +177,18 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     @Override
     public <T> T as(final Class<T> clazz) {
         final String name = getConfigurationNameForAnnotationClass(clazz);
+        if (log.isDebugEnabled()) {
+            log.debug("Get configuration for context path {}, name '{}', class {}", contentResource.getPath(), name, clazz.getName());
+        }
         return getConfigResource(name, clazz, new AnnotationConverter<T>());
     }
 
     @Override
     public <T> Collection<T> asCollection(Class<T> clazz) {
         final String name = getConfigurationNameForAnnotationClass(clazz);
+        if (log.isDebugEnabled()) {
+            log.debug("Get configuration collection for context path {}, name '{}', class {}", contentResource.getPath(), name, clazz.getName());
+        }
         return getConfigResourceCollection(name, clazz, new AnnotationConverter<T>());
     }
 
@@ -211,11 +226,17 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     @Override
     public ValueMap asValueMap() {
+        if (log.isDebugEnabled()) {
+            log.debug("Get ValueMap for context path {}, name '{}'", contentResource.getPath(), this.configName);
+        }
         return getConfigResource(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
     @Override
     public Collection<ValueMap> asValueMapCollection() {
+        if (log.isDebugEnabled()) {
+            log.debug("Get ValueMap collection for context path {}, name '{}'", contentResource.getPath(), this.configName);
+        }
         return getConfigResourceCollection(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
@@ -230,11 +251,17 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     @Override
     public <T> T asAdaptable(Class<T> clazz) {
+        if (log.isDebugEnabled()) {
+            log.debug("Get adaptable for context path {}, name '{}', class {}", contentResource.getPath(), this.configName, clazz);
+        }
         return getConfigResource(this.configName, clazz, new AdaptableConverter<T>());
     }
 
     @Override
     public <T> Collection<T> asAdaptableCollection(Class<T> clazz) {
+        if (log.isDebugEnabled()) {
+            log.debug("Get adaptable collection for context path {}, name '{}', class {}", contentResource.getPath(), this.configName, clazz);
+        }
         return getConfigResourceCollection(this.configName, clazz, new AdaptableConverter<T>());
     }
 
