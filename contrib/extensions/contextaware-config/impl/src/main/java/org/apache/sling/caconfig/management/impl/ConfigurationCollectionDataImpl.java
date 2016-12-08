@@ -59,8 +59,11 @@ final class ConfigurationCollectionDataImpl implements ConfigurationCollectionDa
     @Override
     public Map<String, Object> getProperties() {
         if (filteredPropertiesCache == null) {
-            filteredPropertiesCache = new HashMap<>(properties);
-            PropertiesFilter.removeIgnoredProperties(filteredPropertiesCache);
+            filteredPropertiesCache = new HashMap<>();
+            if (properties != null) {
+                filteredPropertiesCache.putAll(properties);
+                PropertiesFilter.removeIgnoredProperties(filteredPropertiesCache);
+            }
         }
         return filteredPropertiesCache;
     }
