@@ -123,5 +123,10 @@ class BundleConfigurationMapping {
     public ConfigurationMapping getConfigurationMapping(String configName) {
         return getConfigMappings().get(configName);
     }
+
+    @Override
+    public String toString() {
+        return "Classes from bundle '" + bundle.getSymbolicName() + "': " + classNamesList;
+    }
     
 }

@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.impl.ConfigurationResourceWrapper;
+import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -38,6 +39,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Detects all {@link ConfigurationOverrideProvider} implementations in the container
@@ -54,6 +57,8 @@ public class ConfigurationOverrideManager implements ChangeListener {
 
     private RankedServices<ConfigurationOverrideProvider> items = new RankedServices<>(Order.DESCENDING, this);
     private volatile Collection<OverrideItem> allOverrides = Collections.emptyList();
+    
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationOverrideManager.class);
     
     protected void bindConfigurationOverrideProvider(ConfigurationOverrideProvider item, Map<String, Object> props) {
         items.bind(item, props);
@@ -110,6 +115,11 @@ public class ConfigurationOverrideManager implements ChangeListener {
         if (overrideProperties == null) {
             return configResource;
         }
+        if (log.isTraceEnabled()) {
+            log.trace("Override properties for context path " + contextPath + ", name '" + configName + "', "
+                    + "config path " + configResource.getPath() + ": "
+                    + MapUtil.traceOutput(configResource.getValueMap()) + " -> " + MapUtil.traceOutput(overrideProperties));
+        }
         return new ConfigurationResourceWrapper(configResource, new ValueMapDecorator(overrideProperties));
     }
 
@@ -120,7 +130,11 @@ public class ConfigurationOverrideManager implements ChangeListener {
     public void changed() {
         List<OverrideItem> overrides = new ArrayList<>();
         for (ConfigurationOverrideProvider item : items) {
-            overrides.addAll(OverrideStringParser.parse(item.getOverrideStrings()));
+            Collection<OverrideItem> itemOverrides = OverrideStringParser.parse(item.getOverrideStrings());
+            if (log.isDebugEnabled() && !itemOverrides.isEmpty()) {
+                log.debug("Override items from " + item.getClass().getName() + ":\n" + StringUtils.join(itemOverrides, "\n"));
+            }
+            overrides.addAll(itemOverrides);
         }
         allOverrides = overrides;
     }

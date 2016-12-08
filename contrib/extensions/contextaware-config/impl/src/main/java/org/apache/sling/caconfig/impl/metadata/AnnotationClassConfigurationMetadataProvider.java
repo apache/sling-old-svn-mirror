@@ -112,10 +112,12 @@ public class AnnotationClassConfigurationMetadataProvider implements Configurati
     }
 
     void addBundeMapping(BundleConfigurationMapping bundleMapping) {
+        log.debug("Add bundle mapping: {}", bundleMapping);
         bundleMappings.put(bundleMapping.getBundle(), bundleMapping);
     }
 
     void removeBundleMapping(BundleConfigurationMapping bundleMapping) {
+        log.debug("Remove bundle mapping: {}", bundleMapping);
         bundleMappings.remove(bundleMapping.getBundle());
     }
     
