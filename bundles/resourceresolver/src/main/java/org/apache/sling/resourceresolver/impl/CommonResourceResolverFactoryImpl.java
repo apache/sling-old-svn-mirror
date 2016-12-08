@@ -49,6 +49,8 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+
 /**
  * The <code>CommonResourceResolverFactoryImpl</code> is a singleton
  * implementing the shared/common functionality of all resource
@@ -84,14 +86,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
 
-    private boolean logResourceResolverClosing = false;
-
     /**
      * Create a new common resource resolver factory.
      */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
-        this.logResourceResolverClosing = activator.shouldLogResourceResolverClosing();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
             @Override
@@ -115,6 +114,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
+    @Nonnull
     @SuppressWarnings("deprecation")
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
@@ -137,6 +137,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
+    @Nonnull
     @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
@@ -364,6 +365,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.getResourceAccessSecurityTracker();
     }
 
+    @Nonnull
     @Override
     public ResourceResolver getServiceResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
@@ -435,7 +437,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     public boolean shouldLogResourceResolverClosing() {
-        return logResourceResolverClosing;
+        return activator.shouldLogResourceResolverClosing();
     }
 
     public ResourceProviderTracker getResourceProviderTracker() {
