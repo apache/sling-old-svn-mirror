@@ -52,6 +52,7 @@
         optionally using -Dmaven.surefire.debug to enable debugging.            
      -->
     <properties>
+        <sling.java.version>7</sling.java.version>
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
          -->
