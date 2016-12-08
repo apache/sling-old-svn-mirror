@@ -29,7 +29,9 @@ import java.util.Set;
 final class PropertiesFilter {
 
     private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
-            "jcr:primaryType"));
+            "jcr:primaryType",
+            "jcr:created",
+            "jcr:createdBy"));
     
     private PropertiesFilter() {
         // static methods only
