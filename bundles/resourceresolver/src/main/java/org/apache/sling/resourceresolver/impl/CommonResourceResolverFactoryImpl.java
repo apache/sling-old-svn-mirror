@@ -302,13 +302,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
         this.refQueueThread.interrupt();
 
-        // copy and clear before closing
-        final Collection<ResolverReference> references = new ArrayList<ResolverReference>(refs.values());
-        refs.clear();
-        for(final ResolverReference ref : references) {
-            ref.close();
-        }
-
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
@@ -319,6 +312,13 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             mapEntries = MapEntries.EMPTY;
         }
         resolverStackHolder = null;
+
+        // copy and clear map before closing the remaining references
+        final Collection<ResolverReference> references = new ArrayList<ResolverReference>(refs.values());
+        refs.clear();
+        for(final ResolverReference ref : references) {
+            ref.close();
+        }
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -463,7 +463,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             super(referent, q);
             this.control = ctrl;
             this.factory = factory;
-            this.openingException = LOG.isInfoEnabled() ? new Exception() : null;
+            this.openingException = LOG.isInfoEnabled() ? new Exception("Opening Stacktrace") : null;
         }
 
         public void close() {
