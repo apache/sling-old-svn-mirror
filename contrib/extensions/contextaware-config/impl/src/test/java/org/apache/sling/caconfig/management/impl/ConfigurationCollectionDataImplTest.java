@@ -20,6 +20,7 @@ package org.apache.sling.caconfig.management.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -48,6 +50,16 @@ public class ConfigurationCollectionDataImplTest {
         assertSame(items, underTest.getItems());
         assertEquals("/path1", underTest.getResourcePath());
         assertEquals(ImmutableMap.<String,Object>of("prop1", "value1"), underTest.getProperties());
+    }
+
+    @Test
+    public void testEmpty() {
+        ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", ImmutableList.<ConfigurationData>of(), "/path1", null);
+        
+        assertEquals("name1", underTest.getConfigName());;
+        assertTrue(underTest.getItems().isEmpty());
+        assertEquals("/path1", underTest.getResourcePath());
+        assertTrue(underTest.getProperties().isEmpty());
     }
 
 }
