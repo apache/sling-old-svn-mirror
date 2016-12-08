@@ -145,7 +145,10 @@ public class ScriptableTestsProvider implements TestsProvider {
     }
     
     protected void deactivate(ComponentContext ctx) throws RepositoryException {
-        resolver = null;
+        if (resolver != null) {
+            resolver.close();
+            resolver = null;
+        }
         if(session != null) {
             for(EventListener listener : listeners) {
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
