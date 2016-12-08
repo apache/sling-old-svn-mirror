@@ -28,21 +28,57 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationCollectionPersistDataTest {
 
-    @Mock
-    private Collection<ConfigurationPersistData> items;
     @Mock
     private Map<String,Object> props;
     
     @Test
     public void testProperties() {
+        Collection<ConfigurationPersistData> items = ImmutableList.of(
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item1"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item2"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item3"));
+
         ConfigurationCollectionPersistData underTest = new ConfigurationCollectionPersistData(items)
                 .properties(props);
         
         assertSame(items, underTest.getItems());
         assertSame(props, underTest.getProperties());
+    }
+
+    @Test(expected=ConfigurationPersistenceException.class)
+    public void testItemsDuplicateKeys() {
+        Collection<ConfigurationPersistData> itemList = ImmutableList.of(
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item1"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item2"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item1"));
+
+        new ConfigurationCollectionPersistData(itemList);
+    }
+
+    @Test(expected=ConfigurationPersistenceException.class)
+    public void testItemsMissingItemName() {
+        Collection<ConfigurationPersistData> itemList = ImmutableList.of(
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item1"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item2"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()));
+
+        new ConfigurationCollectionPersistData(itemList);
+    }
+
+    @Test(expected=ConfigurationPersistenceException.class)
+    public void testItemsInvalidItemNAme() {
+        Collection<ConfigurationPersistData> itemList = ImmutableList.of(
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item1"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item2"),
+                new ConfigurationPersistData(ImmutableMap.<String, Object>of()).collectionItemName("item #1"));
+
+        new ConfigurationCollectionPersistData(itemList);
     }
 
 }
