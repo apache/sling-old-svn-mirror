@@ -876,13 +876,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                                 result.add(adapted);
                             } else {
                                 return new Result<Object>(new ModelClassException(
-                                    String.format("Could not adapt from %s to %s within the collection", value.getClass(), type)));
+                                    String.format("Could not adapt from %s to %s within the collection!", valueObject, parameterizedType.getActualTypeArguments()[0])));
                             }
                         }
                     }
                     adaptedValue = result;
                 } else {
-                    return new Result<Object>(new ModelClassException(String.format("%s is neither a parametrized Collection or List",
+                    return new Result<Object>(new ModelClassException(String.format("%s is neither a parameterized Collection or List",
                         type)));
                 }
             } else {
