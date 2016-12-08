@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +56,8 @@ import org.slf4j.LoggerFactory;
  */
 public class CommonResourceResolverFactoryImpl implements ResourceResolverFactory, MapConfigurationProvider {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CommonResourceResolverFactoryImpl.class);
+
     /** Helper for the resource resolver. */
     private MapEntriesHandler mapEntries = MapEntriesHandler.EMPTY;
 
@@ -75,8 +78,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** The reference queue to handle disposing of resource resolver instances. */
     private final ReferenceQueue<ResourceResolver> resolverReferenceQueue = new ReferenceQueue<ResourceResolver>();
 
-    /** All weak references for the resource resolver instances. */
-    private final Map<Integer, ResolverWeakReference> refs = new ConcurrentHashMap<Integer, CommonResourceResolverFactoryImpl.ResolverWeakReference>();
+    /** Map of the ResourceResolverControl's hash code to the references to open resource resolver instances. */
+    private final Map<Integer, ResolverReference> refs = new ConcurrentHashMap<Integer, ResolverReference>();
 
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
@@ -93,25 +96,15 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
             @Override
             public void run() {
-                while ( isActive.get() ) {
+                while (isLive()) {
                     try {
-                        final ResolverWeakReference ref = (ResolverWeakReference) resolverReferenceQueue.remove();
-                        try {
-                            ref.close();
-                        } catch ( final Throwable t ) {
-                            // we ignore everything from there to not stop this thread
-                        }
-                        refs.remove(ref.control.hashCode());
+                        final ResolverReference ref = (ResolverReference) resolverReferenceQueue.remove();
+                        ref.close();
                     } catch ( final InterruptedException ie) {
                         Thread.currentThread().interrupt();
                     }
                 }
-                for(final ResolverWeakReference ref : refs.values()) {
-                    ref.close();
-                }
-                refs.clear();
             }
-
         };
         this.refQueueThread.setDaemon(true);
         this.refQueueThread.start();
@@ -126,9 +119,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+        checkIsLive();
 
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
@@ -149,9 +140,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+        checkIsLive();
 
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
@@ -178,7 +167,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     @Override
     public ResourceResolver getThreadResourceResolver() {
-        if ( !isActive.get() ) {
+        if (!isLive()) {
             return null;
         }
 
@@ -207,7 +196,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public void register(final ResourceResolver resolver,
             final ResourceResolverControl ctrl) {
         // create new weak reference
-        refs.put(ctrl.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctrl));
+        refs.put(ctrl.hashCode(), new ResolverReference(resolver, this.resolverReferenceQueue, ctrl, this));
     }
 
     /**
@@ -218,10 +207,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
             final ResourceResolverControl ctrl) {
-        // close the context
-        ctrl.close();
-        // remove it from the set of weak references.
-        refs.remove(ctrl.hashCode());
+        unregisterControl(ctrl);
 
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
@@ -250,14 +236,38 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @return A resource resolver
      * @throws LoginException if login to any of the required resource providers fails.
      */
-    public ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
-                    final boolean isAdmin)
-    throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+    ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
+                                                        final boolean isAdmin)
+            throws LoginException {
+        checkIsLive();
 
         return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
+    }
+
+    /**
+     * Close a resource resolver control and remove its corresponding
+     * resolver reference from the map of weak references.
+     *
+     * @param ctrl The resource resolver control
+     * @return true if the control was closed, false it had been closed before.
+     */
+    private boolean unregisterControl(final ResourceResolverControl ctrl) {
+        // remove reference from the set of weak references and clear
+        final ResolverReference reference = refs.remove(ctrl.hashCode());
+        if (reference != null) {
+            reference.clear();
+        }
+        final boolean doCloseControl = !ctrl.isClosed();
+        if (doCloseControl) {
+            ctrl.close();
+        }
+        return doCloseControl;
+    }
+
+    private void checkIsLive() throws LoginException {
+        if ( !isLive() ) {
+            throw new LoginException("ResourceResolverFactory is deactivated.");
+        }
     }
 
     public MapEntriesHandler getMapEntries() {
@@ -286,8 +296,18 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Deactivates this component
      */
     protected void deactivate() {
-        isActive.set(false);
+        if (!isActive.compareAndSet(true, false)) {
+            return;
+        }
         this.refQueueThread.interrupt();
+
+        // copy and clear before closing
+        final Collection<ResolverReference> references = new ArrayList<ResolverReference>(refs.values());
+        refs.clear();
+        for(final ResolverReference ref : references) {
+            ref.close();
+        }
+
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
@@ -426,19 +446,37 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Extension of a weak reference to be able to get the control object
      * that is used for cleaning up.
      */
-    private static final class ResolverWeakReference extends WeakReference<ResourceResolver> {
+    private static final class ResolverReference extends WeakReference<ResourceResolver> {
 
         private final ResourceResolverControl control;
 
-        public ResolverWeakReference(final ResourceResolver referent,
-                final ReferenceQueue<? super ResourceResolver> q,
-                final ResourceResolverControl ctrl) {
+        private final Exception openingException;
+
+        private final CommonResourceResolverFactoryImpl factory;
+
+        ResolverReference(final ResourceResolver referent,
+                          final ReferenceQueue<? super ResourceResolver> q,
+                          final ResourceResolverControl ctrl,
+                          final CommonResourceResolverFactoryImpl factory) {
             super(referent, q);
             this.control = ctrl;
+            this.factory = factory;
+            this.openingException = LOG.isInfoEnabled() ? new Exception() : null;
         }
 
         public void close() {
-            this.control.close();
+            try {
+                if (factory.unregisterControl(this.control)) {
+                    if (factory.isLive()) {
+                        LOG.warn("Closed unclosed ResourceResolver. The creation stacktrace is available on info log level.");
+                    } else {
+                        LOG.warn("Forced close of ResourceResolver because the ResourceResolverFactory is shutting down.");
+                    }
+                    LOG.info("Unclosed ResourceResolver was created here: ", openingException);
+                }
+            } catch (Throwable t) {
+                LOG.warn("Exception while closing ResolverReference", t);
+            }
         }
     }
 }
