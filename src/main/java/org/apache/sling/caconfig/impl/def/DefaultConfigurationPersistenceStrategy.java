@@ -20,14 +20,15 @@ package org.apache.sling.caconfig.impl.def;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
@@ -159,11 +160,10 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     
     private void replaceProperties(Resource resource, Map<String,Object> properties) {
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
-        // remove all existing properties that do not have jcr: namespace
-        for (String propertyName : new HashSet<>(modValueMap.keySet())) {
-            if (StringUtils.startsWith(propertyName, "jcr:")) {
-                continue;
-            }
+        // remove all existing properties that are not filterd
+        Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());
+        PropertiesFilterUtil.removeIgnoredProperties(propertyNamesToRemove);
+        for (String propertyName : propertyNamesToRemove) {
             modValueMap.remove(propertyName);
         }
         modValueMap.putAll(properties);

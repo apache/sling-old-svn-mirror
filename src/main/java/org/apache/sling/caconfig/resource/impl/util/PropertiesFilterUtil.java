@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.management.impl;
+package org.apache.sling.caconfig.resource.impl.util;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,14 +26,18 @@ import java.util.Set;
 /**
  * Filter internal properties from ConfigManager API output.
  */
-final class PropertiesFilter {
+public final class PropertiesFilterUtil {
 
     private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
             "jcr:primaryType",
+            "jcr:mixinTypes",
             "jcr:created",
-            "jcr:createdBy"));
+            "jcr:createdBy",
+            "jcr:lastModified",
+            "jcr:lastModifiedBy",
+            "jcr:uuid"));
     
-    private PropertiesFilter() {
+    private PropertiesFilterUtil() {
         // static methods only
     }
 

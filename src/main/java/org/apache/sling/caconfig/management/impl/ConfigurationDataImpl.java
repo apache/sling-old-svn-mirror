@@ -38,6 +38,7 @@ import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
@@ -125,7 +126,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 propertyNamesCache.addAll(new TreeSet<>(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet()));
             }
-            PropertiesFilter.removeIgnoredProperties(propertyNamesCache);
+            PropertiesFilterUtil.removeIgnoredProperties(propertyNamesCache);
         }
         return propertyNamesCache;
     }
@@ -137,7 +138,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (writebackConfigurationResource != null) {
                 props.putAll( ResourceUtil.getValueMap(writebackConfigurationResource));
             }
-            PropertiesFilter.removeIgnoredProperties(props);
+            PropertiesFilterUtil.removeIgnoredProperties(props);
             resolveNestedConfigs(props);
             valuesCache = new ValueMapDecorator(props);
         }
@@ -158,7 +159,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
             }
-            PropertiesFilter.removeIgnoredProperties(props);
+            PropertiesFilterUtil.removeIgnoredProperties(props);
             resolveNestedConfigs(props);
             effectiveValuesCache = new ValueMapDecorator(props);
         }
