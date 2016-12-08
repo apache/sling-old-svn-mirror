@@ -42,11 +42,11 @@ public class LoginAdminWhitelistedIT extends OakServerTestSupport {
     
     @Test
     public void testLoginAdmin() throws Exception {
-        repository.loginAdministrative(null);
+        repository.loginAdministrative(null).logout();
     }
     
     @Test
     public void testGetAdminResourceResolver() throws Exception {
-        resolverFactory.getAdministrativeResourceResolver(null);
+        resolverFactory.getAdministrativeResourceResolver(null).close();
     }
 }
