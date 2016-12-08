@@ -849,35 +849,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private Result<Object> adaptIfNecessary(final Object value, final Class<?> type, final Type genericType) {
         final Object adaptedValue;
         if (!isAcceptableType(type, genericType, value)) {
-            if (isModelClass(value, type) && canCreateFromAdaptable(value, type)) {
-                Result<?> result = internalCreateModel(value, type);
-                if (result.wasSuccessful()) {
-                    adaptedValue = result.getValue();
-                } else {
-                    return new Result<Object>(new ModelClassException(
-                        String.format("Could not create model from %s: %s", value.getClass(), result.getThrowable().getMessage()),
-                        result.getThrowable()));
-                }
-            } else if (value instanceof Adaptable) {
-                adaptedValue = ((Adaptable) value).adaptTo(type);
-                if (adaptedValue == null) {
-                    return new Result<Object>(new ModelClassException(String.format("Could not adapt from %s to %s", value.getClass(), type)));
-                } 
-            } else if (genericType instanceof ParameterizedType) {
+            if (genericType instanceof ParameterizedType) {
                 ParameterizedType parameterizedType = (ParameterizedType) genericType;
                 if (value instanceof Collection &&
                         (type.equals(Collection.class) || type.equals(List.class)) &&
                         parameterizedType.getActualTypeArguments().length == 1) {
+                    
                     List<Object> result = new ArrayList<Object>();
                     for (Object valueObject : (Collection<?>) value) {
-                        if (valueObject instanceof Adaptable) {
-                            Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) parameterizedType.getActualTypeArguments()[0]);
-                            if (adapted != null) {
-                                result.add(adapted);
-                            } else {
-                                return new Result<Object>(new ModelClassException(
-                                    String.format("Could not adapt from %s to %s within the collection!", valueObject, parameterizedType.getActualTypeArguments()[0])));
-                            }
+                        Result<Object> singleValueResult = adapt(valueObject, (Class<?>) parameterizedType.getActualTypeArguments()[0], true);
+                        if (singleValueResult.wasSuccessful()) {
+                            result.add(singleValueResult.getValue());
+                        } else {
+                            return singleValueResult;
                         }
                     }
                     adaptedValue = result;
@@ -886,12 +870,44 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                         type)));
                 }
             } else {
-                return new Result<Object>(new ModelClassException(
-                    String.format("Could not adapt from %s to %s, because this class is not adaptable!", value.getClass(), type)));
+                return adapt(value, type, false);
             }
             return new Result<Object>(adaptedValue);
         } else {
             return new Result<Object>(value);
+        }
+    }
+
+    /**
+     * Preferably adapt via the {@link ModelFactory} in case the target type is a Sling Model itself, otherwise use regular {@link Adaptable#adaptTo(Class)}.
+     * @param value the object from which to adapt
+     * @param type the target type
+     * @param isWithinCollection
+     * @return a Result either encapsulating an exception or the adapted value
+     */
+    private @CheckForNull Result<Object> adapt(final Object value, final Class<?> type, boolean isWithinCollection) {
+        Object adaptedValue = null;
+        final String messageSuffix = isWithinCollection ? " in collection" : "";
+        if (isModelClass(type) && canCreateFromAdaptable(value, type)) {
+            Result<?> result = internalCreateModel(value, type);
+            if (result.wasSuccessful()) {
+                adaptedValue = result.getValue();
+            } else {
+                return new Result<Object>(new ModelClassException(
+                    String.format("Could not create model from %s: %s%s", value.getClass(), result.getThrowable().getMessage(), messageSuffix),
+                    result.getThrowable()));
+            }
+        } else if (value instanceof Adaptable) {
+            adaptedValue = ((Adaptable) value).adaptTo(type);
+            if (adaptedValue == null) {
+                return new Result<Object>(new ModelClassException(String.format("Could not adapt from %s to %s%s", value.getClass(), type, messageSuffix)));
+            }
+        }
+        if (adaptedValue != null) {
+            return new Result<Object>(adaptedValue);
+        } else {
+            return new Result<Object>(new ModelClassException(
+                    String.format("Could not adapt from %s to %s%s, because this class is not adaptable!", value.getClass(), type, messageSuffix)));
         }
     }
 
