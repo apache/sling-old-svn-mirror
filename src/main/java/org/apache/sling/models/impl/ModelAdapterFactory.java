@@ -483,11 +483,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         if (!wasInjectionSuccessful) {
             Result<Boolean> defaultInjectionResult = injectDefaultValue(element, annotationProcessor, callback);
             if (defaultInjectionResult.wasSuccessful()) {
+                wasInjectionSuccessful = defaultInjectionResult.getValue();
                 // log previous injection error, if there was any
-                if (lastInjectionException != null) {
+                if (lastInjectionException != null && wasInjectionSuccessful) {
                     log.debug("Although falling back to default value worked, injection into {} failed because of: " + lastInjectionException.getMessage(), element.getAnnotatedElement(), lastInjectionException);
                 }
-                wasInjectionSuccessful = defaultInjectionResult.getValue();
             } else {
                 return defaultInjectionResult.getThrowable();
             }
