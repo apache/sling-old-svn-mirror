@@ -164,6 +164,7 @@ public class ResourceResolverTest {
             session.logout();
             resolver.close();
         }
+        closeResolver();
     }
 
     @Test public void test_clone_based_on_anonymous() throws Exception {
