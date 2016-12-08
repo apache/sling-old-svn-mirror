@@ -51,11 +51,11 @@ public class LoginAdminBlacklistedIT extends OakServerTestSupport {
     
     @Test(expected = javax.jcr.LoginException.class)
     public void testLoginAdmin() throws Exception {
-        repository.loginAdministrative(null);
+        repository.loginAdministrative(null).logout();
     }
     
     @Test(expected = org.apache.sling.api.resource.LoginException.class)
     public void testGetAdminResourceResolver() throws Exception {
-        resolverFactory.getAdministrativeResourceResolver(null);
+        resolverFactory.getAdministrativeResourceResolver(null).close();
     }
 }
