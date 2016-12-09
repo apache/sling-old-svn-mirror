@@ -37,7 +37,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @Designate(ocd = OsgiConfigurationOverrideProvider.Config.class, factory = true)
 public final class OsgiConfigurationOverrideProvider implements ConfigurationOverrideProvider {
 
-    @ObjectClassDefinition(name = "Apache Sling Context-Aware Configuration Override Provider: OSGi",
+    @ObjectClassDefinition(name = "Apache Sling Context-Aware Configuration Override Provider: OSGi configuration",
             description = "Allows to override configuration property values from OSGi configurations.")
     public static @interface Config {
 
