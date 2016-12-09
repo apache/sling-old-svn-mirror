@@ -53,7 +53,7 @@ public class ContextPluginsTest {
         contextResource = context.create().resource("/content/site1/page1");
         
         // register configuration annotation class
-        MockContextAwareConfig.registerAnnotationClasses(context.bundleContext(), SimpleConfig.class);
+        MockContextAwareConfig.registerAnnotationClasses(context, SimpleConfig.class);
 
         // write config
         writeConfig(contextResource, CONFIG_NAME, ImmutableMap.<String, Object>of(
