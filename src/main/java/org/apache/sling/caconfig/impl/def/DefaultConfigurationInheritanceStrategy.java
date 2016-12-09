@@ -91,7 +91,7 @@ public class DefaultConfigurationInheritanceStrategy implements ConfigurationInh
             return parentProps;
         }
         Resource next = inheritanceChain.next();
-        log.trace("Property inheritance: Merge with properties from {}", next.getPath());
+        log.trace("! Property inheritance: Merge with properties from {}", next.getPath());
         Map<String,Object> merged = new HashMap<>(next.getValueMap());
         merged.putAll(parentProps);
         if (isPropertyInheritance(next)) {

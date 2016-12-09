@@ -116,7 +116,7 @@ public class ConfigurationOverrideManager implements ChangeListener {
             return configResource;
         }
         if (log.isTraceEnabled()) {
-            log.trace("Override properties for context path " + contextPath + ", name '" + configName + "', "
+            log.trace("! Override properties for context path " + contextPath + ", name '" + configName + "', "
                     + "config path " + configResource.getPath() + ": "
                     + MapUtil.traceOutput(configResource.getValueMap()) + " -> " + MapUtil.traceOutput(overrideProperties));
         }

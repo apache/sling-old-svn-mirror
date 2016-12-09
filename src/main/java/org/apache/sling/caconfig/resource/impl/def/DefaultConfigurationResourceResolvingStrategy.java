@@ -158,7 +158,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                         final ContextResource contextResource = relativePaths.remove(relativePaths.size() - 1);
                         val = checkPath(contextResource, useFromRelativePathsWith + "/" + contextResource.getConfigRef(), bucketNames);
                         if (val != null) {
-                            log.trace("Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
+                            log.trace("+ Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
                         }
                         if ( relativePaths.isEmpty() ) {
                             useFromRelativePathsWith = null;
@@ -184,7 +184,7 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                         }
                         
                         if (val != null) {
-                            log.trace("Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
+                            log.trace("+ Found reference for context path {}: {}", contextResource.getResource().getPath(), val);
                         }
                     }
                 }
@@ -288,10 +288,14 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
                 String path = (String)input;
                 for (String bucketName : bucketNames) {
                     final String name = bucketName + "/" + configName;
-                    Resource resource = resourceResolver.getResource(buildResourcePath(path, name));
+                    final String configPath = buildResourcePath(path, name);
+                    Resource resource = resourceResolver.getResource(configPath);
                     if (resource != null) {
-                        log.trace("Matching config resource for inheritance chain: {}", resource.getPath());
+                        log.trace("+ Found matching config resource for inheritance chain: {}", configPath);
                         return resource;
+                    }
+                    else {
+                        log.trace("- No matching config resource for inheritance chain: {}", configPath);
                     }
                 }
                 return null;
@@ -324,12 +328,12 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             for(int i=deciders.size()-1;i>=0;i--) {
                 final InheritanceDecision decision = deciders.get(i).decide(resource, bucketName);
                 if ( decision == InheritanceDecision.EXCLUDE ) {
-                    log.trace("Block resource collection inheritance for bucket {}, resource {} because {} retruned EXCLUDE.",
+                    log.trace("- Block resource collection inheritance for bucket {}, resource {} because {} retruned EXCLUDE.",
                             bucketName, resource.getPath(), deciders.get(i));
                     result = false;
                     break;
                 } else if ( decision == InheritanceDecision.BLOCK ) {
-                    log.trace("Block resource collection inheritance for bucket {}, resource {} because {} retruned BLOCK.",
+                    log.trace("- Block resource collection inheritance for bucket {}, resource {} because {} retruned BLOCK.",
                             bucketName, resource.getPath(), deciders.get(i));
                     result = false;
                     blockedItems.add(resource.getName());
@@ -355,22 +359,28 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
             String bucketNameUsed = null;
             for (String bucketName : bucketNames) {
                 String name = bucketName + "/" + configName;
-                item = resourceResolver.getResource(buildResourcePath(path, name));
+                String configPath = buildResourcePath(path, name);
+                item = resourceResolver.getResource(configPath);
                 if (item != null) {
                     bucketNameUsed = bucketName;
                     break;
                 }
+                else {
+                    log.trace("- No collection parent resource found: {}", configPath);
+                }
             }
 
             if (item != null) {
-                log.trace("Check children of collection parent resource {}", item.getPath());
-                for (Resource child : item.getChildren()) {
-                    if (isValidResourceCollectionItem(child)
-                            && !result.containsKey(child.getName())
-                            && include(deciders, bucketNameUsed, child, blockedItems)) {
-                        log.trace("Found collection resource item {}", item.getPath());
-                        result.put(child.getName(), child);
-                   }
+                log.trace("o Check children of collection parent resource: {}", item.getPath());
+                if (item.hasChildren()) {
+                    for (Resource child : item.getChildren()) {
+                        if (isValidResourceCollectionItem(child)
+                                && !result.containsKey(child.getName())
+                                && include(deciders, bucketNameUsed, child, blockedItems)) {
+                            log.trace("+ Found collection resource item {}", child.getPath());
+                            result.put(child.getName(), child);
+                       }
+                    }
                 }
 
                 // check collection inheritance mode on current level - should we check on next-highest level as well?
@@ -446,11 +456,11 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         Iterator<String> configPaths = this.findConfigRefs(contentResource, Collections.singleton(bucketName));
         if (configPaths.hasNext()) {
             String configPath = buildResourcePath(configPaths.next(), name);
-            log.trace("Building configuration path {} for resource {}: {}", name, contentResource.getPath(), configPath);
+            log.trace("+ Building configuration path for name '{}' for resource {}: {}", name, contentResource.getPath(), configPath);
             return configPath;
         }
         else {
-            log.trace("No configuration path {} found for resource {}.", name, contentResource.getPath());
+            log.trace("- No configuration path for name '{}' found for resource {}", name, contentResource.getPath());
             return null;
         }
     }
