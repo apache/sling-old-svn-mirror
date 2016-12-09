@@ -75,11 +75,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     private static final int DEFAULT_INVALIDATION_DELAY = 5000;
 
-    @Property(value = "")
-    private static final String PROP_USER = "user";
-
-    @Property(value = "")
-    private static final String PROP_PASS = "password";
+    private static final String SLING_I18N_USER = "sling-i18n";
 
     @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
@@ -111,8 +107,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     /**
      * The resource resolver used to access the resource bundles. This object is
-     * retrieved from the {@link #resourceResolverFactory} using the administrative
-     * session or the session acquired using the {@link #repoCredentials}.
+     * retrieved from the {@link #resourceResolverFactory} using the {@link #SLING_I18N_USER} service user session.
      */
     private ResourceResolver resourceResolver;
 
@@ -359,18 +354,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
      * @throws LoginException
      */
     protected void activate(BundleContext context, Map<String, Object> props) throws LoginException {
-        Map<String, Object> repoCredentials;
-        String user = PropertiesUtil.toString(props.get(PROP_USER), null);
-        if (user == null || user.length() == 0) {
-            repoCredentials = null;
-        } else {
-            String pass = PropertiesUtil.toString(props.get(PROP_PASS), null);
-            char[] pwd = (pass == null) ? new char[0] : pass.toCharArray();
-            repoCredentials = new HashMap<String, Object>();
-            repoCredentials.put(ResourceResolverFactory.USER, user);
-            repoCredentials.put(ResourceResolverFactory.PASSWORD, pwd);
-        }
-
         String localeString = PropertiesUtil.toString(props.get(PROP_DEFAULT_LOCALE),
             null);
         this.defaultLocale = toLocale(localeString);
@@ -379,11 +362,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         this.bundleContext = context;
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
-            if (repoCredentials == null) {
-                resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-            } else {
-                resourceResolver = resourceResolverFactory.getResourceResolver(repoCredentials);
-            }
+            Map<String, Object> authInfo = Collections.<String, Object>singletonMap(
+                    ResourceResolverFactory.SUBSERVICE, SLING_I18N_USER);
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authInfo);
             scheduleReloadBundles(false);
         }
 
