@@ -126,6 +126,31 @@ public class OsgiContextImplTest {
         assertEquals("value3", service.getConfig().get("prop1"));
     }
 
+    @Test
+    public void testRegisterInjectActivateWithPropertiesWithNulls() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        OsgiServiceUtilTest.Service3 service = context.registerInjectActivateService(new OsgiServiceUtilTest.Service3(),
+                "prop1", "value3",
+                "prop2", null,
+                null, "value4",
+                null, null);
+        assertEquals("value3", service.getConfig().get("prop1"));
+    }
+
+    @Test
+    public void testRegisterInjectActivateWithPropertyMapNulls() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        Map<String,Object> props = new HashMap<>();
+        props.put("prop1", "value3");
+        props.put("prop2", null);
+        props.put(null, "value4");
+        props.put(null, null);
+        OsgiServiceUtilTest.Service3 service = context.registerInjectActivateService(new OsgiServiceUtilTest.Service3(), props);
+        assertEquals("value3", service.getConfig().get("prop1"));
+    }
+
     @Test(expected=RuntimeException.class)
     public void testRegisterInjectActivate_RefrenceMissing() {
         context.registerInjectActivateService(new OsgiServiceUtilTest.Service3());

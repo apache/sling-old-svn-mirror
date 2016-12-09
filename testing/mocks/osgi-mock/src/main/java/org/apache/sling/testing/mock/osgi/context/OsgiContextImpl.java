@@ -20,7 +20,6 @@ package org.apache.sling.testing.mock.osgi.context;
 
 import java.lang.reflect.Array;
 import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.sling.testing.mock.osgi.MapUtil;
@@ -114,10 +113,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final Class<T> serviceClass, final T service, final Map<String, Object> properties) {
-        Dictionary<String, Object> serviceProperties = null;
-        if (properties != null) {
-            serviceProperties = new Hashtable<String, Object>(properties);
-        }
+        Dictionary<String, Object> serviceProperties = MapUtil.toDictionary(properties);
         bundleContext().registerService(serviceClass != null ? serviceClass.getName() : null, service, serviceProperties);
         return service;
     }
