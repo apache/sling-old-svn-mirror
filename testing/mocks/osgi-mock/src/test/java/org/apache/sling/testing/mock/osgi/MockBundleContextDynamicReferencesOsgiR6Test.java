@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-import org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest.Service3;
+import org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest.Service3OsgiR6;
 import org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest.ServiceInterface1;
 import org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest.ServiceInterface1Optional;
 import org.apache.sling.testing.mock.osgi.OsgiServiceUtilTest.ServiceInterface2;
@@ -36,13 +36,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MockBundleContextDynamicReferncesTest {
+public class MockBundleContextDynamicReferencesOsgiR6Test {
 
     private BundleContext bundleContext;
-    private Service3 service;
+    private Service3OsgiR6 service;
     private ServiceRegistration reg1a;
     private ServiceRegistration reg2a;
     
@@ -71,10 +72,10 @@ public class MockBundleContextDynamicReferncesTest {
         reg1a = bundleContext.registerService(ServiceInterface1.class.getName(), dependency1a, null);
         reg2a = bundleContext.registerService(ServiceInterface2.class.getName(), dependency2a, null);
         
-        service = new Service3();
+        service = new Service3OsgiR6();
         MockOsgi.injectServices(service, bundleContext);
         MockOsgi.activate(service, bundleContext);
-        bundleContext.registerService(Service3.class.getName(), service, null);
+        bundleContext.registerService(Service3OsgiR6.class.getName(), service, null);
         
         assertDependency1(dependency1a);
         assertDependency1Optional(null);
@@ -138,6 +139,19 @@ public class MockBundleContextDynamicReferncesTest {
         assertDependencies2();
     }
     
+    @Test
+    public void testReferenceWithTargetFilter() {
+        assertDependencies3Filtered();
+        
+        bundleContext.registerService(ServiceInterface3.class.getName(), dependency3a, 
+                MapUtil.toDictionary(ImmutableMap.<String, Object>of("prop1", "abc")));
+
+        bundleContext.registerService(ServiceInterface3.class.getName(), dependency3b, 
+                MapUtil.toDictionary(ImmutableMap.<String, Object>of("prop1", "def")));
+        
+        assertDependencies3Filtered(dependency3a);
+    }
+    
     private void assertDependency1(ServiceInterface1 instance) {
         if (instance == null) {
             assertNull(service.getReference1());
@@ -164,6 +178,11 @@ public class MockBundleContextDynamicReferncesTest {
     private void assertDependencies3(ServiceSuperInterface3... instances) {
         assertEquals(ImmutableSet.<ServiceSuperInterface3>copyOf(instances), 
                 ImmutableSet.<ServiceSuperInterface3>copyOf(service.getReferences3()));
+    }
+    
+    private void assertDependencies3Filtered(ServiceSuperInterface3... instances) {
+        assertEquals(ImmutableSet.<ServiceSuperInterface3>copyOf(instances), 
+                ImmutableSet.<ServiceSuperInterface3>copyOf(service.getReferences3Filtered()));
     }
     
 }
