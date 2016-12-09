@@ -25,17 +25,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.override.DummyConfigurationOverrideProvider;
+import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Test {@link ConfigurationResolver} with ValueMap for reading the config.
@@ -101,6 +106,42 @@ public class ConfigurationResolverValueMapTest {
         assertEquals("configValue1.1", propsIterator.next().get("stringParam", String.class));
         assertEquals("configValue1.2", propsIterator.next().get("stringParam", String.class));
         assertEquals("configValue1.3", propsIterator.next().get("stringParam", String.class));
+    }
+
+    @Test
+    public void testConfigWithDefaultValues() {
+        context.registerService(ConfigurationMetadataProvider.class, new DummyConfigurationMetadataProvider("sampleName", 
+                ImmutableMap.<String, Object>of("stringParam", "defValue1", "intParam", 999), false));
+        
+        context.build().resource("/conf/content/site1/sling:configs/sampleName", 
+                "boolParam", true);
+
+        ValueMap props = underTest.get(site1Page1).name("sampleName").asValueMap();
+
+        assertEquals("defValue1", props.get("stringParam", String.class));
+        assertEquals(999, (int)props.get("intParam", 0));
+        assertEquals(true, props.get("boolParam", false));
+    }
+
+    @Test
+    public void testConfigCollectionWithDefaultValues() {
+        context.registerService(ConfigurationMetadataProvider.class, new DummyConfigurationMetadataProvider("sampleList", 
+                ImmutableMap.<String, Object>of("intParam", 999), true));
+
+        context.build().resource("/conf/content/site1/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
+
+        List<ValueMap> propsList = ImmutableList.copyOf(underTest.get(site1Page1).name("sampleList").asValueMapCollection());
+
+        assertEquals("configValue1.1", propsList.get(0).get("stringParam", String.class));
+        assertEquals(999, (int)propsList.get(0).get("intParam", 0));
+        assertEquals("configValue1.2", propsList.get(1).get("stringParam", String.class));
+        assertEquals(999, (int)propsList.get(1).get("intParam", 0));
+        assertEquals("configValue1.3", propsList.get(2).get("stringParam", String.class));
+        assertEquals(999, (int)propsList.get(2).get("intParam", 0));
     }
 
     @Test

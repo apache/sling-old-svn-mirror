@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
-import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
@@ -69,7 +68,6 @@ public class ConfigurationManagerImplNoDefaultTest {
     @Before
     public void setUp() {
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
-        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         ConfigurationTestUtils.registerConfigurationResolverWithoutDefaultImpl(context);
         underTest = context.registerInjectActivateService(new ConfigurationManagerImpl());
         

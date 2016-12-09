@@ -80,10 +80,12 @@ public class ConfigurationResolverAdaptableTest {
 
         SimpleSlingModel model = underTest.get(site1Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
         assertEquals("configValue1", model.getStringParam());
+        assertEquals(111, model.getIntParam());
+        assertEquals(true, model.getBoolParam());
     }
 
     @Test
-    public void testConfig_ValueMapCollection() {
+    public void testConfigCollection() {
         context.build().resource("/conf/content/site1/sling:configs/sampleList")
             .siblingsMode()
             .resource("1", "stringParam", "configValue1.1")
@@ -97,6 +99,45 @@ public class ConfigurationResolverAdaptableTest {
         assertEquals("configValue1.2", propsIterator.next().getStringParam());
         assertEquals("configValue1.3", propsIterator.next().getStringParam());
     }
+
+    /*
+     -- this is currently not supported --
+    @Test
+    public void testConfigWithDefaultValues() {
+        context.registerService(ConfigurationMetadataProvider.class, new DummyConfigurationMetadataProvider("sampleName", 
+                ImmutableMap.<String, Object>of("stringParam", "defValue1", "intParam", 999), false));
+
+        context.build().resource("/conf/content/site1/sling:configs/sampleName",
+                "boolParam", true);
+
+        SimpleSlingModel model = underTest.get(site1Page1).name("sampleName").asAdaptable(SimpleSlingModel.class);
+        assertEquals("defValue1", model.getStringParam());
+        assertEquals(999, model.getIntParam());
+        assertEquals(true, model.getBoolParam());
+    }
+
+    @Test
+    public void testConfigCollectionWithDefaultValues() {
+        context.registerService(ConfigurationMetadataProvider.class, new DummyConfigurationMetadataProvider("sampleList", 
+                ImmutableMap.<String, Object>of("intParam", 999), true));
+
+        context.build().resource("/conf/content/site1/sling:configs/sampleList")
+            .siblingsMode()
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
+
+        List<SimpleSlingModel> propsList = ImmutableList.copyOf(underTest.get(site1Page1).name("sampleList").asAdaptableCollection(SimpleSlingModel.class));
+
+        assertEquals("configValue1.1", propsList.get(0).getStringParam());
+        assertEquals(999, propsList.get(0).getIntParam());
+        assertEquals("configValue1.2", propsList.get(1).getStringParam());
+        assertEquals(999, propsList.get(1).getIntParam());
+        assertEquals("configValue1.3", propsList.get(2).getStringParam());
+        assertEquals(999, propsList.get(2).getIntParam());
+    }
+    -- end --
+    */
 
     @Test
     public void testNonExistingContentResource() {
