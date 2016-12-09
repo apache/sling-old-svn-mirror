@@ -46,7 +46,13 @@ public final class MapUtil {
         if (map == null) {
             return null;
         }
-        return new Hashtable<T, U>(map);
+        Hashtable<T, U> hashtable = new Hashtable<>();
+        for (Map.Entry<T, U> entry : map.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                hashtable.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return hashtable;
     }
 
     /**
@@ -101,7 +107,11 @@ public final class MapUtil {
         }
         final Map<String, Object> result = new HashMap<>();
         for (int i=0 ; i < args.length; i+=2) {
-            result.put(args[i].toString(), args[i+1]);
+            Object key = args[i];
+            Object value = args[i+1];
+            if (key != null && value != null) {
+                result.put(key.toString(), value);
+            }
         }
         return result;
     }
