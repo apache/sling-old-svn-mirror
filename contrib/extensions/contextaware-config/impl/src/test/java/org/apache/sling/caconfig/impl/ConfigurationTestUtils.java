@@ -21,6 +21,7 @@ package org.apache.sling.caconfig.impl;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceTestUtils;
@@ -43,6 +44,7 @@ public final class ConfigurationTestUtils {
         context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationOverrideManager());
+        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }
     
@@ -56,6 +58,7 @@ public final class ConfigurationTestUtils {
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
         context.registerInjectActivateService(new ConfigurationOverrideManager());
+        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }
     

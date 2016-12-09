@@ -28,4 +28,10 @@ public interface SimpleSlingModel {
     @ValueMapValue(name="stringParam")
     String getStringParam();
     
+    @ValueMapValue(name="intParam", optional = true)
+    int getIntParam();
+    
+    @ValueMapValue(name="boolParam", optional = true)
+    boolean getBoolParam();
+    
 }

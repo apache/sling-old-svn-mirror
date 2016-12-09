@@ -28,6 +28,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolver;
+import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
@@ -50,6 +51,8 @@ public class ConfigurationResolverImpl implements ConfigurationResolver, Configu
     private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
     @Reference
     private ConfigurationOverrideManager configurationOverrideManager;
+    @Reference
+    private ConfigurationMetadataProviderMultiplexer configurationMetadataProvider;
     
     @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Resolver",
             description="Getting context-aware configurations for a given resource context.")
@@ -79,7 +82,7 @@ public class ConfigurationResolverImpl implements ConfigurationResolver, Configu
     public ConfigurationBuilder get(Resource resource) {
         return new ConfigurationBuilderImpl(resource, this,
                 configurationResourceResolvingStrategy, configurationPersistenceStrategy,
-                configurationInheritanceStrategy, configurationOverrideManager,
+                configurationInheritanceStrategy, configurationOverrideManager, configurationMetadataProvider,
                 configBucketNames);
     }
 

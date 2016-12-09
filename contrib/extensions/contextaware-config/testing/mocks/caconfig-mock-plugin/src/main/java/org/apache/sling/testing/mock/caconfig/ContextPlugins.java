@@ -104,6 +104,7 @@ public final class ContextPlugins {
      */
     private static void registerConfigurationResolver(SlingContextImpl context) {
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         
         // only required for impl 1.2+
         registerByClassName(context, "org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer");
@@ -127,7 +128,6 @@ public final class ContextPlugins {
     }
 
     private static void registerConfigurationManagement(SlingContextImpl context) {
-        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         context.registerInjectActivateService(new ConfigurationManagerImpl());
         context.registerInjectActivateService(new AnnotationClassConfigurationMetadataProvider());
     }

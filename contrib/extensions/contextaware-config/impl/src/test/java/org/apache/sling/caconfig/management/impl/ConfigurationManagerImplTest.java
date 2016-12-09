@@ -34,7 +34,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
 import org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants;
-import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.DummyConfigurationOverrideProvider;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
@@ -82,7 +81,6 @@ public class ConfigurationManagerImplTest {
     @Before
     public void setUp() {
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
-        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         ConfigurationTestUtils.registerConfigurationResolver(context,
                 "configBucketNames", getAlternativeBucketNames());
         underTest = context.registerInjectActivateService(new ConfigurationManagerImpl());

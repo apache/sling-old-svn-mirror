@@ -136,7 +136,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
         if (valuesCache == null) {
             Map<String,Object> props = new HashMap<>();
             if (writebackConfigurationResource != null) {
-                props.putAll( ResourceUtil.getValueMap(writebackConfigurationResource));
+                props.putAll(ResourceUtil.getValueMap(writebackConfigurationResource));
             }
             PropertiesFilterUtil.removeIgnoredProperties(props);
             resolveNestedConfigs(props);

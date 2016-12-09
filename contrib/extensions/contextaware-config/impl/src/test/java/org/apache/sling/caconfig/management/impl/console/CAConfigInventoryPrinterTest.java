@@ -29,7 +29,6 @@ import org.apache.felix.inventory.Format;
 import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
-import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
@@ -64,7 +63,6 @@ public class CAConfigInventoryPrinterTest {
     @Before
     public void setUp() {
         context.registerService(ConfigurationMetadataProvider.class, configurationMetadataProvider);
-        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         context.registerService(ConfigurationOverrideProvider.class, configurationOverrideProvider);
         ConfigurationTestUtils.registerConfigurationResolver(context);
         underTest = context.registerInjectActivateService(new CAConfigInventoryPrinter());

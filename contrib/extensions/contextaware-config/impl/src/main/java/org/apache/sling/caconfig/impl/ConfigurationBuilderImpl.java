@@ -21,13 +21,17 @@ package org.apache.sling.caconfig.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
@@ -38,7 +42,10 @@ import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
+import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +57,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
     private final ConfigurationInheritanceStrategy configurationInheritanceStrategy;
     private final ConfigurationOverrideManager configurationOverrideManager;
+    private final ConfigurationMetadataProvider configurationMetadataProvider;
     private final Collection<String> configBucketNames;
 
     private String configName;
@@ -62,6 +70,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             final ConfigurationPersistenceStrategy configurationPersistenceStrategy,
             final ConfigurationInheritanceStrategy configurationInheritanceStrategy,
             final ConfigurationOverrideManager configurationOverrideManager,
+            final ConfigurationMetadataProvider configurationMetadataProvider,
             final Collection<String> configBucketNames) {
         this.contentResource = resource;
         this.configurationResolver = configurationResolver;
@@ -69,6 +78,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configurationInheritanceStrategy = configurationInheritanceStrategy;
         this.configurationOverrideManager = configurationOverrideManager;
+        this.configurationMetadataProvider = configurationMetadataProvider;
         this.configBucketNames = configBucketNames;
     }
 
@@ -94,42 +104,42 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
      * @param <T> Target class
      */
     private interface Converter<T> {
-        T convert(Resource resource, Class<T> clazz, String name);
+        T convert(Resource resource, Class<T> clazz, String configName);
     }
 
     /**
      * Get singleton configuration resource and convert it to the desired target class.
-     * @param name Configuration name
+     * @param configName Configuration name
      * @param clazz Target class
      * @param converter Conversion method
      * @return Converted singleton configuration
      */
-    private <T> T getConfigResource(String name, Class<T> clazz, Converter<T> converter) {
+    private <T> T getConfigResource(String configName, Class<T> clazz, Converter<T> converter) {
         Iterator<Resource> resourceInheritanceChain = null;
         if (this.contentResource != null) {
-            validateConfigurationName(name);
+            validateConfigurationName(configName);
             resourceInheritanceChain = this.configurationResourceResolvingStrategy
-                    .getResourceInheritanceChain(this.contentResource, configBucketNames, name);
+                    .getResourceInheritanceChain(this.contentResource, configBucketNames, configName);
         }
-        return convert(resourceInheritanceChain, clazz, converter, name, false);
+        return convert(resourceInheritanceChain, clazz, converter, configName, false);
     }
 
     /**
      * Get configuration resource collection and convert it to the desired target class.
-     * @param name Configuration name
+     * @param configName Configuration name
      * @param clazz Target class
      * @param converter Conversion method
      * @return Converted configuration collection
      */
-    private <T> Collection<T> getConfigResourceCollection(String name, Class<T> clazz, Converter<T> converter) {
+    private <T> Collection<T> getConfigResourceCollection(String configName, Class<T> clazz, Converter<T> converter) {
         if (this.contentResource != null) {
-           validateConfigurationName(name);
+           validateConfigurationName(configName);
            final Collection<T> result = new ArrayList<>();
            Collection<Iterator<Resource>> resourceInheritanceChains = this.configurationResourceResolvingStrategy
-                   .getResourceCollectionInheritanceChain(this.contentResource, configBucketNames, name);;
+                   .getResourceCollectionInheritanceChain(this.contentResource, configBucketNames, configName);;
            if (resourceInheritanceChains != null) {
                for (final Iterator<Resource> resourceInheritanceChain : resourceInheritanceChains) {
-                   final T obj = convert(resourceInheritanceChain, clazz, converter, name, true);
+                   final T obj = convert(resourceInheritanceChain, clazz, converter, configName, true);
                    if (obj != null) {
                        result.add(obj);
                    }
@@ -171,6 +181,37 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         }
         return converter.convert(configResource, clazz, conversionName);
     }
+    
+    /**
+     * Apply default values from configuration metadata (where no real data is present).
+     * @param props Properties
+     * @param configName Configuration name
+     * @return null if default values found, or a new map with added default properties.
+     */
+    private Map<String,Object> applyDefaultValues(Map<String,Object> props, String configName) {
+        ConfigurationMetadata metadata = configurationMetadataProvider.getConfigurationMetadata(configName);
+        if (metadata == null) {
+            // probably a configuration list - remove item name from end
+            if (StringUtils.contains(configName, "/")) {
+                String partialConfigName = StringUtils.substringBeforeLast(configName, "/");
+                metadata = configurationMetadataProvider.getConfigurationMetadata(partialConfigName);
+            }
+            if (metadata == null) {
+                return null;
+            }
+        }
+        Map<String,Object> updatedMap = new HashMap<>();
+        for (PropertyMetadata<?> propertyMetadata : metadata.getPropertyMetadata().values()) {
+            if (propertyMetadata.getDefaultValue() != null) {
+                updatedMap.put(propertyMetadata.getName(), propertyMetadata.getDefaultValue());
+            }
+        }
+        if (updatedMap.isEmpty()) {
+            return null;
+        }
+        updatedMap.putAll(props);
+        return updatedMap;
+    }
 
     // --- Annotation class support ---
 
@@ -204,10 +245,10 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
 
     private class AnnotationConverter<T> implements Converter<T> {
         @Override
-        public T convert(final Resource resource, final Class<T> clazz, final String name) {
+        public T convert(final Resource resource, final Class<T> clazz, final String configName) {
             return ConfigurationProxy.get(resource, clazz, new ChildResolver() {
-                private ConfigurationBuilder getConfiguration(String configName) {
-                    String childName = configurationPersistenceStrategy.getResourcePath(name) + "/" + configName;
+                private ConfigurationBuilder getConfiguration(String nestedConfigName) {
+                    String childName = configurationPersistenceStrategy.getResourcePath(configName) + "/" + nestedConfigName;
                     return configurationResolver.get(contentResource).name(childName);
                 }
                 @Override
@@ -240,10 +281,17 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return getConfigResourceCollection(this.configName, ValueMap.class, new ValueMapConverter());
     }
 
-    private static class ValueMapConverter implements Converter<ValueMap> {
+    private class ValueMapConverter implements Converter<ValueMap> {
         @Override
-        public ValueMap convert(Resource resource, Class<ValueMap> clazz, String name) {
-            return ResourceUtil.getValueMap(resource);
+        public ValueMap convert(Resource resource, Class<ValueMap> clazz, String configName) {
+            ValueMap props = ResourceUtil.getValueMap(resource);
+            Map<String,Object> updatedMap = applyDefaultValues(props, configName);
+            if (updatedMap != null) {
+                return new ValueMapDecorator(updatedMap);
+            }
+            else {
+                return props;
+            }
         }
     }
     
@@ -265,9 +313,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         return getConfigResourceCollection(this.configName, clazz, new AdaptableConverter<T>());
     }
 
-    private static class AdaptableConverter<T> implements Converter<T> {
+    private class AdaptableConverter<T> implements Converter<T> {
         @Override
-        public T convert(Resource resource, Class<T> clazz, String name) {
+        public T convert(Resource resource, Class<T> clazz, String configName) {
             if (resource == null || clazz == ConfigurationBuilder.class) {
                 return null;
             }
