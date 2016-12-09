@@ -120,7 +120,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
             while (resource != null) {
                 String configRef = getConfigRef(resource);
                 if (configRef != null) {
-                    log.trace("Found context path {}, configRef {}", resource.getPath(), configRef);
+                    log.trace("+ Found context path {}, configRef {}", resource.getPath(), configRef);
                     return new ContextResource(resource, configRef);
                 }
                 // if getParent() returns null, stop

@@ -166,7 +166,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             }
         }
         if (log.isTraceEnabled() && configResource != null) {
-            log.trace("Found config resource for context path " + contentResource.getPath() + ": " + configResource.getPath() + " "
+            log.trace("+ Found config resource for context path " + contentResource.getPath() + ": " + configResource.getPath() + " "
                     + MapUtil.traceOutput(configResource.getValueMap()));
         }
         return converter.convert(configResource, clazz, conversionName);

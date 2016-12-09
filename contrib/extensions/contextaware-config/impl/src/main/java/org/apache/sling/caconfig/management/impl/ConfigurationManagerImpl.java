@@ -76,7 +76,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     public ConfigurationData getConfiguration(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
         if (log.isDebugEnabled()) {
-            log.debug("Get configuration for context path {}, name '{}', class {}", resource.getPath(), configName);
+            log.debug("Get configuration for context path {}, name '{}'", resource.getPath(), configName);
         }
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         Resource configResource = null;
@@ -104,7 +104,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 }
                 
                 if (log.isTraceEnabled() && configResource != null) {
-                    log.trace("Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
+                    log.trace("+ Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
                             + MapUtil.traceOutput(configResource.getValueMap()) + ", "
                             + "writeback config resource: " + writebackConfigResourcePath);
                 }
@@ -127,7 +127,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     public ConfigurationCollectionData getConfigurationCollection(Resource resource, String configName) {
         ConfigNameUtil.ensureValidConfigName(configName);
         if (log.isDebugEnabled()) {
-            log.debug("Get configuration collection for context path {}, name '{}', class {}", resource.getPath(), configName);
+            log.debug("Get configuration collection for context path {}, name '{}'", resource.getPath(), configName);
         }
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         List<ConfigurationData> configData = new ArrayList<>();
@@ -161,7 +161,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     }
                     
                     if (log.isTraceEnabled() && configResource != null) {
-                        log.trace("Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
+                        log.trace("+ Found config resource for context path " + resource.getPath() + ": " + configResource.getPath() + " "
                                 + MapUtil.traceOutput(configResource.getValueMap()) + ", "
                                 + "writeback config resource: " + writebackConfigResourcePath);
                     }
@@ -294,7 +294,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigNameUtil.ensureValidConfigName(configName);
         ConfigurationMetadata metadata = configurationMetadataProvider.getConfigurationMetadata(configName);
         if (metadata != null) {
-            log.trace("Configuration metadata found for: {}", configName);
+            log.trace("+ Configuration metadata found for: {}", configName);
             return metadata;
         }
         
@@ -304,13 +304,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             if (partialConfigMetadata != null) {
                 ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, configName, partialConfigName);
                 if (nestedConfigMetadata != null) {
-                    log.trace("Nested configuration metadata found for: {}", configName);
+                    log.trace("+ Nested configuration metadata found for: {}", configName);
                     return nestedConfigMetadata;
                 }
             }
         }
 
-        log.trace("No configuration metadata found for: {}", configName);
+        log.trace("- No configuration metadata found for: {}", configName);
         return null;
     }
     

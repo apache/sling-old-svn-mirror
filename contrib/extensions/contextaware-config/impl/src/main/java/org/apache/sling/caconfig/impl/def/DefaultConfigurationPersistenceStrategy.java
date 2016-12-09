@@ -27,7 +27,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
@@ -104,18 +103,13 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         if (!config.enabled()) {
             return false;
         }
-        Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, ValueMap.EMPTY);
+        Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, data.getProperties()); 
         
         // delete existing children and create new ones
         deleteChildren(configResourceParent);
         for (ConfigurationPersistData item : data.getItems()) {
             String path = configResourceParent.getPath() + "/" + item.getCollectionItemName();
             getOrCreateResource(resourceResolver, path, item.getProperties());
-        }
-        
-        // if resource collection parent properties are given replace them as well
-        if (data.getProperties() != null) {
-            replaceProperties(configResourceParent, data.getProperties());
         }
         
         commit(resourceResolver);
@@ -130,7 +124,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         Resource resource = resourceResolver.getResource(configResourcePath);
         if (resource != null) {
             try {
-                log.trace("Delete resource {}", resource.getPath());
+                log.trace("! Delete resource {}", resource.getPath());
                 resourceResolver.delete(resource);
             }
             catch (PersistenceException ex) {
@@ -144,7 +138,9 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     private Resource getOrCreateResource(ResourceResolver resourceResolver, String path, Map<String,Object> properties) {
         try {
             Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, (String)null, (String)null, false);
-            replaceProperties(resource, properties);
+            if (properties != null) {
+                replaceProperties(resource, properties);
+            }
             return resource;
         }
         catch (PersistenceException ex) {
@@ -156,7 +152,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         ResourceResolver resourceResolver = resource.getResourceResolver();
         try {
             for (Resource child : resource.getChildren()) {
-                log.trace("Delete resource {}", child.getPath());
+                log.trace("! Delete resource {}", child.getPath());
                 resourceResolver.delete(child);
             }
         }
@@ -167,7 +163,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     
     private void replaceProperties(Resource resource, Map<String,Object> properties) {
         if (log.isTraceEnabled()) {
-            log.trace("Replace properties of resource {} with {}", resource.getPath(), MapUtil.traceOutput(properties));
+            log.trace("! Store properties for resource {}: {}", resource.getPath(), MapUtil.traceOutput(properties));
         }
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
         // remove all existing properties that are not filterd
