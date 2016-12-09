@@ -39,7 +39,7 @@ import org.osgi.framework.ServiceRegistration;
 import com.google.common.collect.ImmutableSet;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MockBundleContextDynamicReferncesTest {
+public class MockBundleContextDynamicReferencesTest {
 
     private BundleContext bundleContext;
     private Service3 service;
