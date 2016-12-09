@@ -41,6 +41,13 @@
         allow   jcr:read    on /libs/sling/xss,/apps/sling/xss
     end
 
+    # sling-i18n
+    create service user sling-i18n
+
+    set ACL for sling-i18n
+        allow   jcr:read    on /
+    end
+
     # sling-jcr-install
     create service user sling-jcr-install
 
