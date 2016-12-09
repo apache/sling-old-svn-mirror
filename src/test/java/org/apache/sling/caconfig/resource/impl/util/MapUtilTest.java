@@ -31,13 +31,13 @@ public class MapUtilTest {
     public void testTraceOutput() {
         assertEquals("{}", traceOutput(ImmutableMap.<String,Object>of()));
         
-        assertEquals("{prop1: aa, prop2: 5, prop3: true}", traceOutput(ImmutableMap.<String,Object>of(
+        assertEquals("{prop1: 'aa', prop2: 5, prop3: true}", traceOutput(ImmutableMap.<String,Object>of(
                 "prop1", "aa",
                 "prop2", 5,
                 "prop3", true
                 )));
 
-        assertEquals("{prop1: [aa,bb], prop2: [5,10], prop3: true}", traceOutput(ImmutableMap.<String,Object>of(
+        assertEquals("{prop1: ['aa','bb'], prop2: [5,10], prop3: true}", traceOutput(ImmutableMap.<String,Object>of(
                 "prop1", new String[] { "aa", "bb" },
                 "prop2", new Integer[] { 5, 10 },
                 "prop3", true

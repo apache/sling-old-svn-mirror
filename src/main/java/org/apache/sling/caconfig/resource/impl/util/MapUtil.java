@@ -67,6 +67,9 @@ public final class MapUtil {
             }
             sb.append("]");
         }
+        else if (value instanceof String) {
+            sb.append("'").append(value.toString()).append("'");
+        }
         else {
             sb.append(value.toString());
         }
