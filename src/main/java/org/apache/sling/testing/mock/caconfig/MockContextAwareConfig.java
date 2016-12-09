@@ -18,8 +18,8 @@
  */
 package org.apache.sling.testing.mock.caconfig;
 
+import org.apache.sling.testing.mock.sling.context.SlingContextImpl;
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.framework.BundleContext;
 
 /**
  * Helps setting up a mock environment for Context-Aware Configuration.
@@ -33,20 +33,20 @@ public final class MockContextAwareConfig {
 
     /**
      * Search classpath for given class names to scan for and register all classes with @Configuration annotation.
-     * @param bundleContext Bundle context
+     * @param context Sling context
      * @param classNames Java class names
      */
-    public static void registerAnnotationClasses(BundleContext bundleContext, String... classNames) {
-        ConfigurationMetadataUtil.registerAnnotationClasses(bundleContext, classNames);
+    public static void registerAnnotationClasses(SlingContextImpl context, String... classNames) {
+        ConfigurationMetadataUtil.registerAnnotationClasses(context.bundleContext(), classNames);
     }
 
     /**
      * Search classpath for given class names to scan for and register all classes with @Configuration annotation.
-     * @param bundleContext Bundle context
+     * @param context Sling context
      * @param classNames Java class names
      */
-    public static void registerAnnotationClasses(BundleContext bundleContext, Class... classes) {
-        ConfigurationMetadataUtil.registerAnnotationClasses(bundleContext, classes);
+    public static void registerAnnotationClasses(SlingContextImpl context, Class... classes) {
+        ConfigurationMetadataUtil.registerAnnotationClasses(context.bundleContext(), classes);
     }
 
 }
