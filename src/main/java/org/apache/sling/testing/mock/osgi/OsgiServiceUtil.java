@@ -33,6 +33,7 @@ import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferenceCardinality;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferencePolicy;
+import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.ReferencePolicyOption;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -407,7 +408,8 @@ final class OsgiServiceUtil {
     }
 
     /**
-     * Collects all references of any registered service that match with any of the exported interfaces of the given service registration.
+     * Collects all references of any registered service that match with any of the exported interfaces of the given service registration
+     * and are defined as DYNAMIC.
      * @param registeredServices Registered Services
      * @param registration Service registration
      * @return List of references
@@ -420,6 +422,33 @@ final class OsgiServiceUtil {
             if (metadata != null) {
                 for (Reference reference : metadata.getReferences()) {
                     if (reference.getPolicy() == ReferencePolicy.DYNAMIC) {
+                        for (String serviceInterface : registration.getClasses()) {
+                            if (StringUtils.equals(serviceInterface, reference.getInterfaceType())) {
+                                references.add(new ReferenceInfo(existingRegistration, reference));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return references;
+    }
+            
+    /**
+     * Collects all references of any registered service that match with any of the exported interfaces of the given service registration
+     * and are defined as STATIC + GREEDY.
+     * @param registeredServices Registered Services
+     * @param registration Service registration
+     * @return List of references
+     */
+    public static List<ReferenceInfo> getMatchingStaticGreedyReferences(SortedSet<MockServiceRegistration> registeredServices,
+            MockServiceRegistration registration) {
+        List<ReferenceInfo> references = new ArrayList<ReferenceInfo>();
+        for (MockServiceRegistration existingRegistration : registeredServices) {
+            OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(existingRegistration.getService().getClass());
+            if (metadata != null) {
+                for (Reference reference : metadata.getReferences()) {
+                    if (reference.getPolicy() == ReferencePolicy.STATIC && reference.getPolicyOption() == ReferencePolicyOption.GREEDY) {
                         for (String serviceInterface : registration.getClasses()) {
                             if (StringUtils.equals(serviceInterface, reference.getInterfaceType())) {
                                 references.add(new ReferenceInfo(existingRegistration, reference));
