@@ -386,6 +386,7 @@ final class OsgiMetadataUtil {
         private final String interfaceType;
         private final ReferenceCardinality cardinality;
         private final ReferencePolicy policy;
+        private final ReferencePolicyOption policyOption;
         private final String bind;
         private final String unbind;
 
@@ -395,6 +396,7 @@ final class OsgiMetadataUtil {
             this.interfaceType = getAttributeValue(node, "interface");
             this.cardinality = toCardinality(getAttributeValue(node, "cardinality"));
             this.policy = toPolicy(getAttributeValue(node, "policy"));
+            this.policyOption = toPolicyOption(getAttributeValue(node, "policy-option"));
             this.bind = getAttributeValue(node, "bind");
             this.unbind = getAttributeValue(node, "unbind");
         }
@@ -419,6 +421,10 @@ final class OsgiMetadataUtil {
             return policy;
         }
 
+        public ReferencePolicyOption getPolicyOption() {
+            return policyOption;
+        }
+        
         public String getBind() {
             return this.bind;
         }
@@ -445,6 +451,15 @@ final class OsgiMetadataUtil {
             return ReferencePolicy.STATIC;
         }
 
+        private static ReferencePolicyOption toPolicyOption(String value) {
+            for (ReferencePolicyOption item : ReferencePolicyOption.values()) {
+                if (StringUtils.equalsIgnoreCase(item.name(), value)) {
+                    return item;
+                }
+            }
+            return ReferencePolicyOption.RELUCTANT;
+        }
+        
     }
 
 
@@ -513,4 +528,28 @@ final class OsgiMetadataUtil {
         DYNAMIC;
     }
 
+    /**
+     * Options for {@link Reference#policyOption()} property.
+     */
+    enum ReferencePolicyOption {
+
+        /**
+         * The reluctant policy option is the default policy option.
+         * When a new target service for a reference becomes available,
+         * references having the reluctant policy option for the static
+         * policy or the dynamic policy with a unary cardinality will
+         * ignore the new target service. References having the dynamic
+         * policy with a multiple cardinality will bind the new
+         * target service
+         */
+        RELUCTANT,
+
+        /**
+         * When a new target service for a reference becomes available,
+         * references having the greedy policy option will bind the new
+         * target service.
+         */
+        GREEDY;
+    }
+    
 }
