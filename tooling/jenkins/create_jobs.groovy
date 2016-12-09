@@ -824,7 +824,7 @@ def modules = [
 // deployed for maximum compatibility
 def defaultJdks = ["1.7", "1.8"]
 def defaultMvn = "Maven 3.3.9"
-def defaultSlave = "ubuntu&&!ubuntu-4" // exclude ubuntu-4 until INFRA-13063 is fixed
+def defaultSlave = "ubuntu-4"
 
 def jdkMapping = [
     "1.7": "JDK 1.7 (latest)",
