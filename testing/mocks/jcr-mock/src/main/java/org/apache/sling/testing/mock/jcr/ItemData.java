@@ -38,6 +38,7 @@ class ItemData {
     private Value[] values;
     private boolean isMultiple;
     private boolean isNew;
+    private boolean isChanged;
     
     private ItemData(String path, boolean isNode, String uuid, NodeType nodeType) {
         this.path = path;
@@ -46,6 +47,7 @@ class ItemData {
         this.isNode = isNode;
         this.nodeType = nodeType;
         this.isNew = true;
+        this.isChanged = false;
     }
     
     public String getPath() {
@@ -90,6 +92,7 @@ class ItemData {
             throw new UnsupportedOperationException();
         }
         this.values = values;
+        this.isChanged = true;
     }
 
     public boolean isMultiple() {
@@ -104,6 +107,7 @@ class ItemData {
             throw new UnsupportedOperationException();
         }
         this.isMultiple = isMultiple;
+        this.isChanged = true;
     }
     
     public Item getItem(Session session) {
@@ -122,6 +126,15 @@ class ItemData {
     public void setIsNew(boolean isNew) {
         this.isNew = isNew;
     }
+
+    public boolean isChanged() {
+        return !isNew() && this.isChanged;
+    }
+
+    public void setIsChanged(boolean isChanged) {
+        this.isChanged = isChanged;
+    }
+
 
     @Override
     public int hashCode() {

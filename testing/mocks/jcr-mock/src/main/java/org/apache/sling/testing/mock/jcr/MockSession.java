@@ -56,16 +56,19 @@ class MockSession implements Session {
     private final Map<String, ItemData> items;
     private final String userId;
     private boolean isLive;
+    private boolean hasKnownChanges;
 
-    public MockSession(MockRepository repository, Map<String,ItemData> items,
-            String userId, String workspaceName) {
+    public MockSession(MockRepository repository, Map<String, ItemData> items,
+            String userId, String workspaceName) throws RepositoryException {
         this.repository = repository;
         this.workspace = new MockWorkspace(repository, this, workspaceName);
         this.items = items;
         this.userId = userId;
         isLive = true;
+        hasKnownChanges = false;
+        this.save();
     }
-    
+
     private void checkLive() throws RepositoryException {
         if (!isLive) {
             throw new RepositoryException("Session is logged out / not live.");
@@ -192,6 +195,8 @@ class MockSession implements Session {
         for (String pathToRemove : pathsToRemove) {
             this.items.remove(pathToRemove);
         }
+
+        hasKnownChanges = true;
     }
 
     RangeIterator listChildren(final String parentPath, final ItemFilter filter) throws RepositoryException {
@@ -216,6 +221,17 @@ class MockSession implements Session {
     @Override
     public boolean hasPendingChanges() throws RepositoryException {
         checkLive();
+
+        if (hasKnownChanges) {
+            return true;
+        }
+
+        for (final ItemData item : this.items.values()) {
+            if (item.isNew() || item.isChanged()) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -270,7 +286,10 @@ class MockSession implements Session {
         // reset new flags
         for (ItemData itemData : this.items.values()) {
             itemData.setIsNew(false);
+            itemData.setIsChanged(false);
         }
+
+        hasKnownChanges = false;
     }
 
     @Override
@@ -294,7 +313,7 @@ class MockSession implements Session {
     public void logout() {
         isLive = false;
     }
-    
+
     // --- unsupported operations ---
     @Override
     public void addLockToken(final String lt) {

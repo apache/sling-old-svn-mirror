@@ -103,12 +103,24 @@ public final class ContentLoader {
      * @return Resource
      */
     public Resource json(String classpathResource, Resource parentResource, String childName) {
+        return json(classpathResource, parentResource, childName, true);
+    }
+
+    /**
+     * Import content of JSON file into repository.
+     * @param classpathResource Classpath resource URL for JSON content
+     * @param parentResource Parent resource
+     * @param childName Name of child resource to create with JSON content
+     * @param commit commit changes
+     * @return Resource
+     */
+    public Resource json(String classpathResource, Resource parentResource, String childName, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return json(is, parentResource, childName);
+            return json(is, parentResource, childName, commit);
         } finally {
             try {
                 is.close();
@@ -126,12 +138,24 @@ public final class ContentLoader {
      * @return Resource
      */
     public Resource json(String classpathResource, String destPath) {
+        return json(classpathResource, destPath, true);
+    }
+
+    /**
+     * Import content of JSON file into repository. Auto-creates parent
+     * hierarchies as nt:unstrucured nodes if missing.
+     * @param classpathResource Classpath resource URL for JSON content
+     * @param destPath Path to import the JSON content to
+     * @param commit commit changes
+     * @return Resource
+     */
+    public Resource json(String classpathResource, String destPath, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return json(is, destPath);
+            return json(is, destPath, commit);
         } finally {
             try {
                 is.close();
@@ -149,7 +173,19 @@ public final class ContentLoader {
      * @return Resource
      */
     public Resource json(InputStream inputStream, Resource parentResource, String childName) {
-        return json(inputStream, parentResource.getPath() + "/" + childName);
+        return json(inputStream, parentResource, childName, true);
+    }
+
+    /**
+     * Import content of JSON file into repository.
+     * @param inputStream Input stream with JSON content
+     * @param parentResource Parent resource
+     * @param childName Name of child resource to create with JSON content
+     * @param commit commit changes
+     * @return Resource
+     */
+    public Resource json(InputStream inputStream, Resource parentResource, String childName, boolean commit) {
+        return json(inputStream, parentResource.getPath() + "/" + childName, commit);
     }
 
     /**
@@ -160,6 +196,18 @@ public final class ContentLoader {
      * @return Resource
      */
     public Resource json(InputStream inputStream, String destPath) {
+        return json(inputStream, destPath, true);
+    }
+
+    /**
+     * Import content of JSON file into repository. Auto-creates parent
+     * hierarchies as nt:unstrucured nodes if missing.
+     * @param inputStream Input stream with JSON content
+     * @param destPath Path to import the JSON content to
+     * @param commit commit changes
+     * @return Resource
+     */
+    public Resource json(InputStream inputStream, String destPath, boolean commit) {
         try {
             String parentPath = ResourceUtil.getParent(destPath);
             String childName = ResourceUtil.getName(destPath);
@@ -175,7 +223,11 @@ public final class ContentLoader {
             String jsonString = convertToJsonString(inputStream).trim();
             JSONObject json = new JSONObject(jsonString);
             Resource resource = this.createResource(parentResource, childName, json);
-            resourceResolver.commit();
+
+            if(commit) {
+                resourceResolver.commit();
+            }
+
             return resource;
         } catch (JSONException ex) {
             throw new RuntimeException(ex);
@@ -368,12 +420,26 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(String classpathResource, String path) {
+        return binaryFile(classpathResource, path, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing. Mime type is
+     * auto-detected from resource name.
+     * @param classpathResource Classpath resource URL for binary file.
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(String classpathResource, String path, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryFile(is, path, detectMimeTypeFromName(path));
+            return binaryFile(is, path, detectMimeTypeFromName(path), commit);
         } finally {
             try {
                 is.close();
@@ -393,12 +459,26 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(String classpathResource, String path, String mimeType) {
+        return binaryFile(classpathResource, path, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing.
+     * @param classpathResource Classpath resource URL for binary file.
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param mimeType Mime type of binary data
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(String classpathResource, String path, String mimeType, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryFile(is, path, mimeType);
+            return binaryFile(is, path, mimeType, commit);
         } finally {
             try {
                 is.close();
@@ -418,7 +498,21 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, String path) {
-        return binaryFile(inputStream, path, detectMimeTypeFromName(path));
+        return binaryFile(inputStream, path, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing. Mime type is
+     * auto-detected from resource name.
+     * @param inputStream Input stream for binary data
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(InputStream inputStream, String path, boolean commit) {
+        return binaryFile(inputStream, path, detectMimeTypeFromName(path), commit);
     }
 
     /**
@@ -431,13 +525,27 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, String path, String mimeType) {
+        return binaryFile(inputStream, path, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing.
+     * @param inputStream Input stream for binary data
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param mimeType Mime type of binary data
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(InputStream inputStream, String path, String mimeType, boolean commit) {
         String parentPath = ResourceUtil.getParent(path, 1);
         String name = ResourceUtil.getName(path);
         Resource parentResource = resourceResolver.getResource(parentPath);
         if (parentResource == null) {
             parentResource = createResourceHierarchy(parentPath);
         }
-        return binaryFile(inputStream, parentResource, name, mimeType);
+        return binaryFile(inputStream, parentResource, name, mimeType, commit);
     }
 
     /**
@@ -450,7 +558,21 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, Resource parentResource, String name) {
-        return binaryFile(inputStream, parentResource, name, detectMimeTypeFromName(name));
+        return binaryFile(inputStream, parentResource, name, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing. Mime type is
+     * auto-detected from resource name.
+     * @param inputStream Input stream for binary data
+     * @param parentResource Parent resource
+     * @param name Resource name for nt:file
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(InputStream inputStream, Resource parentResource, String name, boolean commit) {
+        return binaryFile(inputStream, parentResource, name, detectMimeTypeFromName(name), commit);
     }
 
     /**
@@ -463,6 +585,20 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, Resource parentResource, String name, String mimeType) {
+        return binaryFile(inputStream, parentResource, name, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:file binary node into repository. Auto-creates
+     * parent hierarchies as nt:unstrucured nodes if missing.
+     * @param inputStream Input stream for binary data
+     * @param parentResource Parent resource
+     * @param name Resource name for nt:file
+     * @param mimeType Mime type of binary data
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryFile(InputStream inputStream, Resource parentResource, String name, String mimeType, boolean commit) {
         try {
             Resource file = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_FILE)
@@ -470,7 +606,11 @@ public final class ContentLoader {
             resourceResolver.create(file, JcrConstants.JCR_CONTENT,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
-            resourceResolver.commit();
+
+            if(commit) {
+                resourceResolver.commit();
+            }
+
             return file;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
@@ -487,12 +627,26 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(String classpathResource, String path) {
+        return binaryResource(classpathResource, path, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing. Mime
+     * type is auto-detected from resource name.
+     * @param classpathResource Classpath resource URL for binary file.
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(String classpathResource, String path, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryResource(is, path, detectMimeTypeFromName(path));
+            return binaryResource(is, path, detectMimeTypeFromName(path), commit);
         } finally {
             try {
                 is.close();
@@ -512,12 +666,26 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(String classpathResource, String path, String mimeType) {
+        return binaryResource(classpathResource, path, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing.
+     * @param classpathResource Classpath resource URL for binary file.
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param mimeType Mime type of binary data
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(String classpathResource, String path, String mimeType, boolean commit) {
         InputStream is = ContentLoader.class.getResourceAsStream(classpathResource);
         if (is == null) {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryResource(is, path, mimeType);
+            return binaryResource(is, path, mimeType, commit);
         } finally {
             try {
                 is.close();
@@ -537,7 +705,21 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, String path) {
-        return binaryResource(inputStream, path, detectMimeTypeFromName(path));
+        return binaryResource(inputStream, path, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing. Mime
+     * type is auto-detected from resource name.
+     * @param inputStream Input stream for binary data
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(InputStream inputStream, String path, boolean commit) {
+        return binaryResource(inputStream, path, detectMimeTypeFromName(path), commit);
     }
 
     /**
@@ -550,13 +732,27 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, String path, String mimeType) {
+        return binaryResource(inputStream, path, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing.
+     * @param inputStream Input stream for binary data
+     * @param path Path to mount binary data to (parent nodes created
+     *            automatically)
+     * @param mimeType Mime type of binary data
+     * @param commit
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(InputStream inputStream, String path, String mimeType, boolean commit) {
         String parentPath = ResourceUtil.getParent(path, 1);
         String name = ResourceUtil.getName(path);
         Resource parentResource = resourceResolver.getResource(parentPath);
         if (parentResource == null) {
             parentResource = createResourceHierarchy(parentPath);
         }
-        return binaryResource(inputStream, parentResource, name, mimeType);
+        return binaryResource(inputStream, parentResource, name, mimeType, commit);
     }
 
     /**
@@ -569,7 +765,21 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, Resource parentResource, String name) {
-        return binaryResource(inputStream, parentResource, name, detectMimeTypeFromName(name));
+        return binaryFile(inputStream, parentResource, name, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing. Mime
+     * type is auto-detected from resource name.
+     * @param inputStream Input stream for binary data
+     * @param parentResource Parent resource
+     * @param name Resource name for nt:resource
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(InputStream inputStream, Resource parentResource, String name, boolean commit) {
+        return binaryResource(inputStream, parentResource, name, detectMimeTypeFromName(name), commit);
     }
 
     /**
@@ -582,11 +792,29 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, Resource parentResource, String name, String mimeType) {
+        return binaryResource(inputStream, parentResource, name, mimeType, true);
+    }
+
+    /**
+     * Import binary file as nt:resource binary node into repository.
+     * Auto-creates parent hierarchies as nt:unstrucured nodes if missing.
+     * @param inputStream Input stream for binary data
+     * @param parentResource Parent resource
+     * @param name Resource name for nt:resource
+     * @param mimeType Mime type of binary data
+     * @param commit commit changes
+     * @return Resource with binary data
+     */
+    public Resource binaryResource(InputStream inputStream, Resource parentResource, String name, String mimeType, boolean commit) {
         try {
             Resource resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
-            resourceResolver.commit();
+
+            if(commit) {
+                resourceResolver.commit();
+            }
+
             return resource;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
