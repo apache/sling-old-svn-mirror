@@ -184,9 +184,26 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     
     /**
      * Apply default values from configuration metadata (where no real data is present).
+     * @param resource Resource
+     * @param configName Configuration name
+     * @return null if no default values found, or a wrapped resource with added default properties.
+     */
+    private Resource applyDefaultValues(Resource resource, String configName) {
+        if (resource == null) {
+            return null;
+        }
+        Map<String,Object> updatedMap = applyDefaultValues(resource.getValueMap(), configName);
+        if (updatedMap == null) {
+            return resource;
+        }
+        return new ConfigurationResourceWrapper(resource, new ValueMapDecorator(updatedMap));
+    }
+    
+    /**
+     * Apply default values from configuration metadata (where no real data is present).
      * @param props Properties
      * @param configName Configuration name
-     * @return null if default values found, or a new map with added default properties.
+     * @return null if no default values found, or a new map with added default properties.
      */
     private Map<String,Object> applyDefaultValues(Map<String,Object> props, String configName) {
         ConfigurationMetadata metadata = configurationMetadataProvider.getConfigurationMetadata(configName);
@@ -319,7 +336,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             if (resource == null || clazz == ConfigurationBuilder.class) {
                 return null;
             }
-            return resource.adaptTo(clazz);
+            return applyDefaultValues(resource, configName).adaptTo(clazz);
         }
     }
 
