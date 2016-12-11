@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Imports JSON data and binary data into Sling resource hierarchy.
- * After all import operations from json or binaries {@link ResourceResolver#commit()} is called.
+ * After all import operations from json or binaries {@link ResourceResolver#commit()} is called (when autocommit mode is active).
  */
 public final class ContentLoader {
 
@@ -77,6 +77,7 @@ public final class ContentLoader {
     private final ResourceResolver resourceResolver;
     private final BundleContext bundleContext;
     private final DateFormat calendarFormat;
+    private final boolean autoCommit;
 
     /**
      * @param resourceResolver Resource resolver
@@ -90,9 +91,19 @@ public final class ContentLoader {
      * @param bundleContext Bundle context
      */
     public ContentLoader(ResourceResolver resourceResolver, BundleContext bundleContext) {
+        this (resourceResolver, bundleContext, true);
+    }
+
+    /**
+     * @param resourceResolver Resource resolver
+     * @param bundleContext Bundle context
+     * @param autoCommit Automatically commit changes after loading content (default: true)
+     */
+    public ContentLoader(ResourceResolver resourceResolver, BundleContext bundleContext, boolean autoCommit) {
         this.resourceResolver = resourceResolver;
         this.bundleContext = bundleContext;
         this.calendarFormat = new SimpleDateFormat(JsonItemWriter.ECMA_DATE_FORMAT, JsonItemWriter.DATE_FORMAT_LOCALE);
+        this.autoCommit = autoCommit;
     }
 
     /**
@@ -175,7 +186,9 @@ public final class ContentLoader {
             String jsonString = convertToJsonString(inputStream).trim();
             JSONObject json = new JSONObject(jsonString);
             Resource resource = this.createResource(parentResource, childName, json);
-            resourceResolver.commit();
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
             return resource;
         } catch (JSONException ex) {
             throw new RuntimeException(ex);
@@ -470,7 +483,9 @@ public final class ContentLoader {
             resourceResolver.create(file, JcrConstants.JCR_CONTENT,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
-            resourceResolver.commit();
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
             return file;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
@@ -586,7 +601,9 @@ public final class ContentLoader {
             Resource resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
-            resourceResolver.commit();
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
             return resource;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
