@@ -25,16 +25,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.example.SimpleSlingModel;
+import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Test {@link ConfigurationResolver} with custom adaptions (in this case: Sling Models) for reading the config.
@@ -100,8 +105,6 @@ public class ConfigurationResolverAdaptableTest {
         assertEquals("configValue1.3", propsIterator.next().getStringParam());
     }
 
-    /*
-     -- this is currently not supported --
     @Test
     public void testConfigWithDefaultValues() {
         context.registerService(ConfigurationMetadataProvider.class, new DummyConfigurationMetadataProvider("sampleName", 
@@ -136,8 +139,6 @@ public class ConfigurationResolverAdaptableTest {
         assertEquals("configValue1.3", propsList.get(2).getStringParam());
         assertEquals(999, propsList.get(2).getIntParam());
     }
-    -- end --
-    */
 
     @Test
     public void testNonExistingContentResource() {
