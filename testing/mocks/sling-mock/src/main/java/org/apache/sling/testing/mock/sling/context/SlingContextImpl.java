@@ -94,6 +94,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     protected MockSlingHttpServletResponse response;
     protected SlingScriptHelper slingScriptHelper;
     protected ContentLoader contentLoader;
+    protected ContentLoader contentLoaderAutoCommit;
     protected ContentBuilder contentBuilder;
     protected ResourceBuilder resourceBuilder;
     protected UniqueRoot uniqueRoot;
@@ -215,6 +216,7 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.response = null;
         this.slingScriptHelper = null;
         this.contentLoader = null;
+        this.contentLoaderAutoCommit = null;
         this.contentBuilder = null;
         this.resourceBuilder = null;
         this.uniqueRoot = null;
@@ -294,10 +296,26 @@ public class SlingContextImpl extends OsgiContextImpl {
      * @return Content loader
      */
     public ContentLoader load() {
-        if (this.contentLoader == null) {
-            this.contentLoader = new ContentLoader(resourceResolver(), bundleContext());
+        return load(true);
+    }
+
+    /**
+     * @param autoCommit Automatically commit changes after loading content (default: true)
+     * @return Content loader
+     */
+    public ContentLoader load(boolean autoCommit) {
+        if (autoCommit) {
+            if (this.contentLoaderAutoCommit == null) {
+                this.contentLoaderAutoCommit = new ContentLoader(resourceResolver(), bundleContext(), true);
+            }
+            return this.contentLoaderAutoCommit;
         }
-        return this.contentLoader;
+        else {
+            if (this.contentLoader == null) {
+                this.contentLoader = new ContentLoader(resourceResolver(), bundleContext(), false);
+            }
+            return this.contentLoader;
+        }
     }
 
     /**
