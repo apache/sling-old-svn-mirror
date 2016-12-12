@@ -61,16 +61,8 @@
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
                     <instructions>
-
                         <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html -->
                         <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
-
-                        <!-- Relax dependency org.apache.sling.api.resource to [2.8,3) because bnd genrates [2.8,2.9) - unsure why -->
-                        <Import-Package>
-                          org.apache.sling.api.resource;version="[2.8,3)",
-                          *
-                        </Import-Package>
-
                     </instructions>
                 </configuration>
             </plugin>
