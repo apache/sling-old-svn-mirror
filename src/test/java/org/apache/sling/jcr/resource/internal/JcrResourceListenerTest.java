@@ -160,7 +160,7 @@ public class JcrResourceListenerTest {
         };
         this.config.unregister(this.listener);
         this.listener = null;
-        final Session session = this.config.getSession();
+        final Session session = this.adminSession;
         if ( !session.nodeExists("/libs") ) {
             createNode(session, "/libs");
         }
