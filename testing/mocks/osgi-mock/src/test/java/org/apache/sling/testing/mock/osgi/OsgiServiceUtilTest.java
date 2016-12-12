@@ -400,6 +400,108 @@ public class OsgiServiceUtilTest {
     }
 
     @Component
+    @References({ @Reference(name = "reference2", referenceInterface = ServiceInterface2.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE) })
+    public static class Service3StaticGreedy {
+
+        @Reference
+        private ServiceInterface1 reference1;
+        @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+        private ServiceInterface1Optional reference1Optional;
+
+        private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
+
+        @Reference(name = "reference3", referenceInterface = ServiceInterface3.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
+        private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
+        private List<Map<String, Object>> reference3Configs = new ArrayList<Map<String, Object>>();
+
+        private ComponentContext componentContext;
+        private Map<String, Object> config;
+
+        @Activate
+        private void activate(ComponentContext ctx) {
+            this.componentContext = ctx;
+            this.config = MapUtil.toMap(ctx.getProperties());
+        }
+
+        @Deactivate
+        private void deactivate(ComponentContext ctx) {
+            this.componentContext = null;
+        }
+
+        @Modified
+        private void modified(Map<String,Object> newConfig) {
+            this.config = newConfig;
+        }
+
+        public ServiceInterface1 getReference1() {
+            return this.reference1;
+        }
+
+        public ServiceInterface1Optional getReference1Optional() {
+            return this.reference1Optional;
+        }
+
+        public List<ServiceInterface2> getReferences2() {
+            List<ServiceInterface2> services = new ArrayList<ServiceInterface2>();
+            for (ServiceReference<?> serviceReference : references2) {
+                services.add((ServiceInterface2)componentContext.getBundleContext().getService(serviceReference));
+            }
+            return services;
+        }
+
+        public List<ServiceSuperInterface3> getReferences3() {
+            return this.references3;
+        }
+
+        public List<Map<String, Object>> getReference3Configs() {
+            return this.reference3Configs;
+        }
+
+        public ComponentContext getComponentContext() {
+            return this.componentContext;
+        }
+
+        public Map<String, Object> getConfig() {
+            return config;
+        }
+
+        protected void bindReference1Optional(ServiceInterface1Optional service) {
+            reference1Optional = service;
+        }
+
+        protected void unbindReference1Optional(ServiceInterface1Optional service) {
+            reference1Optional = null;
+        }
+
+        protected void bindReference1(ServiceInterface1 service) {
+            reference1 = service;
+        }
+
+        protected void unbindReference1(ServiceInterface1 service) {
+            reference1 = null;
+        }
+
+        protected void bindReference2(ServiceReference serviceReference) {
+            references2.add(serviceReference);
+        }
+
+        protected void unbindReference2(ServiceReference serviceReference) {
+            references2.remove(serviceReference);
+        }
+
+        protected void bindReference3(ServiceSuperInterface3 service, Map<String, Object> serviceConfig) {
+            references3.add(service);
+            reference3Configs.add(serviceConfig);
+        }
+
+        protected void unbindReference3(ServiceSuperInterface3 service, Map<String, Object> serviceConfig) {
+            references3.remove(service);
+            reference3Configs.remove(serviceConfig);
+        }
+
+    }
+
+    @Component
     @Reference(referenceInterface = ServiceInterface1.class, name = "customName", bind = "customBind", unbind = "customUnbind")
     public static class Service4 {
 

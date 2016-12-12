@@ -114,8 +114,8 @@ class MockBundleContext implements BundleContext {
     public ServiceRegistration registerService(final String[] clazzes, final Object service, final Dictionary properties) {
         Dictionary<String, Object> mergedPropertes = MapMergeUtil.propertiesMergeWithOsgiMetadata(service, configAdmin, properties);
         MockServiceRegistration registration = new MockServiceRegistration(this.bundle, clazzes, service, mergedPropertes, this);
-        handleRefsUpdateOnRegister(registration);
         this.registeredServices.add(registration);
+        handleRefsUpdateOnRegister(registration);
         notifyServiceListeners(ServiceEvent.REGISTERED, registration.getReference());
         return registration;
     }
@@ -126,8 +126,10 @@ class MockBundleContext implements BundleContext {
      * @param registration
      */
     private void handleRefsUpdateOnRegister(MockServiceRegistration registration) {
-        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
-        for (ReferenceInfo referenceInfo : affectedReferences) {
+        
+        // handle DYNAMIC references to this registration
+        List<ReferenceInfo> affectedDynamicReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
+        for (ReferenceInfo referenceInfo : affectedDynamicReferences) {
             Reference reference = referenceInfo.getReference();
             if (reference.matchesTargetFilter(registration.getReference())) {
                 switch (reference.getCardinality()) {
@@ -145,12 +147,56 @@ class MockBundleContext implements BundleContext {
                 }
             }
         }
+
+        // handle STATIC+GREEDY references to this registration
+        List<ReferenceInfo> affectedStaticGreedyReferences = OsgiServiceUtil.getMatchingStaticGreedyReferences(registeredServices, registration);
+        for (ReferenceInfo referenceInfo : affectedStaticGreedyReferences) {
+            Reference reference = referenceInfo.getReference();
+            switch (reference.getCardinality()) {
+            case MANDATORY_UNARY:
+                throw new ReferenceViolationException("Mandatory unary reference of type " + reference.getInterfaceType() + " already fulfilled "
+                        + "for service " + reference.getServiceClass().getName() + ", registration of new service with this interface failed.");
+            case MANDATORY_MULTIPLE:
+            case OPTIONAL_MULTIPLE:
+            case OPTIONAL_UNARY:
+                restartService(referenceInfo.getServiceRegistration());
+                break;
+            default:
+                throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
+            }
+        }
     }
     
     void unregisterService(MockServiceRegistration registration) {
         this.registeredServices.remove(registration);
         handleRefsUpdateOnUnregister(registration);
         notifyServiceListeners(ServiceEvent.UNREGISTERING, registration.getReference());
+    }
+    
+    @SuppressWarnings("unchecked")
+    void restartService(MockServiceRegistration registration) {
+        // get current service properties
+        Class<?> serviceClass = registration.getService().getClass();
+        Map<String,Object> properties = MapUtil.toMap(registration.getProperties());
+        
+        // deactivate & unregister service
+        MockOsgi.deactivate(registration.getService(), this);
+        unregisterService(registration);
+        
+        // newly create and register service
+        Object newService;
+        try {
+            newService = serviceClass.newInstance();
+        }
+        catch (InstantiationException e) {
+            throw new RuntimeException("Unable to instantiate service: " + serviceClass);
+        }
+        catch (IllegalAccessException e) {
+            throw new RuntimeException("Unable to access service class: " + serviceClass);
+        }
+        MockOsgi.injectServices(newService, this);
+        MockOsgi.activate(newService, this, properties);
+        registerService(serviceClass.getName(), newService, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -159,8 +205,10 @@ class MockBundleContext implements BundleContext {
      * @param registration
      */
     private void handleRefsUpdateOnUnregister(MockServiceRegistration registration) {
-        List<ReferenceInfo> affectedReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
-        for (ReferenceInfo referenceInfo : affectedReferences) {
+
+        // handle DYNAMIC references to this registration
+        List<ReferenceInfo> affectedDynamicReferences = OsgiServiceUtil.getMatchingDynamicReferences(registeredServices, registration);
+        for (ReferenceInfo referenceInfo : affectedDynamicReferences) {
             Reference reference = referenceInfo.getReference();
             if (reference.matchesTargetFilter(registration.getReference())) {
                 switch (reference.getCardinality()) {
@@ -178,6 +226,25 @@ class MockBundleContext implements BundleContext {
                 default:
                     throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
                 }
+            }
+        }
+
+        // handle STATIC+GREEDY references to this registration
+        List<ReferenceInfo> affectedStaticGreedyReferences = OsgiServiceUtil.getMatchingStaticGreedyReferences(registeredServices, registration);
+        for (ReferenceInfo referenceInfo : affectedStaticGreedyReferences) {
+            Reference reference = referenceInfo.getReference();
+            switch (reference.getCardinality()) {
+            case MANDATORY_UNARY:
+                throw new ReferenceViolationException("Reference of type " + reference.getInterfaceType() + " "
+                        + "for service " + reference.getServiceClass().getName() + " is mandatory unary, "
+                        + "unregistration of service with this interface failed.");
+            case MANDATORY_MULTIPLE:
+            case OPTIONAL_MULTIPLE:
+            case OPTIONAL_UNARY:
+                restartService(referenceInfo.getServiceRegistration());
+                break;
+            default:
+                throw new RuntimeException("Unepxected cardinality: " + reference.getCardinality());
             }
         }
     }
