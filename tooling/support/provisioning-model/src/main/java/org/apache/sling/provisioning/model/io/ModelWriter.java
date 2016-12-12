@@ -84,8 +84,15 @@ public class ModelWriter {
     throws IOException {
         final PrintWriter pw = new PrintWriter(writer);
 
+        boolean firstFeature = true;
+
         // features
         for(final Feature feature : model.getFeatures()) {
+            if ( firstFeature ) {
+                firstFeature = false;
+            } else {
+                pw.println();
+            }
             writeComment(pw, feature);
             pw.print("[feature name=");
             pw.print(feature.getName());
@@ -98,10 +105,10 @@ public class ModelWriter {
                 pw.print(feature.getVersion());
             }
             pw.println("]");
-            pw.println();
 
             // variables
             if ( !feature.getVariables().isEmpty() ) {
+                pw.println();
                 writeComment(pw, feature.getVariables());
                 pw.println("[variables]");
                 for(final Map.Entry<String, String> entry : feature.getVariables()) {
@@ -110,13 +117,13 @@ public class ModelWriter {
                     pw.print("=");
                     pw.println(entry.getValue());
                 }
-                pw.println();
             }
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
                 // settings
                 if ( !runMode.getSettings().isEmpty() ) {
+                    pw.println();
                     writeComment(pw, runMode.getSettings());
                     pw.print("[settings");
                     writeRunMode(pw, runMode);
@@ -128,7 +135,6 @@ public class ModelWriter {
                         pw.print("=");
                         pw.println(entry.getValue());
                     }
-                    pw.println();
                 }
 
                 // artifact groups
@@ -137,6 +143,7 @@ public class ModelWriter {
                     if ( group.isEmpty() ) {
                         continue;
                     }
+                    pw.println();
                     writeComment(pw, group);
                     pw.print("[artifacts");
                     if ( group.getStartLevel() > 0 ) {
@@ -145,7 +152,6 @@ public class ModelWriter {
                     }
                     writeRunMode(pw, runMode);
                     pw.println("]");
-                    pw.println();
 
                     // artifacts
                     for(final Artifact ad : group) {
@@ -169,16 +175,22 @@ public class ModelWriter {
                         }
                         pw.println();
                     }
-                    pw.println();
                 }
 
                 // configurations
                 if ( !runMode.getConfigurations().isEmpty() ) {
+                    pw.println();
                     writeComment(pw, runMode.getConfigurations());
                     pw.print("[configurations");
                     writeRunMode(pw, runMode);
                     pw.println("]");
+                    boolean firstConfig = true;
                     for(final Configuration config : runMode.getConfigurations()) {
+                        if ( firstConfig ) {
+                            firstConfig = false;
+                        } else{
+                            pw.println();
+                        }
                         writeComment(pw, config);
                         final String raw = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
                         String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
@@ -238,13 +250,13 @@ public class ModelWriter {
                             pw.print("    ");
                             pw.println(line.trim());
                         }
-                        pw.println();
                     }
                 }
             }
 
             // additional sections
             for(final Section section : feature.getAdditionalSections()) {
+                pw.println();
                 pw.print("  [:");
                 pw.print(section.getName());
                 for(final Map.Entry<String, String> entry : section.getAttributes().entrySet()) {
@@ -257,7 +269,6 @@ public class ModelWriter {
                 if ( section.getContents() != null ) {
                     pw.println(section.getContents());
                 }
-                pw.println();
             }
         }
     }
