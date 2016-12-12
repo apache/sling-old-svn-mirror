@@ -177,6 +177,7 @@ public class JspScriptEngineFactory
 
     private ServletContext slingServletContext;
 
+    @Reference
     private ClassLoaderWriter classLoaderWriter;
 
     private DynamicClassLoaderManager dynamicClassLoaderManager;
