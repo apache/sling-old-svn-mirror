@@ -93,7 +93,11 @@ public class Path implements Comparable<Path> {
      * If this {@code Path} object holds a path (and not a pattern), this method
      * checks whether the provided path is equal to this path or a sub path of it.
      * If a glob pattern is provided as the argument, it performs the same check
-     * and respects the provided pattern.
+     * and respects the provided pattern. This means it returns {@code true} if this
+     * path is a parent to any potential path matching the provided pattern. For
+     * example if this path is {@code /apps/foo} and the provided pattern is
+     * {@code glob:/apps/foo/bar/*.jsp} this method will return true. Same if
+     * the provided pattern is {@code glob:/apps&#47;**&#47;hello.html}.
      * If this {@code Path} object holds a pattern, it checks whether the
      * provided path matches the pattern. If this path object holds a pattern
      * and a pattern is provided as the argument, it returns only {@code true}
@@ -119,37 +123,30 @@ public class Path implements Comparable<Path> {
             }
 
             // this is path, provided argument is a pattern
+
+            // simple check, if this is root, everything is a sub pattern
+            if ( "/".equals(this.path) ) {
+                return true;
+            }
             // simplest case - the prefix of the glob pattern matches already
             // for example: this path = /apps
             //              glob      = /apps/**
-            final Path oPath = new Path(otherPath);
-            if ( this.matches(oPath.prefix) ) {
-                return true;
-            }
-            // count slashes in path
-            int count = 0;
-            for (int i=0; i < this.path.length(); i++) {
-                if (this.path.charAt(i) == '/') {
-                     count++;
+            // then we iterate by removing the last path segment
+            String subPath = otherPath;
+            while ( subPath != null ) {
+                final Path oPath = new Path(subPath);
+                if ( oPath.matches(this.path) ) {
+                    return true;
+                }
+                final int lastSlash = subPath.lastIndexOf('/');
+                if ( lastSlash == GLOB_PREFIX.length() ) {
+                    subPath = null;
+                } else {
+                    subPath = subPath.substring(0, lastSlash);
                 }
             }
-            // now create the substring of the glob pattern with the same amount of slashes
-            int start = GLOB_PREFIX.length();
-            while ( start < otherPath.length() ) {
-                if ( otherPath.charAt(start) == '/') {
-                    if ( count == 0 ) {
-                        break;
-                    }
-                    count--;
-                }
-                start++;
-            }
-            if ( count > 0 ) {
-                return false;
-            }
-            final String globPattern = otherPath.substring(0, start);
-            final Path globPatternPath = new Path(globPattern);
-            return globPatternPath.matches(this.path);
+
+            return false;
         }
 
         // provided argument is a path
