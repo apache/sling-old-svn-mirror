@@ -20,7 +20,7 @@ package org.apache.sling.api.servlets;
 
 /**
  * Service registration properties and common values used for registering a Sling Servlet.
- * 
+ *
  * @see <a href="http://sling.apache.org/documentation/the-sling-engine/servlets.html">Servlets and Scripts</a>
  * @since 2.2.0
  */
@@ -30,18 +30,18 @@ public final class ServletResolverConstants {
      * The name of the service registration property of a servlet registered as
      * a service providing the absolute paths under which the servlet is
      * accessible as a resource (value is "sling.servlet.paths").
-     * A relative path is made absolute by prefixing it with the value set through the 
-     * {@link #SLING_SERVLET_PREFIX} property. 
+     * A relative path is made absolute by prefixing it with the value set through the
+     * {@link #SLING_SERVLET_PREFIX} property.
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the path(s) under which the servlet is registered in the
      * resource tree.
      * <p>
      * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
-     * property must be set or the servlet is ignored. 
+     * property must be set or the servlet is ignored.
      * If both are set the servlet is registered using both ways.
      * <p>
-     * A servlet using this property might be ignored unless its path is included 
+     * A servlet using this property might be ignored unless its path is included
      * in the Execution Paths {@code servletresolver.paths} configuration setting of the
      * {@code org.apache.sling.servlets.resolver.internal.SlingServletResolver} service.
      */
@@ -51,8 +51,8 @@ public final class ServletResolverConstants {
      * The name of the service registration property of a servlet registered as
      * a service containing the resource type(s) supported by the servlet (value
      * is "sling.servlet.resourceTypes").
-     * A relative resource type is made absolute by prefixing it with the value set through the 
-     * {@link #SLING_SERVLET_PREFIX} property. 
+     * A relative resource type is made absolute by prefixing it with the value set through the
+     * {@link #SLING_SERVLET_PREFIX} property.
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types.
@@ -67,7 +67,7 @@ public final class ServletResolverConstants {
      * <p>
      * The name of the service registration property of a servlet registered as
      * a service providing the prefix/index to be used to register this servlet.
-     * It only is applied as prefix to {@link #SLING_SERVLET_PATHS} and 
+     * It only is applied as prefix to {@link #SLING_SERVLET_PATHS} and
      * {@link #SLING_SERVLET_RESOURCE_TYPES} in case they do not start with a "/".
      * </p>
      * <ul>
@@ -109,7 +109,7 @@ public final class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. 
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set.
      * Otherwise this property is optional and ignored if not set.
      */
     public static final String SLING_SERVLET_EXTENSIONS = "sling.servlet.extensions";
@@ -121,7 +121,7 @@ public final class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. 
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set.
      * Otherwise this property is optional and assumed to be {@code GET} and {@code HEAD} if not set.
      * @see <a href="https://tools.ietf.org/html/rfc7231#section-4.3">HTTP 1.1 Spec Methods</a>
      */
@@ -134,7 +134,7 @@ public final class ServletResolverConstants {
      * <code>component.name</code> property or the <code>service.pid</code>
      * is used. If none of the three properties is defined, the Servlet is
      * ignored.
-     * @see ServletConfig#getServletName()
+     * @see javax.servlet.ServletConfig#getServletName()
      */
     public static final String SLING_SERVLET_NAME = "sling.core.servletName";
 
