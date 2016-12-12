@@ -18,10 +18,11 @@
  */
 package org.apache.sling.api.resource.path;
 
-import java.util.UUID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -31,7 +32,7 @@ public class PathTest {
         for(String s : pathOrPattern) {
             final boolean actual = p.matches(s);
             if(actual != expected) {
-                fail("Expected " 
+                fail("Expected "
                         + (expected ? "match" : "no match")
                         + " between " + p.getPath() + " and " + s
                         + " but got match=" + actual
@@ -39,81 +40,51 @@ public class PathTest {
             }
         }
     }
-    
+
     private void assertMatch(Path p, String ... pathOrPattern) {
         assertMatchOrNot(true, p, pathOrPattern);
     }
-    
+
     private void assertNoMatch(Path p, String ... pathOrPattern) {
         assertMatchOrNot(false, p, pathOrPattern);
     }
-    
+
     @Test public void testRootMatching() {
         final Path p = new Path("/");
-        
-        assertMatch(p, 
-                "/", 
-                "/foo", 
+
+        assertMatch(p,
+                "/",
+                "/foo",
                 "/foo/bar"
         );
     }
 
     @Test public void testPathMatching() {
         final Path p  = new Path("/content");
-        assertNoMatch(p, 
-                "/", 
-                "/foo", 
-                "/foo/bar", 
+        assertNoMatch(p,
+                "/",
+                "/foo",
+                "/foo/bar",
                 "/content1"
         );
-        
-        assertMatch(p, 
-                "/content", 
-                "/content/a", 
+
+        assertMatch(p,
+                "/content",
+                "/content/a",
                 "/content/a/b"
         );
     }
 
-    @Test public void testSymmetry() {
-        final String glob = "glob:/apps/**/*.html";
-        
-        final String [] matching = {
-            "/apps/project/a.html", 
-            "/apps/project/1/a.html",
-            "/apps/project/1/2/a.html",
-            "/apps/project/1/2/3/4/5/6/7/8/9/a.html"
-        };
-        
-        final String [] nonMatching = {
-            "/apps/a.html",
-            "/apps/project/a.html/b"
-        };
-        
-        assertMatch(new Path(glob), matching);
-        assertNoMatch(new Path(glob), nonMatching);
-        
-        // TODO this would demonstrate that matching is symmetric, but it's not
-//        for(String s : matching) {
-//            final Path p = new Path(s);
-//            assertMatch(p, glob);
-//        }
-//        
-//        for(String s : nonMatching) {
-//            final Path p = new Path(s);
-//            assertNoMatch(p, glob);
-//        }
-    }
-    
     @Test public void testPatternMatchingA() {
         final Path p = new Path("glob:/apps/**/*.html");
-        
-        assertMatch(p, 
-                "/apps/project/a.html", 
+
+        assertMatch(p,
+                "/apps/project/a.html",
                 "/apps/project/1/a.html",
                 "/apps/project/1/2/a.html",
                 "/apps/project/1/2/3/4/5/6/7/8/9/a.html"
         );
-        
+
         assertNoMatch(p,
                 "/apps/a.html",
                 "/apps/project/a.html/b"
@@ -128,14 +99,14 @@ public class PathTest {
 
     @Test public void testPatternMatchingC() {
         final Path p = new Path("glob:/a/m-p/$structure/**/[cmp]/*.html");
-        
-        assertMatch(p, 
+
+        assertMatch(p,
                 "/a/m-p/$structure/1/2/3/[cmp]/test.html",
                 "/a/m-p/$structure/1/2/3/4/5/6/[cmp]/test.html",
                 "/a/m-p/$structure/1/[cmp]/test.html",
                 "/a/m-p/$structure/1/[cmp]/te-[s]t$.html",
                 "/a/m-p/$structure/1/[cmp]/.html");
-        
+
         assertNoMatch(p,
                 "/a/m-p/$structure/1/[cmp]/html",
                 "/a/m-p/$structure/[cmp]/test.html"
@@ -159,19 +130,19 @@ public class PathTest {
                 "glob:/*/*project",
                 "glob:/*/*project/**.html",
                 "glob:/**/myproject",
-                "glob:/**/myproject/*.jsp"
+                "glob:/**/myproject/*.jsp",
+                "glob:/**",
+                "glob:/**/*.jsp"
         );
-        
+
         assertNoMatch(p,
-                "glob:/*/foo",
-                "glob:/**",         // TODO this one should match?? as per SLING-6350
-                "glob:/**/*.jsp"    // TODO this one should match?? as per SLING-6350
+                "glob:/*/foo"
         );
     }
 
     @Test public void testIllegalArgumentException() {
         final Path path = new Path("/libs/foo");
-        
+
         try {
             new Path("foo");
             fail();
@@ -184,7 +155,7 @@ public class PathTest {
         } catch ( final IllegalArgumentException iae) {
             // this should happen!
         }
-        
+
         try {
             path.matches("invalid-no-slash");
             fail();
@@ -195,12 +166,12 @@ public class PathTest {
 
     @Test public void testPathMatchingTrailingSlash() {
         final Path p = new Path("/libs/");
-        
+
         assertMatch(p,
                 "/libs",
                 "/libs/foo"
         );
-        
+
         assertNoMatch(p,"/lib");
     }
     @Test public void testGlobPatternsMatch() {
@@ -208,22 +179,22 @@ public class PathTest {
         assertMatch(p, "glob:/*/foo");
         assertNoMatch(p, "glob:/*/**/foo");
     }
-    
+
     @Test public void testIsPatternWithGlob() {
         assertTrue(new Path("glob:/*/foo").isPattern());
     }
-    
+
     @Test public void testIsPatternWithPath() {
         assertFalse(new Path("/libs/foo").isPattern());
     }
-    
+
     @Test public void testEquals() {
         final Path path = new Path("/foo/bar");
         assertTrue(path.equals(path));
         assertFalse(path.equals(null));
         assertFalse(path.equals("a string"));
     }
-    
+
     @Test public void testCompareTo() {
         final Path p1 = new Path("/1");
         final Path p2 = new Path("/2");
@@ -231,9 +202,24 @@ public class PathTest {
         assertTrue(p2.compareTo(p1) > 0);
         assertTrue(p1.compareTo(p1) == 0);
     }
-    
+
     @Test public void testToString() {
         final Path path = new Path("/" + UUID.randomUUID());
         assertTrue(path.toString().contains(path.getPath()));
+    }
+
+    @Test public void testMorePathSlashesThenInGlobExp() {
+        Path path = new Path("/libs/sling/resource-editor");
+        assertTrue(path.matches("glob:/libs/**/*.jsp"));
+        path = new Path("/libs/sling/resource-editor/sub-path");
+        assertTrue(path.matches("glob:/libs/**/*.jsp"));
+    }
+
+    @Test public void testEnclosedPatternMatch() {
+        Path path = new Path("/a/b/c");
+        assertFalse(path.matches("glob:/a/*/d"));
+        assertTrue(path.matches("glob:/a/**/d"));
+        assertTrue(path.matches("glob:/a/b/*"));
+        assertTrue(path.matches("glob:/a/b/*/d"));
     }
 }
