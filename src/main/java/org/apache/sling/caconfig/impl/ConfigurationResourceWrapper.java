@@ -20,7 +20,7 @@ package org.apache.sling.caconfig.impl;
 
 import java.util.Iterator;
 
-import org.apache.sling.api.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.ValueMap;
  * Unfortunately it's not possible to use {@link org.apache.sling.api.resource.ResourceWrapper} because when adapting
  * to a Sling Model the replace valuemap would not take effect but the original value map. 
  */
-public final class ConfigurationResourceWrapper extends SlingAdaptable implements Resource {
+public final class ConfigurationResourceWrapper extends AbstractResource {
     
     private final Resource resource;
     private final ValueMap props;
@@ -115,7 +115,7 @@ public final class ConfigurationResourceWrapper extends SlingAdaptable implement
      * Returns a string representation of this wrapper consisting of the class'
      * simple name, the {@link #getResourceType() resource type} and
      * {@link #getPath() path} as well as the string representation of the
-     * {@link #getResource() wrapped resource}.
+     * {@link #resource) wrapped resource}.
      */
     @Override
     public String toString() {
