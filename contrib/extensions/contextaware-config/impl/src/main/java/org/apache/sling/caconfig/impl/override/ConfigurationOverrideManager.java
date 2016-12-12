@@ -67,6 +67,23 @@ public class ConfigurationOverrideManager implements ChangeListener {
     protected void unbindConfigurationOverrideProvider(ConfigurationOverrideProvider item, Map<String, Object> props) {
         items.unbind(item, props);
     }
+    
+    /**
+     * Checks if the whole configuration for the given context path and name is overridden.
+     * @param contextPath Context path
+     * @param configName Config name
+     * @return true if the whole configuration is overridden.
+     */
+    public boolean isAllOverridden(String contextPath, String configName) {
+        for (OverrideItem override : allOverrides) {
+            if (StringUtils.equals(configName, override.getConfigName()) && override.matchesPath(contextPath)) {
+                if (override.isAllProperties()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * Override properties for given context path and configuration name.

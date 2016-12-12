@@ -76,4 +76,9 @@ public interface ConfigurationData {
      */
     @CheckForNull ValueInfo<?> getValueInfo(String propertyName);
     
+    /**
+     * @return true if the whole configuration is overridden by an configuration override provider.
+     */
+    boolean isOverridden();
+    
 }
