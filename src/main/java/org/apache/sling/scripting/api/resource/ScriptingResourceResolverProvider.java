@@ -38,6 +38,8 @@ public interface ScriptingResourceResolverProvider {
      *
      * <p><b>NOTE:</b> Usage of this {@link ResourceResolver} outside of a Servlet Request API context might lead to improper cleaning
      * (e.g. reusing the same resolver for multiple threads).</p>
+     *
+     * @return a request scoped resource resolver
      */
     ResourceResolver getRequestScopedResourceResolver();
 }
