@@ -165,7 +165,7 @@ public interface ResourceProvider {
      *         provider has no children for the given resource.
      * @throws NullPointerException
      *             If {@code parent} is {@code null}.
-     * @throws SlingException
+     * @throws org.apache.sling.api.SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
     @CheckForNull Iterator<Resource> listChildren(@Nonnull Resource parent);

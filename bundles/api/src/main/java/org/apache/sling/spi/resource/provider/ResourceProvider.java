@@ -25,10 +25,14 @@ import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
@@ -277,7 +281,7 @@ public abstract class ResourceProvider<T> {
      * privileges assigned to the service provided by the calling bundle.
      * <p>
      * The {@code authenticationInfo} map will in general contain the same
-     * information as provided to the respective {@link ResourceResolver}
+     * information as provided to the respective {@link org.apache.sling.api.resource.ResourceResolver}
      * method. For
      * <p>
      * The provided {@code authenticationInfo} map may be used to provide
