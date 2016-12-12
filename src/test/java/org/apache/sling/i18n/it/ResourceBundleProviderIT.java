@@ -29,6 +29,7 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -159,6 +160,13 @@ public class ResourceBundleProviderIT {
                     .create(true)
                     .put("enabled", true)
                     .asOption(),
+                ConfigurationAdminOptions.factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                    .create(true)
+                    .put("user.mapping", new String[]{"org.apache.sling.i18n=sling-i18n"})
+                    .asOption(),
+                ConfigurationAdminOptions.newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
+                    .put("references", new String[]{references()})
+                    .asOption(),
 
                 // logging
                 systemProperty("pax.exam.logging").value("none"),
@@ -216,6 +224,9 @@ public class ResourceBundleProviderIT {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.4.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.4.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.repoinit", "1.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.repoinit.parser", "1.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.provisioning.model", "1.4.2"),
 
                 mavenBundle("com.google.guava", "guava", "15.0"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-api", jackrabbitVersion),
@@ -364,5 +375,14 @@ public class ResourceBundleProviderIT {
         setMessage(enRoot, MSG_KEY2, "EN_changed");
         session.save();
         assertMessages(MSG_KEY2, "EN_changed", "EN_changed", "EN_changed");
+    }
+
+    private String references() {
+        try {
+            String repoInitUrl = getClass().getResource("/repoinit.txt").toURI().toString();
+            return String.format("raw:%s", repoInitUrl);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Failed to compute repoinit references", e);
+        }
     }
 }
