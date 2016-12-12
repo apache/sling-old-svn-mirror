@@ -70,6 +70,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -179,7 +181,6 @@ default.is.session.description = Should a session be created by default for ever
 
     private ServletContext slingServletContext;
 
-    @Reference
     private ClassLoaderWriter classLoaderWriter;
 
     @Reference
@@ -552,6 +553,7 @@ default.is.session.description = Should a session be created by default for ever
      *
      * @param repositoryClassLoaderProvider the new provider
      */
+    @Reference(cardinality=ReferenceCardinality.MANDATORY, policy=ReferencePolicy.STATIC)
     protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
         if ( this.dynamicClassLoader != null ) {
             this.ungetClassLoader();
