@@ -26,6 +26,7 @@ use(function () {
         test.startTag = '<' + test.tag + '>';
         test.endTag = '</' + test.tag + '>';
     }
+    test.date = new Packages.java.util.Date();
     test.includeChildren = properties.get('includeChildren') || false;
     if (test.includeChildren) {
         test.children = resource.getChildren();
