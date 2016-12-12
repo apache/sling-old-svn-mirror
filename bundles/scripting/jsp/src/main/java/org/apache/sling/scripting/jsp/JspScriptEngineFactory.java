@@ -171,11 +171,7 @@ public class JspScriptEngineFactory
                     "it will not impact previously-compiled pages.")
         boolean default_is_session() default true;
     }
-/**
-default.is.session.name = Default Session Value
-default.is.session.description = Should a session be created by default for every \
- JSP page? Warning - this behavior may produce unintended results and changing \
- it will not impact previously-compiled pages. */
+
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -183,7 +179,6 @@ default.is.session.description = Should a session be created by default for ever
 
     private ClassLoaderWriter classLoaderWriter;
 
-    @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private ClassLoader dynamicClassLoader;
