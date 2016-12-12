@@ -46,10 +46,10 @@ public final class OsgiConfigurationOverrideProvider implements ConfigurationOve
         String description();
 
         @AttributeDefinition(name = "Overrides",
-                description = "Override strings - examples:<br>\n"
-                + "{configName}/{propertyName}={propertyJsonValue}<br>\n"
-                + "{configName}={propertyJsonObject}<br>\n"
-                + "[{contextPath}]{configName}/{propertyName}={propertyJsonValue}<br>\n"
+                description = "Override strings - examples:\n"
+                + "{configName}/{propertyName}={propertyJsonValue}\n"
+                + "{configName}={propertyJsonObject}\n"
+                + "[{contextPath}]{configName}/{propertyName}={propertyJsonValue}\n"
                 + "[{contextPath}]{configName}={propertyJsonObject}")
         String[] overrides();
 
