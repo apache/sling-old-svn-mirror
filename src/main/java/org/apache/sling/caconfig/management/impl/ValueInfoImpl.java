@@ -42,11 +42,13 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     private final Resource contextResource;
     private final String configName;
     private final ConfigurationOverrideManager configurationOverrideManager;
+    private final boolean isAllOverridden;
     
     public ValueInfoImpl(String name, T value, T effectiveValue, PropertyMetadata<T> propertyMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
             List<Resource> configurationResourceInheritanceChain,
-            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager) {
+            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager,
+            boolean isAllOverridden) {
         this.name = name;
         this.value = value;
         this.effectiveValue = effectiveValue;
@@ -58,6 +60,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         this.contextResource = contextResource;
         this.configName = configName;
         this.configurationOverrideManager = configurationOverrideManager;
+        this.isAllOverridden = isAllOverridden;
     }
     
     @Override
@@ -152,6 +155,9 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     public boolean isOverridden() {
         if (contextResource == null) {
             return false;
+        }
+        if (isAllOverridden) {
+            return true;
         }
         Map<String,Object> overrideProperties = configurationOverrideManager.overrideProperties(
                     contextResource.getPath(), configName, Collections.<String,Object>emptyMap());

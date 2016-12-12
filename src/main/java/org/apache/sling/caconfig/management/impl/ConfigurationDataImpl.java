@@ -56,6 +56,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private final ConfigurationPersistenceStrategy configurationPersistenceStrategy;
     private final boolean configResourceCollection;
     private final String collectionItemName;
+    private final boolean isAllOverridden;
     
     private Set<String> propertyNamesCache;
     private ValueMap valuesCache;
@@ -81,6 +82,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configResourceCollection = configResourceCollection;
         this.collectionItemName = collectionItemName;
+        this.isAllOverridden = contextResource != null ? configurationOverrideManager.isAllOverridden(contextResource.getPath(), configName) : false;
     }
 
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
@@ -222,7 +224,8 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 configurationResourceInheritanceChain,
                 contextResource,
                 configName,
-                configurationOverrideManager);
+                configurationOverrideManager,
+                isAllOverridden);
     }
     
     private Class<?> primitiveToWrapper(Class<?> type) {
@@ -241,6 +244,11 @@ final class ConfigurationDataImpl implements ConfigurationData {
         else {
             return configMetadata.getPropertyMetadata().get(propertyName);
         }
+    }
+
+    @Override
+    public boolean isOverridden() {
+        return isAllOverridden;
     }
     
 }
