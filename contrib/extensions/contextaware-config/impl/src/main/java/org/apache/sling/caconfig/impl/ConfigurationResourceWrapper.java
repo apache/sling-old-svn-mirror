@@ -112,10 +112,9 @@ public final class ConfigurationResourceWrapper extends AbstractResource {
     }
     
     /**
-     * Returns a string representation of this wrapper consisting of the class'
+     * @return Returns a string representation of this wrapper consisting of the class'
      * simple name, the {@link #getResourceType() resource type} and
-     * {@link #getPath() path} as well as the string representation of the
-     * {@link #resource) wrapped resource}.
+     * {@link #getPath() path} as well as the string representation of the wrapped resource}.
      */
     @Override
     public String toString() {
