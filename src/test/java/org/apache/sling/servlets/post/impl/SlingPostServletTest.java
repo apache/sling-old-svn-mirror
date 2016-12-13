@@ -20,20 +20,35 @@ package org.apache.sling.servlets.post.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.commons.testing.osgi.MockBundle;
+import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.JSONResponse;
+import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.SlingPostOperation;
+import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Request;
 import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Response;
+import org.osgi.framework.Constants;
 
 public class SlingPostServletTest extends TestCase {
     
@@ -43,6 +58,38 @@ public class SlingPostServletTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         servlet = new SlingPostServlet();
+        MockBundle bundle = new MockBundle(1) {
+            @Override
+            public Dictionary<String, String> getHeaders() {
+                Hashtable<String, String> headers = new Hashtable<String, String>();
+                headers.put(Constants.BUNDLE_VENDOR, "test");
+                return headers;
+            }
+
+            @Override
+            public Dictionary<String, String> getHeaders(String locale) {
+                return getHeaders();
+            }
+
+            @Override
+            public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse) {
+                return null;
+            }
+
+            @Override
+            public Enumeration<String> getEntryPaths(String path) {
+                return null;
+            }
+
+            @Override
+            public Enumeration<URL> getResources(String name) {
+                return null;
+            }
+        };
+        MockComponentContext componentContext = new MockComponentContext(bundle);
+        Map<String, Object> props = new HashMap<String, Object>();
+        props.put("servlet.post.dateFormats", new String[] { "EEE MMM dd yyyy HH:mm:ss 'GMT'Z" });
+        servlet.activate(componentContext, props);
     }
 
     public void testIsSetStatus() {
@@ -100,6 +147,109 @@ public class SlingPostServletTest extends TestCase {
         testRedirection("/", "/fred/abc", "https://forced.com/test", null);
         // invalid URI
         testRedirection("/", "/fred/abc", "file://c:\\Users\\workspace\\test.java", null);
+    }
+
+    public void testNonExistingOperation() throws Exception {
+        MockSlingHttpServletRequest request = new MockSlingHttpServlet3Request(null, null, null, null, null) {
+            @Override
+            public String getParameter(String name) {
+                if (name.equals(SlingPostConstants.RP_OPERATION)) {
+                    return "doesntexist";
+                }
+                return null;
+            }
+        };
+        MockSlingHttpServlet3Response response = new MockSlingHttpServlet3Response();
+        servlet.doPost(request, response);
+        assertEquals(500, response.getStatus());
+    }
+
+    public void testNonExistingPostProcessor() throws Exception {
+        servlet.bindPostOperation(new PostOperation() {
+            @Override
+            public void run(SlingHttpServletRequest request, PostResponse response, SlingPostProcessor[] processors) {
+                // noop
+            }
+        }, Collections.<String, Object>singletonMap(SlingPostOperation.PROP_OPERATION_NAME, "noop"));
+
+        MockSlingHttpServletRequest request = new MockSlingHttpServlet3Request(null, null, null, null, null) {
+            @Override
+            public String getParameter(String name) {
+                if (name.equals(SlingPostConstants.RP_OPERATION)) {
+                    return "noop";
+                } else if (name.equals(":requiredPostProcessors")) {
+                    return "doesntexist";
+                }
+                return null;
+            }
+        };
+        MockSlingHttpServlet3Response response = new MockSlingHttpServlet3Response();
+        servlet.doPost(request, response);
+        assertEquals(501, response.getStatus());
+    }
+
+
+
+    public void testNonExistingPostProcessorWithMultipleRequired() throws Exception {
+        servlet.bindPostOperation(new PostOperation() {
+            @Override
+            public void run(SlingHttpServletRequest request, PostResponse response, SlingPostProcessor[] processors) {
+                // noop
+            }
+        }, Collections.<String, Object>singletonMap(SlingPostOperation.PROP_OPERATION_NAME, "noop"));
+
+        servlet.bindPostProcessor(new SlingPostProcessor() {
+            @Override
+            public void process(SlingHttpServletRequest request, List<Modification> changes) throws Exception {
+                // noop
+            }
+        }, Collections.<String, Object>singletonMap("postProcessor.name", "noop"));
+
+        MockSlingHttpServletRequest request = new MockSlingHttpServlet3Request(null, null, null, null, null) {
+            @Override
+            public String getParameter(String name) {
+                if (name.equals(SlingPostConstants.RP_OPERATION)) {
+                    return "noop";
+                } else if (name.equals(":requiredPostProcessors")) {
+                    return "noop,doesntexist";
+                }
+                return null;
+            }
+        };
+        MockSlingHttpServlet3Response response = new MockSlingHttpServlet3Response();
+        servlet.doPost(request, response);
+        assertEquals(501, response.getStatus());
+    }
+
+    public void testRequiredPostProcessor() throws Exception {
+        servlet.bindPostOperation(new PostOperation() {
+            @Override
+            public void run(SlingHttpServletRequest request, PostResponse response, SlingPostProcessor[] processors) {
+                // noop
+            }
+        }, Collections.<String, Object>singletonMap(SlingPostOperation.PROP_OPERATION_NAME, "noop"));
+
+        servlet.bindPostProcessor(new SlingPostProcessor() {
+            @Override
+            public void process(SlingHttpServletRequest request, List<Modification> changes) throws Exception {
+                // noop
+            }
+        }, Collections.<String, Object>singletonMap("postProcessor.name", "noop"));
+
+        MockSlingHttpServletRequest request = new MockSlingHttpServlet3Request(null, null, null, null, null) {
+            @Override
+            public String getParameter(String name) {
+                if (name.equals(SlingPostConstants.RP_OPERATION)) {
+                    return "noop";
+                } else if (name.equals(":requiredPostProcessors")) {
+                    return "noop";
+                }
+                return null;
+            }
+        };
+        MockSlingHttpServlet3Response response = new MockSlingHttpServlet3Response();
+        servlet.doPost(request, response);
+        assertEquals(200, response.getStatus());
     }
 
     private void testRedirection(String requestPath, String resourcePath, String redirect, String expected) 
