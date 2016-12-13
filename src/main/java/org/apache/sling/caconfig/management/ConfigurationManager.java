@@ -57,7 +57,7 @@ public interface ConfigurationManager {
      * Write configuration data to repository using the inner-most context path as reference.
      * @param resource Context resource
      * @param configName Configuration name
-     * @param values Values to be stored. All existing properties are erased and replaced with the new ones.
+     * @param data Configuration data to be stored. All existing properties are erased and replaced with the new ones.
      */
     void persistConfiguration(@Nonnull Resource resource, @Nonnull String configName,
             @Nonnull ConfigurationPersistData data);
@@ -66,8 +66,7 @@ public interface ConfigurationManager {
      * Write configuration data collection using the inner-most context path as reference.
      * @param resource Context resource
      * @param configName Configuration name
-     * @param resourceCollectionItems Resource collection items to be stored.
-     *      All existing collection entries on this context path level are erased and replaced with the new ones.
+     * @param data Configuration collection data to be stored. All existing collection entries on this context path level are erased and replaced with the new ones.
      */
     void persistConfigurationCollection(@Nonnull Resource resource, @Nonnull String configName,
             @Nonnull ConfigurationCollectionPersistData data);
