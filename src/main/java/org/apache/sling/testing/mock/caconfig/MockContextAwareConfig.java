@@ -43,7 +43,7 @@ public final class MockContextAwareConfig {
     /**
      * Search classpath for given class names to scan for and register all classes with @Configuration annotation.
      * @param context Sling context
-     * @param classNames Java class names
+     * @param classes Java classes
      */
     public static void registerAnnotationClasses(SlingContextImpl context, Class... classes) {
         ConfigurationMetadataUtil.registerAnnotationClasses(context.bundleContext(), classes);
