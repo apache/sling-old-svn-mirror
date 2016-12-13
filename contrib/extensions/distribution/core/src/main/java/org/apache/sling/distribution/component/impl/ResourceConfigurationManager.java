@@ -120,7 +120,11 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
 
             Map<String, Object> properties = config.getProperties();
             properties = filterMap(properties);
-            properties.putAll(configDefaults);
+            for (Map.Entry<String, String> propDefault : configDefaults.entrySet()) {
+                if (!properties.containsKey(propDefault.getKey())) {
+                    properties.put(propDefault.getKey(),propDefault.getValue());
+                }
+            }
 
             ModifiableValueMap valueMap = contentResource.adaptTo(ModifiableValueMap.class);
             valueMap.putAll(properties);
