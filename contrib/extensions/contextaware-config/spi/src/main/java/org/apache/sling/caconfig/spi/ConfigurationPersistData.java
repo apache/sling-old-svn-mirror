@@ -35,7 +35,6 @@ public final class ConfigurationPersistData {
     private String collectionItemName;
     
     /**
-     * @param collectionItemName Resource collection item name
      * @param properties Property values
      */
     public ConfigurationPersistData(@Nonnull Map<String, Object> properties) {
@@ -57,7 +56,7 @@ public final class ConfigurationPersistData {
     }
 
     /**
-     * @param collectionItemName Resource collection item name.  To be set only for resource collection items.
+     * @param value Resource collection item name.  To be set only for resource collection items.
      * @return this
      */
     public ConfigurationPersistData collectionItemName(String value) {
