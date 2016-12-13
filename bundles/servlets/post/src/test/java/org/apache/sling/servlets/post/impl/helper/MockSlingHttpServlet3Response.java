@@ -24,9 +24,22 @@ import java.util.Collection;
  * When MockSlingHttpServletResponse supports Servlet 3 correctly, delete this class.
  */
 public class MockSlingHttpServlet3Response extends MockSlingHttpServletResponse {
+
+    private int status = 200;
+
+    @Override
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    @Override
+    public void setStatus(int i, String s) {
+        setStatus(i);
+    }
+
     @Override
     public int getStatus() {
-        return 0;
+        return status;
     }
 
     @Override
