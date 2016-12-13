@@ -33,6 +33,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
@@ -67,7 +69,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     static String resourcePrefix;
     static final String OSGI_PREFIX = "";
 
-
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Activate
     void activate(Map<String, Object> properties) {
@@ -121,8 +123,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public void saveConfig(ResourceResolver resolver, DistributionConfiguration config) {
-
-
+        log.debug("saving config {}", config);
 
         if (resourceManager != null) {
             Map<String, DistributionConfiguration> splitConfig = splitConfig(config, resourcePrefix);
@@ -132,12 +133,15 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             osgiManager.saveConfig(resolver, defaultConfig);
 
             DistributionConfiguration resourceConfig = splitConfig.get(resourcePrefix);
+            log.debug("retrieved config {}", resourceConfig);
 
             if (resourceConfig != null) {
                 resourceManager.saveConfig(resolver, resourceConfig);
+                log.debug("saved resource config: {}", resourceConfig);
             }
         } else {
             osgiManager.saveConfig(resolver, config);
+            log.debug("saved osgi config: {}", config);
         }
     }
 
@@ -149,7 +153,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             resourceManager.deleteConfig(resolver, kind, name);
         }
     }
-
 
     static DistributionConfiguration mergeConfig(DistributionConfiguration main, DistributionConfiguration extension, String prefix) {
 
@@ -164,8 +167,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
         return mergeConfig(main.getKind(), main.getName(), configMap);
     }
-
-
 
     static DistributionConfiguration mergeConfig(DistributionComponentKind kind, String name, Map<String, DistributionConfiguration> configMap) {
         Map<String, Object> result = new HashMap<String, Object>();
@@ -196,7 +197,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         for (DistributionConfiguration config : source) {
             sourceMap.put(config.getName(), config);
         }
-
 
         for (DistributionConfiguration targetConfig : target) {
             DistributionConfiguration sourceConfig = sourceMap.get(targetConfig.getName());

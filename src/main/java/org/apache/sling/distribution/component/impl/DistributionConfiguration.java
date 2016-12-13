@@ -51,4 +51,13 @@ public class DistributionConfiguration {
     public String getName() {
         return name;
     }
+
+    @Override
+    public String toString() {
+        return "DistributionConfiguration{" +
+                "kind=" + kind +
+                ", name='" + name + '\'' +
+                ", properties=" + properties +
+                '}';
+    }
 }
