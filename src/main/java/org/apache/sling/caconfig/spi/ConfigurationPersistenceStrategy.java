@@ -53,7 +53,7 @@ public interface ConfigurationPersistenceStrategy {
      * The changes are written using the given resource resolver. They are not committed, this is left to the caller.
      * @param resourceResolver Resource resolver
      * @param configResourcePath Path to store configuration data to. The resource (and it's parents) may not exist and may have to be created. 
-     * @param data Configuration persistence data
+     * @param data Configuration data to be stored. All existing properties are erased and replaced with the new ones.
      * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
      *      (in case of error throw an exception).
      */
