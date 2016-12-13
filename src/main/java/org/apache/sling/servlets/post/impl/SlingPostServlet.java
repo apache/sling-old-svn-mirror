@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -139,10 +138,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private static final String PARAM_AUTO_CHECKIN = ":autoCheckin";
 
-    private static final String PARAM_REQUIRED_POST_PROCESSORS = ":requiredPostProcessors";
-
-    private static final String PROP_POST_PROCESSOR_NAME = "postProcessor.name";
-
     private static final String DEFAULT_IGNORED_PARAMETER_NAME_PATTERN = "j_.*";
 
     @Property(value = DEFAULT_IGNORED_PARAMETER_NAME_PATTERN)
@@ -162,9 +157,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     /** Cached list of post processors, used during request processing. */
     private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
-
-    /** Cached list of post processor names, used during request processing. */
-    private String[] cachedPostProcessorNames = new String[0];
 
     /** Sorted list of node name generator holders. */
     private final List<NodeNameGeneratorHolder> nodeNameGenerators = new ArrayList<NodeNameGeneratorHolder>();
@@ -206,25 +198,19 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 "Invalid operation specified for POST request");
 
         } else {
+            request.getRequestProgressTracker().log(
+                    "Calling PostOperation: {0}", operation.getClass().getName());
             final SlingPostProcessor[] processors = this.cachedPostProcessors;
-            final String[] processorNames = this.cachedPostProcessorNames;
-            if (checkPostProcessors(request, processorNames)) {
-                request.getRequestProgressTracker().log(
-                        "Calling PostOperation: {0}", operation.getClass().getName());
-                try {
-                    operation.run(request, htmlResponse, processors);
-                } catch (ResourceNotFoundException rnfe) {
-                    htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                        rnfe.getMessage());
-                } catch (final Exception exception) {
-                    log.warn("Exception while handling POST "
-                        + request.getResource().getPath() + " with "
-                        + operation.getClass().getName(), exception);
-                    htmlResponse.setError(exception);
-                }
-            } else {
-                htmlResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                        "At least one of the expected PostProcessors was not available.");
+            try {
+                operation.run(request, htmlResponse, processors);
+            } catch (ResourceNotFoundException rnfe) {
+                htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                    rnfe.getMessage());
+            } catch (final Exception exception) {
+                log.warn("Exception while handling POST "
+                    + request.getResource().getPath() + " with "
+                    + operation.getClass().getName(), exception);
+                htmlResponse.setError(exception);
             }
 
         }
@@ -274,13 +260,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     /**
      * Creates an instance of a PostResponse.
      * @param req The request being serviced
-     * @return a {@link org.apache.sling.servlets.post.JSONResponse} if any of these conditions are true:
+     * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
      * <ul>
      *   <li> the request has an <code>Accept</code> header of <code>application/json</code></li>
      *   <li>the request is a JSON POST request (see SLING-1172)</li>
      *   <li>the request has a request parameter <code>:accept=application/json</code></li>
      * </ul>
-     * or a {@link org.apache.sling.servlets.post.PostResponse} otherwise
+     * or a {@link org.apache.sling.api.servlets.PostResponse} otherwise
      */
     PostResponse createPostResponse(final SlingHttpServletRequest req) {
         for (final PostResponseCreator creator : cachedPostResponseCreators) {
@@ -545,7 +531,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         final PostProcessorHolder pph = new PostProcessorHolder();
         pph.processor = processor;
         pph.ranking = OsgiUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
-        pph.name = OsgiUtil.toString(properties.get(PROP_POST_PROCESSOR_NAME), null);
 
         synchronized ( this.postProcessors ) {
             int index = 0;
@@ -584,15 +569,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      */
     private void updatePostProcessorCache() {
         final SlingPostProcessor[] localCache = new SlingPostProcessor[this.postProcessors.size()];
-        final String[] localNameCache = new String[this.postProcessors.size()];
         int index = 0;
         for(final PostProcessorHolder current : this.postProcessors) {
             localCache[index] = current.processor;
-            localNameCache[index] = current.name != null ? current.name : current.processor.getClass().getSimpleName();
             index++;
         }
         this.cachedPostProcessors = localCache;
-        this.cachedPostProcessorNames = localNameCache;
     }
 
     /**
@@ -744,34 +726,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         return cfg;
     }
 
-    private boolean checkPostProcessors(SlingHttpServletRequest request, String[] processorNames) {
-        String param = request.getParameter(PARAM_REQUIRED_POST_PROCESSORS);
-        if (param == null) {
-            return true;
-        } else {
-            List<String> requiredPostProcessors = new ArrayList<String>(Arrays.asList(param.split(",")));
-            Iterator<String> iterator = requiredPostProcessors.iterator();
-            while (iterator.hasNext()) {
-                String requiredPostProcessor = iterator.next();
-                for (String name : processorNames) {
-                    if (name.equals(requiredPostProcessor)) {
-                        iterator.remove();
-                        break;
-                    }
-                }
-            }
-            if (!requiredPostProcessors.isEmpty()) {
-                log.warn("Some required post processors were not available: {}", requiredPostProcessors);
-                return false;
-            } else {
-                return true;
-            }
-        }
-    }
-
     private static final class PostProcessorHolder {
         public SlingPostProcessor processor;
-        public String name;
         public int ranking;
     }
 
