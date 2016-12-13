@@ -42,7 +42,7 @@ public final class ConfigurationCollectionPersistData {
     private Map<String,Object> properties;
     
     /**
-     * @param collection Collection of configuration collection items
+     * @param items Collection of configuration collection items
      */
     public ConfigurationCollectionPersistData(@Nonnull Collection<ConfigurationPersistData> items) {
         validateItems(items);
@@ -81,7 +81,7 @@ public final class ConfigurationCollectionPersistData {
     }
 
     /**
-     * @param properties Properties for the configuration collection itself. Does not contain configuration data, but control data e.g. for enabling collection inheritance.
+     * @param value Properties for the configuration collection itself. Does not contain configuration data, but control data e.g. for enabling collection inheritance.
      * @return this
      */
     public ConfigurationCollectionPersistData properties(Map<String, Object> value) {

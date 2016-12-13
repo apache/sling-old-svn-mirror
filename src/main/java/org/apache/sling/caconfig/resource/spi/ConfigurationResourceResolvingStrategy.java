@@ -45,6 +45,7 @@ public interface ConfigurationResourceResolvingStrategy {
      * @param resource Context resource to fetch configuration for
      * @param bucketNames Configuration "bucket" names. For each inheritance level all bucket names are tried, and the first
      *   one that has a result is included.
+     * @param configName Configuration name or relative path.
      * @return Configuration resource or {@code null} if this strategy did not found matching resources.
      */
     @CheckForNull Resource getResource(@Nonnull Resource resource, @Nonnull Collection<String> bucketNames, @Nonnull String configName);
@@ -61,7 +62,7 @@ public interface ConfigurationResourceResolvingStrategy {
 
     /**
      * Get a context-aware singleton configuration resource inheritance chain defined by the given configuration name.
-     * The first item of the inheritance chain it the same resource returned by {@link #getResource(Resource, String, String)}.
+     * The first item of the inheritance chain it the same resource returned by {@link #getResource(Resource, Collection, String)}.
      * @param resource Context resource to fetch configuration for
      * @param bucketNames Configuration "bucket" names. For each inheritance level all bucket names are tried, and the first
      *   one that has a result is included.
@@ -72,7 +73,7 @@ public interface ConfigurationResourceResolvingStrategy {
 
     /**
      * Get a collection of context-aware configuration resource inheritance chains defined by the given configuration name.
-     * The first item of each inheritance chain is the same item returned by {@link #getResourceCollection(Resource, String, String)}.
+     * The first item of each inheritance chain is the same item returned by {@link #getResourceCollection(Resource, Collection, String)}.
      * @param resource Context resource to fetch configuration for
      * @param bucketNames Configuration "bucket" names. For each inheritance level all bucket names are tried, and the first
      *   one that has a result is included.

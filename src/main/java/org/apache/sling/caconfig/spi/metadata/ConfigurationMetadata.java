@@ -37,6 +37,8 @@ public final class ConfigurationMetadata extends AbstractMetadata<ConfigurationM
 
     /**
      * @param name Configuration name
+     * @param propertyMetadata Property metadata
+     * @param collection Collection
      */
     public ConfigurationMetadata(@Nonnull String name,
             Collection<PropertyMetadata<?>> propertyMetadata,

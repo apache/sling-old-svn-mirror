@@ -43,7 +43,7 @@ public interface ConfigurationPersistenceStrategy {
     /**
      * Allows the strategy to transform the given configuration resource path according to it's persistent strategies,
      * e.g. fetching the data from a child resource instead of the given resource. 
-     * @param resource Configuration resource path or part of it (e.g. config name)
+     * @param resourcePath Configuration resource path or part of it (e.g. config name)
      * @return Transformed configuration resource path. If null is returned this strategy does not support the given configuration resource path.
      */
     @CheckForNull String getResourcePath(@Nonnull String resourcePath);
@@ -53,7 +53,7 @@ public interface ConfigurationPersistenceStrategy {
      * The changes are written using the given resource resolver. They are not committed, this is left to the caller.
      * @param resourceResolver Resource resolver
      * @param configResourcePath Path to store configuration data to. The resource (and it's parents) may not exist and may have to be created. 
-     * @param properties Configuration properties
+     * @param data Configuration persistence data
      * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
      *      (in case of error throw an exception).
      */
@@ -66,8 +66,7 @@ public interface ConfigurationPersistenceStrategy {
      * @param resourceResolver Resource resolver
      * @param configResourceCollectionParentPath Parent path to store configuration collection data to.
      *      The resource (and it's parents) may not exist and may have to be created. 
-     * @param resourceCollectionItems Resource collection items to be stored.
-     *      All existing collection entries on this context path level are erased and replaced with the new ones.
+     * @param data Configuration collection data. All existing collection entries on this context path level are erased and replaced with the new ones.
      * @return true if the data was persisted. false if persisting the data was not accepted by this persistence strategy
      *      (in case of error throw an exception).
      */
