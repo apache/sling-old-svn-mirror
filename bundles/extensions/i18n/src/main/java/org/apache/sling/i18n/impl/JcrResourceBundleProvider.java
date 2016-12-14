@@ -182,6 +182,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     @Override
     public void onChange(List<ResourceChange> changes) {
+        boolean refreshed = false;
         for(final ResourceChange change : changes) {
             log.trace("handleEvent: Detecting event {} for path '{}'", change.getType(), change.getPath());
 
@@ -211,6 +212,11 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
                     }
                 }
                 // may be a completely new dictionary
+                if (!refreshed) {
+                    // refresh at most once per onChange()
+                    resourceResolver.refresh();
+                    refreshed = true;
+                }
                 if (isDictionaryResource(change)) {
                     scheduleReloadBundles(true);
                 }
@@ -223,7 +229,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         // therefore only consider changes either for sling:MessageEntry's
         // or for JSON dictionaries
         // get valuemap
-        resourceResolver.refresh();
         final Resource resource = resourceResolver.getResource(change.getPath());
         if (resource == null) {
             log.trace("Could not get resource for '{}' for event {}", change.getPath(), change.getType());
