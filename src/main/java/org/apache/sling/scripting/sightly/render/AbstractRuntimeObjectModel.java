@@ -21,8 +21,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +50,6 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
      */
     public static final Set<Class<?>> PRIMITIVE_CLASSES = Collections.unmodifiableSet(new HashSet<Class<?>>() {{
         add(Boolean.class);
-        add(Boolean.class);
         add(Character.class);
         add(Byte.class);
         add(Short.class);
@@ -64,6 +65,16 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     @Override
     public boolean isPrimitive(Object obj) {
         return PRIMITIVE_CLASSES.contains(obj.getClass());
+    }
+
+    @Override
+    public boolean isDate(Object target) {
+        return (target instanceof Date || target instanceof Calendar);
+    }
+
+    @Override
+    public boolean isNumber(Object target) {
+        return (target instanceof Number);
     }
 
     @Override
@@ -94,6 +105,15 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
             return (Number) object;
         }
         return 0;
+    }
+
+    public Date toDate(Object object) {
+        if (object instanceof Date) {
+            return (Date)object;
+        } else if (object instanceof Calendar) {
+            return ((Calendar)object).getTime();
+        }
+        return new Date(0);
     }
 
     @Override
@@ -368,4 +388,3 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     }
 
 }
-
