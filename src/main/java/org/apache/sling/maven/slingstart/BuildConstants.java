@@ -32,9 +32,6 @@ public abstract class BuildConstants {
     // Model artifact name
     public static final String MODEL_ARTIFACT_NAME = "slingstart.txt";
 
-    // Model archive name
-    public static final String MODEL_ARCHIVE_NAME = "slingstart." + ModelArchiveWriter.DEFAULT_EXTENSION;
-
     // Types
 
     public static final String TYPE_JAR = "jar";
