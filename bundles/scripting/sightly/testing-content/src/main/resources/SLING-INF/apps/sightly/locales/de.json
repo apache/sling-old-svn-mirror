@@ -26,5 +26,20 @@
         "jcr:primaryType": "sling:MessageEntry",
         "sling:key"      : "the bank",
         "sling:message"  : "das Ufer"
+    },
+    "dayofweek"         : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "'Day of week': EEEE",
+        "sling:message"  : "'Wochentag': EEEE"
+    },
+    "total"              : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "Total: {0}",
+        "sling:message"  : "Gesamtbetrag: {0}"
+    },
+    "number"        : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "##",
+        "sling:message"  : "##.###"
     }
 }

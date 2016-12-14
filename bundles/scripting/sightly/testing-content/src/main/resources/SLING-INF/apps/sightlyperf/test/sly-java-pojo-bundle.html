@@ -20,6 +20,7 @@
     ${test.tag != null ? test.startTag : '' @ context = "unsafe"}
     ${test.text @ context = "text"}
     ${test.tag != null ? test.endTag : '' @ context = "unsafe"}
+    ${'yyyy-MM-dd HH:mm:ss.SSS' @ format = test.date}
     <div data-sly-include="mode.jsp" data-sly-unwrap=""></div>
     <ul data-sly-test="${test.includeChildren}" data-sly-list.child="${test.children}">
         <li data-sly-resource="${child.path}"></li>
