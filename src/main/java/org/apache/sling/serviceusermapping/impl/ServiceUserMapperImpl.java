@@ -151,10 +151,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Deactivate
     synchronized void deactivate() {
-        RegistrationSet registrationSet = null;
+        // this call does not unregister the mappings, but they should be unbound
+        // through the unbind methods anyway
         updateServiceRegistrations(new Mapping[0]);
         bundleContext = null;
-        this.executeServiceRegistrationsAsync(registrationSet);
         if (executorService != null) {
             executorService.shutdown();
             executorService = null;
@@ -305,13 +305,13 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     }
 
 
-    private void executeServiceRegistrations(RegistrationSet registrationSet) {
+    private void executeServiceRegistrations(final RegistrationSet registrationSet) {
 
         if (registrationSet == null) {
             return;
         }
 
-        for (Registration registration : registrationSet.removed) {
+        for (final Registration registration : registrationSet.removed) {
 
 
             ServiceRegistration serviceRegistration = registration.setService(null);
@@ -320,8 +320,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                 try {
                     serviceRegistration.unregister();
                     log.debug("Unregistered ServiceUserMapped {}", registration.mapping);
-                } catch (IllegalStateException e) {
-                    log.error("cannot unregister ServiceUserMapped {}", registration.mapping,  e);
+                } catch (final IllegalStateException e) {
+                    // this can happen on shutdown, therefore we just ignore it and don't log
                 }
             }
         }
@@ -332,7 +332,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             return;
         }
 
-        for (Registration registration : registrationSet.added) {
+        for (final Registration registration : registrationSet.added) {
             Mapping mapping = registration.mapping;
             final Dictionary<String, Object> properties = new Hashtable<String, Object>();
             if (mapping.getSubServiceName() != null) {
@@ -349,8 +349,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             if (oldServiceRegistration != null) {
                 try {
                     oldServiceRegistration.unregister();
-                } catch (IllegalStateException e) {
-                    log.error("cannot unregister ServiceUserMapped {}", registration.mapping,  e);
+                } catch (final IllegalStateException e) {
+                    // this can happen on shutdown, therefore we just ignore it and don't log
                 }
             }
         }
@@ -359,9 +359,9 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private String internalGetUserId(final String serviceName, final String subServiceName) {
         log.debug(
-                "internalGetUserId: {} active mappings, looking for mapping for {}/{}", 
+                "internalGetUserId: {} active mappings, looking for mapping for {}/{}",
                 new Object[] { this.activeMappings.length, serviceName, subServiceName });
-        
+
         for (final Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, subServiceName);
             if (userId != null) {
@@ -372,9 +372,9 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         // second round without serviceInfo
         log.debug(
-                "internalGetUserId: {} active mappings, looking for mapping for {}/<no subServiceName>", 
+                "internalGetUserId: {} active mappings, looking for mapping for {}/<no subServiceName>",
                 this.activeMappings.length, serviceName);
-        
+
         for (Mapping mapping : this.activeMappings) {
             final String userId = mapping.map(serviceName, null);
             if (userId != null) {
