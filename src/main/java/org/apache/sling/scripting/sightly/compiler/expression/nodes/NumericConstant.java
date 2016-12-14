@@ -49,7 +49,7 @@ public final class NumericConstant implements Atom {
      * @param value the number representation
      */
     public NumericConstant(Number value) {
-        this.value = value.longValue();
+        this.value = value;
         this.text = value.toString();
     }
 
@@ -80,11 +80,10 @@ public final class NumericConstant implements Atom {
     }
 
     private Number parseNumber(String s) {
-        try {
-            return Long.parseLong(s);
-        } catch (NumberFormatException e) {
+        if (s.contains(".")) {
             return Double.parseDouble(s);
         }
+        return Long.parseLong(s);
     }
 
 }

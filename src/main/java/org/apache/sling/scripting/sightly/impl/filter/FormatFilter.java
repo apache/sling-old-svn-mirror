@@ -21,6 +21,7 @@ package org.apache.sling.scripting.sightly.impl.filter;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.compiler.expression.nodes.MapLiteral;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 
 /**
@@ -29,6 +30,9 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 public class FormatFilter extends AbstractFilter {
 
     public static final String FORMAT_OPTION = "format";
+    public static final String TYPE_OPTION = "type";
+    public static final String FORMAT_LOCALE_OPTION = "formatLocale";
+    public static final String TIMEZONE_OPTION = "timezone";
 
     private static final class FormatFilterLoader {
         private static final FormatFilter INSTANCE = new FormatFilter();
@@ -53,7 +57,13 @@ public class FormatFilter extends AbstractFilter {
             return expression;
         }
         ExpressionNode translation =
-                new RuntimeCall(RuntimeFunction.FORMAT, expression.getRoot(), expression.removeOption(FORMAT_OPTION));
+                new RuntimeCall(RuntimeFunction.FORMAT, expression.getRoot(),
+                        new MapLiteral(getFilterOptions(expression,
+                                FORMAT_OPTION,
+                                TYPE_OPTION,
+                                I18nFilter.LOCALE_OPTION,
+                                FORMAT_LOCALE_OPTION,
+                                TIMEZONE_OPTION)));
         return expression.withNode(translation);
     }
 }
