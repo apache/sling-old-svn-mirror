@@ -31,6 +31,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.provisioning.model.Artifact;
 import org.apache.sling.provisioning.model.Model;
@@ -47,6 +48,12 @@ import org.apache.sling.provisioning.model.io.ModelArchiveWriter;
         threadSafe = true
     )
 public class AttachModelArchive extends AbstractSlingStartMojo {
+
+    /**
+     * The filename to be used for the generated model archive file.
+     */
+    @Parameter(defaultValue = "${project.build.finalName}")
+    private String modelArchiveName;
 
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
@@ -69,7 +76,7 @@ public class AttachModelArchive extends AbstractSlingStartMojo {
         }
 
         // write the model archive
-        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + BuildConstants.MODEL_ARCHIVE_NAME);
+        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + modelArchiveName + "." + ModelArchiveWriter.DEFAULT_EXTENSION);
         outputFile.getParentFile().mkdirs();
 
         try ( final FileOutputStream fos = new FileOutputStream(outputFile)) {
