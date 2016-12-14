@@ -148,6 +148,14 @@ public class CrankstartSetup extends ExternalResource {
         
         log.info("Starting {}", this);
         
+        // Add system properties which have the expected prefix
+        for(Object o : System.getProperties().keySet()) {
+            final String key = o.toString();
+            if(key.startsWith(Launcher.VARIABLE_OVERRIDE_PREFIX)) {
+                replacementProps.setProperty(key, System.getProperty(key));
+            }
+        }
+        
         final HttpUriRequest get = new HttpGet(baseUrl);
         replacementProps.setProperty("crankstart.model.http.port", String.valueOf(port));
         replacementProps.setProperty("crankstart.model.osgi.storage.path", storagePath);

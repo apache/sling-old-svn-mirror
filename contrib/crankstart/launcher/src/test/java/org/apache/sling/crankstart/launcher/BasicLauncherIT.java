@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -33,6 +34,17 @@ public class BasicLauncherIT {
     
     private DefaultHttpClient client;
     private static WebconsoleClient osgiConsole;
+    private static final String uniqueText = "Unique text for tests run " + UUID.randomUUID();
+    
+    // The Launcher.VARIABLE_OVERRIDE_PREFIX must be used for system properties that
+    // are meant to provide values for the provisioning model
+    private static final String PROP_UNIQUE_TEXT = Launcher.VARIABLE_OVERRIDE_PREFIX + "single.servlet.text";
+    
+    static {
+        // BeforeClass would be too late for this as it's
+        // the CrankstartSetup rule that needs this.
+        System.setProperty(PROP_UNIQUE_TEXT, uniqueText);
+    }
     
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -44,6 +56,7 @@ public class BasicLauncherIT {
     
     @Before
     public void setup() throws IOException {
+        System.getProperties().remove(PROP_UNIQUE_TEXT);
         client = new DefaultHttpClient();
     }
     
@@ -68,6 +81,9 @@ public class BasicLauncherIT {
         try {
             response = client.execute(get);
             assertEquals("Expecting success for " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            final String content = U.getContent(response);
+            final String expected = "SingleConfigServlet:test content is " + uniqueText;
+            assertEquals(expected, content);
         } finally {
             U.closeConnection(response);
         }
