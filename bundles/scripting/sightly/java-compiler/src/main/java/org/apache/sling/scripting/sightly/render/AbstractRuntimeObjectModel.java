@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -68,7 +69,7 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
 
     @Override
     public boolean isDate(Object target) {
-        return (target instanceof Date);
+        return (target instanceof Date || target instanceof Calendar);
     }
 
     @Override
@@ -109,6 +110,8 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     public Date toDate(Object object) {
         if (object instanceof Date) {
             return (Date)object;
+        } else if (object instanceof Calendar) {
+            return ((Calendar)object).getTime();
         }
         return new Date(0);
     }

@@ -22,6 +22,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -98,6 +99,10 @@ public class FormatFilterExtension implements RuntimeExtension {
         if ( options.containsKey(TIMEZONE_OPTION)) {
             return TimeZone.getTimeZone(runtimeObjectModel.toString(options.get(TIMEZONE_OPTION)));
         } else {
+            Object formatObject = options.get(FORMAT_OPTION);
+            if (formatObject instanceof Calendar) {
+                return ((Calendar)formatObject).getTimeZone();
+            }
             return TimeZone.getDefault();
         }
     }
