@@ -17,6 +17,7 @@
 package org.apache.sling.scripting.sightly.render;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -44,6 +45,10 @@ public interface RuntimeObjectModel {
      */
     boolean isCollection(Object target);
 
+    boolean isNumber(Object target);
+
+    boolean isDate(Object target);
+
     /**
      * Resolve a property of a target object and return its value. The property can
      * be either an index or a name
@@ -69,6 +74,8 @@ public interface RuntimeObjectModel {
      * @return the numeric representation
      */
     Number toNumber(Object object);
+
+    Date toDate(Object object);
 
     /**
      * Convert the given object to a string.

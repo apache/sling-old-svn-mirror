@@ -16,6 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.testing.models;
 
+import java.util.Date;
 import java.util.Iterator;
 import javax.inject.Inject;
 
@@ -70,6 +71,10 @@ public class TestModel {
 
     public Iterator<Resource> getChildren() {
         return resource.listChildren();
+    }
+
+    public Date getDate() {
+        return new Date();
     }
 
 }
