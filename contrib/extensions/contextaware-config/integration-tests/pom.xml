@@ -111,7 +111,6 @@
                         <server>
                             <port>${http.port}</port>
                             <controlPort>${sling.control.port}</controlPort>
-                            <runmode>jackrabbit</runmode>
                             <contextPath>${http.base.path}</contextPath>
                             <debug>${launchpad.debug}</debug>
                         </server>
