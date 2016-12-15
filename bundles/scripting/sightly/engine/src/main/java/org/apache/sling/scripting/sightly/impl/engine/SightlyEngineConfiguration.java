@@ -38,13 +38,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
         service = SightlyEngineConfiguration.class,
         configurationPid = "org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration"
 )
-@Designate(ocd = SightlyEngineConfiguration.Configuration.class)
 public class SightlyEngineConfiguration {
 
-    @ObjectClassDefinition(
-            name = "Apache Sling Scripting HTL Engine Configuration",
-            description = "HTL Engine Configuration Options"
-    )
     @interface Configuration {
 
         @AttributeDefinition(

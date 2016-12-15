@@ -40,15 +40,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
                 Constants.SERVICE_RANKING + ":Integer=-10"
         }
 )
-@Designate(
-        ocd = ResourceUseProvider.Configuration.class
-)
 public class ResourceUseProvider implements UseProvider {
 
-    @ObjectClassDefinition(
-            name = "Apache Sling Scripting HTL Resource Use Provider Configuration",
-            description = "HTL Resource Use Provider configuration options"
-    )
     @interface Configuration {
 
         @AttributeDefinition(

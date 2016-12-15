@@ -51,16 +51,8 @@ import org.slf4j.LoggerFactory;
                 Constants.SERVICE_RANKING + ":Integer=90"
         }
 )
-@Designate(
-        ocd = JavaUseProvider.Configuration.class
-)
 public class JavaUseProvider implements UseProvider {
 
-
-    @ObjectClassDefinition(
-            name = "Apache Sling Scripting HTL Java Use Provider Configuration",
-            description = "HTL Java Use Provider configuration options"
-    )
     @interface Configuration {
 
         @AttributeDefinition(
