@@ -78,7 +78,8 @@
                         <Provide-Capability>
                             io.sightly; version:Version=1.0,
                             io.sightly; version:Version=1.1,
-                            io.sightly; version:Version=1.2
+                            io.sightly; version:Version=1.2,
+                            io.sightly; version:Version=1.3
                         </Provide-Capability>
                         <Require-Capability>
                             io.sightly.compiler; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))",
