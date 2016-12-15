@@ -74,7 +74,8 @@
                         <Provide-Capability>
                             io.sightly.compiler.java; version:Version=1.0,
                             io.sightly.compiler.java; version:Version=1.1,
-                            io.sightly.compiler.java; version:Version=1.2
+                            io.sightly.compiler.java; version:Version=1.2,
+                            io.sightly.compiler.java; version:Version=1.3
                         </Provide-Capability>
                     </instructions>
                 </configuration>
