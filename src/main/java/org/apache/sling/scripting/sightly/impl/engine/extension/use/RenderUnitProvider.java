@@ -60,15 +60,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
                 Constants.SERVICE_RANKING + ":Integer=100"
         }
 )
-@Designate(
-        ocd = RenderUnitProvider.Configuration.class
-)
 public class RenderUnitProvider implements UseProvider {
 
-    @ObjectClassDefinition(
-            name = "Apache Sling Scripting HTL Render Unit Use Provider Configuration",
-            description = "HTL Render Unit Use Provider configuration options"
-    )
     @interface Configuration {
 
         @AttributeDefinition(
