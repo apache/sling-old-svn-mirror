@@ -17,22 +17,31 @@
 package org.apache.sling.jcr.repoinit.impl;
 
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Utilities for ACL management */
 public class AclUtil {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AclUtil.class);
+    
     public static JackrabbitAccessControlManager getJACM(Session s) throws UnsupportedRepositoryOperationException, RepositoryException {
         final AccessControlManager acm = s.getAccessControlManager();
         if(!(acm instanceof JackrabbitAccessControlManager)) {
@@ -49,20 +58,88 @@ public class AclUtil {
         final String [] privArray = privileges.toArray(new String[privileges.size()]);
         final Privilege[] jcrPriv = AccessControlUtils.privilegesFromNames(s, privArray);
 
-
         for(String path : paths) {
             if(!s.nodeExists(path)) {
                 throw new PathNotFoundException("Cannot set ACL on non-existent path " + path);
             }
             JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(s, path);
+            AccessControlEntry[] existingAces = acl.getAccessControlEntries();
+            boolean changed = false;
             for (String name : principals) {
                 final Principal principal = AccessControlUtils.getPrincipal(s, name);
                 if (principal == null) {
                     throw new IllegalStateException("Principal not found: " + name);
                 }
-                acl.addEntry(principal, jcrPriv, isAllow);
+                LocalAccessControlEntry newAce = new LocalAccessControlEntry(principal, jcrPriv, isAllow);
+                if (contains(existingAces, newAce)) {
+                    LOG.info("Not adding {} to path {} since an equivalent access control entry already exists", newAce, path);
+                    continue;
+                }
+                acl.addEntry(newAce.principal, newAce.privileges, newAce.isAllow);
+                changed = true;
             }
-            getJACM(s).setPolicy(path, acl);
+            if ( changed ) {
+                getJACM(s).setPolicy(path, acl);
+            }
+            
+        }
+    }
+
+    // visible for testing
+    static boolean contains(AccessControlEntry[] existingAces, LocalAccessControlEntry newAce) throws RepositoryException {
+        for (int i = 0 ; i < existingAces.length; i++) {
+            JackrabbitAccessControlEntry existingEntry = (JackrabbitAccessControlEntry) existingAces[i];
+            LOG.debug("Comparing {} with {}", newAce, toString(existingEntry));
+            if (newAce.isContainedIn(existingEntry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String toString(JackrabbitAccessControlEntry entry) throws RepositoryException {
+        return "[" + entry.getClass().getSimpleName() + "# principal: "
+                + "" + entry.getPrincipal() + ", privileges: " + Arrays.toString(entry.getPrivileges()) +
+                ", isAllow: " + entry.isAllow() + ", restrictionNames: " + entry.getRestrictionNames()  + "]";
+    }
+
+    /**
+     * Helper class which allows easy comparison of a local (proposed) access control entry with an existing one
+     */
+    static class LocalAccessControlEntry {
+        
+        private final Principal principal;
+        private final Privilege[] privileges;
+        private final boolean isAllow;
+        
+        LocalAccessControlEntry(Principal principal, Privilege[] privileges, boolean isAllow) {
+            this.principal = principal;
+            this.privileges = privileges;
+            this.isAllow = isAllow;
+        }
+        
+        public boolean isContainedIn(JackrabbitAccessControlEntry other) throws RepositoryException {
+            return other.getPrincipal().equals(principal) &&
+                    contains(other.getPrivileges(), privileges) &&
+                    other.isAllow() == isAllow &&
+                    ( other.getRestrictionNames() == null || 
+                        other.getRestrictionNames().length == 0 );
+        }
+        
+        private boolean contains(Privilege[] first, Privilege[] second) {
+            // we need to ensure that the privilege order is not taken into account, so we use sets
+            Set<Privilege> set1 = new HashSet<Privilege>();
+            set1.addAll(Arrays.asList(first));
+            
+            Set<Privilege> set2 = new HashSet<Privilege>();
+            set2.addAll(Arrays.asList(second));
+            
+            return set1.containsAll(set2);
+        }
+        
+        @Override
+        public String toString() {
+            return "[" + getClass().getSimpleName() + "# principal " + principal+ ", privileges: " + Arrays.toString(privileges) + ", isAllow : " + isAllow + "]";
         }
     }
 }
