@@ -67,7 +67,7 @@ class ServerSideTeleporter extends TeleporterRule {
         if (configuredTimeout == null) {
             configuredTimeout = Integer.toString(WAITFOR_SERVICE_TIMEOUT_DEFAULT_SECONDS);
         }
-        final long timeout = System.currentTimeMillis() + Integer.parseInt(configuredTimeout) * 1000;
+        final long timeout = Integer.parseInt(configuredTimeout) * 1000;
         try {
             T service = getServiceInternal(serviceClass, ldapFilter, timeout);
             if (service != null) {
