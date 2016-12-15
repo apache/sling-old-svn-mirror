@@ -112,8 +112,12 @@ public class TestUtil {
     }
 
     public void cleanupUser() throws RepositoryException, RepoInitParsingException {
-        parseAndExecute("delete service user " + username);
-        assertServiceUser("in cleanupUser()", username, false);
+        cleanupServiceUser(username);
+    }
+    
+    public void cleanupServiceUser(String principalName) throws RepositoryException, RepoInitParsingException {
+        parseAndExecute("delete service user " + principalName);
+        assertServiceUser("in cleanupUser()", principalName, false);
     }
 
     public Session loginService(String serviceUsername) throws RepositoryException {
