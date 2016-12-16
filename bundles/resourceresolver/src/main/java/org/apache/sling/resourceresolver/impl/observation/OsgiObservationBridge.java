@@ -84,7 +84,7 @@ public class OsgiObservationBridge implements ResourceChangeListener, ExternalRe
             cardinality=ReferenceCardinality.AT_LEAST_ONE,
             policy=ReferencePolicy.DYNAMIC,
             service=EventHandler.class,
-            target="(event.topics=org/apache/sling/api/resource/*)")
+            target="(|(event.topics=org/apache/sling/api/resource/Resource/*)(event.topics=org/apache/sling/api/resource/ResourceProvider/*))")
     private void bindEventHandler(final EventHandler handler) {
         logger.warn("Found OSGi Event Handler for deprecated resource bridge: {}", handler);
     }
