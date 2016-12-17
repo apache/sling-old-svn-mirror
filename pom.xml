@@ -99,7 +99,7 @@
                                 <filter>
                                     <artifact>org.apache.sling:org.apache.sling.commons.osgi</artifact>
                                     <includes>
-                                        <include>org/apache/sling/commons/osgi/*</include>
+                                        <include>org/apache/sling/commons/osgi/**</include>
                                     </includes>
                                 </filter>
                                 <filter>
@@ -111,7 +111,7 @@
                                 <filter>
                                     <artifact>commons-beanutils:commons-beanutils</artifact>
                                     <includes>
-                                        <include>org/apache/commons/beanutils/*</include>
+                                        <include>org/apache/commons/beanutils/**</include>
                                     </includes>
                                 </filter>
                             </filters>
