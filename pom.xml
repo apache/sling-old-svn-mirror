@@ -49,14 +49,61 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createSourcesJar>true</createSourcesJar>
+                            <shadeSourcesContent>true</shadeSourcesContent>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.sling:org.apache.sling.commons.osgi</include>
+                                    <include>org.apache.sling:org.apache.sling.scripting.core</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.sling.commons.osgi</pattern>
+                                    <shadedPattern>slingmodelsimpl.org.apache.sling.commons.osgi</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.sling.scripting.core</pattern>
+                                    <shadedPattern>slingmodelsimpl.org.apache.sling.scripting.core</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.sling:org.apache.sling.commons.osgi</artifact>
+                                    <includes>
+                                        <include>org/apache/sling/commons/osgi/*</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.sling:org.apache.sling.scripting.core</artifact>
+                                    <includes>
+                                        <include>org/apache/sling/scripting/core/impl/helper/ProtectedBindings*</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
-                    <instructions>
-                        <Embed-Dependency>
-                            *;scope=compile,
-                            org.apache.sling.commons.osgi;inline=true,
-                            org.apache.sling.scripting.core;inline="org/apache/sling/scripting/core/impl/helper/ProtectedBindings.class"
-                        </Embed-Dependency>
-                    </instructions>
+                    <excludes>
+                        <exclude>dependency-reduced-pom.xml</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -94,12 +141,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.api</artifactId>
             <version>2.1.6</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.20</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -146,12 +187,19 @@
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- we need a pretty new version for the RankedServices, but we embed the necessary classes in this bundle -->
+        <!-- Artifact is shaded and inlined, only some classes included (see above) -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.4.0</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Artifact is shaded and inlined, only some classes included (see above) -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.scripting.core</artifactId>
+            <version>2.0.20</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
