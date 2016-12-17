@@ -51,11 +51,13 @@
                 <extensions>true</extensions>
                 <configuration>
                   <instructions>
+                    <Embed-Dependency>
+                      *;artifactId=commons-beanutils;groupId=commons-beanutils
+                    </Embed-Dependency>
                     <!-- Remove those package imports because embedded and relocated via shade plugin (see below) -->
                     <Import-Package>
                       !org.apache.sling.commons.osgi,
                       !org.apache.sling.scripting.core.impl.helper,
-                      !org.apache.commons.beanutils,
                       *
                     </Import-Package>
                   </instructions>
@@ -78,7 +80,6 @@
                                 <includes>
                                     <include>org.apache.sling:org.apache.sling.commons.osgi</include>
                                     <include>org.apache.sling:org.apache.sling.scripting.core</include>
-                                    <include>commons-beanutils:commons-beanutils</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
@@ -89,10 +90,6 @@
                                 <relocation>
                                     <pattern>org.apache.sling.scripting.core</pattern>
                                     <shadedPattern>slingmodelsimpl.org.apache.sling.scripting.core</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.apache.commons.beanutils</pattern>
-                                    <shadedPattern>slingmodelsimpl.org.apache.commons.beanutils</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -106,12 +103,6 @@
                                     <artifact>org.apache.sling:org.apache.sling.scripting.core</artifact>
                                     <includes>
                                         <include>org/apache/sling/scripting/core/impl/helper/ProtectedBindings*</include>
-                                    </includes>
-                                </filter>
-                                <filter>
-                                    <artifact>commons-beanutils:commons-beanutils</artifact>
-                                    <includes>
-                                        <include>org/apache/commons/beanutils/**</include>
                                     </includes>
                                 </filter>
                             </filters>
