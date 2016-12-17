@@ -49,6 +49,8 @@ import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 import org.apache.sling.resourcebuilder.impl.ResourceBuilderFactoryService;
+import org.apache.sling.scripting.core.impl.BindingsValuesProvidersByContextImpl;
+import org.apache.sling.scripting.core.impl.ScriptEngineManagerFactory;
 import org.apache.sling.settings.SlingSettingsService;
 import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.MockSling;
@@ -157,6 +159,10 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     protected void registerDefaultServices() {
 
+        // scripting services (required by sling models impl since 1.3.6)
+        registerInjectActivateService(new ScriptEngineManagerFactory());
+        registerInjectActivateService(new BindingsValuesProvidersByContextImpl());
+        
         // adapter factories
         registerInjectActivateService(new ModelAdapterFactory());
 
