@@ -16,7 +16,6 @@
  */
 package org.apache.sling.models.impl.injectors;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 /**
