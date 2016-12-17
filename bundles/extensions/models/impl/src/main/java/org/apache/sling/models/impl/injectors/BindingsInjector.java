@@ -31,19 +31,15 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
 public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory, ValuePreparer {
-
-    private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
     @Override
     public @Nonnull String getName() {

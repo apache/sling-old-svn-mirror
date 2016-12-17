@@ -21,7 +21,6 @@ package org.apache.sling.models.impl.injectors;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;

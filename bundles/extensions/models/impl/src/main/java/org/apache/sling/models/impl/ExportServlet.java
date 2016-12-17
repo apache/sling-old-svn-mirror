@@ -156,6 +156,7 @@ class ExportServlet extends SlingSafeMethodsServlet {
 
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, String> createOptionMap(SlingHttpServletRequest request) {
         Map<String, String[]> parameterMap = request.getParameterMap();
         String[] selectors = request.getRequestPathInfo().getSelectors();
