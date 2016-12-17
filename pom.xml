@@ -49,6 +49,17 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                  <instructions>
+                    <!-- Remove those package imports because embedded and relocated via shade plugin (see below) -->
+                    <Import-Package>
+                      !org.apache.sling.commons.osgi,
+                      !org.apache.sling.scripting.core.impl.helper,
+                      !org.apache.commons.beanutils,
+                      *
+                    </Import-Package>
+                  </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -67,6 +78,7 @@
                                 <includes>
                                     <include>org.apache.sling:org.apache.sling.commons.osgi</include>
                                     <include>org.apache.sling:org.apache.sling.scripting.core</include>
+                                    <include>commons-beanutils:commons-beanutils</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
@@ -77,6 +89,10 @@
                                 <relocation>
                                     <pattern>org.apache.sling.scripting.core</pattern>
                                     <shadedPattern>slingmodelsimpl.org.apache.sling.scripting.core</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.beanutils</pattern>
+                                    <shadedPattern>slingmodelsimpl.org.apache.commons.beanutils</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -90,6 +106,12 @@
                                     <artifact>org.apache.sling:org.apache.sling.scripting.core</artifact>
                                     <includes>
                                         <include>org/apache/sling/scripting/core/impl/helper/ProtectedBindings*</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>commons-beanutils:commons-beanutils</artifact>
+                                    <includes>
+                                        <include>org/apache/commons/beanutils/*</include>
                                     </includes>
                                 </filter>
                             </filters>
@@ -201,17 +223,18 @@
             <version>2.0.20</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.5</version>
-            <scope>provided</scope>
-        </dependency>
+        <!-- Artifact is shaded and inlined, only some classes included (see above) -->
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.8.3</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
