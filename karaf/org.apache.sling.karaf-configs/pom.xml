@@ -158,6 +158,11 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
+                  <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
+                  <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
                   <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-i18n</classifier>
                   <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-i18n.config</file>
                   <type>config</type>
