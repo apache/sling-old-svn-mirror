@@ -5,14 +5,12 @@ Apache Sling Karaf
 * **Apache Sling Karaf Configs**: configurations for provisioning with Apache Karaf
 * **Apache Sling Karaf Distribution**: a [distribution](https://karaf.apache.org/manual/latest/#_custom_distributions) of [Apache Sling](https://sling.apache.org) based on [Apache Karaf](https://karaf.apache.org) (Sling's features and artifacts in a single archive)
 
-**NOTE:** Tested and built with Apache Karaf 4.0.5
+**NOTE:** Tested and built with Apache Karaf 4.1.0-SNAPSHOT
 
 Getting Started
 ---------------
 
-For Karaf < 4.1.0 you need to configure _Felix File Install_ in `etc/config.properties` to include `*.config` files (not necessary when using _Sling's Karaf Distribution_):
-
-  `felix.fileinstall.filter = .*\\.(cfg|config)`
+You have to set `serviceRequirements=disable` in Karaf's `etc/org.apache.karaf.features.cfg` (not necessary when using _Sling's Karaf Distribution_).
 
 1) [Start Apache Karaf](https://karaf.apache.org/manual/latest/#_quick_start) or _Sling's Karaf Distribution_.
 

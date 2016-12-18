@@ -37,7 +37,7 @@
 
   <properties>
     <org.apache.jackrabbit.version>2.13.1</org.apache.jackrabbit.version>
-    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
+    <org.apache.karaf.version>4.1.0-SNAPSHOT</org.apache.karaf.version>
     <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
   </properties>
 
@@ -278,6 +278,7 @@
             </executions>
             <configuration>
               <excludes>
+                <exclude>**/SlingLaunchpadOak*IT.*</exclude>
                 <!-- SLING-5122, SLING-5123 -->
                 <exclude>**/SlingAuthXing*.*</exclude>
               </excludes>
