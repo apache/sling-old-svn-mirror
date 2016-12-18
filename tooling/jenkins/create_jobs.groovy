@@ -32,7 +32,7 @@ def modules = [
     ],
     [
         location: 'bundles/commons/log-webconsole'
-    ],    
+    ],
     [
         location: 'bundles/commons/logservice'
     ],
@@ -593,24 +593,24 @@ def modules = [
     [
         location: "installer/providers/file"
     ],
-    [
-        location: 'karaf/org.apache.sling.karaf-distribution'
-    ],
-    [
-        location: 'karaf/org.apache.sling.karaf-features'
-    ],
-    [
-        location: 'karaf/org.apache.sling.karaf-integration-tests'
-    ],
-    [
-        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
-    ],
-    [
-        location: 'karaf/org.apache.sling.karaf-repoinit'
-    ],
-    [
-        location: 'karaf/org.apache.sling.karaf-configs'
-    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-distribution'
+//    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-features'
+//    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-integration-tests'
+//    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
+//    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-repoinit'
+//    ],
+//    [
+//        location: 'karaf/org.apache.sling.karaf-configs'
+//    ],
     [
         location: 'launchpad/api',
         jdks: ["1.8"]
@@ -915,7 +915,7 @@ for more details</p>''')
             // job is triggered first and we may end up with a
             // mix of Java 7 and Java 8 artifacts for projects which
             // use these 2 versions
-            def extraGoalsParams = module.extraGoalsParams ?: "" 
+            def extraGoalsParams = module.extraGoalsParams ?: ""
             goals( (deploy ? "-U clean deploy" : "-U clean verify") + " " + extraGoalsParams)
 
             publishers {
