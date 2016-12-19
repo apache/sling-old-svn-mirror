@@ -35,7 +35,6 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 
 public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
-    // TODO SLING-6136/KARAF-4760
     private Option testBundle() throws Exception {
         final String filename = System.getProperty("repoinit.filename");
         final InputStream repoinit = new FileInputStream(filename);
