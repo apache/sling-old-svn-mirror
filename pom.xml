@@ -88,8 +88,8 @@
                                     <shadedPattern>slingmodelsimpl.org.apache.sling.commons.osgi</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.apache.sling.scripting.core</pattern>
-                                    <shadedPattern>slingmodelsimpl.org.apache.sling.scripting.core</shadedPattern>
+                                    <pattern>org.apache.sling.scripting.core.impl.helper</pattern>
+                                    <shadedPattern>slingmodelsimpl.org.apache.sling.scripting.core.impl.helper</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
