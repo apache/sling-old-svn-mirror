@@ -273,6 +273,11 @@ public class MockedResourceResolverImplTest {
             public boolean resource_resolver_allowDirect() {
                 return true;
             }
+
+            @Override
+            public boolean resource_resolver_log_unclosed() {
+                return true;
+            }
         });
 
         // configure using Bundle
