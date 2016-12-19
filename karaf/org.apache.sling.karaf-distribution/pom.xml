@@ -365,7 +365,6 @@
             <feature>sling-jcr</feature>
             <feature>sling-jcr-compiler</feature>
             <feature>sling-jcr-jackrabbit-security</feature>
-            <feature>sling-jcr-oak</feature>
             <feature>sling-jcr-repoinit</feature>
             <!-- Apache Sling Launchpad -->
             <feature>sling-launchpad-content</feature>
@@ -391,6 +390,7 @@
             <feature>sling-servlets</feature>
             <!-- Apache Jackrabbit -->
             <feature>jackrabbit-sling</feature>
+            <feature>jackrabbit-oak-sling</feature>
             <!-- Apache Tika -->
             <feature>tika-sling</feature>
             <!-- Apache Sling Samples -->
