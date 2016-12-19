@@ -31,6 +31,8 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -48,8 +50,6 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 
 /**
  * The <code>CommonResourceResolverFactoryImpl</code> is a singleton
@@ -369,7 +369,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public ResourceResolver getServiceResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        throw new IllegalStateException("This method is not implemented.");
+        checkIsLive();
+
+        return getResourceResolverInternal(authenticationInfo, false);
     }
 
     @Override

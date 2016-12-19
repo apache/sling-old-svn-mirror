@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl.observation;
 
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -72,9 +73,8 @@ public class OsgiObservationBridge implements ResourceChangeListener, ExternalRe
 
     private EventSendingJob job;
 
-    @SuppressWarnings("deprecation")
     protected void activate() throws LoginException {
-        resolver = resolverFactory.getAdministrativeResourceResolver(null);
+        resolver = resolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"read"));
         changesQueue = new LinkedBlockingQueue<ResourceChange>();
         job = new EventSendingJob(changesQueue);
         Executors.newSingleThreadExecutor().submit(job);

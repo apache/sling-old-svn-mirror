@@ -570,15 +570,15 @@ public class ResourceResolverImplTest {
         assertTrue(resolver.isResourceType(resourceT1, "/libs/types/1"));
         assertTrue(resolver.isResourceType(resourceT1, "/apps/types/1"));
         assertTrue(resolver.isResourceType(resourceT1, "types/1"));
-        
+
         assertTrue(resolver.isResourceType(resourceT2, "/apps/types/2"));
         assertTrue(resolver.isResourceType(resourceT2, "types/2"));
         assertTrue(resolver.isResourceType(resourceT2, "/libs/types/2"));
-        
+
         assertTrue(resolver.isResourceType(resourceT3, "/apps/types/3"));
         assertTrue(resolver.isResourceType(resourceT3, "types/3"));
         assertTrue(resolver.isResourceType(resourceT3, "/libs/types/3"));
-        
+
         assertFalse(resolver.isResourceType(resourceT4, "/apps/types/4"));
         assertFalse(resolver.isResourceType(resourceT4, "types/4"));
         assertFalse(resolver.isResourceType(resourceT4, "/libs/types/4"));
@@ -631,8 +631,8 @@ public class ResourceResolverImplTest {
     private PathBasedResourceResolverImpl getPathBasedResourceResolver() {
         return getPathBasedResourceResolver(new String[] {""});
     }
-    
-    
+
+
     private PathBasedResourceResolverImpl getPathBasedResourceResolver(String[] searchPaths) {
         try {
             final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
@@ -654,6 +654,11 @@ public class ResourceResolverImplTest {
             this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
                 @Override
                 public ResourceResolver getAdministrativeResourceResolver(
+                        Map<String, Object> authenticationInfo) throws LoginException {
+                    return resolvers.get(0);
+                }
+                @Override
+                public ResourceResolver getServiceResourceResolver(
                         Map<String, Object> authenticationInfo) throws LoginException {
                     return resolvers.get(0);
                 }
