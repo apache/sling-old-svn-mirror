@@ -86,11 +86,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
 
+    private boolean logUnclosedResolvers;
+
     /**
      * Create a new common resource resolver factory.
      */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
+        this.logUnclosedResolvers = activator.isLogUnclosedResourceResolvers();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
             @Override
@@ -465,12 +468,12 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             super(referent, q);
             this.control = ctrl;
             this.factory = factory;
-            this.openingException = LOG.isInfoEnabled() ? new Exception("Opening Stacktrace") : null;
+            this.openingException = factory.logUnclosedResolvers && LOG.isInfoEnabled() ? new Exception("Opening Stacktrace") : null;
         }
 
         public void close() {
             try {
-                if (factory.unregisterControl(this.control)) {
+                if (factory.unregisterControl(this.control) && factory.logUnclosedResolvers) {
                     if (factory.isLive()) {
                         LOG.warn("Closed unclosed ResourceResolver. The creation stacktrace is available on info log level.");
                     } else {

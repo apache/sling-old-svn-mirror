@@ -195,6 +195,10 @@ public class ResourceResolverFactoryActivator {
         return this.config.resource_resolver_optimize_alias_resolution();
     }
 
+    public boolean isLogUnclosedResourceResolvers() {
+        return this.config.resource_resolver_log_unclosed();
+    }
+
     public String[] getVanityPathWhiteList() {
         return this.vanityPathWhiteList;
     }

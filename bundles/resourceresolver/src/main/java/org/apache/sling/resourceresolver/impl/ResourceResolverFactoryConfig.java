@@ -174,5 +174,10 @@ public @interface ResourceResolverFactoryConfig {
                       "with the point where the used resolver was closed. It's advisable to not enable this feature on " +
                       "production systems.")
     boolean resource_resolver_log_closing() default false;
+
+    @AttributeDefinition(name = "Log unclosed resource resolvers",
+            description = "When enabled unclosed resource resolvers will be logged. Not closing " +
+                          "a resource resolver is a bug in the code using the resolver and should be fixed.")
+    boolean resource_resolver_log_unclosed() default true;
 }
 
