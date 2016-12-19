@@ -172,24 +172,16 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     public void testDateProperty() throws IOException {
         Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
-        // TODO: enable this test when JCR resource implementation supports writing Date objects (SLING-3846)
-        if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
-            assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
-        }
+        assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
     }
 
     @Test
     public void testDatePropertyToCalendar() throws IOException {
         Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
-        // TODO: enable this test when JCR resource implementation supports writing Date objects (SLING-3846)
-        if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
-            Calendar calendarValue = props.get("dateProp", Calendar.class);
-            assertNotNull(calendarValue);
-            assertEquals(DATE_VALUE, calendarValue.getTime());
-        }
+        Calendar calendarValue = props.get("dateProp", Calendar.class);
+        assertNotNull(calendarValue);
+        assertEquals(DATE_VALUE, calendarValue.getTime());
     }
 
     @Test
