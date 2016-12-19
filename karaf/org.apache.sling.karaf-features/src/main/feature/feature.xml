@@ -313,6 +313,7 @@
     <feature>webconsole</feature>
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">jackrabbit-sling</feature>
+    <feature version="${feature.version}">jackrabbit-oak-sling</feature>
     <feature version="${feature.version}">tika-sling</feature>
   </feature>
   <feature name="sling-jcr-compiler" version="${feature.version}">
@@ -329,16 +330,15 @@
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-servlets</feature>
   </feature>
-  <feature name="sling-jcr-oak" version="${feature.version}">
-    <!-- dependencies -->
-    <feature>scr</feature>
-    <feature version="${feature.version}">sling-jcr</feature>
-    <feature version="${feature.version}">jackrabbit-sling</feature>
-    <feature version="${feature.version}">tika-sling</feature>
+  <feature name="jackrabbit-oak-sling" version="${feature.version}">
     <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
+    <!-- dependencies -->
+    <feature>scr</feature>
+    <feature version="${feature.version}">jackrabbit-sling</feature>
+    <feature version="${feature.version}">tika-sling</feature>
     <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
   </feature>
@@ -404,7 +404,7 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
     <feature version="${feature.version}">sling-servlets</feature>
     <!-- ... -->
     <feature version="${feature.version}">sling-installer</feature>
-    <feature version="${feature.version}">sling-jcr-oak</feature>
+    <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-jcr-repoinit</feature>
     <feature version="${feature.version}">sling-extension-adapter</feature>
     <feature version="${feature.version}">sling-extension-bundleresource</feature>
