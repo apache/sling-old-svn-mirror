@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.servlet;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
@@ -86,7 +87,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
             if (idParam != null && from != null) {
                 DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
-                DistributionQueue sourceQueue = agent.getQueue(from);
+                DistributionQueue sourceQueue = getQueueOrThrow(agent,from);
 
                 addItems(resourceResolver, queue, sourceQueue, idParam);
             }
@@ -96,7 +97,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
             if (idParam != null && from != null) {
                 DistributionAgent agent = request.getResource().getParent().getParent().adaptTo(DistributionAgent.class);
-                DistributionQueue sourceQueue = agent.getQueue(from);
+                DistributionQueue sourceQueue = getQueueOrThrow(agent,from);
 
                 addItems(resourceResolver, queue, sourceQueue, idParam);
                 deleteItems(resourceResolver, sourceQueue, idParam);
@@ -105,12 +106,6 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
     }
 
     private void addItems(ResourceResolver resourceResolver, DistributionQueue targetQueue, DistributionQueue sourceQueue, String[] ids) {
-
-
-        if (sourceQueue == null) {
-            log.warn("cannot find source queue {}", sourceQueue);
-        }
-
         for (String id: ids) {
             DistributionQueueEntry entry = sourceQueue.getItem(id);
             if (entry != null) {
@@ -159,5 +154,14 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         }
 
         return null;
+    }
+
+    @Nonnull
+    private static DistributionQueue getQueueOrThrow(@Nonnull DistributionAgent agent, @Nonnull String queueName) {
+        DistributionQueue queue = agent.getQueue(queueName);
+        if (queue == null) {
+            throw new IllegalArgumentException(String.format("Could not find queue %s", queueName));
+        }
+        return queue;
     }
 }
