@@ -201,7 +201,7 @@
   </feature>
   <feature name="sling-extension-healthcheck" version="${feature.version}">
     <!-- SLING-5624 Health Check Core 1.2.4 fails on Launchpad Karaf -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.hc.core/1.2.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.jmx/1.0.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.support/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.hc.webconsole/1.1.2</bundle>
