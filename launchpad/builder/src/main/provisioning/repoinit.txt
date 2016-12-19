@@ -30,6 +30,20 @@
         allow   jcr:read	on /
     end
 
+    # sling-mapping
+    create service user sling-mapping
+
+    set ACL for sling-mapping
+        allow   jcr:read    on /
+    end
+
+    # sling-readall
+    create service user sling-readall
+
+    set ACL for sling-mapping
+        allow   jcr:read    on /
+    end
+
     # sling-xss
     create service user sling-xss
 
