@@ -145,6 +145,8 @@
     org.apache.sling.commons.log.level="info"
 
   # TODO: remove bundles as their dependency on admin login is fixed, see SLING-5355 for linked issues
+  # For these bundles, admin login is considered "ok":
+  # org.apache.sling.jcr.contentloader
   org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling
     whitelist.name="sling"
     whitelist.bundles=[
