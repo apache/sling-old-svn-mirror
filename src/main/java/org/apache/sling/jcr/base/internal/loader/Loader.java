@@ -322,7 +322,8 @@ public class Loader implements BundleListener {
     }
 
     private Session getSession() throws RepositoryException {
-        return this.slingRepository.loginService(null, null);
+        // TODO: Should really use loginService !!
+        return this.slingRepository.loginAdministrative(null);
     }
 
     private void ungetSession(final Session session) {
