@@ -114,7 +114,10 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
                      * method, this bundle could be configured with an appropriate
                      * user for service authentication and do:
                      *     tmpSession = repository.loginService(null, workspace);
-                     * For now, we keep loginAdministrative
+                     * For now, we keep loginAdministrative as switching to a service user
+                     * will result in a endless recursion (this method checks if
+                     * a service user is allowed, so using a service user here
+                     * calls this method again...and again...and again)
                      */
                     administrativeSession = repository.loginAdministrative(null);
                     if (administrativeSession instanceof JackrabbitSession) {
