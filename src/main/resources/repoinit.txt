@@ -64,7 +64,3 @@ create path (sling:OrderedFolder) /content
 set ACL for everyone
     allow   jcr:read    on /
 end
-
-# SLING-6136/KARAF-4760
-create path /repoinit/provisioningModelTest
-create service user provisioningModelUser
