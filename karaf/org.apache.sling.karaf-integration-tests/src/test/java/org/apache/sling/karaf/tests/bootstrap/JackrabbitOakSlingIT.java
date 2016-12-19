@@ -35,12 +35,12 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingJcrOakIT extends KarafTestSupport {
+public class JackrabbitOakSlingIT extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            addSlingFeatures("sling-jcr-oak")
+            addSlingFeatures("jackrabbit-oak-sling")
         );
     }
 
