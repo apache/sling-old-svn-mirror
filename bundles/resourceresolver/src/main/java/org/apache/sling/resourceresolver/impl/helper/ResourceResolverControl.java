@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -686,7 +687,6 @@ public class ResourceResolverControl {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private ResourceResolver getResourceTypeResourceResolver(
             final ResourceResolverFactory factory,
             final ResourceResolver resolver) {
@@ -698,9 +698,10 @@ public class ResourceResolverControl {
                     // make sure we're getting the resourceTypeResourceResolver on behalf of
                     // the resourceresolver bundle
                     final Bundle bundle = FrameworkUtil.getBundle(ResourceResolverControl.class);
-                    final Map<String, Object> authenticationInfo =
-                            Collections.<String, Object>singletonMap(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
-                    this.resourceTypeResourceResolver = factory.getAdministrativeResourceResolver(authenticationInfo);
+                    final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+                    authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
+                    authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, "read");
+                    this.resourceTypeResourceResolver = factory.getServiceResourceResolver(authenticationInfo);
                 } catch (final LoginException e) {
                     throw new IllegalStateException("Failed to create resource-type ResourceResolver", e);
                 }

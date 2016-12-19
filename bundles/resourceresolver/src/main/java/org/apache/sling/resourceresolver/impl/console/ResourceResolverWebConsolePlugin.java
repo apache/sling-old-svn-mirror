@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -39,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderDTO;
 import org.apache.sling.api.resource.runtime.dto.ResourceProviderFailureDTO;
@@ -218,8 +220,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 HttpServletRequest helper = new ResolverRequest(request, test);
 
                 // get an administrative resource resolver
-                resolver = resolverFactory
-                        .getAdministrativeResourceResolver(null);
+                resolver = resolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"mapping"));
 
                 // map or resolve as instructed
                 Object result;
