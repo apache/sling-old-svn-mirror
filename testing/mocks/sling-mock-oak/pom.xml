@@ -37,6 +37,7 @@
     <properties>
         <oak.version>1.4.1</oak.version>
         <jackrabbit.version>2.12.1</jackrabbit.version>
+        <sling-mock.version>2.2.5-SNAPSHOT</sling-mock.version>
     </properties>
 
     <scm>
@@ -50,14 +51,14 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>2.1.2</version>
+            <version>${sling-mock.version}</version>
             <scope>compile</scope>
         </dependency>
     
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
-            <version>2.1.2</version>
+            <version>${sling-mock.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
