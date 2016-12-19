@@ -153,6 +153,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     protected SessionProvider getSessionProvider() {
         return new SessionProvider() {
 
+            @Override
             public Session getSession(final HttpServletRequest req, final Repository repository, final String workspace)
                     throws LoginException, RepositoryException, ServletException {
                 final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
@@ -168,6 +169,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                 throw new ServletException("ResourceResolver missing or not providing on JCR Session");
             }
 
+            @Override
             public void releaseSession(final Session session) {
                 log.debug("releaseSession: Logging out long lived Session ({})", session);
                 session.logout();
@@ -177,25 +179,23 @@ public class SlingDavExServlet extends JcrRemotingServlet {
              * Creates a new session for the user of the slingSession in the
              * same workspace as the slingSession.
              * <p>
-             * Assumption: The admin session has permission to impersonate
+             * Assumption: The service session has permission to impersonate
              * as any user without restriction. If this is not the case
              * the Session.impersonate method throws a LoginException
              * which is folded into a RepositoryException.
              *
              * @param slingSession The session provided by the Sling
-             *            authentication mechanis,
+             *            authentication mechanism,
              * @return a new session which may (and will) outlast the request
-             * @throws RepositoryException If an error occurrs creating the
+             * @throws RepositoryException If an error occurs creating the
              *             session.
              */
             private Session getLongLivedSession(final Session slingSession) throws RepositoryException {
-                Session adminSession = null;
                 final String user = slingSession.getUserID();
+                final SimpleCredentials credentials = new SimpleCredentials(user, EMPTY_PW);
                 try {
-                    final SimpleCredentials credentials = new SimpleCredentials(user, EMPTY_PW);
                     final String wsp = slingSession.getWorkspace().getName();
-                    adminSession = SlingDavExServlet.this.repository.loginAdministrative(wsp);
-                    return adminSession.impersonate(credentials);
+                    return SlingDavExServlet.this.repository.impersonateFromService(null, credentials, wsp);
                 } catch (RepositoryException re) {
 
                     // LoginException from impersonate (missing permission)
@@ -203,11 +203,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                     // impersonate folded into RepositoryException to
                     // cause a 403/FORBIDDEN response
                     throw new RepositoryException("Cannot get session for " + user, re);
-
-                } finally {
-                    if (adminSession != null) {
-                        adminSession.logout();
-                    }
                 }
             }
         };
