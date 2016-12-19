@@ -64,7 +64,7 @@ public class JcrListenerBaseConfig implements Closeable {
         this.pathMapper = pathMapper;
         this.reporter = reporter;
         // The session should have read access on the whole repository
-        this.session = repository.loginAdministrative(repository.getDefaultWorkspace());
+        this.session = repository.loginService("observation", repository.getDefaultWorkspace());
     }
 
     /**

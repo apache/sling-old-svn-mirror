@@ -29,14 +29,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.PathSet;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.junit.After;
@@ -68,9 +73,78 @@ public class JcrResourceListenerTest {
         RepositoryUtil.startRepository();
         this.adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
         RepositoryUtil.registerSlingNodeTypes(adminSession);
+        final SlingRepository repo = RepositoryUtil.getRepository();
         this.config = new JcrListenerBaseConfig(getObservationReporter(),
                 new PathMapperImpl(),
-                RepositoryUtil.getRepository());
+                new SlingRepository() {
+
+                    @Override
+                    public Session login(Credentials credentials, String workspaceName)
+                            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+                        return repo.login(credentials, workspaceName);
+                    }
+
+                    @Override
+                    public Session login(String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
+                        return repo.login(workspaceName);
+                    }
+
+                    @Override
+                    public Session login(Credentials credentials) throws LoginException, RepositoryException {
+                        return repo.login(credentials);
+                    }
+
+                    @Override
+                    public Session login() throws LoginException, RepositoryException {
+                        return repo.login();
+                    }
+
+                    @Override
+                    public boolean isStandardDescriptor(String key) {
+                        return repo.isStandardDescriptor(key);
+                    }
+
+                    @Override
+                    public boolean isSingleValueDescriptor(String key) {
+                        return repo.isSingleValueDescriptor(key);
+                    }
+
+                    @Override
+                    public Value[] getDescriptorValues(String key) {
+                        return repo.getDescriptorValues(key);
+                    }
+
+                    @Override
+                    public Value getDescriptorValue(String key) {
+                        return repo.getDescriptorValue(key);
+                    }
+
+                    @Override
+                    public String[] getDescriptorKeys() {
+                        return repo.getDescriptorKeys();
+                    }
+
+                    @Override
+                    public String getDescriptor(String key) {
+                        return repo.getDescriptor(key);
+                    }
+
+                    @Override
+                    public Session loginService(String subServiceName, String workspace) throws LoginException, RepositoryException {
+                        return repo.loginAdministrative(workspace);
+                    }
+
+                    @Override
+                    public Session loginAdministrative(String workspace) throws LoginException, RepositoryException {
+                        return repo.loginAdministrative(workspace);
+                    }
+
+                    @Override
+                    public String getDefaultWorkspace() {
+                        // TODO Auto-generated method stub
+                        return repo.getDefaultWorkspace();
+                    }
+                });
         this.listener = new JcrResourceListener(this.config,
                 getObservationReporter().getObserverConfigurations().get(0));
     }
