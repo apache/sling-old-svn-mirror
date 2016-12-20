@@ -40,7 +40,7 @@
     # sling-readall
     create service user sling-readall
 
-    set ACL for sling-mapping
+    set ACL for sling-readall
         allow   jcr:read    on /
     end
 
