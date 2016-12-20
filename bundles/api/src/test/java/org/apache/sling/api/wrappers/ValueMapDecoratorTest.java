@@ -18,6 +18,10 @@
  */
 package org.apache.sling.api.wrappers;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,4 +150,17 @@ public class ValueMapDecoratorTest {
         Assert.assertFalse("Two ValueMapDecorators based on maps with different entries should not be equal",
                 valueMap.equals(valueMap2));
     }
+    
+    @Test
+    public void testDelegateToValueMap() {
+        ValueMap original = mock(ValueMap.class);
+        ValueMap decorated = new ValueMapDecorator(original);
+        
+        decorated.get("prop1", String.class);
+        verify(original, times(1)).get("prop1", String.class);
+
+        decorated.get("prop1", "defValue");
+        verify(original, times(1)).get("prop1", "defValue");
+    }
+    
 }

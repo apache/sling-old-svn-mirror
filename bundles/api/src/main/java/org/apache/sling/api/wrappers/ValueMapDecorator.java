@@ -51,6 +51,10 @@ public class ValueMapDecorator implements ValueMap {
      * {@inheritDoc}
      */
     public <T> T get(String name, Class<T> type) {
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, type);
+        }
         return convert(get(name), type);
     }
 
@@ -145,7 +149,11 @@ public class ValueMapDecorator implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(String name, T defaultValue) {
-        if ( defaultValue == null ) {
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, defaultValue);
+        }
+        if (defaultValue == null) {
             return (T)get(name);
         }
         T value = get(name, (Class<T>) defaultValue.getClass());
