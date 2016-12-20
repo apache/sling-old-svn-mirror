@@ -52,11 +52,11 @@
     org.apache.sling/org.apache.sling.installer.console/1.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.23-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
-    org.apache.sling/org.apache.sling.jcr.resource/2.9.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.jcr.resource/2.9.3-SNAPSHOT
     org.apache.sling/org.apache.sling.launchpad.content/2.0.9-SNAPSHOT
     org.apache.sling/org.apache.sling.models.api/1.2.2
     org.apache.sling/org.apache.sling.models.impl/1.2.8
-    org.apache.sling/org.apache.sling.resourceresolver/1.5.7-SNAPSHOT
+    org.apache.sling/org.apache.sling.resourceresolver/1.5.9-SNAPSHOT
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.18
     org.apache.sling/org.apache.sling.servlets.post/2.3.14
