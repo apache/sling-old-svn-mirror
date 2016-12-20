@@ -38,7 +38,7 @@ public class TenantProviderImplTest {
         final ResourceResolverFactory rrf = Mockito.mock(ResourceResolverFactory.class);
         final BundleContext context = Mockito.mock(BundleContext.class);
         final ResourceResolver rr = Mockito.mock(ResourceResolver.class);
-        Mockito.when(rrf.getAdministrativeResourceResolver(
+        Mockito.when(rrf.getServiceResourceResolver(
                 Mockito.anyMapOf(String.class, Object.class))).thenReturn(rr);
         set(provider, "factory", rrf);
         provider.activate(context, new HashMap<String, Object>());
