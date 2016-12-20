@@ -24,6 +24,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,17 +35,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(JMock.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ResourceUtilTest {
-
-    protected final Mockery context = new JUnit4Mockery();
 
     @Test public void testResolveRelativeSegments() {
 
@@ -265,28 +262,27 @@ public class ResourceUtilTest {
         // none is adaptable to String
         // b and c are adaptable to long
         // a and c are adaptable to boolean
-        final Resource a = this.context.mock(Resource.class, "a");
-        final Resource b = this.context.mock(Resource.class, "b");
-        final Resource c = this.context.mock(Resource.class, "c");
+        final Resource a = mock(Resource.class, "a");
+        final Resource b = mock(Resource.class, "b");
+        final Resource c = mock(Resource.class, "c");
         final List<Resource> l = new ArrayList<Resource>();
         l.add(a); l.add(b); l.add(c);
-        this.context.checking(new Expectations() {{
-            allowing(a).adaptTo(List.class); will(returnValue(new ArrayList<Object>()));
-            allowing(b).adaptTo(List.class); will(returnValue(new ArrayList<Object>()));
-            allowing(c).adaptTo(List.class); will(returnValue(null));
-            allowing(a).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
-            allowing(b).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
-            allowing(c).adaptTo(Map.class); will(returnValue(new HashMap<Object, Object>()));
-            allowing(a).adaptTo(Long.class); will(returnValue(null));
-            allowing(b).adaptTo(Long.class); will(returnValue(new Long(1)));
-            allowing(c).adaptTo(Long.class); will(returnValue(new Long(2)));
-            allowing(a).adaptTo(Boolean.class); will(returnValue(new Boolean(true)));
-            allowing(b).adaptTo(Boolean.class); will(returnValue(null));
-            allowing(c).adaptTo(Boolean.class); will(returnValue(new Boolean(false)));
-            allowing(a).adaptTo(String.class); will(returnValue(null));
-            allowing(b).adaptTo(String.class); will(returnValue(null));
-            allowing(c).adaptTo(String.class); will(returnValue(null));
-        }});
+        
+        when(a.adaptTo(List.class)).thenReturn(new ArrayList<Object>());
+        when(b.adaptTo(List.class)).thenReturn(new ArrayList<Object>());
+        when(c.adaptTo(List.class)).thenReturn(null);
+        when(a.adaptTo(Map.class)).thenReturn(new HashMap<Object, Object>());
+        when(b.adaptTo(Map.class)).thenReturn(new HashMap<Object, Object>());
+        when(c.adaptTo(Map.class)).thenReturn(new HashMap<Object, Object>());
+        when(a.adaptTo(Long.class)).thenReturn(null);
+        when(b.adaptTo(Long.class)).thenReturn(new Long(1));
+        when(c.adaptTo(Long.class)).thenReturn(new Long(2));
+        when(a.adaptTo(Boolean.class)).thenReturn(new Boolean(true));
+        when(b.adaptTo(Boolean.class)).thenReturn(null);
+        when(c.adaptTo(Boolean.class)).thenReturn(new Boolean(false));
+        when(a.adaptTo(String.class)).thenReturn(null);
+        when(b.adaptTo(String.class)).thenReturn(null);
+        when(c.adaptTo(String.class)).thenReturn(null);
 
         assertEquals(2, checkIterator(l, List.class));
         assertEquals(3, checkIterator(l, Map.class));
@@ -318,14 +314,13 @@ public class ResourceUtilTest {
     }
 
     @Test public void testIsStarResource() {
-        final Resource nonStar = context.mock(Resource.class, "nonStarResource");
+        final Resource nonStar = mock(Resource.class, "nonStarResource");
         final String starPath = "/foo/*";
-        final Resource star = context.mock(Resource.class, "starResource");
+        final Resource star = mock(Resource.class, "starResource");
         final String nonStarPath = "/foo/*";
-        this.context.checking(new Expectations() {{
-            allowing(star).getPath(); will(returnValue(starPath));
-            allowing(nonStar).getPath(); will(returnValue(nonStarPath));
-        }});
+
+        when(star.getPath()).thenReturn(starPath);
+        when(nonStar.getPath()).thenReturn(nonStarPath);
 
         assertTrue("expecting star==true for path" + starPath,
                 ResourceUtil.isStarResource(star));
@@ -334,10 +329,10 @@ public class ResourceUtilTest {
     }
     @Test public void testIsSyntheticResource() {
         final Resource synth = new SyntheticResource(null, "foo", "bar");
-        final Resource star = context.mock(Resource.class);
-        this.context.checking(new Expectations() {{
-            allowing(star).getPath(); will(returnValue("/foo/*"));
-        }});
+        final Resource star = mock(Resource.class);
+
+        when(star.getPath()).thenReturn("/foo/*");
+
         final Resource wrapped = new ResourceWrapper(synth);
 
         assertTrue("expecting synthetic==true for SyntheticResource",

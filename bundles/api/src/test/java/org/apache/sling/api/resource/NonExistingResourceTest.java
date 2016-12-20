@@ -18,33 +18,26 @@
  */
 package org.apache.sling.api.resource;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(JMock.class)
+@RunWith(MockitoJUnitRunner.class)
 public class NonExistingResourceTest {
 
-    protected final Mockery context = new JUnit4Mockery();
-    protected ResourceResolver resolver;
-
-    @Before
-    public void setUp() {
-        resolver = this.context.mock(ResourceResolver.class);
-    }
+    @Mock
+    private ResourceResolver resolver;
 
     @Test
     public void testGetParentWithNonExistingParent() {
         final NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/nonExistingParent/nonExistingResource");
         
-        context.checking(new Expectations() {{
-            allowing(resolver).getParent(nonExistingResource); will(returnValue(null));
-        }});
+        when(resolver.getParent(nonExistingResource)).thenReturn(null);
         
         Resource parentResource = nonExistingResource.getParent();
         Assert.assertNotNull("Non existing parent of NonExistingResource must not return null!", parentResource);
@@ -56,16 +49,15 @@ public class NonExistingResourceTest {
     public void testGetParentWithExistingParent() throws PersistenceException {
         final NonExistingResource nonExistingResource = new NonExistingResource(resolver, "/existingParent/nonExistingResource");
         
-        final Resource mockParentResource = this.context.mock(Resource.class);
-        context.checking(new Expectations() {{
-            allowing(resolver).getParent(nonExistingResource); will(returnValue(mockParentResource));
-            allowing(mockParentResource).getPath(); will(returnValue("/existingParent"));
-            allowing(mockParentResource).getResourceType(); will(returnValue("anyResourceType"));
-        }});
+        final Resource mockParentResource = mock(Resource.class);
+        when(resolver.getParent(nonExistingResource)).thenReturn(mockParentResource);
+        when(mockParentResource.getPath()).thenReturn("/existingParent");
+        when(mockParentResource.getResourceType()).thenReturn("anyResourceType");
         
         Resource parentResource = nonExistingResource.getParent();
         Assert.assertNotNull("Existing parent of NonExistingResource must not return null!", parentResource);
         Assert.assertEquals("/existingParent", parentResource.getPath());
         Assert.assertFalse(ResourceUtil.isNonExistingResource(parentResource));
     }
+
 }
