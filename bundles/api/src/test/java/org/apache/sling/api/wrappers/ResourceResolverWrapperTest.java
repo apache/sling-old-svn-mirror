@@ -82,6 +82,7 @@ public class ResourceResolverWrapperTest {
         verify(wrappedResolver).resolve(PATH);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testResolve2() throws Exception {
         final HttpServletRequest request = mock(HttpServletRequest.class);
@@ -232,6 +233,7 @@ public class ResourceResolverWrapperTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testQueryResources() throws Exception {
         final Map<String, Object> expected = mock(Map.class);
         final List<Map<String, Object>> list = new ArrayList<>();
@@ -260,6 +262,7 @@ public class ResourceResolverWrapperTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testClone() throws Exception {
         final Map<String, Object> authenticationInfo = mock(Map.class);
         final ResourceResolver clone = mock(ResourceResolver.class);
@@ -292,6 +295,7 @@ public class ResourceResolverWrapperTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testGetAttributeNames() throws Exception {
         final Iterator<String> attributeNames = mock(Iterator.class);
         when(wrappedResolver.getAttributeNames()).thenReturn(attributeNames);
@@ -320,6 +324,7 @@ public class ResourceResolverWrapperTest {
     public void testCreate() throws Exception {
         final Resource parent = mock(Resource.class);
         final String name = "aName";
+        @SuppressWarnings("serial")
         final Map<String, Object> properties = new HashMap<String, Object>(){{
             put("jcr:primaryType", "nt:unstructured");
         }};

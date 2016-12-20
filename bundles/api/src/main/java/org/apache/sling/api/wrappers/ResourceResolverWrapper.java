@@ -89,6 +89,7 @@ public class ResourceResolverWrapper implements ResourceResolver {
      *                resource for. This must not be <code>null</code>.
      * @return a wrapped resource obtained through the wrapped resource resolver
      */
+    @SuppressWarnings("deprecation")
     @Nonnull
     @Override
     public Resource resolve(@Nonnull HttpServletRequest request) {

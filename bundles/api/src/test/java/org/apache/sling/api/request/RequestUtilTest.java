@@ -133,7 +133,6 @@ public class RequestUtilTest extends TestCase {
             public void flushBuffer() throws IOException {}
 
             @Override
-            @SuppressWarnings("deprecation")
             public void setStatus(int sc, String sm) {}
 
             @Override
@@ -158,7 +157,6 @@ public class RequestUtilTest extends TestCase {
             public void sendError(int sc) throws IOException {}
 
             @Override
-            @SuppressWarnings("deprecation")
             public String encodeUrl(String url) {
                 return null;
             }
@@ -169,7 +167,6 @@ public class RequestUtilTest extends TestCase {
             }
 
             @Override
-            @SuppressWarnings("deprecation")
             public String encodeRedirectUrl(String url) {
                 return null;
             }

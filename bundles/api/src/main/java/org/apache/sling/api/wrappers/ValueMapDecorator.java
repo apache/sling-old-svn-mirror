@@ -113,6 +113,7 @@ public class ValueMapDecorator implements ValueMap {
      * @param type the component type of the array
      * @return and array of type T
      */
+    @SuppressWarnings("unchecked")
     private <T> T[] convertToArray(Object obj, Class<T> type) {
         if (obj.getClass().isArray()) {
             final Object[] array = (Object[]) obj;
@@ -128,7 +129,6 @@ public class ValueMapDecorator implements ValueMap {
             }
             return resultList.toArray((T[]) Array.newInstance(type, resultList.size()));
         } else {
-            @SuppressWarnings("unchecked")
             final T singleValueResult = convert(obj, type);
             // return null for type conversion errors instead of single element array with value null
             if (singleValueResult == null) {
