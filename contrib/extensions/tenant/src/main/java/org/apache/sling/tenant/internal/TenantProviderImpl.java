@@ -422,7 +422,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         T result = null;
 
         try {
-            resolver = factory.getAdministrativeResourceResolver(null);
+            resolver = factory.getServiceResourceResolver(null);
             result = task.call(resolver);
         } catch (LoginException le) {
             // unexpected, thus ignore
