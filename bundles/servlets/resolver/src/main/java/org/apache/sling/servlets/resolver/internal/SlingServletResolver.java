@@ -139,9 +139,6 @@ public class SlingServletResolver
     @Property(value=DEFAULT_SERVLET_ROOT)
     public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
 
-    @Property
-    public static final String PROP_SCRIPT_USER = "servletresolver.scriptUser";
-
     @Property(intValue=DEFAULT_CACHE_SIZE)
     public static final String PROP_CACHE_SIZE = "servletresolver.cacheSize";
 
@@ -771,16 +768,6 @@ public class SlingServletResolver
         }
     }
 
-    private Map<String, Object> createAuthenticationInfo(final Dictionary<String, Object> props) {
-        final Map<String, Object> authInfo = new HashMap<String, Object>();
-        // if a script user is configured we use this user to read the scripts
-        final String scriptUser = PropertiesUtil.toString(props.get(PROP_SCRIPT_USER), null);
-        if (scriptUser != null && scriptUser.length() > 0) {
-            authInfo.put(ResourceResolverFactory.USER_IMPERSONATION, scriptUser);
-        }
-        return authInfo;
-    }
-
     // ---------- SCR Integration ----------------------------------------------
 
     /**
@@ -802,7 +789,7 @@ public class SlingServletResolver
             pendingServlets.clear();
 
             this.sharedScriptResolver =
-                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo(context.getProperties()));
+                    resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"scripts"));
             this.searchPaths = this.sharedScriptResolver.getSearchPath();
             servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot, this.searchPaths);
 
@@ -1177,7 +1164,7 @@ public class SlingServletResolver
 
             ResourceResolver resourceResolver = null;
             try {
-                resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+                resourceResolver = resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"scripts"));
 
                 final PrintWriter pw = response.getWriter();
 
