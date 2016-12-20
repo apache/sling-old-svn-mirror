@@ -16,7 +16,7 @@ then
  echo "                           DOWNLOAD STAGED REPOSITORY                           "
  echo "################################################################################"
 
- wget -e "robots=off" --wait 1 -nv -r -np "--reject=html,txt" "--follow-tags=" \
+ wget -e "robots=off" --wait 1 -nv -r -np "--reject=html" "--follow-tags=" \
   -P "${DOWNLOAD}/${STAGING}" -nH "--cut-dirs=3" \
   "https://repository.apache.org/content/repositories/orgapachesling-${STAGING}/org/apache/sling/"
 
