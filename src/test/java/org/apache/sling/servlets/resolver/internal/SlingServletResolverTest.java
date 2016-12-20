@@ -121,8 +121,7 @@ public class SlingServletResolverTest {
             @Override
             public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo)
                     throws LoginException {
-                // TODO Auto-generated method stub
-                return null;
+                return mockResourceResolver;
             }
 
             @Override
