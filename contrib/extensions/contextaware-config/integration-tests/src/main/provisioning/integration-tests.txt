@@ -41,8 +41,9 @@
       "org.apache.sling.caconfig.impl\=sling-caconfig"
     ]
 
-  org.apache.sling.jcr.base.internal.LoginAdminWhitelist [mode=merge]
-    whitelist.bundles.regexp="org.apache.sling.junit.*"
+  org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-junitcore
+    whitelist.name="junitcore"
+    whitelist.bundles=["org.apache.sling.junit.core"]
 
 [:repoinit]
     create service user sling-caconfig
