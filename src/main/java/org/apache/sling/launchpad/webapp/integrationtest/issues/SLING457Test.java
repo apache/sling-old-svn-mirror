@@ -20,6 +20,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.issues;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 
 public class SLING457Test extends RenderingTestBase {
@@ -32,7 +33,7 @@ public class SLING457Test extends RenderingTestBase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        final String testRootPathBare = "/" + getClass().getSimpleName() + "/"
+        final String testRootPathBare = "/libs/" + getClass().getSimpleName() + "/"
             + System.currentTimeMillis();
         final String testRootPath = HTTP_BASE_URL + testRootPathBare;
 
