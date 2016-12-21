@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * API for providers of resources. Used by the {@link ResourceResolver} to
+ * API for providers of resources. Used by the {@link org.apache.sling.api.resource.ResourceResolver} to
  * transparently access resources from different locations such as a JCR
  * repository, a database, or bundle resources.
  * <p>
@@ -41,7 +41,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * without breaking any implementation.
  * <p>
  * This service is intended to be implemented by providers of resource
- * instances on behalf of the {@link ResourceResolver}. It
+ * instances on behalf of the {@link org.apache.sling.api.resource.ResourceResolver}. It
  * is not intended to be used by client applications directly. A resource
  * provider implements this service by extending this class.
  * <p>
@@ -189,12 +189,12 @@ public abstract class ResourceProvider<T> {
      * The authentication information property referring to the bundle
      * providing a service for which a resource provider is to be retrieved. If
      * this property is provided, the
-     * {@link ResourceResolverFactory#SUBSERVICE} property may also be
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#SUBSERVICE} property may also be
      * present.
      * <p>
-     * {@link ResourceResolverFactory} implementations must provide this
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory} implementations must provide this
      * property if their implementation of the
-     * {@link ResourceResolverFactory#getServiceResourceResolver(Map)} method
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#getServiceResourceResolver(Map)} method
      * use a resource provider factory.
      * <p>
      * The type of this property, if present, is
@@ -205,7 +205,7 @@ public abstract class ResourceProvider<T> {
     /**
      * The authentication information property indicating to use an
      * administrative login. This property must be set of the resource
-     * resolver is created through {@link ResourceResolverFactory#getAdministrativeResourceResolver(Map)}.
+     * resolver is created through {@link org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(Map)}.
      */
     public static final String AUTH_ADMIN = "provider.auth.admin";
 
@@ -283,11 +283,13 @@ public abstract class ResourceProvider<T> {
      * The provided {@code authenticationInfo} map may be used to provide
      * additional information such as the {@link #AUTH_SERVICE_BUNDLE}.
      * If this property is provided, additional information like
-     * {@link ResourceResolverFactory#SUBSERVICE} might be provided, but the
-     * {@link ResourceResolverFactory#USER} and {@link ResourceResolverFactory#PASSWORD}
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#SUBSERVICE} might be provided, but the
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#USER} and
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#PASSWORD}
      * properties provided in the map must be ignored.
      * <p>
-     * The {@link ResourceResolverFactory#USER_IMPERSONATION} property is obeyed but requires that the
+     * The {@link org.apache.sling.api.resource.ResourceResolverFactory#USER_IMPERSONATION}
+     * property is obeyed but requires that the
      * authenticated user has permission to impersonate as the requested user.
      * If such permission is missing, a {@code LoginException} is thrown.
      * <p>
@@ -411,8 +413,8 @@ public abstract class ResourceProvider<T> {
     /**
      * Returns an {@code Iterator} of {@link Resource} objects loaded from
      * the children of the given {@code Resource}. The returned {@link Resource} instances
-     *  are attached to the same
-     * {@link ResourceResolver} as the given {@code parent} resource.
+     * are attached to the same
+     * {@link org.apache.sling.api.resource.ResourceResolver} as the given {@code parent} resource.
      * <p>
      * This method may be called for resource providers whose root path list contains a path such
      * that the resource path is a
@@ -422,7 +424,7 @@ public abstract class ResourceProvider<T> {
      * <p>
      * The returned iterator may in turn contain resources which do not actually exist but are required
      *  to traverse the resource
-     * tree. Such resources SHOULD be {@link SyntheticResource} objects whose resource type MUST be set to
+     * tree. Such resources SHOULD be {@link org.apache.sling.api.resource.SyntheticResource} objects whose resource type MUST be set to
      * {@link #RESOURCE_TYPE_SYNTHETIC}.
      *
      * As with {@link #getResource(ResolveContext, String, ResourceContext, Resource)} the returned Resource objects must
@@ -435,7 +437,7 @@ public abstract class ResourceProvider<T> {
      *         provider has no children for the given resource.
      * @throws NullPointerException
      *             If {@code parent} is {@code null}.
-     * @throws SlingException
+     * @throws org.apache.sling.api.SlingException
      *             If any error occurs acquiring the child resource iterator.
      */
     public abstract @CheckForNull Iterator<Resource> listChildren(final @Nonnull ResolveContext<T> ctx, final @Nonnull Resource parent);
@@ -480,7 +482,7 @@ public abstract class ResourceProvider<T> {
      * The new resource is put into the transient space of this provider
      * until {@link #commit(ResolveContext)} is called.
      * <p>
-     * A resource provider must value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
+     * A resource provider must value {@link org.apache.sling.api.resource.ResourceResolver#PROPERTY_RESOURCE_TYPE}
      * to set the resource type of a resource.
      * <p>
      * This method is only called if the provider supports this and indicates

@@ -29,8 +29,8 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The JCR query provider supports querying based on the JCR spec.
- * Calls from {@link ResourceResolver#findResources(String, String)} and
- * {@link ResourceResolver#queryResources(String, String)} are passed on
+ * Calls from {@link org.apache.sling.api.resource.ResourceResolver#findResources(String, String)} and
+ * {@link org.apache.sling.api.resource.ResourceResolver#queryResources(String, String)} are passed on
  * to this object.
  *
  * @since 1.0.0 (Sling API Bundle 2.11.0)

@@ -32,7 +32,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
- * to resolve {@link Resource} objects. The resource resolver is available to
+ * to resolve {@link org.apache.sling.api.resource.Resource} objects. The resource resolver is available to
  * the request processing servlet through the
  * {@link org.apache.sling.api.SlingHttpServletRequest#getResourceResolver()}
  * method.

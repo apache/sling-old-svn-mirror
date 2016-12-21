@@ -38,6 +38,7 @@ public final class ObjectConverter {
      * Converts the object to the given type.
      * @param obj object
      * @param type type
+     * @param <T> Target type
      * @return the converted object
      */
     @SuppressWarnings("unchecked")
