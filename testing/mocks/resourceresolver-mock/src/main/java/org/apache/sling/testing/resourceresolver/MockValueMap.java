@@ -27,10 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
  * ValueMap for mocked resources to mimick JCR-like behavior.
@@ -54,24 +52,7 @@ public class MockValueMap extends DeepReadModifiableValueMapDecorator implements
     @Override
     public <T> T get(String name, Class<T> type) {
         
-        if (type == Calendar.class) {
-            // Support conversion of String to Calendar if value conforms to ISO8601 date format
-            Object value = get(name);
-            if (value instanceof String) {
-                return (T)ISO8601.parse((String)value);
-            }
-        }
-        else if (type == Date.class) {
-            // Support conversion from Calendar to Date
-            Calendar calendar = get(name, Calendar.class);
-            if (calendar != null) {
-                return (T)calendar.getTime();
-            }
-            else {
-                return null;
-            }
-        }
-        else if (type == InputStream.class) {
+        if (type == InputStream.class) {
             // Support conversion from byte array to InputStream
             byte[] data = get(name, byte[].class);
             if (data!=null) {

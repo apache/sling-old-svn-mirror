@@ -43,7 +43,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -127,12 +126,10 @@ public class SlingCrudResourceResolverTest {
     }
 
     @Test
-    @Ignore  // TODO: enable this test when resourceresolver-mock implementation supports BigDecimal conversion (SLING-6416)
     public void testSimpleProperties_DecimalConversion() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
 
-        // TODO: enable this test when resourceresolver-mock implementation supports BigDecimal conversion (SLING-6416)
         assertEquals(new BigDecimal(DOUBLE_VALUE).doubleValue(), props.get("doubleProp", BigDecimal.class).doubleValue(), 0.0001d);
         assertEquals(BIGDECIMAL_VALUE.doubleValue() , props.get("bigDecimalProp", Double.class), 0.0001d);
     }
