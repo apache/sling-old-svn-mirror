@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.lang.reflect.Array;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.commons.lang3.ClassUtils;
 
@@ -131,18 +133,28 @@ class Convert {
         assertConversion(expected1, input1, expectedType);
         
         // single value to array
-        Object expectedSingletonArray = Array.newInstance(expectedType, 1);
-        Array.set(expectedSingletonArray, 0, expected1);
-        assertConversion(expectedSingletonArray, input1, expectedArrayType);
+        if (expected1 == null && expected2 == null) {
+            assertConversion(nullValue, input1, expectedArrayType);
+        }
+        else {
+            Object expectedSingletonArray = Array.newInstance(expectedType, 1);
+            Array.set(expectedSingletonArray, 0, expected1);
+            assertConversion(expectedSingletonArray, input1, expectedArrayType);
+        }
         
         // array to array
         Object inputDoubleArray = Array.newInstance(inputType, 2);
         Array.set(inputDoubleArray, 0, input1);
         Array.set(inputDoubleArray, 1, input2);
-        Object expectedDoubleArray = Array.newInstance(expectedType, 2);
-        Array.set(expectedDoubleArray, 0,  expected1);
-        Array.set(expectedDoubleArray, 1,  expected2);
-        assertConversion(expectedDoubleArray, inputDoubleArray, expectedArrayType);
+        if (expected1 == null && expected2 == null) {
+            assertConversion(null, inputDoubleArray, expectedArrayType);
+        }
+        else {
+            Object expectedDoubleArray = Array.newInstance(expectedType, 2);
+            Array.set(expectedDoubleArray, 0,  expected1);
+            Array.set(expectedDoubleArray, 1,  expected2);
+            assertConversion(expectedDoubleArray, inputDoubleArray, expectedArrayType);
+        }
         
         // array to single (first) value
         assertConversion(expected1, inputDoubleArray, expectedType);
@@ -169,10 +181,10 @@ class Convert {
             assertNull(msg, result);
         }
         else if (expected.getClass().isArray()) {
-            assertArrayEquals(msg, (U[])expected, (U[])result);
+            assertArrayEquals(msg, (U[])toStringIfDate(expected), (U[])toStringIfDate(result));
         }
         else {
-            assertEquals(msg, expected, result);
+            assertEquals(msg, toStringIfDate(expected), toStringIfDate(result));
         }
     }
     
@@ -187,14 +199,37 @@ class Convert {
                 if (i > 0) {
                     sb.append(",");
                 }
-                sb.append(Array.get(input, i));
+                sb.append(toString(Array.get(input, i)));
             }
             sb.append("]");
             return sb.toString();
         }
         else {
-            return input.toString();
+            return toStringIfDate(input).toString();
         }
     }
     
+    private static Object toStringIfDate(Object input) {
+        if (input == null) {
+            return null;
+        }
+        if (input instanceof Calendar) {
+            return "(Calendar)" + DateUtils.calendarToString((Calendar)input);
+        }
+        if (input instanceof Date) {
+            return "(Date)" + DateUtils.dateToString((Date)input);
+        }
+        if (input.getClass().isArray()) {
+            if (Calendar.class.isAssignableFrom(input.getClass().getComponentType())
+                    || input.getClass().getComponentType() == Date.class) {
+                Object[] resultArray = new String[Array.getLength(input)];
+                for (int i=0; i<Array.getLength(input); i++) {
+                    resultArray[i] = toStringIfDate(Array.get(input, i));
+                }
+                return resultArray;
+            }
+        }
+        return input;
+    }
+        
 }

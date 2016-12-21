@@ -18,13 +18,16 @@
  */
 package org.apache.sling.api.wrappers.impl;
 
+import static org.apache.sling.api.wrappers.impl.DateUtils.calendarToString;
+import static org.apache.sling.api.wrappers.impl.DateUtils.toCalendar;
+import static org.apache.sling.api.wrappers.impl.DateUtils.toDate;
+
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -52,32 +55,34 @@ public class ObjectConverterTest {
     private static final Calendar CALENDAR_2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.US);
     {
         CALENDAR_1.set(2016, 10, 15, 8, 20, 30);
+        CALENDAR_1.setLenient(true);
         CALENDAR_2.set(2015, 6, 31, 19, 10, 20);
+        CALENDAR_2.setLenient(true);
     }
-    private static final Date DATE_1 = CALENDAR_1.getTime();
-    private static final Date DATE_2 = CALENDAR_2.getTime();
+    private static final Date DATE_1 = toDate(CALENDAR_1);
+    private static final Date DATE_2 = toDate(CALENDAR_2);
 
     @Test
-    public void testToString() {
-        Convert.from(STRING_1, STRING_2).to(STRING_1, STRING_2).test();
-        Convert.fromPrimitive(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
-        Convert.from(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
-        Convert.fromPrimitive(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
-        Convert.from(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
-        Convert.fromPrimitive(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
-        Convert.from(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
-        Convert.fromPrimitive(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
-        Convert.from(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
-        Convert.fromPrimitive(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
-        Convert.from(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
-        Convert.fromPrimitive(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
-        Convert.from(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
-        Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
-        Convert.from(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
-        Convert.from(BIGDECIMAL_1, BIGDECIMAL_2).to(BIGDECIMAL_1.toString(), BIGDECIMAL_2.toString()).test();
-        Convert.from(CALENDAR_1, CALENDAR_2).to(CALENDAR_1.toString(), CALENDAR_2.toString()).test();
-        Convert.from(DATE_1, DATE_2).to(DATE_1.toString(), DATE_2.toString()).test();
-    }
+            public void testDateToString() {
+                Convert.from(STRING_1, STRING_2).to(STRING_1, STRING_2).test();
+                Convert.fromPrimitive(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
+                Convert.from(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
+                Convert.fromPrimitive(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
+                Convert.from(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
+                Convert.fromPrimitive(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
+                Convert.from(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
+                Convert.fromPrimitive(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
+                Convert.from(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
+                Convert.fromPrimitive(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
+                Convert.from(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
+                Convert.fromPrimitive(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
+                Convert.from(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
+                Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
+                Convert.from(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
+                Convert.from(BIGDECIMAL_1, BIGDECIMAL_2).to(BIGDECIMAL_1.toString(), BIGDECIMAL_2.toString()).test();
+                Convert.from(CALENDAR_1, CALENDAR_2).to(calendarToString(CALENDAR_1), calendarToString(CALENDAR_2)).test();
+                Convert.from(DATE_1, DATE_2).to(calendarToString(toCalendar(DATE_1)), calendarToString(toCalendar(DATE_2))).test();
+            }
     
     @Test
     public void testToBoolean() {
@@ -316,14 +321,12 @@ public class ObjectConverterTest {
     }
     
     @Test
-    @Ignore // TODO: support calendar
     public void testToCalendar() {
         Convert.from(CALENDAR_1, CALENDAR_2).to(CALENDAR_1, CALENDAR_2).test();
-        Convert.from(CALENDAR_1.toString(), CALENDAR_2.toString()).to(CALENDAR_1, CALENDAR_2).test();
+        Convert.from(DateUtils.calendarToString(CALENDAR_1), DateUtils.calendarToString(CALENDAR_2)).to(CALENDAR_1, CALENDAR_2).test();
         
         // test conversion from other date types
-        Convert.from(DATE_1, DATE_2).to(DateUtils.toCalendar(DATE_1), DateUtils.toCalendar(DATE_2)).test();
-        Convert.fromPrimitive(DATE_1, DATE_2).to(DateUtils.toCalendar(DATE_1), DateUtils.toCalendar(DATE_2)).test();
+        Convert.from(DATE_1, DATE_2).to(toCalendar(DATE_1), toCalendar(DATE_2)).test();
 
         // test other types that should not be converted
         Convert.<String,Calendar>from(STRING_1, STRING_2).toNull(Calendar.class).test();
@@ -331,14 +334,12 @@ public class ObjectConverterTest {
     }
     
     @Test
-    @Ignore // TODO: support date
     public void testToDate() {
         Convert.from(DATE_1, DATE_2).to(DATE_1, DATE_2).test();
-        Convert.from(DATE_1.toString(), DATE_2.toString()).to(DATE_1, DATE_2).test();
+        Convert.from(DateUtils.dateToString(DATE_1), DateUtils.dateToString(DATE_2)).to(DATE_1, DATE_2).test();
         
         // test conversion from other date types
-        Convert.from(CALENDAR_1, CALENDAR_2).to(CALENDAR_1.getTime(), CALENDAR_2.getTime()).test();
-        Convert.fromPrimitive(CALENDAR_1, CALENDAR_2).to(CALENDAR_1.getTime(), CALENDAR_2.getTime()).test();
+        Convert.from(CALENDAR_1, CALENDAR_2).to(toDate(CALENDAR_1), toDate(CALENDAR_2)).test();
 
         // test other types that should not be converted
         Convert.<String,Date>from(STRING_1, STRING_2).toNull(Date.class).test();

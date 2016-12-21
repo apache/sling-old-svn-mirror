@@ -21,6 +21,8 @@ package org.apache.sling.api.wrappers.impl;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,51 +45,69 @@ public final class ObjectConverter {
         if (obj == null) {
             return null;
         }
-        else if (type.isArray()) {
-            return (T) convertToArray(obj, type.getComponentType());
+        
+        // convert array elements individually
+        if (type.isArray()) {
+            return (T)convertToArray(obj, type.getComponentType());
         }
+        
+        // check if direct assignment is possible
         if (type.isAssignableFrom(obj.getClass())) {
-            return (T) obj;
+            return (T)obj;
         }
-        else {
-            String result = getSingleValue(obj);
-            if (result == null) {
-                return null;
-            }
-            if (type == String.class) {
-                return (T) result.toString();
-            }
-            if (type == Boolean.class) {
-                return (T) (Boolean)Boolean.parseBoolean(result);
-            }
-            try {
-                if (type == Byte.class) {
-                    return (T) (Byte)Byte.parseByte(result);
-                }
-                if (type == Short.class) {
-                    return (T) (Short)Short.parseShort(result);
-                }
-                if (type == Integer.class) {
-                    return (T) (Integer)Integer.parseInt(result);
-                }
-                if (type == Long.class) {
-                    return (T) (Long)Long.parseLong(result);
-                }
-                if (type == Float.class) {
-                    return (T) (Float)Float.parseFloat(result);
-                }
-                if (type == Double.class) {
-                    return (T) (Double)Double.parseDouble(result);
-                }
-                if (type == BigDecimal.class) {
-                    return (T) new BigDecimal(result);
-                }
-            }
-            catch (NumberFormatException e) {
-                return null;
-            }
+        
+        // convert Calendar in Date and vice versa
+        if (Calendar.class.isAssignableFrom(type) && obj instanceof Date) {
+            return (T)DateUtils.toCalendar((Date)obj);
+        }
+        if (type == Date.class && obj instanceof Calendar) {
+            return (T)DateUtils.toDate((Calendar)obj);
+        }
+
+        // no direct conversion - format to string and try to parse to target type 
+        String result = getSingleValue(obj);
+        if (result == null) {
             return null;
         }
+        if (type == String.class) {
+            return (T)result.toString();
+        }
+        if (type == Boolean.class) {
+            return (T)(Boolean)Boolean.parseBoolean(result);
+        }
+        try {
+            if (type == Byte.class) {
+                return (T)(Byte)Byte.parseByte(result);
+            }
+            if (type == Short.class) {
+                return (T)(Short)Short.parseShort(result);
+            }
+            if (type == Integer.class) {
+                return (T)(Integer)Integer.parseInt(result);
+            }
+            if (type == Long.class) {
+                return (T)(Long)Long.parseLong(result);
+            }
+            if (type == Float.class) {
+                return (T)(Float)Float.parseFloat(result);
+            }
+            if (type == Double.class) {
+                return (T)(Double)Double.parseDouble(result);
+            }
+            if (type == BigDecimal.class) {
+                return (T)new BigDecimal(result);
+            }
+        }
+        catch (NumberFormatException e) {
+            return null;
+        }
+        if (Calendar.class.isAssignableFrom(type)) {
+            return (T)DateUtils.calendarFromString(result);
+        }
+        if (type == Date.class) {
+            return (T)DateUtils.dateFromString(result);
+        }
+        return null;
     }
 
     /**
@@ -108,6 +128,12 @@ public final class ObjectConverter {
             else {
                 result = getSingleValue(Array.get(obj, 0));
             }
+        }
+        else if (obj instanceof Calendar) {
+            result = DateUtils.calendarToString((Calendar)obj);
+        }
+        else if (obj instanceof Date) {
+            result = DateUtils.dateToString((Date)obj);
         }
         else {
             result = obj.toString();
@@ -147,5 +173,5 @@ public final class ObjectConverter {
             return arrayResult;
         }
     }
-
+    
 }

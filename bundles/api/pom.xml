@@ -52,6 +52,7 @@
     <properties>
         <site.jira.version.id>12314252</site.jira.version.id>
         <sling.java.version>7</sling.java.version>
+        <jackrabbit.version>2.13.4</jackrabbit.version>
     </properties>
 
     <dependencies>
@@ -67,6 +68,13 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
+        </dependency>
+        <!-- No external dependency, we embed some util classes -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>${jackrabbit.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Testing -->
         <dependency>
@@ -105,6 +113,10 @@
                         <Bundle-DocURL>
                             http://sling.apache.org/site/sling-api.html
                         </Bundle-DocURL>
+                        <!-- Include utility classes from Jackrabbit JCR Commons -->
+                        <Embed-Dependency>
+                           jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO8601.*"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
