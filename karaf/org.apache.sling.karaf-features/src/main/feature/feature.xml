@@ -20,6 +20,7 @@
 <features name="sling-${feature.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
   <!-- Apache Sling -->
   <feature name="sling" version="${feature.version}">
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.16.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.22</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.6.6</bundle>
@@ -291,6 +292,7 @@
     <feature version="${feature.version}">sling-installer</feature>
   </feature>
   <feature name="sling-installer-provider-jcr" version="${feature.version}">
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.22</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-installer</feature>
@@ -299,6 +301,7 @@
   <!-- Apache Sling JCR -->
   <feature name="sling-jcr" version="${feature.version}">
     <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling</configfile>
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr_resource.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr_resource</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.4.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/3.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.2.2</bundle>
@@ -574,6 +577,7 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
+    <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-composum.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-composum</configfile>
     <bundle>mvn:com.composum.sling.core/composum-sling-core-commons/1.7.0</bundle>
     <bundle>mvn:com.composum.sling.core/composum-sling-core-console/1.7.0</bundle>
     <bundle>mvn:com.composum.sling.core/composum-sling-core-jslibs/1.7.0</bundle>
