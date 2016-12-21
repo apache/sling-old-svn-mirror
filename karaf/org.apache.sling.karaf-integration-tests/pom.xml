@@ -278,7 +278,7 @@
             </executions>
             <configuration>
               <excludes>
-                <exclude>**/SlingLaunchpadOak*IT.*</exclude>
+                <exclude>**/SlingLaunchpadOakMongoIT.*</exclude>
                 <!-- SLING-5122, SLING-5123 -->
                 <exclude>**/SlingAuthXing*.*</exclude>
               </excludes>
