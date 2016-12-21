@@ -144,11 +144,8 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
 
-        // TODO: enable this test when resourceresolver-mock implementation supports BigDecimal conversion (SLING-6416)
-        if (getResourceResolverType() != ResourceResolverType.RESOURCERESOLVER_MOCK) {
-            assertEquals(new BigDecimal(DOUBLE_VALUE).doubleValue(), props.get("doubleProp", BigDecimal.class).doubleValue(), 0.0001d);
-            assertEquals(BIGDECIMAL_VALUE.doubleValue() , props.get("bigDecimalProp", Double.class), 0.0001d);
-        }
+        assertEquals(new BigDecimal(DOUBLE_VALUE).doubleValue(), props.get("doubleProp", BigDecimal.class).doubleValue(), 0.0001d);
+        assertEquals(BIGDECIMAL_VALUE.doubleValue() , props.get("bigDecimalProp", Double.class), 0.0001d);
     }
 
     @Test
