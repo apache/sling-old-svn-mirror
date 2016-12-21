@@ -424,7 +424,7 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.3-SNAPSHOT</bundle>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${feature.version}">
-    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/cfg/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
     <feature prerequisite="true" version="${feature.version}">sling-launchpad-oak</feature>
     <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.mongodb/mongo-java-driver/2.14.3</bundle>
