@@ -48,10 +48,10 @@ public class SlingCommonsMessagingMailIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
-            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.cfg", "subject", "Default Subject"),
-            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.cfg", "from", "from@example.net"),
-            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.cfg", "smtp.hostname", "localhost"),
-            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.cfg", "smtp.port", "25"),
+            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config", "subject", "Default Subject"),
+            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config", "from", "from@example.net"),
+            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config", "smtp.hostname", "localhost"),
+            editConfigurationFilePut("etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config", "smtp.port", "25"),
             addSlingFeatures("sling-commons-messaging-mail")
         );
     }
