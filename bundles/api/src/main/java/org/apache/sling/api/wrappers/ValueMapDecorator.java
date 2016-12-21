@@ -19,6 +19,7 @@
 package org.apache.sling.api.wrappers;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -66,28 +67,52 @@ public class ValueMapDecorator implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     private <T> T convert(Object obj, Class<T> type) {
-        // todo: do smarter checks
-        try {
-            if (obj == null) {
-                return null;
-            } else if (type.isAssignableFrom(obj.getClass())) {
-                return (T) obj;
-            } else if (type.isArray()) {
-                return (T) convertToArray(obj, type.getComponentType());
-            } else if (type == String.class) {
-                return (T) String.valueOf(getSingleValue(obj));
-            } else if (type == Integer.class) {
-                return (T) (Integer) Integer.parseInt(getSingleValue(obj));
-            } else if (type == Long.class) {
-                return (T) (Long) Long.parseLong(getSingleValue(obj));
-            } else if (type == Double.class) {
-                return (T) (Double) Double.parseDouble(getSingleValue(obj));
-            } else if (type == Boolean.class) {
-                return (T) (Boolean) Boolean.parseBoolean(getSingleValue(obj));
-            } else {
+        if (obj == null) {
+            return null;
+        }
+        else if (type.isArray()) {
+            return (T) convertToArray(obj, type.getComponentType());
+        }
+        if (type.isAssignableFrom(obj.getClass())) {
+            return (T) obj;
+        }
+        else {
+            String result = getSingleValue(obj);
+            if (result == null) {
                 return null;
             }
-        } catch (NumberFormatException e) {
+            if (type == String.class) {
+                return (T) result.toString();
+            }
+            if (type == Boolean.class) {
+                return (T) (Boolean)Boolean.parseBoolean(result);
+            }
+            try {
+                if (type == Byte.class) {
+                    return (T) (Byte)Byte.parseByte(result);
+                }
+                if (type == Short.class) {
+                    return (T) (Short)Short.parseShort(result);
+                }
+                if (type == Integer.class) {
+                    return (T) (Integer)Integer.parseInt(result);
+                }
+                if (type == Long.class) {
+                    return (T) (Long)Long.parseLong(result);
+                }
+                if (type == Float.class) {
+                    return (T) (Float)Float.parseFloat(result);
+                }
+                if (type == Double.class) {
+                    return (T) (Double)Double.parseDouble(result);
+                }
+                if (type == BigDecimal.class) {
+                    return (T) new BigDecimal(result);
+                }
+            }
+            catch (NumberFormatException e) {
+                return null;
+            }
             return null;
         }
     }
@@ -103,8 +128,12 @@ public class ValueMapDecorator implements ValueMap {
         if (obj == null) {
             result = null;
         } else if (obj.getClass().isArray()) {
-            final Object[] values = (Object[]) obj;
-            result = values[0] != null ? values[0].toString() : null;
+            if (Array.getLength(obj) == 0) {
+                result = null;
+            }
+            else {
+                result = getSingleValue(Array.get(obj, 0));
+            }
         } else {
             result = obj.toString();
         }
@@ -120,10 +149,9 @@ public class ValueMapDecorator implements ValueMap {
     @SuppressWarnings("unchecked")
     private <T> T[] convertToArray(Object obj, Class<T> type) {
         if (obj.getClass().isArray()) {
-            final Object[] array = (Object[]) obj;
             List<Object> resultList = new ArrayList<Object>();
-            for (int i = 0; i < array.length; i++) {
-                T singleValueResult = convert(array[i], type);
+            for (int i = 0; i < Array.getLength(obj); i++) {
+                T singleValueResult = convert(Array.get(obj, i), type);
                 if (singleValueResult != null) {
                     resultList.add(singleValueResult);
                 }
