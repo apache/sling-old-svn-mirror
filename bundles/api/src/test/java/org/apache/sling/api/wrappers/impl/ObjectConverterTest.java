@@ -21,6 +21,8 @@ package org.apache.sling.api.wrappers.impl;
 import static org.apache.sling.api.wrappers.impl.DateUtils.calendarToString;
 import static org.apache.sling.api.wrappers.impl.DateUtils.toCalendar;
 import static org.apache.sling.api.wrappers.impl.DateUtils.toDate;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -215,6 +217,14 @@ public class ObjectConverterTest {
         // test other types that should not be converted
         Convert.<String,Date>from(STRING_1, STRING_2).toNull(Date.class).test();
         Convert.<Boolean,Date>from(BOOLEAN_1, BOOLEAN_2).toNull(Date.class).test();
+    }
+    
+    @Test
+    public void testPrimitiveByteArray() {
+        byte[] array = new byte[] { 0x01, 0x02, 0x03 };
+        assertArrayEquals(array, ObjectConverter.convert(array, byte[].class));
+        assertNull(ObjectConverter.convert(new byte[0], byte[].class));
+        assertNull(ObjectConverter.convert(null, byte[].class));
     }
     
 }

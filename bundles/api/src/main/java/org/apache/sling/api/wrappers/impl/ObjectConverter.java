@@ -46,14 +46,17 @@ public final class ObjectConverter {
             return null;
         }
         
+        // check if direct assignment is possible
+        if (type.isAssignableFrom(obj.getClass())) {
+            if (obj.getClass().isArray() && Array.getLength(obj) == 0) {
+                return null;
+            }
+            return (T)obj;
+        }
+        
         // convert array elements individually
         if (type.isArray()) {
             return (T)convertToArray(obj, type.getComponentType());
-        }
-        
-        // check if direct assignment is possible
-        if (type.isAssignableFrom(obj.getClass())) {
-            return (T)obj;
         }
         
         // convert Calendar in Date and vice versa
