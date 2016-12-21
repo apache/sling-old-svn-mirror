@@ -73,7 +73,16 @@ public final class ObjectConverter {
             return (T)result.toString();
         }
         if (type == Boolean.class) {
-            return (T)(Boolean)Boolean.parseBoolean(result);
+            // do not rely on Boolean.parseBoolean to avoid converting nonsense to "false" without noticing
+            if ("true".equalsIgnoreCase(result)) {
+                return (T)Boolean.TRUE;
+            }
+            else if ("false".equalsIgnoreCase(result)) {
+                return (T)Boolean.FALSE;
+            }
+            else {
+                return null;
+            }
         }
         try {
             if (type == Byte.class) {

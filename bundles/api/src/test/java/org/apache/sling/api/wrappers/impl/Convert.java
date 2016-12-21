@@ -31,7 +31,11 @@ import org.apache.commons.lang3.ClassUtils;
 /**
  * Tests all permutations of object conversions between single values and array types, and null handling.
  */
-class Convert {
+final class Convert {
+    
+    private Convert() {
+        // static methods only
+    }
     
     @SuppressWarnings("unchecked")
     public static class ConversionAssert<T,U> {

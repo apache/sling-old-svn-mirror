@@ -28,7 +28,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ObjectConverterTest {
@@ -55,34 +54,32 @@ public class ObjectConverterTest {
     private static final Calendar CALENDAR_2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.US);
     {
         CALENDAR_1.set(2016, 10, 15, 8, 20, 30);
-        CALENDAR_1.setLenient(true);
         CALENDAR_2.set(2015, 6, 31, 19, 10, 20);
-        CALENDAR_2.setLenient(true);
     }
     private static final Date DATE_1 = toDate(CALENDAR_1);
     private static final Date DATE_2 = toDate(CALENDAR_2);
 
     @Test
-            public void testDateToString() {
-                Convert.from(STRING_1, STRING_2).to(STRING_1, STRING_2).test();
-                Convert.fromPrimitive(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
-                Convert.from(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
-                Convert.fromPrimitive(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
-                Convert.from(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
-                Convert.fromPrimitive(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
-                Convert.from(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
-                Convert.fromPrimitive(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
-                Convert.from(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
-                Convert.fromPrimitive(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
-                Convert.from(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
-                Convert.fromPrimitive(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
-                Convert.from(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
-                Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
-                Convert.from(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
-                Convert.from(BIGDECIMAL_1, BIGDECIMAL_2).to(BIGDECIMAL_1.toString(), BIGDECIMAL_2.toString()).test();
-                Convert.from(CALENDAR_1, CALENDAR_2).to(calendarToString(CALENDAR_1), calendarToString(CALENDAR_2)).test();
-                Convert.from(DATE_1, DATE_2).to(calendarToString(toCalendar(DATE_1)), calendarToString(toCalendar(DATE_2))).test();
-            }
+    public void testDateToString() {
+        Convert.from(STRING_1, STRING_2).to(STRING_1, STRING_2).test();
+        Convert.fromPrimitive(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
+        Convert.from(BOOLEAN_1, BOOLEAN_2).to(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).test();
+        Convert.fromPrimitive(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
+        Convert.from(BYTE_1, BYTE_2).to(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).test();
+        Convert.fromPrimitive(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
+        Convert.from(SHORT_1, SHORT_2).to(Short.toString(SHORT_1), Short.toString(SHORT_2)).test();
+        Convert.fromPrimitive(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
+        Convert.from(INT_1, INT_2).to(Integer.toString(INT_1), Integer.toString(INT_2)).test();
+        Convert.fromPrimitive(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
+        Convert.from(LONG_1, LONG_2).to(Long.toString(LONG_1), Long.toString(LONG_2)).test();
+        Convert.fromPrimitive(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
+        Convert.from(FLOAT_1, FLOAT_2).to(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).test();
+        Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
+        Convert.from(DOUBLE_1, DOUBLE_2).to(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).test();
+        Convert.from(BIGDECIMAL_1, BIGDECIMAL_2).to(BIGDECIMAL_1.toString(), BIGDECIMAL_2.toString()).test();
+        Convert.from(CALENDAR_1, CALENDAR_2).to(calendarToString(CALENDAR_1), calendarToString(CALENDAR_2)).test();
+        Convert.from(DATE_1, DATE_2).to(calendarToString(toCalendar(DATE_1)), calendarToString(toCalendar(DATE_2))).test();
+    }
     
     @Test
     public void testToBoolean() {
@@ -91,23 +88,8 @@ public class ObjectConverterTest {
         Convert.from(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).to(BOOLEAN_1, BOOLEAN_2).test();
         
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Integer,Boolean>conv(INT_1, INT_2).toNull(Boolean.class).test();
-        TestUtils.<Date,Boolean>conv(DATE_1, DATE_2).toNull(Boolean.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToBooleanPrimitive() {
-        Convert.fromPrimitive(BOOLEAN_1, BOOLEAN_2).toPrimitive(BOOLEAN_1, BOOLEAN_2).nullValue(false).test();
-        Convert.from(BOOLEAN_1, BOOLEAN_2).toPrimitive(BOOLEAN_1, BOOLEAN_2).nullValue(false).test();
-        Convert.from(Boolean.toString(BOOLEAN_1), Boolean.toString(BOOLEAN_2)).toPrimitive(BOOLEAN_1, BOOLEAN_2).nullValue(false).test();
-        
-        // test other types that should not be converted
-        Convert.from(INT_1, INT_2).toPrimitive(false,  false).nullValue(false).test();
-        Convert.from(DATE_1, DATE_2).toPrimitive(false,  false).nullValue(false).test();
+        Convert.<Integer,Boolean>from(INT_1, INT_2).toNull(Boolean.class).test();
+        Convert.<Date,Boolean>from(DATE_1, DATE_2).toNull(Boolean.class).test();
     }
     
     @Test
@@ -121,25 +103,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(INT_1, INT_2).to((byte)INT_1, (byte)INT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Byte>conv(DATE_1, DATE_2).toNull(Byte.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToBytePrimitive() {
-        Convert.fromPrimitive(BYTE_1, BYTE_2).toPrimitive(BYTE_1, BYTE_2).nullValue(0).test();
-        Convert.from(BYTE_1, BYTE_2).toPrimitive(BYTE_1, BYTE_2).nullValue(0).test();
-        Convert.from(Byte.toString(BYTE_1), Byte.toString(BYTE_2)).toPrimitive(BYTE_1, BYTE_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(INT_1, INT_2).toPrimitive((byte)INT_1, (byte)INT_2).test();
-        Convert.fromPrimitive(INT_1, INT_2).toPrimitive((byte)INT_1, (byte)INT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(INT_1, INT_2).toPrimitive((byte)0, (byte)0).nullValue(false).test();
+        Convert.<Date,Byte>from(DATE_1, DATE_2).toNull(Byte.class).test();
     }
     
     @Test
@@ -153,25 +117,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(INT_1, INT_2).to((short)INT_1, (short)INT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Short>conv(DATE_1, DATE_2).toNull(Short.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToShortPrimitive() {
-        Convert.fromPrimitive(SHORT_1, SHORT_2).toPrimitive(SHORT_1, SHORT_2).nullValue(0).test();
-        Convert.from(SHORT_1, SHORT_2).toPrimitive(SHORT_1, SHORT_2).nullValue(0).test();
-        Convert.from(Short.toString(SHORT_1), Short.toString(SHORT_2)).toPrimitive(SHORT_1, SHORT_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(INT_1, INT_2).toPrimitive((short)INT_1, (short)INT_2).test();
-        Convert.fromPrimitive(INT_1, INT_2).toPrimitive((short)INT_1, (short)INT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(INT_1, INT_2).toPrimitive((short)0, (short)0).nullValue(false).test();
+        Convert.<Date,Short>from(DATE_1, DATE_2).toNull(Short.class).test();
     }
     
     @Test
@@ -185,25 +131,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(SHORT_1, SHORT_2).to((int)SHORT_1, (int)SHORT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Integer>conv(DATE_1, DATE_2).toNull(Integer.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToIntegerPrimitive() {
-        Convert.fromPrimitive(INT_1, INT_2).toPrimitive(INT_1, INT_2).nullValue(0).test();
-        Convert.from(INT_1, INT_2).toPrimitive(INT_1, INT_2).nullValue(0).test();
-        Convert.from(Integer.toString(INT_1), Integer.toString(INT_2)).toPrimitive(INT_1, INT_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(SHORT_1, SHORT_2).toPrimitive((int)SHORT_1, (int)SHORT_2).test();
-        Convert.fromPrimitive(SHORT_1, SHORT_2).toPrimitive((int)SHORT_1, (int)SHORT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(INT_1, INT_2).toPrimitive((int)0, (int)0).nullValue(false).test();
+        Convert.<Date,Integer>from(DATE_1, DATE_2).toNull(Integer.class).test();
     }
     
     @Test
@@ -217,25 +145,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(SHORT_1, SHORT_2).to((long)SHORT_1, (long)SHORT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Long>conv(DATE_1, DATE_2).toNull(Long.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToLongPrimitive() {
-        Convert.fromPrimitive(LONG_1, LONG_2).toPrimitive(LONG_1, LONG_2).nullValue(0).test();
-        Convert.from(LONG_1, LONG_2).toPrimitive(LONG_1, LONG_2).nullValue(0).test();
-        Convert.from(Long.toString(LONG_1), Long.toString(LONG_2)).toPrimitive(LONG_1, LONG_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(SHORT_1, SHORT_2).toPrimitive((long)SHORT_1, (long)SHORT_2).test();
-        Convert.fromPrimitive(SHORT_1, SHORT_2).toPrimitive((long)SHORT_1, (long)SHORT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(LONG_1, LONG_2).toPrimitive((long)0, (long)0).nullValue(false).test();
+        Convert.<Date,Long>from(DATE_1, DATE_2).toNull(Long.class).test();
     }
     
     @Test
@@ -249,27 +159,9 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(SHORT_1, SHORT_2).to((float)SHORT_1, (float)SHORT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Float>conv(DATE_1, DATE_2).toNull(Float.class).test();
-        */
+        Convert.<Date,Float>from(DATE_1, DATE_2).toNull(Float.class).test();
     }
     
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToFloatPrimitive() {
-        Convert.fromPrimitive(FLOAT_1, FLOAT_2).toPrimitive(FLOAT_1, FLOAT_2).nullValue(0).test();
-        Convert.from(FLOAT_1, FLOAT_2).toPrimitive(FLOAT_1, FLOAT_2).nullValue(0).test();
-        Convert.from(Float.toString(FLOAT_1), Float.toString(FLOAT_2)).toPrimitive(FLOAT_1, FLOAT_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(SHORT_1, SHORT_2).toPrimitive((float)SHORT_1, (float)SHORT_2).test();
-        Convert.fromPrimitive(SHORT_1, SHORT_2).toPrimitive((float)SHORT_1, (float)SHORT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(FLOAT_1, FLOAT_2).toPrimitive((float)0, (float)0).nullValue(false).test();
-    }
- 
     @Test
     public void testToDouble() {
         Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(DOUBLE_1, DOUBLE_2).test();
@@ -281,25 +173,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(SHORT_1, SHORT_2).to((double)SHORT_1, (double)SHORT_2).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,Double>conv(DATE_1, DATE_2).toNull(Double.class).test();
-        */
-    }
-    
-    @Test
-    @Ignore // TODO: support primitive
-    public void testToDoublePrimitive() {
-        Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).toPrimitive(DOUBLE_1, DOUBLE_2).nullValue(0).test();
-        Convert.from(DOUBLE_1, DOUBLE_2).toPrimitive(DOUBLE_1, DOUBLE_2).nullValue(0).test();
-        Convert.from(Double.toString(DOUBLE_1), Double.toString(DOUBLE_2)).toPrimitive(DOUBLE_1, DOUBLE_2).nullValue(0).test();
-
-        // test conversion from other number types
-        Convert.from(SHORT_1, SHORT_2).toPrimitive((double)SHORT_1, (double)SHORT_2).test();
-        Convert.fromPrimitive(SHORT_1, SHORT_2).toPrimitive((double)SHORT_1, (double)SHORT_2).test();
-
-        // test other types that should not be converted
-        Convert.from(DOUBLE_1, DOUBLE_2).toPrimitive((double)0, (double)0).nullValue(false).test();
+        Convert.<Date,Double>from(DATE_1, DATE_2).toNull(Double.class).test();
     }
     
     @Test
@@ -314,10 +188,7 @@ public class ObjectConverterTest {
         Convert.fromPrimitive(DOUBLE_1, DOUBLE_2).to(BigDecimal.valueOf(DOUBLE_1), BigDecimal.valueOf(DOUBLE_2)).test();
 
         // test other types that should not be converted
-        // TODO: test is not successful yet
-        /*
-        TestUtils.<Date,BigDecimal>conv(DATE_1, DATE_2).toNull(BigDecimal.class).test();
-        */
+        Convert.<Date,BigDecimal>from(DATE_1, DATE_2).toNull(BigDecimal.class).test();
     }
     
     @Test
