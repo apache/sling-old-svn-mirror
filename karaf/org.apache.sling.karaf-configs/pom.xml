@@ -79,8 +79,8 @@
                 </artifact>
                 <artifact>
                   <classifier>org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</classifier>
-                  <file>src/main/resources/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg</file>
-                  <type>cfg</type>
+                  <file>src/main/resources/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config</file>
+                  <type>config</type>
                 </artifact>
                 <artifact>
                   <classifier>org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</classifier>
