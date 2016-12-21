@@ -16,22 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.wrappers;
+package org.apache.sling.api.wrappers.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.lang.reflect.Array;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.lang3.ClassUtils;
 
 /**
  * Tests all permutations of object conversions between single values and array types, and null handling.
  */
-class TestUtils {
+class Convert {
     
     @SuppressWarnings("unchecked")
     public static class ConversionAssert<T,U> {
@@ -114,7 +112,7 @@ class TestUtils {
      * @param input1 Singleton or first array input value
      * @param input2 Second array input value
      */
-    public static <T,U> ConversionAssert<T,U> conv(T input1, T input2) {
+    public static <T,U> ConversionAssert<T,U> from(T input1, T input2) {
         return new ConversionAssert<T,U>(input1, input2, false);
     }
 
@@ -122,7 +120,7 @@ class TestUtils {
      * @param input1 Singleton or first array input value
      * @param input2 Second array input value
      */
-    public static <T,U> ConversionAssert<T,U> convPrimitive(T input1, T input2) {
+    public static <T,U> ConversionAssert<T,U> fromPrimitive(T input1, T input2) {
         return new ConversionAssert<T,U>(input1, input2, true);
     }
 
@@ -165,10 +163,7 @@ class TestUtils {
     
     @SuppressWarnings("unchecked")
     private static <T,U> void assertConversion(Object expected, Object input, Class<U> type) {
-        Map<String,Object> map = new HashMap<>();
-        map.put("key", input);
-        ValueMapDecorator underTest = new ValueMapDecorator(map);
-        U result = underTest.get("key", type);
+        U result = ObjectConverter.convert(input, type);
         String msg = "Convert '" + toString(input) + "' to " + type.getSimpleName();
         if (expected == null) {
             assertNull(msg, result);
