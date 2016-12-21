@@ -22,10 +22,10 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
- * This is copied from org.apache.sling.api.wrappers.DeepReadValueMapDecorator and DeepReadModifiableValueMapDecorator.
+ * This is copied from org.apache.sling.api.wrappers.DeepReadValueMapDecorator and DeepReadModifiableValueMapDecorator
+ * to avoid dependency to latest Sling API.
  */
 class DeepReadModifiableValueMapDecorator extends ValueMapDecorator implements ModifiableValueMap {
 
