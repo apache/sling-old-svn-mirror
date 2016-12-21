@@ -20,11 +20,15 @@
 create service user sling-discovery
 create service user sling-event
 create service user sling-i18n
+create service user sling-jcr-install
+create service user sling-mapping
+create service user sling-readall
 create service user sling-scripting
 create service user sling-xss
 
 create path (sling:Folder) /apps
 create path (sling:Folder) /apps/sling
+create path (sling:Folder) /apps/sling/install
 create path (sling:Folder) /apps/sling/xss
 create path (sling:Folder) /libs
 create path (sling:Folder) /libs/sling
@@ -47,6 +51,19 @@ end
 set ACL for sling-i18n
     allow   jcr:read    on /apps
     allow   jcr:read    on /libs
+end
+
+set ACL for sling-jcr-install
+    allow   jcr:read    on /
+    allow   rep:write   on /apps/sling/install
+end
+
+set ACL for sling-mapping
+    allow   jcr:read    on /
+end
+
+set ACL for sling-readall
+    allow   jcr:read    on /
 end
 
 set ACL for sling-scripting
