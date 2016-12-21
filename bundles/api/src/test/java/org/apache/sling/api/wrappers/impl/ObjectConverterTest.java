@@ -223,7 +223,7 @@ public class ObjectConverterTest {
     public void testPrimitiveByteArray() {
         byte[] array = new byte[] { 0x01, 0x02, 0x03 };
         assertArrayEquals(array, ObjectConverter.convert(array, byte[].class));
-        assertNull(ObjectConverter.convert(new byte[0], byte[].class));
+        assertArrayEquals(new byte[0], ObjectConverter.convert(new byte[0], byte[].class));
         assertNull(ObjectConverter.convert(null, byte[].class));
     }
     

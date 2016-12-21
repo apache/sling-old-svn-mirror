@@ -137,28 +137,30 @@ final class Convert {
         assertConversion(expected1, input1, expectedType);
         
         // single value to array
+        Object expectedSingletonArray;
         if (expected1 == null && expected2 == null) {
-            assertConversion(nullValue, input1, expectedArrayType);
+            expectedSingletonArray = Array.newInstance(expectedType, 0);
         }
         else {
-            Object expectedSingletonArray = Array.newInstance(expectedType, 1);
+            expectedSingletonArray = Array.newInstance(expectedType, 1);
             Array.set(expectedSingletonArray, 0, expected1);
-            assertConversion(expectedSingletonArray, input1, expectedArrayType);
         }
+        assertConversion(expectedSingletonArray, input1, expectedArrayType);
         
         // array to array
         Object inputDoubleArray = Array.newInstance(inputType, 2);
         Array.set(inputDoubleArray, 0, input1);
         Array.set(inputDoubleArray, 1, input2);
+        Object expectedDoubleArray;
         if (expected1 == null && expected2 == null) {
-            assertConversion(null, inputDoubleArray, expectedArrayType);
+            expectedDoubleArray = Array.newInstance(expectedType, 0);
         }
         else {
-            Object expectedDoubleArray = Array.newInstance(expectedType, 2);
+            expectedDoubleArray = Array.newInstance(expectedType, 2);
             Array.set(expectedDoubleArray, 0,  expected1);
             Array.set(expectedDoubleArray, 1,  expected2);
-            assertConversion(expectedDoubleArray, inputDoubleArray, expectedArrayType);
         }
+        assertConversion(expectedDoubleArray, inputDoubleArray, expectedArrayType);
         
         // array to single (first) value
         assertConversion(expected1, inputDoubleArray, expectedType);
@@ -174,7 +176,8 @@ final class Convert {
         assertConversion(nullValue, inputEmptyArray, expectedType);
 
         // empty array to array
-        assertConversion(null, inputEmptyArray, expectedArrayType);
+        Object expectedEmptyArray = Array.newInstance(expectedType, 0);
+        assertConversion(expectedEmptyArray, inputEmptyArray, expectedArrayType);
     }
     
     @SuppressWarnings("unchecked")

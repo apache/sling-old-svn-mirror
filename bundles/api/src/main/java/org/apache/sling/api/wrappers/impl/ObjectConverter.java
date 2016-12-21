@@ -48,9 +48,6 @@ public final class ObjectConverter {
         
         // check if direct assignment is possible
         if (type.isAssignableFrom(obj.getClass())) {
-            if (obj.getClass().isArray() && Array.getLength(obj) == 0) {
-                return null;
-            }
             return (T)obj;
         }
         
@@ -169,18 +166,15 @@ public final class ObjectConverter {
                     resultList.add(singleValueResult);
                 }
             }
-            if (resultList.isEmpty()) {
-                return null;
-            }
-            return resultList.toArray((T[]) Array.newInstance(type, resultList.size()));
+            return resultList.toArray((T[])Array.newInstance(type, resultList.size()));
         }
         else {
             final T singleValueResult = convert(obj, type);
             // return null for type conversion errors instead of single element array with value null
             if (singleValueResult == null) {
-                return null;
+                return (T[])Array.newInstance(type, 0);
             }
-            final T[] arrayResult = (T[]) Array.newInstance(type, 1);
+            final T[] arrayResult = (T[])Array.newInstance(type, 1);
             arrayResult[0] = singleValueResult;
             return arrayResult;
         }
