@@ -81,17 +81,17 @@ def modules = [
         location: 'bundles/extensions/bundleresource'
     ],
     [
-        location: 'extensions/caconfig/api'
+        location: 'bundles/extensions/caconfig/api'
     ],
     [
-        location: 'extensions/caconfig/impl'
+        location: 'bundles/extensions/caconfig/impl'
     ],
     [
-        location: 'extensions/caconfig/integration-tests',
+        location: 'bundles/extensions/caconfig/integration-tests',
         jdks: ["1.8"]
     ],
     [
-        location: 'extensions/caconfig/spi'
+        location: 'bundles/extensions/caconfig/spi'
     ],
     [
         location: 'bundles/extensions/dea'
