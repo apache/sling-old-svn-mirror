@@ -1,4 +1,4 @@
-Apache Sling Context Aware Configuration SPI
+Apache Sling Context-Aware Configuration SPI
 
 
 Getting Started
