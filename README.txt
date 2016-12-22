@@ -1,4 +1,4 @@
-Apache Sling Configuration Implementation
+Apache Sling Context-Aware Configuration Implementation
 
 
 Getting Started
