@@ -34,9 +34,9 @@
     <description>Mock Context Plugin for Apache Sling Context-Aware Configuration</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/testing/mocks/caconfig-mock-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/testing/mocks/caconfig-mock-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/testing/mocks/caconfig-mock-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/caconfig-mock-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/caconfig-mock-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/caconfig-mock-plugin</url>
     </scm>
     
     <build>
