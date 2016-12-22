@@ -1,4 +1,4 @@
-Apache Sling Context Aware Configuration API
+Apache Sling Context-Aware Configuration API
 
 
 Getting Started

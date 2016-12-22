@@ -81,6 +81,19 @@ def modules = [
         location: 'bundles/extensions/bundleresource'
     ],
     [
+        location: 'extensions/caconfig/api'
+    ],
+    [
+        location: 'extensions/caconfig/impl'
+    ],
+    [
+        location: 'extensions/caconfig/integration-tests',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'extensions/caconfig/spi'
+    ],
+    [
         location: 'bundles/extensions/dea'
     ],
     [
@@ -507,25 +520,6 @@ def modules = [
         location: 'contrib/extensions/sling-dynamic-include'
     ],
     [
-        location: 'contrib/extensions/contextaware-config/api'
-    ],
-    [
-        location: 'contrib/extensions/contextaware-config/impl'
-    ],
-    [
-        location: 'contrib/extensions/contextaware-config/integration-tests',
-        jdks: ["1.8"]
-    ],
-    [
-        location: 'contrib/extensions/contextaware-config/tooling/bnd-plugin-integration-tests'
-    ],
-    [
-        location: 'contrib/extensions/contextaware-config/tooling/bnd-plugin'
-    ],
-    [
-        location: 'contrib/extensions/contextaware-config/spi'
-    ],
-    [
         location: 'contrib/extensions/oak-restrictions'
     ],
     [
@@ -763,6 +757,9 @@ def modules = [
         location: 'testing/junit/rules'
     ],
     [
+        location: 'testing/mocks/caconfig-mock-plugin'
+    ],
+    [
         location: 'testing/mocks/jcr-mock'
     ],
     [
@@ -805,6 +802,12 @@ def modules = [
     [
         location: 'testing/org.apache.sling.testing.paxexam',
         jdks: ["1.8"]
+    ],
+    [
+        location: 'tooling/bnd/caconfig-bnd-plugin'
+    ],
+    [
+        location: 'tooling/bnd/models-bnd-plugin'
     ],
     [
         location: 'tooling/support/install'

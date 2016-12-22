@@ -34,9 +34,9 @@
     <description>Apache Sling Context-Aware Configuration API</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/contextaware-config/api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/caconfig/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/caconfig/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/caconfig/api</url>
     </scm>
     
     <build>

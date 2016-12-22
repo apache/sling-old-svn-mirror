@@ -31,12 +31,11 @@
     <packaging>pom</packaging>
     <version>1-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration Reactor</name>
-    <description>Sling Context-Aware Configuration handling</description>
   
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</developerConnection>
-        <url>https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/caconfig</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/caconfig</developerConnection>
+        <url>https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/caconfig</url>
     </scm>
     
     <modules>
@@ -44,8 +43,6 @@
         <module>spi</module>
         <module>impl</module>
         <module>integration-tests</module>
-        <module>tooling/bnd-plugin</module>
-        <module>testing/mocks/caconfig-mock-plugin</module>
     </modules>
     
     <build>

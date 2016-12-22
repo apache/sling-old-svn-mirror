@@ -65,6 +65,7 @@
         <module>osgi-mock</module>
         <module>sling-mock</module>
         <module>sling-mock-oak</module>
+        <module>caconfig-mock-plugin</module>
     </modules>
   
 </project>

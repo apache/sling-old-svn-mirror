@@ -1,4 +1,4 @@
-Apache Sling Configuration Implementation
+Apache Sling Context-Aware Configuration SPI
 
 
 Getting Started
@@ -20,6 +20,6 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/impl
+    svn checkout https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/contextaware-config/spi
 
 See the Subversion documentation for other source control features.
