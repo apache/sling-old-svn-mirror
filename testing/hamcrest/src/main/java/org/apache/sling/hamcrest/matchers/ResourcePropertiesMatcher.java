@@ -16,6 +16,7 @@
  */
 package org.apache.sling.hamcrest.matchers;
 
+import java.lang.reflect.Array;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -25,27 +26,62 @@ import org.hamcrest.TypeSafeMatcher;
 
 public class ResourcePropertiesMatcher extends TypeSafeMatcher<Resource> {
 
-    private final Map<String, Object> properties;
+    private final Map<String, Object> expectedProps;
 
     public ResourcePropertiesMatcher(Map<String, Object> properties) {
         if (properties == null || properties.isEmpty()) {
             throw new IllegalArgumentException("properties is null or empty");
         }
 
-        this.properties = properties;
+        this.expectedProps = properties;
     }
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("Resource with properties ").appendValueList("[", ",", "]", properties.entrySet());
+        description.appendText("Resource with properties ").appendValueList("[", ",", "]", expectedProps.entrySet());
     }
 
     @Override
     protected boolean matchesSafely(Resource item) {
-
-        for (Map.Entry<String, Object> prop : properties.entrySet()) {
-            Object value = item.adaptTo(ValueMap.class).get(prop.getKey());
-            if ( value == null || !value.equals(prop.getValue())) {
+        ValueMap givenProps = item.adaptTo(ValueMap.class);
+        for (Map.Entry<String, Object> prop : expectedProps.entrySet()) {
+            Object givenValue = givenProps.get(prop.getKey());
+            Object expectedValue = prop.getValue();
+            if (givenValue != null && expectedValue != null
+                    && givenValue.getClass().isArray() && expectedValue.getClass().isArray()) {
+                if (!arrayEquals(expectedValue, givenValue)) {
+                    return false;
+                }
+            }
+            else {
+                if (!objectEquals(expectedValue, givenValue)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    private boolean objectEquals(Object value1, Object value2) {
+        if (value1 == null) {
+            return (value2 == null);
+        }
+        else if (value2 == null) {
+            return (value1 == null);
+        }
+        else {
+            return value1.equals(value2);
+        }
+    }
+    
+    private boolean arrayEquals(Object array1, Object array2) {
+        int length1 = Array.getLength(array1);
+        int length2 = Array.getLength(array2);
+        if (length1 != length2) {
+            return false;
+        }
+        for (int i=0; i<length1; i++) {
+            if (!objectEquals(Array.get(array1, i), Array.get(array2, i))) {
                 return false;
             }
         }

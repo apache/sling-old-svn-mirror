@@ -66,12 +66,14 @@ public class ResourceMatchersTest {
     public void testProps() {
         context.build().resource("/resource",
                 "key1", "value1",
-                "key2", "value2",
-                "key3", "value3");
+                "key2", 123,
+                "key3", new String[] { "item1", "item2" },
+                "key4", "otherValue");
         
         Map<String, Object> expectedProperties = ImmutableMap.<String, Object>builder()
                 .put("key1", "value1")
-                .put("key2", "value2")
+                .put("key2", 123)
+                .put("key3", new String[] { "item1", "item2" })
                 .build();
         
         Resource resource = context.resourceResolver().getResource("/resource");
@@ -80,13 +82,13 @@ public class ResourceMatchersTest {
         // test existing key with not matching value
         expectedProperties = ImmutableMap.<String, Object>builder()
                 .put("key1", "value1")
-                .put("key2", "value3")
+                .put("key3", "value3")
                 .build();
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
         
         // test non-existing key
         expectedProperties = ImmutableMap.<String, Object>builder()
-                .put("key4", "value4")
+                .put("key5", "value5")
                 .build();
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
     }
@@ -95,12 +97,14 @@ public class ResourceMatchersTest {
     public void testPropsVarargs() {
         context.build().resource("/resource",
                 "key1", "value1",
-                "key2", "value2",
-                "key3", "value3");
+                "key2", true,
+                "key3", new int[] { 1, 2, 3 },
+                "key4", "otherValue");
         
         Object[] expectedProperties = new Object[] {
                 "key1", "value1",
-                "key2", "value2"
+                "key2", true,
+                "key3", new int[] { 1, 2, 3 }
         };
         
         Resource resource = context.resourceResolver().getResource("/resource");
@@ -109,13 +113,31 @@ public class ResourceMatchersTest {
         // test existing key with not matching value
         expectedProperties = new Object[] {
                 "key1", "value1",
-                "key2", "value3"
+                "key3", new int[] { 1, 2, 5 }
+        };
+        Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
+
+        expectedProperties = new Object[] {
+                "key1", "value1",
+                "key3", new int[] { 1, 2 }
+        };
+        Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
+        
+        expectedProperties = new Object[] {
+                "key1", "value1",
+                "key3", 1
+        };
+        Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
+        
+        expectedProperties = new Object[] {
+                "key1", "value1",
+                "key3", null
         };
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
         
         // test non-existing key
         expectedProperties = new Object[] {
-                "key4", "value4"
+                "key5", "value5"
         };
         Assert.assertThat(resource, Matchers.not(ResourceMatchers.props(expectedProperties)));
     }
@@ -134,12 +156,12 @@ public class ResourceMatchersTest {
     public void testNameAndProps() {
         context.build().resource("/resource",
                 "key1", "value1",
-                "key2", "value2",
+                "key2", new String[] { "item1" },
                 "key3", "value3");
         
         Map<String, Object> expectedProperties = ImmutableMap.<String, Object>builder()
                 .put("key1", "value1")
-                .put("key2", "value2")
+                .put("key2", new String[] { "item1" })
                 .build();
         
         Resource resource = context.resourceResolver().getResource("/resource");
