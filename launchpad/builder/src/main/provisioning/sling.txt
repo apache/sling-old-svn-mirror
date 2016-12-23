@@ -23,6 +23,8 @@
     jackrabbit.version=2.13.5
 
 [artifacts]
+    # Add the Slingshot Sample provisioning model
+    org.apache.sling/org.apache.sling.sample.slingshot/0.8.0/slingfeature/slingfeature
     commons-collections/commons-collections/3.2.2
     org.apache.commons/commons-collections4/4.1
     commons-codec/commons-codec/1.9
