@@ -18,6 +18,8 @@ package org.apache.sling.hamcrest.matchers;
 
 import java.lang.reflect.Array;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -38,7 +40,8 @@ public class ResourcePropertiesMatcher extends TypeSafeMatcher<Resource> {
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("Resource with properties ").appendValueList("[", ",", "]", expectedProps.entrySet());
+        description.appendText("Resource with properties ")
+            .appendValueList("[", ",", "]", convertArraysToStrings(expectedProps).entrySet());
     }
 
     @Override
@@ -95,7 +98,43 @@ public class ResourcePropertiesMatcher extends TypeSafeMatcher<Resource> {
             mismatchDescription.appendText("was Resource which does not expose a value map via adaptTo(ValueMap.class)");
             return;
         }
-        mismatchDescription.appendText("was Resource with properties ").appendValueList("[", ",", "]", actualProperties.entrySet()).appendText(" (resource: ").appendValue(item).appendText(")");
+        mismatchDescription.appendText("was Resource with properties ")
+             .appendValueList("[", ",", "]", convertArraysToStrings(actualProperties).entrySet())
+             .appendText(" (resource: ")
+             .appendValue(item)
+             .appendText(")");
+    }
+    
+    /**
+     * Convert arrays to string representation to get better message if comparison fails.
+     * @param props Properties
+     * @return Properties with array values converted to strings
+     */
+    private Map<String,Object> convertArraysToStrings(Map<String,Object> props) {
+        SortedMap<String,Object> transformedProps = new TreeMap<String,Object>();
+        for (Map.Entry<String, Object> entry : props.entrySet()) {
+            Object value = entry.getValue();
+            if (value != null && value.getClass().isArray()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("[");
+                for (int i=0; i<Array.getLength(value); i++) {
+                    if (i > 0) {
+                        sb.append(",");
+                    }
+                    Object item = Array.get(value, i);
+                    if (item == null) {
+                        sb.append("null");
+                    }
+                    else {
+                        sb.append(item.toString());
+                    }
+                }
+                sb.append("]");
+                value = sb.toString();
+            }
+            transformedProps.put(entry.getKey(), value);
+        }
+        return transformedProps;
     }
 
 }
