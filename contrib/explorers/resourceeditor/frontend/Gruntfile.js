@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
 
-	var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content';
+	var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor/static';
 	var jspFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor';
 	var e2eTestSpecFolder = '../src/test/javascript/e2e/spec/**/*spec.js';
 	var server = 'localhost';

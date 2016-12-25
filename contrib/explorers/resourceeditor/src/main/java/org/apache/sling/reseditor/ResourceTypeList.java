@@ -67,7 +67,8 @@ public class ResourceTypeList extends SlingSafeMethodsServlet {
 	@Override
 	protected void doGet(SlingHttpServletRequest request,
 			SlingHttpServletResponse response) throws ServletException,
-			IOException {
+			IOException { 
+		response.setContentType("application/json");
 		PrintWriter responseWriter = null;
 		Set<String> resourceTypes = new HashSet<String>();
 		try {

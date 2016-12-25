@@ -17,15 +17,15 @@
 				When should it be displayed as active?
 				 --%>
 				<c:set var="isWebPage" value="<%=hasScriptResource ? scriptResourceReqAttr.isResourceType("sling/web-page") : false %>"/>
-			    <c:if test="${isWebPage}">
+			    <c:if test="${isWebPage || true}">
 					<ul id="content-tabs" class="nav nav-pills" role="tablist">
-					    <li role="presentation" class="active"><a href="#page-editor" aria-controls="page-editor" role="tab" data-toggle="pill">Web Page Editor</a></li>
+					    <li role="presentation" class="active"><a href="#page-editor" aria-controls="page-editor" role="tab" data-toggle="pill">Web Page Editor xxx</a></li>
 					    <li role="presentation"><a href="#page-preview" aria-controls="page-preview" role="tab" data-toggle="pill">Page Preview</a></li>
 					    <li role="presentation"><a href="#resource-type-editor" aria-controls="resource-type-editor" role="tab" data-toggle="pill">Resource Type Editor</a></li>
 					    <li role="presentation"><a href="#properties" aria-controls="properties" role="tab" data-toggle="pill">Properties</a></li>
 					</ul>
 			    </c:if>
-			    <c:if test="${!isWebPage}">
+			    <c:if test="${!isWebPage && false}">
 					<ul id="content-tabs" class="nav nav-pills" role="tablist">
 					    <li role="presentation" class="active"><a href="#properties" aria-controls="properties" role="tab" data-toggle="pill">Properties</a></li>
 					    <li role="presentation"><a href="#resource-type-editor" aria-controls="resource-type-editor" role="tab" data-toggle="pill">Resource Type Editor</a></li>

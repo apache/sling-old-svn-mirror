@@ -18,6 +18,7 @@
 --%>
 [
 	<c:forEach var="theResource" items="${sling:listChildren(resource)}" varStatus="status">
+	
 		<c:set var="resourceIsNode" scope="request" value="${sling:adaptTo(resource,'javax.jcr.Node') != null}"/>
 		<%--Hiding the resource provider root. --%>
 		<c:if test="${theResource.path != '/reseditor'}">

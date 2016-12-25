@@ -1,4 +1,4 @@
-var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor-static-content';
+var staticContentFolder = '../src/main/resources/SLING-INF/libs/sling/resource-editor/static';
 module.exports = function(config) {
   config.set({
 	    runnerPort: 9999,

@@ -80,7 +80,7 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		if (dialogSubmitable) {
 			var nodeName = $("#nodeName").select2("val");
 			var nodeType = $("#nodeType").select2("val");
-			var resourceType = $("#resourceType").select2("val");
+			var resourceType = $("#newResourceType").select2("val");
 	
 			
 			var data = {"_charset_": "utf-8"};
@@ -259,16 +259,16 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 		this.lastAddNodeURL = contextPath+resourcePath;
 
 
-		$('#resourceType').select2('data', null);
+		$('#newResourceType').select2('data', null);
 		var contextPath = this.mainController.getContextPath();
 		contextPath = "/" === contextPath ? "" : contextPath;
-		var url = contextPath+"/libs/sling/resource-editor/content-nodes/resource-types.json";
+		var url = contextPath+"/libs/sling/resource-editor/content/content-nodes/resource-types.json";
 		$.getJSON(url, function( origData ) {
 			var data = jQuery.map( origData, function( n, i ) {
 				return ( {id:n, text:n} );
 			});
 			data.unshift({id:"",text:""});
-			var select2 = $("#resourceType").select2({
+			var select2 = $("#newResourceType").select2({
 				placeholder: "Enter or select a resource type",
 				allowClear: true, 
 				dropdownCssClass: "resource_type_dd_container",
@@ -280,10 +280,10 @@ org.apache.sling.reseditor.AddNodeController = (function() {
 				}
 			}).data("select2");
 
-			$("#resourceType").on("select2-open", function(e) {
+			$("#newResourceType").on("select2-open", function(e) {
 				thatAddNodeController.resourceTypeSubmitable=false;
 			});
-			$("#resourceType").on("select2-close", function(e) {
+			$("#newResourceType").on("select2-close", function(e) {
 				thatAddNodeController.resourceTypeSubmitable=true;
 			});
 			

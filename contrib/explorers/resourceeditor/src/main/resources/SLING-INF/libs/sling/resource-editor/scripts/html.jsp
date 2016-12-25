@@ -34,13 +34,13 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font.css' rel='stylesheet' type='text/css'>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/font.css' rel='stylesheet' type='text/css'>
  <!--[if lt IE 9]>
-<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/font_ie.css' rel='stylesheet' type='text/css'>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/font_ie.css' rel='stylesheet' type='text/css'>
   <![endif]--> 
  
  <!--[if IE]>
-<link href='<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/ie.css' rel='stylesheet' type='text/css'>
+<link href='<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/ie.css' rel='stylesheet' type='text/css'>
   <![endif]-->
   
 <!-- 
@@ -50,38 +50,38 @@ original
 
 <script type="text/javascript" src="<%= request.getContextPath() %>/libs/jsnodetypes/js/jsnodetypes.js"></script>
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/jquery.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/bootbox.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/jstree.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/select2.min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/bootstrap-notify.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/jquery.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/bootbox.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/jstree.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/select2.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/bootstrap-notify.min.js"></script>
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/JSTreeAdapter.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/TreeController.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/tree/AddNodeController.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/properties/PropertyController.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/LoginController.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/MainController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/tree/JSTreeAdapter.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/tree/TreeController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/tree/AddNodeController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/properties/PropertyController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/LoginController.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/MainController.js"></script>
 
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/js/scriptpathchooser/scriptfilechooser.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/js/scriptpathchooser/scriptfilechooser.js"></script>
 
 <!-- 
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/jquery.scrollTo-min.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/js/urlEncode.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/jquery.scrollTo-min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/js/urlEncode.js"></script>
  -->
 
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/css/style.min.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/jstree.reseditor.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/css/bootstrap.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/bootbox.reseditor.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/css/animate.min.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/generated/3rd_party/css/select2.css">
-<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/select2.reseditor.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/css/style.min.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/jstree.reseditor.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/css/bootstrap.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/bootbox.reseditor.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/css/animate.min.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/generated/3rd_party/css/select2.css">
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/select2.reseditor.css">
 
 <!--[if IE]>
-	<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor-static-content/css/browser_ie.css"/>
+	<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/libs/sling/resource-editor/static/css/browser_ie.css"/>
 <![endif]-->
 
 <%
@@ -279,8 +279,8 @@ new org.apache.sling.reseditor.PropertyController({}, mainController);
 					    <input name="jcr:primaryType" type="hidden" id="nodeType">
 					  </div>
 					  <div class="form-group resource-type">
-					    <label for="resourceType">Sling Resource Type</label>
-					    <input name="sling:resourceType" type="hidden" id="resourceType">
+					    <label for="newResourceType">Sling Resource Type</label>
+					    <input name="sling:resourceType" type="hidden" id="newResourceType">
 					    <span class="resource-type-not-allowed help-block" style="display:none;">The selected node type does not allow the resulting node to have a Sling resource type property.</span>
 					  </div>
 		      </div>
