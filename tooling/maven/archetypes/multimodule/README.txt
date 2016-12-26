@@ -1,4 +1,4 @@
-Sling Servlet Archetype
+Sling Multim-odule Maven Archetype
 
 Maven archetype for Sling Multi-module Project.
 
