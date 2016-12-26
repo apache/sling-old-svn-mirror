@@ -65,6 +65,7 @@
         <module>parent</module>
         <module>launchpad-standalone</module>
         <module>launchpad-webapp</module>
+        <module>multimodule</module>
         <module>slingstart</module>
         <module>initial-content</module>
         <module>servlet</module>
