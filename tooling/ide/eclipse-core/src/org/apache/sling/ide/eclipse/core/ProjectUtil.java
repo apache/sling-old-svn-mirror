@@ -160,57 +160,6 @@ public abstract class ProjectUtil {
             }
         }
     }
-    
-    /**
-     * Loads a filter for the specified project
-     * 
-     * @param project the project to find a filter for
-     * @return the found filter or null
-     * @throws CoreException
-     */
-    public static Filter loadFilter(final IProject project) throws CoreException {
-
-        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-
-        IPath filterPath = findFilterPath(project);
-        if (filterPath == null) {
-            return null;
-        }
-
-        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
-        Filter filter = null;
-        if (filterFile != null && filterFile.exists()) {
-            try ( InputStream contents = filterFile.getContents() ) {
-                filter = filterLocator.loadFilter(contents);
-            } catch (IOException e) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                        "Failed loading filter file for project " + project.getName()
-                                + " from location " + filterFile, e));
-            }
-        }
-        return filter;
-    }
-
-    /**
-     * Finds the path to a filter defined for the project
-     * 
-     * @param project the project
-     * @return the path to the filter defined in the project, or null if no filter is found
-     */
-    public static IPath findFilterPath(final IProject project) {
-
-        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-
-        IFolder syncFolder = ProjectUtil.getSyncDirectory(project);
-        if (syncFolder == null) {
-            return null;
-        }
-        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
-        if (filterLocation == null) {
-            return null;
-        }
-        return Path.fromOSString(filterLocation.getAbsolutePath());
-    }
 
     /**
      * Verifies if a resource is inside the content sync root for its defined project

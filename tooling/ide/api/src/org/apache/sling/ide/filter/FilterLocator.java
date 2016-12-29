@@ -16,25 +16,19 @@
  */
 package org.apache.sling.ide.filter;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.annotation.NonNull;
 
 public interface FilterLocator {
 
-    // TODO - should be File[] to allow multiple lookups, see {filter-vlt.xml, filter.xml}
-    File findFilterLocation(File syncDirectory);
-
     /**
-     * Loads a filter based on the raw <tt>filterFileContents</tt>
+     * Loads a filter for the given project (which determines which parts of the repository should be overwritten)
      * 
-     * <p>
-     * If the <tt>filterFileContents</tt> is null it returns a default filter
-     * </p>
-     * 
-     * @param filterFileContents the raw contents of the filter file, possibly null
-     * @return
-     * @throws IOException
+     * @param IProject the Eclipse project from which to retrieve the filter
+     * @return the filter
+     * @throws IOException, IllegalStateException in case the filter could not be retrieved from the project
      */
-    Filter loadFilter(InputStream filterFileContents) throws IOException;
+    @NonNull Filter loadFilter(@NonNull IProject project) throws IOException, IllegalStateException;
 }

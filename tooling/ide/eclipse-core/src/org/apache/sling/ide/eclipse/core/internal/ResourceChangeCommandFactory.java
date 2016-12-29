@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
@@ -93,7 +94,7 @@ public class ResourceChangeCommandFactory {
             return null;
         }
         
-        CommandContext context = new CommandContext(ProjectUtil.loadFilter(resource.getProject()));
+        CommandContext context = new CommandContext(Activator.getDefault().getFilterLocator().loadFilter(resource.getProject()));
 
         if (rai.isOnlyWhenMissing()) {
             return repository.newAddOrUpdateNodeCommand(context, rai.getInfo(), rai.getResource(),
@@ -139,7 +140,8 @@ public class ResourceChangeCommandFactory {
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(resource.getProject()).toFile();
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
 
-        Filter filter = ProjectUtil.loadFilter(resource.getProject());
+        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+        Filter filter = filterLocator.loadFilter(resource.getProject());
 
         ResourceProxy resourceProxy = null;
 
@@ -240,7 +242,7 @@ public class ResourceChangeCommandFactory {
      * The resourceProxy may be null, typically when a resource is already deleted.
      * 
      * <p>
-     * The filter may be null, in which case all combinations are included in the filed, i.e. allowed.
+     * In case the filter is {@code null} no resource should be added, i.e. {@link FilterResult#DENY} is returned
      * 
      * @param resource the resource to filter for, must not be <code>null</code>
      * @param resourceProxy the resource proxy to filter for, possibly <code>null</code>
@@ -250,7 +252,7 @@ public class ResourceChangeCommandFactory {
     private FilterResult getFilterResult(IResource resource, ResourceProxy resourceProxy, Filter filter) {
 
         if (filter == null) {
-            return FilterResult.ALLOW;
+            return FilterResult.DENY;
         }
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
@@ -524,9 +526,8 @@ public class ResourceChangeCommandFactory {
             return null;
         }
 
+        Filter filter = Activator.getDefault().getFilterLocator().loadFilter(resource.getProject());
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
-
-        Filter filter = ProjectUtil.loadFilter(syncDirectory.getProject());
 
         FilterResult filterResult = getFilterResult(resource, null, filter);
         if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {

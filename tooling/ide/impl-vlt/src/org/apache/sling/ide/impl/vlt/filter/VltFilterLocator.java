@@ -17,13 +17,16 @@
 package org.apache.sling.ide.impl.vlt.filter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
+import org.eclipse.core.resources.IProject;
 
 public class VltFilterLocator implements FilterLocator {
 
@@ -38,19 +41,17 @@ public class VltFilterLocator implements FilterLocator {
     }
 
     @Override
-    public File findFilterLocation(File syncDirectory) {
-
-        return fsLocator.findFilterFile(syncDirectory);
-    }
-
-    @Override
-    public Filter loadFilter(InputStream filterFileContents) throws IOException {
-
-        try {
-            return new VltFilter(filterFileContents);
+    public Filter loadFilter(IProject project) throws IOException, IllegalStateException {
+        File syncDirectory = ProjectUtil.getSyncDirectoryFile(project);
+        if (syncDirectory == null) {
+            throw new IllegalStateException("Could not determine sync directory for project " + project);
+        }
+        // TODO: also consider filter rules being configured through the maven-content-package-plugin
+        File filterFile = fsLocator.findFilterFile(syncDirectory);
+        try (InputStream contents = new FileInputStream(filterFile)) {
+            return new VltFilter(contents);
         } catch (ConfigurationException e) {
-            // TODO proper error handling
-            throw new IOException(e);
+            throw new IllegalStateException("Invalid filter file at " + filterFile, e);
         }
     }
 

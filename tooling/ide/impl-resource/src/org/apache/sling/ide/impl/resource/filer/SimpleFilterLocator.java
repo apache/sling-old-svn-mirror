@@ -18,14 +18,17 @@ package org.apache.sling.ide.impl.resource.filer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
+import org.eclipse.core.resources.IProject;
 
 /**
  * The <tt>SimpleFilterLocator</tt> looks for a file named {@value #FILTERS_FILE_NAME} in the parent folder of the
@@ -42,15 +45,7 @@ public class SimpleFilterLocator implements FilterLocator {
 
     private static final String FILTERS_FILE_NAME = "filters.txt";
 
-    @Override
-    public File findFilterLocation(File syncDirectory) {
-        String parent = syncDirectory.getParent();
-
-        return new File(parent, FILTERS_FILE_NAME);
-    }
-
-    @Override
-    public Filter loadFilter(InputStream filterFileContents) throws IOException {
+    private Filter loadFilter(InputStream filterFileContents) throws IOException {
 
         List<String> filters = new ArrayList<>();
         if (filterFileContents != null) {
@@ -64,5 +59,21 @@ public class SimpleFilterLocator implements FilterLocator {
         }
 
         return new SimpleFilter(filters);
+    }
+
+    @Override
+    public Filter loadFilter(IProject project) throws IOException, IllegalStateException {
+        File syncDirectory = ProjectUtil.getSyncDirectoryFile(project);
+        if (syncDirectory == null) {
+            throw new IllegalStateException("Could not determine sync directory for project " + project);
+        }
+        File syncDirectoryParent = syncDirectory.getParentFile();
+        if (syncDirectoryParent == null) {
+            throw new IllegalStateException("Sync directory at " + syncDirectory + " does not have a parent!");
+        }
+        File filterFile = new File(syncDirectory.getParentFile(), FILTERS_FILE_NAME);
+        try (InputStream inputStream = new FileInputStream(filterFile)) {
+            return loadFilter(inputStream);
+        }
     }
 }

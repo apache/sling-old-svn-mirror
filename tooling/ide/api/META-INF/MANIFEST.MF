@@ -18,6 +18,8 @@ Import-Package: javax.jcr.nodetype,
  org.apache.commons.httpclient.methods.multipart;version="3.1.0",
  org.apache.commons.httpclient.params;version="3.1.0",
  org.apache.commons.io;version="2.0.1",
+ org.eclipse.core.resources,
+ org.eclipse.jdt.annotation,
  org.json,
  org.osgi.framework;version="1.6.0",
  org.osgi.service.event
