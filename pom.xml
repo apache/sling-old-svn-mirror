@@ -158,7 +158,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.provisioning.model</artifactId>
-            <version>1.4.2</version>
+            <version>1.8.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
