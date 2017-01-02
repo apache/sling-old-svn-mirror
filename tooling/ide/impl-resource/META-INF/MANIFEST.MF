@@ -13,6 +13,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Service-Component: OSGI-INF/RepositoryFactoryImpl.xml,
  OSGI-INF/SimpleXmlSerializationManager.xml,
  OSGI-INF/SimpleFilterLocator.xml
-Import-Package: org.apache.sling.ide.eclipse.core,
- org.eclipse.core.resources,
- org.json
+Import-Package: org.json
