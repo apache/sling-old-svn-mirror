@@ -18,14 +18,13 @@
 
 package org.apache.sling.resourceresolver.impl.params;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
  * Parses path looking for semicolon-separated parameters. Parameters are extracted and exposed as an
  * immutable map. The path without parameters is available as raw path.
  * 
- * Parameters should be added immedietaly before or after selectors and extension:
+ * Parameters should be added immediately before or after selectors and extension:
  * {@code /content/test;v='1.0'.html} or {@code /content/test.html;v=1.0}. Quotes can be used to escape the
  * parameter value (it is necessary if the value contains dot and parameter is added before extension).
  */
@@ -47,7 +46,7 @@ public class ParsedParameters {
         parser.parse(fullPath);
 
         parametersString = parser.getParametersString();
-        parameters = Collections.unmodifiableMap(parser.getParameters());
+        parameters = parser.getParameters();
         path = parser.getPath();
     }
 
