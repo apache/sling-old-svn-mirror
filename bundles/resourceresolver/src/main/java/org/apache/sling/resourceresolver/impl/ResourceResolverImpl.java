@@ -683,7 +683,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( path != null ) {
             // if the path is absolute, normalize . and .. segments and get res
             if (path.startsWith("/")) {
-                ParsedParameters parsedPath = new ParsedParameters(path);
+                final ParsedParameters parsedPath = new ParsedParameters(path);
                 path = ResourceUtil.normalize(parsedPath.getRawPath());
                 result = (path != null) ? getAbsoluteResourceInternal(parent, path, parsedPath.getParameters(), false) : null;
                 if (result != null) {
