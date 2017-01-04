@@ -82,6 +82,16 @@
 				  </signature>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!--  text test resources -->
+                        <exclude>src/test/resources/*.txt</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
