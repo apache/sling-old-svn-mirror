@@ -175,4 +175,18 @@ public class ProcessorConfigurationImplTest {
         assertMatch(ImmutableMap.<String,Object>of(PROPERTY_SELECTORS, new String[] {"sel1"}));
     }
 
+    @Test
+    public void testNoMatchRequestAttribute() {
+        context.request().setAttribute(ProcessorConfigurationImpl.ATTR_PIPELINE, "config2");
+        context.requestPathInfo().setResourcePath("/content/test");
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_PATHS, new String[] {"/apps","/content"}));
+    }
+
+    @Test
+    public void testNoMatchRequestAttributeIfConditionsDoNotMatch() {
+        context.request().setAttribute(ProcessorConfigurationImpl.ATTR_PIPELINE, "config");
+        context.requestPathInfo().setResourcePath("/content/test");
+        assertNoMatch(ImmutableMap.<String,Object>of(PROPERTY_PATHS, new String[] {"/apps"}));
+    }
+
 }
