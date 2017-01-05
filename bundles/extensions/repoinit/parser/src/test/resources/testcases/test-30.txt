@@ -6,7 +6,20 @@ set ACL for user1,u2
 
     deny jcr:write on /apps
     
-    # Optional nodetypes clause 
-    deny jcr:lockManagement on /apps, /content nodetypes sling:Folder, nt:unstructured   
+    # Optional nodetypes clause
+    deny jcr:lockManagement on /apps, /content nodetypes sling:Folder, nt:unstructured
+    # nodetypes clause with restriction clause
+    deny jcr:modifyProperties on /apps, /content nodetypes sling:Folder, nt:unstructured restriction(rep:itemNames,prop1,prop2)
     remove jcr:understand,some:other on /apps
+
+    # multi value restriction
+    allow jcr:addChildNodes on /apps restriction(rep:ntNames,sling:Folder,nt:unstructured)
+
+    # multiple restrictions
+    allow jcr:modifyProperties on /apps restriction(rep:ntNames,sling:Folder,nt:unstructured) restriction(rep:itemNames,prop1,prop2)
+
+    # restrictions with glob patterns
+    allow jcr:addChildNodes on /apps,/content restriction(rep:glob,/cat,/cat/,cat)
+    allow jcr:addChildNodes on /apps,/content restriction(rep:glob,cat/,*,*cat)
+    allow jcr:addChildNodes on /apps,/content restriction(rep:glob,/cat/*,*/cat,*cat/*)
 end

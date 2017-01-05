@@ -3,4 +3,10 @@ SetAclPrincipals for user1 u2
   AclLine ALLOW {paths=[/content], privileges=[jcr:read]}
   AclLine DENY {paths=[/apps], privileges=[jcr:write]}
   AclLine DENY {nodetypes=[sling:Folder, nt:unstructured], paths=[/apps, /content], privileges=[jcr:lockManagement]}
+  AclLine DENY {nodetypes=[sling:Folder, nt:unstructured], paths=[/apps, /content], privileges=[jcr:modifyProperties]} restrictions=[rep:itemNames=[prop1, prop2]]
   AclLine REMOVE {paths=[/apps], privileges=[jcr:understand, some:other]}
+  AclLine ALLOW {paths=[/apps], privileges=[jcr:addChildNodes]} restrictions=[rep:ntNames=[sling:Folder, nt:unstructured]]
+  AclLine ALLOW {paths=[/apps], privileges=[jcr:modifyProperties]} restrictions=[rep:ntNames=[sling:Folder, nt:unstructured], rep:itemNames=[prop1, prop2]]
+  AclLine ALLOW {paths=[/apps, /content], privileges=[jcr:addChildNodes]} restrictions=[rep:glob=[/cat, /cat/, cat]]
+  AclLine ALLOW {paths=[/apps, /content], privileges=[jcr:addChildNodes]} restrictions=[rep:glob=[cat/, *, *cat]]
+  AclLine ALLOW {paths=[/apps, /content], privileges=[jcr:addChildNodes]} restrictions=[rep:glob=[/cat/*, */cat, *cat/*]]
