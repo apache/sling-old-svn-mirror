@@ -32,11 +32,18 @@ import java.io.IOException;
  * @see org.slf4j.MDC http://www.slf4j.org/manual.html
  */
 public class TestDescriptionInterceptor implements HttpRequestInterceptor{
-    public static final String TEST_NAME_HEADER = "sling.test.name";
-    public static final String TEST_CLASS_HEADER = "sling.test.class";
+    //Same headers are defined in TestLogServlet
+    public static final String TEST_CLASS_HEADER = "X-Sling-TestClass";
+    public static final String TEST_NAME_HEADER = "X-Sling-TestName";
 
     public void process(HttpRequest httpRequest, HttpContext httpContext) throws HttpException, IOException {
-            httpRequest.addHeader(TEST_NAME_HEADER, TestDescriptionHolder.getMethodName());
-            httpRequest.addHeader(TEST_CLASS_HEADER, TestDescriptionHolder.getClassName());
+        addHeader(httpRequest, TEST_NAME_HEADER, TestDescriptionHolder.getMethodName());
+        addHeader(httpRequest, TEST_CLASS_HEADER, TestDescriptionHolder.getClassName());
+    }
+
+    private static void addHeader(HttpRequest httpRequest, String name, String value){
+        if (value != null){
+            httpRequest.addHeader(name, value);
+        }
     }
 }
