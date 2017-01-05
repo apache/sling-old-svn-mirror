@@ -46,6 +46,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -65,8 +66,9 @@ public class TestLogServlet extends HttpServlet {
 
     //These name should be kept in sync with
     // org.apache.sling.testing.tools.junit.RemoteLogDumper
-    public static final String TEST_NAME = "X-Sling-Test-Name";
-    public static final String TEST_CLASS = "X-Sling-Test-Class";
+    // org.apache.sling.testing.clients.interceptors.TestDescriptionInterceptor
+    public static final String TEST_NAME = "X-Sling-TestName";
+    public static final String TEST_CLASS = "X-Sling-TestClass";
 
     @Property(value="/system/sling/testlog")
     static final String SERVLET_PATH_NAME = "servlet.path";
@@ -122,7 +124,7 @@ public class TestLogServlet extends HttpServlet {
         if (description != null && !description.equals(currentTest)){
             currentTest = description;
             resetAppender();
-            log.info("Starting test execution {}", description);
+            log.info("Starting test execution ======[{}]======", description);
         }
     }
 
@@ -226,7 +228,9 @@ public class TestLogServlet extends HttpServlet {
         props.put(Constants.SERVICE_DESCRIPTION, "Filter to extract testName from request headers");
         props.put(Constants.SERVICE_VENDOR, ctx.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
 
-        props.put("pattern", "/.*");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
         filter = ctx.registerService(Filter.class.getName(), new TestNameLoggingFilter(), props);
     }
 
@@ -279,7 +283,6 @@ public class TestLogServlet extends HttpServlet {
     /**
      * Return the path at which to mount this servlet, or null
      * if it must not be mounted.
-     * @param ctx
      */
     private static String getServletPath(Map<String, ?> config) {
         String result = (String)config.get(SERVLET_PATH_NAME);
