@@ -20,9 +20,6 @@ package org.apache.sling.resourceresolver.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-
 /**
  * Some helper methods for doing comparisons on resource types.
  * This class is private the resource resolver bundle.

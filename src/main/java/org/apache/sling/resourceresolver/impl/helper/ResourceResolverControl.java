@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.path.PathBuilder;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
-import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;

@@ -246,7 +246,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
      */
-    @SuppressWarnings("deprecation")
     @Override
     public Resource resolve(final HttpServletRequest request) {
         checkClosed();

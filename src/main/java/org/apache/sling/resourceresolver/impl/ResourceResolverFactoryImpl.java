@@ -105,7 +105,6 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public ResourceResolver getAdministrativeResourceResolver(
             Map<String, Object> authenticationInfo) throws LoginException {
         // usingBundle is required as bundles must now be whitelisted to use this method
