@@ -17,6 +17,7 @@
 package org.apache.sling.testing.junit.rules;
 
 import org.apache.sling.testing.junit.rules.category.FailingTest;
+import org.apache.sling.testing.junit.rules.instance.Instance;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -25,9 +26,12 @@ import org.junit.runners.model.Statement;
 /**
  * Sling Rule that wraps all the Rules (at method level) useful when running a Sling Integration Test.
  * Can be used in any junit test using the @Rule annotation
- * I chains: {@link TestTimeout}, {@link TestDescriptionRule}, {@link TestStickyCookieRule}, {@link FilterRule}
+ * It chains: {@link TestTimeout}, {@link TestDescriptionRule}, {@link TestStickyCookieRule}, {@link FilterRule}
  */
 public class SlingRule implements TestRule {
+
+    private Instance[] instances;
+
     /** Rule to define the max timeout for all the tests */
     public final TestTimeout testTimeoutRule = new TestTimeout();
 
@@ -41,10 +45,18 @@ public class SlingRule implements TestRule {
     public final TestDescriptionRule testDescriptionRule = new TestDescriptionRule();
 
     /** Main RuleChain describing the order of execution of all the rules */
-    protected TestRule ruleChain = RuleChain.outerRule(testTimeoutRule)
-            .around(testStickySessionRule)
-            .around(filterRule)
-            .around(testDescriptionRule);
+    protected RuleChain ruleChain = RuleChain.outerRule(testTimeoutRule);
+
+    public SlingRule(Instance... instances) {
+        this.instances = instances;
+        this.ruleChain = ruleChain.around(testStickySessionRule)
+                .around(filterRule)
+                .around(testDescriptionRule);
+        // Configure all rules that need an instance (where you can get a client from)
+        for (Instance instance : instances) {
+            this.ruleChain = ruleChain.around(new RemoteLogDumperRule(instance));
+        }
+    }
 
     @Override
     public Statement apply(Statement base, Description description) {
