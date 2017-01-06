@@ -481,7 +481,7 @@ public class MapEntries implements
             final String containingResourceName = containingResource.getName();
             final String parentPath = ResourceUtil.getParent(containingResource.getPath());
 
-            final Map<String, String> aliasMapEntry = aliasMap.get(parentPath);
+            final Map<String, String> aliasMapEntry = parentPath == null ? null : aliasMap.get(parentPath);
             if (aliasMapEntry != null) {
                 for (Iterator<Map.Entry<String, String>> iterator = aliasMapEntry.entrySet().iterator(); iterator.hasNext(); ) {
                     final Map.Entry<String, String> entry = iterator.next();
