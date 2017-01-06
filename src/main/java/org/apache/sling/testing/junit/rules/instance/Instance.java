@@ -18,6 +18,7 @@ package org.apache.sling.testing.junit.rules.instance;
 
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.instance.InstanceConfiguration;
+import org.apache.sling.testing.clients.instance.InstanceSetup;
 import org.junit.rules.TestRule;
 
 public interface Instance extends TestRule {
@@ -28,8 +29,35 @@ public interface Instance extends TestRule {
 
     InstanceConfiguration getConfiguration();
 
+    /**
+     * Return <strong>a new client</strong> pointing to the instance corresponding to this {{AbstractInstance}}
+     *
+     * @param clientClass the class of the returned client
+     * @param user the username used in the client
+     * @param pass the password used in the client
+     * @param <T> the type of the returned client
+     * @return a new client extending {{SlingClient}}
+     */
     <T extends SlingClient> T getClient(Class<T> clientClass, String user, String pass);
 
+    /**
+     * Return <strong>a new client</strong> pointing to the instance corresponding to this {{AbstractInstance}},
+     * with the admin user and password.
+     * See {@link InstanceSetup#INSTANCE_CONFIG_ADMINUSER} and {@link InstanceSetup#INSTANCE_CONFIG_ADMINPASSWORD}
+     *
+     * @return a new {{SlingClient}}
+     */
+    SlingClient getAdminClient();
+
+    /**
+     * Return <strong>a new client</strong> pointing to the instance corresponding to this {{AbstractInstance}},
+     * with the admin user and password.
+     * See {@link InstanceSetup#INSTANCE_CONFIG_ADMINUSER} and {@link InstanceSetup#INSTANCE_CONFIG_ADMINPASSWORD}
+     *
+     * @param clientClass the class of the returned client
+     * @param <T> the class of the returned client
+     * @return a new client extending on {{SlingClient}}
+     */
     <T extends SlingClient> T getAdminClient(Class<T> clientClass);
 
 }

@@ -26,6 +26,7 @@ import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingHttpResponse;
 import org.apache.sling.testing.clients.interceptors.TestDescriptionHolder;
 import org.apache.sling.testing.clients.util.URLParameterBuilder;
+import org.apache.sling.testing.junit.rules.instance.Instance;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -38,12 +39,14 @@ import static org.apache.sling.testing.clients.interceptors.TestDescriptionInter
  * remote server and dumps them locally upon test failure. This simplifies determining failure
  * cause by providing all required data locally. This would be specially useful when running test
  * in CI server where server logs gets cluttered with all other test executions
+ * Can be constructed either with a {@link SlingClient} or with a {@link Instance}
  *
  * <pre>
  *     public class LoginTestIT {
  *
  *     &#064;Rule
  *     public TestRule logDumper = new RemoteLogDumperRule(slingClient);
+ *     // OR public TestRule logDumper = new RemoteLogDumperRule(myInstance);
  *
  *     &#064;Test
  *     public void remoteLogin() {
@@ -60,23 +63,33 @@ public class RemoteLogDumperRule extends TestWatcher {
      */
     static final String SERVLET_PATH = "/system/sling/testlog";
 
-    private SlingClient slingClient;
+    private SlingClient slingClient = null;
+    private Instance instance = null;
 
-    public RemoteLogDumperRule(){
+    public RemoteLogDumperRule() {
+    }
 
+    public RemoteLogDumperRule (Instance instance) {
+        this.instance = instance;
     }
 
     public RemoteLogDumperRule(SlingClient slingClient) {
         this.slingClient = slingClient;
     }
 
+    public RemoteLogDumperRule setSlingClient(SlingClient slingClient) {
+        this.slingClient = slingClient;
+        return this;
+    }
+
+    public RemoteLogDumperRule setInstance(Instance instance) {
+        this.instance = instance;
+        return this;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return super.apply(base, description);
-    }
-
-    public void setSlingClient(SlingClient slingClient) {
-        this.slingClient = slingClient;
     }
 
     @Override
@@ -87,6 +100,10 @@ public class RemoteLogDumperRule extends TestWatcher {
 
     @Override
     protected void starting(Description description) {
+        // Get the client from an Instance if it was passed in this way
+        if (null == this.slingClient && null != instance) {
+            this.slingClient = instance.getAdminClient();
+        }
         TestDescriptionHolder.setClassName(description.getClassName());
         TestDescriptionHolder.setMethodName(description.getMethodName());
     }
