@@ -73,7 +73,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
-    	final Version currentVersion = new Version(b.getHeaders().get(Constants.BUNDLE_VERSION));
+    	final Version currentVersion = b.getVersion();
     	snapshot = BundleInfo.isSnapshot(newVersion);
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
