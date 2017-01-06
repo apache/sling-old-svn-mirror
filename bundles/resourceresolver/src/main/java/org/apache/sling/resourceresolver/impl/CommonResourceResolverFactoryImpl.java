@@ -118,7 +118,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
     @Nonnull
-    @SuppressWarnings("deprecation")
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
