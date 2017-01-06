@@ -26,10 +26,16 @@ import org.apache.sling.scripting.sightly.compiler.CompilerMessage;
 import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
 import org.apache.sling.scripting.sightly.impl.TestUtils;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(SightlyCompiler.class)
 public class SightlyCompilerTest {
 
     private SightlyCompiler compiler = new SightlyCompiler();
@@ -42,15 +48,44 @@ public class SightlyCompilerTest {
 
     @Test
     public void testMissingExplicitContext() {
-        String script = "/missing-explicit-context.html";
+        for (String s : new String[] {"", "-win", "-mac"}) {
+            String script = "/missing-explicit-context" + s + ".html";
+            testMissingExplicitContext(script);
+        }
+    }
+
+    private void testMissingExplicitContext(String script) {
         CompilationResult result = compile(script);
         List<CompilerMessage> warnings = result.getWarnings();
-        assertTrue("Expected compilation warnings.", warnings.size() == 1);
+        assertTrue(script + ": Expected compilation warnings.", warnings.size() == 1);
         CompilerMessage warningMessage = warnings.get(0);
-        assertEquals("Expected warning on a different line.", 18, warningMessage.getLine());
+        assertEquals(script + ": Expected warning on a different line.", 18, warningMessage.getLine());
+        assertEquals(script + ": Expected warning on a different column.", 14, warningMessage.getColumn());
         assertTrue(script.equals(warningMessage.getScriptName()));
         assertEquals("${some.value}: Element script requires that all expressions have an explicit context specified. The expression will" +
                 " be replaced with an empty string.", warningMessage.getMessage());
+    }
+
+    @Test
+    public void testMissingExplicitContextOnWindows() {
+        PowerMockito.mockStatic(System.class);
+        PowerMockito.when(System.lineSeparator()).thenReturn("\r\n");
+
+        for (String s : new String[] {"", "-win", "-mac"}) {
+            String script = "/missing-explicit-context" + s + ".html";
+            testMissingExplicitContext(script);
+        }
+    }
+
+    @Test
+    public void testMissingExplicitContextOnMac() {
+        PowerMockito.mockStatic(System.class);
+        PowerMockito.when(System.lineSeparator()).thenReturn("\r");
+
+        for (String s : new String[] {"", "-win", "-mac"}) {
+            String script = "/missing-explicit-context" + s + ".html";
+            testMissingExplicitContext(script);
+        }
     }
 
     @Test
