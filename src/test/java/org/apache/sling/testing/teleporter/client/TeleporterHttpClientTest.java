@@ -29,7 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import org.apache.sling.testing.tools.sling.TimeoutsProvider;
+import org.apache.sling.testing.clients.util.TimeoutsProvider;
 import org.junit.Rule;
 import org.junit.Test;
 
