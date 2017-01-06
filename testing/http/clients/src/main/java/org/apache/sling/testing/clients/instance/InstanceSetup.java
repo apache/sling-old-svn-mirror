@@ -29,9 +29,15 @@ import java.util.List;
  * Utility class for getting the current instance setup
  */
 public final class InstanceSetup {
-
     private static final Logger LOG = LoggerFactory.getLogger(InstanceSetup.class);
     private static InstanceSetup SINGLETON;
+
+    // TODO: JAVADOC
+    public static final String INSTANCE_CONFIG_INSTANCES = Constants.CONFIG_PROP_PREFIX + "instances";
+    public static final String INSTANCE_CONFIG_URL = Constants.CONFIG_PROP_PREFIX + "instance.url.";
+    public static final String INSTANCE_CONFIG_RUNMODE = Constants.CONFIG_PROP_PREFIX + "instance.runmode.";
+    public static final String INSTANCE_CONFIG_ADMINUSER = Constants.CONFIG_PROP_PREFIX + "instance.adminUser.";
+    public static final String INSTANCE_CONFIG_ADMINPASSWORD = Constants.CONFIG_PROP_PREFIX + "instance.adminPassword.";
 
     /**
      * @return  the current setup object.
@@ -46,18 +52,26 @@ public final class InstanceSetup {
     private final List<InstanceConfiguration> configs = new ArrayList<InstanceConfiguration>();
 
     private InstanceSetup() {
-        final int number = Integer.valueOf(System.getProperty(Constants.CONFIG_PROP_PREFIX + "instances", "0"));
+        final int number = Integer.valueOf(System.getProperty(INSTANCE_CONFIG_INSTANCES, "0"));
         for (int i=1; i<=number; i++ ) {
             URI url;
             try {
-                url = new URI(System.getProperty(Constants.CONFIG_PROP_PREFIX + "instance.url." + String.valueOf(i)));
+                url = new URI(System.getProperty(INSTANCE_CONFIG_URL + String.valueOf(i)));
             } catch (URISyntaxException e) {
                 LOG.error("Could not read URL for instance");
                 continue;
             }
-            final String runmode = System.getProperty(Constants.CONFIG_PROP_PREFIX + "instance.runmode." + String.valueOf(i));
+            final String runmode = System.getProperty(INSTANCE_CONFIG_RUNMODE + String.valueOf(i));
+            final String adminUser = System.getProperty(INSTANCE_CONFIG_ADMINUSER + String.valueOf(i));
+            final String adminPassword = System.getProperty(INSTANCE_CONFIG_ADMINPASSWORD + String.valueOf(i));
 
-            final InstanceConfiguration qc = new InstanceConfiguration(url, runmode);
+            final InstanceConfiguration qc;
+            // Only pass in the admin user name and password if they're both set
+            if ((null == adminUser) || (null == adminPassword)) {
+                qc = new InstanceConfiguration(url, runmode);
+            } else {
+                qc = new InstanceConfiguration(url, runmode, adminUser, adminPassword);
+            }
 
             this.configs.add(qc);
         }
