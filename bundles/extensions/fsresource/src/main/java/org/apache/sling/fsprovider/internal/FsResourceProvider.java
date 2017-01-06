@@ -20,8 +20,10 @@ package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -120,12 +122,23 @@ public class FsResourceProvider extends ResourceProvider<Object> {
      * to access the file or folder. If no such file or folder exists, this
      * method returns <code>null</code>.
      */
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
     public Resource getResource(final ResolveContext<Object> ctx,
             final String path,
             final ResourceContext resourceContext,
             final Resource parent) {
-        return getResource(ctx.getResourceResolver(), path, getFile(path));
+        Resource rsrc = getResource(ctx.getResourceResolver(), path, getFile(path));
+        if ( rsrc == null ) {
+        	// get resource from shadowed provider
+        	final ResourceProvider rp = ctx.getParentResourceProvider();
+        	if ( rp != null ) {
+	            rsrc = rp.getResource((ResolveContext)ctx.getParentResolveContext(), 
+	            		path, 
+	            		resourceContext, parent);
+        	}        	
+        }
+        return rsrc;
     }
 
     /**
@@ -165,55 +178,70 @@ public class FsResourceProvider extends ResourceProvider<Object> {
             }
         }
 
+    	// get children from from shadowed provider
+    	final ResourceProvider rp = ctx.getParentResourceProvider();
+    	final Iterator<Resource> parentChildrenIterator;
+    	if ( rp != null ) {
+    		parentChildrenIterator = rp.listChildren(ctx.getParentResolveContext(), parent);
+    	} else {
+    		parentChildrenIterator = null;
+    	}
         final File[] children = parentFile.listFiles();
 
-        if (children != null && children.length > 0) {
-            final ResourceResolver resolver = parent.getResourceResolver();
-            final String parentPath = parent.getPath();
-            return new Iterator<Resource>() {
-                int index = 0;
+        final ResourceResolver resolver = ctx.getResourceResolver();
+        final String parentPath = parent.getPath();
+        return new Iterator<Resource>() {
 
-                Resource next = seek();
+            final Set<String> names = new HashSet<>();
 
-                @Override
-                public boolean hasNext() {
-                    return next != null;
+            int index = 0;
+
+            Resource next = seek();
+
+            @Override
+            public boolean hasNext() {
+                return next != null;
+            }
+
+            @Override
+            public Resource next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
                 }
 
-                @Override
-                public Resource next() {
-                    if (!hasNext()) {
-                        throw new NoSuchElementException();
+                Resource result = next;
+                next = seek();
+                return result;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+
+            private Resource seek() {
+                while (children != null && index < children.length) {
+                    File file = children[index++];
+                    String path = parentPath + "/" + file.getName();
+                    Resource result = getResource(resolver, path, file);
+                    if (result != null) {
+                    	names.add(file.getName());
+                        return result;
                     }
-
-                    Resource result = next;
-                    next = seek();
-                    return result;
                 }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException("remove");
+                if ( parentChildrenIterator != null ) {
+                	while ( parentChildrenIterator.hasNext() ) {
+                		final Resource result = parentChildrenIterator.next();
+                		if ( !names.contains(result.getName()) ) {
+                			names.add(result.getName());
+                			return result;
+                		}
+                	}
                 }
-
-                private Resource seek() {
-                    while (index < children.length) {
-                        File file = children[index++];
-                        String path = parentPath + "/" + file.getName();
-                        Resource result = getResource(resolver, path, file);
-                        if (result != null) {
-                            return result;
-                        }
-                    }
-
-                    // nothing found any more
-                    return null;
-                }
-            };
-        }
-
-        // no children
-        return null;
+                // nothing found any more
+                return null;
+            }
+        };
     }
 
     // ---------- SCR Integration
@@ -307,15 +335,16 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         return null;
     }
 
-    private Resource getResource(ResourceResolver resourceResolver,
-            String resourcePath, File file) {
+    private Resource getResource(final ResourceResolver resolver,
+            final String resourcePath, 
+            final File file) {
 
         if (file != null) {
 
             // if the file exists, but is not a directory or no repository entry
             // exists, return it as a resource
             if (file.exists()) {
-                return new FsResource(resourceResolver, resourcePath, file);
+                return new FsResource(resolver, resourcePath, file);
             }
 
         }
