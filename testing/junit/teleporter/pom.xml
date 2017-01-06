@@ -82,7 +82,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.junit.core</artifactId>
-      <version>1.0.23-SNAPSHOT</version>
+      <version>1.0.23</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -119,7 +119,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.clients</artifactId>
-      <version>1.0.1-SNAPSHOT</version>
+      <version>1.0.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
