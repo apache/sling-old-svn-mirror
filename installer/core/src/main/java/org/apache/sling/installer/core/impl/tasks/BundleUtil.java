@@ -64,13 +64,13 @@ public abstract class BundleUtil {
      * Gets the bundle's Fragment-Host header.
      */
     public static String getFragmentHostHeader(final Bundle b) {
-        return (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
+        return (String) b.getHeaders("").get( Constants.FRAGMENT_HOST );
     }
 
     /**
      * Check if the bundle has the lazy activation policy
      */
     public static boolean isLazyActivatian(final Bundle b) {
-        return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
+        return Constants.ACTIVATION_LAZY.equals(b.getHeaders("").get(Constants.BUNDLE_ACTIVATIONPOLICY));
     }
 }
