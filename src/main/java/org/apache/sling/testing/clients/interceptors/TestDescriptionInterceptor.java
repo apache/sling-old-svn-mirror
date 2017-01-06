@@ -42,7 +42,7 @@ public class TestDescriptionInterceptor implements HttpRequestInterceptor{
     }
 
     private static void addHeader(HttpRequest httpRequest, String name, String value){
-        if (value != null){
+        if (value != null) {
             httpRequest.addHeader(name, value);
         }
     }

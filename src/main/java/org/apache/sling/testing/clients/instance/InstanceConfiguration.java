@@ -23,12 +23,23 @@ import java.net.URI;
  */
 public class InstanceConfiguration {
 
+    public static final String DEFAULT_ADMIN_USER = "admin";
+    public static final String DEFAULT_ADMIN_PASSWORD = "admin";
+
     private URI url;
     private final String runmode;
+    private String adminUser;
+    private String adminPassword;
 
-    public InstanceConfiguration(final URI url, final String runmode) {
+    public InstanceConfiguration(final URI url, final String runmode, String adminUser, String adminPassword) {
         this.url = url;
         this.runmode = runmode;
+        this.adminUser = adminUser;
+        this.adminPassword = adminPassword;
+    }
+
+    public InstanceConfiguration(URI url, String runmode) {
+        this(url, runmode, DEFAULT_ADMIN_USER, DEFAULT_ADMIN_PASSWORD);
     }
 
     public URI getUrl() {
@@ -37,5 +48,13 @@ public class InstanceConfiguration {
 
     public String getRunmode() {
         return runmode;
+    }
+
+    public String getAdminUser() {
+        return adminUser;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
     }
 }

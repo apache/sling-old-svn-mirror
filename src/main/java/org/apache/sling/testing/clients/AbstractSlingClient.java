@@ -28,6 +28,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.sling.testing.clients.util.HttpUtils;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URI;
@@ -41,7 +42,7 @@ import java.util.UUID;
  * The abstract base client for all implementing integration test clients.
  */
 @Immutable
-public class AbstractSlingClient implements HttpClient {
+public class AbstractSlingClient implements HttpClient, Closeable {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(getClass());
 
@@ -646,6 +647,15 @@ public class AbstractSlingClient implements HttpClient {
             throws ClientException {
         HttpUriRequest request = new HttpDelete(getUrl(requestPath, parameters));
         return doRequest(request, headers, expectedStatus);
+    }
+
+    @Override
+    /**
+     * <p>Closes the http client and makes sure all the underlying resources, like the connection manager, shut down </p>
+     *
+     */
+    public void close() throws IOException {
+        this.http.close();
     }
 
 

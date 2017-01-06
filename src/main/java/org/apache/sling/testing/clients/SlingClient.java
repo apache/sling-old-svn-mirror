@@ -21,6 +21,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.NameValuePair;
+import org.apache.http.annotation.Immutable;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.RedirectStrategy;
@@ -31,6 +32,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import org.apache.sling.testing.clients.interceptors.DelayRequestInterceptor;
+import org.apache.sling.testing.clients.interceptors.TestDescriptionInterceptor;
 import org.apache.sling.testing.clients.util.FormEntityBuilder;
 import org.apache.sling.testing.clients.util.HttpUtils;
 import org.apache.sling.testing.clients.util.JsonUtils;
@@ -51,6 +53,7 @@ import static org.apache.http.HttpStatus.SC_OK;
  * <p>It has methods to perform simple node operations on the server like creating and deleting nodes, etc.
  * on the server using requests. </p>
  */
+@Immutable
 public class SlingClient extends AbstractSlingClient {
 
     public static final String DEFAULT_NODE_TYPE = "sling:OrderedFolder";
@@ -557,6 +560,7 @@ public class SlingClient extends AbstractSlingClient {
             httpClientBuilder.setMaxConnPerRoute(10);
             httpClientBuilder.setMaxConnTotal(100);
             // Interceptors
+            httpClientBuilder.addInterceptorLast(new TestDescriptionInterceptor());
             httpClientBuilder.addInterceptorLast(new DelayRequestInterceptor(Constants.HTTP_DELAY));
 
             return this;
