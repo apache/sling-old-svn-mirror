@@ -182,10 +182,6 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         }
 
         separatorHtml(pw);
-
-        dumpDTOsHtml(pw);
-
-        separatorHtml(pw);
         dumpMapHtml(
                 pw,
                 "Resolver Map Entries",
@@ -199,6 +195,10 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 "Mapping Map Entries",
                 "Lists the entries used by the ResourceResolver.map methods to map Resource Paths to URLs",
                 mapEntries.getMapMaps());
+
+        separatorHtml(pw);
+
+        dumpDTOsHtml(pw);
 
         pw.println("</table>");
 
