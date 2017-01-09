@@ -73,6 +73,17 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
      */
     private static final String mimeSeparation = "SLING_MIME_BOUNDARY";
 
+    // size threshold for sending an Accept-Ranges header back in the response (100KB)
+    private static final int ACCEPT_RANGES_THRESHOLD = 100 * 1024 * 1024;
+
+    // Accept-Ranges header name
+    private static final String ACCEPT_RANGES_HEADER = "Accept-Ranges";
+
+    // Accept-Ranges header value
+    private static final String ACCEPT_RANGES_BYTES = "bytes";
+
+
+
     /**
      * Full range marker.
      */
@@ -392,6 +403,11 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         String encoding = meta.getCharacterEncoding();
         if (encoding != null) {
             response.setCharacterEncoding(encoding);
+        }
+
+        // announce support for ranges if we know the size to be larger than 100KB
+        if (meta.getContentLength() > ACCEPT_RANGES_THRESHOLD) {
+            response.setHeader(ACCEPT_RANGES_HEADER, ACCEPT_RANGES_BYTES);
         }
     }
 
