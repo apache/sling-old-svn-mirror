@@ -104,7 +104,7 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
         if (object instanceof Number) {
             return (Number) object;
         }
-        return 0;
+        return null;
     }
 
     public Date toDate(Object object) {
@@ -113,7 +113,7 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
         } else if (object instanceof Calendar) {
             return ((Calendar)object).getTime();
         }
-        return new Date(0);
+        return null;
     }
 
     @Override

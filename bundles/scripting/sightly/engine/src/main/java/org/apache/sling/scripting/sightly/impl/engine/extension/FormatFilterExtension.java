@@ -110,6 +110,9 @@ public class FormatFilterExtension implements RuntimeExtension {
     }
 
     private Object[] decodeParams(RuntimeObjectModel runtimeObjectModel, Object paramObj) {
+        if (paramObj == null) {
+            return null;
+        }
         if (runtimeObjectModel.isCollection(paramObj)) {
             return runtimeObjectModel.toCollection(paramObj).toArray();
         }
@@ -117,6 +120,9 @@ public class FormatFilterExtension implements RuntimeExtension {
     }
 
     private String formatString(RuntimeObjectModel runtimeObjectModel, String source, Object[] params) {
+        if (params == null) {
+            return null;
+        }
         Matcher matcher = PLACEHOLDER_REGEX.matcher(source);
         StringBuilder builder = new StringBuilder();
         int lastPos = 0;
@@ -145,6 +151,9 @@ public class FormatFilterExtension implements RuntimeExtension {
     }
 
     private String formatDate(String format, Date date, Locale locale, TimeZone timezone) {
+        if (date == null) {
+            return null;
+        }
         try {
             SimpleDateFormat formatter;
             if (locale != null) {
@@ -163,6 +172,9 @@ public class FormatFilterExtension implements RuntimeExtension {
     }
 
     private String formatNumber(String format, Number number, Locale locale) {
+        if (number == null) {
+            return null;
+        }
         try {
             NumberFormat formatter;
             if (locale != null) {
