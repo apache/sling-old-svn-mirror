@@ -16,6 +16,9 @@
  */
 package org.apache.sling.models.it.exporter;
 
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.text.Format;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,9 +26,8 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -62,13 +64,25 @@ public class ExporterTest {
     private final String interfaceRequestComponentPath = "/content/exp-request/interfaceComponent";
     private Calendar testDate;
 
+    private Format dateFormat = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
     @Before
-    public void setup() throws LoginException, PersistenceException {
+    public void setup() throws Exception {
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrFactory.getAdministrativeResourceResolver(null);
             Map<String, Object> properties = new HashMap<String, Object>();
             properties.put("sampleValue", "baseTESTValue");
+            properties.put("sampleBooleanValue", true);
+            properties.put("sampleLongValue", 1l);
+            properties.put("sampleDoubleValue", 1d);
+            properties.put("sampleArray", new String[] { "a", "b", "c" });
+            properties.put("sampleEmptyArray", new String[0]);
+            properties.put("sampleBinary", new ByteArrayInputStream("abc".getBytes("UTF-8")));
+            properties.put("sampleBinaryArray", new InputStream[] {
+                    new ByteArrayInputStream("abc".getBytes("UTF-8")),
+                    new ByteArrayInputStream("def".getBytes("UTF-8"))
+            });
             properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
                     "sling/exp/base");
             ResourceUtil.getOrCreateResource(adminResolver, baseComponentPath, properties, null, false);
@@ -131,6 +145,16 @@ public class ExporterTest {
             Assert.assertTrue("JSON Data should contain the property value",
                     StringUtils.contains(jsonData, "baseTESTValue"));
 
+            JSONObject parsed = new JSONObject(jsonData);
+            JSONObject resource = parsed.getJSONObject("resource");
+            Assert.assertEquals(3, resource.getJSONArray("sampleArray").length());
+            Assert.assertEquals(1.0d, resource.getDouble("sampleDoubleValue"), .1);
+            Assert.assertEquals(2, resource.getJSONArray(":sampleBinaryArray").length());
+            Assert.assertTrue(resource.getBoolean("sampleBooleanValue"));
+            Assert.assertEquals(1, resource.getLong("sampleLongValue"));
+            Assert.assertEquals(3, resource.getLong(":sampleBinary"));
+            Assert.assertEquals(0, resource.getJSONArray("sampleEmptyArray"));
+
             final Resource extendedComponentResource = resolver.getResource(extendedComponentPath);
             Assert.assertNotNull(extendedComponentResource);
             jsonData = modelFactory.exportModelForResource(extendedComponentResource, "jackson", String.class,
@@ -144,6 +168,27 @@ public class ExporterTest {
                     Collections.<String, String> emptyMap());
             Assert.assertTrue("JSON Data should contain the property value",
                     StringUtils.contains(jsonData, "interfaceTESTValue"));
+        } finally {
+            if (resolver != null && resolver.isLive()) {
+                resolver.close();
+            }
+        }
+    }
+
+    @Test
+    public void testExportToTidyJSON() throws Exception {
+        ResourceResolver resolver = null;
+        try {
+            resolver = rrFactory.getAdministrativeResourceResolver(null);
+            final Resource baseComponentResource = resolver.getResource(baseComponentPath);
+            Assert.assertNotNull(baseComponentResource);
+            String jsonData = modelFactory.exportModelForResource(baseComponentResource, "jackson", String.class,
+                    Collections.<String, String>emptyMap());
+            Assert.assertFalse(jsonData.contains(System.lineSeparator()));
+
+            jsonData = modelFactory.exportModelForResource(baseComponentResource, "jackson", String.class,
+                    Collections.<String, String>singletonMap("tidy", "true"));
+            Assert.assertTrue(jsonData.contains(System.lineSeparator()));
         } finally {
             if (resolver != null && resolver.isLive()) {
                 resolver.close();
@@ -208,7 +253,11 @@ public class ExporterTest {
             resolver = rrFactory.getAdministrativeResourceResolver(null);
             FakeResponse response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(baseRequestComponentPath + ".model.json"), response, resolver);
-            JSONObject obj = new JSONObject(response.getStringWriter().toString());
+            String stringOutput = response.getStringWriter().toString();
+
+            Assert.assertTrue(stringOutput.startsWith("{\"UPPER\":"));
+
+            JSONObject obj = new JSONObject(stringOutput);
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("BASETESTVALUE", obj.getString("UPPER"));
             Assert.assertTrue(obj.has("testBindingsObject"));
@@ -224,7 +273,7 @@ public class ExporterTest {
             obj = new JSONObject(response.getStringWriter().toString());
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(extendedRequestComponentPath, obj.getString("id"));
-            Assert.assertEquals(testDate.getTimeInMillis(), obj.getLong("date"));
+            Assert.assertEquals(dateFormat.format(testDate), obj.getString("date"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(interfaceRequestComponentPath + ".model.json"), response, resolver);

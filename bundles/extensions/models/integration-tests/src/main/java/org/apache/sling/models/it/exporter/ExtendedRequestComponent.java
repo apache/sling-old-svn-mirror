@@ -19,6 +19,7 @@ package org.apache.sling.models.it.exporter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Exporter;
+import org.apache.sling.models.annotations.ExporterOption;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Via;
 
@@ -28,7 +29,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 @Model(adaptables = { SlingHttpServletRequest.class }, resourceType = "sling/exp-request/extended")
-@Exporter(name = "jackson", extensions = "json")
+@Exporter(name = "jackson", extensions = "json", options = {
+    @ExporterOption(name = "SerializationFeature.WRITE_DATES_AS_TIMESTAMPS", value = "false")
+})
 public class ExtendedRequestComponent extends BaseRequestComponent {
 
     @Inject @Via("resource")

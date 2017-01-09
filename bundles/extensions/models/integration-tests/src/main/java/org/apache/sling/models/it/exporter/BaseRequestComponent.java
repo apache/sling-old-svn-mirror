@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Exporter;
+import org.apache.sling.models.annotations.ExporterOption;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.annotations.injectorspecific.SlingObject;
@@ -30,7 +31,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @Model(adaptables = { SlingHttpServletRequest.class }, resourceType = "sling/exp-request/base")
-@Exporter(name = "jackson", extensions = "json")
+@Exporter(name = "jackson", extensions = "json", options = {
+    @ExporterOption(name = "MapperFeature.SORT_PROPERTIES_ALPHABETICALLY", value = "true")
+})
 public class BaseRequestComponent {
 
     @Inject @SlingObject
