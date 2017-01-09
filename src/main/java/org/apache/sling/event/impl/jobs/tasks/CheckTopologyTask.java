@@ -131,6 +131,7 @@ public class CheckTopologyTask {
                                     break;
                                 }
                                 final QueueInfo info = qcm.getQueueInfo(topicName);
+				logger.info ("Start reassigning stale jobs");
                                 JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
 
                                     @Override
