@@ -166,8 +166,19 @@ public final class SightlyCompiler {
             int offendingInputIndex = documentFragment.indexOf(offendingInput);
             if (offendingInputIndex > -1) {
                 String textBeforeError = documentFragment.substring(0, offendingInputIndex);
-                int line = lineOffset + textBeforeError.length() - textBeforeError.replaceAll(System.lineSeparator(), "").length();
-                int column = textBeforeError.substring(textBeforeError.lastIndexOf(System.lineSeparator())).length();
+                int line = lineOffset;
+                int lastNewLineIndex = 0;
+                for (String s : new String[] {"\r\n", "\r", "\n"}) {
+                    int l = textBeforeError.split(s, -1).length - 1;
+                    if (l + lineOffset > line) {
+                        line = l + lineOffset;
+                        int ix = textBeforeError.lastIndexOf(s);
+                        if (ix > 0) {
+                            lastNewLineIndex = ix + s.length() - 1;
+                        }
+                    }
+                }
+                int column = textBeforeError.substring(lastNewLineIndex).length();
                 if (column != columnOffset) {
                     column +=columnOffset;
                 }
