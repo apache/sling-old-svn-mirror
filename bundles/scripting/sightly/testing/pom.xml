@@ -70,11 +70,11 @@
 
         <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
         <!-- HTL modules under test versions -->
-        <org.apache.sling.scripting.sightly.compiler.version>1.0.3-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.version>
-        <org.apache.sling.scripting.sightly.compiler.java.version>1.0.5-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
-        <org.apache.sling.scripting.sightly.version>1.0.27-SNAPSHOT</org.apache.sling.scripting.sightly.version>
-        <org.apache.sling.scripting.sightly.js.provider.version>1.0.17-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
-        <org.apache.sling.scripting.sightly.models.provider.version>1.0.5-SNAPSHOT</org.apache.sling.scripting.sightly.models.provider.version>
+        <org.apache.sling.scripting.sightly.compiler.version>1.0.5-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.version>
+        <org.apache.sling.scripting.sightly.compiler.java.version>1.0.7-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
+        <org.apache.sling.scripting.sightly.version>1.0.29-SNAPSHOT</org.apache.sling.scripting.sightly.version>
+        <org.apache.sling.scripting.sightly.js.provider.version>1.0.19-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
+        <org.apache.sling.scripting.sightly.models.provider.version>1.0.7-SNAPSHOT</org.apache.sling.scripting.sightly.models.provider.version>
     </properties>
 
     <build>
@@ -449,6 +449,12 @@
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.rules</artifactId>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

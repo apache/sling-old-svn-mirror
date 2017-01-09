@@ -17,16 +17,21 @@
  * under the License.
  ******************************************************************************/
 
-import java.io.IOException;
-
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.junit.rules.SlingInstanceRule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-public class LaunchpadReadyIT extends HttpTestBase {
+public class LaunchpadReadyIT {
+
+    @ClassRule
+    public static final SlingInstanceRule SLING_INSTANCE_RULE = new SlingInstanceRule();
 
     @Test
-    public void testLaunchpadReady() throws IOException {
-        assertHttpStatus(HTTP_URL + "/index.html", 200);
+    public void testLaunchpadReady() throws Exception {
+        SlingClient client = SLING_INSTANCE_RULE.getAdminClient();
+        client.waitUntilExists("/apps/sightly", 100, 100);
+        client.waitUntilExists("/sightlytck", 100, 100);
     }
 
 }
