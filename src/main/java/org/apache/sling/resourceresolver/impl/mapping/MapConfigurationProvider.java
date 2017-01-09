@@ -19,6 +19,7 @@ package org.apache.sling.resourceresolver.impl.mapping;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.path.Path;
 
@@ -55,6 +56,8 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     boolean hasVanityPathPrecedence();
 
+    Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName) throws LoginException;
+    
     public class VanityPathConfig implements Comparable<VanityPathConfig> {
         public final boolean isExclude;
         public final String prefix;

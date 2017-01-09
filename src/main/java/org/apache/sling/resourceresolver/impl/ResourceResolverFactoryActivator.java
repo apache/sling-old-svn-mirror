@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.runtime.RuntimeService;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
@@ -493,6 +494,14 @@ public class ResourceResolverFactoryActivator {
         return new RuntimeServiceImpl(this.resourceProviderTracker);
     }
 
+    public ServiceUserMapper getServiceUserMapper() {
+    	return this.serviceUserMapper;
+    }
+    
+    public BundleContext getBundleContext() {
+    	return this.bundleContext;
+    }
+    
     /**
      * Check the preconditions and if it changed, either register factory or unregister
      */
