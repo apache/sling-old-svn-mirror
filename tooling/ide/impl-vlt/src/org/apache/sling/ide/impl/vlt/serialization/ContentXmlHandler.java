@@ -17,66 +17,113 @@
 package org.apache.sling.ide.impl.vlt.serialization;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.vault.util.DocViewNode;
+import org.apache.jackrabbit.vault.util.DocViewProperty;
+import org.apache.sling.ide.impl.vlt.Activator;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-// TODO - worth investigating whether we can properly use org.apache.jackrabbit.vault.util.DocViewProperty instead
-public class ContentXmlHandler extends DefaultHandler {
+public class ContentXmlHandler extends DefaultHandler implements NamespaceResolver {
 
     private static final String JCR_ROOT = "jcr:root";
     private final ResourceProxy root;
     private final Deque<ResourceProxy> queue = new LinkedList<>();
 
+    /** 
+     * map containing fully qualified uris as keys and their defined prefixes as values
+     */
+    private final Map<String, String> uriPrefixMap;
+    
+    /**
+     * the default name path resolver
+     */
+    private final DefaultNamePathResolver npResolver = new DefaultNamePathResolver(this);
+
+    /**
+     * all type hint classes in a map (key = type integer value)
+     */
+    private static final Map<Integer, TypeHint> TYPE_HINT_MAP;
+    
+    static {
+        TYPE_HINT_MAP = new HashMap<>();
+        for (TypeHint hint : EnumSet.allOf(TypeHint.class)) {
+            TYPE_HINT_MAP.put(hint.propertyType, hint);
+        }
+    }
+
     public ContentXmlHandler(String rootResourcePath) {
         root = new ResourceProxy(rootResourcePath);
+        uriPrefixMap = new HashMap<>();
+    }
+
+    @Override
+    public void startPrefixMapping(String prefix, String uri) throws SAXException {
+        uriPrefixMap.put(uri, prefix);
     }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 
         ResourceProxy current;
-        if (qName.equals(JCR_ROOT)) {
-            current = root;
-        } else {
-            ResourceProxy parent = queue.peekLast();
-
-            StringBuilder path = new StringBuilder(parent.getPath());
-            if (path.charAt(path.length() - 1) != '/')
-                path.append('/');
-            path.append(qName);
-
-
-            current = new ResourceProxy(ISO9075.decode(path.toString()));
-            parent.addChild(current);
-        }
-
-        for (int i = 0; i < attributes.getLength(); i++) {
-
-            String attributeQName = attributes.getQName(i);
-            String value = attributes.getValue(i);
-            Object typedValue = TypeHint.parsePossiblyTypedValue(value);
+        // name is equal to label except for SNS
+        String label = ISO9075.decode(qName);
+        String name = label;
+        // code mostly taken from {@link org.apache.jackrabbit.vault.fs.impl.io.DocViewSaxImporter}
+        DocViewNode node;
+        try {
+            node = new DocViewNode(name, label, attributes, npResolver);
             
-            // unsupported
-            if (typedValue == null) {
-                continue;
+            if (qName.equals(JCR_ROOT)) {
+                current = root;
+            } else {
+               ResourceProxy parent = queue.peekLast();
+
+                StringBuilder path = new StringBuilder(parent.getPath());
+                if (path.charAt(path.length() - 1) != '/')
+                    path.append('/');
+                path.append(qName);
+
+                current = new ResourceProxy(ISO9075.decode(path.toString()));
+                parent.addChild(current);
             }
 
-            current.addProperty(attributeQName, typedValue);
-        }
+            for (Map.Entry<String, DocViewProperty> entry : node.props.entrySet()) {
 
-        queue.add(current);
+                try {
+                    Object typedValue = TypeHint.convertDocViewPropertyToTypedValue(entry.getValue());
+                    
+                    // unsupported
+                    if (typedValue == null) {
+                        continue;
+                    }
+                    current.addProperty(entry.getKey(), typedValue);
+                } catch (Throwable t) {
+                    Activator.getDefault().getPluginLogger().error("Could not parse property '" + entry.getValue().name, t);
+                }
+            }
+
+            queue.add(current);
+        } catch (NamespaceException e) {
+            Activator.getDefault().getPluginLogger().error("Could not resolve a JCR namespace.", e);
+        }
     }
 
     @Override
@@ -89,15 +136,31 @@ public class ContentXmlHandler extends DefaultHandler {
         return root;
     }
     
-    // TODO - validate that this is comprehensive
+    /**
+     * Each enum implements the {@link TypeHint#parseValues(String[], boolean)} in a way, that the String[] value is converted to the closest underlying type.
+     */
     static enum TypeHint {
-        BINARY("Binary") {
+        UNDEFINED(PropertyType.UNDEFINED) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                return STRING.parseValues(values, explicitMultiValue);
+            }
+        },
+        STRING(PropertyType.STRING) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
+                    return values[0];
+                } else {
+                    return values;
+                }
+            }
+        },
+        BINARY(PropertyType.BINARY) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 return null;
             }
         },
-        BOOLEAN("Boolean") {
+        BOOLEAN(PropertyType.BOOLEAN) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 if (values.length == 1 && !explicitMultiValue) {
@@ -109,10 +172,9 @@ public class ContentXmlHandler extends DefaultHandler {
                     ret[i] = Boolean.parseBoolean(values[i]);
                 }
                 return ret;
-
             }
         },
-        DATE("Date") {
+        DATE(PropertyType.DATE) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
 
@@ -127,7 +189,7 @@ public class ContentXmlHandler extends DefaultHandler {
                 return ret;
             }
         },
-        DOUBLE("Double") {
+        DOUBLE(PropertyType.DOUBLE) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 if (values.length == 1 && !explicitMultiValue) {
@@ -141,7 +203,7 @@ public class ContentXmlHandler extends DefaultHandler {
                 return ret;
             }
         },
-        LONG("Long") {
+        LONG(PropertyType.LONG) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 if (values.length == 1 && !explicitMultiValue) {
@@ -155,7 +217,7 @@ public class ContentXmlHandler extends DefaultHandler {
                 return ret;
             }
         },
-        DECIMAL("Decimal") {
+        DECIMAL(PropertyType.DECIMAL) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 if (values.length == 1 && !explicitMultiValue) {
@@ -169,21 +231,22 @@ public class ContentXmlHandler extends DefaultHandler {
                 return ret;
             }
         },
-        NAME("Name") {
+        NAME(PropertyType.NAME) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
+                    return values[0];
+                }
                 return values;
             }
         },
-        PATH("Path") {
-
+        PATH(PropertyType.PATH) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 return NAME.parseValues(values, explicitMultiValue);
             }
-
         },
-        REFERENCE("Reference") {
+        REFERENCE(PropertyType.REFERENCE) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 if (values.length == 1 && !explicitMultiValue) {
@@ -200,116 +263,70 @@ public class ContentXmlHandler extends DefaultHandler {
             }
 
         },
-        WEAKREFERENCE("WeakReference") {
+        WEAKREFERENCE(PropertyType.WEAKREFERENCE) {
             @Override
             Object parseValues(String[] values, boolean explicitMultiValue) {
                 return REFERENCE.parseValues(values, explicitMultiValue);
             }
-
+        },
+        URI(PropertyType.URI) {
+            @Override
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                try {
+                    if (values.length == 1 && !explicitMultiValue) {
+                        return new java.net.URI(values[0]);
+                    }
+    
+                    java.net.URI[] refs = new java.net.URI[values.length];
+                    for (int i = 0; i < values.length; i++) {
+                        String value = values[i];
+                        refs[i] = new java.net.URI(value);
+                    }
+                    return refs;
+                } catch (URISyntaxException e) {
+                    throw new IllegalArgumentException("Given value cannot be converted to URI", e);
+                }
+            }
         };
 
-        static Object parsePossiblyTypedValue(String value) {
-
-            boolean explicitMultiValue = false;
-            String rawValue;
-            int hintEnd = -1;
-            
-            if (value.isEmpty()) {
-            	return value;
+        static Object convertDocViewPropertyToTypedValue(DocViewProperty property) {
+            TypeHint hint = TYPE_HINT_MAP.get(property.type);
+            if (hint == null) {
+                throw new IllegalArgumentException("Unknown type value '" + property.type + "'");
             }
-
-            if (value.charAt(0) != '{') {
-                rawValue = value;
-            } else {
-                hintEnd = value.indexOf('}');
-                rawValue = value.substring(hintEnd + 1);
-            }
-            
-            String[] values;
-
-            // SLING-3609
-            if (rawValue.length()>0 && rawValue.charAt(0) == '[') {
-
-                if (rawValue.charAt(rawValue.length() - 1) != ']') {
-                    throw new IllegalArgumentException("Invalid multi-valued property definition : '" + rawValue + "'");
-                }
-
-                String rawValues = rawValue.substring(1, rawValue.length() - 1);
-                values = splitValues(rawValues);
-                explicitMultiValue = true;
-            } else {
-                values = new String[] { rawValue };
-            }
-
-            // no hint -> string type
-            if (hintEnd == -1) {
-                unescape(values);
-                if (values.length == 1 && !explicitMultiValue) {
-                    return values[0];
-                }
-                return values;
-            }
-
-            String rawHint = value.substring(1, hintEnd);
-
-            for (TypeHint hint : EnumSet.allOf(TypeHint.class)) {
-                if (hint.rawHint.equals(rawHint)) {
-                    return hint.parseValues(values, explicitMultiValue);
-                }
-            }
-
-            throw new IllegalArgumentException("Unknown typeHint value '" + rawHint + "'");
+            return hint.parseValues(property.values, property.isMulti);
         }
 
-        private static String[] splitValues(String rawValues) {
-            
-            if ( rawValues.isEmpty() ) {
-                return new String[0];
-            }
-            
-            List<String> values = new ArrayList<>();
-            String[] firstPass = rawValues.split(",");
-            for ( int i = 0 ; i < firstPass.length; i++) {
-                
-                String val = firstPass[i];
-                
-                boolean trailingSlash = val.endsWith("\\");
-                boolean moreEntries = i < firstPass.length;
-                
-                // special case where the comma is escaped, so this means that
-                // two values should be joined
-                if ( trailingSlash && moreEntries ) {
-                    // re-establish the value, e.g. first\,second becomes a single first,second entry
-                    values.add(val.substring(0, val.length() - 1) + "," + firstPass[i+1]);
-                    // manually advance the iteration couter since we consumed the next entry
-                    i++;
-                    continue;
-                }
-              
-                values.add(val);
-            }
-            
-            return values.toArray(new String[values.size()]);
-            
-        }
+        private final int propertyType;
 
-        private static void unescape(String[] values) {
+        /**
+         * 
+         * @param propertyType one of type values being defined in {@link javax.jcr.PropertyType}
+         */
+        private TypeHint(int propertyType) {
 
-            for (int i = 0; i < values.length; i++) {
-                if (values[i].length() > 0 && values[i].charAt(0) == '\\') {
-                    values[i] = values[i].substring(1);
-                }
-            }
-        }
-
-        private final String rawHint;
-
-        private TypeHint(String rawHint) {
-
-            this.rawHint = rawHint;
+            this.propertyType = propertyType;
         }
 
         abstract Object parseValues(String[] values, boolean explicitMultiValue);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getURI(String prefix) throws NamespaceException {
+        throw new UnsupportedOperationException("The method getUri is not implemented as this is not being used");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getPrefix(String uri) throws NamespaceException {
+       String prefix = uriPrefixMap.get(uri);
+       if (prefix == null) {
+           throw new NamespaceException("Could not find defined prefix for uri " + uri);
+       }
+       return prefix;
     }
 }
