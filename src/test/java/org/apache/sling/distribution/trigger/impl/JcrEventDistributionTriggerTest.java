@@ -80,4 +80,20 @@ public class JcrEventDistributionTriggerTest {
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
     }
+
+    @Test
+    public void testProcessEventOnMultipleIgnoredPattern() throws Exception {
+        SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
+
+        String path = "/home/users";
+        String serviceName = "serviceId";
+        String[] ignoredPaths = new String[]{".*/.tokens.*", ".*/.rep:cache.*"};
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, ignoredPaths);
+        Event event = mock(Event.class);
+        when(event.getPath()).thenReturn("/home/users/3/3U3HxUUzJJ60BdN4lEDJ/.tokens/2017-01-10T15.52.37.842+01.00");
+        DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
+        assertNull(distributionRequest);
+    }
 }
