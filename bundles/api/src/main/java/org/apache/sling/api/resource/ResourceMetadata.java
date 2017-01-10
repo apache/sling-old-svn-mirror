@@ -127,6 +127,8 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * The value of this property has no meaning, the resource resolver
      * just checks whether this flag is set or not.
      * @since 2.2 (Sling API Bundle 2.2.0)
+     * @deprecated This flag is not supported anymore when implementing the SPI
+     *             based {@code org.apache.sling.spi.resource.provider.ResourceProvider}
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
 
