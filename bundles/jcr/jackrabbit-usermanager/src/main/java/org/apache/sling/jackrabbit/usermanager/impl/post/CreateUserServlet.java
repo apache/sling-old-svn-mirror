@@ -16,7 +16,6 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -44,7 +38,13 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,62 +87,40 @@ import org.slf4j.LoggerFactory;
  * curl -F:name=ieb -Fpwd=password -FpwdConfirm=password -Fproperty1=value1 http://localhost:8080/system/userManager/user.create.html
  * </code>
  */
-@Component (metatype=true,
-		label="%createUser.post.operation.name",
-		description="%createUser.post.operation.description")
-@Service(value={
-		Servlet.class,
-		CreateUser.class
+@Designate(ocd = CreateUserServlet.Config.class)
+@Component(service = {Servlet.class, CreateUser.class},
+    property = {
+		   "sling.servlet.resourceTypes=sling/users",
+		   "sling.servlet.methods=POST",
+		   "sling.servlet.selectors=create",
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=EEE MMM dd yyyy HH:mm:ss 'GMT'Z", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss.SSSZ", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy",
+		   ChangeUserPasswordServlet.PAR_USER_ADMIN_GROUP_NAME + "=" + ChangeUserPasswordServlet.DEFAULT_USER_ADMIN_GROUP_NAME
 })
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value="sling/users"),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="create"),
-    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
-    value={
-    "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
-    "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-    "yyyy-MM-dd'T'HH:mm:ss",
-    "yyyy-MM-dd",
-    "dd.MM.yyyy HH:mm:ss",
-    "dd.MM.yyyy"
-    })
-})
-public class CreateUserServlet extends AbstractUserPostServlet implements CreateUser {
+public class CreateUserServlet extends AbstractAuthorizablePostServlet implements CreateUser {
     private static final long serialVersionUID = 6871481922737658675L;
+
+    @ObjectClassDefinition(name = "Apache Sling Create User",
+    		description = "The Sling operation to handle create user requests in Sling.")
+    public @interface Config {
+    	
+    	@AttributeDefinition(name = "Self-Registration Enabled",
+    			description = "When selected, the anonymous user is allowed to register a new user with the system.")
+    	boolean self_registration_enabled() default false;
+    }
 
     /**
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final boolean DEFAULT_SELF_REGISTRATION_ENABLED = false;
+    private boolean selfRegistrationEnabled;
 
-    @Property (label="%self.registration.enabled.name",
-    		description="%self.registration.enabled.description",
-    		boolValue=DEFAULT_SELF_REGISTRATION_ENABLED)
-    private static final String PROP_SELF_REGISTRATION_ENABLED = "self.registration.enabled";
-
-    private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
-
-    /**
-     * The default 'User administrator' group name
-     *
-     * @see #PAR_USER_ADMIN_GROUP_NAME
-     */
-    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
-
-    /**
-     * The name of the configuration parameter providing the
-     * 'User administrator' group name.
-     */
-    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
-
-    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
+    private String userAdminGroupName = ChangeUserPasswordServlet.DEFAULT_USER_ADMIN_GROUP_NAME;
 
     /**
      * The JCR Repository we access to resolve resources
@@ -175,30 +153,22 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
     /**
      * Activates this component.
      *
-     * @param componentContext The OSGi <code>ComponentContext</code> of this
-     *            component.
+     * @param props The configuration properties
      */
-    @Override
-    protected void activate(ComponentContext componentContext) {
-        super.activate(componentContext);
-        Dictionary<?, ?> props = componentContext.getProperties();
-        Object propValue = props.get(PROP_SELF_REGISTRATION_ENABLED);
-        if (propValue instanceof Boolean) {
-            selfRegistrationEnabled = (Boolean)propValue;
-        } else if (propValue instanceof String) {
-            selfRegistrationEnabled = Boolean.parseBoolean((String) propValue);
-        } else {
-            selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
-        }
+    @Activate
+    protected void activate(Config config, Map<String, Object> props) {
+        super.activate(props);
+        selfRegistrationEnabled = config.self_registration_enabled();
 
-        this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
-                DEFAULT_USER_ADMIN_GROUP_NAME);
-        log.info("User Admin Group Name {}", this.userAdminGroupName);
+        this.userAdminGroupName = OsgiUtil.toString(props.get(ChangeUserPasswordServlet.PAR_USER_ADMIN_GROUP_NAME),
+        		ChangeUserPasswordServlet.DEFAULT_USER_ADMIN_GROUP_NAME);
+        log.debug("User Admin Group Name {}", this.userAdminGroupName);
     }
 
     @Override
-    protected void deactivate(ComponentContext context) {
-        super.deactivate(context);
+    @Deactivate
+    protected void deactivate() {
+        super.deactivate();
     }
 
     /*

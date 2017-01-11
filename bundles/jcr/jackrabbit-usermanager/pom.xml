@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>29</version>
         <relativePath />
     </parent>
 
@@ -73,12 +73,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.jackrabbit.usermanager;version=2.2.1,
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.jackrabbit.usermanager.impl.*
-                        </Private-Package>
                         <Embed-Dependency>
                             org.apache.sling.servlets.post;inline="org/apache/sling/servlets/post/impl/helper/RequestProperty*
                                 |org/apache/sling/servlets/post/impl/helper/DateParser*
@@ -93,12 +87,12 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.2.0</version>
+            <version>2.11.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -125,16 +119,12 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.6</version>
+            <version>2.9.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -146,11 +136,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

@@ -23,41 +23,33 @@ import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Resource Provider implementation for jackrabbit UserManager resources.
  */
-@Component (immediate=true, metatype=true,
-		label="%authorizable.resourceprovider.name",
-		description="%authorizable.resourceprovider.description")
-@Service (value=ResourceProvider.class)
-@Properties ({
-	@Property (name="service.description", 
-			value="Resource provider implementation for UserManager resources"),
-	@Property (name="service.vendor",
-			value="The Apache Software Foundation"),
-	@Property (name="provider.roots",
-			value="/system/userManager/")			
-})
-public class AuthorizableResourceProvider implements ResourceProvider {
+@Component(service = ResourceProvider.class,
+    property={
+    		"service.description=Resource provider implementation for UserManager resources",
+    		"service.vendor=The Apache Software Foundation",
+    		ResourceProvider.PROPERTY_ROOT + "=" + AuthorizableResourceProvider.SYSTEM_USER_MANAGER_PATH
+    })
+public class AuthorizableResourceProvider extends ResourceProvider<Object> {
 
     /**
      * default log
@@ -78,34 +70,21 @@ public class AuthorizableResourceProvider implements ResourceProvider {
     public static final String SYSTEM_USER_MANAGER_GROUP_PREFIX = SYSTEM_USER_MANAGER_GROUP_PATH
         + "/";
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.sling.api.resource.ResourceProvider#getResource(org.apache
-     * .sling.api.resource.ResourceResolver,
-     * javax.servlet.http.HttpServletRequest, java.lang.String)
-     */
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.sling.api.resource.ResourceProvider#getResource(org.apache
-     * .sling.api.resource.ResourceResolver, java.lang.String)
-     */
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
+    
+    @Override
+	public Resource getResource(ResolveContext<Object> ctx, 
+		    String path, 
+		    ResourceContext resourceContext,
+			Resource parent) {
 
         // handle resources for the virtual container resources
         if (path.equals(SYSTEM_USER_MANAGER_PATH)) {
-            return new SyntheticResource(resourceResolver, path,
+            return new SyntheticResource(ctx.getResourceResolver(), path,
                 "sling/userManager");
         } else if (path.equals(SYSTEM_USER_MANAGER_USER_PATH)) {
-            return new SyntheticResource(resourceResolver, path, "sling/users");
+            return new SyntheticResource(ctx.getResourceResolver(), path, "sling/users");
         } else if (path.equals(SYSTEM_USER_MANAGER_GROUP_PATH)) {
-            return new SyntheticResource(resourceResolver, path, "sling/groups");
+            return new SyntheticResource(ctx.getResourceResolver(), path, "sling/groups");
         }
 
         // the principalId should be the first segment after the prefix
@@ -122,7 +101,7 @@ public class AuthorizableResourceProvider implements ResourceProvider {
                              // out now.
             }
             try {
-                Session session = resourceResolver.adaptTo(Session.class);
+                Session session = ctx.getResourceResolver().adaptTo(Session.class);
                 if (session != null) {
                     UserManager userManager = AccessControlUtil.getUserManager(session);
                     if (userManager != null) {
@@ -131,7 +110,7 @@ public class AuthorizableResourceProvider implements ResourceProvider {
                             // found the Authorizable, so return the resource
                             // that wraps it.
                             return new AuthorizableResource(authorizable,
-                                resourceResolver, path);
+                            		ctx.getResourceResolver(), path);
                         }
                     }
                 }
@@ -143,16 +122,8 @@ public class AuthorizableResourceProvider implements ResourceProvider {
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.sling.api.resource.ResourceProvider#listChildren(org.apache
-     * .sling.api.resource.Resource)
-     */
-    public Iterator<Resource> listChildren(Resource parent) {
-        if (parent == null) {
-            throw new NullPointerException("parent is null");
-        }
+	@Override
+	public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
         try {
             String path = parent.getPath();
             ResourceResolver resourceResolver = parent.getResourceResolver();
@@ -161,10 +132,10 @@ public class AuthorizableResourceProvider implements ResourceProvider {
             if (SYSTEM_USER_MANAGER_PATH.equals(path)) {
                 List<Resource> resources = new ArrayList<Resource>();
                 if (resourceResolver != null) {
-                    resources.add(getResource(resourceResolver,
-                        SYSTEM_USER_MANAGER_USER_PATH));
-                    resources.add(getResource(resourceResolver,
-                        SYSTEM_USER_MANAGER_GROUP_PATH));
+                    resources.add(getResource(ctx,
+                        SYSTEM_USER_MANAGER_USER_PATH, null, null));
+                    resources.add(getResource(ctx,
+                        SYSTEM_USER_MANAGER_GROUP_PATH, null, null));
                 }
                 return resources.iterator();
             }
