@@ -108,7 +108,7 @@ public class ResourceResolverFactoryActivator {
 
     /** Service User Mapper */
     @Reference
-    private ServiceUserMapper serviceUserMapper;
+    ServiceUserMapper serviceUserMapper;
 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
