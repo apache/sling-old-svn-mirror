@@ -16,20 +16,13 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
-import java.lang.reflect.Method;
-import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -43,7 +36,9 @@ import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourc
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,31 +79,21 @@ import org.slf4j.LoggerFactory;
  *
  * <h4>Notes</h4>
  */
-@Component (metatype=true,
-		label="%changeUserPassword.post.operation.name",
-		description="%changeUserPassword.post.operation.description")
-@Service (value={
-	Servlet.class,
-	ChangeUserPassword.class
-})
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value="sling/user"),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="changePassword"),
-    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
-            value={
-            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd",
-            "dd.MM.yyyy HH:mm:ss",
-            "dd.MM.yyyy"
-            })
-})
-public class ChangeUserPasswordServlet extends AbstractUserPostServlet implements ChangeUserPassword {
+
+@Component(service = {Servlet.class, ChangeUserPassword.class},
+           property = {
+        		   "sling.servlet.resourceTypes=sling/user",
+        		   "sling.servlet.methods=POST",
+        		   "sling.servlet.selectors=changePassword",
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=EEE MMM dd yyyy HH:mm:ss 'GMT'Z", 
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss.SSSZ", 
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss", 
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd", 
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy HH:mm:ss", 
+        		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy",
+        		   ChangeUserPasswordServlet.PAR_USER_ADMIN_GROUP_NAME + "=" + ChangeUserPasswordServlet.DEFAULT_USER_ADMIN_GROUP_NAME
+           })
+public class ChangeUserPasswordServlet extends AbstractAuthorizablePostServlet implements ChangeUserPassword {
     private static final long serialVersionUID = 1923614318474654502L;
 
     /**
@@ -121,15 +106,14 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
      *
      * @see #PAR_USER_ADMIN_GROUP_NAME
      */
-    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
+    static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
 
     /**
      * The name of the configuration parameter providing the
      * name of the group whose members are allowed to reset the password
      * of a user without the 'oldPwd' value.
      */
-    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+    static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
 
@@ -138,22 +122,22 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
     /**
      * Activates this component.
      *
-     * @param componentContext The OSGi <code>ComponentContext</code> of this
-     *            component.
+     * @param props The component properties
      */
     @Override
-    protected void activate(ComponentContext componentContext) {
-        super.activate(componentContext);
-        Dictionary<?, ?> props = componentContext.getProperties();
+    @Activate
+    protected void activate(final Map<String, Object> props) {
+        super.activate(props);
 
         this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
                 DEFAULT_USER_ADMIN_GROUP_NAME);
-        log.info("User Admin Group Name {}", this.userAdminGroupName);
+        log.debug("User Admin Group Name {}", this.userAdminGroupName);
     }
 
     @Override
-    protected void deactivate(ComponentContext context) {
-        super.deactivate(context);
+    @Deactivate
+    protected void deactivate() {
+        super.deactivate();
     }
 
     /*

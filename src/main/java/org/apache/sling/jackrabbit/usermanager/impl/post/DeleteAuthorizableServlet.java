@@ -25,10 +25,6 @@ import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -37,7 +33,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables;
 import org.apache.sling.jackrabbit.usermanager.DeleteGroup;
 import org.apache.sling.jackrabbit.usermanager.DeleteUser;
@@ -46,6 +41,7 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.osgi.service.component.annotations.Component;
 
 /**
  
@@ -81,26 +77,14 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * curl -Fgo=1 http://localhost:8080/system/userManager/user/ieb.delete.html
  * </code>
  */
-@Component (immediate=true, metatype=true,
-		label="%deleteAuthorizable.post.operation.name",
-		description="%deleteAuthorizable.post.operation.description")
-@Service (value={
-	Servlet.class,
-	DeleteUser.class,
-	DeleteGroup.class,
-	DeleteAuthorizables.class
-})		
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value={
-					"sling/user",
-					"sling/group",
-					"sling/userManager"
-				}),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="delete")
+
+@Component(service = {Servlet.class, DeleteUser.class, DeleteGroup.class, DeleteAuthorizables.class},
+    property = {
+		   "sling.servlet.resourceTypes=sling/user",
+		   "sling.servlet.resourceTypes=sling/group",
+		   "sling.servlet.resourceTypes=sling/userManager",
+		   "sling.servlet.methods=POST",
+		   "sling.servlet.selectors=delete"
 })
 public class DeleteAuthorizableServlet extends AbstractPostServlet
         implements DeleteUser, DeleteGroup, DeleteAuthorizables {

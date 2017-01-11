@@ -16,6 +16,8 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -35,7 +38,6 @@ import javax.jcr.ValueFormatException;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,22 +172,51 @@ public class AuthorizableValueMap implements ValueMap {
         return null;
     }
 
+    /**
+     * Converts a JCR Value to a corresponding Java Object
+     *
+     * @param value the JCR Value to convert
+     * @return the Java Object
+     * @throws RepositoryException if the value cannot be converted
+     */
+    public static Object toJavaObject(Value value) throws RepositoryException {
+        switch (value.getType()) {
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
+            case PropertyType.BINARY:
+                return new LazyInputStream(value);
+            case PropertyType.BOOLEAN:
+                return value.getBoolean();
+            case PropertyType.DATE:
+                return value.getDate();
+            case PropertyType.DOUBLE:
+                return value.getDouble();
+            case PropertyType.LONG:
+                return value.getLong();
+            case PropertyType.NAME: // fall through
+            case PropertyType.PATH: // fall through
+            case PropertyType.REFERENCE: // fall through
+            case PropertyType.STRING: // fall through
+            case PropertyType.UNDEFINED: // not actually expected
+            default: // not actually expected
+                return value.getString();
+        }
+    }
     protected Object valuesToJavaObject(Value[] values)
             throws RepositoryException {
         if (values == null) {
             return null;
         } else if (values.length == 1) {
-            return JcrResourceUtil.toJavaObject(values[0]);
+            return toJavaObject(values[0]);
         } else {
             Object[] valuesObjs = new Object[values.length];
             for (int i = 0; i < values.length; i++) {
-                valuesObjs[i] = JcrResourceUtil.toJavaObject(values[i]);
+                valuesObjs[i] = toJavaObject(values[i]);
             }
             return valuesObjs;
         }
     }
 
-    @SuppressWarnings("unchecked")
     protected void readFully() {
         if (!fullyRead) {
             try {
@@ -196,7 +227,7 @@ public class AuthorizableValueMap implements ValueMap {
                 cache.put(MEMBER_OF_KEY, getMemberships(authorizable, true));
                 cache.put(DECLARED_MEMBER_OF_KEY, getMemberships(authorizable, false));
 
-                Iterator pi = authorizable.getPropertyNames();
+                Iterator<String> pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
                     String key = (String) pi.next();
                     if (!cache.containsKey(key)) {
@@ -371,5 +402,89 @@ public class AuthorizableValueMap implements ValueMap {
         }
         return results.toArray(new String[results.size()]);
     }
+    
+    public static class LazyInputStream extends InputStream {
 
+        /** The JCR Value from which the input stream is requested on demand */
+        private final Value value;
+
+        /** The inputstream created on demand, null if not used */
+        private InputStream delegatee;
+
+        public LazyInputStream(Value value) {
+            this.value = value;
+        }
+
+        /**
+         * Closes the input stream if acquired otherwise does nothing.
+         */
+        @Override
+        public void close() throws IOException {
+            if (delegatee != null) {
+                delegatee.close();
+            }
+        }
+
+        @Override
+        public int available() throws IOException {
+            return getStream().available();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return getStream().read();
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return getStream().read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return getStream().read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return getStream().skip(n);
+        }
+
+        @Override
+        public boolean markSupported() {
+            try {
+                return getStream().markSupported();
+            } catch (IOException ioe) {
+                // ignore
+            }
+            return false;
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            try {
+                getStream().mark(readlimit);
+            } catch (IOException ioe) {
+                // ignore
+            }
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            getStream().reset();
+        }
+
+        /** Actually retrieves the input stream from the underlying JCR Value */
+        private InputStream getStream() throws IOException {
+            if (delegatee == null) {
+                try {
+                    delegatee = value.getBinary().getStream();
+                } catch (RepositoryException re) {
+                    throw (IOException) new IOException(re.getMessage()).initCause(re);
+                }
+            }
+            return delegatee;
+        }
+
+    }
 }

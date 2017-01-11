@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +41,6 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
-import org.osgi.service.component.ComponentContext;
 
 /**
  * Base class for all the POST servlets for the UserManager operations
@@ -57,9 +55,7 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     // ---------- SCR Integration ----------------------------------------------
 
-    protected void activate(ComponentContext context) {
-        Dictionary<?, ?> props = context.getProperties();
-
+    protected void activate(Map<String, Object> props) {
         dateParser = new DateParser();
         String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
         for (String dateFormat : dateFormats) {
@@ -67,7 +63,7 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
     }
 
-    protected void deactivate(ComponentContext context) {
+    protected void deactivate() {
         dateParser = null;
     }
 
@@ -671,6 +667,12 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
 
         @Override
+		public String getName() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
         public String toString() {
             return this.getString();
         }
