@@ -16,6 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.render;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -306,11 +307,10 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     }
 
     protected static Object getField(Object obj, String property) {
-        if (obj instanceof Object[] && "length".equals(property)) {
-            // Working around this limitation: http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getFields%28%29
-            return ((Object[]) obj).length;
-        }
         Class<?> cls = obj.getClass();
+        if (cls.isArray() && "length".equals(property)) {
+            return Array.getLength(obj);
+        }
         try {
             Field field = cls.getDeclaredField(property);
             return field.get(obj);
