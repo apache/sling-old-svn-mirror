@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.CheckForNull;
@@ -105,10 +104,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference
     private PathMapper pathMapper;
 
-    /** This service is only available on OAK, therefore optional and static) */
-    @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL)
-    private Executor executor;
-
     /** The JCR listener base configuration. */
     private volatile JcrListenerBaseConfig listenerConfig;
 
@@ -176,14 +171,14 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @SuppressWarnings("unused")
     private void bindRepository(final ServiceReference<SlingRepository> ref) {
         this.repositoryReference = ref;
-        this.repository = null; // make sure ...
+        this.repository = null;
     }
 
     @SuppressWarnings("unused")
     private void unbindRepository(final ServiceReference<SlingRepository> ref) {
         if (this.repositoryReference == ref) {
             this.repositoryReference = null;
-            this.repository = null; // make sure ...
+            this.repository = null;
         }
     }
 
