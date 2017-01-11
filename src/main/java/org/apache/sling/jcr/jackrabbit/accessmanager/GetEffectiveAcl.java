@@ -41,7 +41,7 @@ public interface GetEffectiveAcl {
      * @return the ACL as a JSON object 
 	 * @throws RepositoryException
 	 */
-	public JSONObject getEffectiveAcl(Session jcrSession,
+	JSONObject getEffectiveAcl(Session jcrSession,
 							String resourcePath
 				) throws RepositoryException, JSONException;
 	

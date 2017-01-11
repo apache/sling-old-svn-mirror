@@ -38,7 +38,7 @@ public interface DeleteAces {
 	 * @param principalNamesToDelete An array of ace principal names to delete.. (required)
 	 * @throws RepositoryException
 	 */
-	public void deleteAces(Session jcrSession,
+	void deleteAces(Session jcrSession,
 							String resourcePath,
 							String [] principalNamesToDelete
 				) throws RepositoryException;
