@@ -242,7 +242,6 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
                     TenantImpl tenant = new TenantImpl(tenantRes);
-                    adminResolver.commit();
                     customizeTenant(tenantRes, tenant, true);
                     adminResolver.commit();
 
