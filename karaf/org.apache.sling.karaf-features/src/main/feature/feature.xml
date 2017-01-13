@@ -494,11 +494,11 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
   </feature>
   <feature name="sling-scripting-sightly" version="${feature.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.26</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.4</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.16</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.28</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.18</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
