@@ -188,6 +188,10 @@ public abstract class OakServerTestSupport extends TestSupport {
             slingJcr(),
             jackrabbitSling(),
             tikaSling(),
+
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
+
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-core").version(SlingOptions.versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-commons").version(SlingOptions.versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-blob").version(SlingOptions.versionResolver),
