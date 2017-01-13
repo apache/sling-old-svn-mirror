@@ -20,7 +20,7 @@
 [feature name=sling]
 
 [variables]
-    jackrabbit.version=2.13.5
+    jackrabbit.version=2.14.0
 
 [artifacts]
     # Add the Slingshot Sample provisioning model
