@@ -52,7 +52,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
         final int httpPort = Integer.getInteger("http.port");
         return OptionUtils.combine(baseConfiguration(),
             cleanCaches(true),
-            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "ERROR, out, sift, osgi:*"),
             // configurations for tests
             editConfigurationFilePut("etc/custom.properties", "sling.run.modes", "oak_tar"),
             editConfigurationFilePut("etc/users.properties", "admin", "admin,_g_:admingroup"), // Sling’s default admin credentials used in tests
