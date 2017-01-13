@@ -50,6 +50,10 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
     @Configuration
     public Option[] configuration() throws Exception {
         final int httpPort = Integer.getInteger("http.port");
+        final String[] references = new String[]{
+            "raw:classpath://org.apache.sling.karaf-repoinit/repoinit.txt",
+            "raw:classpath://repoinit/repoinit.txt"
+        };
         return OptionUtils.combine(baseConfiguration(),
             cleanCaches(true),
             // configurations for tests
@@ -60,9 +64,9 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.config", "servletresolver.cacheSize", "0"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.config", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.config", "alias", "/server"),
-            editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config", "enabled", "true"),
-            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config", "references", "[\"raw:classpath://org.apache.sling.karaf-repoinit/repoinit.txt\", \"raw:classpath://repoinit/repoinit.txt\"]"),
-            editConfigurationFilePut("etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.config", "whitelist.bypass", "true"),
+            editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config", "enabled", true),
+            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config", "references", references),
+            editConfigurationFilePut("etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.config", "whitelist.bypass", true),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
                 "sling-launchpad-content",
