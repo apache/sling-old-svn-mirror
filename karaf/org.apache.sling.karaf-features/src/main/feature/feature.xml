@@ -389,7 +389,6 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
   <feature name="sling-launchpad-oak" version="${feature.version}"><!-- hidden="true" -->
     <!-- Sling with Oak Repository and Felix Web Console -->
     <configfile finalname="/etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</configfile>
-    <configfile finalname="/etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge</configfile>
     <!-- http://jackrabbit.apache.org/oak/docs/osgi_config.html -->
     <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-GuestLoginModule.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-GuestLoginModule</configfile>
     <configfile finalname="/etc/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.felix.jaas.Configuration.factory-LoginModuleImpl</configfile>
