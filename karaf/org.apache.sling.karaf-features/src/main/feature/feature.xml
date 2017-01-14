@@ -413,7 +413,7 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
     <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
     <feature version="${feature.version}">sling-launchpad-oak</feature>
     <bundle>mvn:org.mongodb/mongo-java-driver/3.4.1</bundle>
-    <bundle>mvn:com.h2database/h2/1.4.193</bundle>
+    <bundle>mvn:com.h2database/h2-mvstore/1.4.193</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.3-SNAPSHOT</bundle>
   </feature>
   <!-- Apache Sling NoSQL -->
