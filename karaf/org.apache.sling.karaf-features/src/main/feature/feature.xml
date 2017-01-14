@@ -339,7 +339,7 @@
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
-    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.1.1-SNAPSHOT</bundle>
+    <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.1.0</bundle>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.8.0</bundle>
     <feature version="${feature.version}">pax-url-classpath-sling</feature><!-- prerequisite="true" -->
     <!-- TODO
