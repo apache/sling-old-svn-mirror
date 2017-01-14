@@ -274,23 +274,14 @@
                 <include>**/*Test.class</include>
               </includes>
               <excludes>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
                 <!-- SLING-5414 Launchpad/Provisioning Model only -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
-                <!-- TODO (PAXWEB-935) SlingWebDavServletTest.testHandlerOrder:76->checkHandler:93->RenderingTestBase.assertContains:36 Content does not contain 'test-io-handler-1-' -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
-                <!-- TODO (PAXWEB-935) WebdavDeleteTest.testDelete:70 expected:<200> but was:<404> -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/WebdavDeleteTest.*</exclude>
                 <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectCookie:118->assertXReason:245 » IO -->
                 <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectHttpBasicCredentials:134->assertXReason:245 » IO -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
-                <!-- TODO UpdateUserTest.testChangeUserPassword:100 expected:<200> but was:<500> -->
-                <!-- TODO UpdateUserTest.testUpdateUser:76 expected:<200> but was:<500> -->
-                <!-- TODO UpdateUserTest.testUpdateUserResponseAsJSON:148 Expected status 200 for http://localhost:55658/system/userManager/user/testUser1469444618835.update.json ... expected:<200> but was:<500> -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
-                <!-- TODO JspForwardTest.testWithJspForward:152 Content includes JSP marker -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
+                <!-- TODO RedirectOnLogoutTest.testRedirectToResourceAfterLogout: java.net.SocketException: Connection reset -->
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/login/RedirectOnLogoutTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
