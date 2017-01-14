@@ -64,7 +64,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.config", "servletresolver.cacheSize", "0"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.config", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.config", "alias", "/server"),
-            editConfigurationFilePut("etc/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config", "enabled", true),
             editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config", "references", references),
             editConfigurationFilePut("etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.config", "whitelist.bypass", true),
             addSlingFeatures(
