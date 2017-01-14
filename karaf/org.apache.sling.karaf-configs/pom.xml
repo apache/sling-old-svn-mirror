@@ -148,11 +148,6 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge</classifier>
-                  <file>src/main/resources/org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge.config</file>
-                  <type>config</type>
-                </artifact>
-                <artifact>
                   <classifier>org.apache.sling.samples.fling.internal.WiserSmtpService</classifier>
                   <file>src/main/resources/org.apache.sling.samples.fling.internal.WiserSmtpService.config</file>
                   <type>config</type>
