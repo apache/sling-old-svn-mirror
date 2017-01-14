@@ -276,11 +276,6 @@
                 </goals>
               </execution>
             </executions>
-            <configuration>
-              <excludes>
-                <exclude>**/SlingLaunchpadOakMongoIT.*</exclude>
-              </excludes>
-            </configuration>
           </plugin>
         </plugins>
       </build>

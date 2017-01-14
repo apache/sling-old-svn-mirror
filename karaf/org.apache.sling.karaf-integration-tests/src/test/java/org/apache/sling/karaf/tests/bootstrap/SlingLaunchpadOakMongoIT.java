@@ -99,4 +99,11 @@ public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSuppo
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
+    @Test
+    public void testComH2databaseH2() {
+        final Bundle bundle = findBundle("org.h2");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
 }

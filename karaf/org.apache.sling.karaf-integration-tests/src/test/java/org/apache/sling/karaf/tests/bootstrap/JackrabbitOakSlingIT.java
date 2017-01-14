@@ -73,6 +73,13 @@ public class JackrabbitOakSlingIT extends KarafTestSupport {
     }
 
     @Test
+    public void testOrgApacheJackrabbitOakLucene() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-lucene");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testComGoogleGuava() {
         final Bundle bundle = findBundle("com.google.guava");
         assertNotNull(bundle);
@@ -80,7 +87,6 @@ public class JackrabbitOakSlingIT extends KarafTestSupport {
     }
 
     @Test
-    @Ignore
     public void testOrgApacheFelixJaas() {
         final Bundle bundle = findBundle("org.apache.felix.jaas");
         assertNotNull(bundle);
