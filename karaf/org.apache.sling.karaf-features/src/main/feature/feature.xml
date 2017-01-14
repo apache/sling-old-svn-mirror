@@ -333,18 +333,6 @@
     <feature version="${feature.version}">sling-jcr</feature>
     <feature version="${feature.version}">sling-servlets</feature>
   </feature>
-  <feature name="jackrabbit-oak-sling" version="${feature.version}">
-    <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
-    <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
-    <!-- dependencies -->
-    <feature>scr</feature>
-    <feature version="${feature.version}">jackrabbit-sling</feature>
-    <feature version="${feature.version}">tika-sling</feature>
-    <bundle dependency="true">mvn:com.google.guava/guava/15.0</bundle>
-    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
-  </feature>
   <feature name="sling-jcr-repoinit" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.repoinit/1.1.2</bundle>
     <!-- dependencies -->
@@ -417,16 +405,15 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${feature.version}">
     <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService</configfile>
-    <feature prerequisite="true" version="${feature.version}">sling-launchpad-oak</feature>
-    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <feature version="${feature.version}">sling-launchpad-oak</feature>
     <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.3-SNAPSHOT</bundle>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${feature.version}">
     <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</configfile>
-    <feature prerequisite="true" version="${feature.version}">sling-launchpad-oak</feature>
-    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <feature version="${feature.version}">sling-launchpad-oak</feature>
     <bundle>mvn:org.mongodb/mongo-java-driver/3.4.1</bundle>
+    <bundle>mvn:com.h2database/h2/1.4.193</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.3-SNAPSHOT</bundle>
   </feature>
   <!-- Apache Sling NoSQL -->
@@ -554,6 +541,19 @@ org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteExceptio
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/4.4.5</bundle>
     <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/4.5.2</bundle>
+  </feature>
+  <feature name="jackrabbit-oak-sling" version="${feature.version}">
+    <bundle>mvn:org.apache.jackrabbit/oak-core/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-commons/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-blob/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-jcr/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-lucene/${org.apache.jackrabbit.oak.version}</bundle>
+    <!-- dependencies -->
+    <feature>scr</feature>
+    <feature version="${feature.version}">jackrabbit-sling</feature>
+    <feature version="${feature.version}">tika-sling</feature>
+    <bundle>mvn:com.google.guava/guava/15.0</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.jaas/0.0.4</bundle>
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${feature.version}">
