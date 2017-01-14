@@ -38,7 +38,7 @@
 
 [artifacts startLevel=15 runModes=oak_mongo]
     org.mongodb/mongo-java-driver/3.4.1
-    com.h2database/h2/1.4.193
+    com.h2database/h2-mvstore/1.4.193
 
 # start the Oak server instance after all components have been configured
 # and started to avoid restarting that component ( see SLING-4556 )
