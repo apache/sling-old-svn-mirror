@@ -341,19 +341,7 @@
     <feature version="${feature.version}">sling-jcr-jackrabbit-security</feature>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.repoinit.parser/1.1.0</bundle>
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.provisioning.model/1.8.0</bundle>
-    <feature version="${feature.version}">pax-url-classpath-sling</feature><!-- prerequisite="true" -->
-    <!-- TODO
-... | ERROR | pool-2-thread-2  | BootFeaturesInstaller            | 9 - org.apache.karaf.features.core - 4.1.0.SNAPSHOT | Error installing boot features
-org.apache.karaf.features.internal.service.Deployer$CircularPrerequisiteException: [pax-url-classpath-sling/0.1.1.SNAPSHOT]
-	at org.apache.karaf.features.internal.service.Deployer.deploy(Deployer.java:266) ~[?:?]
-	at org.apache.karaf.features.internal.service.Deployer.deploy(Deployer.java:281) ~[?:?]
-	at org.apache.karaf.features.internal.service.FeaturesServiceImpl.doProvision(FeaturesServiceImpl.java:1170) ~[?:?]
-	at org.apache.karaf.features.internal.service.FeaturesServiceImpl.lambda$doProvisionInThread$0(FeaturesServiceImpl.java:1069) ~[?:?]
-	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [?:?]
-	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:?]
-	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:?]
-	at java.lang.Thread.run(Thread.java:745) [?:?]
-    -->
+    <feature version="${feature.version}">pax-url-classpath-sling</feature>
   </feature>
   <!-- Apache Sling Launchpad -->
   <feature name="sling-launchpad-content" version="${feature.version}">
