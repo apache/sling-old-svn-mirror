@@ -18,18 +18,6 @@
  */
 package org.apache.sling.jcr.oak.server.it;
 
-import static org.apache.sling.testing.paxexam.SlingOptions.jackrabbitSling;
-import static org.apache.sling.testing.paxexam.SlingOptions.scr;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingJcr;
-import static org.apache.sling.testing.paxexam.SlingOptions.tikaSling;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,12 +34,23 @@ import javax.jcr.observation.ObservationManager;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.paxexam.SlingOptions;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.BundleContext;
+
+import static org.apache.sling.testing.paxexam.SlingOptions.scr;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingJcr;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingJcrRepoinit;
+import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class OakServerTestSupport extends TestSupport {
 
@@ -162,53 +161,23 @@ public abstract class OakServerTestSupport extends TestSupport {
     }
 
     protected Option launchpad() {
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.base");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.jcr.resource");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.resourceresolver");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.sling", "org.apache.sling.api");
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.jackrabbit", "oak-core");
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "oak-commons", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "oak-core"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "oak-blob", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "oak-core"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "oak-jcr", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "oak-core"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "oak-segment", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "oak-core"));
-        SlingOptions.versionResolver.setVersionFromProject("org.apache.jackrabbit", "jackrabbit-api");
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-data", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-jcr-commons", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-jcr-rmi", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-spi", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-spi-commons", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.jackrabbit", "jackrabbit-webdav", SlingOptions.versionResolver.getVersion("org.apache.jackrabbit", "jackrabbit-api"));
-        SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
-        SlingOptions.versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
+        versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
+        versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
         final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
         final String slingHome = String.format("%s/sling", workingDirectory());
         final String repositoryHome = String.format("%s/repository", slingHome);
+        final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             scr(),
             slingJcr(),
-            jackrabbitSling(),
-            tikaSling(),
-
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
-
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-core").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-commons").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-blob").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-jcr").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("com.google.guava").artifactId("guava").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
-            // repoinit (temp)
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.repoinit").version("1.1.0"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.repoinit.parser").version("1.1.0"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.provisioning.model").version("1.7.0"),
+            slingJcrRepoinit(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
             newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
                 .asOption(),
-            newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
-                .put("enabled", true)
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", localIndexDir)
                 .asOption(),
             newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
                 .put("references", new String[]{repoinit})
