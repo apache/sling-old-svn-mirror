@@ -260,6 +260,7 @@
               </execution>
             </executions>
             <configuration>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
               <systemPropertyVariables>
                 <launchpad.http.server.url>http://localhost:${http.port}</launchpad.http.server.url>
                 <server.ready.path.1>/:script src="/system/sling.js"</server.ready.path.1>
