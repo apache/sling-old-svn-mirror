@@ -109,7 +109,7 @@ public class SlingOptions {
             [(${fc})]()[# th:unless="${fcsStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getFeatures())}"][# th:if="${not #lists.isEmpty(feature.getBundles())}"],[/][/][# th:each="bundle,bundlesStatus : ${feature.getBundles()}"]
             mavenBundle().groupId("[(${bundle.groupId})]").artifactId("[(${bundle.artifactId})]").version(versionResolver)[# th:unless="${bundlesStatus.last}"],[/][/][# th:if="${not #lists.isEmpty(feature.getConfigurations())}"],[/][# th:each="configuration,configurationsStatus : ${feature.getConfigurations()}"]
             [# th:if="${configuration.isFactory()}"]factoryConfiguration[/][# th:unless="${configuration.isFactory()}"]newConfiguration[/]("[(${configuration.pid})]")    [# th:each="entry,entriesStatus : ${configuration.getEntries()}"]
-                .put("[(${entry.key})]", "[(${entry.value})]")[/]
+                .put("[(${entry.key})]", [(${entry.value})])[/]
                 .asOption()[# th:unless="${configurationsStatus.last}"],[/][/]
         );
     }
@@ -119,9 +119,7 @@ public class SlingOptions {
         final String repositoryHome = String.format("%s/repository", slingHome);
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
-            slingJcrOak(),
             slingLaunchpadOak(),
-            paxUrlClasspath(), // for reading repoinit from bundle
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
