@@ -22,3 +22,9 @@ create path (sling:OrderedFolder) /content
 set ACL for everyone
   allow jcr:read on /content
 end
+
+create service user sling-readall
+
+set ACL for sling-readall
+    allow   jcr:read    on /
+end
