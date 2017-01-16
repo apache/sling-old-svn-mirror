@@ -106,7 +106,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request,
             final HttpServletResponse response) throws ServletException,
-            IOException {
+    IOException {
         final String msg = request.getParameter(PAR_MSG);
         final String test;
         if (msg != null) {
@@ -217,7 +217,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 // prepare the request for the resource resolver
                 HttpServletRequest helper = new ResolverRequest(request, test);
 
-                resolver = resolverFactory.getServiceResourceResolver(this.resolverFactory.getServiceUserAuthenticationInfo("mapping"));
+                resolver = resolverFactory.getServiceResourceResolver(this.resolverFactory.getServiceUserAuthenticationInfo("read"));
 
                 // map or resolve as instructed
                 Object result;
@@ -249,7 +249,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         // finally redirect
         final String path = request.getContextPath() + request.getServletPath()
-                + request.getPathInfo();
+        + request.getPathInfo();
         final String redirectTo;
         if (msg == null) {
             redirectTo = path;
@@ -372,7 +372,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
             final Collection<ServiceReference<ResourceProvider>> refs = this.bundleContext.getServiceReferences(ResourceProvider.class,
                     "(" + Constants.SERVICE_ID + "=" + String.valueOf(id) + ")");
             if ( refs != null && !refs.isEmpty() ) {
-            	final ServiceReference rp = refs.iterator().next();
+                final ServiceReference rp = refs.iterator().next();
                 return rp;
             }
         } catch ( final InvalidSyntaxException ise) {
