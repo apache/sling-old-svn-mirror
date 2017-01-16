@@ -31,6 +31,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -68,7 +69,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     private final transient CommonResourceResolverFactoryImpl resolverFactory;
 
-    private transient ServiceRegistration service;
+    private transient ServiceRegistration<Servlet> service;
 
     private final transient RuntimeService runtimeService;
 
@@ -92,8 +93,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         props.put("felix.webconsole.category", "Sling");
         props.put("felix.webconsole.configprinter.modes", "always");
 
-        service = context.registerService(
-                new String[] { "javax.servlet.Servlet" }, this, props);
+        service = context.registerService(Servlet.class, this, props);
     }
 
     public void dispose() {
@@ -367,12 +367,13 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         }
     }
 
-    private ServiceReference getServiceReference(final long id) {
+    private ServiceReference<ResourceProvider<?>> getServiceReference(final long id) {
         try {
-            final ServiceReference[] refs = this.bundleContext.getServiceReferences(ResourceProvider.class.getName(),
+            final Collection<ServiceReference<ResourceProvider>> refs = this.bundleContext.getServiceReferences(ResourceProvider.class,
                     "(" + Constants.SERVICE_ID + "=" + String.valueOf(id) + ")");
-            if ( refs != null && refs.length > 0 ) {
-                return refs[0];
+            if ( refs != null && !refs.isEmpty() ) {
+            	final ServiceReference rp = refs.iterator().next();
+                return rp;
             }
         } catch ( final InvalidSyntaxException ise) {
             // ignore
@@ -393,7 +394,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
         for(final ResourceProviderDTO dto : runtimeDTO.providers) {
             // get service reference
-            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
             final StringBuilder sb = new StringBuilder();
             if ( dto.name != null ) {
                 sb.append(dto.name);
@@ -452,7 +453,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
             for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
                 // get service reference
-                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
                 final StringBuilder sb = new StringBuilder();
                 if ( dto.name != null ) {
                     sb.append(dto.name);
@@ -493,7 +494,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
         for(final ResourceProviderDTO dto : runtimeDTO.providers) {
             // get service reference
-            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
             final StringBuilder sb = new StringBuilder();
             if ( dto.name != null ) {
                 sb.append(dto.name);
@@ -532,7 +533,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
             for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
                 // get service reference
-                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
                 final StringBuilder sb = new StringBuilder();
                 if ( dto.name != null ) {
                     sb.append(dto.name);
