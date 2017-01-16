@@ -22,6 +22,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
@@ -46,7 +49,7 @@ public class FactoryPreconditionsTest {
         assertTrue(conditions.checkPreconditions(null, null));
 
         conditions = new FactoryPreconditions();
-        conditions.activate(null, new String[0], new String[0], tracker);
+        conditions.activate(null, Collections.<String> emptySet(), Collections.<String> emptySet(), tracker);
 
         assertTrue(conditions.checkPreconditions(null, null));
     }
@@ -106,7 +109,7 @@ public class FactoryPreconditionsTest {
         Mockito.when(tracker.getResourceProviderStorage()).thenReturn(storage);
 
         FactoryPreconditions conditions = new FactoryPreconditions();
-        conditions.activate(null, new String[] {"pid1", "pid3"}, null, tracker);
+        conditions.activate(null, new HashSet<>(Arrays.asList("pid1", "pid3")), null, tracker);
 
         final List<ResourceProviderHandler> handlers1 = getResourceProviderHandlers(new String[] {"pid2"});
         Mockito.when(storage.getAllHandlers()).thenReturn(handlers1);
@@ -127,7 +130,7 @@ public class FactoryPreconditionsTest {
         Mockito.when(tracker.getResourceProviderStorage()).thenReturn(storage);
 
         FactoryPreconditions conditions = new FactoryPreconditions();
-        conditions.activate(null, null, new String[] {"n1", "n2"}, tracker);
+        conditions.activate(null, null,new HashSet<>(Arrays.asList("n1", "n2")), tracker);
 
         final List<ResourceProviderHandler> handlers1 = getResourceProviderHandlersWithNames(new String[] {"n2"});
         Mockito.when(storage.getAllHandlers()).thenReturn(handlers1);
@@ -148,7 +151,7 @@ public class FactoryPreconditionsTest {
         Mockito.when(tracker.getResourceProviderStorage()).thenReturn(storage);
 
         FactoryPreconditions conditions = new FactoryPreconditions();
-        conditions.activate(null, new String[] {"pid1", "pid3"}, null, tracker);
+        conditions.activate(null, new HashSet<>(Arrays.asList("pid1", "pid3")), null, tracker);
 
         final List<ResourceProviderHandler> handlers2 = getResourceProviderHandlers(new String[] {"pid1", "pid2", "pid3"});
         Mockito.when(storage.getAllHandlers()).thenReturn(handlers2);

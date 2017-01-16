@@ -22,11 +22,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
@@ -329,27 +331,54 @@ public class ResourceResolverFactoryActivator {
         }
 
         // check for required property
-        final String[] requiredResourceProvidersLegacy = config.resource_resolver_required_providers();
-        final String[] requiredResourceProviderNames = config.resource_resolver_required_providernames();
+        Set<String> requiredResourceProvidersLegacy = getStringSet(config.resource_resolver_required_providers());
+        Set<String> requiredResourceProviderNames = getStringSet(config.resource_resolver_required_providernames());
 
-        if ( requiredResourceProvidersLegacy != null && requiredResourceProvidersLegacy.length > 0 ) {
-            boolean hasRealValue = false;
+        boolean hasLegacyRequiredProvider = false;
+        if ( requiredResourceProvidersLegacy != null ) {
             for(final String name : requiredResourceProvidersLegacy) {
-                if ( name != null && !name.trim().isEmpty() ) {
-                    hasRealValue = true;
-                    break;
-                }
+            	if ( name.equals(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID)) {
+                	hasLegacyRequiredProvider = true;
+                	break;
+            	}
             }
-            if ( hasRealValue ) {
+            if ( hasLegacyRequiredProvider ) {
+            	requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
+            }
+            if ( !requiredResourceProvidersLegacy.isEmpty() ) {
                 logger.error("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
-                        "). Please change to use the property resource.resolver.required.providernames for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+                        "). Please change to use the property resource.resolver.required.providernames for values: " + requiredResourceProvidersLegacy);
+            } else {
+            	requiredResourceProvidersLegacy = null;
             }
         }
+        if ( hasLegacyRequiredProvider ) {
+            final boolean hasRequiredProvider;
+        	if ( requiredResourceProviderNames != null ) {
+        		hasRequiredProvider = !requiredResourceProviderNames.add(ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME);
+        	} else {
+        		hasRequiredProvider = false;
+        		requiredResourceProviderNames = Collections.singleton(ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME);
+        	}
+        	if ( hasRequiredProvider ) {
+                logger.warn("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
+                        ") with value '" + ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID + ". Please remove this configuration property. " +
+                        ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME + " is already contained in the property resource.resolver.required.providernames.");        		        		
+        	} else {
+                logger.warn("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
+                        ") with value '" + ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID + ". Please remove this configuration property and add " +
+                        ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME + " to the property resource.resolver.required.providernames.");        		
+        	}
+        }
+
         // for testing: if we run unit test, both trackers are set from the outside
         if ( this.resourceProviderTracker == null ) {
             this.resourceProviderTracker = new ResourceProviderTracker();
             this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
-            this.preconds.activate(this.bundleContext, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.preconds.activate(this.bundleContext, 
+            		requiredResourceProvidersLegacy, 
+            		requiredResourceProviderNames, 
+            		resourceProviderTracker);
             this.changeListenerWhiteboard.activate(this.bundleContext,
                 this.resourceProviderTracker, searchPath);
             this.resourceProviderTracker.activate(this.bundleContext,
@@ -375,7 +404,10 @@ public class ResourceResolverFactoryActivator {
                         }
                     });
         } else {
-            this.preconds.activate(this.bundleContext, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.preconds.activate(this.bundleContext, 
+            		requiredResourceProvidersLegacy, 
+            		requiredResourceProviderNames, 
+            		resourceProviderTracker);
             this.checkFactoryPreconditions(null, null);
          }
     }
@@ -554,6 +586,22 @@ public class ResourceResolverFactoryActivator {
         return resourceProviderTracker;
     }
 
+    /**
+     * Utility method to create a set out of a string array
+     */
+    private Set<String> getStringSet(final String[] values) {
+    	if ( values == null || values.length == 0 ) {
+    		return null;
+    	}
+    	final Set<String> set = new HashSet<>();
+    	for(final String val : values) {
+    		if ( val != null && !val.trim().isEmpty() ) {
+    			set.add(val.trim());
+    		}
+    	}
+    	return set.isEmpty() ? null : set;
+    }
+    
     public static ResourceResolverFactoryConfig DEFAULT_CONFIG;
 
     static {

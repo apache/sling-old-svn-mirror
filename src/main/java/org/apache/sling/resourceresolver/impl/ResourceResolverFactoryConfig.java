@@ -26,6 +26,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             description = "Configures the Resource Resolver for request URL and resource path rewriting.")
 public @interface ResourceResolverFactoryConfig {
 
+	String LEGACY_REQUIRED_PROVIDER_PID = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider";
+	String REQUIRED_PROVIDER_NAME = "JCR";
+	
     @AttributeDefinition(name = "Resource Search Path",
         description = "The list of absolute path prefixes " +
                       "applied to find resources whose path is just specified with a relative path. " +
@@ -79,7 +82,7 @@ public @interface ResourceResolverFactoryConfig {
         description = "A resource resolver factory is only " +
                        "available (registered) if all resource providers mentioned in this configuration " +
                        "are available. Each entry is refers to the name of a registered provider.")
-    String[] resource_resolver_required_providernames() default {"JCR"};
+    String[] resource_resolver_required_providernames() default {REQUIRED_PROVIDER_NAME};
 
     /**
      * The resolver.virtual property has no default configuration. But the Sling
