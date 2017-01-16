@@ -1,0 +1,10 @@
+SetAclPaths on /libs /apps ACLOptions=[merge]
+  AclLine REMOVE_ALL {principals=[user1, user2]}
+  AclLine ALLOW {principals=[user1, user2], privileges=[jcr:read]}
+  AclLine REMOVE_ALL {principals=[another]}
+  AclLine ALLOW {principals=[another], privileges=[x:y]}
+SetAclPaths on /libs /apps ACLOptions=[mergePreserve, someOtherOption, someOther123, namespaced:option]
+  AclLine REMOVE_ALL {principals=[user1, user2]}
+  AclLine ALLOW {principals=[user1, user2], privileges=[jcr:read]}
+  AclLine REMOVE_ALL {principals=[another]}
+  AclLine ALLOW {principals=[another], privileges=[x:y]}

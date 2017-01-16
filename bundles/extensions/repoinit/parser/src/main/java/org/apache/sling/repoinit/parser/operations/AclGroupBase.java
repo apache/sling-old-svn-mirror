@@ -17,16 +17,28 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 /** Base class for operations that group AclLines */
  abstract class AclGroupBase extends Operation {
+    /**
+     * Supported ACL options
+     */
+    public static final String ACL_OPTION_MERGE = "merge";
+    public static final String ACL_OPTION_MERGE_PRESERVE = "mergePreserve";
+
     private final List<AclLine> lines;
+    private final List<String> aclOptions;
     
     protected AclGroupBase(List<AclLine> lines) {
+        this(lines,new ArrayList<String>());
+    }
+    protected AclGroupBase(List<AclLine> lines, List<String> aclOptions) {
         this.lines = Collections.unmodifiableList(lines);
+        this.aclOptions = Collections.unmodifiableList(aclOptions);
     }
     
     protected String getParametersDescription() {
@@ -39,5 +51,9 @@ import java.util.List;
     
     public Collection<AclLine> getLines() {
         return lines;
+    }
+
+    public List<String> getOptions() {
+        return aclOptions;
     }
 }

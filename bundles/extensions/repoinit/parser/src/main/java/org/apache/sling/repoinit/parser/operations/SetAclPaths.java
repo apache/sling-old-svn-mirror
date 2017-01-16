@@ -17,6 +17,7 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +29,11 @@ public class SetAclPaths extends AclGroupBase {
     private final List<String> paths;
     
     public SetAclPaths(List<String> paths, List<AclLine> lines) {
-        super(lines);
+        this(paths,lines,new ArrayList<String>());
+    }
+
+    public SetAclPaths(List<String> paths,List<AclLine> lines, List<String> aclOptions){
+        super(lines,aclOptions);
         this.paths = Collections.unmodifiableList(paths);
     }
     
