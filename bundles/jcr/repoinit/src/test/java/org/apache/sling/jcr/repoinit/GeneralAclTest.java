@@ -32,6 +32,7 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -199,7 +200,8 @@ public class GeneralAclTest {
    /**
     * Verifies that ACEs for existing principal are replaced
     */
-  // @Test
+   @Test
+   @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
    public void mergeMode_ReplaceExistingPrincipalTest() throws Exception {
       final String initialAclSetup = 
                      " set ACL for " + userA + "\n"
@@ -233,7 +235,8 @@ public class GeneralAclTest {
      * Verify that ACLs for new principal are added
      * @throws Exception
      */
-  //  @Test
+    @Test
+    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
     public void mergeMode_AddAceTest() throws Exception {
         final String initialAclSetup =
                 "set ACL for " + userA + "\n"
@@ -267,7 +270,8 @@ public class GeneralAclTest {
      * Verify that ACEs for unspecified principal are preserved
      * @throws Exception
      */
-    //@Test
+    @Test
+    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
     public void mergeMode_PreserveAceTest() throws Exception {
         final String initialAclSetup =
                         "set ACL on / \n"
@@ -302,7 +306,8 @@ public class GeneralAclTest {
      * Verifiy that ACE for non-existing principal are added
      * @throws Exception
      */
-    //@Test
+    @Test
+    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
     public void mergePreserveMode_AddAceTest() throws Exception{
         final String initialAclSetup =
                 " set ACL for " + userB + "\n"
@@ -334,7 +339,8 @@ public class GeneralAclTest {
      * Verify that ACE for existing principal are ignored
      * @throws Exception
      */
-   //@Test
+    @Test
+    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
     public void mergePreserveMode_IgnoreAceTest() throws Exception {
         final String initialAclSetup =
                 "set ACL for " + userA + "\n"
@@ -366,7 +372,8 @@ public class GeneralAclTest {
      * Verify that ACE for unspecified principal are preserved
      * @throws Exception
      */
-    //@Test
+    @Test
+    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
     public void mergePreserveMode_PreserveAceTest() throws Exception {
         final String initialAclSetup =
                 " set ACL on /\n"
