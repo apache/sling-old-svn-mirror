@@ -19,6 +19,7 @@ package org.apache.sling.repoinit.parser.test;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreatePath;
@@ -79,6 +80,9 @@ class OperationToStringVisitor implements OperationVisitor {
             out.print(p);
             out.print(' ');
         }
+
+        dumpAclOptions(s.getOptions());
+
         out.println();
         dumpAclLines(s.getLines());
     }
@@ -91,6 +95,9 @@ class OperationToStringVisitor implements OperationVisitor {
             out.print(p);
             out.print(' ');
         }
+
+        dumpAclOptions(s.getOptions());
+
         out.println();
         dumpAclLines(s.getLines());
     }
@@ -114,6 +121,12 @@ class OperationToStringVisitor implements OperationVisitor {
         for(AclLine line : c) {
             out.print("  ");
             out.println(line);
+        }
+    }
+
+    private void dumpAclOptions(List<String> options){
+        if(options != null && options.size() > 0){
+            out.print("ACLOptions="+options);
         }
     }
 }

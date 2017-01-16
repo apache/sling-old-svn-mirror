@@ -78,7 +78,9 @@ TOKEN:
 |   < RCURLY: "}" >
 |   < COMMA: "," >
 |   < STAR: "*" >
+|   < EQUALS: "=" >
 |   < RESTRICTION: "restriction" >
+|   < ACL_OPTIONS: "ACLOptions" >
 
 /* The order of these fuzzy statements is important (first match wins?) */ 
 |   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
@@ -211,15 +213,16 @@ void setAclPaths(List<Operation> result) :
 {
     List<String> paths;
     List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> aclOptions;
 } 
 {
-    <SET> <ACL> <ON> paths  = pathsList() <EOL>
+    <SET> <ACL> <ON> paths  = pathsList() aclOptions=aclOptions() <EOL>
     ( removeStarLine(lines) | userPrivilegesLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     
     {
-        result.add(new SetAclPaths(paths, lines));
+        result.add(new SetAclPaths(paths, lines, aclOptions));
     }
 }
 
@@ -351,20 +354,43 @@ void pathPrivilegesLine(List<AclLine> lines) :
         lines.add(line); 
     }
 }
+void aclOption(List<String> options) :
+{
+   Token t;
+}
+{
+    (t=<NAMESPACED_ITEM> | t=<STRING>)
+    {
+        options.add(t.image);
+    }
+}
+List<String> aclOptions() :
+{
+    List<String> aclOptionList = new ArrayList<String>();
+    Token t;
+}
+{
+    ( <LPAREN> <ACL_OPTIONS> <EQUALS> aclOption(aclOptionList) ( <COMMA> aclOption(aclOptionList) )*  <RPAREN> )?
+
+    {
+       return aclOptionList;
+    }
+}
 
 void setAclPrincipals(List<Operation> result) :
 {
     List <String> principals;
     List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> aclOptions;
 }
 {
-    <SET> <ACL> <FOR> principals = principalsList() <EOL>
+    <SET> <ACL> <FOR> principals = principalsList() aclOptions=aclOptions() <EOL>
     ( removeStarLine(lines) | pathPrivilegesLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     
     {
-        result.add(new SetAclPrincipals(principals, lines));
+        result.add(new SetAclPrincipals(principals, lines, aclOptions));
     }
 }
 

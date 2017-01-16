@@ -1,0 +1,6 @@
+SetAclPrincipals for user1 u2 ACLOptions=[mergePreserve]
+  AclLine REMOVE_ALL {paths=[/libs, /apps]}
+  AclLine ALLOW {paths=[/content], privileges=[jcr:read]}
+SetAclPrincipals for user1 u2 ACLOptions=[mergePreserve, someOtherOption, someOther123, namespaced:option]
+  AclLine REMOVE_ALL {paths=[/libs, /apps]}
+  AclLine ALLOW {paths=[/content], privileges=[jcr:read]}
