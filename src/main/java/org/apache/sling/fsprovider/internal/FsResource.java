@@ -111,7 +111,7 @@ public class FsResource extends AbstractResource {
             metaData.setModificationTime(file.lastModified());
             metaData.setResolutionPath(resourcePath);
             if ( this.file.isDirectory() ) {
-                metaData.put(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING, Boolean.TRUE);
+                metaData.put(FsResourceProvider.RESOURCE_METADATA_FILE_DIRECTORY, Boolean.TRUE);
             }
         }
         return metaData;
