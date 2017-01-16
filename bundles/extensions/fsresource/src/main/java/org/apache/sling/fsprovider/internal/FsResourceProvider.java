@@ -26,7 +26,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
@@ -63,7 +62,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
            })
 @Designate(ocd=FsResourceProvider.Config.class, factory=true)
 public class FsResourceProvider extends ResourceProvider<Object> {
-
+    
+    /**
+     * Resource metadata property set by {@link FsResource} if the underlying file reference is a directory.
+     */
+    static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
+    
     @ObjectClassDefinition(name = "Apache Sling Filesystem Resource Provider",
             description = "Configure an instance of the filesystem " +
                           "resource provider in terms of provider root and filesystem location")
@@ -132,7 +136,7 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         Resource rsrc = getResource(ctx.getResourceResolver(), path, getFile(path));
         // make sure directory resources from parent resource provider have higher precedence than from this provider
         // this allows properties like sling:resourceSuperType to take effect
-        if ( rsrc == null || rsrc.getResourceMetadata().containsKey(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) ) {
+        if ( rsrc == null || rsrc.getResourceMetadata().containsKey(RESOURCE_METADATA_FILE_DIRECTORY) ) {
         	// get resource from shadowed provider
         	final ResourceProvider rp = ctx.getParentResourceProvider();
         	if ( rp != null ) {
