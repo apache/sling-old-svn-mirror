@@ -25,7 +25,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,7 @@ import java.util.Map;
 
 public class DistributionUtils {
     private static final Logger log = LoggerFactory.getLogger(DistributionUtils.class);
-
+    private static final String AUTHENTICATION_INFO_SESSION = "user.jcr.credentials";
 
     public static ResourceResolver loginService(ResourceResolverFactory resolverFactory, String serviceName) throws LoginException {
         Map<String, Object> authInfo = new HashMap<String, Object>();
@@ -87,7 +86,7 @@ public class DistributionUtils {
 
             if (subServiceName == null && user != null) {
                 Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
-                authenticationInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+                authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
                 resourceResolver = resourceResolverFactory.getResourceResolver(authenticationInfo);
             } else {
                 authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);

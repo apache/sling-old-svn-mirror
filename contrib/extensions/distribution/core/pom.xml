@@ -84,6 +84,12 @@
                 </configuration>
             </plugin>
             <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
@@ -103,6 +109,12 @@
     <!-- D E P E N D E N C I E S                                                 -->
     <!-- ======================================================================= -->
     <dependencies>
+        <!-- need it here as to avoid classpath conflicts with testing mock -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.2.0</version>
+        </dependency>
         <!-- TESTING -->
         <dependency>
             <groupId>junit</groupId>
@@ -127,6 +139,25 @@
             <version>1.1.16</version>
             <scope>test</scope>
         </dependency>
+        <!-- Sling Mock -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
+            <version>1.7.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+            <version>1.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- SLING -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -137,11 +168,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.api</artifactId>
             <version>0.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -181,12 +207,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event.dea</artifactId>
             <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.3.12</version>
             <scope>provided</scope>
         </dependency>
         <!-- LOGGING -->
