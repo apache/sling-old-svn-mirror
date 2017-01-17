@@ -46,6 +46,7 @@ public class RepeatPlugin extends AbstractPlugin {
     private static final String LAST = "last";
     private static final String ODD = "odd";
     private static final String EVEN = "even";
+    private static final OutText NEW_LINE = new OutText("\n");
 
     public RepeatPlugin() {
         name = "repeat";
@@ -75,7 +76,7 @@ public class RepeatPlugin extends AbstractPlugin {
 
             @Override
             public void afterTagClose(PushStream stream, boolean isSelfClosing) {
-                stream.write(new OutText("\n"));
+                stream.write(NEW_LINE);
             }
 
             @Override
