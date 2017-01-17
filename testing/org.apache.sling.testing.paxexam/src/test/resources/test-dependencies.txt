@@ -1,0 +1,7 @@
+[feature name=test]
+# Dependencies
+[artifacts]
+  org.apache.sling/org.apache.sling.engine/2.6.4
+  org.apache.sling/org.apache.sling.servlets.resolver/2.4.10
+  org.apache.sling/org.apache.sling.servlets.get/2.1.18
+  org.apache.sling/org.apache.sling.servlets.post/2.3.14
