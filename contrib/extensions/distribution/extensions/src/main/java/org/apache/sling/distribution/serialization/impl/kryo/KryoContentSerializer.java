@@ -230,14 +230,13 @@ public class KryoContentSerializer implements DistributionContentSerializer {
     }
 
     private void addResource(DistributionExportFilter.TreeFilter nodeFilter, LinkedList<Resource> resources, Resource resource) {
-        resources.add(resource);
-        for (Resource child : resource.getChildren()) {
-            if (nodeFilter.matches(child.getPath())) {
+        if (nodeFilter.matches(resource.getPath())) {
+            resources.add(resource);
+            for (Resource child : resource.getChildren()) {
+                resources.add(child);
                 addResource(nodeFilter, resources, child);
             }
         }
-
-
     }
 
 

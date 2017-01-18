@@ -29,6 +29,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.commons.JcrUtils;
@@ -57,7 +58,7 @@ public class Init {
             final String serviceUserName = "testDistributionUser";
             final String distributorUserName = "testDistributorUser";
 
-            Session session = slingRepository.loginAdministrative(null);
+            Session session = slingRepository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
             JackrabbitSession jackrabittSession  = (JackrabbitSession) session;
             UserManager userManager = jackrabittSession.getUserManager();
