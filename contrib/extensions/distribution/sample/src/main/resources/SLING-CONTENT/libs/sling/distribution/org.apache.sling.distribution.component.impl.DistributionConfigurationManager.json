@@ -1,4 +1,0 @@
-{
-    "jcr:primaryType": "sling:OsgiConfig",
-    "resource.config.enabled": true
-}
