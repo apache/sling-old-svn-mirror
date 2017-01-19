@@ -85,13 +85,18 @@ public class DistributionUtils {
             Map<String, Object> authenticationInfo = new HashMap<String, Object>();
 
             if (subServiceName == null && user != null) {
-                Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
-                authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
-                resourceResolver = resourceResolverFactory.getResourceResolver(authenticationInfo);
+                try {
+                    Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
+                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
+                } catch (NoSuchMethodError nsme) {
+                    log.warn("without sling.jcr.api 2.3.0 content will be aggregated using service {}", service);
+                    Session session = slingRepository.loginService(service, null);
+                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
+                }
             } else {
                 authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
-                resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
             }
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
 
             return resourceResolver;
         } catch (LoginException le) {
