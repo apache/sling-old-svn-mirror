@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Map;
@@ -27,9 +28,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
-import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Integration test for forward distribution
@@ -37,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 public class SelectiveForwardDistributionTest extends DistributionIntegrationTestBase {
 
 
+    @Ignore
     @Test
     public void testQueues() throws Exception {
 
@@ -44,6 +44,7 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertEquals(2, queues.size());
     }
 
+    @Ignore
     @Test
     public void testAddContent() throws Exception {
         String nodePath1 = createRandomNode(authorClient, "/content/news/forward_add_" + System.nanoTime());
@@ -59,6 +60,7 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertExists(publishClient, nodePath2);
     }
 
+    @Ignore
     @Test
     public void testDeleteContent() throws Exception {
         String nodePath1 = createRandomNode(publishClient, "/content/news/forward_del_" + System.nanoTime());

@@ -3,6 +3,8 @@
 
     "name": "impersonate-publish",
 
+    "serviceName" : "distributionService",
+
     "packageImporter.endpoints": [
         "http://localhost:4503/libs/sling/distribution/services/importers/default"
     ]
