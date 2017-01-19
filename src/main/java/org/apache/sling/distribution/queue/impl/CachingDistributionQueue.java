@@ -35,8 +35,8 @@ public class CachingDistributionQueue extends DistributionQueueWrapper {
     // cache status for 30 sec as it is expensive to count items
     private static final int EXPIRY_QUEUE_CACHE = 30 * 1000;
 
-    static final Map<String, DistributionQueueStatus> queueCache = new ConcurrentHashMap<String, DistributionQueueStatus>();
-    static final Map<String, Long> queueCacheExpiry = new ConcurrentHashMap<String, Long>();
+    private static final Map<String, DistributionQueueStatus> queueCache = new ConcurrentHashMap<String, DistributionQueueStatus>();
+    private static final Map<String, Long> queueCacheExpiry = new ConcurrentHashMap<String, Long>();
     private final String cacheKey;
 
     public CachingDistributionQueue(String cacheKey, DistributionQueue wrappedQueue) {

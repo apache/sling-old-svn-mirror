@@ -38,8 +38,8 @@ import java.util.Map;
  */
 public class ResourceConfigurationManager implements DistributionConfigurationManager {
 
-    final String CONTENT_NODE = "jcr:content";
-    final String configRootPath;
+    private final String CONTENT_NODE = "jcr:content";
+    private final String configRootPath;
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String[] configProperties;
     private final Map<String, String> configDefaults;
@@ -153,7 +153,7 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
 
     }
 
-    Map<String, Object> getMap(Resource resource) {
+    private Map<String, Object> getMap(Resource resource) {
         Map<String, Object> result = new HashMap<String, Object>();
         Resource contentResource = resource.getChild(CONTENT_NODE);
 
@@ -166,7 +166,7 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
         return result;
     }
 
-    Map<String, Object> getFilteredMap(Resource resource) {
+    private Map<String, Object> getFilteredMap(Resource resource) {
         Map<String, Object> result = getMap(resource);
 
         result = filterMap(result);
@@ -174,7 +174,7 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
         return result;
     }
 
-    Map<String, Object> filterMap(Map<String, Object> configMap) {
+    private Map<String, Object> filterMap(Map<String, Object> configMap) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         for (String key: configMap.keySet()) {
@@ -186,7 +186,7 @@ public class ResourceConfigurationManager implements DistributionConfigurationMa
         return result;
     }
 
-    boolean isAccepted(String key) {
+    private boolean isAccepted(String key) {
         for (String property : configProperties) {
            if (property.equals(key)) {
                return true;

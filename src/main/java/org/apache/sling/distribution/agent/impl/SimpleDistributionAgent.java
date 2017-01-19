@@ -59,7 +59,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 public class SimpleDistributionAgent implements DistributionAgent {
-    public final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
+    private final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
 
     private final DistributionQueueProvider queueProvider;
     private final DistributionPackageImporter distributionPackageImporter;
@@ -168,8 +168,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             boolean silent = DistributionRequestType.PULL.equals(distributionRequest.getRequestType());
 
-            log.info(silent, "REQUEST-START {}: {} paths={}, user={}", new Object[]{requestId,
-                    distributionRequest.getRequestType(), distributionRequest.getPaths(), callingUser});
+            log.info(silent, "REQUEST-START {}: {} paths={}, user={}", requestId,
+                    distributionRequest.getRequestType(), distributionRequest.getPaths(), callingUser);
 
             // check permissions
             distributionRequestAuthorizationStrategy.checkPermission(resourceResolver, distributionRequest);
@@ -181,19 +181,17 @@ public class SimpleDistributionAgent implements DistributionAgent {
             // export packages
             CompositeDistributionResponse distributionResponse = exportPackages(agentResourceResolver, distributionRequest, callingUser, requestId);
 
-            log.debug("REQUEST-STARTED {}: {} paths={}, success={}, state={}, exportTime={}ms, noPackages={}, size={}B, noQueues={}", new Object[]{
-                    requestId,
+            log.debug("REQUEST-STARTED {}: {} paths={}, success={}, state={}, exportTime={}ms, noPackages={}, size={}B, noQueues={}", requestId,
                     distributionRequest.getRequestType(), distributionRequest.getPaths(),
                     distributionResponse.isSuccessful(), distributionResponse.getState(),
                     distributionResponse.getExportTime(),
                     distributionResponse.getPackagesCount(), distributionResponse.getPackagseSize(),
-                    distributionResponse.getQueuesCount()
-            });
+                    distributionResponse.getQueuesCount());
 
             return distributionResponse;
         } catch (DistributionException e) {
-            log.error("REQUEST-FAIL {}: {} paths={}, user={}, message={}", new Object[]{requestId,
-                    distributionRequest.getRequestType(), distributionRequest.getPaths(), callingUser, e.getMessage()});
+            log.error("REQUEST-FAIL {}: {} paths={}, user={}, message={}", requestId,
+                    distributionRequest.getRequestType(), distributionRequest.getPaths(), callingUser, e.getMessage());
             throw e;
         } finally {
             DistributionUtils.ungetResourceResolver(agentResourceResolver);

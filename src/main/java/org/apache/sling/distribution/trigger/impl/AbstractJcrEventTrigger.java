@@ -168,7 +168,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         log.debug("current requests {}", requestList);
     }
 
-    void addMissingPaths(Set<String> allPaths) {
+    private void addMissingPaths(Set<String> allPaths) {
         Set<String> newPaths = new HashSet<String>();
 
         for (String path : allPaths) {

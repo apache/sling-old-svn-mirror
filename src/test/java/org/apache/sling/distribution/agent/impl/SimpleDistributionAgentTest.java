@@ -220,7 +220,7 @@ public class SimpleDistributionAgentTest {
 
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueueDispatchingStrategy dispatchingStrategy = mock(DistributionQueueDispatchingStrategy.class);
-        when(dispatchingStrategy.getQueueNames()).thenReturn(Arrays.asList(new String[]{ "priority" }));
+        when(dispatchingStrategy.getQueueNames()).thenReturn(Arrays.asList("priority"));
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 

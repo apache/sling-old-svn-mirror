@@ -133,12 +133,10 @@ class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcesso
                     removeItemFromQueue = true;
                     final long endTime = System.currentTimeMillis();
 
-                    log.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, importTime={}ms, execTime={}ms, size={}B", new Object[]{
-                            queueName, requestId,
+                    log.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, importTime={}ms, execTime={}ms, size={}B", queueName, requestId,
                             requestType, paths,
                             endTime - startTime, endTime - globalStartTime,
-                            packageSize
-                    });
+                            packageSize);
                 } catch (RecoverableDistributionException e) {
                     log.error("[{}] PACKAGE-FAIL {}: could not deliver {}, {}", queueName, requestId, distributionPackage.getId(), e.getMessage());
                     log.debug("could not deliver package {}", distributionPackage.getId(), e);

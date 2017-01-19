@@ -49,7 +49,6 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
 
     private final List<String> queues;
     private final Map<String, String> deliveryMappings;
-    private final int MAX_QUEUE_ITEMS_THRESHOLD = 100;
 
     /**
      * create an async delivery strategy
@@ -77,6 +76,7 @@ public class AsyncDeliveryDispatchingStrategy implements DistributionQueueDispat
         for (String referenceQueueName : deliveryMappings.keySet()) {
             DistributionQueue queue = queueProvider.getQueue(referenceQueueName);
 
+            int MAX_QUEUE_ITEMS_THRESHOLD = 100;
             if (queue.getStatus().getItemsCount() > MAX_QUEUE_ITEMS_THRESHOLD) {
                 // too many items in the queue, let's send actual packages and references separately
 

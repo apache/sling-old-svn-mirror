@@ -27,7 +27,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 /**
  * Authentication information required by a {@link SimpleDistributionAgent} to perform its tasks.
  */
-public class SimpleDistributionAgentAuthenticationInfo {
+class SimpleDistributionAgentAuthenticationInfo {
 
     private final SlingRepository slingRepository;
     private final String agentService;

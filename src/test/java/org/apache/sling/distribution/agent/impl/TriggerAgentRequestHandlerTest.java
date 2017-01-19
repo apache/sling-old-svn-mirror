@@ -24,7 +24,6 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**

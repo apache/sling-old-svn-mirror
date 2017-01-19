@@ -140,7 +140,7 @@ public class DistributionPackageUtils {
      * Delete a distribution package, if deletion fails, ignore it
      * @param distributionPackage the package to delete
      */
-    public static void deleteSafely(DistributionPackage distributionPackage) {
+    private static void deleteSafely(DistributionPackage distributionPackage) {
         if (distributionPackage != null) {
             try {
                 distributionPackage.delete();

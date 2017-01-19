@@ -18,8 +18,6 @@
  */
 package org.apache.sling.distribution.packaging.impl;
 
-import static java.util.UUID.randomUUID;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jcr.RepositoryException;

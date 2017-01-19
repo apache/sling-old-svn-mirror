@@ -88,7 +88,7 @@ public final class DigestUtils {
         return targetDigest;
     }
 
-    public static void rewriteDigestMessage(DigestOutputStream digestOutput, OutputStream target) throws IOException {
+    private static void rewriteDigestMessage(DigestOutputStream digestOutput, OutputStream target) throws IOException {
         final Writer writer = new OutputStreamWriter(target);
         try {
             readDigest(digestOutput.getMessageDigest(), writer);

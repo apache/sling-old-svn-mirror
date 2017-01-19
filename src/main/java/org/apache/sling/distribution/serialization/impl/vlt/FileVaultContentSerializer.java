@@ -55,7 +55,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static final String TYPE = "filevault";
+    private static final String TYPE = "filevault";
     private static final String VERSION = "0.0.1";
     private static final String PACKAGE_GROUP = "sling/distribution";
 
@@ -146,7 +146,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     }
 
-    protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
+    private Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
             DistributionJcrUtils.setDoNotDistribute(session);
@@ -156,7 +156,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
         return session;
     }
 
-    protected void ungetSession(Session session) {
+    private void ungetSession(Session session) {
         if (session != null) {
             try {
                 if (session.hasPendingChanges()) {
