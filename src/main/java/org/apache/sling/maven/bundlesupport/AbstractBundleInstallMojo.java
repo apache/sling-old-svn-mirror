@@ -87,7 +87,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * Felix Web Console. In the <code>uninstall</code> goal, a HTTP DELETE will be
      * used.
      * 
-     * @deprecated Use {@link #deployMethod} instead.
+     * @deprecated Use {@link #deploymentMethod} instead.
      */
     @Parameter(property="sling.usePut", defaultValue = "false")
     protected boolean usePut;
@@ -117,7 +117,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      *  <li><strong>WebDAV</strong>, uses <a href="https://sling.apache.org/documentation/development/repository-based-development.html">
      *  WebDAV</a> for deployment (HTTP PUT). Make sure that {@link #slingUrl} points to the entry path of 
      *  the Sling WebDAV bundle (usually below regular Sling root URL). Issues a HTTP Delete for the uninstall goal.
-     *  <li><strong>SlingPostServlet</strong>, uses the <a href="">Sling Post Servlet</a> for deployment (HTTP POST).
+     *  <li><strong>SlingPostServlet</strong>, uses the Sling Post Servlet for deployment (HTTP POST).
      *  Make sure that {@link #slingUrl} points a path which is handled by the Sling POST Servlet (usually below regular Sling root URL).</li>
      * </ol>
      * 
