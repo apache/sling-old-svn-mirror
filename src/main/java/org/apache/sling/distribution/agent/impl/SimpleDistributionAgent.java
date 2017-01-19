@@ -59,7 +59,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 public class SimpleDistributionAgent implements DistributionAgent {
-    private final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
+    public final static String DEFAULT_AGENT_SERVICE = "defaultAgentService";
 
     private final DistributionQueueProvider queueProvider;
     private final DistributionPackageImporter distributionPackageImporter;

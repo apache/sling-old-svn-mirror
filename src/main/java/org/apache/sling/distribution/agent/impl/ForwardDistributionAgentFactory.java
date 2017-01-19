@@ -97,7 +97,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
 
-    @Property(label = "Service Name", description = "The name of the service used to access the repository.")
+    @Property(label = "Service Name", description = "The name of the service used to access the repository. " +
+            "If not set, the calling user ResourceResolver will be used")
     private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
