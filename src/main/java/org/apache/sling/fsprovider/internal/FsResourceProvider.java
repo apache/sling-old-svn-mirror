@@ -49,9 +49,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
  * this provider may be created by creating respective configuration.
  * <p>
  * Each provider instance is configured with two properties: The location in the
- * resource tree where resources are provided ({@link ResourceProvider#ROOTS})
+ * resource tree where resources are provided (provider.root)
  * and the file system path from where files and folders are mapped into the
- * resource ({@link #PROP_PROVIDER_FILE}).
+ * resource (provider.file).
  */
 @Component(name="org.apache.sling.fsprovider.internal.FsResourceProvider",
            service=ResourceProvider.class,
