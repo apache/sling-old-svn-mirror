@@ -171,11 +171,11 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
-    protected Map<String, Object> getResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
+    Map<String, Object> getResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
         return getInternalResourceProperties(resolver, pathInfo);
     }
 
-    protected Iterable<String> getResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
+    private Iterable<String> getResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
         return getInternalResourceChildren(resolver, pathInfo);
     }
 

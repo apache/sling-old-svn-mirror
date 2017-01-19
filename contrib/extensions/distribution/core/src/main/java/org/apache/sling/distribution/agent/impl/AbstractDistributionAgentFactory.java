@@ -66,7 +66,7 @@ abstract class AbstractDistributionAgentFactory<DistributionAgentMBeanType> {
 
     private SimpleDistributionAgent agent;
 
-    public AbstractDistributionAgentFactory(Class<DistributionAgentMBeanType> distributionAgentMBeanType) {
+    AbstractDistributionAgentFactory(Class<DistributionAgentMBeanType> distributionAgentMBeanType) {
         this.distributionAgentMBeanType = distributionAgentMBeanType;
     }
 

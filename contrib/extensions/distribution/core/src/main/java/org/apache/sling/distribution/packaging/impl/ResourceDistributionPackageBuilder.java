@@ -182,7 +182,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
     }
 
 
-    Resource uploadStream(ResourceResolver resourceResolver, Resource parent, InputStream stream, long size) throws PersistenceException {
+    private Resource uploadStream(ResourceResolver resourceResolver, Resource parent, InputStream stream, long size) throws PersistenceException {
 
         String name;
         log.debug("uploading stream");

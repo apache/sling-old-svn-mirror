@@ -25,8 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
@@ -45,8 +43,6 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 
 /**
@@ -54,13 +50,10 @@ import static org.mockito.Mockito.*;
  */
 public class FileVaultContentSerializerTest {
 
-    private MockHelper helper;
-    private ResourceResolver resourceResolver;
-
     @Before
     public void setUp() throws Exception {
-        resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
-        helper = MockHelper.create(resourceResolver).resource("/libs").p("prop", "value")
+        ResourceResolver resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
+        MockHelper helper = MockHelper.create(resourceResolver).resource("/libs").p("prop", "value")
                 .resource("sub").p("sub", "hello")
                 .resource(".sameLevel")
                 .resource("/apps").p("foo", "baa");

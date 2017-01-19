@@ -63,8 +63,8 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     @Reference
     ConfigurationAdmin configurationAdmin;
 
-    DistributionConfigurationManager osgiManager;
-    DistributionConfigurationManager resourceManager;
+    private DistributionConfigurationManager osgiManager;
+    private DistributionConfigurationManager resourceManager;
 
     static String resourcePrefix;
     static final String OSGI_PREFIX = "";
@@ -216,7 +216,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
      * @param prefix a prefix
      * @return a {@link Map} of prefix -> configuration
      */
-    static Map<String, DistributionConfiguration> splitConfig(DistributionConfiguration config, String prefix) {
+    private static Map<String, DistributionConfiguration> splitConfig(DistributionConfiguration config, String prefix) {
         Map<String, Object> distributionConfigurationProperties = config.getProperties();
 
         // properties for OSGi configuration

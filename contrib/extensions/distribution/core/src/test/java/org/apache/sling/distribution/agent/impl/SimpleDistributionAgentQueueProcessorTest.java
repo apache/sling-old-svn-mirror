@@ -29,7 +29,6 @@ import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;

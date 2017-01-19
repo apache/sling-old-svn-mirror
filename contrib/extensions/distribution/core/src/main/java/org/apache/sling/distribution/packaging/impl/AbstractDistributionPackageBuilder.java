@@ -51,7 +51,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     private final String type;
 
-    protected AbstractDistributionPackageBuilder(String type) {
+    AbstractDistributionPackageBuilder(String type) {
         this.type = type;
     }
 
@@ -216,7 +216,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return distributionPackage;
     }
 
-    protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
+    private Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
             // this is needed in order to avoid loops in sync case when there're deletions, otherwise it could work with sling resources
@@ -227,7 +227,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return session;
     }
 
-    protected void ungetSession(Session session) {
+    private void ungetSession(Session session) {
         if (session != null) {
             try {
                 if (session.hasPendingChanges()) {

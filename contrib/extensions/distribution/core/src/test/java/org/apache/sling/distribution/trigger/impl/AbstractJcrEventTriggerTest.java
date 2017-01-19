@@ -42,14 +42,13 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractJcrEventTriggerTest {
 
-    private MockHelper helper;
     private MockResourceResolverFactory rrf;
 
     @Before
     public void setUp() throws Exception {
         rrf = new MockResourceResolverFactory();
         ResourceResolver resourceResolver = rrf.getResourceResolver(null);
-        helper = MockHelper.create(resourceResolver).resource("/a").resource("b").resource("c").resource("d")
+        MockHelper helper = MockHelper.create(resourceResolver).resource("/a").resource("b").resource("c").resource("d")
                 .resource("e").resource("f").resource("g").p("foo", true).resource(".h").p("foo", false);
         helper.commit();
     }

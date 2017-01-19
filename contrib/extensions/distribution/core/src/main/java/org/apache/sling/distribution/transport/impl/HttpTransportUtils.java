@@ -30,7 +30,7 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 
-public class HttpTransportUtils {
+class HttpTransportUtils {
 
     public static InputStream fetchNextPackage(Executor executor, URI distributionURI) throws URISyntaxException, IOException {
         URI fetchUri = getFetchUri(distributionURI);

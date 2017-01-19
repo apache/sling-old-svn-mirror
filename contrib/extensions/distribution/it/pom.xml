@@ -133,6 +133,8 @@
                 <configuration>
                     <excludes>
                         <exclude>derby.log</exclude>
+                        <exclude>**/sling.properties</exclude>
+                        <exclude>**/cache.lock</exclude>
                         <exclude>src/main/resources/**/*.*</exclude>
                         <exclude>src/test/resources/**/*.*</exclude>
                     </excludes>

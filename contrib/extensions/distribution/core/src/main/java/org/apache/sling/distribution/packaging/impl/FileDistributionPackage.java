@@ -97,7 +97,7 @@ public class FileDistributionPackage extends AbstractDistributionPackage {
     }
 
 
-    File getStatusFile() {
+    private File getStatusFile() {
         String statusFilePath = file.getAbsolutePath() + ".status";
         return new File(statusFilePath);
     }
