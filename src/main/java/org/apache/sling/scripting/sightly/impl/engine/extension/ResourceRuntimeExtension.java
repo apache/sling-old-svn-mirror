@@ -40,6 +40,7 @@ import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -74,28 +75,49 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         final Bindings bindings = renderContext.getBindings();
         SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
         Map originalAttributes = ExtensionUtils.setRequestAttributes(request, (Map)options.remove(OPTION_REQUEST_ATTRIBUTES));
-        String resourceType = coerceString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
+        RuntimeObjectModel runtimeObjectModel = renderContext.getObjectModel();
+        String resourceType = runtimeObjectModel.toString(getAndRemoveOption(opts, OPTION_RESOURCE_TYPE));
         StringWriter writer = new StringWriter();
         PrintWriter printWriter = new PrintWriter(writer);
         if (pathObj instanceof Resource) {
-            Resource includeRes = (Resource) pathObj;
-            Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, new LinkedHashSet<String>(), opts);
+            Resource includedResource = (Resource) pathObj;
+            Map<String, String> dispatcherOptionsMap = handleSelectors(request, new LinkedHashSet<String>(), opts, runtimeObjectModel);
             String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
-            includeResource(bindings, printWriter, includeRes, dispatcherOptions, resourceType);
+            includeResource(bindings, printWriter, includedResource, dispatcherOptions, resourceType);
         } else {
-            PathInfo pathInfo = new PathInfo(coerceString(pathObj));
-            String finalPath = buildPath(pathInfo.path, opts, BindingsUtils.getResource(bindings));
-            Map<String, String> dispatcherOptionsMap = handleSelectors(bindings, pathInfo.selectors, opts);
-            String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
-            includeResource(bindings, printWriter, finalPath, dispatcherOptions, resourceType);
+            String includePath = runtimeObjectModel.toString(pathObj);
+            // build path completely
+            includePath = buildPath(includePath, options, request.getResource());
+            if (includePath != null) {
+                // check if path identifies an existing resource
+                Resource includedResource = request.getResourceResolver().getResource(includePath);
+                PathInfo pathInfo;
+                if (includedResource != null) {
+                    Map<String, String> dispatcherOptionsMap =
+                            handleSelectors(request, new LinkedHashSet<String>(), opts, runtimeObjectModel);
+                    String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
+                    includeResource(bindings, printWriter, includedResource, dispatcherOptions, resourceType);
+                } else {
+                    // analyse path and decompose potential selectors from the path
+                    pathInfo = new PathInfo(includePath);
+                    Map<String, String> dispatcherOptionsMap = handleSelectors(request, pathInfo.selectors, opts, runtimeObjectModel);
+                    String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
+                    includeResource(bindings, printWriter, pathInfo.path, dispatcherOptions, resourceType);
+                }
+            } else {
+                // use the current resource
+                Map<String, String> dispatcherOptionsMap = handleSelectors(request, new LinkedHashSet<String>(), opts, runtimeObjectModel);
+                String dispatcherOptions = createDispatcherOptions(dispatcherOptionsMap);
+                includeResource(bindings, printWriter, request.getResource(), dispatcherOptions, resourceType);
+            }
         }
         ExtensionUtils.setRequestAttributes(request, originalAttributes);
         return writer.toString();
     }
 
-    private Map<String, String> handleSelectors(Bindings bindings, Set<String> selectors, Map<String, Object> options) {
+    private Map<String, String> handleSelectors(SlingHttpServletRequest request, Set<String> selectors, Map<String, Object> options,
+                                                RuntimeObjectModel runtimeObjectModel) {
         if (selectors.isEmpty()) {
-            SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
             selectors.addAll(Arrays.asList(request.getRequestPathInfo().getSelectors()));
         }
         Map<String, String> dispatcherOptionsMap = new HashMap<>();
@@ -104,13 +126,13 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         if (options.containsKey(OPTION_SELECTORS)) {
             Object selectorsObject = getAndRemoveOption(options, OPTION_SELECTORS);
             selectors.clear();
-            addSelectors(selectors, selectorsObject);
+            addSelectors(selectors, selectorsObject, runtimeObjectModel);
             dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
             dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
         }
         if (options.containsKey(OPTION_ADD_SELECTORS)) {
             Object selectorsObject = getAndRemoveOption(options, OPTION_ADD_SELECTORS);
-            addSelectors(selectors, selectorsObject);
+            addSelectors(selectors, selectorsObject, runtimeObjectModel);
             dispatcherOptionsMap.put(OPTION_ADD_SELECTORS, getSelectorString(selectors));
             dispatcherOptionsMap.put(OPTION_REPLACE_SELECTORS, " ");
         }
@@ -124,7 +146,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
                 }
             } else if (selectorsObject instanceof Object[]) {
                 for (Object s : (Object[]) selectorsObject) {
-                    String selector = coerceString(s);
+                    String selector = runtimeObjectModel.toString(s);
                     if (StringUtils.isNotEmpty(selector)) {
                         selectors.remove(selector);
                     }
@@ -143,14 +165,14 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return dispatcherOptionsMap;
     }
 
-    private void addSelectors(Set<String> selectors, Object selectorsObject) {
+    private void addSelectors(Set<String> selectors, Object selectorsObject, RuntimeObjectModel runtimeObjectModel) {
         if (selectorsObject instanceof String) {
             String selectorString = (String) selectorsObject;
             String[] parts = selectorString.split("\\.");
             selectors.addAll(Arrays.asList(parts));
         } else if (selectorsObject instanceof Object[]) {
             for (Object s : (Object[]) selectorsObject) {
-                String selector = coerceString(s);
+                String selector = runtimeObjectModel.toString(s);
                 if (StringUtils.isNotEmpty(selector)) {
                     selectors.add(selector);
                 }
@@ -158,7 +180,7 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         }
     }
 
-    private String buildPath(Object pathObj, Map<String, Object> options, Resource currentResource) {
+    private String buildPath(String path, Map<String, Object> options, Resource currentResource) {
         String prependPath = getOption(OPTION_PREPEND_PATH, options, StringUtils.EMPTY);
         if (prependPath == null) {
             prependPath = StringUtils.EMPTY;
@@ -171,7 +193,6 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
                 prependPath += "/";
             }
         }
-        String path = coerceString(pathObj);
         path = getOption(OPTION_PATH, options, StringUtils.isNotEmpty(path) ? path : StringUtils.EMPTY);
         String appendPath = getOption(OPTION_APPEND_PATH, options, StringUtils.EMPTY);
         if (appendPath == null) {
@@ -211,13 +232,6 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return buffer.toString();
     }
 
-    private String coerceString(Object obj) {
-        if (obj instanceof String) {
-            return (String) obj;
-        }
-        return null;
-    }
-
     private String getOption(String option, Map<String, Object> options, String defaultValue) {
         if (options.containsKey(option)) {
             return (String) options.get(option);
@@ -229,15 +243,27 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         return options.remove(property);
     }
 
-    private void includeResource(final Bindings bindings, PrintWriter out, String script, String dispatcherOptions, String resourceType) {
-        if (StringUtils.isEmpty(script)) {
+    private String getSelectorString(Set<String> selectors) {
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (String s : selectors) {
+            sb.append(s);
+            if (i < selectors.size() - 1) {
+                sb.append(".");
+                i++;
+            }
+        }
+        return sb.toString();
+    }
+
+    private void includeResource(final Bindings bindings, PrintWriter out, String path, String dispatcherOptions, String resourceType) {
+        if (StringUtils.isEmpty(path)) {
             throw new SightlyException("Resource path cannot be empty");
         } else {
             SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
-            script = normalizePath(request, script);
-            Resource includeRes = request.getResourceResolver().resolve(script);
+            Resource includeRes = request.getResourceResolver().resolve(path);
             if (ResourceUtil.isNonExistingResource(includeRes)) {
-                includeRes = new SyntheticResource(request.getResourceResolver(), script, resourceType);
+                includeRes = new SyntheticResource(request.getResourceResolver(), path, resourceType);
             }
             includeResource(bindings, out, includeRes, dispatcherOptions, resourceType);
         }
@@ -266,13 +292,6 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
         }
     }
 
-    private String normalizePath(SlingHttpServletRequest request, String path) {
-        if (!path.startsWith("/")) {
-            path = request.getResource().getPath() + "/" + path;
-        }
-        return ResourceUtil.normalize(path);
-    }
-
     private class PathInfo {
         private String path;
         private Set<String> selectors;
@@ -286,41 +305,28 @@ public class ResourceRuntimeExtension implements RuntimeExtension {
                 this.path = path.replace("." + selectorString, "");
             }
         }
-    }
 
-    private Set<String> getSelectorsFromPath(String path) {
-        Set<String> selectors = new LinkedHashSet<>();
-        if (path != null) {
-            String processingPath = path;
-            int lastSlashPos = path.lastIndexOf('/');
-            if (lastSlashPos > -1) {
-                processingPath = path.substring(lastSlashPos + 1, path.length());
-            }
-            int dotPos = processingPath.indexOf('.');
-            if (dotPos > -1) {
-                int lastDotPos = processingPath.lastIndexOf('.');
-                // We're expecting selectors only when an extension is also present. If there's
-                // one dot it means we only have the extension
-                if (lastDotPos > dotPos) {
-                    String selectorString = processingPath.substring(dotPos + 1, lastDotPos);
-                    String[] selectorParts = selectorString.split("\\.");
-                    selectors.addAll(Arrays.asList(selectorParts));
+        private Set<String> getSelectorsFromPath(String path) {
+            Set<String> selectors = new LinkedHashSet<>();
+            if (path != null) {
+                String processingPath = path;
+                int lastSlashPos = path.lastIndexOf('/');
+                if (lastSlashPos > -1) {
+                    processingPath = path.substring(lastSlashPos + 1, path.length());
+                }
+                int dotPos = processingPath.indexOf('.');
+                if (dotPos > -1) {
+                    int lastDotPos = processingPath.lastIndexOf('.');
+                    // We're expecting selectors only when an extension is also present. If there's
+                    // one dot it means we only have the extension
+                    if (lastDotPos > dotPos) {
+                        String selectorString = processingPath.substring(dotPos + 1, lastDotPos);
+                        String[] selectorParts = selectorString.split("\\.");
+                        selectors.addAll(Arrays.asList(selectorParts));
+                    }
                 }
             }
+            return selectors;
         }
-        return selectors;
-    }
-
-    private String getSelectorString(Set<String> selectors) {
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        for (String s : selectors) {
-            sb.append(s);
-            if (i < selectors.size() - 1) {
-                sb.append(".");
-                i++;
-            }
-        }
-        return sb.toString();
     }
 }
