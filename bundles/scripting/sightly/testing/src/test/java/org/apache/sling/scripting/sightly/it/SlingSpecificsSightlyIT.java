@@ -126,6 +126,31 @@ public class SlingSpecificsSightlyIT {
     }
 
     @Test
+    public void testDataSlyResourceResolution() {
+        String url = launchpadURL + SLING_RESOURCE;
+        String pageContent = client.getStringContent(url, 200);
+
+        assertEquals("resource.with.dots.in.path", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource_with_dots_in_path span" +
+                ".name"));
+        assertEquals("/sightly/resource.with.dots.in.path", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource_with_dots_in_path span" +
+                ".path"));
+        assertEquals("false", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource_with_dots_in_path span" +
+                ".synthetic"));
+
+        assertEquals("nonexistingresource", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_nonexistingresource span" +
+                ".name"));
+        assertEquals("/sightly/nonexistingresource", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_nonexistingresource span" +
+                ".path"));
+        assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_nonexistingresource span.synthetic"));
+
+        assertEquals("resource", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource span" +
+                ".name"));
+        assertEquals("/sightly/resource", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource span" +
+                ".path"));
+        assertEquals("false", HTMLExtractor.innerHTML(url, pageContent, "#_sightly_resource span.synthetic"));
+    }
+
+    @Test
     public void testDataSlyTemplate() {
         String url = launchpadURL + SLING_TEMPLATE;
         String pageContent = client.getStringContent(url, 200);
