@@ -217,7 +217,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 // prepare the request for the resource resolver
                 HttpServletRequest helper = new ResolverRequest(request, test);
 
-                resolver = resolverFactory.getServiceResourceResolver(this.resolverFactory.getServiceUserAuthenticationInfo("read"));
+                resolver = resolverFactory.getServiceResourceResolver(this.resolverFactory.getServiceUserAuthenticationInfo("console"));
 
                 // map or resolve as instructed
                 Object result;
