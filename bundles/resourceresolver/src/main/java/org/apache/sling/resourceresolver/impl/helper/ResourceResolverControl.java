@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.path.PathBuilder;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
@@ -371,7 +372,7 @@ public class ResourceResolverControl {
      */
     public Resource create(final ResourceResolverContext context,
             final String path, final Map<String, Object> properties)
-    throws PersistenceException {
+                    throws PersistenceException {
         final AuthenticatedResourceProvider provider = getBestMatchingModifiableProvider(context, path);
         if ( provider != null ) {
             final Resource creationResultResource = provider.create(context.getResourceResolver(), path, properties);
@@ -699,7 +700,7 @@ public class ResourceResolverControl {
                     final Bundle bundle = FrameworkUtil.getBundle(ResourceResolverControl.class);
                     final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
                     authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
-                    authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, "read");
+                    authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, "hierarchy");
                     this.resourceTypeResourceResolver = factory.getServiceResourceResolver(authenticationInfo);
                 } catch (final LoginException e) {
                     throw new IllegalStateException("Failed to create resource-type ResourceResolver", e);

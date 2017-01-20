@@ -49,14 +49,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(service = ResourceChangeListener.class,
-           configurationPolicy = ConfigurationPolicy.IGNORE,
-           property = {
-                  Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
-                  ResourceChangeListener.PATHS + "=/",
-                  ResourceChangeListener.CHANGES + "=ADDED",
-                  ResourceChangeListener.CHANGES + "=CHANGED",
-                  ResourceChangeListener.CHANGES + "=REMOVED"
-           })
+configurationPolicy = ConfigurationPolicy.IGNORE,
+property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        ResourceChangeListener.PATHS + "=/",
+        ResourceChangeListener.CHANGES + "=ADDED",
+        ResourceChangeListener.CHANGES + "=CHANGED",
+        ResourceChangeListener.CHANGES + "=REMOVED"
+})
 public class OsgiObservationBridge implements ResourceChangeListener, ExternalResourceChangeListener {
 
     private final Logger logger = LoggerFactory.getLogger(OsgiObservationBridge.class);
@@ -74,7 +74,7 @@ public class OsgiObservationBridge implements ResourceChangeListener, ExternalRe
     private EventSendingJob job;
 
     protected void activate() throws LoginException {
-        resolver = resolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"read"));
+        resolver = resolverFactory.getServiceResourceResolver(Collections.<String, Object>singletonMap(ResourceResolverFactory.SUBSERVICE, "observation"));
         changesQueue = new LinkedBlockingQueue<ResourceChange>();
         job = new EventSendingJob(changesQueue);
         Executors.newSingleThreadExecutor().submit(job);
