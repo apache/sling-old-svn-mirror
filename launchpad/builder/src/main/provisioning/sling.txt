@@ -58,7 +58,7 @@
     org.apache.sling/org.apache.sling.launchpad.content/2.0.9-SNAPSHOT
     org.apache.sling/org.apache.sling.models.api/1.2.2
     org.apache.sling/org.apache.sling.models.impl/1.2.8
-    org.apache.sling/org.apache.sling.resourceresolver/1.5.10
+    org.apache.sling/org.apache.sling.resourceresolver/1.5.11-SNAPSHOT
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.4
     org.apache.sling/org.apache.sling.servlets.get/2.1.18
     org.apache.sling/org.apache.sling.servlets.post/2.3.14
@@ -180,7 +180,9 @@
   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver
     user.mapping=[
       "org.apache.sling.resourceresolver:mapping\=sling-mapping",
-      "org.apache.sling.resourceresolver:read\=sling-readall"
+      "org.apache.sling.resourceresolver:hierarchy\=sling-readall",
+      "org.apache.sling.resourceresolver:observation\=sling-readall",
+      "org.apache.sling.resourceresolver:console\=sling-readall"
     ]
 
   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-observation
