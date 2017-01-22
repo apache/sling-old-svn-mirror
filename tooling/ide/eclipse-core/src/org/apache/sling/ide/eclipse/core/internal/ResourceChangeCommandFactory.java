@@ -240,7 +240,7 @@ public class ResourceChangeCommandFactory {
      * The resourceProxy may be null, typically when a resource is already deleted.
      * 
      * <p>
-     * The filter may be null, in which case all combinations are included in the filed, i.e. allowed.
+     * In case the filter is {@code null} no resource should be added, i.e. {@link FilterResult#DENY} is returned
      * 
      * @param resource the resource to filter for, must not be <code>null</code>
      * @param resourceProxy the resource proxy to filter for, possibly <code>null</code>
@@ -250,7 +250,7 @@ public class ResourceChangeCommandFactory {
     private FilterResult getFilterResult(IResource resource, ResourceProxy resourceProxy, Filter filter) {
 
         if (filter == null) {
-            return FilterResult.ALLOW;
+            return FilterResult.DENY;
         }
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());

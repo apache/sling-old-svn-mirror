@@ -91,6 +91,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
+
         // create a sling:Folder at /content/test-root
         InputStream contentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), contentXml);
@@ -145,6 +148,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
+        
         // create a sling:Folder at /content/test-root
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
                 .getResourceAsStream("sling-folder-nodetype.xml"));
@@ -199,6 +205,8 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
 
         // create a nt:file at /content/test-root/file.txt
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/folder/file.txt"),
@@ -254,6 +262,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
+        
         // the expected repository structure is
         // mapping [sling:Mapping]
         // \- jcr:content [nt:unstructured]
@@ -319,6 +330,9 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
+        
         // the expected repository structure is
         // mapping [sling:Mapping]
         // \- jcr:content [nt:unstructured]

@@ -20,6 +20,7 @@ import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
@@ -37,12 +38,14 @@ public class ExportWizardPage extends WizardDataTransferPage {
 
     private SlingLaunchpadCombo repositoryCombo;
     private IResource syncStartPoint;
+    boolean hasValidFilter;
 
     public ExportWizardPage(IResource syncStartPoint) {
         super("Repository selection");
         setTitle("Repository selection");
         setDescription("Select a repository to export content to");
         this.syncStartPoint = syncStartPoint;
+        this.hasValidFilter = false;
     }
 
     @Override
@@ -106,13 +109,16 @@ public class ExportWizardPage extends WizardDataTransferPage {
         Label filterLabel = new Label(parent, SWT.NONE);
         GridDataFactory.fillDefaults().applyTo(filterLabel);
 
-        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot()
-                .getFileForLocation(ProjectUtil.findFilterPath(syncStartPoint.getProject()));
+        IFile filterFile = null;
+        IPath path = ProjectUtil.findFilterPath(syncStartPoint.getProject());
+        if (path != null) {
+            filterFile  = ResourcesPlugin.getWorkspace().getRoot()
+                    .getFileForLocation(path);
+        }
 
         if (filterFile != null && filterFile.exists()) {
             filterLabel.setText("Will apply export filter from /" + filterFile.getProjectRelativePath() + ".");
-        } else {
-            filterLabel.setText("No filter definition found, will export all resources.");
+            hasValidFilter = true;
         }
     }
 
@@ -123,7 +129,17 @@ public class ExportWizardPage extends WizardDataTransferPage {
             setErrorMessage(repositoryError);
             return false;
         }
-
         return true;
     }
+
+    @Override
+    protected boolean validateSourceGroup() {
+        if (!hasValidFilter) {
+            setErrorMessage("No valid filter found in this project!");
+            return false;
+        }
+        return true;
+    }
+    
+    
 }

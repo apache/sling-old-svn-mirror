@@ -62,6 +62,8 @@ public class ResourceChangeCommandFactoryTest {
 
         // install content facet
         project.installFacet("sling.content", "1.0");
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
 
         factory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager());
 
