@@ -49,8 +49,7 @@ set ACL for sling-event
 end
 
 set ACL for sling-i18n
-    allow   jcr:read    on /apps
-    allow   jcr:read    on /libs
+    allow   jcr:read    on /
 end
 
 set ACL for sling-jcr-install
