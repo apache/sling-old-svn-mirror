@@ -51,7 +51,13 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
     public Option[] configuration() throws Exception {
         final int httpPort = Integer.getInteger("http.port");
         final String[] references = new String[]{
-            "raw:classpath://org.apache.sling.karaf-repoinit/repoinit.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-discovery.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-event.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-i18n.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-installer-jcr.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-scripting.txt",
+            "raw:classpath://org.apache.sling.karaf-repoinit/sling-xss.txt",
             "raw:classpath://repoinit/repoinit.txt"
         };
         return OptionUtils.combine(baseConfiguration(),
