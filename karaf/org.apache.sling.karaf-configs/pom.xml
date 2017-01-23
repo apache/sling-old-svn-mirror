@@ -168,8 +168,8 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr</classifier>
-                  <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr.config</file>
+                  <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr</classifier>
+                  <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>
