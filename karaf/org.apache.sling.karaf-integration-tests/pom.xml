@@ -278,10 +278,6 @@
             </executions>
             <configuration>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
-              <excludes>
-                <exclude>**/SlingLaunchpadOakMongoIT.*</exclude>
-                <exclude>**/SlingLaunchpadOakTarIT.*</exclude>
-              </excludes>
             </configuration>
           </plugin>
         </plugins>
