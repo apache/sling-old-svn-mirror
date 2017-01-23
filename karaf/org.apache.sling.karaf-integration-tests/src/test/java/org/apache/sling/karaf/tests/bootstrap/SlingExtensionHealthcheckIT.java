@@ -51,13 +51,6 @@ public class SlingExtensionHealthcheckIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheSlingHealthcheckJmx() {
-        final Bundle bundle = findBundle("org.apache.sling.hc.jmx");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     public void testOrgApacheSlingHealthcheckSupport() {
         final Bundle bundle = findBundle("org.apache.sling.hc.support");
         assertNotNull(bundle);
