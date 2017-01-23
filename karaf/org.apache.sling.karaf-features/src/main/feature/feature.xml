@@ -292,7 +292,7 @@
     <feature version="${feature.version}">sling-installer</feature>
   </feature>
   <feature name="sling-installer-provider-jcr" version="${feature.version}">
-    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr</configfile>
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_provider_jcr</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.22</bundle>
     <!-- dependencies -->
     <feature version="${feature.version}">sling-installer</feature>
