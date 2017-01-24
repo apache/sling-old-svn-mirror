@@ -134,7 +134,7 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.commons").artifactId("commons-math").version(versionResolver),
             mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
-                .put("user.mapping", new String[]{"org.apache.sling.resourceresolver:mapping=sling-mapping", "org.apache.sling.resourceresolver:read=sling-readall"})
+                .put("user.mapping", new String[]{"org.apache.sling.resourceresolver:mapping=sling-mapping", "org.apache.sling.resourceresolver:hierarchy=sling-readall", "org.apache.sling.resourceresolver:observation=sling-readall", "org.apache.sling.resourceresolver:console=sling-readall"})
                 .asOption()
         );
     }
@@ -324,7 +324,6 @@ public class SlingOptions {
             slingJcr(),
             slingScripting(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.hc.core").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.hc.jmx").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.hc.support").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.hc.webconsole").version(versionResolver)
         );
@@ -553,7 +552,7 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.memoryusage").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.packageadmin").version(versionResolver),
             newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
-                .put("references", new String[]{"raw:classpath://org.apache.sling.karaf-repoinit/repoinit.txt"})
+                .put("references", new String[]{"raw:classpath://org.apache.sling.karaf-repoinit/sling.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-discovery.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-event.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-i18n.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-installer-jcr.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-scripting.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-xss.txt"})
                 .asOption(),
             factoryConfiguration("org.apache.felix.jaas.Configuration.factory")
                 .put("jaas.classname", "org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule")
@@ -817,6 +816,7 @@ public class SlingOptions {
         return composite(
             slingLaunchpadOak(),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
                 .asOption(),
