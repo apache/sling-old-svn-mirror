@@ -18,9 +18,12 @@ package org.apache.sling.servlets.post;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -30,6 +33,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -96,6 +100,32 @@ public abstract class AbstractPostOperation implements PostOperation {
             if (processors != null) {
                 for (SlingPostProcessor processor : processors) {
                     processor.process(request, changes);
+                }
+            }
+
+            // check modifications for remaining postfix and store the base path
+            final Map<String, String> modificationSourcesContainingPostfix = new HashMap<String, String>();
+            final Set<String> allModificationSources = new HashSet<String>(changes.size());
+            for (final Modification modification : changes) {
+                final String source = modification.getSource();
+                if (source != null) {
+                    allModificationSources.add(source);
+                    final int atIndex = source.indexOf('@');
+                    if (atIndex > 0) {
+                        modificationSourcesContainingPostfix.put(source.substring(0, atIndex), source);
+                    }
+                }
+            }
+
+            // fail if any of the base paths (before the postfix) which had a postfix are contained in the modification set
+            if (modificationSourcesContainingPostfix.size() > 0) {
+                for (final Map.Entry<String, String> sourceToCheck : modificationSourcesContainingPostfix.entrySet()) {
+                    if (allModificationSources.contains(sourceToCheck.getKey())) {
+                        response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED,
+                                "Postfix-containing path " + sourceToCheck.getValue() +
+                                " contained in the modification list. Check configuration.");
+                        return;
+                    }
                 }
             }
 
