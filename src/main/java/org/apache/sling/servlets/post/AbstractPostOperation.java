@@ -121,7 +121,7 @@ public abstract class AbstractPostOperation implements PostOperation {
             if (modificationSourcesContainingPostfix.size() > 0) {
                 for (final Map.Entry<String, String> sourceToCheck : modificationSourcesContainingPostfix.entrySet()) {
                     if (allModificationSources.contains(sourceToCheck.getKey())) {
-                        response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED,
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                                 "Postfix-containing path " + sourceToCheck.getValue() +
                                 " contained in the modification list. Check configuration.");
                         return;
