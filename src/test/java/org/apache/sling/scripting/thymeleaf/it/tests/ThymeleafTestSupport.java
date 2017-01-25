@@ -25,8 +25,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.scripting.thymeleaf.it.app.Activator;
-import org.apache.sling.testing.paxexam.SlingOptions;
-import org.apache.sling.testing.paxexam.SlingVersionResolver;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
@@ -40,6 +39,7 @@ import org.thymeleaf.ITemplateEngine;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionI18n;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionModels;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingInstallerProviderJcr;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScripting;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingJsp;
@@ -47,7 +47,6 @@ import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class ThymeleafTestSupport extends TestSupport {
@@ -71,16 +70,11 @@ public abstract class ThymeleafTestSupport extends TestSupport {
     @Inject
     protected ITemplateEngine templateEngine;
 
+    @Inject
+    protected ServiceUserMapped serviceUserMapped;
+
     @Configuration
     public Option[] configuration() {
-        // SlingOptions.versionResolver.setVersionFromProject(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.scripting.api");
-        // SlingOptions.versionResolver.setVersionFromProject(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.scripting.core");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.api", "2.14.3-SNAPSHOT");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.jcr.base", "2.4.1-SNAPSHOT");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.jcr.oak.server", "1.1.1-SNAPSHOT");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.jcr.repoinit", "1.0.3-SNAPSHOT");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.jcr.resource", "2.8.1-SNAPSHOT");
-        SlingOptions.versionResolver.setVersion(SlingVersionResolver.SLING_GROUP_ID, "org.apache.sling.resourceresolver", "1.4.19-SNAPSHOT");
         return new Option[]{
             baseConfiguration(),
             launchpad(),
@@ -98,6 +92,7 @@ public abstract class ThymeleafTestSupport extends TestSupport {
     @ProbeBuilder
     public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
         testProbeBuilder.setHeader(Constants.BUNDLE_ACTIVATOR, Activator.class.getName());
+        testProbeBuilder.setHeader(Constants.BUNDLE_SYMBOLICNAME, "org.apache.sling.scripting.thymeleaf.it.app");
         testProbeBuilder.setHeader(Constants.EXPORT_PACKAGE, "org.apache.sling.scripting.thymeleaf.it.app");
         testProbeBuilder.setHeader("Sling-Model-Packages", "org.apache.sling.scripting.thymeleaf.it.app");
         testProbeBuilder.setHeader("Sling-Initial-Content", String.join(",",
@@ -111,22 +106,13 @@ public abstract class ThymeleafTestSupport extends TestSupport {
     protected Option launchpad() {
         final int httpPort = findFreePort();
         final String workingDirectory = workingDirectory();
-        final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
         return composite(
             slingLaunchpadOakTar(workingDirectory, httpPort),
             slingExtensionI18n(),
             slingExtensionModels(),
+            slingInstallerProviderJcr(),
             slingScripting(),
-            slingScriptingJsp(),
-            newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
-                .put("references", new String[]{repoinit})
-                .asOption(),
-            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
-                .put("user.mapping", "org.apache.sling.scripting.thymeleaf=sling-scripting")
-                .asOption(),
-            newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
-                .put("whitelist.bundles.regexp", "org.apache.sling.*")
-                .asOption()
+            slingScriptingJsp()
         );
     }
 
