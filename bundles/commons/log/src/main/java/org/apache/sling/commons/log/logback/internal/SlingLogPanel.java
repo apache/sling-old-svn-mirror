@@ -785,7 +785,7 @@ public class SlingLogPanel implements LogPanel {
     }
 
     private static String getPath(String path, final String rootPath, final boolean shortenPaths) {
-        if (shortenPaths && path != null) {
+        if (shortenPaths && path != null && path.length() > rootPath.length()) {
             // if the shortenPath parameter is set (all log files are in the same folder)
             // remove the root path (root log file folder) from the paths
             path = path.substring(rootPath.length() + 1);
