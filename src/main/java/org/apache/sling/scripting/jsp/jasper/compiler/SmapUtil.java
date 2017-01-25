@@ -44,7 +44,7 @@ import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 public class SmapUtil {
 
     private org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( SmapUtil.class );
+            org.apache.juli.logging.LogFactory.getLog( SmapUtil.class );
 
     //*********************************************************************
     // Constants
@@ -63,9 +63,9 @@ public class SmapUtil {
      * @return a SMAP for the page
      */
     public static String[] generateSmap(
-        JspCompilationContext ctxt,
-        Node.Nodes pageNodes)
-        throws IOException {
+            JspCompilationContext ctxt,
+            Node.Nodes pageNodes)
+                    throws IOException {
 
         // Scan the nodes for presence of Jasper generated inner classes
         PreScanVisitor psVisitor = new PreScanVisitor();
@@ -92,7 +92,7 @@ public class SmapUtil {
             String subSmapString = new String(subSmap, SMAP_ENCODING);
             g.addSmap(subSmapString, "JSP");
         }
-        **/
+         **/
 
         // now, assemble info about our own stratum (JSP) using JspLineMap
         SmapStratum s = new SmapStratum("JSP");
@@ -124,8 +124,8 @@ public class SmapUtil {
             g.addStratum(s, true);
 
             String innerClassFileName =
-                classFileName.substring(0, classFileName.indexOf(".class")) +
-                '$' + innerClass + ".class";
+                    classFileName.substring(0, classFileName.indexOf(".class")) +
+                    '$' + innerClass + ".class";
             dumpSmap(g, innerClassFileName, ctxt);
             smapInfo[count] = innerClassFileName;
             smapInfo[count+1] = g.getString();
@@ -141,7 +141,7 @@ public class SmapUtil {
             try {
                 out = ctxt.getOutputStream(smapFile + ".smap");
                 PrintWriter so = new PrintWriter(new OutputStreamWriter(out,
-                    SMAP_ENCODING));
+                        SMAP_ENCODING));
                 so.print(g.getString());
                 so.close();
                 out = null;
@@ -157,7 +157,7 @@ public class SmapUtil {
     }
 
     public static void installSmap(JspCompilationContext ctxt, String[] smap)
-        throws IOException {
+            throws IOException {
         if (smap == null) {
             return;
         }
@@ -192,7 +192,7 @@ public class SmapUtil {
     private static class SDEInstaller {
 
         private org.apache.juli.logging.Log log=
-            org.apache.juli.logging.LogFactory.getLog( SDEInstaller.class );
+                org.apache.juli.logging.LogFactory.getLog( SDEInstaller.class );
 
         static final String nameSDE = "SourceDebugExtension";
 
@@ -205,39 +205,39 @@ public class SmapUtil {
 
         int sdeIndex;
 
-//        public static void main(String[] args) throws IOException {
-//            if (args.length == 2) {
-//                install(new File(args[0]), new File(args[1]));
-//            } else if (args.length == 3) {
-//                install(
-//                    new File(args[0]),
-//                    new File(args[1]),
-//                    new File(args[2]));
-//            } else {
-//                System.err.println(
-//                    "Usage: <command> <input class file> "
-//                        + "<attribute file> <output class file name>\n"
-//                        + "<command> <input/output class file> <attribute file>");
-//            }
-//        }
-//
-//        static void install(File inClassFile, File attrFile, File outClassFile)
-//            throws IOException {
-//            new SDEInstaller(inClassFile, attrFile, outClassFile);
-//        }
-//
-//        static void install(File inOutClassFile, File attrFile)
-//            throws IOException {
-//            File tmpFile = new File(inOutClassFile.getPath() + "tmp");
-//            new SDEInstaller(inOutClassFile, attrFile, tmpFile);
-//            if (!inOutClassFile.delete()) {
-//                throw new IOException("inOutClassFile.delete() failed");
-//            }
-//            if (!tmpFile.renameTo(inOutClassFile)) {
-//                throw new IOException("tmpFile.renameTo(inOutClassFile) failed");
-//            }
-//        }
-//
+        //        public static void main(String[] args) throws IOException {
+        //            if (args.length == 2) {
+        //                install(new File(args[0]), new File(args[1]));
+        //            } else if (args.length == 3) {
+        //                install(
+        //                    new File(args[0]),
+        //                    new File(args[1]),
+        //                    new File(args[2]));
+        //            } else {
+        //                System.err.println(
+        //                    "Usage: <command> <input class file> "
+        //                        + "<attribute file> <output class file name>\n"
+        //                        + "<command> <input/output class file> <attribute file>");
+        //            }
+        //        }
+        //
+        //        static void install(File inClassFile, File attrFile, File outClassFile)
+        //            throws IOException {
+        //            new SDEInstaller(inClassFile, attrFile, outClassFile);
+        //        }
+        //
+        //        static void install(File inOutClassFile, File attrFile)
+        //            throws IOException {
+        //            File tmpFile = new File(inOutClassFile.getPath() + "tmp");
+        //            new SDEInstaller(inOutClassFile, attrFile, tmpFile);
+        //            if (!inOutClassFile.delete()) {
+        //                throw new IOException("inOutClassFile.delete() failed");
+        //            }
+        //            if (!tmpFile.renameTo(inOutClassFile)) {
+        //                throw new IOException("tmpFile.renameTo(inOutClassFile) failed");
+        //            }
+        //        }
+        //
         static void install(JspCompilationContext ctxt, String classFile, byte[] smap) throws IOException {
             String tmpFile = classFile + "tmp";
             new SDEInstaller(ctxt, classFile, smap, tmpFile);
@@ -250,10 +250,10 @@ public class SmapUtil {
         }
 
         SDEInstaller(JspCompilationContext ctxt, String inClassFile, byte[] sdeAttr, String outClassFile)
-            throws IOException {
-//            if (!inClassFile.exists()) {
-//                throw new FileNotFoundException("no such file: " + inClassFile);
-//            }
+                throws IOException {
+            //            if (!inClassFile.exists()) {
+            //                throw new FileNotFoundException("no such file: " + inClassFile);
+            //            }
 
             this.sdeAttr = sdeAttr;
             // get the bytes
@@ -269,11 +269,11 @@ public class SmapUtil {
             outStream.close();
         }
 
-//        SDEInstaller(File inClassFile, File attrFile, File outClassFile)
-//            throws IOException {
-//            this(inClassFile, readWhole(attrFile), outClassFile);
-//        }
-//
+        //        SDEInstaller(File inClassFile, File attrFile, File outClassFile)
+        //            throws IOException {
+        //            this(inClassFile, readWhole(attrFile), outClassFile);
+        //        }
+        //
         static byte[] readWhole(JspCompilationContext ctxt, String input) throws IOException {
             InputStream inStream = ctxt.getInputStream(input);
             try {
@@ -445,50 +445,57 @@ public class SmapUtil {
         }
 
         int copyConstantPool(int constantPoolCount)
-            throws UnsupportedEncodingException, IOException {
+                throws UnsupportedEncodingException, IOException {
             int sdeIndex = -1;
             // copy const pool index zero not in class file
             for (int i = 1; i < constantPoolCount; ++i) {
                 int tag = readU1();
                 writeU1(tag);
                 switch (tag) {
-                    case 7 : // Class
-                    case 8 : // String
-                        if (log.isDebugEnabled())
-                            log.debug(i + " copying 2 bytes");
-                        copy(2);
-                        break;
-                    case 9 : // Field
-                    case 10 : // Method
-                    case 11 : // InterfaceMethod
-                    case 3 : // Integer
-                    case 4 : // Float
-                    case 12 : // NameAndType
-                        if (log.isDebugEnabled())
-                            log.debug(i + " copying 4 bytes");
-                        copy(4);
-                        break;
-                    case 5 : // Long
-                    case 6 : // Double
-                        if (log.isDebugEnabled())
-                            log.debug(i + " copying 8 bytes");
-                        copy(8);
-                        i++;
-                        break;
-                    case 1 : // Utf8
-                        int len = readU2();
-                        writeU2(len);
-                        byte[] utf8 = readBytes(len);
-                        String str = new String(utf8, "UTF-8");
-                        if (log.isDebugEnabled())
-                            log.debug(i + " read class attr -- '" + str + "'");
-                        if (str.equals(nameSDE)) {
-                            sdeIndex = i;
-                        }
-                        writeBytes(utf8);
-                        break;
-                    default :
-                        throw new IOException("unexpected tag: " + tag);
+                case 7 : // Class
+                case 8 : // String
+                case 16 : // MethodType
+                    if (log.isDebugEnabled())
+                        log.debug(i + " copying 2 bytes");
+                    copy(2);
+                    break;
+                case 15 : // MethodHandle
+                    if (log.isDebugEnabled())
+                        log.debug(i + " copying 3 bytes");
+                    copy(3);
+                    break;
+                case 9 : // Field
+                case 10 : // Method
+                case 11 : // InterfaceMethod
+                case 3 : // Integer
+                case 4 : // Float
+                case 12 : // NameAndType
+                case 18 : // InvokeDynamic
+                    if (log.isDebugEnabled())
+                        log.debug(i + " copying 4 bytes");
+                    copy(4);
+                    break;
+                case 5 : // Long
+                case 6 : // Double
+                    if (log.isDebugEnabled())
+                        log.debug(i + " copying 8 bytes");
+                    copy(8);
+                    i++;
+                    break;
+                case 1 : // Utf8
+                    int len = readU2();
+                    writeU2(len);
+                    byte[] utf8 = readBytes(len);
+                    String str = new String(utf8, "UTF-8");
+                    if (log.isDebugEnabled())
+                        log.debug(i + " read class attr -- '" + str + "'");
+                    if (str.equals(nameSDE)) {
+                        sdeIndex = i;
+                    }
+                    writeBytes(utf8);
+                    break;
+                default :
+                    throw new IOException("unexpected tag: " + tag);
                 }
             }
             return sdeIndex;
@@ -505,10 +512,10 @@ public class SmapUtil {
     }
 
     public static void evaluateNodes(
-        Node.Nodes nodes,
-        SmapStratum s,
-        HashMap innerClassMap,
-        boolean breakAtLF) {
+            Node.Nodes nodes,
+            SmapStratum s,
+            HashMap innerClassMap,
+            boolean breakAtLF) {
         try {
             nodes.visit(new SmapGenVisitor(s, breakAtLF, innerClassMap));
         } catch (JasperException ex) {
@@ -657,7 +664,7 @@ public class SmapUtil {
             int iOutputStartLine = n.getBeginJavaLine();
             int iOutputLineIncrement = breakAtLF? 1: 0;
             smap.addLineData(iInputStartLine, fileName, 1, iOutputStartLine,
-                             iOutputLineIncrement);
+                    iOutputLineIncrement);
 
             // Output additional mappings in the text
             java.util.ArrayList extraSmap = n.getExtraSmap();
@@ -666,20 +673,20 @@ public class SmapUtil {
                 for (int i = 0; i < extraSmap.size(); i++) {
                     iOutputStartLine += iOutputLineIncrement;
                     smap.addLineData(
-                        iInputStartLine+((Integer)extraSmap.get(i)).intValue(),
-                        fileName,
-                        1,
-                        iOutputStartLine,
-                        iOutputLineIncrement);
+                            iInputStartLine+((Integer)extraSmap.get(i)).intValue(),
+                            fileName,
+                            1,
+                            iOutputStartLine,
+                            iOutputLineIncrement);
                 }
             }
         }
 
         private void doSmap(
-            Node n,
-            int inLineCount,
-            int outIncrement,
-            int skippedLines) {
+                Node n,
+                int inLineCount,
+                int outIncrement,
+                int skippedLines) {
             Mark mark = n.getStart();
             if (mark == null) {
                 return;
@@ -688,11 +695,11 @@ public class SmapUtil {
             String unqualifiedName = unqualify(mark.getFile());
             smap.addFile(unqualifiedName, mark.getFile());
             smap.addLineData(
-                mark.getLineNumber() + skippedLines,
-                mark.getFile(),
-                inLineCount - skippedLines,
-                n.getBeginJavaLine() + skippedLines,
-                outIncrement);
+                    mark.getLineNumber() + skippedLines,
+                    mark.getFile(),
+                    inLineCount - skippedLines,
+                    n.getBeginJavaLine() + skippedLines,
+                    outIncrement);
         }
 
         private void doSmap(Node n) {
