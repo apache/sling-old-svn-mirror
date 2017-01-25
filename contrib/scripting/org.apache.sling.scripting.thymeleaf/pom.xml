@@ -300,6 +300,7 @@
           </execution>
         </executions>
         <configuration>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <systemProperties>
             <property>
               <name>bundle.filename</name>
