@@ -30,7 +30,7 @@ import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
-import org.apache.sling.scripting.thymeleaf.internal.resourceresolver.RequestScopedResourceResolverProvider;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -133,7 +133,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
         policy = ReferencePolicy.DYNAMIC,
         policyOption = ReferencePolicyOption.GREEDY
     )
-    private volatile RequestScopedResourceResolverProvider resourceResolverProvider;
+    private volatile ScriptingResourceResolverProvider scriptingResourceResolverProvider;
 
     private ThymeleafScriptEngineFactoryConfiguration configuration;
 
@@ -429,7 +429,7 @@ public final class ThymeleafScriptEngineFactory extends AbstractScriptEngineFact
     }
 
     ResourceResolver getRequestScopedResourceResolver() {
-        return resourceResolverProvider.getResourceResolver();
+        return scriptingResourceResolverProvider.getRequestScopedResourceResolver();
     }
 
 }
