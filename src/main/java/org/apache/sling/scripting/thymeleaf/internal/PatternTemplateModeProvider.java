@@ -18,9 +18,7 @@
  */
 package org.apache.sling.scripting.thymeleaf.internal;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.thymeleaf.TemplateModeProvider;
@@ -33,7 +31,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.templatemode.TemplateMode;
-import org.thymeleaf.util.PatternSpec;
 
 @Component(
     immediate = true,
@@ -47,17 +44,17 @@ import org.thymeleaf.util.PatternSpec;
 )
 public class PatternTemplateModeProvider implements TemplateModeProvider {
 
-    private final PatternSpec htmlPatternSpec = new PatternSpec();
+    private Pattern htmlPattern;
 
-    private final PatternSpec xmlPatternSpec = new PatternSpec();
+    private Pattern xmlPattern;
 
-    private final PatternSpec textPatternSpec = new PatternSpec();
+    private Pattern textPattern;
 
-    private final PatternSpec javascriptPatternSpec = new PatternSpec();
+    private Pattern javascriptPattern;
 
-    private final PatternSpec cssPatternSpec = new PatternSpec();
+    private Pattern cssPattern;
 
-    private final PatternSpec rawPatternSpec = new PatternSpec();
+    private Pattern rawPattern;
 
     private final Logger logger = LoggerFactory.getLogger(PatternTemplateModeProvider.class);
 
@@ -83,52 +80,44 @@ public class PatternTemplateModeProvider implements TemplateModeProvider {
 
     private void configure(final PatternTemplateModeProviderConfiguration configuration) {
         // HTML
-        setPatterns(configuration.htmlPatterns(), htmlPatternSpec);
-        logger.debug("configured HTML patterns: {}", htmlPatternSpec.getPatterns());
+        htmlPattern = Pattern.compile(configuration.htmlPattern());
+        logger.debug("configured HTML pattern: {}", htmlPattern.pattern());
         // XML
-        setPatterns(configuration.xmlPatterns(), xmlPatternSpec);
-        logger.debug("configured XML patterns: {}", xmlPatternSpec.getPatterns());
+        xmlPattern = Pattern.compile(configuration.xmlPattern());
+        logger.debug("configured XML pattern: {}", xmlPattern.pattern());
         // TEXT
-        setPatterns(configuration.textPatterns(), textPatternSpec);
-        logger.debug("configured TEXT patterns: {}", textPatternSpec.getPatterns());
+        textPattern = Pattern.compile(configuration.textPattern());
+        logger.debug("configured TEXT pattern: {}", textPattern.pattern());
         // JAVASCRIPT
-        setPatterns(configuration.javascriptPatterns(), javascriptPatternSpec);
-        logger.debug("configured JAVASCRIPT patterns: {}", javascriptPatternSpec.getPatterns());
+        javascriptPattern = Pattern.compile(configuration.javascriptPattern());
+        logger.debug("configured JAVASCRIPT pattern: {}", javascriptPattern.pattern());
         // CSS
-        setPatterns(configuration.cssPatterns(), cssPatternSpec);
-        logger.debug("configured CSS patterns: {}", cssPatternSpec.getPatterns());
+        cssPattern = Pattern.compile(configuration.cssPattern());
+        logger.debug("configured CSS pattern: {}", cssPattern.pattern());
         // RAW
-        setPatterns(configuration.rawPatterns(), rawPatternSpec);
-        logger.debug("configured RAW patterns: {}", rawPatternSpec.getPatterns());
-    }
-
-    private void setPatterns(final String[] strings, final PatternSpec patternSpec) {
-        final Set<String> set = new HashSet<String>();
-        if (strings != null) {
-            Collections.addAll(set, strings);
-        }
-        patternSpec.setPatterns(set);
+        rawPattern = Pattern.compile(configuration.rawPattern());
+        logger.debug("configured RAW pattern: {}", rawPattern.pattern());
     }
 
     @Override
     public TemplateMode provideTemplateMode(final Resource resource) {
         final String path = resource.getPath();
-        if (htmlPatternSpec.matches(path)) {
+        if (htmlPattern.matcher(path).matches()) {
             return TemplateMode.HTML;
         }
-        if (xmlPatternSpec.matches(path)) {
+        if (xmlPattern.matcher(path).matches()) {
             return TemplateMode.XML;
         }
-        if (textPatternSpec.matches(path)) {
+        if (textPattern.matcher(path).matches()) {
             return TemplateMode.TEXT;
         }
-        if (javascriptPatternSpec.matches(path)) {
+        if (javascriptPattern.matcher(path).matches()) {
             return TemplateMode.JAVASCRIPT;
         }
-        if (cssPatternSpec.matches(path)) {
+        if (cssPattern.matcher(path).matches()) {
             return TemplateMode.CSS;
         }
-        if (rawPatternSpec.matches(path)) {
+        if (rawPattern.matcher(path).matches()) {
             return TemplateMode.RAW;
         }
         return null;
