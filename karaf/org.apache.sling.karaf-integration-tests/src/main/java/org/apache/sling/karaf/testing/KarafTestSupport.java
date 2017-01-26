@@ -28,6 +28,7 @@ import org.apache.karaf.features.BootFinished;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
 import org.ops4j.pax.exam.util.Filter;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -128,12 +129,13 @@ public abstract class KarafTestSupport {
         final int rmiServerPort = findFreePort();
         final int sshPort = findFreePort();
         final int httpPort = findFreePort();
+        final String unpackDirectory = String.format("%s/target/paxexam/%s", PathUtils.getBaseDir(), getClass().getSimpleName());
         return options(
             karafDistributionConfiguration()
                 .frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).versionAsInProject().type("tar.gz"))
                 .useDeployFolder(false)
                 .name(karafName())
-                .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
+                .unpackDirectory(new File(unpackDirectory)),
             keepRuntimeFolder(),
             editConfigurationFilePut("etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.config", "whitelist.bundles.regexp", "^PAXEXAM.*$"),
             editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j2.rootLogger.level", "DEBUG"),
