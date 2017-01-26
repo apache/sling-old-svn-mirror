@@ -1218,10 +1218,12 @@ public class SlingAuthenticator implements Authenticator,
             final String owner) {
 
         final String quotedUser;
-        final String quotedOwner;
+        String quotedOwner = null;
         try {
             quotedUser = quoteCookieValue(user);
-            quotedOwner = quoteCookieValue(owner);
+            if (owner != null) {
+                quotedOwner = quoteCookieValue(owner);
+            }
         } catch (IllegalArgumentException iae) {
             log.error(
                 "sendSudoCookie: Failed to quote value '{}' of cookie {}: {}",
