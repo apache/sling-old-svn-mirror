@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 import static org.ops4j.pax.exam.CoreOptions.bundle;
@@ -39,7 +40,7 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 
 public abstract class TestSupport {
 
-    private final String workingDirectory = String.format("target/paxexam/%s", getClass().getSimpleName());
+    private final String workingDirectory = String.format("%s/target/paxexam/%s", PathUtils.getBaseDir(), getClass().getSimpleName());
 
     @Inject
     protected ConfigurationAdmin configurationAdmin;
