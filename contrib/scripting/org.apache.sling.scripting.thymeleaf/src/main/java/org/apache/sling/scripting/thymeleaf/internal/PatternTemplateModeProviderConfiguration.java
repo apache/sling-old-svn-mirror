@@ -28,49 +28,39 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @interface PatternTemplateModeProviderConfiguration {
 
     @AttributeDefinition(
-        name = "patterns for template mode HTML",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode HTML (e.g. *.html - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode HTML",
+        description = "The template patterns (regular expression) for templates which should be processed with template mode HTML (e.g. *.html - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] htmlPatterns() default {
-        "*.html"
-    };
+    String htmlPattern() default "^.+\\.html$";
 
     @AttributeDefinition(
-        name = "patterns for template mode XML",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode XML (e.g. *.xml - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode XML",
+        description = "The template pattern (regular expression) for templates which should be processed with template mode XML (e.g. *.xml - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] xmlPatterns() default {
-        "*.xml"
-    };
+    String xmlPattern() default "^.+\\.xml$";
 
     @AttributeDefinition(
-        name = "patterns for template mode TEXT",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode TEXT (e.g. *.txt - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode TEXT",
+        description = "The template pattern (regular expression) for templates which should be processed with template mode TEXT (e.g. *.txt - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] textPatterns() default {
-        "*.txt"
-    };
+    String textPattern() default "^.+\\.txt$";
 
     @AttributeDefinition(
-        name = "patterns for template mode JAVASCRIPT",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode JAVASCRIPT (e.g. *.js - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode JAVASCRIPT",
+        description = "The template pattern (regular expression) for templates which should be processed with template mode JAVASCRIPT (e.g. *.js - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] javascriptPatterns() default {
-        "*.js"
-    };
+    String javascriptPattern() default "^.+\\.js$";
 
     @AttributeDefinition(
-        name = "patterns for template mode CSS",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode CSS (e.g. *.css - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode CSS",
+        description = "The template pattern (regular expression) for templates which should be processed with template mode CSS (e.g. *.css - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] cssPatterns() default {
-        "*.css"
-    };
+    String cssPattern() default "^.+\\.css$";
 
     @AttributeDefinition(
-        name = "patterns for template mode RAW",
-        description = "The template patterns (regular expressions) for templates which should be processed with template mode RAW (e.g. *.raw - NOTE: extension needs to be enabled for this script engine)."
+        name = "pattern for template mode RAW",
+        description = "The template pattern (regular expression) for templates which should be processed with template mode RAW (e.g. *.raw - NOTE: extension needs to be enabled for this script engine)."
     )
-    String[] rawPatterns();
+    String rawPattern() default "^.+$";
 
 }
