@@ -15,7 +15,7 @@
  * limitations under the License.
  ******************************************************************************/
 /**
- * <p>The {@code org.apache.sling.scripting.api.resolver} package provides a unified API for scripting bundles that need to perform script
+ * <p>The {@code org.apache.sling.scripting.api.resource} package provides a unified API for scripting bundles that need to perform script
  * resolution across the {@link org.apache.sling.api.resource.Resource} space.</p>
  *
  * <p>Some API methods might indicate that they are <i>request-bound</i>. In this case it should be noted that <i>usage outside of the
