@@ -78,6 +78,9 @@ public class RestartActiveBundlesTask extends AbstractInstallTask {
                         remove.add(id);
                     } catch (final BundleException e) {
                         getLogger().info("Unable to start bundle {} : {}", bundle, e.getMessage());
+                    } catch (final IllegalStateException ie) {
+                        getLogger().info("Unable to start bundle {} : {}", bundle, ie.getMessage());
+                        remove.add(id);
                     }
                 } else {
                     // bundle might be null(!)
