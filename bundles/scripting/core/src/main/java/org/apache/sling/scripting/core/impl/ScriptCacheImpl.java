@@ -22,7 +22,6 @@ package org.apache.sling.scripting.core.impl;
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -112,7 +111,6 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     private Set<String> extensions = new HashSet<>();
     private String[] additionalExtensions = new String[]{};
     private String[] searchPaths = {};
-    private static final String SLING_SCRIPTING_USER = "sling-scripting";
 
     // use a static policy so that we can reconfigure the watched script files if the search paths are changed
     @Reference(policy = ReferencePolicy.STATIC)
@@ -244,9 +242,7 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
         }
         ResourceResolver resolver = null;
         try {
-            Map<String, Object> authenticationInfo = new HashMap<>(1);
-            authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, SLING_SCRIPTING_USER);
-            resolver = rrf.getServiceResourceResolver(authenticationInfo);
+            resolver = rrf.getServiceResourceResolver(null);
             searchPaths = resolver.getSearchPath();
         } catch (LoginException e) {
             LOGGER.error("Unable to retrieve a ResourceResolver for determining the search paths.", e);
