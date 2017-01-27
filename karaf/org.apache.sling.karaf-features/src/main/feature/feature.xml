@@ -228,6 +228,13 @@
     <feature version="${feature.version}">sling</feature>
     <feature version="${feature.version}">sling-scripting</feature>
   </feature>
+  <feature name="sling-extension-pipes" version="${feature.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.pipes/0.0.10</bundle>
+    <!-- dependencies -->
+    <feature version="${feature.version}">sling</feature>
+    <feature version="${feature.version}">jackrabbit-sling</feature>
+    <feature version="${feature.version}">sling-extension-query</feature>
+  </feature>
   <feature name="sling-extension-query" version="${feature.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.query/3.0.0</bundle>
     <!-- dependencies -->
