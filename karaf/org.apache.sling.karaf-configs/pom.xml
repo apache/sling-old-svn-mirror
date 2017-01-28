@@ -113,11 +113,6 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder</classifier>
-                  <file>src/main/resources/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config</file>
-                  <type>config</type>
-                </artifact>
-                <artifact>
                   <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-composum</classifier>
                   <file>src/main/resources/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-composum.config</file>
                   <type>config</type>
@@ -145,11 +140,6 @@
                 <artifact>
                   <classifier>org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default</classifier>
                   <file>src/main/resources/org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default.config</file>
-                  <type>config</type>
-                </artifact>
-                <artifact>
-                  <classifier>org.apache.sling.samples.fling.internal.WiserSmtpService</classifier>
-                  <file>src/main/resources/org.apache.sling.samples.fling.internal.WiserSmtpService.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>
