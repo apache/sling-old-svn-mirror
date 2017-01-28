@@ -112,6 +112,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.scripting.thymeleaf</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.validation.api</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>provided</scope>
