@@ -19,6 +19,7 @@
 package org.apache.sling.event.dea.impl;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -54,6 +55,9 @@ public class DistributedEventAdminImpl {
 
     @Reference
     private EventAdmin eventAdmin;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     /** Default repository path. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/distribution";
