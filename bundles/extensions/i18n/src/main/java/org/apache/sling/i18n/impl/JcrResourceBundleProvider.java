@@ -75,8 +75,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     private static final int DEFAULT_INVALIDATION_DELAY = 5000;
 
-    private static final String SLING_I18N_USER = "sling-i18n";
-
     @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
 
@@ -107,7 +105,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     /**
      * The resource resolver used to access the resource bundles. This object is
-     * retrieved from the {@link #resourceResolverFactory} using the {@link #SLING_I18N_USER} service user session.
+     * retrieved from the {@link #resourceResolverFactory} using the service user session.
      */
     private ResourceResolver resourceResolver;
 
@@ -367,9 +365,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         this.bundleContext = context;
         invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
-            Map<String, Object> authInfo = Collections.<String, Object>singletonMap(
-                    ResourceResolverFactory.SUBSERVICE, SLING_I18N_USER);
-            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authInfo);
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
             scheduleReloadBundles(false);
         }
 
