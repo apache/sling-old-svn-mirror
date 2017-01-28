@@ -123,6 +123,11 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
+                  <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
                   <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
                   <file>src/main/resources/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config</file>
                   <type>config</type>
