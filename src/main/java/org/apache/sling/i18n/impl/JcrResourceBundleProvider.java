@@ -55,6 +55,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
@@ -95,6 +96,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     /**
      * The default Locale as configured with the <i>locale.default</i>
