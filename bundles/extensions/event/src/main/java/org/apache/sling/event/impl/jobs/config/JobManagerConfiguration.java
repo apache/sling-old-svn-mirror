@@ -53,6 +53,7 @@ import org.apache.sling.event.impl.jobs.tasks.UpgradeTask;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,6 +187,9 @@ public class JobManagerConfiguration {
 
     @Reference
     private Scheduler scheduler;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     /** Is this still active? */
     private final AtomicBoolean active = new AtomicBoolean(false);
