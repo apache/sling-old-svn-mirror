@@ -53,6 +53,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -162,6 +163,9 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
      */
     @Reference
     private OsgiInstaller installer;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     /** The component context. */
     private volatile ComponentContext componentContext;
