@@ -566,9 +566,8 @@
     <feature version="${feature.version}">sling-extension-models</feature>
     <feature version="${feature.version}">sling-extension-query</feature>
     <feature version="${feature.version}">sling-extension-validation</feature>
+    <feature version="${feature.version}">sling-installer-provider-jcr</feature>
     <feature version="${feature.version}">sling-auth-form</feature>
-    <configfile finalname="/etc/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.commons.messaging.mail.internal.SimpleMailBuilder</configfile>
-    <configfile finalname="/etc/org.apache.sling.samples.fling.internal.WiserSmtpService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.samples.fling.internal.WiserSmtpService</configfile>
   </feature>
   <!-- Composum -->
   <feature name="composum-sling" version="${feature.version}">
