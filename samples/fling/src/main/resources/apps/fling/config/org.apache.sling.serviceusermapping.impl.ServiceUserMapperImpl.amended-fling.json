@@ -1,0 +1,6 @@
+{
+  "jcr:primaryType": "sling:OsgiConfig",
+  "user.mapping": [
+    "org.apache.sling.samples.fling=sling-scripting"
+  ]
+}

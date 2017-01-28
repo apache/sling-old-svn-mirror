@@ -1,0 +1,4 @@
+{
+  "jcr:primaryType": "sling:OsgiConfig",
+  "smtpPort": 8025
+}
