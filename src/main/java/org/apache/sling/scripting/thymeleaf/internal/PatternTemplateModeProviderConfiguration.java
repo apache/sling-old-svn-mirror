@@ -61,6 +61,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
         name = "pattern for template mode RAW",
         description = "The template pattern (regular expression) for templates which should be processed with template mode RAW (e.g. *.raw - NOTE: extension needs to be enabled for this script engine)."
     )
-    String rawPattern() default "^.+$";
+    String rawPattern();
 
 }
