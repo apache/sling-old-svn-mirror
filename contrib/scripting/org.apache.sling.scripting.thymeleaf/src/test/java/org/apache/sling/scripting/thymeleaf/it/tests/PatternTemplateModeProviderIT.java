@@ -31,6 +31,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.thymeleaf.templatemode.TemplateMode;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(PaxExam.class)
@@ -83,7 +84,7 @@ public class PatternTemplateModeProviderIT extends ThymeleafTestSupport {
     public void provideTemplateMode_fall_through() throws Exception {
         final Resource resource = mockResource("foohtml");
         final TemplateMode templateMode = templateModeProvider.provideTemplateMode(resource);
-        assertThat(templateMode, is(TemplateMode.RAW));
+        assertThat(templateMode, is(nullValue()));
     }
 
 }

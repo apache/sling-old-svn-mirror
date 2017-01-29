@@ -20,6 +20,7 @@ package org.apache.sling.scripting.thymeleaf.internal;
 
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.thymeleaf.TemplateModeProvider;
 import org.osgi.framework.Constants;
@@ -80,44 +81,44 @@ public class PatternTemplateModeProvider implements TemplateModeProvider {
 
     private void configure(final PatternTemplateModeProviderConfiguration configuration) {
         // HTML
-        htmlPattern = Pattern.compile(configuration.htmlPattern());
-        logger.debug("configured HTML pattern: {}", htmlPattern.pattern());
+        htmlPattern = StringUtils.isNotBlank(configuration.htmlPattern()) ? Pattern.compile(configuration.htmlPattern()) : null;
+        logger.debug("configured HTML pattern: {}", htmlPattern);
         // XML
-        xmlPattern = Pattern.compile(configuration.xmlPattern());
-        logger.debug("configured XML pattern: {}", xmlPattern.pattern());
+        xmlPattern = StringUtils.isNotBlank(configuration.xmlPattern()) ? Pattern.compile(configuration.xmlPattern()) : null;
+        logger.debug("configured XML pattern: {}", xmlPattern);
         // TEXT
-        textPattern = Pattern.compile(configuration.textPattern());
-        logger.debug("configured TEXT pattern: {}", textPattern.pattern());
+        textPattern = StringUtils.isNotBlank(configuration.textPattern()) ? Pattern.compile(configuration.textPattern()) : null;
+        logger.debug("configured TEXT pattern: {}", textPattern);
         // JAVASCRIPT
-        javascriptPattern = Pattern.compile(configuration.javascriptPattern());
-        logger.debug("configured JAVASCRIPT pattern: {}", javascriptPattern.pattern());
+        javascriptPattern = StringUtils.isNotBlank(configuration.javascriptPattern()) ? Pattern.compile(configuration.javascriptPattern()) : null;
+        logger.debug("configured JAVASCRIPT pattern: {}", javascriptPattern);
         // CSS
-        cssPattern = Pattern.compile(configuration.cssPattern());
-        logger.debug("configured CSS pattern: {}", cssPattern.pattern());
+        cssPattern = StringUtils.isNotBlank(configuration.cssPattern()) ? Pattern.compile(configuration.cssPattern()) : null;
+        logger.debug("configured CSS pattern: {}", cssPattern);
         // RAW
-        rawPattern = Pattern.compile(configuration.rawPattern());
-        logger.debug("configured RAW pattern: {}", rawPattern.pattern());
+        rawPattern = StringUtils.isNotBlank(configuration.rawPattern()) ? Pattern.compile(configuration.rawPattern()) : null;
+        logger.debug("configured RAW pattern: {}", rawPattern);
     }
 
     @Override
     public TemplateMode provideTemplateMode(final Resource resource) {
         final String path = resource.getPath();
-        if (htmlPattern.matcher(path).matches()) {
+        if (htmlPattern != null && htmlPattern.matcher(path).matches()) {
             return TemplateMode.HTML;
         }
-        if (xmlPattern.matcher(path).matches()) {
+        if (xmlPattern != null && xmlPattern.matcher(path).matches()) {
             return TemplateMode.XML;
         }
-        if (textPattern.matcher(path).matches()) {
+        if (textPattern != null && textPattern.matcher(path).matches()) {
             return TemplateMode.TEXT;
         }
-        if (javascriptPattern.matcher(path).matches()) {
+        if (javascriptPattern != null && javascriptPattern.matcher(path).matches()) {
             return TemplateMode.JAVASCRIPT;
         }
-        if (cssPattern.matcher(path).matches()) {
+        if (cssPattern != null && cssPattern.matcher(path).matches()) {
             return TemplateMode.CSS;
         }
-        if (rawPattern.matcher(path).matches()) {
+        if (rawPattern != null && rawPattern.matcher(path).matches()) {
             return TemplateMode.RAW;
         }
         return null;
