@@ -467,7 +467,7 @@
     <feature version="${project.version}">sling-scripting</feature>
   </feature>
   <feature name="sling-scripting-jsp" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.2.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-scripting</feature>
