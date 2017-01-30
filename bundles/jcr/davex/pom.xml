@@ -152,8 +152,7 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.http.whiteboard</artifactId>
-            <version>1.0.0</version>
+            <artifactId>org.osgi.compendium</artifactId>
         </dependency>
 
         <!-- JUnit -->
