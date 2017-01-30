@@ -25,7 +25,6 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,7 +45,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,17 +85,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     private static final String PROP_CREATE_ABSOLUTE_URI = "dav.create-absolute-uri";
 
     /**
-     * Default value for the configuration {@link #PROP_PROTECTED_HANDLERS}
-     */
-    private static final String DEFAULT_PROTECTED_HANDLERS = "org.apache.jackrabbit.server.remoting.davex.AclRemoveHandler";
-
-    /**
-     * defines the Protected handlers for the Jcr Remoting Servlet
-     */
-    @Property(value=DEFAULT_PROTECTED_HANDLERS)
-    private static final String PROP_PROTECTED_HANDLERS = "dav.protectedhandlers";
-
-    /**
      * The name of the service property of the registered dummy service to cause
      * the path to the DavEx servlet to not be subject to forced authentication.
      */
@@ -110,37 +98,88 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     @Reference
     private SlingRepository repository;
 
-    /**
-     * The DavExServlet service registration with the OSGi Whiteboard.
-     */
-    private ServiceRegistration davServlet;
+    @Reference
+    private HttpService httpService;
 
+    @Reference
+    private AuthenticationSupport authSupport;
+
+    /**
+     * The path at which the DavEx servlet has successfully been
+     * registered in the {@link #activate(Map)} method. If this is
+     * <code>null</code> the DavEx servlet is not registered with the
+     * Http Service.
+     */
+    private String servletAlias;
+
+    /**
+     * The dummy service registration to convey to the Sling Authenticator
+     * that everything under the alias must not be forcibly authenticated.
+     * This will be <code>null</code> if the DavEx servlet registration
+     * fails.
+     */
+    private ServiceRegistration dummyService;
+
+    /**
+     * Default value for the configuration {@link #PROP_PROTECTED_HANDLERS}
+     */
+    public static final String DEFAULT_PROTECTED_HANDLERS = "org.apache.jackrabbit.server.remoting.davex.AclRemoveHandler";
+
+    /**
+     * defines the Protected handlers for the Jcr Remoting Servlet
+     */
+    @Property(value=DEFAULT_PROTECTED_HANDLERS)
+    public static final String PROP_PROTECTED_HANDLERS = "dav.protectedhandlers";
+    
     @Activate
     protected void activate(final BundleContext bundleContext, final Map<String, ?> config) {
         final String davRoot = OsgiUtil.toString(config.get(PROP_DAV_ROOT), DEFAULT_DAV_ROOT);
         final boolean createAbsoluteUri = OsgiUtil.toBoolean(config.get(PROP_CREATE_ABSOLUTE_URI), DEFAULT_CREATE_ABSOLUTE_URI);
         final String protectedHandlers = OsgiUtil.toString(config.get(PROP_PROTECTED_HANDLERS), DEFAULT_PROTECTED_HANDLERS);
 
+        final AuthHttpContext context = new AuthHttpContext(davRoot);
+        context.setAuthenticationSupport(authSupport);
+
         // prepare DavEx servlet config
-        final Dictionary<String, Object> initProps = new Hashtable<String, Object>();
-        initProps.put(toInitParamProperty(INIT_PARAM_RESOURCE_PATH_PREFIX), davRoot);
-        initProps.put(toInitParamProperty(INIT_PARAM_CREATE_ABSOLUTE_URI), Boolean.toString(createAbsoluteUri));
-        initProps.put(toInitParamProperty(INIT_PARAM_CSRF_PROTECTION), CSRFUtil.DISABLED);
+        final Dictionary<String, String> initProps = new Hashtable<String, String>();
+
+        // prefix to the servlet
+        initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, davRoot);
+
+        // create absolute URIs (or absolute paths)
+        initProps.put(INIT_PARAM_CREATE_ABSOLUTE_URI, Boolean.toString(createAbsoluteUri));
+
+        // disable CSRF checks for now (should be handled by Sling)
+        initProps.put(INIT_PARAM_CSRF_PROTECTION, CSRFUtil.DISABLED);
+        
         initProps.put(INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedHandlers);
-        initProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, davRoot.concat("/*"));
-        initProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-            "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + AuthHttpContext.HTTP_CONTEXT_NAME + ")");
-        initProps.put(Constants.SERVICE_VENDOR, config.get(Constants.SERVICE_VENDOR));
-        initProps.put(Constants.SERVICE_DESCRIPTION, config.get(Constants.SERVICE_DESCRIPTION));
-        initProps.put(PAR_AUTH_REQ, "-" + davRoot); // make sure this is not forcible authenticated !
-        this.davServlet = bundleContext.registerService(Servlet.class.getName(), this, initProps);
+
+        // register and handle registration failure
+        try {
+            this.httpService.registerServlet(davRoot, this, initProps, context);
+            this.servletAlias = davRoot;
+
+            java.util.Properties dummyServiceProperties = new java.util.Properties();
+            dummyServiceProperties.put(Constants.SERVICE_VENDOR, config.get(Constants.SERVICE_VENDOR));
+            dummyServiceProperties.put(Constants.SERVICE_DESCRIPTION,
+                "Helper for " + config.get(Constants.SERVICE_DESCRIPTION));
+            dummyServiceProperties.put(PAR_AUTH_REQ, "-" + davRoot);
+            this.dummyService = bundleContext.registerService("java.lang.Object", new Object(), dummyServiceProperties);
+        } catch (Exception e) {
+            log.error("activate: Failed registering DavEx Servlet at " + davRoot, e);
+        }
     }
 
     @Deactivate
     protected void deactivate() {
-        if (this.davServlet!= null) {
-            this.davServlet.unregister();
-            this.davServlet = null;
+        if (this.dummyService != null) {
+            this.dummyService.unregister();
+            this.dummyService = null;
+        }
+
+        if (this.servletAlias != null) {
+            this.httpService.unregister(servletAlias);
+            this.servletAlias = null;
         }
     }
 
@@ -206,19 +245,5 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                 }
             }
         };
-    }
-
-    /**
-     * Returns the name as a String suitable for use as a property registered with
-     * and OSGi Http Whiteboard Service init parameter.
-     *
-     * @param name The parameter to convert. Must not be {@code null} and should not be empty.
-     *
-     * @return The converted name properly prefixed.
-     *
-     * @throws NullPointerException if {@code name} is {@code null}.
-     */
-    private static String toInitParamProperty(final String name) {
-        return HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX.concat(name);
     }
 }
