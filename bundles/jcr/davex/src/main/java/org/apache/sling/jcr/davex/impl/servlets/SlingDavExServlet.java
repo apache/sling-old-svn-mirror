@@ -126,7 +126,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         initProps.put(toInitParamProperty(INIT_PARAM_RESOURCE_PATH_PREFIX), davRoot);
         initProps.put(toInitParamProperty(INIT_PARAM_CREATE_ABSOLUTE_URI), Boolean.toString(createAbsoluteUri));
         initProps.put(toInitParamProperty(INIT_PARAM_CSRF_PROTECTION), CSRFUtil.DISABLED);
-        initProps.put(INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedHandlers);
+        initProps.put(toInitParamProperty(INIT_PARAM_PROTECTED_HANDLERS_CONFIG), protectedHandlers);
         initProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, davRoot.concat("/*"));
         initProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
             "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + AuthHttpContext.HTTP_CONTEXT_NAME + ")");
