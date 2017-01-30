@@ -17,53 +17,54 @@
 package org.apache.sling.jcr.davex.impl.servlets;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.auth.core.AuthenticationSupport;
-import org.osgi.service.http.HttpContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 
-class AuthHttpContext implements HttpContext {
+@Component(metatype = false, policy = ConfigurationPolicy.IGNORE)
+@Service(ServletContextHelper.class)
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling JcrRemoting Servlet"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, value = AuthHttpContext.HTTP_CONTEXT_NAME),
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, value = "/"),
+    @Property(name = Constants.SERVICE_RANKING, intValue = 5)
+})
+public class AuthHttpContext extends ServletContextHelper {
 
     /**
-     * The root path at which the DavEx servlet is registered. This is used to
-     * extract the workspace name from the request URL where the workspace name
-     * is the first segment in the path after the this path.
+     * The name of this ServletContext for use by they SlingDavExServlet
      */
-    private final String davRoot;
+    static final String HTTP_CONTEXT_NAME = "DavExAuthHttpContext";
 
     /**
      * Handles security
      *
      * @see #handleSecurity(HttpServletRequest, HttpServletResponse)
      */
+    @Reference
     private AuthenticationSupport authenticator;
 
-    AuthHttpContext(final String davRoot) {
-        this.davRoot = davRoot;
-    }
-
-    public void setAuthenticationSupport(final AuthenticationSupport auth) {
-        this.authenticator = auth;
-    }
-
-    // ---------- HttpContext
+    // ---------- ServletContextHelper
 
     /**
-     * Returns the MIME type as resolved by the <code>MimeTypeService</code> or
-     * <code>null</code> if the service is not available.
+     * Always returns <code>null</code> as resources are only accessible through
+     * the {@link SlingDavExServlet}.
      */
-    public String getMimeType(String name) {
-        return null;
-    }
-
-    /**
-     * Always returns <code>null</code> because resources are all provided
-     * through the {@link MainServlet}.
-     */
-    public URL getResource(String name) {
+    @Override
+    public Set<String> getResourcePaths(String path) {
         return null;
     }
 
@@ -94,40 +95,21 @@ class AuthHttpContext implements HttpContext {
 
     private final String getWorkspace(final String uriPath) {
 
-        // Paths to consider
-        // /davRoot
-        // /davRoot/
-        // /davRoot/wsp
-        // /davRoot/wsp/
-        // /davRoot/wsp/...
+        // Paths to consider  | Result
+        // -------------------+---------
+        // null               | null
+        // "" (empty)         | null
+        // /                  | null
+        // /wsp               | wsp
+        // /wsp/              | wsp
+        // /wsp/...           | wsp
 
-        if (uriPath != null && uriPath.startsWith(this.davRoot)) {
-
-            // cut off root
-            int start = this.davRoot.length();
-
-            // just the root
-            if (start >= uriPath.length()) {
-                return null;
-            }
-
-            if (uriPath.charAt(start) == '/') {
-                start++;
-            } else {
-                // expected slash, actually (don't care)
-                return null;
-            }
-
-            // just the root with trailing slash
-            if (start >= uriPath.length()) {
-                return null;
-            }
-
-            int end = uriPath.indexOf('/', start);
-            if (end > start) {
-                return uriPath.substring(start, end);
+        if (uriPath != null && uriPath.length() > 1 && uriPath.charAt(0) == '/') {
+            int end = uriPath.indexOf('/', 1);
+            if (end > 1) {
+                return uriPath.substring(1, end);
             } else if (end < 0) {
-                return uriPath.substring(start);
+                return uriPath.substring(1);
             }
         }
 
