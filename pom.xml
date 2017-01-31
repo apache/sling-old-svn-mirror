@@ -44,7 +44,7 @@
     <org.unbescape.version>1.1.4.RELEASE</org.unbescape.version>
     <ognl.version>3.1.12</ognl.version>
     <com.fasterxml.jackson.version>2.6.3</com.fasterxml.jackson.version>
-    <org.ops4j.pax.exam.version>4.9.2</org.ops4j.pax.exam.version>
+    <org.ops4j.pax.exam.version>4.10.0</org.ops4j.pax.exam.version>
   </properties>
 
   <scm>
