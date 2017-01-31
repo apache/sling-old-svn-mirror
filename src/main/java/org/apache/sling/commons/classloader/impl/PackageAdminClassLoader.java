@@ -61,8 +61,8 @@ class PackageAdminClassLoader extends ClassLoader {
     private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
 
     public PackageAdminClassLoader(final PackageAdmin pckAdmin,
-                                   final ClassLoader parent,
-                                   final DynamicClassLoaderManagerFactory factory) {
+            final ClassLoader parent,
+            final DynamicClassLoaderManagerFactory factory) {
         super(parent);
         this.packageAdmin = pckAdmin;
         this.factory = factory;
@@ -146,7 +146,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
+    @Override
     public Enumeration<URL> getResources(final String name) throws IOException {
         Enumeration<URL> e = super.getResources(name);
         if ( e == null || !e.hasMoreElements() ) {
@@ -176,6 +176,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
+    @Override
     public URL findResource(final String name) {
         final URL cachedURL = urlCache.get(name);
         if ( cachedURL != null ) {
@@ -211,6 +212,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
+    @Override
     public Class<?> findClass(final String name) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
@@ -236,6 +238,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
+    @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
@@ -287,6 +290,7 @@ class PackageAdminClassLoader extends ClassLoader {
         } else {
             try {
                 clazz = providingBundle.loadClass(name);
+                this.factory.addUsedBundle(providingBundle);
             } catch (ClassNotFoundException icnfe) {
                 throw new ClassNotFoundException(String.format("Cannot find class %s in bundle %s:%s which was marked as the provider for" +
                         " package %s.", name, providingBundle.getSymbolicName(), providingBundle.getVersion().toString(), packageName), icnfe);
