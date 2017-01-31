@@ -47,6 +47,8 @@ public class SlingOptions {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver),
+            mavenBundle().groupId("javax.servlet.jsp").artifactId("javax.servlet.jsp-api").version(versionResolver),
+            mavenBundle().groupId("javax.el").artifactId("javax.el-api").version(versionResolver),
             config()
         );
     }
@@ -352,6 +354,15 @@ public class SlingOptions {
             slingScripting(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.models.api").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.models.impl").version(versionResolver)
+        );
+    }
+
+    public static Option slingExtensionPipes() {
+        return composite(
+            sling(),
+            jackrabbitSling(),
+            slingExtensionQuery(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.pipes").version(versionResolver)
         );
     }
 
