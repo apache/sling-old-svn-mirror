@@ -160,7 +160,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.resource", "2.9.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webconsole", "1.0.2");
-        versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.6");
+        versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.7-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jmx.provider", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.karaf-repoinit", "0.1.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.launchpad.content", "2.0.8");
