@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -175,8 +176,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", "/content/site1");
         validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertEquals(1, modelProvider.counter);
-        validationModelRetriever.handleEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC,
-                null));
+        validationModelRetriever.handleEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
         // after cache invalidation the provider is called again
         validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
         Assert.assertEquals(2, modelProvider.counter);
