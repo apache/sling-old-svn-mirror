@@ -18,6 +18,8 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.Dictionary;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -37,7 +39,7 @@ public class ValidationModelCacheImpl implements ValidationModelCache {
     
     @Override
     public void invalidate() {
-        eventAdmin.sendEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, null));
+        eventAdmin.sendEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
     }
 
 }
