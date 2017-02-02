@@ -18,7 +18,10 @@
  */
 package org.apache.sling.validation.testservices;
 
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -26,7 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostOperation;
@@ -40,14 +43,14 @@ import org.slf4j.LoggerFactory;
 @Component()
 @Service(PostOperation.class)
 @Properties({
-        @Property(
-                name = PostOperation.PROP_OPERATION_NAME,
-                value = "validation"
-        )
+    @Property(
+        name = PostOperation.PROP_OPERATION_NAME,
+        value = "validation"
+    )
 })
 public class ValidationPostOperation extends AbstractPostOperation {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationPostOperation.class);
+    private final Logger logger = LoggerFactory.getLogger(ValidationPostOperation.class);
 
     @Reference
     private ValidationService validationService;
@@ -55,23 +58,29 @@ public class ValidationPostOperation extends AbstractPostOperation {
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) {
         if (response instanceof ValidationPostResponse) {
-            ValidationPostResponse vpr = (ValidationPostResponse) response;
-            ValueMap requestParameters = request.adaptTo(ValueMap.class);
-            String[] resourceTypeValues = requestParameters.get("sling:resourceType", String[].class);
-            String resourceType = null;
-            if (resourceTypeValues != null && resourceTypeValues.length > 0) {
-                resourceType = resourceTypeValues[0];
+            final Map<String, Object> base = new LinkedHashMap<>();
+            final ValueMapDecorator valueMap = new ValueMapDecorator(base);
+            final Enumeration<String> names = request.getParameterNames();
+            while (names.hasMoreElements()) {
+                final String name = names.nextElement();
+                valueMap.put(name, request.getRequestParameter(name).getString());
             }
+
+            final String resourceType = request.getRequestParameter("sling:resourceType").getString();
             if (resourceType != null && !"".equals(resourceType)) {
-                String resourcePath = request.getRequestPathInfo().getResourcePath();
-                ValidationModel vm = validationService.getValidationModel(resourceType, resourcePath, false);
-                if (vm != null) {
-                    ValidationResult vr = validationService.validate(requestParameters, vm);
-                    vpr.setValidationResult(vr);
+                final String resourcePath = request.getRequestPathInfo().getResourcePath();
+                final ValidationModel validationModel = validationService.getValidationModel(resourceType, resourcePath, false);
+                if (validationModel != null) {
+                    final ValidationResult validationResult = validationService.validate(valueMap, validationModel);
+                    final ValidationPostResponse validationPostResponse = (ValidationPostResponse) response;
+                    validationPostResponse.setValidationResult(validationResult);
                 } else {
-                    LOG.error("No validation model for resourceType {} and resourcePath {} ", resourceType, resourcePath);
+                    logger.error("No validation model for resourceType {} and resourcePath {} ", resourceType, resourcePath);
                 }
+            } else {
+                logger.error("resource type is empty");
             }
         }
     }
+
 }
