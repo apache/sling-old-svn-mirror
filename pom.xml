@@ -48,6 +48,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            javax.el;version="2.2",
+                            *
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.scripting.jsp.util;version=2.0.8
                         </Export-Package>
