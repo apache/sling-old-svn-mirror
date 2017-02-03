@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -234,5 +235,43 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
         resourceResolver.commit();
 
         return resource;
+    }
+
+    @Nonnull
+    public Iterator<ResourceDistributionPackage> getPackages(@Nonnull ResourceResolver resourceResolver)
+            throws DistributionException {
+        try {
+            Resource packagesRoot = DistributionPackageUtils.getPackagesRoot(resourceResolver, packagesPath);
+            return new ResourceDistributionPackageIterator(packagesRoot, resourceResolver, getType());
+        } catch (PersistenceException e) {
+            throw new DistributionException("Failed to get the package list", e);
+        }
+    }
+
+    private static final class ResourceDistributionPackageIterator implements Iterator<ResourceDistributionPackage> {
+
+        final Iterator<Resource> packages;
+
+        final ResourceResolver resourceResolver;
+
+        final String type;
+
+        private ResourceDistributionPackageIterator(@Nonnull Resource packagesRoot, @Nonnull ResourceResolver resourceResolver,
+                                            @Nonnull String type) {
+            this.packages = packagesRoot.listChildren();
+            this.resourceResolver = resourceResolver;
+            this.type = type;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return packages.hasNext();
+        }
+
+        @Override
+        public ResourceDistributionPackage next() {
+            Resource packageResource = packages.next();
+            return new ResourceDistributionPackage(packageResource, type, resourceResolver, null, null);
+        }
     }
 }

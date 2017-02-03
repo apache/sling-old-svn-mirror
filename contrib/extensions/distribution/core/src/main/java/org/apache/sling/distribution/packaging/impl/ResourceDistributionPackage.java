@@ -82,12 +82,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
 
     @Override
     public void delete() {
-        try {
-            resourceResolver.delete(resource);
-            resourceResolver.commit();
-        } catch (PersistenceException e) {
-            throw new RuntimeException(e);
-        }
+        delete(true);
     }
 
     @Override
@@ -108,12 +103,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
     @Override
     public void release(@Nonnull String... holderNames) {
         try {
-            boolean doDelete = DistributionPackageUtils.release(resource, holderNames);
-
-            if (doDelete) {
-                delete();
-            }
-
+            DistributionPackageUtils.release(resource, holderNames);
             if (resourceResolver.hasChanges()) {
                 resourceResolver.commit();
             }
@@ -121,6 +111,26 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
             log.error("cannot release package", e);
         } catch (PersistenceException e) {
             log.error("cannot release package", e);
+        }
+    }
+
+    public boolean disposable() {
+        try {
+            return DistributionPackageUtils.disposable(resource);
+        } catch (RepositoryException e) {
+            log.error("cannot check if package is disposable", e);
+        }
+        return false;
+    }
+
+    void delete(boolean save) {
+        try {
+            resourceResolver.delete(resource);
+            if (save) {
+                resourceResolver.commit();
+            }
+        } catch (PersistenceException e) {
+            throw new RuntimeException(e);
         }
     }
 }
