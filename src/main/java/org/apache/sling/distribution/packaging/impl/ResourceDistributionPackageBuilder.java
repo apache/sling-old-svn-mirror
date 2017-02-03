@@ -273,5 +273,10 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
             Resource packageResource = packages.next();
             return new ResourceDistributionPackage(packageResource, type, resourceResolver, null, null);
         }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove");
+        }
     }
 }
