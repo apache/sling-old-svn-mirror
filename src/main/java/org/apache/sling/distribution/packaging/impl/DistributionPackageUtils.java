@@ -316,7 +316,13 @@ public class DistributionPackageUtils {
         }
     }
 
-    public static boolean release(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
+    public static boolean disposable(@Nonnull Resource resource) throws RepositoryException {
+        Node parent = resource.adaptTo(Node.class);
+        Node refs = parent.getNode("refs");
+        return !refs.hasNodes() && refs.hasProperty("released");
+    }
+
+    public static void release(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
         if (holderNames.length == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
@@ -332,12 +338,9 @@ public class DistributionPackageUtils {
             }
         }
 
-        if (!refs.hasNodes()) {
-            refs.remove();
-            return true;
+        if (!refs.hasProperty("released")) {
+            refs.setProperty("released", true);
         }
-
-        return false;
     }
 
     public static void acquire(File file, @Nonnull String[] holderNames) throws IOException {

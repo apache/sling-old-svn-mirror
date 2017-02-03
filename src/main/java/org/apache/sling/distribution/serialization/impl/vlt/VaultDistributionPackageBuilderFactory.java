@@ -19,6 +19,8 @@
 package org.apache.sling.distribution.serialization.impl.vlt;
 
 import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
@@ -37,7 +39,9 @@ import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
@@ -48,9 +52,11 @@ import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageCleanup;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.
@@ -130,6 +136,16 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
     public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
 
+    private static final long DEFAULT_PACKAGE_CLEANUP_DELAY = 60L;
+
+    @Property(
+            label="The delay in seconds between two runs of the cleanup phase for resource persisted packages.",
+            description = "The resource persisted packages are cleaned up periodically (asynchronously) since SLING-6503." +
+                    "The delay between two runs of the cleanup phase can be configured with this setting. 60 seconds by default",
+            longValue = DEFAULT_PACKAGE_CLEANUP_DELAY
+    )
+    private static final String PACKAGE_CLEANUP_DELAY = "cleanupDelay";
+
     // 1M
     private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1;
 
@@ -194,6 +210,11 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Reference
     private Packaging packaging;
 
+    @Reference
+    private ResourceResolverFactory resolverFactory;
+
+    private ServiceRegistration packageCleanup = null;
+
     private MonitoringDistributionPackageBuilder packageBuilder;
 
 
@@ -208,6 +229,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         String[] packageRoots = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_ROOTS), null));
         String[] packageNodeFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
         String[] packagePropertyFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PROPERTY_FILTERS), null));
+
+        long cleanupDelay = PropertiesUtil.toLong(config.get(PACKAGE_CLEANUP_DELAY), DEFAULT_PACKAGE_CLEANUP_DELAY);
 
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
         boolean useBinaryReferences = PropertiesUtil.toBoolean(config.get(USE_BINARY_REFERENCES), false);
@@ -239,7 +262,13 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             String memoryUnitName = PropertiesUtil.toString(config.get(MEMORY_UNIT), DEFAULT_MEMORY_UNIT);
             final MemoryUnit memoryUnit = MemoryUnit.valueOf(memoryUnitName);
             final boolean useOffHeapMemory = PropertiesUtil.toBoolean(config.get(USE_OFF_HEAP_MEMORY), DEFAULT_USE_OFF_HEAP_MEMORY);
-            wrapped = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory, digestAlgorithm, packageNodeFilters, packagePropertyFilters);
+            ResourceDistributionPackageBuilder resourceDistributionPackageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory, digestAlgorithm, packageNodeFilters, packagePropertyFilters);
+            Runnable cleanup = new ResourceDistributionPackageCleanup(resolverFactory, resourceDistributionPackageBuilder);
+            Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Scheduler.PROPERTY_SCHEDULER_CONCURRENT, false);
+            props.put(Scheduler.PROPERTY_SCHEDULER_PERIOD, cleanupDelay);
+            packageCleanup = context.registerService(Runnable.class.getName(), cleanup, props);
+            wrapped = resourceDistributionPackageBuilder;
         }
 
         int monitoringQueueSize = PropertiesUtil.toInteger(config.get(MONITORING_QUEUE_SIZE), DEFAULT_MONITORING_QUEUE_SIZE);
@@ -249,6 +278,9 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Deactivate
     public void deactivate() {
         packageBuilder.clear();
+        if (packageCleanup != null) {
+            packageCleanup.unregister();
+        }
     }
 
     public String getType() {
