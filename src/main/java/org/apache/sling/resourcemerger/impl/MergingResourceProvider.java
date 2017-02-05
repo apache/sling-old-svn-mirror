@@ -83,7 +83,7 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
         /**
          * 
          * @param parent the underlying resource
-         * @param traverseParent
+         * @param traverseParent if true will also continue with the parent's parent recursively
          */
         public ParentHidingHandler(final Resource parent, final boolean traverseParent) {
             // evaluate the sling:hideChildren property on the current resource
