@@ -100,7 +100,6 @@ public class SlyBindingsValuesProvider {
     private static final String REQ_NS = SlyBindingsValuesProvider.class.getCanonicalName();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlyBindingsValuesProvider.class);
-    private static final String SLING_SCRIPTING_USER = "sling-scripting";
 
     @Reference
     private ScriptEngineManager scriptEngineManager = null;
@@ -203,9 +202,7 @@ public class SlyBindingsValuesProvider {
             }
             jsEnvironment = new JsEnvironment(scriptEngine);
             jsEnvironment.initialize();
-            final Map<String, Object> authenticationInfo = new HashMap<>(1);
-            authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, SLING_SCRIPTING_USER);
-            resolver = rrf.getServiceResourceResolver(authenticationInfo);
+            resolver = rrf.getServiceResourceResolver(null);
             factories = new HashMap<>(scriptPaths.size());
             for (Map.Entry<String, String> entry : scriptPaths.entrySet()) {
                 factories.put(entry.getKey(), loadFactory(resolver, jsEnvironment, entry.getValue(), bindings));
