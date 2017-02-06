@@ -21,6 +21,7 @@ import java.util.UUID;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -70,7 +71,9 @@ public class ManyServiceUsersTest {
         final String path = testRoot.getPath();
         s.save();
         
+        Session otherSession = null;
         try {
+            otherSession = s.getRepository().login(new SimpleCredentials("admin", "admin".toCharArray()));
             for(int i=1; i < N_USERS; i++) {
                 final String username = getClass().getSimpleName() + "_" + uniqueId + "_" + i;
                 UserUtil.createServiceUser(s, username);
@@ -80,7 +83,7 @@ public class ManyServiceUsersTest {
                 s.save();
                 
                 try {
-                    AclUtil.setAcl(s, Arrays.asList(username), Arrays.asList(path), Arrays.asList("jcr:read"), true);
+                    AclUtil.setAcl(otherSession, Arrays.asList(username), Arrays.asList(path), Arrays.asList("jcr:read"), true);
                 } catch(Exception e) {
                     fail("SetAcl failed at index " + i + ": " + e);
                 }
@@ -88,6 +91,9 @@ public class ManyServiceUsersTest {
         } finally {
             testRoot.remove();
             s.save();
+            if(otherSession != null) {
+                otherSession.logout();
+            }
         }
     }
 }
