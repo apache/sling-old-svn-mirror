@@ -72,7 +72,6 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
     public static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
     private static final String EMBEDDED_POLICY_PATH = "SLING-INF/content/config.xml";
-    private static final String SLING_XSS_USER = "sling-xss";
     private static final int DEFAULT_POLICY_CACHE_SIZE = 128;
     private PolicyHandler defaultHandler;
     private Attribute hrefAttribute;
@@ -123,10 +122,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
         this.defaultHandler = null;
         ResourceResolver xssResourceResolver = null;
         try {
-            Map<String, Object> authenticationInfo = new HashMap<String, Object>() {{
-                put(ResourceResolverFactory.SUBSERVICE, SLING_XSS_USER);
-            }};
-            xssResourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+            xssResourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
             Resource policyResource = xssResourceResolver.getResource(DEFAULT_POLICY_PATH);
             if (policyResource != null) {
                 try (InputStream policyStream = policyResource.adaptTo(InputStream.class)) {
