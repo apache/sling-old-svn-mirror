@@ -129,7 +129,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -282,8 +282,6 @@
                 <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectCookie:118->assertXReason:245 » IO -->
                 <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectHttpBasicCredentials:134->assertXReason:245 » IO -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
-                <!-- TODO FiltersTest.testCounters:33 Expecting header 'FILTER_COUNTER_HTTPSERVICE' -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
