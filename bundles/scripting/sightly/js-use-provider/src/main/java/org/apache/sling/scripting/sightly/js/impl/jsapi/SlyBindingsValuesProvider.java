@@ -47,6 +47,7 @@ import org.apache.sling.scripting.sightly.js.impl.async.TimingFunction;
 import org.apache.sling.scripting.sightly.js.impl.cjs.CommonJsModule;
 import org.apache.sling.scripting.sightly.js.impl.rhino.HybridObject;
 import org.apache.sling.scripting.sightly.js.impl.rhino.JsValueAdapter;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;
@@ -106,6 +107,9 @@ public class SlyBindingsValuesProvider {
 
     @Reference
     private ResourceResolverFactory rrf = null;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     private final AsyncExtractor asyncExtractor = new AsyncExtractor();
     private final JsValueAdapter jsValueAdapter = new JsValueAdapter(asyncExtractor);
