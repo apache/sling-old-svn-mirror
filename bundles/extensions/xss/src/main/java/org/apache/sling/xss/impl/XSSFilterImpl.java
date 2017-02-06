@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSFilter;
 import org.owasp.validator.html.model.Attribute;
@@ -85,6 +86,9 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory = null;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     @Override
     public void onChange(List<ResourceChange> resourceChanges) {
