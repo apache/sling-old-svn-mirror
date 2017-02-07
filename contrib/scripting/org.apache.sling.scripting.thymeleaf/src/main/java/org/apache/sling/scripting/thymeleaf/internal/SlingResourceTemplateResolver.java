@@ -115,6 +115,10 @@ public class SlingResourceTemplateResolver implements ITemplateResolver {
             final SlingContext slingContext = (SlingContext) context;
             final ResourceResolver resourceResolver = slingContext.getResourceResolver();
             final Resource resource = resourceResolver.getResource(template);
+            if (resource == null) {
+                logger.warn("resource for template '{}' is null, not resolving template", template);
+                return null;
+            }
             final ITemplateResource templateResource = new SlingTemplateResource(resource);
             final boolean templateResourceExistenceVerified = false;
             final TemplateMode templateMode = templateModeProvider.provideTemplateMode(resource);
