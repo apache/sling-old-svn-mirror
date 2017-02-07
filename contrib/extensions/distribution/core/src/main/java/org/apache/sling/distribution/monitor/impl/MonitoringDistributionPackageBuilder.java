@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import javax.annotation.Nonnull;
 import javax.management.ObjectName;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -58,31 +59,34 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
         return wrapped.getType();
     }
 
+    @Nonnull
     @Override
-    public DistributionPackage createPackage(ResourceResolver resourceResolver, DistributionRequest request) throws DistributionException {
+    public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         long start = System.currentTimeMillis();
         DistributionPackage distributionPackage = wrapped.createPackage(resourceResolver, request);
         registerDistributionPackageMBean(start, distributionPackage);
         return distributionPackage;
     }
 
+    @Nonnull
     @Override
-    public DistributionPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
+    public DistributionPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         return wrapped.readPackage(resourceResolver, stream);
     }
 
     @Override
-    public DistributionPackage getPackage(ResourceResolver resourceResolver, String id) throws DistributionException {
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) throws DistributionException {
         return wrapped.getPackage(resourceResolver, id);
     }
 
     @Override
-    public boolean installPackage(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws DistributionException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionException {
         return wrapped.installPackage(resourceResolver, distributionPackage);
     }
 
+    @Nonnull
     @Override
-    public DistributionPackageInfo installPackage(ResourceResolver resourceResolver, InputStream stream) throws DistributionException {
+    public DistributionPackageInfo installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionException {
         return wrapped.installPackage(resourceResolver, stream);
     }
 
