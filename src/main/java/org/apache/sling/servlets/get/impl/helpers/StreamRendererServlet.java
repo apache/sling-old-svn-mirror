@@ -74,7 +74,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     private static final String mimeSeparation = "SLING_MIME_BOUNDARY";
 
     // size threshold for sending an Accept-Ranges header back in the response (100KB)
-    private static final int ACCEPT_RANGES_THRESHOLD = 100 * 1024 * 1024;
+    private static final int ACCEPT_RANGES_THRESHOLD = 100 * 1024;
 
     // Accept-Ranges header name
     private static final String ACCEPT_RANGES_HEADER = "Accept-Ranges";
