@@ -22,6 +22,7 @@ package org.apache.sling.distribution.packaging.impl.exporter;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
@@ -50,6 +51,21 @@ public class AgentDistributionPackageExporterTest {
             @Override
             public void process(DistributionPackage distributionPackage) {
                 distributionPackages.add(distributionPackage);
+            }
+
+            @Override
+            public List<DistributionResponse> getAllResponses() {
+                return null;
+            }
+
+            @Override
+            public int getPackagesCount() {
+                return 0;
+            }
+
+            @Override
+            public long getPackagesSize() {
+                return 0;
             }
         });
         assertNotNull(distributionPackages);
