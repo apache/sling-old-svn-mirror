@@ -46,20 +46,24 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
  * The package exporter callback function is responsible to process the exported packages.
  * The exported packages are scheduled for import by passing them to a {@link DistributionQueueDispatchingStrategy}.
  */
-class DistributionPackageExporterProcessor implements DistributionPackageProcessor {
+class QueueingDistributionPackageProcessor implements DistributionPackageProcessor {
 
+    // request info
     private final String callingUser;
     private final String requestId;
     private final long requestStartTime;
+    private final String agentName;
+
+    // stats
     private final AtomicInteger packagesCount = new AtomicInteger();
     private final AtomicLong packagesSize = new AtomicLong();
     private final List<DistributionResponse> allResponses = new LinkedList<DistributionResponse>();
 
+    // required components
     private final DistributionEventFactory distributionEventFactory;
     private final DistributionQueueDispatchingStrategy scheduleQueueStrategy;
     private final DistributionQueueProvider queueProvider;
     private final DefaultDistributionLog log;
-    private final String agentName;
 
     public List<DistributionResponse> getAllResponses() {
         return allResponses;
@@ -73,7 +77,7 @@ class DistributionPackageExporterProcessor implements DistributionPackageProcess
         return packagesSize.get();
     }
 
-    DistributionPackageExporterProcessor(@Nullable String callingUser, @Nonnull String requestId, long requestStartTime,
+    QueueingDistributionPackageProcessor(@Nullable String callingUser, @Nonnull String requestId, long requestStartTime,
                                          @Nonnull DistributionEventFactory distributionEventFactory,
                                          @Nonnull DistributionQueueDispatchingStrategy scheduleQueueStrategy,
                                          @Nonnull DistributionQueueProvider queueProvider, @Nonnull DefaultDistributionLog log,
@@ -104,7 +108,8 @@ class DistributionPackageExporterProcessor implements DistributionPackageProcess
                 distributionPackage.getInfo().getPaths(), endTime - startTime, responses.size());
     }
 
-    private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage, String callingUser, String requestId, long startTime) {
+    private Collection<SimpleDistributionResponse> scheduleImportPackage(DistributionPackage distributionPackage, String callingUser,
+                                                                         String requestId, long startTime) {
         Collection<SimpleDistributionResponse> distributionResponses = new LinkedList<SimpleDistributionResponse>();
 
         // dispatch the distribution package to one or more queues

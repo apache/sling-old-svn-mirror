@@ -18,13 +18,6 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
-import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.DistributionRequest;
@@ -45,6 +38,7 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -54,6 +48,13 @@ import org.apache.sling.distribution.queue.impl.SimpleAgentDistributionQueue;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.util.impl.DistributionUtils;
 import org.apache.sling.jcr.api.SlingRepository;
+
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -205,9 +206,15 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private CompositeDistributionResponse exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest, String callingUser, String requestId) throws DistributionException {
         final long startTime = System.currentTimeMillis();
         // callback function
-        DistributionPackageExporterProcessor packageProcessor = new DistributionPackageExporterProcessor(callingUser, requestId, startTime,
-                distributionEventFactory, scheduleQueueStrategy, queueProvider, log, name);
-
+        DistributionPackageProcessor packageProcessor;
+        if (DistributionRequestType.TEST.equals(distributionRequest.getRequestType())) {
+            // test packages do not get passed to the queues and get imported immediately
+            packageProcessor = new ImportingDistributionPackageProcessor(distributionPackageImporter, agentAuthenticationInfo,
+                    callingUser, requestId, log);
+        } else {
+            packageProcessor = new QueueingDistributionPackageProcessor(callingUser, requestId, startTime,
+                    distributionEventFactory, scheduleQueueStrategy, queueProvider, log, name);
+        }
         // export packages
         distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest, packageProcessor);
 
@@ -355,6 +362,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     /**
      * check whether the given request type can be handled by the current agent
+     *
      * @param request a distribution request
      * @return {@code true} if request can be executed, {@code false} otherwise.
      */
@@ -378,6 +386,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     /**
      * check whether a certain request paths can be distributed via this agent
+     *
      * @param request a distribution request
      * @return {@code true} if request can be executed, {@code false} otherwise.
      */

@@ -39,9 +39,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link DistributionPackageExporterProcessor}
+ * Tests for {@link QueueingDistributionPackageProcessor}
  */
-public class DistributionPackageExporterProcessorTest {
+public class QueueingDistributionPackageProcessorTest {
 
     @Test
     public void testGetAllResponses() throws Exception {
@@ -53,7 +53,7 @@ public class DistributionPackageExporterProcessorTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DefaultDistributionLog log = mock(DefaultDistributionLog.class);
         String agentName = "dummy";
-        DistributionPackageExporterProcessor exporterProcessor = new DistributionPackageExporterProcessor(callingUser, requestId,
+        QueueingDistributionPackageProcessor exporterProcessor = new QueueingDistributionPackageProcessor(callingUser, requestId,
                 startTime, eventFactory, scheduleQueueStrategy, queueProvider, log, agentName);
 
         List<DistributionResponse> allResponses = exporterProcessor.getAllResponses();
@@ -71,7 +71,7 @@ public class DistributionPackageExporterProcessorTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DefaultDistributionLog log = mock(DefaultDistributionLog.class);
         String agentName = "dummy";
-        DistributionPackageExporterProcessor exporterProcessor = new DistributionPackageExporterProcessor(callingUser, requestId,
+        QueueingDistributionPackageProcessor exporterProcessor = new QueueingDistributionPackageProcessor(callingUser, requestId,
                 startTime, eventFactory, scheduleQueueStrategy, queueProvider, log, agentName);
 
         int packagesCount = exporterProcessor.getPackagesCount();
@@ -89,7 +89,7 @@ public class DistributionPackageExporterProcessorTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DefaultDistributionLog log = mock(DefaultDistributionLog.class);
         String agentName = "dummy";
-        DistributionPackageExporterProcessor exporterProcessor = new DistributionPackageExporterProcessor(callingUser, requestId,
+        QueueingDistributionPackageProcessor exporterProcessor = new QueueingDistributionPackageProcessor(callingUser, requestId,
                 startTime, eventFactory, scheduleQueueStrategy, queueProvider, log, agentName);
 
         long packagesSize = exporterProcessor.getPackagesSize();
@@ -113,7 +113,7 @@ public class DistributionPackageExporterProcessorTest {
 
         DefaultDistributionLog log = mock(DefaultDistributionLog.class);
         String agentName = "dummy";
-        DistributionPackageExporterProcessor exporterProcessor = new DistributionPackageExporterProcessor(callingUser, requestId,
+        QueueingDistributionPackageProcessor exporterProcessor = new QueueingDistributionPackageProcessor(callingUser, requestId,
                 startTime, eventFactory, scheduleQueueStrategy, queueProvider, log, agentName);
 
         DistributionPackageInfo info = new DistributionPackageInfo("type-a", new HashMap<String, Object>());

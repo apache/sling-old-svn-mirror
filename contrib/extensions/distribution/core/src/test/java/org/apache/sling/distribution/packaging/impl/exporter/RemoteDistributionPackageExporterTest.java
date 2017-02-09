@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -56,6 +57,21 @@ public class RemoteDistributionPackageExporterTest {
             @Override
             public void process(DistributionPackage distributionPackage) {
                 distributionPackages.add(distributionPackage);
+            }
+
+            @Override
+            public List<DistributionResponse> getAllResponses() {
+                return null;
+            }
+
+            @Override
+            public int getPackagesCount() {
+                return 0;
+            }
+
+            @Override
+            public long getPackagesSize() {
+                return 0;
             }
         });
         assertNotNull(distributionPackages);
