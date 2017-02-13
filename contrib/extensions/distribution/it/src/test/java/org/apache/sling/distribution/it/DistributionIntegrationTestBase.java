@@ -19,27 +19,20 @@
 package org.apache.sling.distribution.it;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.assertEmptyFolder;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
-import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
-import static org.apache.sling.distribution.it.DistributionUtils.getResource;
 import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.setArrayProperties;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Integration test base class for distribution
@@ -132,8 +125,9 @@ public abstract class DistributionIntegrationTestBase {
 
 
     @After
-    public void checkNoPackagesLeft() throws IOException, JSONException {
+    public void checkNoPackagesLeft() throws IOException, JSONException, InterruptedException {
 
+        Thread.sleep(5000);
 
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");

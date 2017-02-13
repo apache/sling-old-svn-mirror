@@ -2,5 +2,7 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "default",
     "type": "jcrvlt",
-    "package.filters": ["/content|-.*/excluded"]
+    "cleanupDelay" : 1,
+    "package.filters": ["/content|-.*/excluded"],
+    "tempFsFolder" : "/var/sling/distribution/packages"
 }

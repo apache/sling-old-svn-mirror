@@ -88,6 +88,7 @@ public class Init {
             User defaultAgentUser = createOrGetServiceUser(userManager, defaultAgentUserName);
 
             if (defaultAgentUser != null) {
+                AccessControlUtils.addAccessControlEntry(session, "/var/sling/distribution/packages", defaultAgentUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
                 ((User) distributorUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
                 ((User) serviceUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
             }
