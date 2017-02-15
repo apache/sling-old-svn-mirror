@@ -36,6 +36,11 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "50-";
 
+    private static final int MAX_RETRIES = 5;
+    
+    // keep track of retry attempts via temporary attribute stored in taskresource
+    private String ATTR_UPDATE_RETRY = "org.apache.sling.installer.core.impl.tasks.BundleUpdateTask.retrycount";
+
     public BundleUpdateTask(final TaskResourceGroup r,
                             final TaskSupport creator) {
         super(r, creator);
@@ -132,10 +137,23 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
     	} catch (final Exception e) {
-    	    String message = MessageFormat.format("Removing failing update task due to {0} - unable to retry: {1}", e.getLocalizedMessage(), this);
+            int retries = 0;
+            Object obj = getResource().getTemporaryAttribute(ATTR_UPDATE_RETRY);
+            if (obj instanceof Integer) {
+                retries = (Integer) obj;
+            }
+            getResource().setAttribute(ATTR_UPDATE_RETRY, Integer.valueOf(++retries));
+            if (retries >= MAX_RETRIES) {
+                String message = MessageFormat.format("Removing failing update task due to {0} - unable to retry: {1}",
+                    e.getLocalizedMessage(), this);
+                this.getLogger().error(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
+            } else {
+                String message = MessageFormat.format("Failing update task due to {0} - will retry up to {1} more time(s) for {2} later", 
+                    e.getLocalizedMessage(), MAX_RETRIES - (retries - 1) , this);
             this.getLogger().warn(message, e);
-            this.setFinishedState(ResourceState.IGNORED, null, message);
     	}
+    }
     }
 
     @Override
