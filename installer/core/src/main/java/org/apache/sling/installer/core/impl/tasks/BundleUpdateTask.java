@@ -36,6 +36,11 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "50-";
 
+    private static final int MAX_RETRIES = 5;
+    
+    // keep track of retry attempts via temporary attribute stored in taskresource
+    private String ATTR_UPDATE_RETRY = "org.apache.sling.installer.core.impl.tasks.BundleUpdateTask.retrycount";
+
     public BundleUpdateTask(final TaskResourceGroup r,
                             final TaskSupport creator) {
         super(r, creator);
@@ -73,17 +78,17 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
-    	final Version currentVersion = b.getVersion();
-    	snapshot = BundleInfo.isSnapshot(newVersion);
-    	if (currentVersion.equals(newVersion) && !snapshot) {
-    	    // TODO : Isn't this already checked in the task creator?
-    	    String message = MessageFormat.format("Same version is already installed, and not a snapshot, ignoring update: {0}", getResource());
-    	    this.getLogger().debug(message);
-    	    this.setFinishedState(ResourceState.INSTALLED, null, message);
-    		return;
-    	}
+        final Version currentVersion = b.getVersion();
+        snapshot = BundleInfo.isSnapshot(newVersion);
+        if (currentVersion.equals(newVersion) && !snapshot) {
+            // TODO : Isn't this already checked in the task creator?
+            String message = MessageFormat.format("Same version is already installed, and not a snapshot, ignoring update: {0}", getResource());
+            this.getLogger().debug(message);
+            this.setFinishedState(ResourceState.INSTALLED, null, message);
+            return;
+        }
 
-    	try {
+        try {
             // If the bundle is active before the update - restart it once updated, but
             // in sequence, not right now
             final boolean reactivate = this.isBundleActive(b);
@@ -131,11 +136,24 @@ public class BundleUpdateTask extends AbstractBundleTask {
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
-    	} catch (final Exception e) {
-    	    String message = MessageFormat.format("Removing failing update task due to {0} - unable to retry: {1}", e.getLocalizedMessage(), this);
-            this.getLogger().warn(message, e);
-            this.setFinishedState(ResourceState.IGNORED, null, message);
-    	}
+        } catch (final Exception e) {
+            int retries = 0;
+            Object obj = getResource().getTemporaryAttribute(ATTR_UPDATE_RETRY);
+            if (obj instanceof Integer) {
+                retries = (Integer) obj;
+            }
+            getResource().setTemporaryAttribute(ATTR_UPDATE_RETRY, Integer.valueOf(++retries));
+            if (retries > MAX_RETRIES) {
+                String message = MessageFormat.format("Removing failing update task due to {0} - unable to retry: {1}",
+                    e.getLocalizedMessage(), this);
+                this.getLogger().error(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
+            } else {
+                String message = MessageFormat.format("Failing update task due to {0} - will retry up to {1} more time(s) for {2} later", 
+                    e.getLocalizedMessage(), MAX_RETRIES - (retries - 1) , this);
+                this.getLogger().warn(message, e);
+            }
+        }
     }
 
     @Override
