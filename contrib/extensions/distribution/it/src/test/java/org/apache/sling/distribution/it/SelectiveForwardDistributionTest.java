@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Map;
