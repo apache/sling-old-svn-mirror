@@ -35,6 +35,7 @@ public class ValidationModelImpl implements ValidationModel {
     private final @Nonnull String[] applicablePaths;
     private final @Nonnull List<ChildResource> children;
 
+    // TODO: only call from ValidationModelBuilder
     public ValidationModelImpl(@Nonnull List<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
                               String[] applicablePaths, @Nonnull List<ChildResource> children) {
         this.resourceProperties = resourceProperties;
