@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 public class SelectiveForwardDistributionTest extends DistributionIntegrationTestBase {
 
 
-    @Ignore
     @Test
     public void testQueues() throws Exception {
 
@@ -44,7 +43,6 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertEquals(2, queues.size());
     }
 
-    @Ignore
     @Test
     public void testAddContent() throws Exception {
         String nodePath1 = createRandomNode(authorClient, "/content/news/forward_add_" + System.nanoTime());
@@ -60,7 +58,6 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertExists(publishClient, nodePath2);
     }
 
-    @Ignore
     @Test
     public void testDeleteContent() throws Exception {
         String nodePath1 = createRandomNode(publishClient, "/content/news/forward_del_" + System.nanoTime());

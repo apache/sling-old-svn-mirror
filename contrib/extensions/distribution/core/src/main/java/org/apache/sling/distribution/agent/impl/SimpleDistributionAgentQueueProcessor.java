@@ -41,7 +41,11 @@ import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStra
 import org.apache.sling.distribution.util.impl.DistributionUtils;
 
 /**
- * A processor of agent queue entries, each entry's underlying package is fecthed and passed to the {@link DistributionPackageImporter} for import.
+ * A processor of agent queue entries, each entry's underlying package is fecthed and passed to the
+ * {@link DistributionPackageImporter} for import.
+ * If item can be delivered it can be removed from the queue, if it cannot be delivered because of a {@link RecoverableDistributionException}
+ * like a connection issue the item will stay in the queue, for other types of errors the item will be moved to the
+ * current queue "error queue" if that exists.
  */
 class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcessor {
 

@@ -273,6 +273,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             Map<String, String> queueAliases = dispatchingStrategy.getMatchingQueues(null);
             importerEndpointsMap = SettingsUtils.expandUriMap(importerEndpointsMap, queueAliases);
             exportQueueStrategy = dispatchingStrategy;
+            endpointNames = importerEndpointsMap.keySet();
         } else {
             boolean asyncDelivery = PropertiesUtil.toBoolean(config.get(ASYNC_DELIVERY), false);
             if (asyncDelivery) {
