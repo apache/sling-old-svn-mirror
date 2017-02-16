@@ -45,8 +45,8 @@ public class MockInstallableResource extends InstallableResource {
                 InstallableResource.TYPE_BUNDLE, null);
     }
 
-    public MockInstallableResource(String uri, InputStream is, String digest, String type, Integer priority) {
-        super(uri, is,
+    public MockInstallableResource(String id, InputStream is, String digest, String type, Integer priority) {
+        super(id, is,
                 null, digest,
                 type != null ? type : InstallableResource.TYPE_BUNDLE, priority);
     }

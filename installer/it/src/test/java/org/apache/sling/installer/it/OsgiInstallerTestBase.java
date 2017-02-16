@@ -408,14 +408,17 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource[] getInstallableResource(File testBundle, String digest, int priority) throws IOException {
-        final String url = testBundle.getAbsolutePath();
+        return getInstallableResource(testBundle, testBundle.getAbsolutePath(), digest, priority);
+    }
+
+    protected InstallableResource[] getInstallableResource(File testBundle, String id, String digest, int priority) throws IOException {
         if (digest == null) {
             digest = String.valueOf(testBundle.lastModified());
         }
-        final InstallableResource result = new MockInstallableResource(url, new FileInputStream(testBundle), digest, null, priority);
+        final InstallableResource result = new MockInstallableResource(id, new FileInputStream(testBundle), digest, null, priority);
         return new InstallableResource[] {result};
     }
-
+    
     protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data) {
         return getInstallableResource(configPid, copy(data), InstallableResource.DEFAULT_PRIORITY);
     }
