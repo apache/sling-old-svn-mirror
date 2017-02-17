@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.fsclassloader</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons FileSystem ClassLoader</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fsclassloader</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fsclassloader</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/fsclassloader</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.fsclassloader-1.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.fsclassloader-1.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.fsclassloader-1.0.6</url>
     </scm>
 
     <build>
