@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -225,20 +224,8 @@ public class PersistentResourceList {
                 t = new EntityResourceList(input.getEntityId(), this.listener);
                 this.data.put(input.getEntityId(), t);
             }
-            t.addOrUpdate(input);
 
-            // find stale resources (other entity ids with the same URL)
-            Collection<RegisteredResource> staleResources = getResourcesWithUrl(input.getURL(), input.getEntityId());
-            for (RegisteredResource staleResource : staleResources) {
-                // get according group
-                EntityResourceList group = this.data.get(staleResource.getEntityId());
-                if (group == null) {
-                    logger.error("Could not get group of stale resource {}", staleResource);
-                } else {
-                    group.remove(input.getURL());
-                    logger.warn("Removing stale resource {}, overwritten by {}", staleResource, input);
-                }
-            }
+            t.addOrUpdate(input);
         } else {
             // check if there is an old resource and remove it first
             if ( this.untransformedResources.contains(input) ) {
@@ -254,7 +241,6 @@ public class PersistentResourceList {
     public List<RegisteredResource> getUntransformedResources() {
         return this.untransformedResources;
     }
-   
 
     /**
      * Remove a resource by url.
@@ -294,27 +280,6 @@ public class PersistentResourceList {
             }
         }
         return erl;
-    }
-
-    /**
-     * 
-     * @param url the url of the resource to look for
-     * @param entityIdToSkip all resources having this entity id should in no case be returned
-     * @return the list of all registered resources with the given url, not having the entityId which should be skipped.
-     */
-    private Collection<RegisteredResource> getResourcesWithUrl(String url, String entityIdToSkip) {
-        Collection<RegisteredResource> foundResources = new LinkedList<>();
-        for(final EntityResourceList group : this.data.values()) {
-            if (group.getResourceId().equals(entityIdToSkip)) {
-                continue;
-            }
-            for (RegisteredResource resource : group.listResources()) {
-                if (resource.getURL().equals(url)) {
-                    foundResources.add(resource);
-                }
-            }
-        }
-        return foundResources;
     }
 
     /**
