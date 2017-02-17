@@ -23,7 +23,7 @@ package org.apache.sling.commons.classloader;
  * Whiteboard interface for scripting implementations which need to respond to
  * ClassLoader clearing events.
  * 
- * @Since 1.4.0
+ * @since 1.4.0
  */
 public interface ClassLoaderWriterListener {
 
