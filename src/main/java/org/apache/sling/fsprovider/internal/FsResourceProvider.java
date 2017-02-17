@@ -154,6 +154,7 @@ public class FsResourceProvider extends ResourceProvider<Object> {
     /**
      * Returns an iterator of resources.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> listChildren(final ResolveContext<Object> ctx, final Resource parent) {
         File parentFile = parent.adaptTo(File.class);

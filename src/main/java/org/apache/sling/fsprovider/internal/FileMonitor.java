@@ -203,8 +203,8 @@ public class FileMonitor extends TimerTask {
 
         for(final ObserverConfiguration config : reporter.getObserverConfigurations()) {
             if ( config.matches(monitorable.path) ) {
-                final ResourceChange change = new ResourceChange(changeType, monitorable.path, false);
-                reporter.reportChanges(config, Collections.singleton(change), false);
+                final ResourceChange change = new ResourceChange(changeType, monitorable.path, false, null, null, null);
+                reporter.reportChanges(Collections.singleton(change), false);
             }
         }
     }
