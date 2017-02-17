@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +30,8 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -54,6 +47,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.classloader.ClassLoaderWriterListener;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
@@ -82,7 +76,7 @@ import org.slf4j.LoggerFactory;
  * The JSP engine (a.k.a Jasper).
  *
  */
-@Component(service = {javax.script.ScriptEngineFactory.class,ResourceChangeListener.class,Servlet.class},
+@Component(service = {javax.script.ScriptEngineFactory.class,ResourceChangeListener.class,ClassLoaderWriterListener.class},
            property = {
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                    Constants.SERVICE_DESCRIPTION + "=JSP Script Handler",
@@ -92,15 +86,12 @@ import org.slf4j.LoggerFactory;
                    ResourceChangeListener.PATHS + "=glob:**/*.jspf",
                    ResourceChangeListener.PATHS + "=glob:**/*.jspx",
                    ResourceChangeListener.PATHS + "=glob:**/*.tld",
-                   ResourceChangeListener.PATHS + "=glob:**/*.tag",
-                   "felix.webconsole.label=slingjsp",
-                   "felix.webconsole.title=JSP",
-                   "felix.webconsole.category=Sling"
+                   ResourceChangeListener.PATHS + "=glob:**/*.tag"
            })
 @Designate(ocd = JspScriptEngineFactory.Config.class)
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
-    implements Servlet,ResourceChangeListener,ExternalResourceChangeListener {
+    implements ResourceChangeListener,ExternalResourceChangeListener, ClassLoaderWriterListener {
 
     @ObjectClassDefinition(name = "Apache Sling JSP Script Handler",
             description = "The JSP Script Handler supports development of JSP " +
@@ -718,81 +709,12 @@ public class JspScriptEngineFactory
         };
         t.start();
     }
-
-    //
-    // Web Console Plugin
-    //
-    private ServletConfig config;
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#destroy()
-     */
-    @Override
-    public void destroy() {
-        this.config = null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#getServletConfig()
-     */
-    @Override
-    public ServletConfig getServletConfig() {
-        return this.config;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#getServletInfo()
-     */
-    @Override
-    public String getServletInfo() {
-        return "";
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
-     */
-    @Override
-    public void init(final ServletConfig config) throws ServletException {
-        this.config = config;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
-     */
-    @Override
-    public void service(final ServletRequest request, final ServletResponse response)
-            throws ServletException, IOException {
-        if ( request instanceof HttpServletRequest ) {
-            final HttpServletRequest req = (HttpServletRequest) request;
-            final HttpServletResponse res = (HttpServletResponse) response;
-
-            final String path = req.getContextPath() + req.getServletPath() + req.getPathInfo();
-
-            if ( req.getMethod().equals("POST") ) {
-                final JspRuntimeContext rctxt = this.jspRuntimeContext;
-                this.classLoaderWriter.delete("/org/apache/jsp");
-                if ( rctxt != null ) {
-                    renewJspRuntimeContext();
-                }
-
-                res.sendRedirect(path + "?reset");
-                return;
-            } else if ( req.getMethod().equals("GET") ) {
-                final PrintWriter pw = res.getWriter();
-                pw.println("<h1>Apache Sling JSP Scripting</h1>");
-                pw.println("<br/>");
-                if ( req.getParameter("reset") != null ) {
-                    pw.println("<p>All compiled jsp files removed.");
-                    pw.println("<br/>");
-                }
-                pw.print("<form action='");
-                pw.print(path);
-                pw.println("' method='POST'>");
-                pw.println("<input type='submit' value='Recompile all JSPs'>");
-                pw.println("</form>");
-                return;
-            }
+    
+	@Override
+	public void onClassLoaderClear(String context) {
+        final JspRuntimeContext rctxt = this.jspRuntimeContext;
+		if ( rctxt != null ) {
+            renewJspRuntimeContext();
         }
-        throw new ServletException("Request not supported.");
-    }
+	}
 }
