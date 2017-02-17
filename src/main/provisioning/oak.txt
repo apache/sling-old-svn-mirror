@@ -24,7 +24,7 @@
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10]
-    org.apache.felix/org.apache.felix.jaas/0.0.4
+    org.apache.felix/org.apache.felix.jaas/1.0.2
 
 [artifacts startLevel=15]
     org.apache.jackrabbit/oak-core/${oak.version}
