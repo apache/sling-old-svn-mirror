@@ -110,13 +110,13 @@ public class ITWebConsoleRemote extends LogTestBase {
         String text = page.asText();
 
         //Filter name should be part of Filter table
-        assertTrue(text.contains("WebConsoleTestTurboFilter"));
+        assertThat(text, containsString("WebConsoleTestTurboFilter"));
 
         //Console name should be part of console table
-        assertTrue(text.contains("WebConsoleTestAppender"));
+        assertThat(text, containsString("WebConsoleTestAppender"));
 
         //Should show file name testremote.log
-        assertTrue(text.contains("testremote.log"));
+        assertThat(text, containsString("testremote.log"));
     }
 
     @Test

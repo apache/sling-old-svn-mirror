@@ -18,6 +18,11 @@
   -->
 
 <configuration>
+  <newRule pattern="*/configuration/osgi"
+           actionClass="org.apache.sling.commons.log.logback.OsgiAction"/>
+  <newRule pattern="*/configuration/appender-ref-osgi"
+           actionClass="org.apache.sling.commons.log.logback.OsgiAppenderRefAction"/>
+  <osgi/>
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} *%level* [%thread] %logger %message%n</pattern>
