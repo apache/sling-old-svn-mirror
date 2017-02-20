@@ -99,7 +99,6 @@ public abstract class LogTestBase {
             mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
             mavenBundle("commons-io", "commons-io").versionAsInProject(),
             wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
-            wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
             LogTestBase.configAdmin(),
             addPaxExamSpecificOptions(),
             addCodeCoverageOption(), addDebugOptions(), addExtraOptions(), addDefaultOptions());
