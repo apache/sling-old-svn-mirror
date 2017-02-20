@@ -1221,12 +1221,6 @@
             <artifactId>org.osgi.service.metatype.annotations</artifactId>
         </dependency>
 
-        <!-- DEPRECATED: OSGi support annotations -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-        <!-- DEPRECATED: OSGi support annotations -->
         <dependency>
             <groupId>biz.aQute.bnd</groupId>
             <artifactId>biz.aQute.bndlib</artifactId>
