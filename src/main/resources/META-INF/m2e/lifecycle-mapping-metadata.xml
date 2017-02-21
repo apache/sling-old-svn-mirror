@@ -22,6 +22,8 @@
             <pluginExecutionFilter>
                 <goals>
                     <goal>attach-slingfeature</goal>
+                    <goal>attach-modelarchive</goal>
+                    <goal>repository</goal>
                     <goal>package</goal>
                     <goal>prepare-package</goal>
                     <goal>start</goal>
