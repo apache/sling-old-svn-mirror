@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.testing.samples.module-with-it</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>slingstart</packaging> <!-- means the launchpad is configured in /src/main/provisioning, extends classpath -->
+    <packaging>jar</packaging> <!-- means the launchpad is configured in /src/main/provisioning, extends classpath -->
 
     <name>Apache Sling Testing - sample module with integration tests</name>
     <description>Sample project that demonstrates a module with integration 
@@ -84,6 +84,18 @@
                 <extensions>true</extensions>
                 <executions>
                     <execution>
+                        <id>prepare-launchpad-package</id>
+                        <goals>
+                            <goal>prepare-package</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>build-launchpad-package</id>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                          <id>start-container-before-IT</id>
                         <goals>
                             <goal>start</goal>
@@ -95,6 +107,8 @@
                             <goal>stop</goal>
                         </goals>
                     </execution>
+                    
+                   
                 </executions>
                 <configuration>
                     <servers>
