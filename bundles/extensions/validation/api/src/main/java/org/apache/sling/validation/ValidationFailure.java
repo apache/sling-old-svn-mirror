@@ -22,7 +22,7 @@ import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface ValidationFailure {
