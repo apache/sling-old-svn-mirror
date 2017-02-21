@@ -50,6 +50,8 @@ import static org.mockito.Mockito.when;
  */
 public class PlumberServletTest extends AbstractPipeTest {
 
+    static final int DUMMYTREE_TEST_SIZE = 4;
+
     String containersPath = PATH_PIPE + "/" + "containers";
 
     String dummyTreePath = containersPath + "/" + ContainerPipeTest.NN_DUMMYTREE;
@@ -79,31 +81,35 @@ public class PlumberServletTest extends AbstractPipeTest {
         }
     }
 
-    private void assertDummyTree() throws JSONException {
+    private void assertDummyTree(int size) throws JSONException {
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
         JSONObject object = new JSONObject(finalResponse);
-        assertEquals("response should be an obj with size value equals to 4", object.getInt(OutputWriter.KEY_SIZE), 4);
-        assertEquals("response should be an obj with items value equals to a 4 valued array", object.getJSONArray(OutputWriter.KEY_ITEMS).length(), 4);
+        assertEquals("response should be an obj with size value equals to " + DUMMYTREE_TEST_SIZE, object.getInt(OutputWriter.KEY_SIZE), DUMMYTREE_TEST_SIZE);
+        assertEquals("response should be an obj with items value equals to a " + size + " valued array", object.getJSONArray(OutputWriter.KEY_ITEMS).length(), size);
+    }
+
+    private void assertDummyTree() throws JSONException {
+        assertDummyTree(DUMMYTREE_TEST_SIZE);
     }
 
     @Test
     public void testDummyTreeThroughRT() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, null, null, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
     }
 
     @Test
     public void testDummyTreeThroughPlumber() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), PATH_PIPE, dummyTreePath, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), PATH_PIPE, dummyTreePath, null, null, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
     }
 
     @Test
     public void testWriteExecute() throws ServletException {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, null, null);
         servlet.execute(request, response, true);
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
@@ -116,7 +122,7 @@ public class PlumberServletTest extends AbstractPipeTest {
      */
     @Test
     public void testGetOnWriteExecute() throws ServletException {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, null, null);
         boolean hasFailed = true;
         try {
             servlet.execute(request, response, false);
@@ -136,7 +142,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         JSONObject bindings = new JSONObject("{'" + testBinding + "':'" + bindingValue + "'}");
         JSONObject respObject = new JSONObject("{'" + pathLengthParam + "':'${path.get(\"dummyGrandChild\").length}','" + testBindingLength + "':'${" + testBinding + ".length}'}");
         SlingHttpServletRequest request =
-                mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, bindings.toString(), respObject.toString(), null);
+                mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, bindings.toString(), respObject.toString(), null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
         JSONObject response = new JSONObject(stringResponse.toString());
@@ -159,15 +165,29 @@ public class PlumberServletTest extends AbstractPipeTest {
     @Test
     public void testDryRun() throws Exception {
         SlingHttpServletRequest dryRunRequest =
-                mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, "true");
+                mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, "true", null);
         servlet.execute(dryRunRequest, response, true);
         Resource resource = context.resourceResolver().getResource("/content/fruits");
         ValueMap properties = resource.adaptTo(ValueMap.class);
         assertFalse("property fruits shouldn't have been written", properties.containsKey("fruits"));
         SlingHttpServletRequest request =
-                mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, "false");
+                mockPlumberServletRequest(context.resourceResolver(), pipedWritePath, null, null, null, "false", null);
         servlet.execute(request, response, true);
         WritePipeTest.assertPiped(resource);
+    }
+    
+    @Test
+    public void testDummyTreeSizeLimit() throws Exception {
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, null, null, null, "2");
+        servlet.execute(request, response, false);
+        assertDummyTree(2);
+    }
+
+    @Test
+    public void testDummyTreeInfiniteSize() throws Exception {
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, null, null, null, "-1");
+        servlet.execute(request, response, false);
+        assertDummyTree(DUMMYTREE_TEST_SIZE);
     }
 
     public static SlingHttpServletRequest mockPlumberServletRequest(ResourceResolver resolver,
@@ -175,7 +195,8 @@ public class PlumberServletTest extends AbstractPipeTest {
                                                                     String pathParam,
                                                                     String bindings,
                                                                     String writer,
-                                                                    String dryRun){
+                                                                    String dryRun,
+                                                                    String size) {
         SlingHttpServletRequest request = mock(SlingHttpServletRequest.class);
         Resource resource = resolver.getResource(path);
         when(request.getResourceResolver()).thenReturn(resolver);
@@ -184,6 +205,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         when(request.getParameter(PlumberServlet.PARAM_BINDINGS)).thenReturn(bindings);
         when(request.getParameter(CustomWriter.PARAM_WRITER)).thenReturn(writer);
         when(request.getParameter(BasePipe.DRYRUN_KEY)).thenReturn(dryRun);
+        when(request.getParameter(PlumberServlet.PARAM_SIZE)).thenReturn(size);
         return request;
     }
 

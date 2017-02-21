@@ -121,7 +121,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             while (resourceIterator.hasNext()){
                 Resource resource = resourceIterator.next();
                 paths.add(resource.getPath());
-                if (++i < size) {
+                if (i++ < size) {
                     writer.writeItem(resource);
                 }
             }
