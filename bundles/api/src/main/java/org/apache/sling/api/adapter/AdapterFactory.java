@@ -45,7 +45,7 @@ public interface AdapterFactory {
      * The service name to use when registering implementations of this
      * interface as services.
      */
-    final static String SERVICE_NAME = "org.apache.sling.api.adapter.AdapterFactory";
+    String SERVICE_NAME = "org.apache.sling.api.adapter.AdapterFactory";
 
     /**
      * The service registration property listing the fully qualified names of
@@ -54,13 +54,13 @@ public interface AdapterFactory {
      * {@link #getAdapter(Object, Class)} method must be an instance of one of
      * these classes for this factory to be able to adapt the object.
      */
-    final static String ADAPTABLE_CLASSES = "adaptables";
+    String ADAPTABLE_CLASSES = "adaptables";
 
     /**
      * The service registration property listing the fully qualified names of
      * classes to which this factory can adapt adaptables (value is "adapters").
      */
-    final static String ADAPTER_CLASSES = "adapters";
+    String ADAPTER_CLASSES = "adapters";
 
     /**
      * Adapt the given object to the adaptable type. The adaptable object is
