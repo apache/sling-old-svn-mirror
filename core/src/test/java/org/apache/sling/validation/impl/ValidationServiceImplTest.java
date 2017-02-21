@@ -62,7 +62,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ValidationServiceImplTest {
 
     /**
@@ -73,6 +77,9 @@ public class ValidationServiceImplTest {
     private ValidationModelBuilder modelBuilder;
 
     private ResourcePropertyBuilder propertyBuilder;
+    
+    @Mock
+    ValidationServiceConfiguration configuration;
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -81,6 +88,7 @@ public class ValidationServiceImplTest {
     public void setUp() throws LoginException, PersistenceException, RepositoryException {
         validationService = new ValidationServiceImpl();
         validationService.searchPaths = Arrays.asList(context.resourceResolver().getSearchPath());
+        validationService.configuration = configuration;
         modelBuilder = new ValidationModelBuilder();
         propertyBuilder = new ResourcePropertyBuilder();
     }

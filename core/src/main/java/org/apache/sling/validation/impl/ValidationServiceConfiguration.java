@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,26 +18,11 @@
  */
 package org.apache.sling.validation.impl;
 
-import java.util.Dictionary;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-import org.apache.sling.validation.model.spi.ValidationModelCache;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-
-/**
- * Invalidates the cache of the {@link ValidationModelRetrieverImpl} by sending an event through the {@link EventAdmin}
- */
-@Component
-public class ValidationModelCacheImpl implements ValidationModelCache {
-
-    @Reference
-    protected EventAdmin eventAdmin;
-    
-    @Override
-    public void invalidate() {
-        eventAdmin.sendEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
-    }
-
+@ObjectClassDefinition(name = "Apache Sling Validation Configuration", description = "Allows to influence the validation behaviour")
+public @interface ValidationServiceConfiguration {
+    @AttributeDefinition(name = "Cache Validation Results on Resources", description = "If enabled will cache the validation result from calls to ValidationService.validate(Resource,ValidationModel) and expose it via Resource.adaptTo('ValidationResult.class').")
+    boolean cacheValidationResultsOnResources() default false;
 }
