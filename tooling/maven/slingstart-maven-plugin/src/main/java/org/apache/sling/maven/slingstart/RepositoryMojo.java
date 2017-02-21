@@ -64,8 +64,8 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.getLog().info("Creating repository...");
         final File artifactDir = new File(this.project.getBuild().getDirectory(), DIR_NAME);
+        this.getLog().info("Creating repository in '" + artifactDir.getPath() + "'...");
 
         // artifacts
         final Model model = ProjectHelper.getEffectiveModel(this.project, getResolverOptions());
