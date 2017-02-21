@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fsprovider.internal;
+package org.apache.sling.fsprovider.internal.mapper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.AbstractResource;
@@ -36,6 +38,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.fsprovider.internal.FsResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +50,7 @@ import org.slf4j.LoggerFactory;
     @Adapter({File.class, URL.class}),
     @Adapter(condition="If the resource is an FsResource and is a readable file.", value=InputStream.class)
 })
-public class FsResource extends AbstractResource {
+public final class FileResource extends AbstractResource {
 
     /**
      * The resource type for file system files mapped into the resource tree by
@@ -60,9 +63,6 @@ public class FsResource extends AbstractResource {
      * by the {@link FsResourceProvider} (value is "nt:folder").
      */
     static final String RESOURCE_TYPE_FOLDER = "nt:folder";
-
-    // default log, assigned on demand
-    private Logger log;
 
     // the owning resource resolver
     private final ResourceResolver resolver;
@@ -79,6 +79,8 @@ public class FsResource extends AbstractResource {
     // the resource metadata, assigned on demand
     private ResourceMetadata metaData;
 
+    private static final Logger log = LoggerFactory.getLogger(FileResource.class);
+    
     /**
      * Creates an instance of this Filesystem resource.
      *
@@ -86,7 +88,7 @@ public class FsResource extends AbstractResource {
      * @param resourcePath The resource path in the resource tree
      * @param file The wrapped file
      */
-    FsResource(ResourceResolver resolver, String resourcePath, File file) {
+    FileResource(ResourceResolver resolver, String resourcePath, File file) {
         this.resolver = resolver;
         this.resourcePath = resourcePath;
         this.file = file;
@@ -139,11 +141,8 @@ public class FsResource extends AbstractResource {
      */
     public String getResourceType() {
         if (resourceType == null) {
-            resourceType = file.isFile()
-                    ? RESOURCE_TYPE_FILE
-                            : RESOURCE_TYPE_FOLDER;
+            resourceType = file.isFile() ? RESOURCE_TYPE_FILE : RESOURCE_TYPE_FOLDER;
         }
-
         return resourceType;
     }
 
@@ -156,39 +155,31 @@ public class FsResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == File.class) {
-
             return (AdapterType) file;
-
-        } else if (type == InputStream.class) {
-
+        }
+        else if (type == InputStream.class) {
             if (!file.isDirectory() && file.canRead()) {
-
                 try {
                     return (AdapterType) new FileInputStream(file);
-                } catch (IOException ioe) {
-                    getLog().info(
-                            "adaptTo: Cannot open a stream on the file " + file,
-                            ioe);
                 }
-
-            } else {
-
-                getLog().debug("adaptTo: File {} is not a readable file", file);
-
+                catch (IOException ioe) {
+                    log.info("adaptTo: Cannot open a stream on the file " + file, ioe);
+                }
             }
-
-        } else if (type == URL.class) {
-
+            else {
+                log.debug("adaptTo: File {} is not a readable file", file);
+            }
+        }
+        else if (type == URL.class) {
             try {
                 return (AdapterType) file.toURI().toURL();
-            } catch (MalformedURLException mue) {
-                getLog().info(
-                        "adaptTo: Cannot convert the file path " + file
-                        + " to an URL", mue);
+            }
+            catch (MalformedURLException mue) {
+                log.info("adaptTo: Cannot convert the file path " + file + " to an URL", mue);
             }
 
-        } else if (type == ValueMap.class) {
-
+        }
+        else if (type == ValueMap.class) {
             // this resource simulates nt:file/nt:folder behavior by returning it as resource type
             // we should simulate the corresponding JCR properties in a value map as well
             if (file.exists() && file.canRead()) {
@@ -200,18 +191,17 @@ public class FsResource extends AbstractResource {
                 props.put("jcr:created", lastModifed);
                 return (AdapterType) new ValueMapDecorator(props);
             }
-
         }
-
         return super.adaptTo(type);
     }
 
-    // ---------- internal
-
-    private Logger getLog() {
-        if (log == null) {
-            log = LoggerFactory.getLogger(getClass());
-        }
-        return log;
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("path", resourcePath)
+                .append("file", file.getPath())
+                .append("resourceType", getResourceType())
+                .build();
     }
+
 }

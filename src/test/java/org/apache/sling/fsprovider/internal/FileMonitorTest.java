@@ -63,7 +63,8 @@ public class FileMonitorTest {
                 context.registerInjectActivateService(new FsResourceProvider(),
                         "provider.file", tempDir.getPath(),
                         "provider.root", "/fs-test",
-                        "provider.checkinterval", 120);
+                        "provider.checkinterval", 120,
+                        "provider.json.content", true);
                 
                 // register resource change listener
                 context.registerService(ResourceChangeListener.class, resourceListener,
@@ -85,7 +86,7 @@ public class FileMonitorTest {
         assertTrue(changes.isEmpty());
         
         File file1a = new File(tempDir, "folder1/file1a.txt");
-        FileUtils.write(file1a, "newcontent");
+        FileUtils.touch(file1a);
         
         Thread.sleep(250);
 
@@ -153,6 +154,50 @@ public class FileMonitorTest {
         assertChange(changes, 1, "/fs-test/folder1", ChangeType.REMOVED);
     }
 
+    @Test
+    public void testUpdateJsonContent() throws Exception {
+        List<ResourceChange> changes = resourceListener.getChanges();
+        assertTrue(changes.isEmpty());
+        
+        File file1a = new File(tempDir, "folder2/content.json");
+        FileUtils.touch(file1a);
+        
+        Thread.sleep(250);
+
+        assertEquals(1, changes.size());
+        assertChange(changes, 0, "/fs-test/folder2/content", ChangeType.CHANGED);
+    }
+    
+    @Test
+    public void testAddJsonContent() throws Exception {
+        List<ResourceChange> changes = resourceListener.getChanges();
+        assertTrue(changes.isEmpty());
+        
+        File file1c = new File(tempDir, "folder1/file1c.json");
+        FileUtils.write(file1c, "{'prop1':'value1'}");
+        
+        Thread.sleep(250);
+
+        assertEquals(2, changes.size());
+        assertChange(changes, 0, "/fs-test/folder1", ChangeType.CHANGED);
+        assertChange(changes, 1, "/fs-test/folder1/file1c", ChangeType.ADDED);
+    }
+    
+    @Test
+    public void testRemoveJsonContent() throws Exception {
+        List<ResourceChange> changes = resourceListener.getChanges();
+        assertTrue(changes.isEmpty());
+        
+        File file1a = new File(tempDir, "folder2/content.json");
+        file1a.delete();
+        
+        Thread.sleep(250);
+
+        assertEquals(2, changes.size());
+        assertChange(changes, 0, "/fs-test/folder2", ChangeType.CHANGED);
+        assertChange(changes, 1, "/fs-test/folder2/content", ChangeType.REMOVED);
+    }
+    
     
     private void assertChange(List<ResourceChange> changes, int index, String path, ChangeType changeType) {
         ResourceChange change = changes.get(index);

@@ -19,14 +19,19 @@
 package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.fsprovider.internal.mapper.ContentFileResourceMapper;
+import org.apache.sling.fsprovider.internal.mapper.FileResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentFileParser;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -61,12 +66,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
 @Designate(ocd=FsResourceProvider.Config.class, factory=true)
-public class FsResourceProvider extends ResourceProvider<Object> {
+public final class FsResourceProvider extends ResourceProvider<Object> {
     
     /**
      * Resource metadata property set by {@link FsResource} if the underlying file reference is a directory.
      */
-    static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
+    public static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
     
     @ObjectClassDefinition(name = "Apache Sling Filesystem Resource Provider",
             description = "Configure an instance of the filesystem " +
@@ -100,6 +105,10 @@ public class FsResourceProvider extends ResourceProvider<Object> {
                 "filesystem resources are mapped in. This property must not be an empty string.")
         String provider_root();
         
+        @AttributeDefinition(name = "Mount JSON",
+                description = "Mount .json files as content in the resource hierarchy.")
+        boolean provider_json_content();
+        
         /**
          * Internal Name hint for web console.
          */
@@ -109,14 +118,18 @@ public class FsResourceProvider extends ResourceProvider<Object> {
     // The location in the resource tree where the resources are mapped
     private String providerRoot;
 
-    // providerRoot + "/" to be used for prefix matching of paths
-    private String providerRootPrefix;
-
     // The "root" file or folder in the file system
     private File providerFile;
 
-    /** The monitor to detect file changes. */
+    // The monitor to detect file changes.
     private FileMonitor monitor;
+    
+    // maps filesystem to resources
+    private FsResourceMapper fileMapper;
+    private FsResourceMapper contentFileMapper;
+    
+    // if true resources from filesystem are only "overlayed" to JCR resources, serving JCR as fallback within the same path
+    private boolean overlayParentResourceProvider;
 
     /**
      * Returns a resource wrapping a file system file or folder for the given
@@ -133,21 +146,30 @@ public class FsResourceProvider extends ResourceProvider<Object> {
             final String path,
             final ResourceContext resourceContext,
             final Resource parent) {
-        Resource rsrc = getResource(ctx.getResourceResolver(), path, getFile(path));
-        // make sure directory resources from parent resource provider have higher precedence than from this provider
-        // this allows properties like sling:resourceSuperType to take effect
-        if ( rsrc == null || rsrc.getResourceMetadata().containsKey(RESOURCE_METADATA_FILE_DIRECTORY) ) {
-        	// get resource from shadowed provider
-        	final ResourceProvider rp = ctx.getParentResourceProvider();
-        	if ( rp != null ) {
-        	    Resource resourceFromParentResourceProvider = rp.getResource((ResolveContext)ctx.getParentResolveContext(), 
-	            		path, 
-	            		resourceContext, parent);
-        	    if (resourceFromParentResourceProvider != null) {
-        	        rsrc = resourceFromParentResourceProvider;
-        	    }
-        	}        	
+        
+        ResourceResolver resolver = ctx.getResourceResolver();
+        Resource rsrc = contentFileMapper.getResource(resolver, path);
+        if (rsrc == null) {
+            rsrc = fileMapper.getResource(resolver, path);
         }
+        
+        if (this.overlayParentResourceProvider) {
+            // make sure directory resources from parent resource provider have higher precedence than from this provider
+            // this allows properties like sling:resourceSuperType to take effect
+            if ( rsrc == null || rsrc.getResourceMetadata().containsKey(RESOURCE_METADATA_FILE_DIRECTORY) ) {
+            	// get resource from shadowed provider
+            	final ResourceProvider rp = ctx.getParentResourceProvider();
+            	if ( rp != null ) {
+            	    Resource resourceFromParentResourceProvider = rp.getResource((ResolveContext)ctx.getParentResolveContext(), 
+    	            		path, 
+    	            		resourceContext, parent);
+            	    if (resourceFromParentResourceProvider != null) {
+            	        rsrc = resourceFromParentResourceProvider;
+            	    }
+            	}        	
+            }
+        }
+
         return rsrc;
     }
 
@@ -157,102 +179,49 @@ public class FsResourceProvider extends ResourceProvider<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> listChildren(final ResolveContext<Object> ctx, final Resource parent) {
-        File parentFile = parent.adaptTo(File.class);
-
-        // not a FsResource, try to create one from the resource
-        if (parentFile == null) {
-            // if the parent path is at or below the provider root, get
-            // the respective file
-            parentFile = getFile(parent.getPath());
-
-            // if the parent path is actually the parent of the provider
-            // root, return a single element iterator just containing the
-            // provider file, unless the provider file is a directory and
-            // a repository item with the same path actually exists
-            if (parentFile == null) {
-
-                String parentPath = parent.getPath().concat("/");
-                if (providerRoot.startsWith(parentPath)) {
-                    String relPath = providerRoot.substring(parentPath.length());
-                    if (relPath.indexOf('/') < 0) {
-                        Resource res = getResource(
-                                parent.getResourceResolver(), providerRoot,
-                                providerFile);
-                        if (res != null) {
-                            return Collections.singletonList(res).iterator();
-                        }
-                    }
+        ResourceResolver resolver = ctx.getResourceResolver();
+        
+        List<Iterator<Resource>> allChildren = new ArrayList<>();
+        Iterator<Resource> children;
+        
+        children = contentFileMapper.getChildren(resolver, parent);
+        if (children != null) {
+            allChildren.add(children);
+        }
+        
+        children = fileMapper.getChildren(resolver, parent);
+        if (children != null) {
+            allChildren.add(children);
+        }
+        
+    	// get children from from shadowed provider
+        if (this.overlayParentResourceProvider) {
+        	final ResourceProvider parentResourceProvider = ctx.getParentResourceProvider();
+        	if (parentResourceProvider != null) {
+        		children = parentResourceProvider.listChildren(ctx.getParentResolveContext(), parent);
+                if (children != null) {
+                    allChildren.add(children);
                 }
-
-                // no children here
-                return null;
-            }
+        	}
         }
 
-    	// get children from from shadowed provider
-    	final ResourceProvider rp = ctx.getParentResourceProvider();
-    	final Iterator<Resource> parentChildrenIterator;
-    	if ( rp != null ) {
-    		parentChildrenIterator = rp.listChildren(ctx.getParentResolveContext(), parent);
-    	} else {
-    		parentChildrenIterator = null;
+    	if (allChildren.isEmpty()) {
+    	    return null;
     	}
-        final File[] children = parentFile.listFiles();
-
-        final ResourceResolver resolver = ctx.getResourceResolver();
-        final String parentPath = parent.getPath();
-        return new Iterator<Resource>() {
-
-            final Set<String> names = new HashSet<>();
-
-            int index = 0;
-
-            Resource next = seek();
-
-            @Override
-            public boolean hasNext() {
-                return next != null;
-            }
-
-            @Override
-            public Resource next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
+    	else if (allChildren.size() == 1) {
+    	    return allChildren.get(0);
+    	}
+    	else {
+    	    // merge all children from the different iterators, but filter out potential duplicates with same resource name
+    	    return IteratorUtils.filteredIterator(IteratorUtils.chainedIterator(allChildren), new Predicate() {
+    	        private Set<String> names = new HashSet<>();
+                @Override
+                public boolean evaluate(Object object) {
+                    Resource resource = (Resource)object;
+                    return names.add(resource.getName());
                 }
-
-                Resource result = next;
-                next = seek();
-                return result;
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException("remove");
-            }
-
-            private Resource seek() {
-                while (children != null && index < children.length) {
-                    File file = children[index++];
-                    String path = parentPath + "/" + file.getName();
-                    Resource result = getResource(resolver, path, file);
-                    if (result != null) {
-                    	names.add(file.getName());
-                        return result;
-                    }
-                }
-                if ( parentChildrenIterator != null ) {
-                	while ( parentChildrenIterator.hasNext() ) {
-                		final Resource result = parentChildrenIterator.next();
-                		if ( !names.contains(result.getName()) ) {
-                			names.add(result.getName());
-                			return result;
-                		}
-                	}
-                }
-                // nothing found any more
-                return null;
-            }
-        };
+            });
+    	}
     }
 
     // ---------- SCR Integration
@@ -269,11 +238,22 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         }
 
         this.providerRoot = providerRoot;
-        this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = getProviderFile(providerFileName, bundleContext);
+        this.overlayParentResourceProvider = true;
+        
+        List<String> contentFileSuffixes = new ArrayList<>();
+        if (config.provider_json_content()) {
+            contentFileSuffixes.add(ContentFileParser.JSON_SUFFIX);
+            this.overlayParentResourceProvider = false;
+        }
+        ContentFileExtensions contentFileExtensions = new ContentFileExtensions(contentFileSuffixes);
+        
+        this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
+        this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
+        
         // start background monitor if check interval is higher than 100
         if ( config.provider_checkinterval() > 100 ) {
-            this.monitor = new FileMonitor(this, config.provider_checkinterval());
+            this.monitor = new FileMonitor(this, config.provider_checkinterval(), contentFileExtensions);
         }
     }
 
@@ -284,8 +264,10 @@ public class FsResourceProvider extends ResourceProvider<Object> {
             this.monitor = null;
         }
         this.providerRoot = null;
-        this.providerRootPrefix = null;
         this.providerFile = null;
+        this.overlayParentResourceProvider = false;
+        this.fileMapper = null;
+        this.contentFileMapper = null;
     }
 
     File getRootFile() {
@@ -325,45 +307,6 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         return providerFile;
     }
 
-    /**
-     * Returns a file corresponding to the given absolute resource tree path. If
-     * the path equals the configured provider root, the provider root file is
-     * returned. If the path starts with the configured provider root, a file is
-     * returned relative to the provider root file whose relative path is the
-     * remains of the resource tree path without the provider root path.
-     * Otherwise <code>null</code> is returned.
-     */
-    private File getFile(String path) {
-        if (path.equals(providerRoot)) {
-            return providerFile;
-        }
-
-        if (path.startsWith(providerRootPrefix)) {
-            String relPath = path.substring(providerRootPrefix.length());
-            return new File(providerFile, relPath);
-        }
-
-        return null;
-    }
-
-    private Resource getResource(final ResourceResolver resolver,
-            final String resourcePath, 
-            final File file) {
-
-        if (file != null) {
-
-            // if the file exists, but is not a directory or no repository entry
-            // exists, return it as a resource
-            if (file.exists()) {
-                return new FsResource(resolver, resourcePath, file);
-            }
-
-        }
-
-        // not applicable or not an existing file path
-        return null;
-    }
-
     public ObservationReporter getObservationReporter() {
         final ProviderContext ctx = this.getProviderContext();
         if ( ctx != null ) {
@@ -371,4 +314,5 @@ public class FsResourceProvider extends ResourceProvider<Object> {
         }
         return null;
     }
+
 }

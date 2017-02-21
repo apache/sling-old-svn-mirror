@@ -18,7 +18,6 @@
  */
 package org.apache.sling.fsprovider.internal;
 
-import static org.apache.sling.fsprovider.internal.TestUtils.REGISTER_FSRESOURCE_PLUGIN;
 import static org.apache.sling.fsprovider.internal.TestUtils.assertFile;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -27,6 +26,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.fsprovider.internal.TestUtils.RegisterFsResourcePlugin;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -45,7 +45,7 @@ public class JcrMixedTest {
 
     @Rule
     public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
-        .plugin(REGISTER_FSRESOURCE_PLUGIN)
+        .plugin(new RegisterFsResourcePlugin())
         .build();
 
     @Before
@@ -84,7 +84,7 @@ public class JcrMixedTest {
         assertFile(fsroot, "folder1/file1a.txt", "file1a");
         assertFile(fsroot, "folder1/file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
-        assertFile(fsroot, "folder2/file2a.txt", "file2a");
+        assertFile(fsroot, "folder2/content.json", null);
 
         // do not expected properties from JCR for files
         Resource file1a = fsroot.getChild("folder1/file1a.txt");
