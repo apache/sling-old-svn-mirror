@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * This class is a monitor for the file system
  * that periodically checks for changes.
  */
-public class FileMonitor extends TimerTask {
+public final class FileMonitor extends TimerTask {
 
     /** The logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -46,16 +47,19 @@ public class FileMonitor extends TimerTask {
     private final Monitorable root;
 
     private final FsResourceProvider provider;
+    
+    private final ContentFileExtensions contentFileExtensions;
 
     /**
      * Creates a new instance of this class.
      * @param provider The resource provider.
      * @param interval The interval between executions of the task, in milliseconds.
      */
-    public FileMonitor(final FsResourceProvider provider, final long interval) {
+    public FileMonitor(final FsResourceProvider provider, final long interval, final ContentFileExtensions contentFileExtensions) {
         this.provider = provider;
-        this.root = new Monitorable(this.provider.getProviderRoot(), this.provider.getRootFile());
-        createStatus(this.root);
+        this.contentFileExtensions = contentFileExtensions;
+        this.root = new Monitorable(this.provider.getProviderRoot(), this.provider.getRootFile(), null);
+        createStatus(this.root, contentFileExtensions);
         logger.debug("Starting file monitor for {} with an interval of {}ms", this.root.file, interval);
         timer.schedule(this, 0, interval);
     }
@@ -130,7 +134,7 @@ public class FileMonitor extends TimerTask {
         if ( monitorable.status instanceof NonExistingStatus ) {
             if ( monitorable.file.exists() ) {
                 // new file and reset status
-                createStatus(monitorable);
+                createStatus(monitorable, contentFileExtensions);
                 sendEvents(monitorable,
                            ChangeType.ADDED,
                            reporter);
@@ -176,9 +180,8 @@ public class FileMonitor extends TimerTask {
                                     }
                                 }
                                 if (children[i] == null) {
-                                    children[i] = new Monitorable(
-                                        monitorable.path + '/'
-                                            + files[i].getName(), files[i]);
+                                    children[i] = new Monitorable(monitorable.path + '/' + files[i].getName(), files[i],
+                                            contentFileExtensions.getSuffix(files[i]));
                                     children[i].status = NonExistingStatus.SINGLETON;
                                     check(children[i], reporter);
                                 }
@@ -212,25 +215,29 @@ public class FileMonitor extends TimerTask {
     /**
      * Create a status object for the monitorable
      */
-    private static void createStatus(final Monitorable monitorable) {
+    private static void createStatus(final Monitorable monitorable, ContentFileExtensions contentFileExtensions) {
         if ( !monitorable.file.exists() ) {
             monitorable.status = NonExistingStatus.SINGLETON;
         } else if ( monitorable.file.isFile() ) {
             monitorable.status = new FileStatus(monitorable.file);
         } else {
-            monitorable.status = new DirStatus(monitorable.file, monitorable.path);
+            monitorable.status = new DirStatus(monitorable.file, monitorable.path, contentFileExtensions);
         }
     }
 
     /** The monitorable to hold the resource path, the file and the status. */
     private static final class Monitorable {
         public final String path;
-        public final File   file;
+        public final File file;
         public Object status;
-
-        public Monitorable(final String path, final File file) {
-            this.path = path;
+        public Monitorable(final String path, final File file, String contentFileSuffix) {
             this.file = file;
+            if (contentFileSuffix != null) {
+                this.path = StringUtils.substringBeforeLast(path, contentFileSuffix);
+            }
+            else {
+                this.path = path;
+            }
         }
     }
 
@@ -246,15 +253,15 @@ public class FileMonitor extends TimerTask {
     private static final class DirStatus extends FileStatus {
         public Monitorable[] children;
 
-        public DirStatus(final File dir, final String path) {
+        public DirStatus(final File dir, final String path, final ContentFileExtensions contentFileExtensions) {
             super(dir);
             final File[] files = dir.listFiles();
             if (files != null) {
                 this.children = new Monitorable[files.length];
                 for (int i = 0; i < files.length; i++) {
-                    this.children[i] = new Monitorable(path + '/'
-                        + files[i].getName(), files[i]);
-                    FileMonitor.createStatus(this.children[i]);
+                    this.children[i] = new Monitorable(path + '/' + files[i].getName(), files[i],
+                            contentFileExtensions.getSuffix(files[i]));
+                    FileMonitor.createStatus(this.children[i], contentFileExtensions);
                 }
             } else {
                 this.children = new Monitorable[0];
