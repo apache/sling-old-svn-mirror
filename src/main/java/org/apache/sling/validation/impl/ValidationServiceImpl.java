@@ -30,15 +30,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.SlingValidationException;
@@ -50,11 +45,13 @@ import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component()
-@Service()
+@Component
 public class ValidationServiceImpl implements ValidationService{
 
     /** Keys whose values are defined in the JCR resource bundle contained in the content-repository section of this bundle */
@@ -73,12 +70,15 @@ public class ValidationServiceImpl implements ValidationService{
     
     Collection<String> searchPaths;
     
+    ValidationServiceConfiguration configuration;
+    
     @Reference
     private ResourceResolverFactory rrf = null;
     
     
     @Activate
-    public void activate() {
+    public void activate(ValidationServiceConfiguration configuration) {
+        this.configuration = configuration;
         ResourceResolver rr = null;
         try {
             rr = rrf.getAdministrativeResourceResolver(null);
@@ -159,6 +159,11 @@ public class ValidationServiceImpl implements ValidationService{
 
         // validate child resources, if any
         validateChildren(resource, relativePath, model.getChildren(), result);
+        
+        // optionally put result to cache
+        if (configuration.cacheValidationResultsOnResources()) {
+            ResourceToValidationResultAdapterFactory.putValidationResultToCache(result, resource);
+        }
         return result;
     }
 
