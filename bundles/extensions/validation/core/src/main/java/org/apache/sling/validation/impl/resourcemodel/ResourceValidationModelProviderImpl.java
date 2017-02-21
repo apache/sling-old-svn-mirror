@@ -29,11 +29,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
@@ -57,6 +52,10 @@ import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -64,8 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //the event handler is dynamic and registered in the activate method
-@Service(value = ValidationModelProvider.class)
-@Component
+@Component(service = ValidationModelProvider.class)
 public class ResourceValidationModelProviderImpl implements ValidationModelProvider, EventHandler {
 
     static final String MODEL_XPATH_QUERY = "/jcr:root%s/*[@sling:resourceType=\""+ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE+"\" and @"+ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE+"=\"%s\"]";

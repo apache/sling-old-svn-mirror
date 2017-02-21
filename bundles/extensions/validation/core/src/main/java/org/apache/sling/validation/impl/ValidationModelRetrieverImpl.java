@@ -26,12 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -41,6 +35,10 @@ import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -52,11 +50,9 @@ import org.slf4j.LoggerFactory;
  * {@link ValidationModelProvider}s. Also implements a cache of all previously retrieved models.
  *
  */
-@Service
-@Component
+@Component(property={EventConstants.EVENT_TOPIC+"="+ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC})
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever, EventHandler {
 
-    @Property(name = EventConstants.EVENT_TOPIC)
     public static final String CACHE_INVALIDATION_EVENT_TOPIC = "org/apache/sling/validation/cache/INVALIDATE";
 
     /**
@@ -66,13 +62,13 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     protected Map<String, Trie<ValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<ValidationModel>>();
 
     /** Map of validation providers (key=service properties) */
-    @Reference(name = "modelProvider", referenceInterface = ValidationModelProvider.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
+    @Reference(name = "modelProvider", service = ValidationModelProvider.class, bind="bindModelProvider", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     private RankedServices<ValidationModelProvider> modelProviders = new RankedServices<ValidationModelProvider>();
 
     /**
      * List of all known validators (key=classname of validator)
      */
-    @Reference(name = "validator", referenceInterface = Validator.class, policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
+    @Reference(name = "validator",  service = Validator.class,  bind="bindValidator",policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference

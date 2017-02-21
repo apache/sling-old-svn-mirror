@@ -24,21 +24,19 @@ import java.util.regex.PatternSyntaxException;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.SlingValidationException;
+import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
  * mandatory parameter in the arguments map: {@link RegexValidator#REGEX_PARAM}.
  */
-@Component()
-@Service(Validator.class)
+@Component
 public class RegexValidator implements Validator<String> {
 
     public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
