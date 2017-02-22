@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -37,14 +38,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.api.resource.Resource;
@@ -59,6 +65,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -1807,6 +1814,83 @@ public class MapEntriesTest {
         }
 
     }
+    
+    // tests SLING-6542
+    @Test
+    public void sessionConcurrency() throws Exception {
+        final Method addResource = MapEntries.class.getDeclaredMethod("addResource", String.class, AtomicBoolean.class);
+        addResource.setAccessible(true);
+        final Method updateResource = MapEntries.class.getDeclaredMethod("updateResource", String.class, AtomicBoolean.class);
+        updateResource.setAccessible(true);
+        final Method handleConfigurationUpdate = MapEntries.class.getDeclaredMethod("handleConfigurationUpdate", 
+                String.class, AtomicBoolean.class, AtomicBoolean.class, boolean.class);
+        handleConfigurationUpdate.setAccessible(true);
+
+        final Semaphore sessionLock = new Semaphore(1);
+        // simulate somewhat slow (1ms) session operations that use locking
+        // to determine that they are using the session exclusively.
+        // if that lock mechanism detects concurrent access we fail
+        Mockito.doAnswer(new Answer<Void>() {
+
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                simulateSomewhatSlowSessionOperation(sessionLock);
+                return null;
+            }
+            
+        }).when(resourceResolver).refresh();
+        Mockito.doAnswer(new Answer<Resource>() {
+
+            @Override
+            public Resource answer(InvocationOnMock invocation) throws Throwable {
+                simulateSomewhatSlowSessionOperation(sessionLock);
+                return null;
+            }
+            
+        }).when(resourceResolver).getResource(any(String.class));
+        
+        when(resourceResolverFactory.isMapConfiguration(any(String.class))).thenReturn(true);
+        
+        final AtomicInteger failureCnt = new AtomicInteger(0);
+        final List<Exception> exceptions = new LinkedList<Exception>();
+        final Semaphore done = new Semaphore(0);
+        final int NUM_THREADS = 30;
+        final Random random = new Random(12321);
+        for(int i=0; i<NUM_THREADS; i++) {
+            final int randomWait = random.nextInt(10);
+            Runnable r = new Runnable() {
+
+                @Override
+                public void run() {
+                    try{
+                        Thread.sleep(randomWait);
+                        for(int i=0; i<3; i++) {
+                            addResource.invoke(mapEntries, "/node", new AtomicBoolean());
+                            updateResource.invoke(mapEntries, "/node", new AtomicBoolean());
+                            handleConfigurationUpdate.invoke(mapEntries, "/node", new AtomicBoolean(), new AtomicBoolean(), false);
+                        }
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                        synchronized(exceptions) {
+                            exceptions.add(e);
+                        }
+                        failureCnt.incrementAndGet();
+                    } finally {
+                        done.release();
+                    }
+                }
+            };
+            Thread th = new Thread(r);
+            th.setDaemon(true);
+            th.start();
+        }
+        assertTrue("threads did not finish in time", done.tryAcquire(NUM_THREADS, 30, TimeUnit.SECONDS));
+        if (failureCnt.get() != 0) {
+            synchronized(exceptions) {
+                throw new AssertionError("exceptions encountered (" + failureCnt.get() + "). First exception: ", exceptions.get(0));
+            }
+        }
+    }
 
     // -------------------------- private methods ----------
     private DataFuture createDataFuture(ExecutorService pool, final MapEntries mapEntries) {
@@ -1820,6 +1904,17 @@ public class MapEntriesTest {
         return new DataFuture(future);
     }
 
+    private void simulateSomewhatSlowSessionOperation(final Semaphore sessionLock) throws InterruptedException {
+        if (!sessionLock.tryAcquire()) {
+            fail("concurrent session access detected");
+        }
+        try{
+            Thread.sleep(1);
+        } finally {
+            sessionLock.release();
+        }
+    }
+
     // -------------------------- inner classes ------------
 
     private static class DataFuture {
@@ -1830,4 +1925,5 @@ public class MapEntriesTest {
             this.future = future;
         }
     }
+    
 }
