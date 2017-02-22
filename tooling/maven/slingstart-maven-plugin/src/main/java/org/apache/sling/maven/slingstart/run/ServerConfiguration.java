@@ -64,6 +64,13 @@ public class ServerConfiguration implements Serializable {
 
     /** The folder to use. */
     private File folder;
+    
+    /**
+     * The relative filename of the file which receives both the standard output (stdout) and standard error (stderr) of the server processes. 
+     * If null or empty string the server process inherits stdout from the parent process (i.e. the Maven process).
+     * The given filename must be relative to the working directory of the according server.
+     */
+    private String stdOutFile;
 
     /**
      * Get the instance id
@@ -168,6 +175,14 @@ public class ServerConfiguration implements Serializable {
         this.controlPort = controlPort;
     }
 
+    public String getStdOutFile() {
+        return stdOutFile;
+    }
+
+    public void setStdOutFile(String stdOutFile) {
+        this.stdOutFile = stdOutFile;
+    }
+
     /**
      * Get the server
      * @return The server
@@ -189,7 +204,7 @@ public class ServerConfiguration implements Serializable {
         copy.setInstances(1);
         copy.setFolder(this.getFolder());
         copy.setControlPort(this.getControlPort());
-
+        copy.setStdOutFile(this.stdOutFile);
         return copy;
     }
 
@@ -199,6 +214,6 @@ public class ServerConfiguration implements Serializable {
                 + ", port=" + port + ", controlPort=" + controlPort
                 + ", contextPath=" + contextPath
                 + ", vmOpts=" + vmOpts + ", vmDebugOpts=" + getVmDebugOpts(null) + ", opts=" + opts + ", instances="
-                + instances + ", folder=" + folder + "]";
+                + instances + ", folder=" + folder + ", stdout=" + stdOutFile + "]";
     }
 }
