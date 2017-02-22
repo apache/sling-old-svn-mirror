@@ -28,6 +28,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 
@@ -44,6 +45,13 @@ import org.codehaus.plexus.archiver.jar.JarArchiver;
 public class PackageMojo extends AbstractSlingStartMojo {
 
     private static final String[] EXCLUDES_MANIFEST = new String[] {"META-INF/MANIFEST.MF"};
+
+
+    /**
+     * If set to {@code true} creates a WAR artifact in addition to the standalone JAR from the model.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean createWebapp;
 
     /**
      * The Jar archiver.

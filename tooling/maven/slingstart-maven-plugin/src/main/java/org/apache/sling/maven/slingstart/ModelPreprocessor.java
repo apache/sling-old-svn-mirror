@@ -52,6 +52,7 @@ import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.Traceable;
 import org.apache.sling.provisioning.model.io.ModelReader;
+import org.codehaus.plexus.component.configurator.converters.basic.BooleanConverter;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
@@ -64,6 +65,7 @@ public class ModelPreprocessor {
         public Model        localModel;
         public boolean      done = false;
         public Model        model;
+        public boolean      extendMavenClassPath = true;
         public final Map<org.apache.sling.provisioning.model.Artifact, Model> includedModels = new HashMap<org.apache.sling.provisioning.model.Artifact, Model>();
 
     }
@@ -135,6 +137,9 @@ public class ModelPreprocessor {
 
         // process attachments
         processAttachments(env, info);
+        
+        // is the maven classpath supposed to be extended?
+        info.extendMavenClassPath = !nodeBooleanValue(info.plugin, AbstractSlingStartMojo.CONFIGURATION_NAME_DISABLE_EXTENDING_CLASSPATH, false);
 
         // check for setting version
         if ( nodeBooleanValue(info.plugin, "setFeatureVersions", false) ) {
@@ -172,7 +177,12 @@ public class ModelPreprocessor {
             throw new MavenExecutionException("Unable to create model file for " + info.project + " : " + errors, (File)null);
         }
 
-        addDependenciesFromModel(env, info, scope);
+        if (info.extendMavenClassPath) {
+            addDependenciesFromModel(env, info, scope);
+            env.logger.info("Extended Maven classpath (scope '" + scope + "') by the dependencies extracted from the Sling model.");
+        } else {
+            env.logger.debug("Do not enrich Maven classpath with Sling model!");
+        }
 
         try {
            ProjectHelper.storeProjectInfo(info);
