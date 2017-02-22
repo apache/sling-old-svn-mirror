@@ -47,6 +47,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.commons.osgi.BSNRenamer;
 import org.apache.sling.provisioning.model.ArtifactGroup;
@@ -92,6 +93,12 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private static final String BOOTSTRAP_FILE = "sling_bootstrap.txt";
 
     private static final String PROPERTIES_FILE = "sling_install.properties";
+
+    /**
+     * If set to {@code true} creates a WAR artifact in addition to the standalone JAR from the model.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean createWebapp;
 
     /**
      * To look up Archiver/UnArchiver implementations
