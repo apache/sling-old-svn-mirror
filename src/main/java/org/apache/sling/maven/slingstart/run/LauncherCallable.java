@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.shared.utils.StringUtils;
 import org.apache.sling.maven.slingstart.launcher.Main;
 
 /**
@@ -179,10 +180,18 @@ public class LauncherCallable implements Callable<ProcessDescription> {
         builder.command(args.toArray(new String[args.size()]));
         builder.directory(this.configuration.getFolder());
         builder.redirectErrorStream(true);
-        builder.redirectOutput(Redirect.INHERIT);
-        builder.redirectError(Redirect.INHERIT);
-
         logger.info("Starting Launchpad " + this.configuration.getId() +  "...");
+        String stdOutFile = this.configuration.getStdOutFile();
+        if (StringUtils.isNotBlank(stdOutFile)) {
+            File absoluteStdOutFile = new File(builder.directory(), stdOutFile);
+            // make sure to create the parent directories (if they do not exist yet)
+            absoluteStdOutFile.getParentFile().mkdirs();
+            builder.redirectOutput(absoluteStdOutFile);
+            logger.info("Redirecting stdout and stderr to " + absoluteStdOutFile);
+        } else {
+            builder.redirectOutput(Redirect.INHERIT);
+        }
+
         logger.debug("Launchpad cmd: " + builder.command());
         logger.debug("Launchpad dir: " + builder.directory());
 
