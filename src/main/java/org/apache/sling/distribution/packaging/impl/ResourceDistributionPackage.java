@@ -44,6 +44,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
 
     private final Resource resource;
     private final ResourceResolver resourceResolver;
+    private final long size;
 
     ResourceDistributionPackage(Resource resource,
                                 String type,
@@ -55,6 +56,8 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
         ValueMap valueMap = resource.getValueMap();
         assert type.equals(valueMap.get("type")) : "wrong resource type";
         this.resource = resource;
+        Object sizeProperty = resource.getValueMap().get("size");
+        this.size = sizeProperty == null ? -1 : Long.parseLong(sizeProperty.toString());
 
         this.getInfo().put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
     }
@@ -71,8 +74,7 @@ public class ResourceDistributionPackage extends AbstractDistributionPackage {
 
     @Override
     public long getSize() {
-        Object size = resource.getValueMap().get("size");
-        return size == null ? -1 : Long.parseLong(size.toString());
+        return size;
     }
 
     @Override
