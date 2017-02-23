@@ -29,8 +29,9 @@
     <modules>
         <module>api</module>
         <module>core</module>
-        <module>extensions</module>
         <module>it</module>
         <module>sample</module>
+        <module>avro-serializer</module>
+        <module>kryo-serializer</module>
     </modules>
 </project>
