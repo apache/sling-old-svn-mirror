@@ -138,50 +138,60 @@ class TeleporterHttpClient {
         }
     }
     
-    void verifyCorrectBundleState(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws IOException {
+    void verifyCorrectBundleState(String bundleSymbolicName, int timeoutInSeconds) throws IOException {
         final String url = baseUrl + "/system/console/bundles/" + bundleSymbolicName + ".json";
         
-        String jsonBody = waitForStatus(url, 200, webConsoleReadyTimeoutSeconds * 1000);
-        // deserialize json (https://issues.apache.org/jira/browse/SLING-6536)
-        try {
-            JsonReader jsonReader = Json.createReader(new StringReader(jsonBody));
-            // extract state
-            JsonArray jsonArray = jsonReader.readObject().getJsonArray("data");
-            if (jsonArray == null) {
-                throw new JsonException("Could not find 'data' array");
-            }
-            JsonObject bundleObject = jsonArray.getJsonObject(0);
-            String state = bundleObject.getString("state");
-            if ("Active".equals(state)) {
-                return;
-            }
-            // otherwise evaluate the import section
-            JsonArray propsArray = bundleObject.getJsonArray("props");
-            if (propsArray == null) {
-                throw new JsonException("Could not find 'props' object");
-            }
-            // iterate through all of them until key="Imported Packages" is found
-            for (JsonValue propValue : propsArray) {
-                if (propValue.getValueType().equals(ValueType.OBJECT)) {
-                    JsonObject propObject = (JsonObject)propValue;
-                    if ("Imported Packages".equals(propObject.getString("key"))) {
-                        JsonArray importedPackagesArray = propObject.getJsonArray("value");
-                        String reason = "Unknown";
-                        for (JsonValue importedPackageValue : importedPackagesArray) {
-                            if (importedPackageValue.getValueType().equals(ValueType.STRING)) {
-                                String importedPackage = ((JsonString)importedPackageValue).getString();
-                                if (importedPackage.startsWith("ERROR:")) {
-                                    reason = importedPackage;
+        final long end = System.currentTimeMillis() + timeoutInSeconds * 1000;
+        final ExponentialBackoffDelay d = new ExponentialBackoffDelay(50,  250);
+        while(System.currentTimeMillis() < end) {
+            
+            String jsonBody = waitForStatus(url, 200, timeoutInSeconds * 1000);
+            // deserialize json (https://issues.apache.org/jira/browse/SLING-6536)
+            try {
+                JsonReader jsonReader = Json.createReader(new StringReader(jsonBody));
+                // extract state
+                JsonArray jsonArray = jsonReader.readObject().getJsonArray("data");
+                if (jsonArray == null) {
+                    throw new JsonException("Could not find 'data' array");
+                }
+                JsonObject bundleObject = jsonArray.getJsonObject(0);
+                String state = bundleObject.getString("state");
+                if ("Active".equals(state)) {
+                    return;
+                }
+                // otherwise evaluate the import section
+                JsonArray propsArray = bundleObject.getJsonArray("props");
+                if (propsArray == null) {
+                    throw new JsonException("Could not find 'props' object");
+                }
+                // iterate through all of them until key="Imported Packages" is found
+                for (JsonValue propValue : propsArray) {
+                    if (propValue.getValueType().equals(ValueType.OBJECT)) {
+                        JsonObject propObject = (JsonObject)propValue;
+                        if ("Imported Packages".equals(propObject.getString("key"))) {
+                            JsonArray importedPackagesArray = propObject.getJsonArray("value");
+                            String reason = null;
+                            for (JsonValue importedPackageValue : importedPackagesArray) {
+                                if (importedPackageValue.getValueType().equals(ValueType.STRING)) {
+                                    String importedPackage = ((JsonString)importedPackageValue).getString();
+                                    if (importedPackage.startsWith("ERROR:")) {
+                                        reason = importedPackage;
+                                    }
                                 }
                             }
+                            // only if ERROR is found there is no more need to wait for the bundle to become active, otherwise it might just be started in the background
+                            if (reason != null) {
+                                throw new IllegalStateException("The test bundle '" + bundleSymbolicName + "' is in state '" + state +"'. This is due to unresolved import-packages: " + reason);
+                            }
                         }
-                        throw new IllegalStateException("The test bundle is in state '" + state +"'. Most probably this is due to unresolved import-packages: " + reason);
                     }
                 }
+            } catch (JsonException|IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Test bundle '" + bundleSymbolicName +"' not correctly installed. Could not parse JSON response though to expose further information: " + jsonBody, e);
             }
-        } catch (JsonException|IndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("Test bundle '" + bundleSymbolicName +"' not correctly installed. Could not parse JSON response though to expose further information: " + jsonBody, e);
+            d.waitNextDelay();
         }
+        throw new IOException("Bundle '" + bundleSymbolicName + "' was not started after " + timeoutInSeconds + " seconds. The check at " + url + " was not successfull");
     }
 
     void uninstallBundle(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
