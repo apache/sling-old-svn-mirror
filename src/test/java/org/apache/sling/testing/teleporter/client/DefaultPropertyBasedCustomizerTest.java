@@ -68,6 +68,7 @@ public class DefaultPropertyBasedCustomizerTest {
         System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_TESTREADY_TIMEOUT_SECONDS, "50");
         System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_USERNAME, "adminuser");
         System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_SERVER_PASSWORD, "adminpassword");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_ADDITIONAL_BUNDLE_HEADERS, "name1:value1,name2:value2:something");
         customizer = new DefaultPropertyBasedCustomizer();
         customizer.customize(clientSideTeleporter, null);
         Mockito.verify(clientSideTeleporter).setBaseUrl("base-url");
@@ -79,12 +80,38 @@ public class DefaultPropertyBasedCustomizerTest {
         Mockito.verify(clientSideTeleporter).embedClass(ClientSideTeleporter.class);
         Mockito.verify(clientSideTeleporter).setTestReadyTimeoutSeconds(50);
         Mockito.verify(clientSideTeleporter).setServerCredentials("adminuser", "adminpassword");
+        Mockito.verify(clientSideTeleporter).addAdditionalBundleHeader("name1", "value1");
+        Mockito.verify(clientSideTeleporter).addAdditionalBundleHeader("name2", "value2:something");
     }
 
     @Test(expected=AssertionError.class)
     public void testEmbeddingInvalidClass() {
         System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
         System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_EMBED_CLASSES, "org.apache.sling.testing.teleporter.client.InvalidClass");
+        customizer = new DefaultPropertyBasedCustomizer();
+        customizer.customize(clientSideTeleporter, null);
+    }
+    
+    @Test(expected=AssertionError.class)
+    public void testAdditionalHeaderWithInvalidValue1() {
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_ADDITIONAL_BUNDLE_HEADERS, "entrywithoutcolon");
+        customizer = new DefaultPropertyBasedCustomizer();
+        customizer.customize(clientSideTeleporter, null);
+    }
+
+    @Test(expected=AssertionError.class)
+    public void testAdditionalHeaderWithInvalidValue2() {
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_ADDITIONAL_BUNDLE_HEADERS, ":value");
+        customizer = new DefaultPropertyBasedCustomizer();
+        customizer.customize(clientSideTeleporter, null);
+    }
+
+    @Test(expected=AssertionError.class)
+    public void testAdditionalHeaderWithInvalidValue3() {
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_BASE_URL, "base-url");
+        System.setProperty(DefaultPropertyBasedCustomizer.PROPERTY_ADDITIONAL_BUNDLE_HEADERS, "key:");
         customizer = new DefaultPropertyBasedCustomizer();
         customizer.customize(clientSideTeleporter, null);
     }

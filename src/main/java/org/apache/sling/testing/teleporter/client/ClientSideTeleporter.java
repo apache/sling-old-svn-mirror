@@ -86,6 +86,7 @@ public class ClientSideTeleporter extends TeleporterRule {
             .add(c);
 
         for(Map.Entry<String, String> header : additionalBundleHeaders.entrySet()) {
+            log.info("Add bundle header '{}' with value '{}'", header.getKey(), header.getValue());
             b.set(header.getKey(), header.getValue());
         }
         
@@ -193,10 +194,14 @@ public class ClientSideTeleporter extends TeleporterRule {
     }
     
     /** Set additional bundle headers on the generated test bundle */
+    public void addAdditionalBundleHeader(String name, String value) {
+        additionalBundleHeaders.put(name, value);
+    }
+    
     public Map<String, String> getAdditionalBundleHeaders() {
         return additionalBundleHeaders;
     }
-
+    
     public void setEnableLogging(boolean enableLogging) {
         this.enableLogging = enableLogging;
         this.initLogger();
