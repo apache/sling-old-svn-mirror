@@ -26,6 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -69,6 +74,10 @@ public class ClientSideTeleporter extends TeleporterRule {
     
     private Logger log;
     
+    public ClientSideTeleporter() {
+        initLogger();
+    }
+    
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) throws IOException {
         final TinyBundle b = TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
@@ -81,13 +90,14 @@ public class ClientSideTeleporter extends TeleporterRule {
         }
         
         // enrich embedded classes by automatically detected dependencies
-        for(Class<?> embeddedClazz : dependencyAnalyzer.getDependencies(log)) {
-            log.info("Embed class '{}' because it is referenced and in the allowed package prefixes", embeddedClazz);
-            embeddedClasses.add(embeddedClazz);
+        for(Class<?> clz : dependencyAnalyzer.getDependencies(log)) {
+            log.debug("Embed dependent class '{}' because it is referenced and in the allowed package prefixes", clz);
+            b.add(clz);
         }
         
         // Embed specified classes
         for(Class<?> clz : embeddedClasses) {
+            log.info("Embed class '{}'", clz);
             b.add(clz);
         }
         
@@ -98,7 +108,7 @@ public class ClientSideTeleporter extends TeleporterRule {
                     @Override
                     public void process(String resourcePath, InputStream resourceStream) throws IOException {
                         b.add(resourcePath, resourceStream);
-                        log.info("Embedded resource '{}' in test bundle", resourcePath);
+                        log.info("Embed resource '{}'", resourcePath);
                     }
                     
                 };
@@ -189,6 +199,7 @@ public class ClientSideTeleporter extends TeleporterRule {
 
     public void setEnableLogging(boolean enableLogging) {
         this.enableLogging = enableLogging;
+        this.initLogger();
     }
 
     public void setPreventToUninstallBundle(boolean preventToUninstallTestBundle) {
@@ -199,11 +210,35 @@ public class ClientSideTeleporter extends TeleporterRule {
         this.directoryForPersistingTestBundles = directoryForPersistingTestBundles;
     }
 
+    /** Embeds every class found in the given directory
+     * 
+     * @throws IOException */
+    public void embedClassesDirectory(File classesDirectory) throws IOException, ClassNotFoundException {
+        final Path start = classesDirectory.toPath();
+        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                if (file.getFileName().toString().endsWith(".class")) {
+                    String className = start.relativize(file).toString().replace(file.getFileSystem().getSeparator(), ".");
+                    // strip off extension
+                    className = className.substring(0, className.length() - 6);
+                    try {
+                        Class<?> clazz = this.getClass().getClassLoader().loadClass(className);
+                        embedClass(clazz);
+                    } catch (ClassNotFoundException e) {
+                        throw new IOException("Could not load class with name '" + className + "'", e);
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
         final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss");
         final String bundleSymbolicName = getClass().getSimpleName() + "." + classUnderTest.getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
-        log.info("Installing bundle '{}' to {}", bundleSymbolicName, baseUrl);
-        
+        log.info("Building bundle '{}'", bundleSymbolicName, baseUrl);
         try (final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName)) {
             // optionally persist the test bundle
             if (directoryForPersistingTestBundles != null) {
@@ -214,9 +249,11 @@ public class ClientSideTeleporter extends TeleporterRule {
                     IOUtils.copy(bundle, output);
                 }
                 try (InputStream bundleInput = new BufferedInputStream(new FileInputStream(bundleFile))) {
+                    log.info("Installing bundle '{}' to {}", bundleSymbolicName, baseUrl);
                     httpClient.installBundle(bundleInput, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
                 }
             } else {
+                log.info("Installing bundle '{}' to {}", bundleSymbolicName, baseUrl);
                 httpClient.installBundle(bundle, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
             }
             httpClient.verifyCorrectBundleState(bundleSymbolicName, webConsoleReadyTimeoutSeconds);

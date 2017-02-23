@@ -19,6 +19,7 @@ package org.apache.sling.testing.teleporter.client;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.junit.rules.TeleporterRule;
@@ -47,6 +48,8 @@ import org.apache.sling.junit.rules.TeleporterRule.Customizer;
  *      This takes precedence over the {@code ClientSideTeleporter.includeDependencyPrefixes}.</li>
  *      <li>{@code ClientSideTeleporter.embedClasses}, comma-separated list of fully qualified class names which should be embedded in the test bundle.
  *      Use this only for classes which are not detected automatically by the Maven Dependency Analyzer but still should be embedded in the test bundle</li>
+ *      <li>{@code ClientSideTeleporter.embedClassesDirectories}, comma-separated list directories containing classfiles which should be embedded in the test bundle.
+ *      Use this only for classes which are not detected automatically by the Maven Dependency Analyzer but still should be embedded in the test bundle</li>
  *      <li>{@code ClientSideTeleporter.testReadyTimeoutSeconds}, how long to wait for our test to be ready on the server-side in seconds, after installing the test bundle. By default {@code 12}.</li>
  *      <li>{@code ClientSideTeleporter.serverUsername}, the username with which to send requests to the Sling server. By default {@code admin}.</li>
  *      <li>{@code ClientSideTeleporter.serverPassword}, the password with which to send requests to the Sling server. By default {@code admin}.</li>
@@ -61,6 +64,7 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
     static final String PROPERTY_INCLUDE_DEPENDENCY_PREFIXES = "ClientSideTeleporter.includeDependencyPrefixes";
     static final String PROPERTY_EXCLUDE_DEPENDENCY_PREFIXES = "ClientSideTeleporter.excludeDependencyPrefixes";
     static final String PROPERTY_EMBED_CLASSES = "ClientSideTeleporter.embedClasses";
+    static final String PROPERTY_EMBED_CLASSES_DIRECTORIES = "ClientSideTeleporter.embedClassesDirectories";
     static final String PROPERTY_SERVER_PASSWORD = "ClientSideTeleporter.serverPassword";
     static final String PROPERTY_SERVER_USERNAME = "ClientSideTeleporter.serverUsername";
     static final String PROPERTY_TESTREADY_TIMEOUT_SECONDS = "ClientSideTeleporter.testReadyTimeoutSeconds";
@@ -76,6 +80,7 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
     private final String includeDependencyPrefixes;
     private final String excludeDependencyPrefixes;
     private final String embedClasses;
+    private final String embedClassesDirectories;
     private final String baseUrl;
     private final String testBundleDirectory;
     private final boolean enableLogging;
@@ -88,6 +93,7 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
         includeDependencyPrefixes = System.getProperty(PROPERTY_INCLUDE_DEPENDENCY_PREFIXES);
         excludeDependencyPrefixes = System.getProperty(PROPERTY_EXCLUDE_DEPENDENCY_PREFIXES);
         embedClasses = System.getProperty(PROPERTY_EMBED_CLASSES);
+        embedClassesDirectories = System.getProperty(PROPERTY_EMBED_CLASSES_DIRECTORIES);
         baseUrl = System.getProperty(PROPERTY_BASE_URL);
         testBundleDirectory = System.getProperty(PROPERTY_TESTBUNDLE_DIRECTORY);
         enableLogging = Boolean.getBoolean(PROPERTY_ENABLE_LOGGING);
@@ -119,6 +125,17 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
             for (String excludeDependencyPrefix : excludeDependencyPrefixes.split(LIST_SEPARATOR)) {
                 if (StringUtils.isNotBlank(excludeDependencyPrefix)) {
                     cst.excludeDependencyPrefix(excludeDependencyPrefix);
+                }
+            }
+        }
+        if (StringUtils.isNotBlank(embedClassesDirectories)) {
+            for (String embedClassesDirectory : embedClassesDirectories.split(LIST_SEPARATOR)) {
+                if (StringUtils.isNotBlank(embedClassesDirectory)) {
+                    try {
+                        cst.embedClassesDirectory(new File(embedClassesDirectory));
+                    } catch (ClassNotFoundException | IOException e) {
+                        fail("Could not load class directory '" + embedClassesDirectory + "': " + e.getMessage());
+                    }
                 }
             }
         }

@@ -175,7 +175,7 @@ class TeleporterHttpClient {
                                 }
                             }
                         }
-                        throw new IllegalStateException("The test bundle is in state " + state +". Most probably this is due to unresolved import-packages: " + reason);
+                        throw new IllegalStateException("The test bundle is in state '" + state +"'. Most probably this is due to unresolved import-packages: " + reason);
                     }
                 }
             }
