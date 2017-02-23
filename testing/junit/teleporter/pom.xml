@@ -84,6 +84,18 @@
       <artifactId>org.apache.sling.junit.core</artifactId>
       <version>1.0.24-SNAPSHOT</version>
     </dependency>
+    <!-- JSR 353 (JSON-P 1.0) implementation -->
+    <dependency>
+      <groupId>org.apache.johnzon</groupId>
+      <artifactId>johnzon-core</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <!-- JSR 353 API -->
+    <dependency>
+       <groupId>org.apache.geronimo.specs</groupId>
+       <artifactId>geronimo-json_1.0_spec</artifactId>
+       <version>1.0-alpha-1</version>
+    </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
