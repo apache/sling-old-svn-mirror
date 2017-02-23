@@ -25,6 +25,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
@@ -37,14 +38,11 @@ import org.apache.maven.plugins.annotations.Mojo;
     defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST,
     threadSafe = true
 )
-public class StopMojo extends StartMojo {
+public class StopMojo extends AbstractStartStopMojo {
 
     @Override
-    public void execute() throws MojoExecutionException {
-        if (this.skipLaunchpad) {
-            this.getLog().info("Executing of the stop-multiple launchpad mojo is disabled by configuration.");
-            return;
-        }
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+        
         // read configurations
         final Properties launchpadConfigProps = new Properties();
         Reader reader = null;
@@ -70,6 +68,7 @@ public class StopMojo extends StartMojo {
             }
         }
 
+        blockIfNecessary();
         if (configurations.size() > 0) {
             getLog().info(new StringBuilder("Stopping ").append(configurations.size()).append(" Launchpad instances").toString());
 

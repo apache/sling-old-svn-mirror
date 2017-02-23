@@ -60,20 +60,7 @@ import org.apache.sling.maven.slingstart.BuildConstants;
         defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST,
         threadSafe = true
     )
-public class StartMojo extends AbstractMojo {
-
-    /**
-     * Set this to "true" to skip starting the launchpad
-     *
-     */
-    @Parameter(property = "maven.test.skip", defaultValue = "false")
-    protected boolean skipLaunchpad;
-
-    /**
-     * Parameter containing the list of server configurations
-     */
-    @Parameter
-    private List<ServerConfiguration> servers;
+public class StartMojo extends AbstractStartStopMojo {
 
     /**
      * Overwrites debug parameter of all server configurations (if set).
@@ -111,7 +98,9 @@ public class StartMojo extends AbstractMojo {
 
     /**
      * Keep the launchpad running.
+     * @deprecated Use {@link AbstractStartStopMojo#blockUntilKeyIsPressed} instead.
      */
+    @Deprecated
     @Parameter(property = "launchpad.keep.running", defaultValue = "false")
     private boolean keepLaunchpadRunning;
 
@@ -120,12 +109,6 @@ public class StartMojo extends AbstractMojo {
      */
     @Parameter(property = "launchpad.parallelExecution", defaultValue = "true")
     private boolean parallelExecution;
-
-    /**
-     * The system properties file will contain all started instances with their ports etc.
-     */
-    @Parameter(defaultValue = "${project.build.directory}/launchpad-runner.properties")
-    protected File systemPropertiesFile;
 
     /**
      * The Maven project.
@@ -175,16 +158,9 @@ public class StartMojo extends AbstractMojo {
         return prjArtifact;
     }
 
-    /**
-     * @see org.apache.maven.plugin.Mojo#execute()
-     */
+    
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        if (this.skipLaunchpad) {
-            this.getLog().info("Executing of the start launchpad mojo is disabled by configuration.");
-            return;
-        }
-
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         // delete properties
         if ( systemPropertiesFile != null && systemPropertiesFile.exists() ) {
             FileUtils.deleteQuietly(this.systemPropertiesFile);
@@ -250,6 +226,7 @@ public class StartMojo extends AbstractMojo {
                 }
             }
         }
+        blockIfNecessary();
     }
 
     /**
