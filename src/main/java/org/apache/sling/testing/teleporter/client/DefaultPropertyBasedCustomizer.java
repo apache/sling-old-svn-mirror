@@ -18,6 +18,8 @@ package org.apache.sling.testing.teleporter.client;
 
 import static org.junit.Assert.fail;
 
+import java.io.File;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.junit.rules.TeleporterRule.Customizer;
@@ -43,9 +45,15 @@ import org.apache.sling.junit.rules.TeleporterRule.Customizer;
  *      <li>{@code ClientSideTeleporter.excludeDependencyPrefixes}, comma-separated list of package prefixes for classes referenced from the IT. 
  *      Classes having one of the given package prefix will not be included in the bundle being deployed to the given Sling instance together with the IT class itself. 
  *      This takes precedence over the {@code ClientSideTeleporter.includeDependencyPrefixes}.</li>
+ *      <li>{@code ClientSideTeleporter.embedClasses}, comma-separated list of fully qualified class names which should be embedded in the test bundle.
+ *      Use this only for classes which are not detected automatically by the Maven Dependency Analyzer but still should be embedded in the test bundle</li>
  *      <li>{@code ClientSideTeleporter.testReadyTimeoutSeconds}, how long to wait for our test to be ready on the server-side in seconds, after installing the test bundle. By default {@code 12}.</li>
  *      <li>{@code ClientSideTeleporter.serverUsername}, the username with which to send requests to the Sling server. By default {@code admin}.</li>
  *      <li>{@code ClientSideTeleporter.serverPassword}, the password with which to send requests to the Sling server. By default {@code admin}.</li>
+ *      <li>{@code ClientSideTeleporter.enableLogging}, set to true to log the tasks being performed by the teleporter. Useful for debugging.</li>
+ *      <li>{@code ClientSideTeleporter.preventToUninstallBundle}, set to true to not automatically uninstall the test bundle after test execution. Useful for debugging.</li>
+ *      <li>{@code ClientSideTeleporter.testBundleDirectory}, if set the test bundles are being persisted (before being installed) within the given directory name. 
+ *      If the directory does not exist, it will be automatically created. Useful for debugging.</li>
  * </ul>
  */
 public class DefaultPropertyBasedCustomizer implements Customizer {
@@ -56,6 +64,9 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
     static final String PROPERTY_SERVER_PASSWORD = "ClientSideTeleporter.serverPassword";
     static final String PROPERTY_SERVER_USERNAME = "ClientSideTeleporter.serverUsername";
     static final String PROPERTY_TESTREADY_TIMEOUT_SECONDS = "ClientSideTeleporter.testReadyTimeoutSeconds";
+    static final String PROPERTY_TESTBUNDLE_DIRECTORY = "ClientSideTeleporter.testBundleDirectory";
+    static final String PROPERTY_ENABLE_LOGGING = "ClientSideTeleporter.enableLogging";
+    static final String PROPERTY_PREVENT_TO_UNINSTALL_BUNDLE = "ClientSideTeleporter.preventToUninstallBundle";
     
     static final String LIST_SEPARATOR = ",";
     
@@ -66,6 +77,9 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
     private final String excludeDependencyPrefixes;
     private final String embedClasses;
     private final String baseUrl;
+    private final String testBundleDirectory;
+    private final boolean enableLogging;
+    private final boolean preventToUninstallBundle;
 
     public DefaultPropertyBasedCustomizer() {
         testReadyTimeout = Integer.getInteger(PROPERTY_TESTREADY_TIMEOUT_SECONDS, 12);
@@ -75,6 +89,9 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
         excludeDependencyPrefixes = System.getProperty(PROPERTY_EXCLUDE_DEPENDENCY_PREFIXES);
         embedClasses = System.getProperty(PROPERTY_EMBED_CLASSES);
         baseUrl = System.getProperty(PROPERTY_BASE_URL);
+        testBundleDirectory = System.getProperty(PROPERTY_TESTBUNDLE_DIRECTORY);
+        enableLogging = Boolean.getBoolean(PROPERTY_ENABLE_LOGGING);
+        preventToUninstallBundle = Boolean.getBoolean(PROPERTY_PREVENT_TO_UNINSTALL_BUNDLE);
     }
 
     @Override
@@ -82,6 +99,11 @@ public class DefaultPropertyBasedCustomizer implements Customizer {
         final ClientSideTeleporter cst = (ClientSideTeleporter)rule;
         if (StringUtils.isBlank(baseUrl)) {
             fail("The mandatory system property " + PROPERTY_BASE_URL + " is not set!");
+        }
+        cst.setEnableLogging(enableLogging);
+        cst.setPreventToUninstallBundle(preventToUninstallBundle);
+        if (StringUtils.isNotBlank(testBundleDirectory)) {
+            cst.setDirectoryForPersistingTestBundles(new File(testBundleDirectory));
         }
         cst.setBaseUrl(baseUrl);
         cst.setServerCredentials(serverUsername, serverPassword);
