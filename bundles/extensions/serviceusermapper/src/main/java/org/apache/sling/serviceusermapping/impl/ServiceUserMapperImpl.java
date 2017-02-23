@@ -106,19 +106,23 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         final String[] props = config.user_mapping();
 
-        final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
-        for (final String prop : props) {
-            if (prop != null && prop.trim().length() > 0 ) {
-                try {
-                    final Mapping mapping = new Mapping(prop.trim());
-                    mappings.add(mapping);
-                } catch (final IllegalArgumentException iae) {
-                    log.error("configure: Ignoring '{}': {}", prop, iae.getMessage());
+        if ( props != null ) {
+            final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+            for (final String prop : props) {
+                if (prop != null && prop.trim().length() > 0 ) {
+                    try {
+                        final Mapping mapping = new Mapping(prop.trim());
+                        mappings.add(mapping);
+                    } catch (final IllegalArgumentException iae) {
+                        log.error("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    }
                 }
             }
-        }
 
-        this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+            this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+        } else {
+            this.globalServiceUserMappings = new Mapping[0];
+        }
         this.defaultUser = config.user_default();
 
         RegistrationSet registrationSet = null;
