@@ -29,12 +29,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
@@ -72,18 +68,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
     private static final Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
-
-    private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
-
-    private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
-
-    private static final Pattern MANGLE_NAMESPACE_IN_PATTERN = Pattern.compile("/_([^_/]+)_");
-
-    private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
-
-    private static final String MANGLE_NAMESPACE_OUT_PREFIX = "/";
-
-    private static final Pattern MANLE_NAMESPACE_OUT_PATTERN = Pattern.compile("/([^:/]+):");
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
 
@@ -780,11 +764,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 return user.toString();
             }
         }
-        // Try session
-        final Session session = this.getSession();
-        if ( session != null ) {
-            return session.getUserID();
-        }
         // Try attributes
         final Object impUser = this.getAttribute(ResourceResolverFactory.USER_IMPERSONATION);
         if ( impUser != null ) {
@@ -799,19 +778,20 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     /** Cached session object, fetched on demand. */
-    private Session cachedSession;
+    private Object cachedSession;
     /** Flag indicating if a searching has already been searched. */
     private boolean searchedSession = false;
 
     /**
      * Try to get a session from one of the resource providers.
      */
-    private Session getSession() {
+    @SuppressWarnings("unchecked")
+    private <AdapterType> AdapterType getSession(final Class<AdapterType> type) {
         if ( !this.searchedSession ) {
             this.searchedSession = true;
-            this.cachedSession = this.control.adaptTo(this.context, Session.class);
+            this.cachedSession = this.control.adaptTo(this.context, type);
         }
-        return this.cachedSession;
+        return (AdapterType) this.cachedSession;
     }
 
     // ---------- Adaptable interface
@@ -824,8 +804,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         checkClosed();
 
-        if (type == Session.class) {
-            return (AdapterType) getSession();
+        if (type.getName().equals("javax.jcr.Session")) {
+            return getSession(type);
         }
         final AdapterType result = this.control.adaptTo(this.context, type);
         if ( result != null ) {
@@ -1118,79 +1098,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     private String mangleNamespaces(String absPath) {
-        if (factory.isMangleNamespacePrefixes() && absPath != null && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
-            final Matcher m = MANLE_NAMESPACE_OUT_PATTERN.matcher(absPath);
-
-            final StringBuffer buf = new StringBuffer();
-            while (m.find()) {
-                final String namespace = m.group(1);
-                try {
-
-                    // throws if "namespace" is not a registered
-                    // namespace prefix
-                    final Session session = getSession();
-                    if ( session != null ) {
-                        session.getNamespaceURI(namespace);
-                        final String replacement = MANGLE_NAMESPACE_IN_PREFIX + namespace + MANGLE_NAMESPACE_IN_SUFFIX;
-                        m.appendReplacement(buf, replacement);
-                    } else {
-                        logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
-                    }
-
-
-                } catch (final NamespaceException ne) {
-
-                    // not a valid prefix
-                    logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
-
-                } catch (final RepositoryException re) {
-
-                    logger.warn("mangleNamespaces: Problem checking namespace '{}'", namespace, re);
-
-                }
-            }
-
-            m.appendTail(buf);
-
-            absPath = buf.toString();
+        if ( absPath != null && factory.getNamespaceMangler() != null ) {
+            absPath = ((JcrNamespaceMangler)factory.getNamespaceMangler()).mangleNamespaces(this, logger, absPath);
         }
 
         return absPath;
     }
 
     private String unmangleNamespaces(String absPath) {
-        if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
-            final Matcher m = MANGLE_NAMESPACE_IN_PATTERN.matcher(absPath);
-            final StringBuffer buf = new StringBuffer();
-            while (m.find()) {
-                final String namespace = m.group(1);
-                try {
-
-                    // throws if "namespace" is not a registered
-                    // namespace prefix
-                    final Session session = getSession();
-                    if ( session != null ) {
-                        session.getNamespaceURI(namespace);
-                        final String replacement = MANGLE_NAMESPACE_OUT_PREFIX + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
-                        m.appendReplacement(buf, replacement);
-                    } else {
-                        logger.debug("unmangleNamespaces: '{}' is not a prefix, not unmangling", namespace);
-                    }
-
-
-                } catch (final NamespaceException ne) {
-
-                    // not a valid prefix
-                    logger.debug("unmangleNamespaces: '{}' is not a prefix, not unmangling", namespace);
-
-                } catch (final RepositoryException re) {
-
-                    logger.warn("unmangleNamespaces: Problem checking namespace '{}'", namespace, re);
-
-                }
-            }
-            m.appendTail(buf);
-            absPath = buf.toString();
+        if (absPath != null && factory.getNamespaceMangler() != null ) {
+            absPath = ((JcrNamespaceMangler)factory.getNamespaceMangler()).unmangleNamespaces(this, logger, absPath);
         }
 
         return absPath;

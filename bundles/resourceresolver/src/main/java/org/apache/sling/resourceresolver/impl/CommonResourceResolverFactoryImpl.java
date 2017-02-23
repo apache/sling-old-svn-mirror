@@ -89,6 +89,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
     private boolean logUnclosedResolvers;
 
+    private final Object optionalNamespaceMangler;
+
+
     /**
      * Create a new common resource resolver factory.
      */
@@ -111,6 +114,17 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         };
         this.refQueueThread.setDaemon(true);
         this.refQueueThread.start();
+
+        // try create namespace mangler
+        Object mangler = null;
+        if ( this.isMangleNamespacePrefixes() ) {
+            try {
+                mangler = new JcrNamespaceMangler();
+            } catch ( final Throwable t) {
+                LOG.info("Unable to create JCR namespace mangler: {}", t.getMessage());
+            }
+        }
+        this.optionalNamespaceMangler = mangler;
     }
 
     // ---------- Resource Resolver Factory ------------------------------------
@@ -336,6 +350,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.isMangleNamespacePrefixes();
     }
 
+    public Object getNamespaceMangler() {
+        return this.optionalNamespaceMangler;
+    }
+
     @Override
     public String getMapRoot() {
         return this.activator.getMapRoot();
@@ -449,7 +467,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return activator.getResourceProviderTracker();
     }
 
-    public Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName) 
+    @Override
+    public Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName)
     throws LoginException {
         // get an administrative resource resolver
         // Ensure a mapped user name: If no user is defined for a bundle
@@ -469,7 +488,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
         authenticationInfo.put(ResourceResolverFactory.USER, userName);
         authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
-        
+
         return authenticationInfo;
     }
 
