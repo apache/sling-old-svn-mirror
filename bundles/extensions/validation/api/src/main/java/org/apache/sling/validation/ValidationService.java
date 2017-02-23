@@ -31,7 +31,7 @@ import org.apache.sling.validation.model.ValidationModel;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
+ * The {@code ValidationService} provides methods for finding {@link ValidationModel}s and to trigger validations against those.
  */
 @ProviderType
 public interface ValidationService {
