@@ -77,7 +77,7 @@
     <feature version="${project.version}">sling-commons-classloader</feature>
   </feature>
   <feature name="sling-commons-classloader" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.4.1-SNAPSHOT</bundle>
   </feature>
   <feature name="sling-commons-fsclassloader" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.4</bundle>
@@ -165,7 +165,7 @@
   </feature>
   <feature name="sling-extension-distribution" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.distribution.api/0.3.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.1.18</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.distribution.core/0.2.4</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
@@ -246,7 +246,7 @@
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.4</bundle>
   </feature>
   <feature name="sling-extension-resourcemerger" version="${project.version}">
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.3.2</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
   </feature>
@@ -279,7 +279,7 @@
   </feature>
   <feature name="sling-extension-xss" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.16</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.xss/1.0.17-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
@@ -287,7 +287,7 @@
   <!-- Apache Sling Installer -->
   <feature name="sling-installer" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.console/1.0.2</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.installer.core/3.8.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.core/3.8.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.factory.configuration/1.1.2</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
@@ -474,10 +474,10 @@
   </feature>
   <feature name="sling-scripting-sightly" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.28</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.4</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.6</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.18</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.30</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.19-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
@@ -502,7 +502,7 @@
   <!-- Apache Sling Servlets -->
   <feature name="sling-servlets" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.20</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.22</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.14</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.4.10</bundle>
     <!-- dependencies -->
@@ -547,7 +547,7 @@
     <feature version="${project.version}">jackrabbit-sling</feature>
     <feature version="${project.version}">tika-sling</feature>
     <bundle>mvn:com.google.guava/guava/15.0</bundle>
-    <bundle>mvn:org.apache.felix/org.apache.felix.jaas/1.0.0</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.jaas/1.0.2</bundle>
   </feature>
   <!-- Apache Tika -->
   <feature name="tika-sling" version="${project.version}">
