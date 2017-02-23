@@ -18,6 +18,7 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,23 +28,18 @@ import java.util.TreeMap;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.felix.utils.json.JSONWriter;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /** InventoryPrinter for service user mappings */
-@Component
-@Service(value = InventoryPrinter.class)
-@Properties({
-    @Property(name = InventoryPrinter.FORMAT, value = { "JSON", "TEXT" }),
-    @Property(name = InventoryPrinter.NAME, value = "slingserviceusers"),
-    @Property(name = InventoryPrinter.TITLE, value = "Sling Service User Mappings"),
-    @Property(name = InventoryPrinter.WEBCONSOLE, boolValue = true)
-})
+@Component(service = InventoryPrinter.class,
+           property = {
+                   InventoryPrinter.FORMAT + "=JSON",
+                   InventoryPrinter.FORMAT + "=TEXT",
+                   InventoryPrinter.TITLE + "=Sling Service User Mappings",
+                   InventoryPrinter.WEBCONSOLE + ":Boolean=true"
+           })
 public class MappingInventoryPrinter implements InventoryPrinter {
 
     @Reference
@@ -80,7 +76,7 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         return result;
     }
 
-    private void asJSON(JSONWriter w, Mapping m) throws JSONException {
+    private void asJSON(JSONWriter w, Mapping m) throws IOException {
         w.object();
         w.key("serviceName").value(m.getServiceName());
         w.key("subServiceName").value(m.getSubServiceName());
@@ -88,12 +84,11 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         w.endObject();
     }
 
-    private void renderJson(PrintWriter out) throws JSONException {
+    private void renderJson(PrintWriter out) throws IOException {
         final List<Mapping> data = mapper.getActiveMappings();
         final Map<String, List<Mapping>> byUser = getMappingsByUser(data);
 
         final JSONWriter w = new JSONWriter(out);
-        w.setTidy(true);
         w.object();
         w.key("title").value("Service User Mappings");
         w.key("mappingsCount").value(data.size());

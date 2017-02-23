@@ -17,10 +17,6 @@
  * under the License.
  */
 
-@Version("1.2")
-@Export(optional = "provide:=true")
+@org.osgi.annotation.versioning.Version("1.2.1")
 package org.apache.sling.serviceusermapping;
-
-import aQute.bnd.annotation.Export;
-import aQute.bnd.annotation.Version;
 

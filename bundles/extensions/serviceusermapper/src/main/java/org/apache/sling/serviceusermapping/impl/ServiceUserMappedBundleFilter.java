@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
@@ -32,12 +30,13 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.service.EventListenerHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
+import org.osgi.service.component.annotations.Component;
 
-@Component(immediate=true) // framework gets/ungets hooks each time
-@Service(value = {EventListenerHook.class, FindHook.class} )
 /**
  * The <code>ServiceUserMappingBundleFilter</code> only allows the bundle for which the service mapping is available to see it.
  */
+@Component(immediate=true, // framework gets/ungets hooks each time
+           service = {EventListenerHook.class, FindHook.class} )
 public class ServiceUserMappedBundleFilter implements EventListenerHook, FindHook {
 
     @Override

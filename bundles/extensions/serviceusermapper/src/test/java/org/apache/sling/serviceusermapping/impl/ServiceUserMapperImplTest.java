@@ -26,17 +26,16 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+
+import junit.framework.TestCase;
 
 public class ServiceUserMapperImplTest {
     private static final String BUNDLE_SYMBOLIC1 = "bundle1";
@@ -68,23 +67,16 @@ public class ServiceUserMapperImplTest {
         when(BUNDLE2.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC2);
     }
 
-
-
-
     @Test
     public void test_getServiceUserID() {
-        @SuppressWarnings("serial")
-        Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String[] {
-                    BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                    BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
-                    BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
-                    BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
-                });
-                put("user.default", NONE);
-            }
-        };
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+            BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+            BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
+            BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+            BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
+        });
+        when(config.user_default()).thenReturn(NONE);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -99,23 +91,20 @@ public class ServiceUserMapperImplTest {
 
     @Test
     public void test_getServiceUserID_WithServiceUserValidator() {
-        @SuppressWarnings("serial")
-        Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String[] {
-                    BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                    BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
-                    BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
-                    BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
-                });
-                put("user.default", NONE);
-            }
-        };
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+                BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
+        });
+        when(config.user_default()).thenReturn(NONE);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
         ServiceUserValidator serviceUserValidator = new ServiceUserValidator() {
 
+            @Override
             public boolean isValid(String serviceUserId, String serviceName,
                     String subServiceName) {
                 if (SAMPLE.equals(serviceUserId)) {
@@ -136,41 +125,39 @@ public class ServiceUserMapperImplTest {
 
     @Test
     public void test_amendment() {
-        @SuppressWarnings("serial")
-        Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String[] {
-                    BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                    BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
-                });
-                put("user.default", NONE);
-            }
-        };
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+        });
+        when(config.user_default()).thenReturn(NONE);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca1Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
-                put(Constants.SERVICE_ID, 1L);
-                put(Constants.SERVICE_RANKING, 100);
-            }
-        };
+
+        MappingConfigAmendment.Config mca1Config = mock(MappingConfigAmendment.Config.class);
+        when(mca1Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
+        when(mca1Config.service_ranking()).thenReturn(100);
+        Map<String, Object> mca1ConfigMap = new HashMap<>();
+        mca1ConfigMap.put("user.mapping", mca1Config.user_mapping());
+        mca1ConfigMap.put("service.ranking", mca1Config.service_ranking());
+        mca1ConfigMap.put("service.id", 1L);
+
         mca1.configure(mca1Config);
-        sum.bindAmendment(mca1, mca1Config);
+        sum.bindAmendment(mca1, mca1ConfigMap);
         final MappingConfigAmendment mca2 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca2Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB});
-                put(Constants.SERVICE_ID, 2L);
-                put(Constants.SERVICE_RANKING, 200);
-            }
-        };
+
+        MappingConfigAmendment.Config mca2Config = mock(MappingConfigAmendment.Config.class);
+        when(mca2Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB});
+        when(mca2Config.service_ranking()).thenReturn(200);
+        Map<String, Object> mca2ConfigMap = new HashMap<>();
+        mca2ConfigMap.put("user.mapping", mca2Config.user_mapping());
+        mca2ConfigMap.put("service.ranking", mca2Config.service_ranking());
+        mca2ConfigMap.put("service.id", 2L);
+
         mca2.configure(mca2Config);
-        sum.bindAmendment(mca2, mca2Config);
+        sum.bindAmendment(mca2, mca2ConfigMap);
 
         TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
@@ -182,37 +169,36 @@ public class ServiceUserMapperImplTest {
 
     @Test
     public void test_amendmentOverlap() {
-        @SuppressWarnings("serial")
-        final Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.default", NONE);
-            }
-        };
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {});
+        when(config.user_default()).thenReturn(NONE);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
 
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca1Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
-                put(Constants.SERVICE_RANKING, 100);
-            }
-        };
+
+        MappingConfigAmendment.Config mca1Config = mock(MappingConfigAmendment.Config.class);
+        when(mca1Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
+        when(mca1Config.service_ranking()).thenReturn(100);
+        Map<String, Object> mca1ConfigMap = new HashMap<>();
+        mca1ConfigMap.put("user.mapping", mca1Config.user_mapping());
+        mca1ConfigMap.put("service.ranking", mca1Config.service_ranking());
+
         mca1.configure(mca1Config);
         final MappingConfigAmendment mca2 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca2Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER_SUB});
-                put(Constants.SERVICE_RANKING, 200);
-            }
-        };
+
+        MappingConfigAmendment.Config mca2Config = mock(MappingConfigAmendment.Config.class);
+        when(mca2Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER_SUB});
+        when(mca2Config.service_ranking()).thenReturn(200);
+        Map<String, Object> mca2ConfigMap = new HashMap<>();
+        mca2ConfigMap.put("user.mapping", mca2Config.user_mapping());
+        mca2ConfigMap.put("service.ranking", mca2Config.service_ranking());
+
         mca2.configure(mca2Config);
 
-        sum.bindAmendment(mca1, mca1Config);
-        sum.bindAmendment(mca2, mca2Config);
+        sum.bindAmendment(mca1, mca1ConfigMap);
+        sum.bindAmendment(mca2, mca2ConfigMap);
 
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, ""));
     }
@@ -221,16 +207,13 @@ public class ServiceUserMapperImplTest {
 
     @Test
     public void test_amendmentServiceUserMapping() {
-        @SuppressWarnings("serial")
-        Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String[] {
-                        BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                        BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
                 });
-                put("user.default", NONE);
-            }
-        };
+        when(config.user_default()).thenReturn(NONE);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.registerAsync = false;
@@ -240,34 +223,36 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(2, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
         final MappingConfigAmendment mca1 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca1Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
-                put(Constants.SERVICE_ID, 1L);
-                put(Constants.SERVICE_RANKING, 100);
-            }
-        };
+
+        MappingConfigAmendment.Config mca1Config = mock(MappingConfigAmendment.Config.class);
+        when(mca1Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
+        when(mca1Config.service_ranking()).thenReturn(100);
+        Map<String, Object> mca1ConfigMap = new HashMap<>();
+        mca1ConfigMap.put("user.mapping", mca1Config.user_mapping());
+        mca1ConfigMap.put("service.ranking", mca1Config.service_ranking());
+        mca1ConfigMap.put("service.id", 1L);
+
         mca1.configure(mca1Config);
-        sum.bindAmendment(mca1, mca1Config);
+        sum.bindAmendment(mca1, mca1ConfigMap);
 
         TestCase.assertEquals(3, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
         final MappingConfigAmendment mca2 = new MappingConfigAmendment();
-        @SuppressWarnings("serial")
-        final Map<String, Object> mca2Config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB});
-                put(Constants.SERVICE_ID, 2L);
-                put(Constants.SERVICE_RANKING, 200);
-            }
-        };
+
+        MappingConfigAmendment.Config mca2Config = mock(MappingConfigAmendment.Config.class);
+        when(mca2Config.user_mapping()).thenReturn(new String[] {BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB});
+        when(mca2Config.service_ranking()).thenReturn(200);
+        Map<String, Object> mca2ConfigMap = new HashMap<>();
+        mca2ConfigMap.put("user.mapping", mca2Config.user_mapping());
+        mca2ConfigMap.put("service.ranking", mca2Config.service_ranking());
+        mca2ConfigMap.put("service.id", 2L);
+
         mca2.configure(mca2Config);
-        sum.bindAmendment(mca2, mca2Config);
+        sum.bindAmendment(mca2, mca2ConfigMap);
 
         TestCase.assertEquals(4, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
 
-        sum.unbindAmendment(mca1, mca1Config);
+        sum.unbindAmendment(mca1, mca1ConfigMap);
 
         TestCase.assertEquals(3, context.getRegistrations(ServiceUserMappedImpl.SERVICEUSERMAPPED).size());
     }
@@ -282,6 +267,7 @@ public class ServiceUserMapperImplTest {
         public ServiceRegistrationContextHelper() {
             when(bundleContext.registerService(any(String.class), any(Object.class), any(Dictionary.class)))
                     .then(new Answer<ServiceRegistration>() {
+                        @Override
                         public ServiceRegistration answer(InvocationOnMock invocationOnMock) throws Throwable {
 
                             Object[] arguments = invocationOnMock.getArguments();
@@ -301,14 +287,17 @@ public class ServiceUserMapperImplTest {
 
 
             return new ServiceRegistration() {
+                @Override
                 public ServiceReference getReference() {
                     return null;
                 }
 
+                @Override
                 public void setProperties(Dictionary dictionary) {
 
                 }
 
+                @Override
                 public void unregister() {
                     serviceRegistrations.remove(registeredObject);
                 }
