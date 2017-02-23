@@ -18,7 +18,7 @@
  */
 package org.apache.sling.serviceusermapping;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ServiceUserMapped</code> is a marker service that can be used to ensure that there is an already registered mapping for a certain service/subService.

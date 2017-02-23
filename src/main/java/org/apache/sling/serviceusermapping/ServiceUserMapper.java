@@ -18,9 +18,8 @@
  */
 package org.apache.sling.serviceusermapping;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * The <code>ServiceUserMapper</code> service can be used to map a service

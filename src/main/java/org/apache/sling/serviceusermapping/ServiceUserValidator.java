@@ -16,7 +16,7 @@
  */
 package org.apache.sling.serviceusermapping;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The {@code ServiceUserValidator} allows to implement validation of configured

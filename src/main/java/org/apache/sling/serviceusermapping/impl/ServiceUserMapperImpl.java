@@ -35,18 +35,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
@@ -54,47 +42,39 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(
-        metatype = true,
-        label = "Apache Sling Service User Mapper Service",
-        description = "Configuration for the service mapping service names to names of users.")
-@Service(value={ServiceUserMapper.class, ServiceUserMapperImpl.class})
-@References( {
-    @Reference(name="amendment",
-            referenceInterface=MappingConfigAmendment.class,
-            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-            policy=ReferencePolicy.DYNAMIC,
-            updated="updateAmendment"),
-    @Reference(name = "serviceUserValidator ", referenceInterface = ServiceUserValidator.class,
-    bind = "bindServiceUserValidator", unbind = "unbindServiceUserValidator",
-    cardinality= ReferenceCardinality.OPTIONAL_MULTIPLE, policy= ReferencePolicy.DYNAMIC)
-
-})
-
+@Designate(ocd = ServiceUserMapperImpl.Config.class)
+@Component(service = {ServiceUserMapper.class, ServiceUserMapperImpl.class})
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
-    @Property(
-            label = "Service Mappings",
+    @ObjectClassDefinition(name = "Apache Sling Service User Mapper Service",
+        description = "Configuration for the service mapping service names to names of users.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Service Mappings",
             description = "Provides mappings from service name to user names. "
                 + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
                 + "where bundleId and subServiceName identify the service and userName "
-                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.",
-            unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_SERVICE2USER_MAPPING = "user.mapping";
+                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
+        String[] user_mapping() default {};
 
-    private static final String[] PROP_SERVICE2USER_MAPPING_DEFAULT = {};
-
-    private static final String PROP_DEFAULT_USER = "user.default";
-
-    @Property(
-            name = PROP_DEFAULT_USER,
-            label = "Default User",
+        @AttributeDefinition(name = "Default User",
             description = "The name of the user to use as the default if no service mapping"
                 + "applies. If this property is missing or empty no default user is defined.")
-    private static final String PROP_DEFAULT_USER_DEFAULT = null;
+        String user_default();
+    }
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -119,13 +99,12 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Activate
     @Modified
-    synchronized void configure(BundleContext bundleContext, final Map<String, Object> config) {
+    synchronized void configure(BundleContext bundleContext, final Config config) {
         if (registerAsync && executorService == null) {
             executorService = Executors.newSingleThreadExecutor();
         }
 
-        final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
-            PROP_SERVICE2USER_MAPPING_DEFAULT);
+        final String[] props = config.user_mapping();
 
         final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
         for (final String prop : props) {
@@ -140,7 +119,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
         this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
-        this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
+        this.defaultUser = config.user_default();
 
         RegistrationSet registrationSet = null;
         this.bundleContext = bundleContext;
@@ -172,6 +151,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
      * bind the serviceUserValidator
      * @param serviceUserValidator
      */
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy= ReferencePolicy.DYNAMIC)
     protected synchronized void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
         validators.add(serviceUserValidator);
         restartAllActiveServiceUserMappedServices();
@@ -201,6 +181,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         return result;
     }
 
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE,policy=ReferencePolicy.DYNAMIC,updated="updateAmendment")
     protected synchronized void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
         final Long key = (Long) props.get(Constants.SERVICE_ID);
         RegistrationSet registrationSet = null;
