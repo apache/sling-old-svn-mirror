@@ -306,6 +306,8 @@
                         <exclude>**/*.rej</exclude>
                         <!-- Exclude Java crash log files -->
                         <exclude>hs_err_*.log</exclude>
+                        <!-- Lucene index details (Oak 1.6) -->
+                        <exclude>**/repository/index/*/index-details.txt</exclude>
                     </excludes>
                 </configuration>
                 <executions>
