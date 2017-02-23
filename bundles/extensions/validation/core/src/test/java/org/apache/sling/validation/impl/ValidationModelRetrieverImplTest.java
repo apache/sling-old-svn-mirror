@@ -125,8 +125,8 @@ public class ValidationModelRetrieverImplTest {
         // service id must be set (even if service ranking is not set)
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(Constants.SERVICE_ID, 1L);
-        validationModelRetriever.bindModelProvider(modelProvider, properties);
-        validationModelRetriever.bindValidator(dateValidator);
+        validationModelRetriever.addModelProvider(modelProvider, properties);
+        validationModelRetriever.addValidator(dateValidator);
     }
 
     @Test
