@@ -588,22 +588,28 @@ def modules = [
         location: "installer/providers/file"
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-distribution'
+        location: 'karaf/org.apache.sling.karaf-distribution',
+        jdks: ["1.8"]
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-features'
+        location: 'karaf/org.apache.sling.karaf-features',
+        jdks: ["1.8"]
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-integration-tests'
+        location: 'karaf/org.apache.sling.karaf-integration-tests',
+        jdks: ["1.8"]
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
+        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests',
+        jdks: ["1.8"]
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-repoinit'
+        location: 'karaf/org.apache.sling.karaf-repoinit',
+        jdks: ["1.8"]
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-configs'
+        location: 'karaf/org.apache.sling.karaf-configs',
+        jdks: ["1.8"]
     ],
     [
         location: 'launchpad/api',
