@@ -62,13 +62,11 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     protected Map<String, Trie<ValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<ValidationModel>>();
 
     /** Map of validation providers (key=service properties) */
-    @Reference(name = "modelProvider", service = ValidationModelProvider.class, bind="bindModelProvider", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     private RankedServices<ValidationModelProvider> modelProviders = new RankedServices<ValidationModelProvider>();
 
     /**
      * List of all known validators (key=classname of validator)
      */
-    @Reference(name = "validator",  service = Validator.class,  bind="bindValidator",policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference
@@ -160,26 +158,28 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
         return modelsForResourceType;
     }
 
-    protected void bindModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    protected synchronized void addModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
         modelProviders.bind(modelProvider, props);
         LOG.debug("Invalidating models cache because new model provider '{}' available", modelProvider);
         validationModelsCache.clear();
     }
 
-    protected void unbindModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
+    protected void removeModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
         modelProviders.unbind(modelProvider, props);
         LOG.debug("Invalidating models cache because model provider '{}' is no longer available", modelProvider);
         validationModelsCache.clear();
     }
 
-    protected void bindValidator(Validator<?> validator) {
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    protected void addValidator(Validator<?> validator) {
         if (validators.put(validator.getClass().getName(), validator) != null) {
             LOG.debug("Validator with the name '{}' has been registered in the system already and was now overwritten",
                     validator.getClass().getName());
         }
     }
 
-    protected void unbindValidator(Validator<?> validator) {
+    protected void removeValidator(Validator<?> validator) {
         // also remove references to all validators in the cache
         validator = validators.remove(validator.getClass().getName());
         if (validator != null) {
