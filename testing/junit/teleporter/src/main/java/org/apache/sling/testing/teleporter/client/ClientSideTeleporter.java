@@ -18,8 +18,13 @@ package org.apache.sling.testing.teleporter.client;
 
 import static org.junit.Assert.fail;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -30,12 +35,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.ops4j.pax.tinybundles.core.TinyBundle;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
 
 /** Client-side TeleporterRule. Packages the
  *  test to run in a test bundle, installs the bundle,
@@ -49,11 +58,16 @@ public class ClientSideTeleporter extends TeleporterRule {
     private int testReadyTimeoutSeconds = 20;
     private int webConsoleReadyTimeoutSeconds = 30;
     private int waitForServiceTimout = 10;
+    private boolean enableLogging = false;
+    private boolean preventToUninstallBundle = false;
+    private File directoryForPersistingTestBundles = null;
     private String baseUrl;
     private String serverCredentials;
     private String testServletPath = DEFAULT_TEST_SERVLET_PATH;
     private final Set<Class<?>> embeddedClasses = new HashSet<Class<?>>();
     private final Map<String, String> additionalBundleHeaders = new HashMap<String, String>();
+    
+    private Logger log;
     
     private InputStream buildTestBundle(Class<?> c, Collection<Class<?>> embeddedClasses, String bundleSymbolicName) throws IOException {
         final TinyBundle b = TinyBundles.bundle()
@@ -64,6 +78,12 @@ public class ClientSideTeleporter extends TeleporterRule {
 
         for(Map.Entry<String, String> header : additionalBundleHeaders.entrySet()) {
             b.set(header.getKey(), header.getValue());
+        }
+        
+        // enrich embedded classes by automatically detected dependencies
+        for(Class<?> embeddedClazz : dependencyAnalyzer.getDependencies(log)) {
+            log.info("Embed class '{}' because it is referenced and in the allowed package prefixes", embeddedClazz);
+            embeddedClasses.add(embeddedClazz);
         }
         
         // Embed specified classes
@@ -78,6 +98,7 @@ public class ClientSideTeleporter extends TeleporterRule {
                     @Override
                     public void process(String resourcePath, InputStream resourceStream) throws IOException {
                         b.add(resourcePath, resourceStream);
+                        log.info("Embedded resource '{}' in test bundle", resourcePath);
                     }
                     
                 };
@@ -165,19 +186,56 @@ public class ClientSideTeleporter extends TeleporterRule {
     public Map<String, String> getAdditionalBundleHeaders() {
         return additionalBundleHeaders;
     }
-    
+
+    public void setEnableLogging(boolean enableLogging) {
+        this.enableLogging = enableLogging;
+    }
+
+    public void setPreventToUninstallBundle(boolean preventToUninstallTestBundle) {
+        this.preventToUninstallBundle = preventToUninstallTestBundle;
+    }
+
+    public void setDirectoryForPersistingTestBundles(File directoryForPersistingTestBundles) {
+        this.directoryForPersistingTestBundles = directoryForPersistingTestBundles;
+    }
+
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
-        final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss-");
-        final String bundleSymbolicName = getClass().getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
-        final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName);
-        httpClient.installBundle(bundle, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+        final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss");
+        final String bundleSymbolicName = getClass().getSimpleName() + "." + classUnderTest.getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
+        log.info("Installing bundle '{}' to {}", bundleSymbolicName, baseUrl);
+        
+        try (final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName)) {
+            // optionally persist the test bundle
+            if (directoryForPersistingTestBundles != null) {
+                directoryForPersistingTestBundles.mkdirs();
+                File bundleFile = new File(directoryForPersistingTestBundles, bundleSymbolicName + ".jar");
+                log.info("Persisting test bundle in '{}'", bundleFile);
+                try (OutputStream output = new FileOutputStream(bundleFile)) {
+                    IOUtils.copy(bundle, output);
+                }
+                try (InputStream bundleInput = new BufferedInputStream(new FileInputStream(bundleFile))) {
+                    httpClient.installBundle(bundleInput, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+                }
+            } else {
+                httpClient.installBundle(bundle, bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+            }
+            httpClient.verifyCorrectBundleState(bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+        };
         return bundleSymbolicName;
     }
-    
+
+    private void initLogger() {
+        if (enableLogging) {
+            log = LoggerFactory.getLogger(ClientSideTeleporter.class);
+        } else {
+            log = NOPLogger.NOP_LOGGER;
+        }
+    }
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         customize();
-        
+        initLogger();
         if(baseUrl == null) {
             fail("base URL is not set");
         }
@@ -188,10 +246,6 @@ public class ClientSideTeleporter extends TeleporterRule {
         
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-        
-        for(Class<?> c : dependencyAnalyzer.getDependencies()) {
-            embeddedClasses.add(c);
         }
 
         final TeleporterHttpClient httpClient = new TeleporterHttpClient(baseUrl, testServletPath);
@@ -204,12 +258,18 @@ public class ClientSideTeleporter extends TeleporterRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                
                 final String bundleSymbolicName = installTestBundle(httpClient);
                 final String testPath = description.getClassName() + "/" + description.getMethodName();
                 try {
                     httpClient.runTests(testPath, testReadyTimeoutSeconds);
                 } finally {
-                    httpClient.uninstallBundle(bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+                    if (!preventToUninstallBundle) {
+                        log.info("Uninstalling bundle '{}' from {}", bundleSymbolicName, baseUrl);
+                        httpClient.uninstallBundle(bundleSymbolicName, webConsoleReadyTimeoutSeconds);
+                    } else {
+                        log.info("Not uninstalling bundle '{}' from {} due to according configuration", bundleSymbolicName, baseUrl);
+                    }
                 }
             }
         };
