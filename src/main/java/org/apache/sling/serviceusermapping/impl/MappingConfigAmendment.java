@@ -68,19 +68,23 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
     void configure(final Config config) {
         final String[] props = config.user_mapping();
 
-        final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
-        for (final String prop : props) {
-            if (prop != null && prop.trim().length() > 0 ) {
-                try {
-                    final Mapping mapping = new Mapping(prop.trim());
-                    mappings.add(mapping);
-                } catch (final IllegalArgumentException iae) {
-                    logger.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+        if ( props != null ) {
+            final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+            for (final String prop : props) {
+                if (prop != null && prop.trim().length() > 0 ) {
+                    try {
+                        final Mapping mapping = new Mapping(prop.trim());
+                        mappings.add(mapping);
+                    } catch (final IllegalArgumentException iae) {
+                        logger.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    }
                 }
             }
-        }
 
-        this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+            this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+        } else {
+            this.serviceUserMappings = new Mapping[0];
+        }
         this.serviceRanking = config.service_ranking();
     }
 
