@@ -18,6 +18,7 @@
  */
 package org.apache.sling.fsprovider.internal.parser;
 
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
 import java.io.File;
@@ -28,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Parses file that contains content fragments (e.g. JSON, JCR XML).
+ * Parses files that contains content fragments (e.g. JSON, JCR XML).
  */
 class ContentFileParser {
     
@@ -47,6 +48,9 @@ class ContentFileParser {
         try {
             if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
                 return JsonFileParser.parse(file);
+            }
+            else if (StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+                return JcrXmlFileParser.parse(file);
             }
         }
         catch (Throwable ex) {

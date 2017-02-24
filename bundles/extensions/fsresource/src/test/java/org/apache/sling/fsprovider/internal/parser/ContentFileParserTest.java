@@ -41,7 +41,24 @@ public class ContentFileParserTest {
 
     @Test
     public void testParseInvalidJson() {
-        File file = new File("src/test/resources/fs-test/folder1/file1a.txt");
+        File file = new File("src/test/resources/invalid-test/invalid.json");
+        Map<String,Object> content = ContentFileParser.parse(file);
+        assertNull(content);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testParseJcrXml() {
+        File file = new File("src/test/resources/fs-test/folder3/content.jcr.xml");
+        Map<String,Object> content = ContentFileParser.parse(file);
+        assertNotNull(content);
+        assertEquals("app:Page", content.get("jcr:primaryType"));
+        assertEquals("app:PageContent", ((Map<String,Object>)content.get("jcr:content")).get("jcr:primaryType"));
+    }
+
+    @Test
+    public void testParseInvalidJcrXml() {
+        File file = new File("src/test/resources/invalid-test/invalid.jcr.xml");
         Map<String,Object> content = ContentFileParser.parse(file);
         assertNull(content);
     }

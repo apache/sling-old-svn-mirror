@@ -33,12 +33,13 @@ import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import javax.json.stream.JsonParsingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Parses JSON file that contains content fragments.
+ * Parses JSON files that contains content fragments.
  */
 class JsonFileParser {
     
@@ -71,13 +72,11 @@ class JsonFileParser {
      */
     public static Map<String,Object> parse(File file) {
         log.debug("Parse JSON content from {}", file.getPath());
-        try {
-            try (FileInputStream fis = new FileInputStream(file);
-                    JsonReader reader = JSON_READER_FACTORY.createReader(fis)) {
-                return toMap(reader.readObject());
-            }
+        try (FileInputStream fis = new FileInputStream(file);
+                JsonReader reader = JSON_READER_FACTORY.createReader(fis)) {
+            return toMap(reader.readObject());
         }
-        catch (IOException ex) {
+        catch (IOException | JsonParsingException ex) {
             log.warn("Error parsing JSON content from " + file.getPath(), ex);
             return null;
         }

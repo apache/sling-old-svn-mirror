@@ -66,8 +66,8 @@ public class JcrMixedTest {
         file1a.setProperty("prop2", 234L);
         // folder1/file1c.txt
         folder1.addNode("file1c.txt", "nt:file");
-        // folder3
-        fstest.addNode("folder3", "nt:folder");
+        // folder99
+        fstest.addNode("folder99", "nt:folder");
     }
 
     @Test
@@ -96,7 +96,7 @@ public class JcrMixedTest {
     @Test
     public void testListChildren() {
         assertThat(root, ResourceMatchers.containsChildren("fs-test"));
-        assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2", "folder3"));
+        assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2", "folder99"));
         assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("file1a.txt", "file1b.txt", "file1c.txt"));
     }
 

@@ -106,10 +106,14 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
                 "filesystem resources are mapped in. This property must not be an empty string.")
         String provider_root();
         
-        @AttributeDefinition(name = "Mount JSON",
+        @AttributeDefinition(name = "Mount json",
                 description = "Mount .json files as content in the resource hierarchy.")
         boolean provider_json_content();
-
+       
+        @AttributeDefinition(name = "Mount jcr.xml",
+                description = "Mount .jcr.xml files as content in the resource hierarchy.")
+        boolean provider_jcrxml_content();
+        
         @AttributeDefinition(name = "Cache Size",
                 description = "Max. number of content files cached in memory.")
         int provider_cache_size() default 1000;
@@ -252,6 +256,10 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         List<String> contentFileSuffixes = new ArrayList<>();
         if (config.provider_json_content()) {
             contentFileSuffixes.add(ContentFileTypes.JSON_SUFFIX);
+            this.overlayParentResourceProvider = false;
+        }
+        if (config.provider_jcrxml_content()) {
+            contentFileSuffixes.add(ContentFileTypes.JCR_XML_SUFFIX);
             this.overlayParentResourceProvider = false;
         }
         ContentFileExtensions contentFileExtensions = new ContentFileExtensions(contentFileSuffixes);

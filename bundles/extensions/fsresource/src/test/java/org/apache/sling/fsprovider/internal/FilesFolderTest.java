@@ -57,6 +57,7 @@ public class FilesFolderTest {
         assertFolder(fsroot, "folder1");
         assertFolder(fsroot, "folder1/folder11");
         assertFolder(fsroot, "folder2");
+        assertFolder(fsroot, "folder3");
     }
 
     @Test
@@ -66,12 +67,13 @@ public class FilesFolderTest {
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertFile(fsroot, "folder2/content.json", null);
         assertFile(fsroot, "folder2/content/file2content.txt", "file2content");
+        assertFile(fsroot, "folder3/content.jcr.xml", null);
     }
 
     @Test
     public void testListChildren() {
         assertThat(root, ResourceMatchers.containsChildren("fs-test"));
-        assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2"));
+        assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2", "folder3"));
         assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("folder11", "file1a.txt", "file1b.txt"));
         assertThat(fsroot.getChild("folder2"), ResourceMatchers.hasChildren("folder21", "content.json"));
         assertFalse(fsroot.getChild("folder1/file1a.txt").listChildren().hasNext());

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:app="http://sample.com/jcr/app/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+    jcr:primaryType="app:Page">
+  <jcr:content
+      jcr:primaryType="app:PageContent"
+      jcr:title="en"
+      sling:resourceType="samples/sample-app/components/content/page/homepage"
+      includeAside="{Boolean}true"
+      includeAsideBar="{Boolean}true"
+      includeTeaserBar="{Boolean}true"
+      includeTeaserbar="{Boolean}true"
+      inheritAside="{Boolean}false"
+      inheritTeaserbar="{Boolean}false"
+      longProp="{Long}1234567890123"
+      decimalProp="{Decimal}1.2345"
+      longPropMulti="{Long}[1234567890123,55]"
+      stringPropMulti="[aa,bb,cc]"
+      navTitle="HOME"
+      pageTitle="Sample Site">
+    <teaserbar
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarParsys">
+      <teaserbaritem
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarItem"
+          linkContentRef="/content/samples/en/conference"
+          linkMediaDownload="{Boolean}false"
+          linkTitle="This should help you with your decision"
+          linkType="internal"
+          linkWindowFeatures="default"
+          linkWindowTarget="_self"
+          mediaRef="/content/dam/samples/content/user.png"
+          teaserContent="Still not convinced to attend? Need persuasion? Facts for your boss?"
+          title="Why to attend" />
+      <teaserbaritem_0
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarItem"
+          linkContentRef="/content/samples/en/venue"
+          linkMediaDownload="{Boolean}false"
+          linkTitle="More information"
+          linkType="internal"
+          linkWindowFeatures="default"
+          linkWindowTarget="_self"
+          mediaRef="/content/dam/samples/content/location.png"
+          teaserContent="Take a look at the new venue for 2013. The Kulturbrauerei in the Prenzlauer Berg district."
+          title="Location" />
+      <teaserbaritem_1
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarItem"
+          linkContentRef="/content/samples/en/conference/call-for-papers"
+          linkMediaDownload="{Boolean}false"
+          linkTitle="Submit your proposal here"
+          linkType="internal"
+          linkWindowFeatures="default"
+          linkWindowTarget="_self"
+          mediaRef="/content/dam/samples/content/talk.png"
+          teaserContent="If you have insight and experiences with Apache Sling and want to share them? We are actually asking for your participation!"
+          title="Want to share?" />
+      <teaserbaritem_2
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarItem"
+          linkContentRef="/content/samples/en/archive"
+          linkMediaDownload="{Boolean}false"
+          linkTitle="Dive into the archive"
+          linkType="internal"
+          linkWindowFeatures="default"
+          linkWindowTarget="_self"
+          mediaRef="/content/dam/samples/content/archive.png"
+          teaserContent="adaptTo() is not a new event. Take a look at what was said and done previously."
+          title="Take a look back" />
+    </teaserbar>
+    <aside
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="samples/sample-app/components/content/aside/asideParsys">
+      <asidesponsorteaser
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaser"
+          title="Sponsors">
+        <images
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaserParsys">
+          <asidesponsorteaserit_0
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaserItem"
+              imageHeight="41"
+              imageWidth="200"
+              linkExternalRef="http://www.pro-vision.de"
+              linkType="external"
+              linkWindowFeatures="default"
+              linkWindowTarget="_blank"
+              mediaRef="/content/dam/samples/content/provision-logo.png" />
+        </images>
+      </asidesponsorteaser>
+      <asidesocialteaser
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/aside/asideSocialTeaser"
+          title="Follow us">
+        <images
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaserParsys">
+          <asidesocialteaserite
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/content/aside/asideSocialTeaserItem"
+              linkExternalRef="http://twitter.com/adaptto"
+              linkMediaDownload="{Boolean}false"
+              linkTitle="@adaptTo"
+              linkType="external"
+              linkWindowFeatures="default"
+              linkWindowTarget="_blank"
+              mediaRef="/content/dam/samples/content/twitter-icon.png"
+              title="on twitter" />
+        </images>
+      </asidesocialteaser>
+    </aside>
+    <content
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="sample/wcm/parsys/components/parsys">
+      <contentrichtext
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/common/contentRichText"
+          text="&lt;p&gt;adaptTo() is a meetup in Berlin focused on Apache Sling including Apache Jackrabbit and Apache Felix and is addressed to all using this stack or parts of it.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;internal&amp;quot;,&amp;quot;linkContentRef&amp;quot;:&amp;quot;/content/samples/handler/en/conference&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_self&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Read more...&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;" />
+      <contentheadline
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/common/contentHeadline"
+          headline="Extended Call for Papers"
+          smaller="{Boolean}true" />
+      <contentrichtext_0
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/common/contentRichText"
+          text="&lt;p&gt;Although we got some great submissions for adaptTo() 2013, we still have some slots for further sessions. Therefore we extend the timeslot for submissions to the call for papers and for feedback by two weeks. This means you still can submit you submissions till 06.05.2013. We're looking forward to get more of your great talks.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;internal&amp;quot;,&amp;quot;linkContentRef&amp;quot;:&amp;quot;/content/samples/handler/en/conference/call-for-papers&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_self&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Read more...&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;" />
+    </content>
+    <stage
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="sample/wcm/parsys/components/parsys">
+      <stageheader
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/stage/stageheader"
+          linkMediaDownload="{Boolean}false"
+          linkType="internal"
+          linkWindowFeatures="default"
+          linkWindowTarget="_self"
+          mediaRef="/content/dam/samples/content/stageheader-outside2.jpg"
+          subtitle="23.–25. September 2013&#xA;Kulturbrauerei Berlin"
+          title="adaptTo() 2013">
+        <links
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="samples/sample-app/components/content/stage/stageheaderParsys">
+          <stageheaderlinkitem
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/content/stage/stageheaderLinkItem"
+              linkContentRef="/content/samples/en/tickets"
+              linkMediaDownload="{Boolean}false"
+              linkTitle="Get tickets now"
+              linkType="internal"
+              linkWindowFeatures="default"
+              linkWindowTarget="_self" />
+          <stageheaderlinkitem_0
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/content/stage/stageheaderLinkItem"
+              linkContentRef="/content/samples/en/conference/call-for-papers"
+              linkMediaDownload="{Boolean}false"
+              linkTitle="Submit paper"
+              linkType="internal"
+              linkWindowFeatures="default"
+              linkWindowTarget="_self" />
+        </links>
+      </stageheader>
+    </stage>
+    <image
+        jcr:primaryType="nt:unstructured" />
+  </jcr:content>
+  <tools />
+  <conference />
+</jcr:root>
