@@ -71,4 +71,9 @@ public class CompositeValidationResult implements ValidationResult {
         }
         return failures;
     }
+
+    @Override
+    public String toString() {
+        return "CompositeValidationResult [results=" + results + "]";
+    }
 }
