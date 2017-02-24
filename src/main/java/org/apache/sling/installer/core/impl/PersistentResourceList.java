@@ -29,10 +29,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationListener;
@@ -308,6 +310,7 @@ public class PersistentResourceList {
         // remove resource from unknown list
         this.untransformedResources.remove(resource);
         try {
+            Set<String> entityIds = new HashSet<String>();
             for(int i=0; i<result.length; i++) {
                 // check the result
                 final TransformationResult tr = result[i];
@@ -322,6 +325,14 @@ public class PersistentResourceList {
                 }
                 final RegisteredResourceImpl clone =  (RegisteredResourceImpl)((RegisteredResourceImpl)resource).clone(result[i]);
                 this.checkInstallable(clone);
+                entityIds.add(clone.getEntityId());
+            }
+            for (EntityResourceList group : this.data.values())
+            {
+                if (!entityIds.contains(group.getResourceId()))
+                {
+                    group.remove(resource.getURL());
+                }
             }
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + resource, ioe);
