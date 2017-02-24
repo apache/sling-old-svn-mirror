@@ -131,14 +131,14 @@ public class FileMonitorTest {
         List<ResourceChange> changes = resourceListener.getChanges();
         assertTrue(changes.isEmpty());
         
-        File folder3 = new File(tempDir, "folder3");
-        folder3.mkdir();
+        File folder99 = new File(tempDir, "folder99");
+        folder99.mkdir();
         
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
         assertChange(changes, 0, "/fs-test", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder3", ChangeType.ADDED);
+        assertChange(changes, 1, "/fs-test/folder99", ChangeType.ADDED);
     }
     
     @Test

@@ -77,10 +77,17 @@
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
                     <instructions>
+                        <!-- Embed Apache Johnzon -->
                         <Embed-Dependency>
                             johnzon-core;scope=compile;inline=false,
                             geronimo-json_1.0_spec;scope=compile;inline=false
                         </Embed-Dependency>
+                        <!-- Embed the nessecary parts of the jackrabbit-jcr-commons bundle as described in http://njbartlett.name/2014/05/26/static-linking.html -->
+                        <Conditional-Package>org.apache.jackrabbit.util</Conditional-Package>
+                        <Import-Package>
+                          !org.apache.jackrabbit.*,
+                          *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -90,6 +97,8 @@
                 <configuration>
                     <excludes>
                       <exclude>src/test/resources/fs-test/**</exclude>
+                      <exclude>src/test/resources/invalid-test/**</exclude>
+                      <exclude>src/test/resources/vaultfs-test/**/original</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -131,22 +140,22 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <groupId>org.apache.johnzon</groupId>
+            <artifactId>johnzon-core</artifactId>
+            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-          <groupId>org.apache.johnzon</groupId>
-          <artifactId>johnzon-core</artifactId>
-          <version>1.0.0</version>
-          <scope>compile</scope>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-json_1.0_spec</artifactId>
+            <version>1.0-alpha-1</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-          <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-json_1.0_spec</artifactId>
-          <version>1.0-alpha-1</version>
-          <scope>compile</scope>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>2.8.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

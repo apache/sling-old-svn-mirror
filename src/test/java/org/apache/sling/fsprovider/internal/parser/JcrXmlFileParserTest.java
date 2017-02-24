@@ -18,23 +18,17 @@
  */
 package org.apache.sling.fsprovider.internal.parser;
 
-/**
- * Content file types.
- */
-public final class ContentFileTypes {
-    
-    /**
-     * JSON content files.
-     */
-    public static final String JSON_SUFFIX = ".json";
+import static org.junit.Assert.assertEquals;
 
-    /**
-     * JCR XML content files.
-     */
-    public static final String JCR_XML_SUFFIX = ".jcr.xml";
-        
-    private ContentFileTypes() {
-        // static methods only
+import org.apache.jackrabbit.util.ISO9075;
+import org.junit.Test;
+
+public class JcrXmlFileParserTest {
+
+    @Test
+    public void testDecodeName() {
+        assertEquals("jcr:title", JcrXmlFileParser.decodeName("jcr:" + ISO9075.encode("title")));
+        assertEquals("sling:123", JcrXmlFileParser.decodeName("sling:" + ISO9075.encode("123")));
     }
-    
+
 }

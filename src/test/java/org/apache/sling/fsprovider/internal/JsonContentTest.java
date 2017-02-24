@@ -87,6 +87,7 @@ public class JsonContentTest {
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertNull(fsroot.getChild("folder2/content.json"));
         assertFile(fsroot, "folder2/content/file2content.txt", "file2content");
+        assertFile(fsroot, "folder3/content.jcr.xml", null);
     }
 
     @Test
@@ -229,9 +230,9 @@ public class JsonContentTest {
         // prepare mixed JCR content
         Node node = root.adaptTo(Node.class);
         Node fstest = node.addNode("fs-test", "nt:folder");
-        fstest.addNode("folder3", "nt:folder");
+        fstest.addNode("folder99", "nt:folder");
 
-        assertNull(fsroot.getChild("folder3"));
+        assertNull(fsroot.getChild("folder99"));
     }
 
     @Test
