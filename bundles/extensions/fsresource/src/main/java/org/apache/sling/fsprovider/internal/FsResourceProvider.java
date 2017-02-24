@@ -31,7 +31,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.fsprovider.internal.mapper.ContentFileResourceMapper;
 import org.apache.sling.fsprovider.internal.mapper.FileResourceMapper;
-import org.apache.sling.fsprovider.internal.parser.ContentFileParser;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
+import org.apache.sling.fsprovider.internal.parser.ContentFileTypes;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -108,7 +109,11 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         @AttributeDefinition(name = "Mount JSON",
                 description = "Mount .json files as content in the resource hierarchy.")
         boolean provider_json_content();
-        
+
+        @AttributeDefinition(name = "Cache Size",
+                description = "Max. number of content files cached in memory.")
+        int provider_cache_size() default 1000;
+
         /**
          * Internal Name hint for web console.
          */
@@ -130,6 +135,9 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
     
     // if true resources from filesystem are only "overlayed" to JCR resources, serving JCR as fallback within the same path
     private boolean overlayParentResourceProvider;
+    
+    // cache for parsed content files
+    private ContentFileCache contentFileCache;
 
     /**
      * Returns a resource wrapping a file system file or folder for the given
@@ -243,17 +251,20 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         
         List<String> contentFileSuffixes = new ArrayList<>();
         if (config.provider_json_content()) {
-            contentFileSuffixes.add(ContentFileParser.JSON_SUFFIX);
+            contentFileSuffixes.add(ContentFileTypes.JSON_SUFFIX);
             this.overlayParentResourceProvider = false;
         }
         ContentFileExtensions contentFileExtensions = new ContentFileExtensions(contentFileSuffixes);
         
+        this.contentFileCache = new ContentFileCache(config.provider_cache_size());
         this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
-        this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
+        this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile,
+                contentFileExtensions, this.contentFileCache);
         
         // start background monitor if check interval is higher than 100
         if ( config.provider_checkinterval() > 100 ) {
-            this.monitor = new FileMonitor(this, config.provider_checkinterval(), contentFileExtensions);
+            this.monitor = new FileMonitor(this, config.provider_checkinterval(),
+                    contentFileExtensions, this.contentFileCache);
         }
     }
 
@@ -268,6 +279,10 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         this.overlayParentResourceProvider = false;
         this.fileMapper = null;
         this.contentFileMapper = null;
+        if (this.contentFileCache != null) {
+            this.contentFileCache.clear();
+            this.contentFileCache = null;
+        }
     }
 
     File getRootFile() {

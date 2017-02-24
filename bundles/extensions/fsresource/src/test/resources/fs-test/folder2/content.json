@@ -102,7 +102,6 @@
         }
       },
       "title_2": {
-        "jcr:primaryType": "nt:unstructured",
         "jcr:createdBy": "admin",
         "jcr:title": "Shape Technology",
         "jcr:lastModifiedBy": "admin",
@@ -220,6 +219,7 @@
       "jcr:created": "Thu Aug 07 2014 16:33:00 GMT+0200",
       "jcr:content": {
         "jcr:primaryType": "app:PageContent",
+        "jcr:mixinTypes": ["type1","type2"],
         "jcr:createdBy": "admin",
         "jcr:title": "Profiles",
         "app:template": "/apps/sample/templates/contentpage",

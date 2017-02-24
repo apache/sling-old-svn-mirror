@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.fsprovider.internal.ContentFileExtensions;
 import org.apache.sling.fsprovider.internal.FsResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 public final class ContentFileResourceMapper implements FsResourceMapper {
     
@@ -42,18 +43,21 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
     private final File providerFile;
     
     private final ContentFileExtensions contentFileExtensions;
+    private final ContentFileCache contentFileCache;
     
-    public ContentFileResourceMapper(String providerRoot, File providerFile, ContentFileExtensions contentFileExtensions) {
+    public ContentFileResourceMapper(String providerRoot, File providerFile,
+            ContentFileExtensions contentFileExtensions, ContentFileCache contentFileCache) {
         this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = providerFile;
         this.contentFileExtensions = contentFileExtensions;
+        this.contentFileCache = contentFileCache;
     }
     
     @Override
     public Resource getResource(final ResourceResolver resolver, final String resourcePath) {
         ContentFile contentFile = getFile(resourcePath, null);
         if (contentFile != null && contentFile.hasContent()) {
-            return new ContentFileResource(resolver, resourcePath, contentFile);
+            return new ContentFileResource(resolver, contentFile);
         }
         else {
             return null;
@@ -78,9 +82,9 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
                     for (File file : parentFile.listFiles()) {
                         String filenameSuffix = contentFileExtensions.getSuffix(file);
                         if (filenameSuffix != null) {
-                            ContentFile contentFile = new ContentFile(file, null);
                             String path = parentPath + "/" + StringUtils.substringBeforeLast(file.getName(), filenameSuffix);
-                            childResources.add(new ContentFileResource(resolver, path, contentFile));
+                            ContentFile contentFile = new ContentFile(file, path, null, contentFileCache);
+                            childResources.add(new ContentFileResource(resolver, contentFile));
                         }
                     }
                     if (!childResources.isEmpty()) {
@@ -106,7 +110,7 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
                     else {
                         subPath = parentContentFile.getSubPath() + "/" + entry.getKey();
                     }
-                    children.add(new ContentFile(parentContentFile.getFile(), subPath, entry.getValue()));
+                    children.add(new ContentFile(parentContentFile.getFile(), parentContentFile.getPath(), subPath, contentFileCache, entry.getValue()));
                 }
             }
         }
@@ -118,8 +122,7 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
                 @Override
                 public Object transform(Object input) {
                     ContentFile contentFile = (ContentFile)input;
-                    String path = parentPath + "/" + ResourceUtil.getName(contentFile.getSubPath());
-                    return new ContentFileResource(resolver, path, contentFile);
+                    return new ContentFileResource(resolver, contentFile);
                 }
             });
         }
@@ -133,7 +136,7 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
         for (String filenameSuffix : contentFileExtensions.getSuffixes()) {
             File file = new File(providerFile, relPath + filenameSuffix);
             if (file.exists()) {
-                return new ContentFile(file, subPath);
+                return new ContentFile(file, path, subPath, contentFileCache);
             }
         }
         // try to find in parent path which contains content fragment

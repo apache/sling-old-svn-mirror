@@ -38,6 +38,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -85,6 +86,7 @@ public class JsonContentTest {
         assertFile(fsroot, "folder1/file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertNull(fsroot.getChild("folder2/content.json"));
+        assertFile(fsroot, "folder2/content/file2content.txt", "file2content");
     }
 
     @Test
@@ -144,11 +146,11 @@ public class JsonContentTest {
         
         assertEquals("/fs-test/folder2/content/toolbar/profiles/jcr:content", node.getPath());
         assertEquals(6, node.getDepth());
-        assertTrue(node.isNodeType("app:PageContent"));
         
         assertTrue(node.hasProperty("jcr:title"));
         assertEquals(PropertyType.STRING, node.getProperty("jcr:title").getType());
         assertFalse(node.getProperty("jcr:title").isMultiple());
+        assertEquals("jcr:title", node.getProperty("jcr:title").getDefinition().getName());
         assertEquals("/fs-test/folder2/content/toolbar/profiles/jcr:content/jcr:title", node.getProperty("jcr:title").getPath());
         assertEquals("Profiles", node.getProperty("jcr:title").getString());
         assertEquals(PropertyType.BOOLEAN, node.getProperty("booleanProp").getType());
@@ -196,9 +198,26 @@ public class JsonContentTest {
         Node parent = rightpar.getParent();
         assertTrue(node.isSame(parent));
         Node ancestor = (Node)rightpar.getAncestor(4);
-        assertEquals(underTest.getParent().getPath(), ancestor.getPath());        
+        assertEquals(underTest.getParent().getPath(), ancestor.getPath());
+        
+        // node types
+        assertTrue(node.isNodeType("app:PageContent"));
+        assertEquals("app:PageContent", node.getPrimaryNodeType().getName());
+        assertFalse(node.getPrimaryNodeType().isMixin());
+        NodeType[] mixinTypes = node.getMixinNodeTypes();
+        assertEquals(2, mixinTypes.length);
+        assertEquals("type1", mixinTypes[0].getName());
+        assertEquals("type2", mixinTypes[1].getName());
+        assertTrue(mixinTypes[0].isMixin());
+        assertTrue(mixinTypes[1].isMixin());
     }
 
+    @Test
+    public void testFallbackNodeType() throws RepositoryException {
+        Resource underTest = fsroot.getChild("folder2/content/jcr:content/par/title_2");
+        assertEquals(NodeType.NT_UNSTRUCTURED, underTest.adaptTo(Node.class).getPrimaryNodeType().getName());
+    }
+    
     @Test
     public void testJsonContent_InvalidPath() {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content/xyz");
