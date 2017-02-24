@@ -54,10 +54,11 @@ public final class ContentFileResource extends AbstractResource {
      * @param resourcePath The resource path in the resource tree
      * @param contentFile Content file with sub path
      */
-    ContentFileResource(ResourceResolver resolver, String resourcePath, ContentFile contentFile) {
+    ContentFileResource(ResourceResolver resolver, ContentFile contentFile) {
         this.resolver = resolver;
-        this.resourcePath = resourcePath;
         this.contentFile = contentFile;
+        this.resourcePath = contentFile.getPath()
+                + (contentFile.getSubPath() != null ? "/" + contentFile.getSubPath() : "");
     }
 
     public String getPath() {
@@ -79,7 +80,7 @@ public final class ContentFileResource extends AbstractResource {
 
     public String getResourceSuperType() {
         if (resourceSuperType == null) {
-            resourceSuperType = contentFile.getValueMap().get("sling:resourceSuperType", String.class);
+            resourceSuperType = getValueMap().get("sling:resourceSuperType", String.class);
         }
         return resourceSuperType;
     }

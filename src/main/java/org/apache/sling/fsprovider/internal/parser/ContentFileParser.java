@@ -18,20 +18,21 @@
  */
 package org.apache.sling.fsprovider.internal.parser;
 
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
+
 import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parses file that contains content fragments (e.g. JSON, JCR XML).
  */
-public final class ContentFileParser {
+class ContentFileParser {
     
-    /**
-     * JSON content files.
-     */
-    public static final String JSON_SUFFIX = ".json";
+    private static final Logger log = LoggerFactory.getLogger(ContentFileParser.class);
     
     private ContentFileParser() {
         // static methods only
@@ -43,8 +44,13 @@ public final class ContentFileParser {
      * @return Content or null if content could not be parsed.
      */
     public static Map<String,Object> parse(File file) {
-        if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
-            return JsonFileParser.parse(file);
+        try {
+            if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
+                return JsonFileParser.parse(file);
+            }
+        }
+        catch (Throwable ex) {
+            log.warn("Error parsing content from " + file.getPath(), ex);
         }
         return null;
     }

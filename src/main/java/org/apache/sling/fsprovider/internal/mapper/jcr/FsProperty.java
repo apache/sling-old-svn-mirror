@@ -143,7 +143,12 @@ class FsProperty extends FsItem implements Property {
         return getValue().getType();
     }
     
+    @Override
+    public PropertyDefinition getDefinition() throws RepositoryException {
+        return new FsPropertyDefinition(propertyName);
+    }
 
+    
     // --- unsupported methods ---
     
     @Override
@@ -215,11 +220,6 @@ class FsProperty extends FsItem implements Property {
     @Override
     public void setValue(Node value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public PropertyDefinition getDefinition() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

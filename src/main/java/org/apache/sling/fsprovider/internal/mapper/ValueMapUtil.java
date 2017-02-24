@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.nodetype.NodeType;
+
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
@@ -38,6 +40,7 @@ final class ValueMapUtil {
      */
     public static ValueMap toValueMap(Map<String,Object> content) {
         Map<String,Object> props = new HashMap<>();
+        
         for (Map.Entry<String, Object> entry : ((Map<String,Object>)content).entrySet()) {
             if (entry.getValue() instanceof Map) {
                 // skip child resources
@@ -51,6 +54,12 @@ final class ValueMapUtil {
                 props.put(entry.getKey(), entry.getValue());
             }
         }
+        
+        // fallback to default jcr:primaryType is none is set
+        if (!props.containsKey("jcr:primaryType")) {
+            props.put("jcr:primaryType", NodeType.NT_UNSTRUCTURED);
+        }
+        
         return new ValueMapDecorator(props);
     }
 

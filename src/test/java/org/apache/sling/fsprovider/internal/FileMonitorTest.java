@@ -37,6 +37,8 @@ import org.apache.sling.testing.mock.sling.junit.SlingContextCallback;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Test events when changing filesystem content.
  */
@@ -164,8 +166,10 @@ public class FileMonitorTest {
         
         Thread.sleep(250);
 
-        assertEquals(1, changes.size());
-        assertChange(changes, 0, "/fs-test/folder2/content", ChangeType.CHANGED);
+        assertTrue(changes.size() > 1);
+        assertChange(changes, 0, "/fs-test/folder2/content", ChangeType.REMOVED);
+        assertChange(changes, 1, "/fs-test/folder2/content", ChangeType.ADDED);
+        assertChange(changes, 2, "/fs-test/folder2/content/jcr:content", ChangeType.ADDED);
     }
     
     @Test
@@ -174,13 +178,14 @@ public class FileMonitorTest {
         assertTrue(changes.isEmpty());
         
         File file1c = new File(tempDir, "folder1/file1c.json");
-        FileUtils.write(file1c, "{'prop1':'value1'}");
+        FileUtils.write(file1c, "{\"prop1\":\"value1\",\"child1\":{\"prop2\":\"value1\"}}");
         
         Thread.sleep(250);
 
-        assertEquals(2, changes.size());
+        assertEquals(3, changes.size());
         assertChange(changes, 0, "/fs-test/folder1", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder1/file1c", ChangeType.ADDED);
+        assertChange(changes, 1, "/fs-test/folder1/file1c", ChangeType.ADDED, "prop1");
+        assertChange(changes, 2, "/fs-test/folder1/file1c/child1", ChangeType.ADDED, "prop2");
     }
     
     @Test
@@ -199,10 +204,13 @@ public class FileMonitorTest {
     }
     
     
-    private void assertChange(List<ResourceChange> changes, int index, String path, ChangeType changeType) {
+    private void assertChange(List<ResourceChange> changes, int index, String path, ChangeType changeType, String... addedPropertyNames) {
         ResourceChange change = changes.get(index);
         assertEquals(path, change.getPath());
         assertEquals(changeType, change.getType());
+        if (addedPropertyNames.length > 0) {
+            assertEquals(ImmutableSet.copyOf(addedPropertyNames), change.getAddedPropertyNames());
+        }
     }
     
     static class ResourceListener implements ResourceChangeListener {

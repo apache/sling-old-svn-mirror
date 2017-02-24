@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.fsprovider.internal.parser.ContentFileParser;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 /**
  * Reference to a file that contains a content fragment (e.g. JSON, JCR XML).
@@ -30,28 +30,35 @@ import org.apache.sling.fsprovider.internal.parser.ContentFileParser;
 public final class ContentFile {
     
     private final File file;
+    private final String path;
     private final String subPath;
+    private final ContentFileCache contentFileCache;
     private boolean contentInitialized;
     private Object content;
     private ValueMap valueMap;
     
     /**
      * @param file File with content fragment
+     * @param path Root path of the content file
      * @param subPath Relative path addressing content fragment inside file
+     * @param contentFileCache Content file cache
      */
-    public ContentFile(File file, String subPath) {
+    public ContentFile(File file, String path, String subPath, ContentFileCache contentFileCache) {
         this.file = file;
+        this.path = path;
         this.subPath = subPath;
+        this.contentFileCache = contentFileCache;
     }
 
     /**
      * @param file File with content fragment
+     * @param path Root path of the content file
      * @param subPath Relative path addressing content fragment inside file
+     * @param contentFileCache Content file cache
      * @param content Content
      */
-    public ContentFile(File file, String subPath, Object content) {
-        this.file = file;
-        this.subPath = subPath;
+    public ContentFile(File file, String path, String subPath, ContentFileCache contentFileCache, Object content) {
+        this(file, path, subPath, contentFileCache);
         this.contentInitialized = true;
         this.content = content;
     }
@@ -61,6 +68,13 @@ public final class ContentFile {
      */
     public File getFile() {
         return file;
+    }
+    
+    /**
+     * @return Root path of content file
+     */
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -76,7 +90,7 @@ public final class ContentFile {
      */
     public Object getContent() {
         if (!contentInitialized) {
-            Map<String,Object> rootContent = ContentFileParser.parse(file);
+            Map<String,Object> rootContent = contentFileCache.get(path, file);
             content = getDeepContent(rootContent, subPath);
             contentInitialized = true;
         }

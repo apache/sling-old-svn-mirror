@@ -63,6 +63,14 @@ public final class FsNode extends FsItem implements Node {
         super(resource);
     }
     
+    private String getPrimaryTypeName() {
+        return  props.get("jcr:primaryType", String.class);
+    }
+    
+    private String[] getMixinTypeNames() {
+        return props.get("jcr:mixinTypes", new String[0]);
+    }
+    
     @Override
     public Node getNode(String relPath) throws PathNotFoundException, RepositoryException {
         Resource child = resource.getChild(relPath);
@@ -123,7 +131,7 @@ public final class FsNode extends FsItem implements Node {
 
     @Override
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
-        return StringUtils.equals(nodeTypeName, props.get("jcr:primaryType", String.class));
+        return StringUtils.equals(nodeTypeName, getPrimaryTypeName());
     }
 
     @Override
@@ -146,6 +154,21 @@ public final class FsNode extends FsItem implements Node {
         return false;
     }
 
+    @Override
+    public NodeType getPrimaryNodeType() throws RepositoryException {
+        return new FsNodeType(getPrimaryTypeName(), false);
+    }
+
+    @Override
+    public NodeType[] getMixinNodeTypes() throws RepositoryException {
+        String[] mixinTypeNames = getMixinTypeNames();
+        NodeType[] mixinTypes = new NodeType[mixinTypeNames.length];
+        for (int i=0; i<mixinTypeNames.length; i++) {
+            mixinTypes[i] = new FsNodeType(mixinTypeNames[i], true);
+        }
+        return mixinTypes;
+    }
+    
 
     // --- unsupported methods ---
     
@@ -444,22 +467,12 @@ public final class FsNode extends FsItem implements Node {
     }
 
     @Override
-    public NodeType getPrimaryNodeType() throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getIdentifier() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public int getIndex() throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public NodeType[] getMixinNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

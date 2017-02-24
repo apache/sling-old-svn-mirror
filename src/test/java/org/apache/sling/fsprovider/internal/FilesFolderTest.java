@@ -65,6 +65,7 @@ public class FilesFolderTest {
         assertFile(fsroot, "folder1/file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertFile(fsroot, "folder2/content.json", null);
+        assertFile(fsroot, "folder2/content/file2content.txt", "file2content");
     }
 
     @Test
