@@ -39,9 +39,11 @@ import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.util.impl.DistributionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A processor of agent queue entries, each entry's underlying package is fecthed and passed to the
+ * A processor of agent queue entries, each entry's underlying package is fetched and passed to the
  * {@link DistributionPackageImporter} for import.
  * If item can be delivered it can be removed from the queue, if it cannot be delivered because of a {@link RecoverableDistributionException}
  * like a connection issue the item will stay in the queue, for other types of errors the item will be moved to the
@@ -49,11 +51,13 @@ import org.apache.sling.distribution.util.impl.DistributionUtils;
  */
 class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcessor {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final DistributionPackageExporter distributionPackageExporter;
     private final DistributionPackageImporter distributionPackageImporter;
     private final int retryAttempts;
     private final DistributionQueueDispatchingStrategy errorQueueStrategy;
-    private final DefaultDistributionLog log;
+    private final DefaultDistributionLog distributionLog;
     private final DistributionQueueProvider queueProvider;
     private final DistributionEventFactory distributionEventFactory;
     private final SimpleDistributionAgentAuthenticationInfo authenticationInfo;
@@ -69,7 +73,7 @@ class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcesso
         this.distributionPackageImporter = distributionPackageImporter;
         this.retryAttempts = retryAttempts;
         this.errorQueueStrategy = errorQueueStrategy;
-        this.log = log;
+        this.distributionLog = log;
         this.queueProvider = queueProvider;
         this.distributionEventFactory = distributionEventFactory;
         this.authenticationInfo = authenticationInfo;
@@ -83,18 +87,18 @@ class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcesso
         try {
             final long startTime = System.currentTimeMillis();
 
-            log.debug("[{}] ITEM-PROCESS processing item={}", queueName, queueItem);
+            distributionLog.debug("[{}] ITEM-PROCESS processing item={}", queueName, queueItem);
 
             boolean success = processQueueItem(queueName, queueEntry);
 
             final long endTime = System.currentTimeMillis();
 
-            log.debug("[{}] ITEM-PROCESSED item={}, status={}, processingTime={}ms", queueName, queueItem, success, endTime - startTime);
+            distributionLog.debug("[{}] ITEM-PROCESSED item={}, status={}, processingTime={}ms", queueName, queueItem, success, endTime - startTime);
 
             return success;
 
         } catch (Throwable t) {
-            log.error("[{}] ITEM-FAIL item={}", queueName, queueItem, t);
+            distributionLog.error("[{}] ITEM-FAIL item={}", queueName, queueItem, t);
             return false;
         }
     }
@@ -137,24 +141,29 @@ class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcesso
                     removeItemFromQueue = true;
                     final long endTime = System.currentTimeMillis();
 
-                    log.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, importTime={}ms, execTime={}ms, size={}B", queueName, requestId,
+                    distributionLog.info("[{}] PACKAGE-DELIVERED {}: {} paths={}, importTime={}ms, execTime={}ms, size={}B", queueName, requestId,
                             requestType, paths,
                             endTime - startTime, endTime - globalStartTime,
                             packageSize);
                 } catch (RecoverableDistributionException e) {
-                    log.error("[{}] PACKAGE-FAIL {}: could not deliver {}, {}", queueName, requestId, distributionPackage.getId(), e.getMessage());
-                    log.debug("could not deliver package {}", distributionPackage.getId(), e);
+                    distributionLog.error("[{}] PACKAGE-FAIL {}: could not deliver {}, {}", queueName, requestId, distributionPackage.getId(), e.getMessage());
+                    distributionLog.debug("could not deliver package {}", distributionPackage.getId(), e);
+
+                    log.error("could not deliver package {}", distributionPackage.getId(), e);
+
                 } catch (Throwable e) {
-                    log.error("[{}] PACKAGE-FAIL {}: could not deliver package {} {}", queueName, requestId, distributionPackage.getId(), e.getMessage(), e);
+                    distributionLog.error("[{}] PACKAGE-FAIL {}: could not deliver package {} {}", queueName, requestId, distributionPackage.getId(), e.getMessage(), e);
+
+                    log.error("could not deliver package {} from queue {}", new Object[]{distributionPackage.getId(), queueName}, e);
 
                     if (errorQueueStrategy != null && queueItemStatus.getAttempts() > retryAttempts) {
                         removeItemFromQueue = reEnqueuePackage(distributionPackage);
-                        log.info("[{}] PACKAGE-QUEUED {}: distribution package {} was enqueued to an error queue", queueName, requestId, distributionPackage.getId());
+                        distributionLog.info("[{}] PACKAGE-QUEUED {}: distribution package {} was enqueued to an error queue", queueName, requestId, distributionPackage.getId());
                     }
                 }
             } else {
                 removeItemFromQueue = true; // return success if package does not exist in order to clear the queue.
-                log.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getPackageId());
+                distributionLog.error("distribution package with id {} does not exist. the package will be skipped.", queueItem.getPackageId());
             }
         } finally {
             if (removeItemFromQueue) {
@@ -177,8 +186,9 @@ class SimpleDistributionAgentQueueProcessor implements DistributionQueueProcesso
 
         try {
             errorQueueStrategy.add(distributionPackage, queueProvider);
+            log.warn("package {} moved to error queue", distributionPackage.getId());
         } catch (DistributionException e) {
-            log.error("could not reenqueue package {}", distributionPackage.getId(), e);
+            distributionLog.error("could not reenqueue package {}", distributionPackage.getId(), e);
             return false;
         }
 
