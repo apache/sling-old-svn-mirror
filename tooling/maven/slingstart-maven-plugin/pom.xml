@@ -11,19 +11,18 @@
     either express or implied. See the License for the specific language governing permissions
     and limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>29</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>slingstart-maven-plugin</artifactId>
-    <version>1.7.1-SNAPSHOT</version>
+    <version>1.7.2</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling SlingStart Maven Plugin</name>
@@ -36,9 +35,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/slingstart-maven-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/slingstart-maven-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/slingstart-maven-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/slingstart-maven-plugin-1.7.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/slingstart-maven-plugin-1.7.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/slingstart-maven-plugin-1.7.2</url>
     </scm>
 
     <build>
