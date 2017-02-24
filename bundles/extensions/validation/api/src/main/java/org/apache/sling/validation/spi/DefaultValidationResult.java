@@ -28,6 +28,10 @@ import javax.annotation.Nonnull;
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 
+/**
+ * Default implementation of {@link ValidationResult} wrapping a list of {@link ValidationFailure}s.
+ *
+ */
 public class DefaultValidationResult implements ValidationResult {
 
     private final boolean isValid;
@@ -67,5 +71,8 @@ public class DefaultValidationResult implements ValidationResult {
         return failures;
     }
 
+    /**
+     * Used to indicated a valid result. Use this instead of instantiating your own {@link DefaultValidationResult}.
+     */
     public static final @Nonnull DefaultValidationResult VALID = new DefaultValidationResult(true);
 }
