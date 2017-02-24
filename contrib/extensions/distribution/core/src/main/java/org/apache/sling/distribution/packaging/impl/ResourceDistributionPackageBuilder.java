@@ -127,6 +127,7 @@ public class ResourceDistributionPackageBuilder extends AbstractDistributionPack
                 packageResource = uploadStream(resourceResolver, packagesRoot, inputStream, outputStream.size());
             } finally {
                 IOUtils.closeQuietly(inputStream);
+                outputStream.clean();
             }
 
             distributionPackage = new ResourceDistributionPackage(packageResource, getType(), resourceResolver, digestAlgorithm, digestMessage);
