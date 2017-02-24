@@ -1021,6 +1021,68 @@ public class ContentDispositionFilterTest {
         rewriterResponse.setContentType("text/html");
         Assert.assertEquals(1, counter.intValue());
     }
+    
+    /**
+     * Test multiple calls of setContentType which each result in a content-disposition header being needed.
+     * Only one header should be added.
+     * @throws Throwable
+     */
+    @Test
+    public void test_doFilter21b() throws Throwable{
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content"});
+
+        final AtomicInteger counter =  new AtomicInteger();
+
+        context.checking(new Expectations() {
+            {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(response).reset();
+                exactly(1).of(request).removeAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
+                will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+                
+                // Exactly 2 setContentType should reach the mock response.
+                exactly(1).of(response).setContentType("text/html");
+                exactly(1).of(response).setContentType("text/html");
+                //CONTENT DISPOSITION IS SET
+                exactly(1).of(response).addHeader("Content-Disposition", "attachment");
+            }
+        });
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {
+            @Override
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+        rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(1, counter.intValue());
+        rewriterResponse.reset();
+        
+        /* Reset on the response clears all the headers, so if we setContentType again the content type header *and* the
+         * content disposition should both reappear. The counter counts each time the content disposition header is added.
+         * The setContentType calls on the mock response are enforced in the Expectations checked above.
+         */
+        rewriterResponse.setContentType("text/html");
+
+        Assert.assertEquals(2, counter.intValue());
+    }
 
     @Test
     public void test_doFilter22() throws Throwable{
@@ -1063,7 +1125,52 @@ public class ContentDispositionFilterTest {
         rewriterResponse.setContentType("text/html");
         Assert.assertEquals(0, counter.intValue());
     }
+    
+    @Test
+    public void test_doFilter22b() throws Throwable{
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content/usergenerated"});
 
+        final AtomicInteger counter =  new AtomicInteger();
+        context.checking(new Expectations() {
+            {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(response).reset();
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                exactly(1).of(request).removeAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
+                will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+                exactly(2).of(response).setContentType("text/html");
+                //CONTENT DISPOSITION IS NOT SET
+                never(response).addHeader("Content-Disposition", "attachment");
+            }
+        });
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {
+            @Override
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+
+        rewriterResponse.setContentType("text/html");
+        rewriterResponse.reset();
+        rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(0, counter.intValue());
+    }
     @Test
     public void test_isJcrData1() throws Throwable {
         contentDispositionFilter = new ContentDispositionFilter();
