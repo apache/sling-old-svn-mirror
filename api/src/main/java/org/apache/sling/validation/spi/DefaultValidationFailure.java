@@ -61,7 +61,11 @@ public class DefaultValidationFailure implements ValidationFailure {
     @SuppressWarnings("null")
     @Override
     public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle) {
-        return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
+        if (resourceBundle != null) {
+            return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
+        } else {
+            return "";
+        }
     }
 
     @Override
