@@ -197,10 +197,6 @@ def modules = [
         jdks: ["1.8"]
     ],
     [
-        location: 'bundles/extensions/validation/it-http',
-        jdks: ["1.8"]
-    ],
-    [
         location: 'bundles/extensions/validation/test-services',
         jdks: ["1.8"]
     ],
