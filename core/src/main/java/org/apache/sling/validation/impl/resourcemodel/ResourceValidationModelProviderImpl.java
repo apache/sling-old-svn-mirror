@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
@@ -97,6 +98,9 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     private ThreadPool threadPool;
 
     private ServiceRegistration eventHandlerRegistration;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     @Activate
     protected void activate(ComponentContext componentContext) throws LoginException {

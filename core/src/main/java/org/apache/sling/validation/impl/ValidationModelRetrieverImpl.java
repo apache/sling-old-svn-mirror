@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.RankedServices;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.impl.model.MergedValidationModel;
 import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
@@ -71,6 +72,9 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationModelRetrieverImpl.class);
 
