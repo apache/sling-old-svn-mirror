@@ -16,18 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.testservices;
+package org.apache.sling.validation.testservices.internal;
 
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.servlets.post.AbstractPostOperation;
@@ -37,17 +32,17 @@ import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component()
-@Service(PostOperation.class)
-@Properties({
-    @Property(
-        name = PostOperation.PROP_OPERATION_NAME,
-        value = "validation"
-    )
-})
+@Component(
+    service = PostOperation.class,
+    property = {
+        PostOperation.PROP_OPERATION_NAME + "=validation"
+    }
+)
 public class ValidationPostOperation extends AbstractPostOperation {
 
     private final Logger logger = LoggerFactory.getLogger(ValidationPostOperation.class);
