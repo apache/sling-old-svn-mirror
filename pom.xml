@@ -34,7 +34,6 @@
         <module>api</module>
         <module>core</module>
         <module>test-services</module>
-        <module>it-http</module>
         <module>examples</module>
     </modules>
 
