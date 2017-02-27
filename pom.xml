@@ -396,6 +396,8 @@
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>
                         <obrRepository>NONE</obrRepository>
+                        <!-- Export SCR metadata to classpath to have them available in unit tests -->
+                        <exportScr>true</exportScr>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
@@ -414,6 +416,16 @@
                             <goals>
                                 <goal>baseline</goal>
                             </goals>
+                        </execution>
+                        <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+                        <execution>
+                            <id>scr-metadata</id>
+                            <goals>
+                                <goal>manifest</goal>
+                            </goals>
+                            <configuration>
+                                <supportIncrementalBuild>true</supportIncrementalBuild>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
