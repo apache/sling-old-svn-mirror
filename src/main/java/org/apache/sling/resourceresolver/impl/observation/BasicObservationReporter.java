@@ -96,7 +96,8 @@ public class BasicObservationReporter implements ObservationReporter {
                 // find the set of paths that match the provider
                 final Set<Path> paths = new HashSet<>();
                 for(final Path p : info.getPaths()) {
-                    boolean add = providerPath.matches(p.getPath());
+                    // add when there is an intersection between provider path and resource change listener path 
+                    boolean add = providerPath.matches(p.getPath()) || (!p.isPattern() && p.matches(providerPath.getPath()));
                     if ( add ) {
                         if ( p.isPattern() ) {
                             for(final Path exclude : excludePaths) {
