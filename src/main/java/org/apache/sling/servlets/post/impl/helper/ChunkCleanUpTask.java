@@ -36,7 +36,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +67,7 @@ import org.slf4j.LoggerFactory;
         + "of the format for this value."),
     @Property(name = "service.description", value = "Periodic Chunk Cleanup Job", propertyPrivate = true),
     @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
-    @Property(name = "scheduler.concurrent", label = "scheduler.concurrent", boolValue = false, 
+    @Property(name = "scheduler.concurrent", label = "scheduler.concurrent", boolValue = false,
         description = "Allow Chunk Cleanup Task to run concurrently (default: false).")})
 public class ChunkCleanUpTask implements Runnable {
 
@@ -91,6 +90,7 @@ public class ChunkCleanUpTask implements Runnable {
     /**
      * Executes the job. Is called for each triggered schedule point.
      */
+    @Override
     public void run() {
         log.debug("ChunkCleanUpTask: Starting cleanup");
         cleanup();
@@ -175,8 +175,7 @@ public class ChunkCleanUpTask implements Runnable {
     }
 
     @Activate
-    protected void activate(final ComponentContext context,
-            final Map<String, Object> configuration) {
+    protected void activate(final Map<String, Object> configuration) {
         chunkCleanUpAge = OsgiUtil.toInteger(
             configuration.get(CHUNK_CLEANUP_AGE), 1) * 60 * 1000;
         log.info("scheduler config [{}], chunkGarbageTime  [{}] ms",
