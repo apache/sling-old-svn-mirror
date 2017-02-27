@@ -22,7 +22,8 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * A {@code ValidationModel} defines the validation rules that a resource tree has to pass.

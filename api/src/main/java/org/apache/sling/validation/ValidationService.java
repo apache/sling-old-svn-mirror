@@ -27,8 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.model.ValidationModel;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code ValidationService} provides methods for finding {@link ValidationModel}s and to trigger validations against those.

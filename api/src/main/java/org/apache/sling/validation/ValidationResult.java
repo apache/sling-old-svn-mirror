@@ -23,8 +23,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.annotation.versioning.ProviderType;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * A {@code ValidationResult} contains validation information either from a single {@link Validator} or from multiple Validator invocations.

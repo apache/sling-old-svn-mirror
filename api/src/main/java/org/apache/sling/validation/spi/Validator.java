@@ -21,10 +21,10 @@ package org.apache.sling.validation.spi;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.SlingValidationException;
+import org.apache.sling.validation.ValidationResult;
+import org.osgi.annotation.versioning.ConsumerType;
 
-import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A {@code Validator} is responsible for validating a single piece of information according to an internal constraint.
