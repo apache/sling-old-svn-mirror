@@ -27,8 +27,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -123,7 +123,7 @@ public class ValidationModelRetrieverImplTest {
     @Before
     public void setup() throws LoginException {
         dateValidator = new DateValidator();
-        applicablePathPerResourceType = new MultiHashMap();
+        applicablePathPerResourceType = new MultiValueMap();
         validationModelRetriever = new ValidationModelRetrieverImpl();
         modelProvider = new TestModelProvider();
         // service id must be set (even if service ranking is not set)
