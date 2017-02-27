@@ -32,6 +32,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
+import org.apache.sling.scripting.core.ScriptNameAwareReader;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyCompiledScript;
@@ -47,8 +48,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
-import org.osgi.service.metatype.annotations.Designate;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * Interprets identifiers as paths to other HTL templates
@@ -123,7 +122,8 @@ public class RenderUnitProvider implements UseProvider {
                         return ProviderOutcome.failure();
                     }
                     InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding);
-                    compiledScript = (SightlyCompiledScript) sightlyScriptEngine.compile(inputStreamReader);
+                    ScriptNameAwareReader reader = new ScriptNameAwareReader(inputStreamReader, renderUnitResource.getPath());
+                    compiledScript = (SightlyCompiledScript) sightlyScriptEngine.compile(reader);
                     scriptCache.putScript(new CachedScript() {
                         @Override
                         public String getScriptPath() {
