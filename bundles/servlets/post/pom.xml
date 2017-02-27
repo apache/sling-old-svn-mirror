@@ -58,12 +58,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.servlets.post;version=2.3.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.servlets.post.impl.*
-                        </Private-Package>
                         <Sling-Bundle-Resources>
                             /system/sling.js
                         </Sling-Bundle-Resources>
@@ -74,7 +68,7 @@
                             sling=http://sling.apache.org/jcr/sling/1.0
                         </Sling-Namespaces>
                         <Sling-Nodetypes>
-                            SLING-INF/nodetypes/chunk.cnd,
+                            SLING-INF/nodetypes/chunk.cnd
                         </Sling-Nodetypes>
                     </instructions>
                 </configuration>
@@ -165,11 +159,6 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>1.6.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

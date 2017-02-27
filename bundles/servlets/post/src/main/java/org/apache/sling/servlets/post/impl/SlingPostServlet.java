@@ -75,7 +75,6 @@ import org.apache.sling.servlets.post.impl.operations.StreamedUploadOperation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -324,7 +323,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 log.warn("given redirect target ({}) is not a valid uri: {}", result, e);
                 return null;
             }
-            
+
             log.debug("redirect requested as [{}] for path [{}]", result, ctx.getPath());
 
             // redirect to created/modified Resource
@@ -398,14 +397,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     // ---------- SCR Integration ----------------------------------------------
 
     @Activate
-    protected void activate(final ComponentContext context,
+    protected void activate(final BundleContext bundleContext,
             final Map<String, Object> configuration) {
         // configure now
         this.configure(configuration);
 
         // other predefined operations
         final ArrayList<ServiceRegistration> providedServices = new ArrayList<ServiceRegistration>();
-        final BundleContext bundleContext = context.getBundleContext();
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_MODIFY, modifyOperation));
         providedServices.add(registerOperation(bundleContext,
