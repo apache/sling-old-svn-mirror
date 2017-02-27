@@ -85,7 +85,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final String SEVERITY = "severity";
 
     @Reference
-    private ResourceResolverFactory rrf = null;
+    ResourceResolverFactory rrf = null;
 
     @Reference
     private ValidationModelCache cache;
@@ -107,7 +107,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         threadPool = tpm.get("Validation Service Thread Pool");
         ResourceResolver rr = null;
         try {
-            rr = rrf.getAdministrativeResourceResolver(null);
+            rr = rrf.getServiceResourceResolver(null);
             StringBuilder sb = new StringBuilder("(");
             String[] searchPaths = rr.getSearchPath();
             if (searchPaths.length > 1) {
@@ -171,43 +171,53 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      */
     @Override
     @Nonnull
-    public Collection<ValidationModel> getModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
+    public Collection<ValidationModel> getModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
         ValidationModelImpl vm;
         Collection<ValidationModel> validationModels = new ArrayList<ValidationModel>();
-        String[] searchPaths = resourceResolver.getSearchPath();
-        for (String searchPath : searchPaths) {
-            final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, relativeResourceType);
-            Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
-            while (models.hasNext()) {
-                Resource model = models.next();
-                LOG.debug("Found validation model resource {}.", model.getPath());
-                String jcrPath = model.getPath();
-                try {
-                    ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                    String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, String[].class));
-                    Resource r = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
-                    List<ResourceProperty> resourceProperties = buildProperties(validatorsMap,r);
-                    List<ChildResource> children = buildChildren(model, model, validatorsMap);
-                    if (resourceProperties.isEmpty() && children.isEmpty()) {
-                        throw new IllegalArgumentException("Neither children nor properties set.");
-                    } else {
-                        vm = new ValidationModelImpl(resourceProperties, relativeResourceType,
-                                applicablePaths, children);
-                        validationModels.add(vm);
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = rrf.getServiceResourceResolver(null);
+            String[] searchPaths = resourceResolver.getSearchPath();
+            for (String searchPath : searchPaths) {
+                final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, relativeResourceType);
+                Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
+                while (models.hasNext()) {
+                    Resource model = models.next();
+                    LOG.debug("Found validation model resource {}.", model.getPath());
+                    String jcrPath = model.getPath();
+                    try {
+                        ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
+                        String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, String[].class));
+                        Resource r = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
+                        List<ResourceProperty> resourceProperties = buildProperties(validatorsMap,r);
+                        List<ChildResource> children = buildChildren(model, model, validatorsMap);
+                        if (resourceProperties.isEmpty() && children.isEmpty()) {
+                            throw new IllegalArgumentException("Neither children nor properties set.");
+                        } else {
+                            vm = new ValidationModelImpl(resourceProperties, relativeResourceType,
+                                    applicablePaths, children);
+                            validationModels.add(vm);
+                        }
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalStateException("Found invalid validation model in '" + jcrPath + "': "
+                                + e.getMessage(), e);
                     }
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalStateException("Found invalid validation model in '" + jcrPath + "': "
-                            + e.getMessage(), e);
+                }
+                if (!validationModels.isEmpty()) {
+                    // do not continue to search in other search paths if some results were already found!
+                    // earlier search paths overlay lower search paths (/apps wins over /libs)
+                    // the applicable content paths do not matter here!
+                    break;
                 }
             }
-            if (!validationModels.isEmpty()) {
-                // do not continue to search in other search paths if some results were already found!
-                // earlier search paths overlay lower search paths (/apps wins over /libs)
-                // the applicable content paths do not matter here!
-                break;
+            return validationModels;
+        } catch (LoginException e) {
+            throw new IllegalStateException("Could not get service resource resolver", e);
+        } finally {
+            if (resourceResolver != null) {
+                resourceResolver.close();
             }
         }
-        return validationModels;
     }
     
     /**

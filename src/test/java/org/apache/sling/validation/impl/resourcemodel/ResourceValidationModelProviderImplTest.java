@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.testing.mock.jcr.MockJcr;
@@ -62,7 +63,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ResourceValidationModelProviderImplTest {
 
     private final static class PrefixAndResourceType {
@@ -119,6 +127,8 @@ public class ResourceValidationModelProviderImplTest {
     private static Map<String, Object> primaryTypeUnstructuredMap;
     private ResourceValidationModelProviderImpl modelProvider;
     private ResourceResolver rr;
+    @Mock
+    private ResourceResolverFactory resourceResolverFactory;
     private MockQueryResultHandler prefixBasedResultHandler;
     private Map<PrefixAndResourceType, List<Node>> validatorModelNodesPerPrefixAndResourceType;
     private Map<String, Validator<?>> validatorMap;
@@ -181,6 +191,13 @@ public class ResourceValidationModelProviderImplTest {
             }
         };
         rr = context.resourceResolver();
+        modelProvider.rrf = resourceResolverFactory;
+        // create a wrapper resource resolver, which cannot be closed (as the SlingContext will take care of that)
+        ResourceResolver nonClosableResourceResolverWrapper = Mockito.spy(rr);
+        // intercept all close calls
+        Mockito.doNothing().when(nonClosableResourceResolverWrapper).close();
+        // always use the context's resource resolver (because we never commit)
+        Mockito.when(resourceResolverFactory.getServiceResourceResolver(Mockito.anyObject())).thenReturn(nonClosableResourceResolverWrapper);
         MockJcr.addQueryResultHandler(rr.adaptTo(Session.class), prefixBasedResultHandler);
 
         validatorModelNodesPerPrefixAndResourceType = new HashMap<PrefixAndResourceType, List<Node>>();
@@ -214,7 +231,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel2", model2);
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1, model2));
     }
 
@@ -230,7 +247,7 @@ public class ResourceValidationModelProviderImplTest {
             createValidationModelResource(rr, contentValidatorsRoot.getPath(), "testValidationModel1", model1);
 
             // check that no model is found
-            Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+            Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
             Assert.assertThat("Model was placed outside resource resolver search path but still found", models, Matchers.empty());
         } finally {
             rr.delete(contentValidatorsRoot);
@@ -252,7 +269,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // compare both models
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -268,7 +285,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", model2);
 
         // only the apps model should be returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
         Assert.assertThat(models, Matchers.contains(model2));
     }
 
@@ -280,7 +297,7 @@ public class ResourceValidationModelProviderImplTest {
 
         // clear validator map to make the referenced validator unknown
         validatorMap.clear();
-        modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        modelProvider.getModels("sling/validation/test", validatorMap);
     }
     
     @Test(expected = IllegalStateException.class)
@@ -292,7 +309,7 @@ public class ResourceValidationModelProviderImplTest {
         
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
-        modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        modelProvider.getModels("sling/validation/test", validatorMap);
     }
 
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
