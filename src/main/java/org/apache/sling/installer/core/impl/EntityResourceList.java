@@ -405,6 +405,11 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     public void remove(final String url) {
+        removeInternal(url);
+    }
+
+    boolean removeInternal(final String url) {
+        boolean removed = false;
         synchronized ( lock ) {
             Collections.sort(this.resources);
             final Iterator<RegisteredResourceImpl> i = resources.iterator();
@@ -412,6 +417,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             while ( i.hasNext() ) {
                 final TaskResource r = i.next();
                 if ( r.getURL().equals(url) ) {
+                    removed = true;
                     if ( first && (r.getState() == ResourceState.INSTALLED
                             || r.getState() == ResourceState.INSTALL)) {
                         LOGGER.debug("Marking for uninstalling: {}", r);
@@ -425,6 +431,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 first = false;
             }
         }
+        return removed;
     }
 
     /**

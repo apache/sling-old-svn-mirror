@@ -327,11 +327,11 @@ public class PersistentResourceList {
                 this.checkInstallable(clone);
                 entityIds.add(clone.getEntityId());
             }
-            for (EntityResourceList group : this.data.values())
-            {
-                if (!entityIds.contains(group.getResourceId()))
-                {
-                    group.remove(resource.getURL());
+            for (EntityResourceList group : this.data.values()) {
+                if (!entityIds.contains(group.getResourceId())) {
+                    if (group.removeInternal(resource.getURL())) {
+                        logger.debug("Removed stale resources from group with entityid: {} because after transforming {} the entityids have changed.", group.getResourceId(), resource);
+                    }
                 }
             }
         } catch (final IOException ioe) {
