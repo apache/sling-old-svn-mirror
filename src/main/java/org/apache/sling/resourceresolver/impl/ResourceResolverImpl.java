@@ -800,7 +800,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.adapter.SlingAdaptable#adaptTo(java.lang.Class)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         checkClosed();
 
