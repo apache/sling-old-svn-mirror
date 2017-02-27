@@ -25,8 +25,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.annotation.versioning.ProviderType;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * All providers of {@link ValidationModel}s must implement this interface. In addition, if the model might become
