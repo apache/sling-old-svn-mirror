@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>30-SNAPSHOT</version>
+        <version>29</version>
         <relativePath/>
     </parent>
 
@@ -91,6 +91,16 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <!-- sling-home used by paxexam is outside of target -->
+                        <exclude>sling/*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -129,7 +139,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
-            <version>1.2.4</version>
+            <version>1.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
