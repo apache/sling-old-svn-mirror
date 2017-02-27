@@ -29,7 +29,9 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.collections.MultiMap;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
@@ -60,6 +62,8 @@ public class ValidationModelRetrieverImplTest {
     
     @Mock
     private ResourceResolver resourceResolver;
+    @Mock
+    private ResourceResolverFactory resourceResolverFactory;
 
     /**
      * Test model provider which only provides models for all resource types in map applicablePathPerResourceType with their according applicablePath!
@@ -71,7 +75,7 @@ public class ValidationModelRetrieverImplTest {
 
         @Override
         public @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
-                @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver) {
+                @Nonnull Map<String, Validator<?>> validatorsMap) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,
                     Matchers.<String, Validator<?>> hasEntry(DateValidator.class.getName(), dateValidator));
@@ -117,7 +121,7 @@ public class ValidationModelRetrieverImplTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws LoginException {
         dateValidator = new DateValidator();
         applicablePathPerResourceType = new MultiHashMap();
         validationModelRetriever = new ValidationModelRetrieverImpl();
@@ -127,6 +131,8 @@ public class ValidationModelRetrieverImplTest {
         properties.put(Constants.SERVICE_ID, 1L);
         validationModelRetriever.addModelProvider(modelProvider, properties);
         validationModelRetriever.addValidator(dateValidator);
+        validationModelRetriever.resourceResolverFactory = resourceResolverFactory;
+        Mockito.when(resourceResolverFactory.getServiceResourceResolver(Mockito.anyObject())).thenReturn(resourceResolver);
     }
 
     @Test
@@ -136,7 +142,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
 
         ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage",
-                false, resourceResolver);
+                false);
         Assert.assertNotNull(model);
         Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains("/content/site1/subnode/test"));
     }
@@ -147,7 +153,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", null);
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
 
-        ValidationModel model = validationModelRetriever.getModel("test/type", null, false, resourceResolver);
+        ValidationModel model = validationModelRetriever.getModel("test/type", null, false);
         Assert.assertNotNull(model);
         Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains(""));
     }
@@ -156,17 +162,17 @@ public class ValidationModelRetrieverImplTest {
     public void testGetCachedModel() {
         applicablePathPerResourceType.put("test/type", "/content/site1");
         // call two times, the second time the counter must be the same (because provider is not called)
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", false);
         Assert.assertNotNull(model);
         Assert.assertEquals(1, modelProvider.counter);
-        model = validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", false);
         Assert.assertNotNull(model);
         Assert.assertEquals(1, modelProvider.counter);
 
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false, resourceResolver);
+        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
         Assert.assertNull(model);
         Assert.assertEquals(2, modelProvider.counter);
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false, resourceResolver);
+        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
         Assert.assertNull(model);
         Assert.assertEquals(2, modelProvider.counter);
     }
@@ -174,11 +180,11 @@ public class ValidationModelRetrieverImplTest {
     @Test
     public void testGetCachedInvalidation() {
         applicablePathPerResourceType.put("test/type", "/content/site1");
-        validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
+        validationModelRetriever.getModel("test/type", "/content/site1", false);
         Assert.assertEquals(1, modelProvider.counter);
         validationModelRetriever.handleEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
         // after cache invalidation the provider is called again
-        validationModelRetriever.getModel("test/type", "/content/site1", false, resourceResolver);
+        validationModelRetriever.getModel("test/type", "/content/site1", false);
         Assert.assertEquals(2, modelProvider.counter);
     }
 
@@ -186,13 +192,13 @@ public class ValidationModelRetrieverImplTest {
     public void testGetModelWithResourceInheritance() {
         // in case no super type is known, just return model
         applicablePathPerResourceType.put("test/type", "/content/site1");
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/type")));
         // in case there is one super type make sure the merged model is returned!
         Mockito.when(resourceResolver.getParentResourceType("test/type")).thenReturn("test/supertype");
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
-        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(new ResourcePropertyNameMatcher("test/type"), new ResourcePropertyNameMatcher("test/supertype")));
     }
@@ -200,20 +206,20 @@ public class ValidationModelRetrieverImplTest {
     @Test
     public void testGetModelWithResourceInheritanceAndNoSuitableBaseModelFound() {
         // no model found for base type and no resource super type set
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNull("Found model although no model has been specified", model);
         
         // set super super type
         Mockito.when(resourceResolver.getParentResourceType("test/type")).thenReturn("test/supertype");
         // no model found at all (neither base nor super type)
-        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNull("Found model although no model has been specified (neither in base nor in super type)", model);
         
         validationModelRetriever.validationModelsCache.clear();
         
         // only supertype has model being set
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
-        model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/supertype")));
     }
@@ -225,7 +231,7 @@ public class ValidationModelRetrieverImplTest {
         Mockito.when(resourceResolver.getParentResourceType("test/supertype")).thenReturn("test/supersupertype");
         
         // only model found for base type
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true, resourceResolver);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/type")));
     }

@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.spi.Validator;
 
@@ -44,15 +43,12 @@ public interface ValidationModelProvider {
      * @param validatorsMap
      *            all known validators in a map (key=name of validator). Only one of those should be used in the
      *            returned validation models.
-     * @param resourceResolver
-     *            the resource resolver which should be used by the provider (if one is necessary).
      * @return a Collection of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no
      *         model for the given resource type could be found.
      * @throws IllegalStateException
      *             in case a validation model was found but it is invalid
      */
     @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
-            @Nonnull Map<String, Validator<?>> validatorsMap, @Nonnull ResourceResolver resourceResolver)
-            throws IllegalStateException;
+            @Nonnull Map<String, Validator<?>> validatorsMap) throws IllegalStateException;
 
 }

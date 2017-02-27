@@ -67,11 +67,6 @@ public class ValidationTestSupport extends TestSupport {
             testBundle("bundle.filename"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.api").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.test-services").versionAsInProject(),
-            // TODO remove whitelist configuration once loginAdministrative is removed
-            factoryConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment")
-                .put("whitelist.bundles", new String[]{"org.apache.sling.validation.core"})
-                .put("whitelist.name", "sling-validation")
-                .asOption(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", new String[]{
                     "org.apache.sling.validation.core=sling-readall",
