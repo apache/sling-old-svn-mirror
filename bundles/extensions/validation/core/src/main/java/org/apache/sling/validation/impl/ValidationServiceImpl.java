@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
@@ -74,17 +75,19 @@ public class ValidationServiceImpl implements ValidationService{
     
     @Reference
     private ResourceResolverFactory rrf = null;
-    
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
     
     @Activate
     public void activate(ValidationServiceConfiguration configuration) {
         this.configuration = configuration;
         ResourceResolver rr = null;
         try {
-            rr = rrf.getAdministrativeResourceResolver(null);
+            rr = rrf.getServiceResourceResolver(null);
             searchPaths = Arrays.asList(rr.getSearchPath());
         } catch (LoginException e) {
-            throw new IllegalStateException("Could not login as administrator to figure out search paths", e);
+            throw new IllegalStateException("Could not get service resource resolver to figure out search paths", e);
         } finally {
             if (rr != null) {
                 rr.close();
