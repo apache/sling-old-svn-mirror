@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>29</version>
         <relativePath />
     </parent>
 
@@ -135,6 +135,11 @@
     </reporting>
     <dependencies>
         <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.mom</artifactId>
             <version>1.0.1-SNAPSHOT</version>
@@ -197,10 +202,6 @@
 
 
 
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
