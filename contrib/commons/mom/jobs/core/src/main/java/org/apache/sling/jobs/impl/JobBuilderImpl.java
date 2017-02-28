@@ -18,22 +18,21 @@
  */
 package org.apache.sling.jobs.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import org.apache.sling.jobs.Job;
 import org.apache.sling.jobs.JobBuilder;
 import org.apache.sling.jobs.Types;
 import org.apache.sling.jobs.impl.spi.JobStarter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Provides an implementation of a JobBuilder.
  */
 public class JobBuilderImpl implements JobBuilder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobBuilderImpl.class);
+
     private final String id;
     private final Map<String, Object> properties;
     private final JobStarter jobStarter;

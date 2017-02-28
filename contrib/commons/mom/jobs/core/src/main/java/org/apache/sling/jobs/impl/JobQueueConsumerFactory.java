@@ -19,18 +19,33 @@
 
 package org.apache.sling.jobs.impl;
 
-import com.google.common.collect.ImmutableSet;
-import org.apache.felix.scr.annotations.*;
-import org.apache.sling.jobs.*;
-import org.apache.sling.mom.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobCallback;
+import org.apache.sling.jobs.JobConsumer;
+import org.apache.sling.jobs.JobManager;
+import org.apache.sling.jobs.JobUpdate;
+import org.apache.sling.jobs.JobUpdateListener;
+import org.apache.sling.mom.MessageFilter;
+import org.apache.sling.mom.QueueManager;
+import org.apache.sling.mom.QueueReader;
+import org.apache.sling.mom.RequeueMessageException;
+import org.apache.sling.mom.TopicManager;
 import org.apache.sling.mom.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
 /**
  * This is a configuration factory that creates QueueReader instances on configuration. These connect to the JobManager
@@ -48,7 +63,7 @@ import java.util.Set;
 public class JobQueueConsumerFactory implements QueueReader, MessageFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobQueueConsumerFactory.class);
-    private static final Set<JobUpdate.JobUpdateCommand> ALLOWED_COMMANDS = ImmutableSet.of(JobUpdate.JobUpdateCommand.UPDATE_JOB) ;
+    private static final Set<JobUpdate.JobUpdateCommand> ALLOWED_COMMANDS = Collections.unmodifiableSet(Collections.singleton(JobUpdate.JobUpdateCommand.UPDATE_JOB));
 
     @Reference
     private JobManager jobManager;
@@ -59,19 +74,12 @@ public class JobQueueConsumerFactory implements QueueReader, MessageFilter {
     private QueueManager queueManager;
 
     @Activate
-    public void activate(Map<String, Object> properties) {
+    public void activate() {
         if ( !(jobManager instanceof JobConsumer) ) {
             LOGGER.error("JobManager must implement JobConsumer interface. {} does not. ", jobManager.getClass());
             throw new IllegalStateException("JobManager does not implement JobConsumer");
         }
     }
-
-    @Deactivate
-    public void deactivate(@SuppressWarnings("UnusedParameters") Map<String, Object> properties) {
-    }
-
-
-
 
     @Override
     public void onMessage(Types.QueueName queueName, Map<String, Object> message) throws RequeueMessageException {

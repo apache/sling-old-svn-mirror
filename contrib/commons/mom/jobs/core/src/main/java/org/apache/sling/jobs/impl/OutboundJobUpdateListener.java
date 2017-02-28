@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.jobs.impl;
+
+import javax.annotation.Nonnull;
 
 import org.apache.sling.jobs.JobUpdate;
 import org.apache.sling.jobs.JobUpdateListener;
-import org.apache.sling.jobs.Types;
 import org.apache.sling.mom.QueueManager;
 import org.apache.sling.mom.TopicManager;
-
-import javax.annotation.Nonnull;
 
 /**
  * Sends messages out to JMS Queues or topics. Normally called by the local JobManager Implementation.
@@ -43,7 +41,7 @@ public class OutboundJobUpdateListener implements JobUpdateListener {
         this.queueManager = queueManager;
         active = true;
     }
-    
+
     public void dispose() {
         active = false;
     }

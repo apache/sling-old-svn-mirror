@@ -18,14 +18,17 @@
  */
 package org.apache.sling.jobs.impl;
 
-import org.apache.sling.jobs.*;
-import org.apache.sling.jobs.impl.spi.JobStarter;
-import org.apache.sling.jobs.impl.spi.JobStorage;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Map;
+
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobBuilder;
+import org.apache.sling.jobs.JobManager;
+import org.apache.sling.jobs.JobUpdate;
+import org.apache.sling.jobs.JobUpdateListener;
+import org.apache.sling.jobs.Types;
+import org.apache.sling.jobs.impl.spi.JobStarter;
+import org.apache.sling.jobs.impl.spi.JobStorage;
 
 /**
  * Implements a JobManager, storing Jobs in a JobStorage implementation.

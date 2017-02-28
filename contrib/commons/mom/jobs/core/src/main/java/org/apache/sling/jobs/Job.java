@@ -19,17 +19,12 @@
 package org.apache.sling.jobs;
 
 
-import com.google.common.collect.ImmutableSet;
-import org.apache.sling.mom.TopicManager;
-import org.osgi.annotation.versioning.ProviderType;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Largely based on org.apache.sling.event.Job.

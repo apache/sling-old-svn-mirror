@@ -18,12 +18,12 @@
  */
 package org.apache.sling.jobs;
 
-import org.apache.sling.mom.TopicManager;
-import org.osgi.annotation.versioning.ProviderType;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Job updates are messages that update the state of the job at all subscribers.

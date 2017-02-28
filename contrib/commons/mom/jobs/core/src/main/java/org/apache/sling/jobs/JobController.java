@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.jobs;
-
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -42,6 +40,4 @@ public interface JobController {
      * Abort the job immediately.
      */
     void abort();
-
-
 }

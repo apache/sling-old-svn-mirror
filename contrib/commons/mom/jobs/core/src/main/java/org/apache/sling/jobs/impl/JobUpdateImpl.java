@@ -18,17 +18,17 @@
  */
 package org.apache.sling.jobs.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.sling.jobs.Job;
 import org.apache.sling.jobs.JobUpdate;
 import org.apache.sling.jobs.Types;
 import org.apache.sling.jobs.impl.spi.MapValueAdapter;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents messages sent to the Job via a message queue.
@@ -61,9 +61,15 @@ public class JobUpdateImpl implements MapValueAdapter,  JobUpdate {
      * @param properties properties in the update message.
      */
     public JobUpdateImpl(@Nonnull Job job, @Nonnull JobUpdateCommand command, @Nonnull Map<String, Object> properties) {
-        Preconditions.checkNotNull(job, "Job argument cant be null");
-        Preconditions.checkNotNull(command, "JobCommand argument cant be null");
-        Preconditions.checkNotNull(properties, "Map of properties cant be null");
+        if ( job == null ) {
+            throw new IllegalArgumentException("Job argument cant be null");
+        }
+        if ( command == null ) {
+            throw new IllegalArgumentException("JobCommand argument cant be null");
+        }
+        if ( properties == null ) {
+            throw new IllegalArgumentException("Map of properties cant be null");
+        }
 
         jobQueue = job.getQueue();
         jobType = job.getJobType();
@@ -86,20 +92,26 @@ public class JobUpdateImpl implements MapValueAdapter,  JobUpdate {
      * @param message a inbound message in map form.
      */
     public JobUpdateImpl(@Nonnull Map<String, Object> message) {
-        Preconditions.checkNotNull(message, "Message cant be null");
+        if ( message == null ) {
+            throw new IllegalArgumentException("Message cant be null");
+        }
         fromMapValue(message);
     }
 
     public JobUpdateImpl(@Nonnull String jobId, @Nonnull JobUpdateCommand command) {
-        Preconditions.checkNotNull(jobId, "JobId argument cant be null");
-        Preconditions.checkNotNull(command, "JobUpdateCommand argument cant be null");
+        if ( jobId == null ) {
+            throw new IllegalArgumentException("JobId argument cant be null");
+        }
+        if ( command == null ) {
+            throw new IllegalArgumentException("JobUpdateCommand argument cant be null");
+        }
         jobQueue = Types.ANY_JOB_QUEUE;
         id = jobId;
         updateTimestamp = System.currentTimeMillis();
         expires = updateTimestamp + TTL;
         jobState = Job.JobState.ANY_STATE;
         this.command = command;
-        this.properties = ImmutableMap.of();
+        this.properties = Collections.emptyMap();
 
     }
 
@@ -211,7 +223,7 @@ public class JobUpdateImpl implements MapValueAdapter,  JobUpdate {
     @Override
     @Nonnull
     public Object toMapValue() {
-        ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        final Map<String, Object> builder = new HashMap<>();
         builder.put("tp", jobQueue.toString());
         builder.put("jt",jobType.toString());
         builder.put("id",id);
@@ -226,9 +238,9 @@ public class JobUpdateImpl implements MapValueAdapter,  JobUpdate {
             builder.put("finishedAt", finishedAt);
             builder.put("jobState", jobState.toString());
             builder.put("resultMessage", resultMessage);
-            builder.put("properties", ImmutableMap.builder().putAll(properties).build());
+            builder.put("properties", Collections.unmodifiableMap(properties));
 
         }
-        return builder.build();
+        return Collections.unmodifiableMap(builder);
     }
 }

@@ -18,13 +18,18 @@
  */
 package org.apache.sling.jobs.impl;
 
-import com.google.common.base.Preconditions;
-import org.apache.sling.jobs.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
+
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobController;
+import org.apache.sling.jobs.JobUpdate;
+import org.apache.sling.jobs.JobUpdateBuilder;
+import org.apache.sling.jobs.JobUpdateListener;
+import org.apache.sling.jobs.Types;
 
 /**
  * JobImpl is a data object to hold the current state of the job in the current JVM as loaded into memory.
@@ -202,7 +207,9 @@ public class JobImpl implements Job, JobUpdateListener {
      * @param properties the update properties.
      */
     private void updateProperties(@Nonnull Map<String, Object> properties) {
-        Preconditions.checkNotNull(properties, "Properties cant be null.");
+        if ( properties == null ) {
+            throw new IllegalArgumentException("Properties cant be null.");
+        }
         for (Map.Entry<String, Object> e : properties.entrySet()) {
             if (e.getValue() instanceof JobUpdate.JobPropertyAction ) {
                 switch(((JobUpdate.JobPropertyAction)e.getValue())) {

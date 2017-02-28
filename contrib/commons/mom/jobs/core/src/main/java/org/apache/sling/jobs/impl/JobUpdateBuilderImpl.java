@@ -18,14 +18,16 @@
  */
 package org.apache.sling.jobs.impl;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.sling.jobs.Job;
-import org.apache.sling.jobs.JobUpdate;
-import org.apache.sling.jobs.JobUpdateBuilder;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
+
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobUpdate;
+import org.apache.sling.jobs.JobUpdateBuilder;
 
 /**
  */
@@ -34,7 +36,7 @@ public class JobUpdateBuilderImpl implements JobUpdateBuilder {
     private final String jobId;
     private final Job job;
     private JobUpdate.JobUpdateCommand command;
-    private final ImmutableMap.Builder<String, Object> updateProperties = ImmutableMap.builder();
+    private final Map<String, Object> updateProperties = new HashMap<>();
 
     /**
      * Create a JobUpdateBuilder from a job.
@@ -96,7 +98,7 @@ public class JobUpdateBuilderImpl implements JobUpdateBuilder {
     @Override
     public JobUpdate build() {
         if ( job != null) {
-            return new JobUpdateImpl(job, command, updateProperties.build());
+            return new JobUpdateImpl(job, command, Collections.unmodifiableMap(this.updateProperties));
         } else if ( command == JobUpdate.JobUpdateCommand.ABORT_JOB || command == JobUpdate.JobUpdateCommand.STOP_JOB) {
             return new JobUpdateImpl(jobId, command);
         } else {
