@@ -60,7 +60,7 @@
 	}
 
 	function appendSelectorToPath(path) {
-		return path + ".availablebindings.json";
+		return path + ".SLING_availablebindings.json";
 	}
 
     
