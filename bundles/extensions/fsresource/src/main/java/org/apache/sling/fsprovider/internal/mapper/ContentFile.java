@@ -128,6 +128,15 @@ public final class ContentFile {
         return valueMap;
     }
     
+    /**
+     * Navigate to another sub path position in content file.
+     * @param newSubPath New sub path
+     * @return Content file
+     */
+    public ContentFile navigateTo(String newSubPath) {
+        return new ContentFile(file, path, newSubPath, contentFileCache);
+    }
+        
     @SuppressWarnings("unchecked")
     private static Object getDeepContent(Object object, String subPath) {
         if (object == null) {

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
@@ -93,7 +94,7 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(1, changes.size());
-        assertChange(changes, 0, "/fs-test/folder1/file1a.txt", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder1/file1a.txt", ChangeType.CHANGED);
     }
     
     @Test
@@ -107,8 +108,8 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
-        assertChange(changes, 0, "/fs-test/folder1", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder1/file1c.txt", ChangeType.ADDED);
+        assertChange(changes, "/fs-test/folder1", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder1/file1c.txt", ChangeType.ADDED);
     }
     
     @Test
@@ -122,8 +123,8 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
-        assertChange(changes, 0, "/fs-test/folder1", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder1/file1a.txt", ChangeType.REMOVED);
+        assertChange(changes, "/fs-test/folder1", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder1/file1a.txt", ChangeType.REMOVED);
     }
     
     @Test
@@ -137,8 +138,8 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
-        assertChange(changes, 0, "/fs-test", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder99", ChangeType.ADDED);
+        assertChange(changes, "/fs-test", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder99", ChangeType.ADDED);
     }
     
     @Test
@@ -152,8 +153,8 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
-        assertChange(changes, 0, "/fs-test", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder1", ChangeType.REMOVED);
+        assertChange(changes, "/fs-test", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder1", ChangeType.REMOVED);
     }
 
     @Test
@@ -167,9 +168,9 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertTrue(changes.size() > 1);
-        assertChange(changes, 0, "/fs-test/folder2/content", ChangeType.REMOVED);
-        assertChange(changes, 1, "/fs-test/folder2/content", ChangeType.ADDED);
-        assertChange(changes, 2, "/fs-test/folder2/content/jcr:content", ChangeType.ADDED);
+        assertChange(changes, "/fs-test/folder2/content", ChangeType.REMOVED);
+        assertChange(changes, "/fs-test/folder2/content", ChangeType.ADDED);
+        assertChange(changes, "/fs-test/folder2/content/jcr:content", ChangeType.ADDED);
     }
     
     @Test
@@ -183,9 +184,9 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(3, changes.size());
-        assertChange(changes, 0, "/fs-test/folder1", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder1/file1c", ChangeType.ADDED, "prop1");
-        assertChange(changes, 2, "/fs-test/folder1/file1c/child1", ChangeType.ADDED, "prop2");
+        assertChange(changes, "/fs-test/folder1", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder1/file1c", ChangeType.ADDED, "prop1");
+        assertChange(changes, "/fs-test/folder1/file1c/child1", ChangeType.ADDED, "prop2");
     }
     
     @Test
@@ -199,18 +200,24 @@ public class FileMonitorTest {
         Thread.sleep(250);
 
         assertEquals(2, changes.size());
-        assertChange(changes, 0, "/fs-test/folder2", ChangeType.CHANGED);
-        assertChange(changes, 1, "/fs-test/folder2/content", ChangeType.REMOVED);
+        assertChange(changes, "/fs-test/folder2", ChangeType.CHANGED);
+        assertChange(changes, "/fs-test/folder2/content", ChangeType.REMOVED);
     }
     
     
-    private void assertChange(List<ResourceChange> changes, int index, String path, ChangeType changeType, String... addedPropertyNames) {
-        ResourceChange change = changes.get(index);
-        assertEquals(path, change.getPath());
-        assertEquals(changeType, change.getType());
-        if (addedPropertyNames.length > 0) {
-            assertEquals(ImmutableSet.copyOf(addedPropertyNames), change.getAddedPropertyNames());
+    private void assertChange(List<ResourceChange> changes, String path, ChangeType changeType, String... addedPropertyNames) {
+        boolean found = false;
+        for (ResourceChange change : changes) {
+            if (StringUtils.equals(change.getPath(), path) && change.getType() == changeType) {
+                found = true;
+                if (addedPropertyNames.length > 0) {
+                    assertEquals(ImmutableSet.copyOf(addedPropertyNames), change.getAddedPropertyNames());
+                }
+                break;
+            }
         }
+        assertTrue("Change with path=" + path + ", changeType=" + changeType, found);
+
     }
     
     static class ResourceListener implements ResourceChangeListener {

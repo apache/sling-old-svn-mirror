@@ -38,53 +38,49 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.fsprovider.internal.mapper.ContentFile;
 
 /**
  * Simplified implementation of read-only content access via the JCR API.
  */
 abstract class FsItem implements Item {
     
-    protected final Resource resource;
-    protected final ValueMap props;
+    protected final ContentFile contentFile;
     protected final ResourceResolver resolver;
+    protected final ValueMap props;
     
-    public FsItem(Resource resource) {
-        this.resource = resource;
-        this.props = resource.getValueMap();
-        this.resolver = resource.getResourceResolver();
+    public FsItem(ContentFile contentFile, ResourceResolver resolver) {
+        this.contentFile = contentFile;
+        this.resolver = resolver;
+        this.props = contentFile.getValueMap();
     }
 
     @Override
     public String getPath() throws RepositoryException {
-        return resource.getPath();
-    }
-
-    @Override
-    public String getName() throws RepositoryException {
-        return resource.getName();
-    }
-
-    @Override
-    public FsItem getAncestor(int depth) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        String path = ResourceUtil.getParent(resource.getPath(), getDepth() - depth - 1);
-        if (path != null) {
-            Resource ancestor = resolver.getResource(path);
-            if (ancestor != null) {
-                return new FsNode(ancestor);
-            }
+        if (contentFile.getSubPath() == null) {
+            return contentFile.getPath();
         }
-        throw new ItemNotFoundException(path);
+        else {
+            return contentFile.getPath() + "/" + contentFile.getSubPath();
+        }
     }
 
     @Override
-    public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        Resource parent = resource.getParent();
-        if (parent != null) {
-            Node parentNode = parent.adaptTo(Node.class);
-            if (parentNode != null) {
-                return parentNode;
+    public Item getAncestor(int depth) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        String path;
+        if (depth == 0) {
+            path = "/";
+        }
+        else {
+            String[] pathParts = StringUtils.splitPreserveAllTokens(getPath(), "/");
+            path = StringUtils.join(pathParts, "/", 0, depth + 1);
+        }
+        Resource resource = resolver.getResource(path);
+        if (resource != null) {
+            Node refNode = resource.adaptTo(Node.class);
+            if (refNode != null) {
+                return refNode;
             }
         }
         throw new ItemNotFoundException();

@@ -53,18 +53,21 @@ import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.fsprovider.internal.mapper.ContentFile;
 
 /**
  * Simplified implementation of read-only content access via the JCR API.
  */
 public final class FsNode extends FsItem implements Node {
     
-    public FsNode(Resource resource) {
-        super(resource);
+    public FsNode(ContentFile contentFile, ResourceResolver resolver) {
+        super(contentFile, resolver);
     }
     
     private String getPrimaryTypeName() {
-        return  props.get("jcr:primaryType", String.class);
+        return props.get("jcr:primaryType", String.class);
     }
     
     private String[] getMixinTypeNames() {
@@ -72,30 +75,76 @@ public final class FsNode extends FsItem implements Node {
     }
     
     @Override
+    public String getName() throws RepositoryException {
+        if (contentFile.getSubPath() == null) {
+            return ResourceUtil.getName(contentFile.getPath());
+        }
+        else {
+            return ResourceUtil.getName(contentFile.getSubPath());
+        }
+    }
+
+    @Override
+    public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        return getNode(ResourceUtil.getParent(getPath()));
+    }
+    
+    @Override
     public Node getNode(String relPath) throws PathNotFoundException, RepositoryException {
-        Resource child = resource.getChild(relPath);
-        if (child != null) {
-            return new FsNode(child);
+        if (relPath == null) {
+            throw new PathNotFoundException();
+        }
+        
+        // get absolute node path
+        String path = relPath;
+        if (!StringUtils.startsWith(path,  "/")) {
+            path = ResourceUtil.normalize(getPath() + "/" + relPath);
+        }
+
+        if (StringUtils.equals(path, contentFile.getPath()) || StringUtils.startsWith(path, contentFile.getPath() + "/")) {
+            // node is contained in content file
+            String subPath;
+            if (StringUtils.equals(path, contentFile.getPath())) {
+                subPath = null;
+            }
+            else {
+                subPath = path.substring(contentFile.getPath().length() + 1);
+            }
+            ContentFile referencedFile = contentFile.navigateTo(subPath);
+            if (referencedFile.hasContent()) {
+                return new FsNode(referencedFile, resolver);
+            }
+        }
+        else {
+            // node is outside content file
+            Node refNode = null;
+            Resource resource = resolver.getResource(path);
+            if (resource != null) {
+                refNode = resource.adaptTo(Node.class);
+                if (refNode != null) {
+                    return refNode;
+                }
+            }
         }
         throw new PathNotFoundException(relPath);
     }
 
     @Override
     public NodeIterator getNodes() throws RepositoryException {
-        return new FsNodeIterator(resource.listChildren());
+        return new FsNodeIterator(contentFile, resolver);
     }
 
     @Override
     public Property getProperty(String relPath) throws PathNotFoundException, RepositoryException {
         if (props.containsKey(relPath)) {
-            return new FsProperty(resource, relPath, this);
+            return new FsProperty(contentFile, resolver, relPath, this);
         }
         throw new PathNotFoundException(relPath);
     }
 
     @Override
     public PropertyIterator getProperties() throws RepositoryException {
-        return new FsPropertyIterator(props.keySet().iterator(), resource, this);
+        return new FsPropertyIterator(props.keySet().iterator(), contentFile, resolver, this);
     }
 
     @Override
@@ -111,7 +160,13 @@ public final class FsNode extends FsItem implements Node {
 
     @Override
     public boolean hasNode(String relPath) throws RepositoryException {
-        return resource.getChild(relPath) != null;
+        try {
+            getNode(relPath);
+            return true;
+        }
+        catch (RepositoryException ex) {
+            return false;
+        }
     }
 
     @Override
@@ -121,7 +176,7 @@ public final class FsNode extends FsItem implements Node {
 
     @Override
     public boolean hasNodes() throws RepositoryException {
-        return resource.listChildren().hasNext();
+        return getNodes().hasNext();
     }
 
     @Override

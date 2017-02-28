@@ -55,6 +55,9 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
     
     @Override
     public Resource getResource(final ResourceResolver resolver, final String resourcePath) {
+        if (contentFileExtensions.isEmpty()) {
+            return null;
+        }
         ContentFile contentFile = getFile(resourcePath, null);
         if (contentFile != null && contentFile.hasContent()) {
             return new ContentFileResource(resolver, contentFile);
@@ -67,6 +70,9 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
     @SuppressWarnings("unchecked")
     @Override
     public Iterator<Resource> getChildren(final ResourceResolver resolver, final Resource parent) {
+        if (contentFileExtensions.isEmpty()) {
+            return null;
+        }
         final String parentPath = parent.getPath();
         ContentFile parentContentFile = parent.adaptTo(ContentFile.class);
 

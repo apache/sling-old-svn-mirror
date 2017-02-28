@@ -24,7 +24,8 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.fsprovider.internal.mapper.ContentFile;
 
 /**
  * Simplified implementation of read-only content access via the JCR API.
@@ -32,12 +33,14 @@ import org.apache.sling.api.resource.Resource;
 class FsPropertyIterator implements PropertyIterator {
     
     private final Iterator<String> propertyNames;
-    private final Resource resource;
+    private final ContentFile contentFile;
+    private final ResourceResolver resolver;
     private final Node node;
     
-    public FsPropertyIterator(Iterator<String> propertyNames, Resource resource, Node node) {
+    public FsPropertyIterator(Iterator<String> propertyNames, ContentFile contentFile, ResourceResolver resolver, Node node) {
         this.propertyNames = propertyNames;
-        this.resource = resource;
+        this.contentFile = contentFile;
+        this.resolver = resolver;
         this.node = node;
     }
 
@@ -51,7 +54,7 @@ class FsPropertyIterator implements PropertyIterator {
 
     @Override
     public Property nextProperty() {
-        return new FsProperty(resource, propertyNames.next(), node);
+        return new FsProperty(contentFile, resolver, propertyNames.next(), node);
     }
 
     
