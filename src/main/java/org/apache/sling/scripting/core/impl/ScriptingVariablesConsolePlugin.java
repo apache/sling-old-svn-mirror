@@ -96,7 +96,7 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
         pw.append("<div id='content'>");
         pw.append("<table class='content'  cellpadding='0' cellspacing='0' width='100%'>");
         pw.append("<tr><th colspan='3' class='content container'>Sling Scripting Variables</th></tr>");
-        pw.append("<tr class='content'><td class='content' colspan='3'>Provide a resource path url and script engine (via extension) and then click on 'Retrieve Variables' to expose all script bindings variables which are available for that resource and script engine.</td></tr>"); 
+        pw.append("<tr class='content'><td class='content' colspan='3'>Provide a resource path url and script engine (via extension) and then click on 'Retrieve Variables' to expose all script bindings variables for context 'request' which are available for that resource and script engine.</td></tr>"); 
         pw.append("<tr class='content'>");
         pw.append("<td class='content'>Resource Url (without selectors and extension)</td> ");
         pw.append("<td class='content' colspan='2'><input type ='text' name='form.path' placeholder='path' required='required' value='/' ");
