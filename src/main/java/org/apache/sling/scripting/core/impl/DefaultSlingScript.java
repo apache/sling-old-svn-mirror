@@ -629,7 +629,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         };
     }
 
-    private Bindings verifySlingBindings(final SlingBindings slingBindings) throws IOException {
+    Bindings verifySlingBindings(final SlingBindings slingBindings) throws IOException {
 
     	final Bindings bindings = new SimpleBindings();
 
