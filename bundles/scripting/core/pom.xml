@@ -63,6 +63,8 @@
                         <Embed-Dependency>
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
                         </Embed-Dependency>
+                        <!-- statically link JSONWriter (http://njbartlett.name/2014/05/26/static-linking.html) -->
+                        <Conditional-Package>org.apache.felix.utils.json.*</Conditional-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -151,10 +153,16 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+        </dependency>
+        <!-- for serializing to JSON, must be after osgi.core to make Maven use the correct osgi.core version -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
