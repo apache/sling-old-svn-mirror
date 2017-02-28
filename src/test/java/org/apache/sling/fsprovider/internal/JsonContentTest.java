@@ -198,8 +198,10 @@ public class JsonContentTest {
         assertEquals(7, rightpar.getDepth());
         Node parent = rightpar.getParent();
         assertTrue(node.isSame(parent));
-        Node ancestor = (Node)rightpar.getAncestor(4);
+        Node ancestor = (Node)rightpar.getAncestor(5);
         assertEquals(underTest.getParent().getPath(), ancestor.getPath());
+        Node root = (Node)rightpar.getAncestor(0);
+        assertEquals("/", root.getPath());
         
         // node types
         assertTrue(node.isNodeType("app:PageContent"));

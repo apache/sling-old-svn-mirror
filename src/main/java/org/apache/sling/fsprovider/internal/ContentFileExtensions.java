@@ -65,4 +65,11 @@ public final class ContentFileExtensions {
         return contentFileSuffixes;
     }
     
+    /**
+     * @return true if not suffixes are defined.
+     */
+    public boolean isEmpty() {
+        return contentFileSuffixes.isEmpty();
+    }
+    
 }

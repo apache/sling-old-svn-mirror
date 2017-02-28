@@ -36,7 +36,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.fsprovider.internal.mapper.ContentFile;
 
 /**
  * Simplified implementation of read-only content access via the JCR API.
@@ -46,8 +47,8 @@ class FsProperty extends FsItem implements Property {
     private final String propertyName;
     private final Node node;
     
-    public FsProperty(Resource resource, String propertyName, Node node) {
-        super(resource);
+    public FsProperty(ContentFile contentFile, ResourceResolver resolver, String propertyName, Node node) {
+        super(contentFile, resolver);
         this.propertyName = propertyName;
         this.node = node;
     }
@@ -69,7 +70,7 @@ class FsProperty extends FsItem implements Property {
     
     @Override
     public String getPath() throws RepositoryException {
-        return resource.getPath() + "/" + propertyName;
+        return super.getPath() + "/" + propertyName;
     }
 
     @Override
