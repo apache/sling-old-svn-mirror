@@ -21,11 +21,9 @@ package org.apache.sling.fsprovider.internal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -263,15 +261,6 @@ public final class FileMonitor extends TimerTask {
         }
     }
     private ResourceChange buildContentResourceChange(final String topic, final Map<String,Object> content, final String path) {
-        Set<String> addedPropertyNames = null;
-        if (content != null && topic == SlingConstants.TOPIC_RESOURCE_ADDED) {
-            addedPropertyNames = new HashSet<>();
-            for (Map.Entry<String,Object> entry : content.entrySet()) {
-                if (!(entry.getValue() instanceof Map)) {
-                    addedPropertyNames.add(entry.getKey());
-                }
-            }
-        }
         ResourceChange change = new ResourceChange();
         change.path = path;
         change.resourceType = content != null ? (String)content.get("sling:resourceType") : null;
