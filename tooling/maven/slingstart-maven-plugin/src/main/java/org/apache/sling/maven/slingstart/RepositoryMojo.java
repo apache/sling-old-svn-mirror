@@ -32,10 +32,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.io.ModelWriter;
@@ -62,6 +64,12 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
     @Component
     private ArtifactResolver resolver;
 
+    /**
+     * This is the name of the final model as written to the target directory.
+     */
+    @Parameter(defaultValue="slingstart.txt")
+    private String repositoryModelName;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final File artifactDir = new File(this.project.getBuild().getDirectory(), DIR_NAME);
@@ -79,18 +87,20 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
                 }
             }
         }
-        // base artifact
-        try {
-            final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.findBaseArtifact(model);
-            final org.apache.sling.provisioning.model.Artifact appArtifact =
-                    new org.apache.sling.provisioning.model.Artifact(baseArtifact.getGroupId(),
-                    baseArtifact.getArtifactId(),
-                    baseArtifact.getVersion(),
-                    BuildConstants.CLASSIFIER_APP,
-                    BuildConstants.TYPE_JAR);
-            copyArtifactToRepository(appArtifact, artifactDir);
-        } catch ( final MavenExecutionException mee) {
-            throw new MojoExecutionException(mee.getMessage(), mee.getCause());
+        // base artifact - only if launchpad feature is available
+        if (model.getFeature(ModelConstants.FEATURE_LAUNCHPAD) != null) {
+            try {
+                final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.findBaseArtifact(model);
+                final org.apache.sling.provisioning.model.Artifact appArtifact =
+                        new org.apache.sling.provisioning.model.Artifact(baseArtifact.getGroupId(),
+                        baseArtifact.getArtifactId(),
+                        baseArtifact.getVersion(),
+                        BuildConstants.CLASSIFIER_APP,
+                        BuildConstants.TYPE_JAR);
+                copyArtifactToRepository(appArtifact, artifactDir);
+            } catch ( final MavenExecutionException mee) {
+                throw new MojoExecutionException(mee.getMessage(), mee.getCause());
+            }
         }
         // models
         Model rawModel = ProjectHelper.getRawModel(this.project);
@@ -114,6 +124,17 @@ public class RepositoryMojo extends AbstractSlingStartMojo {
         Writer writer = null;
         try {
             writer = new FileWriter(rawModelFile);
+            ModelWriter.write(writer, rawModel);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to write model to " + rawModelFile, e);
+        } finally {
+            IOUtils.closeQuietly(writer);
+        }
+
+        // and write model to target
+        writer = null;
+        try {
+            writer = new FileWriter(new File(this.project.getBuild().getDirectory(), repositoryModelName));
             ModelWriter.write(writer, rawModel);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write model to " + rawModelFile, e);
