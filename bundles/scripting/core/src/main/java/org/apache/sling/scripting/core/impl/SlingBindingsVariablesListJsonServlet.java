@@ -120,7 +120,7 @@ public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServl
             jsonWriter.key("name");
             jsonWriter.value(entry.getKey());
             jsonWriter.key("class");
-            jsonWriter.value(entry.getValue().getClass().getName());
+            jsonWriter.value(entry.getValue() == null ? "&lt;NO VALUE&gt;" : entry.getValue().getClass().getName());
             jsonWriter.endObject();
         }
         jsonWriter.endArray();
