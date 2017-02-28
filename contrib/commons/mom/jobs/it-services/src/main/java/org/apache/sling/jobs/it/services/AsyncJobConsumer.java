@@ -19,14 +19,28 @@
 
 package org.apache.sling.jobs.it.services;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.sling.jobs.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.concurrent.*;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jobs.Job;
+import org.apache.sling.jobs.JobCallback;
+import org.apache.sling.jobs.JobConsumer;
+import org.apache.sling.jobs.JobUpdate;
+import org.apache.sling.jobs.JobUpdateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This job consumer consumes jobs from the job subsystem. It accepts the jobs into a queue and uses a thread pool to drain the queue.

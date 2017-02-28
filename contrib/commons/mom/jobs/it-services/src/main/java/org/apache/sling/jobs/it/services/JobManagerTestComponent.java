@@ -20,7 +20,11 @@
 package org.apache.sling.jobs.it.services;
 
 
-import com.google.common.collect.ImmutableMap;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Collections;
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -30,10 +34,6 @@ import org.apache.sling.jobs.JobManager;
 import org.apache.sling.jobs.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  */
@@ -50,14 +50,14 @@ public class JobManagerTestComponent  {
     public void activate(Map<String,Object> props) {
         for( int i = 0; i < 10; i++) {
             Job job = jobManager.newJobBuilder(Types.jobQueue(TOPIC), Types.jobType(AsyncJobConsumer.JOB_TYPE)).addProperties(
-                    ImmutableMap.of("jobtest", (Object) "jobtest")).add();
+                    Collections.singletonMap("jobtest", (Object) "jobtest")).add();
             assertNotNull(job);
             LOGGER.info("Started Job {} ", job.getId());
         }
         // then start 10 sync jobs.
         for( int i = 0; i < 10; i++) {
-            Job job = jobManager.newJobBuilder(Types.jobQueue(TOPIC), Types.jobType(FullySyncJob.JOB_TYPE)).addProperties(
-                    ImmutableMap.of("jobtest", (Object) "jobtest")).add();
+            Job job = jobManager.newJobBuilder(Types.jobQueue(TOPIC), Types.jobType(FullySyncJob.JOB_TYPE))
+                    .addProperties(Collections.singletonMap("jobtest", (Object) "jobtest")).add();
             assertNotNull(job);
             LOGGER.info("Started Job {} ", job.getId());
         }
