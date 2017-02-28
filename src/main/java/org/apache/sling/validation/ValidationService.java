@@ -96,6 +96,6 @@ public interface ValidationService {
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
      * @throws SlingValidationException if one validator was called with invalid arguments
      */
-    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
+    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate<Resource> filter, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
 
 }
