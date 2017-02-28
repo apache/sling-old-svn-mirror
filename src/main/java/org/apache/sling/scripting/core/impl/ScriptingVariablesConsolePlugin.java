@@ -99,7 +99,7 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
         pw.append("<tr class='content'><td class='content' colspan='3'>Provide a resource path url and script engine (via extension) and then click on 'Retrieve Variables' to expose all script bindings variables which are available for that resource and script engine.</td></tr>"); 
         pw.append("<tr class='content'>");
         pw.append("<td class='content'>Resource Url (without selectors and extension)</td> ");
-        pw.append("<td class='content' colspan='2'><input type ='text' name='form.path' placeholder='path' required='required' ");
+        pw.append("<td class='content' colspan='2'><input type ='text' name='form.path' placeholder='path' required='required' value='/' ");
         pw.append("class='input ui-state-default ui-corner-all inputText' size='50' pattern='^/{1}.*'></td></tr>");
         pw.append("<tr class='content'>");
         pw.append("<td class='content'>Script Engine</td> ");
