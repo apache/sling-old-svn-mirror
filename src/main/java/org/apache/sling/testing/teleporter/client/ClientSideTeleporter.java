@@ -241,8 +241,7 @@ public class ClientSideTeleporter extends TeleporterRule {
     }
 
     private String installTestBundle(TeleporterHttpClient httpClient) throws MalformedURLException, IOException {
-        final SimpleDateFormat fmt = new SimpleDateFormat("HH-mm-ss");
-        final String bundleSymbolicName = getClass().getSimpleName() + "." + classUnderTest.getSimpleName() + "." + fmt.format(new Date()) + "." + UUID.randomUUID();
+        final String bundleSymbolicName = getClass().getSimpleName() + "." + classUnderTest.getSimpleName();
         log.info("Building bundle '{}'", bundleSymbolicName, baseUrl);
         try (final InputStream bundle = buildTestBundle(classUnderTest, embeddedClasses, bundleSymbolicName)) {
             // optionally persist the test bundle
