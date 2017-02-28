@@ -38,8 +38,6 @@ import org.apache.sling.testing.mock.sling.junit.SlingContextCallback;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSet;
-
 /**
  * Test events when changing filesystem content.
  */
@@ -185,8 +183,8 @@ public class FileMonitorTest {
 
         assertEquals(3, changes.size());
         assertChange(changes, "/fs-test/folder1", ChangeType.CHANGED);
-        assertChange(changes, "/fs-test/folder1/file1c", ChangeType.ADDED, "prop1");
-        assertChange(changes, "/fs-test/folder1/file1c/child1", ChangeType.ADDED, "prop2");
+        assertChange(changes, "/fs-test/folder1/file1c", ChangeType.ADDED);
+        assertChange(changes, "/fs-test/folder1/file1c/child1", ChangeType.ADDED);
     }
     
     @Test
@@ -205,19 +203,15 @@ public class FileMonitorTest {
     }
     
     
-    private void assertChange(List<ResourceChange> changes, String path, ChangeType changeType, String... addedPropertyNames) {
+    private void assertChange(List<ResourceChange> changes, String path, ChangeType changeType) {
         boolean found = false;
         for (ResourceChange change : changes) {
             if (StringUtils.equals(change.getPath(), path) && change.getType() == changeType) {
                 found = true;
-                if (addedPropertyNames.length > 0) {
-                    assertEquals(ImmutableSet.copyOf(addedPropertyNames), change.getAddedPropertyNames());
-                }
                 break;
             }
         }
         assertTrue("Change with path=" + path + ", changeType=" + changeType, found);
-
     }
     
     static class ResourceListener implements ResourceChangeListener {
