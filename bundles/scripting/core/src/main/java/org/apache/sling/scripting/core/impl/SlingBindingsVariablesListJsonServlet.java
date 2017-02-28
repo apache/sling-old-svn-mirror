@@ -51,7 +51,7 @@ import org.osgi.service.component.ComponentContext;
  */
 @SlingServlet(
         resourceTypes = "sling/servlet/default",
-        selectors = "availablebindings",
+        selectors = "SLING_availablebindings",
         methods = "GET",
         extensions = "json"
 )
