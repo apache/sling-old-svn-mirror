@@ -27,8 +27,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.collections.MultiMap;
-import org.apache.commons.collections.map.MultiValueMap;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -57,7 +57,7 @@ public class ValidationModelRetrieverImplTest {
 
     private ValidationModelRetrieverImpl validationModelRetriever;
     private Validator<?> dateValidator;
-    private MultiMap applicablePathPerResourceType;
+    private MultiValuedMap<String, String> applicablePathPerResourceType;
     private TestModelProvider modelProvider;
     
     @Mock
@@ -123,7 +123,7 @@ public class ValidationModelRetrieverImplTest {
     @Before
     public void setup() throws LoginException {
         dateValidator = new DateValidator();
-        applicablePathPerResourceType = new MultiValueMap();
+        applicablePathPerResourceType = new ArrayListValuedHashMap<>();
         validationModelRetriever = new ValidationModelRetrieverImpl();
         modelProvider = new TestModelProvider();
         // service id must be set (even if service ranking is not set)
@@ -200,7 +200,10 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
         model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
-        Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(new ResourcePropertyNameMatcher("test/type"), new ResourcePropertyNameMatcher("test/supertype")));
+        Collection<ResourcePropertyNameMatcher> matchers = new ArrayList<>();
+        matchers.add(new ResourcePropertyNameMatcher("test/type"));
+        matchers.add(new ResourcePropertyNameMatcher("test/supertype"));
+        Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(matchers));
     }
     
     @Test
