@@ -125,7 +125,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.3.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
