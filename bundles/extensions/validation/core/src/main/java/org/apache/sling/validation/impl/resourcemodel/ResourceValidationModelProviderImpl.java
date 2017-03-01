@@ -36,8 +36,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPoolPolicy;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
@@ -79,7 +81,6 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final String PROPERTY_MULTIPLE = "propertyMultiple";
     public static final String PROPERTIES = "properties";
     public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
-    public static final String MODELS_HOME = "validation/";
     public static final String APPLICABLE_PATHS = "applicablePaths";
     public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
     public static final String SEVERITY = "severity";
@@ -104,7 +105,12 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     @Activate
     protected void activate(ComponentContext componentContext) throws LoginException {
-        threadPool = tpm.get("Validation Service Thread Pool");
+        ModifiableThreadPoolConfig threadPoolConfig = new ModifiableThreadPoolConfig();
+        threadPoolConfig.setMinPoolSize(1);
+        threadPoolConfig.setMaxPoolSize(1);
+        threadPoolConfig.setQueueSize(2); // make sure at most 2 invalidation requests queue up
+        threadPoolConfig.setBlockPolicy(ThreadPoolPolicy.DISCARD);
+        threadPool = tpm.create(threadPoolConfig, "Validation Service Thread Pool");
         ResourceResolver rr = null;
         try {
             rr = rrf.getServiceResourceResolver(null);
@@ -114,11 +120,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 sb.append("|");
             }
             for (String searchPath : searchPaths) {
-                if (searchPath.endsWith("/")) {
-                    searchPath = searchPath.substring(0, searchPath.length() - 1);
-                }
-                String path = searchPath + "/*" + ResourceValidationModelProviderImpl.MODELS_HOME;
-                sb.append("(path=").append(path).append("*)");
+                sb.append("(path=").append(searchPath + "*").append(")");
             }
             sb.append(")");
             Dictionary<String, Object> eventHandlerProperties = new Hashtable<String, Object>();
@@ -151,6 +153,12 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         Runnable task = new Runnable() {
             @Override
             public void run() {
+                try {
+                    // defer invalidating the cache, to prevent to many invalidation events to be sent in a row when a lot of modifications happen below the resource resolver's search paths
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    LOG.warn("Could not wait 500 seconds till invalidating the cache", e);
+                }
                 cache.invalidate();
             }
         };
