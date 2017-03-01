@@ -19,7 +19,14 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.factory.ModelClassException;
@@ -128,6 +135,49 @@ public class ConstructorTest {
         assertNull(model.getRequest());
         assertEquals(INT_VALUE, model.getAttribute());
         assertEquals(STRING_VALUE, model.getAttribute2());
+    }
+
+    @Test
+    public void testMultiThreadedConstructorInjection() throws InterruptedException, ExecutionException {
+
+        class ModelCreator implements Callable<String> {
+            @Override
+            public String call() throws Exception {
+                try {
+                    WithOneConstructorModel model = factory.getAdapter(request, WithOneConstructorModel.class);
+                    if (model == null) {
+                        return "Expected model not null";
+                    }
+                    if (!request.equals(model.getRequest())) {
+                        return "Expected same request";
+                    }
+                    if (INT_VALUE != model.getAttribute()) {
+                        return "Expected same value for attribute";
+                    }
+                } catch (Throwable e) {
+                    return "Exception not expected: " + e;
+                }
+                return null;
+            }
+        }
+
+        int tries = 10000;
+        int threads = 10;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        List<ModelCreator> modelCreators = new ArrayList<>(tries);
+        for (int i = 0; i < tries; i++) {
+            modelCreators.add(new ModelCreator());
+        }
+        List<Future<String>> futures = executorService.invokeAll(modelCreators);
+        executorService.shutdown();
+
+        for (Future<String> f : futures) {
+            String res = f.get();
+            if (res != null) {
+                fail(res);
+            }
+        }
     }
 
     @Test

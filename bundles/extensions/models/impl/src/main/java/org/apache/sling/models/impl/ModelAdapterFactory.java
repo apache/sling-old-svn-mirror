@@ -799,23 +799,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     private RuntimeException setField(InjectableField injectableField, Object createdObject, Object value) {
-        Field field = injectableField.getField();
-        Result<Object> result = adaptIfNecessary(value, field.getType(), field.getGenericType());
+        Result<Object> result = adaptIfNecessary(value, injectableField.getFieldType(), injectableField.getFieldGenericType());
         if (result.wasSuccessful()) {
-            boolean accessible = field.isAccessible();
-            try {
-                if (!accessible) {
-                    field.setAccessible(true);
-                }
-                field.set(createdObject, result.getValue());
-            } catch (Exception e) {
-                return new ModelClassException("Could not inject field due to reflection issues", e);
-            } finally {
-                if (!accessible) {
-                    field.setAccessible(false);
-                }
-            }
-            return null;
+            return injectableField.set(createdObject, result);
         } else {
             return result.getThrowable();
         }
