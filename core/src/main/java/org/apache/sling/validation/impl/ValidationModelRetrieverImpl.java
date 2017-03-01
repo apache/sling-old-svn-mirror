@@ -39,6 +39,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -56,7 +57,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     public static final String CACHE_INVALIDATION_EVENT_TOPIC = "org/apache/sling/validation/cache/INVALIDATE";
 
     /**
-     * Map of known validation models (key=validated resourceType, value=trie of ValidationModels sorted by their
+     * Map of known validation models (key=validated resourceType, value={@link Trie} of {@link ValidationModel}s sorted by their
      * allowed paths)
      */
     protected Map<String, Trie<ValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<ValidationModel>>();
@@ -150,7 +151,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
         return modelsForResourceType;
     }
 
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE, policyOption=ReferencePolicyOption.GREEDY)
     protected synchronized void addModelProvider(ValidationModelProvider modelProvider, Map<String, Object> props) {
         modelProviders.bind(modelProvider, props);
         LOG.debug("Invalidating models cache because new model provider '{}' available", modelProvider);
@@ -163,7 +164,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
         validationModelsCache.clear();
     }
 
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption=ReferencePolicyOption.GREEDY)
     protected void addValidator(Validator<?> validator) {
         if (validators.put(validator.getClass().getName(), validator) != null) {
             LOG.debug("Validator with the name '{}' has been registered in the system already and was now overwritten",
