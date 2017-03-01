@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
@@ -40,6 +41,7 @@ import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Assert;
@@ -200,10 +202,7 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
         model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
-        Collection<ResourcePropertyNameMatcher> matchers = new ArrayList<>();
-        matchers.add(new ResourcePropertyNameMatcher("test/type"));
-        matchers.add(new ResourcePropertyNameMatcher("test/supertype"));
-        Assert.assertThat(model.getResourceProperties(), Matchers.containsInAnyOrder(matchers));
+        Assert.assertThat(model.getResourceProperties(), Matchers.<ResourceProperty>containsInAnyOrder(Arrays.asList(new ResourcePropertyNameMatcher("test/type"), new ResourcePropertyNameMatcher("test/supertype"))));
     }
     
     @Test
