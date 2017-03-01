@@ -97,7 +97,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     private ThreadPool threadPool;
 
-    private ServiceRegistration eventHandlerRegistration;
+    private ServiceRegistration<EventHandler> eventHandlerRegistration;
 
     @Reference
     private ServiceUserMapped serviceUserMapped;
@@ -125,7 +125,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             eventHandlerProperties.put(EventConstants.EVENT_TOPIC, TOPICS);
             eventHandlerProperties.put(EventConstants.EVENT_FILTER, sb.toString());
             eventHandlerRegistration = componentContext.getBundleContext().registerService(
-                    EventHandler.class.getName(), this, eventHandlerProperties);
+                    EventHandler.class, this, eventHandlerProperties);
             LOG.debug("Registered event handler for validation models in {}", sb.toString());
         } finally {
             if (rr != null) {
