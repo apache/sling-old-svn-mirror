@@ -80,6 +80,9 @@ public abstract class ThymeleafTestSupport extends TestSupport {
             launchpad(),
             // Sling Scripting Thymeleaf
             testBundle("bundle.filename"),
+            mavenBundle().groupId("org.attoparser").artifactId("attoparser").versionAsInProject(),
+            mavenBundle().groupId("org.unbescape").artifactId("unbescape").versionAsInProject(),
+            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.ognl").versionAsInProject(),
             mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
             // testing
             mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
