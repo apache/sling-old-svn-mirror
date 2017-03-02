@@ -18,7 +18,6 @@
  */
 package org.apache.sling.fscontentparser;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.fscontentparser.impl.JcrXmlContentFileParser;
 import org.apache.sling.fscontentparser.impl.JsonContentFileParser;
 
@@ -33,27 +32,28 @@ public final class ContentFileParserFactory {
     
     /**
      * Create content file parser.
-     * @param fileExtension File extension from {@link ContentFileExtension}.
+     * @param type Content file type
      * @return Content file parser
      */
-    public static ContentFileParser create(String fileExtension) {
-        return create(fileExtension, new ParserOptions());
+    public static ContentFileParser create(ContentFileType type) {
+        return create(type, new ParserOptions());
     }
     
     /**
      * Create content file parser.
-     * @param fileExtension File extension from {@link ContentFileExtension}.
+     * @param type Content file type
      * @param options Parser options
      * @return Content file parser
      */
-    public static ContentFileParser create(String fileExtension, ParserOptions options) {
-        if (StringUtils.equals(fileExtension, ContentFileExtension.JSON)) {
-            return new JsonContentFileParser(options);
+    public static ContentFileParser create(ContentFileType type, ParserOptions options) {
+        switch (type) {
+            case JSON:
+                return new JsonContentFileParser(options);
+            case JCR_XML:
+                return new JcrXmlContentFileParser(options);
+            default:
+                throw new IllegalArgumentException("Unsupported file extension: " + type);
         }
-        else if (StringUtils.equals(fileExtension, ContentFileExtension.JCR_XML)) {
-            return new JcrXmlContentFileParser(options);
-        }
-        throw new IllegalArgumentException("Unsupported file extension: " + fileExtension);
     }
     
 }
