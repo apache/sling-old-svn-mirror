@@ -231,7 +231,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     /**
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
-     * @param validatorsMap      a map containing {@link Validator}s as values and their class names as keys
+     * @param validatorsMap      a map containing {@link Validator}s as values and their id's as keys
      * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty
@@ -250,15 +250,15 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 if (validators != null) {
                     Iterator<Resource> validatorsIterator = validators.listChildren();
                     while (validatorsIterator.hasNext()) {
-                        Resource validator = validatorsIterator.next();
-                        ValueMap validatorProperties = validator.adaptTo(ValueMap.class);
+                        Resource validatorResource = validatorsIterator.next();
+                        ValueMap validatorProperties = validatorResource.adaptTo(ValueMap.class);
                         if (validatorProperties == null) {
-                            throw new IllegalStateException("Could not adapt resource " + validator.getPath() + " to ValueMap");
+                            throw new IllegalStateException("Could not adapt resource " + validatorResource.getPath() + " to ValueMap");
                         }
-                        String validatorName = validator.getName();
-                        Validator<?> v = validatorsMap.get(validatorName);
-                        if (v == null) {
-                            throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
+                        String validatorId = validatorResource.getName();
+                        Validator<?> validator = validatorsMap.get(validatorId);
+                        if (validator == null) {
+                            throw new IllegalArgumentException("Could not find validator with id '" + validatorId + "'");
                         }
                         // get arguments for validator
                         String[] validatorArguments = validatorProperties.get(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS, String[].class);
@@ -274,7 +274,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                         }
                         // get severity
                         Integer severity = validatorProperties.get(SEVERITY, Integer.class);
-                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap, severity));
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(validator, validatorArgumentsMap, severity));
                     }
                 }
                 ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, propertyRequired, parameterizedValidators);
