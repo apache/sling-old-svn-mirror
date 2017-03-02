@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Component;
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
  * mandatory parameter in the arguments map: {@link RegexValidator#REGEX_PARAM}.
  */
-@Component
+@Component(property=Validator.PROPERTY_VALIDATOR_ID+"=org.apache.sling.validation.core.RegexValidator")
 public class RegexValidator implements Validator<String> {
 
     public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";

@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
+import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
@@ -51,8 +52,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
+
+import edu.umd.cs.findbugs.annotations.When;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationModelRetrieverImplTest {
@@ -66,6 +71,14 @@ public class ValidationModelRetrieverImplTest {
     private ResourceResolver resourceResolver;
     @Mock
     private ResourceResolverFactory resourceResolverFactory;
+    @Mock
+    private ServiceReference<Validator<?>> validatorServiceReference;
+    @Mock
+    private ServiceReference<Validator<?>> newValidatorServiceReference;
+    @Mock
+    private Bundle providingBundle;
+    
+    private static final String DATE_VALIDATOR_ID = "DateValidator";
 
     /**
      * Test model provider which only provides models for all resource types in map applicablePathPerResourceType with their according applicablePath!
@@ -80,7 +93,7 @@ public class ValidationModelRetrieverImplTest {
                 @Nonnull Map<String, Validator<?>> validatorsMap) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,
-                    Matchers.<String, Validator<?>> hasEntry(DateValidator.class.getName(), dateValidator));
+                    Matchers.<String, Validator<?>> hasEntry(DATE_VALIDATOR_ID, dateValidator));
 
             Collection<ValidationModel> models = new ArrayList<ValidationModel>();
             Collection<String> applicablePaths = (Collection<String>) applicablePathPerResourceType
@@ -132,9 +145,49 @@ public class ValidationModelRetrieverImplTest {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(Constants.SERVICE_ID, 1L);
         validationModelRetriever.addModelProvider(modelProvider, properties);
-        validationModelRetriever.addValidator(dateValidator);
+        Mockito.doReturn(1l).when(providingBundle).getBundleId();
+        Mockito.doReturn(providingBundle).when(validatorServiceReference).getBundle();
+        Mockito.doReturn(providingBundle).when(newValidatorServiceReference).getBundle();
+        Map<String, Object> validatorProperties = new HashMap<>();
+        validatorProperties.put(Validator.PROPERTY_VALIDATOR_ID, DATE_VALIDATOR_ID);
+        validationModelRetriever.addValidator(dateValidator, validatorProperties, validatorServiceReference);
         validationModelRetriever.resourceResolverFactory = resourceResolverFactory;
         Mockito.when(resourceResolverFactory.getServiceResourceResolver(Mockito.anyObject())).thenReturn(resourceResolver);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testAddValidatorWithoutValidatorIdProperty() {
+        Map<String, Object> validatorProperties = new HashMap<>();
+        validationModelRetriever.addValidator(dateValidator, validatorProperties, validatorServiceReference);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testAddValidatorWithWronglyTypedValidatorId() {
+        Map<String, Object> validatorProperties = new HashMap<>();
+        validatorProperties.put(Validator.PROPERTY_VALIDATOR_ID, new String[]{"some", "value"});
+        validationModelRetriever.addValidator(dateValidator, validatorProperties, validatorServiceReference);
+    }
+
+    @Test
+    public void testAddOverloadingValidatorWithSameValidatorIdAndHigherRanking() {
+        Map<String, Object> validatorProperties = new HashMap<>();
+        validatorProperties.put(Validator.PROPERTY_VALIDATOR_ID, DATE_VALIDATOR_ID);
+        Mockito.doReturn(1).when(newValidatorServiceReference).compareTo(Mockito.anyObject());
+        Validator<String> stringValidator = new StringValidator();
+        validationModelRetriever.addValidator(stringValidator, validatorProperties, newValidatorServiceReference);
+        Assert.assertEquals(stringValidator, validationModelRetriever.validators.get(DATE_VALIDATOR_ID));
+        Assert.assertEquals(newValidatorServiceReference, validationModelRetriever.validatorServiceReferences.get(DATE_VALIDATOR_ID));
+    }
+    
+    @Test
+    public void testAddOverloadingValidatorWithSameValidatorIdAndLowerRanking() {
+        Map<String, Object> validatorProperties = new HashMap<>();
+        validatorProperties.put(Validator.PROPERTY_VALIDATOR_ID, DATE_VALIDATOR_ID);
+        Mockito.doReturn(-1).when(newValidatorServiceReference).compareTo(Mockito.anyObject());
+        Validator<String> stringValidator = new StringValidator();
+        validationModelRetriever.addValidator(stringValidator, validatorProperties, newValidatorServiceReference);
+        Assert.assertEquals(dateValidator, validationModelRetriever.validators.get(DATE_VALIDATOR_ID));
+        Assert.assertEquals(validatorServiceReference, validationModelRetriever.validatorServiceReferences.get(DATE_VALIDATOR_ID));
     }
 
     @Test
