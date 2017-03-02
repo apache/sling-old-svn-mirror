@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.nodetype.NodeType;
-
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
@@ -53,11 +51,6 @@ final class ValueMapUtil {
             else {
                 props.put(entry.getKey(), entry.getValue());
             }
-        }
-        
-        // fallback to default jcr:primaryType is none is set
-        if (!props.containsKey("jcr:primaryType")) {
-            props.put("jcr:primaryType", NodeType.NT_UNSTRUCTURED);
         }
         
         return new ValueMapDecorator(props);
