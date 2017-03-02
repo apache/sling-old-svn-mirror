@@ -237,6 +237,36 @@ public class ResourceValidationModelProviderImplTest {
     }
 
     @Test
+    public void testGetValidationModelsWithoutApplicablePath() throws Exception {
+        modelBuilder = new ValidationModelBuilder();
+        // build two models manually (which are identical except for the applicable path)
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        
+        // build models in JCR
+        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1, true);
+        
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+    }
+    
+    @Test
+    public void testGetValidationModelsWithEmptyApplicablePath() throws Exception {
+        modelBuilder = new ValidationModelBuilder();
+        // build two models manually (which are identical except for the applicable path)
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        
+        // build models in JCR
+        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1, false);
+        
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+    }
+    
+    @Test
     public void testGetValidationModelsOutsideSearchPath() throws Exception {
         // build two models manually (which are identical except for the applicable path)
         ValidationModel model1 = modelBuilder.build("sling/validation/test", "some source");
@@ -332,11 +362,17 @@ public class ResourceValidationModelProviderImplTest {
         Assert.assertEquals("Due to caching both models should be actually the same instance", System.identityHashCode(models), System.identityHashCode(models2));
     }
 
-    private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
+    private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model) throws Exception {
+        return createValidationModelResource(rr, root, name, model, false);
+    }
+
+    private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model, boolean leaveOutApplicablePathProperty)
             throws Exception {
         Map<String, Object> modelProperties = new HashMap<String, Object>();
         modelProperties.put(ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE, model.getValidatedResourceType());
-        modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths());
+        if (!leaveOutApplicablePathProperty) {
+            modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths().toArray());
+        }
         modelProperties
                 .put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE);
         modelProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);

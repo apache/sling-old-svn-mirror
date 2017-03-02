@@ -73,7 +73,7 @@ public class MergedValidationModel implements ValidationModel {
             // throw exception if the applicable path is restricted in the modelToMerge in comparison to baseModel
             for (String path : modelToMerge.getApplicablePaths()) {
                 if (isPathRestricted(path, baseModel.getApplicablePaths())) {
-                    String msg = String.format("The path '%s' from one of the models to merge is more specific than any of the base paths (%s)", path, Arrays.toString(baseModel.getApplicablePaths()));
+                    String msg = String.format("The path '%s' from one of the models to merge is more specific than any of the base paths (%s)", path, baseModel.getApplicablePaths());
                     throw new IllegalArgumentException(msg);
                 }
             }
@@ -88,7 +88,7 @@ public class MergedValidationModel implements ValidationModel {
      * @param pathsToCompareWith
      * @return {@code true} in case the given path is either more specific or not at all overlapping with one of the pathsToCompareWith
      */
-    private boolean isPathRestricted(String path, String[] pathsToCompareWith) {
+    private boolean isPathRestricted(String path, Collection<String> pathsToCompareWith) {
         for (String basePath : pathsToCompareWith) {
             if (basePath.startsWith(path)) {
                 return false;
@@ -111,7 +111,7 @@ public class MergedValidationModel implements ValidationModel {
 
     @Override
     @Nonnull
-    public String[] getApplicablePaths() {
+    public Collection<String> getApplicablePaths() {
         return baseModel.getApplicablePaths();
     }
 

@@ -20,9 +20,7 @@ package org.apache.sling.validation.impl.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -38,7 +36,7 @@ public class ValidationModelBuilder {
 
     private final @Nonnull List<ResourceProperty> resourceProperties;
     private final @Nonnull List<ChildResource> children;
-    private final Collection<String> applicablePaths;
+    private final @Nonnull Collection<String> applicablePaths;
     
     public ValidationModelBuilder() {
         resourceProperties = new ArrayList<ResourceProperty>();
@@ -85,6 +83,6 @@ public class ValidationModelBuilder {
     }
     
     public @Nonnull ValidationModel build(@Nonnull String validatedResourceType, @Nonnull String source) {
-        return new ValidationModelImpl(resourceProperties, validatedResourceType, applicablePaths.toArray(new String[0]), children, source);
+        return new ValidationModelImpl(resourceProperties, validatedResourceType, applicablePaths, children, source);
     }
 }
