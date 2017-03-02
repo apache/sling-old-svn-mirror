@@ -61,12 +61,16 @@ public class ResourceDistributionPackageCleanup implements Runnable {
             for (Iterator<ResourceDistributionPackage> pkgs = packageBuilder.getPackages(serviceResolver) ; pkgs.hasNext() ; total++) {
                 ResourceDistributionPackage pkg = pkgs.next();
                 if (pkg.disposable()) {
-                    log.trace("Delete package {}", pkg.getId());
+                    log.debug("Delete package {}", pkg.getId());
                     deleted++;
                     pkg.delete(false);
+                } else {
+                    log.debug("package {} is not disposable", pkg.getId());
                 }
             }
-            serviceResolver.commit();
+            if (serviceResolver.hasChanges()) {
+                serviceResolver.commit();
+            }
             log.debug("Cleaned up {}/{} {} packages",
                     new Object[]{deleted, total, packageBuilder.getType()});
         } catch (LoginException e) {
