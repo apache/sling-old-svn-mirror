@@ -21,8 +21,8 @@ package org.apache.sling.validation.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -30,21 +30,18 @@ import javax.annotation.Nonnull;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
+import org.apache.sling.validation.impl.util.ResourcePropertyNameMatcher;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,9 +52,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.event.Event;
-
-import edu.umd.cs.findbugs.annotations.When;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationModelRetrieverImplTest {
@@ -86,18 +80,20 @@ public class ValidationModelRetrieverImplTest {
      *
      */
     class TestModelProvider implements ValidationModelProvider {
-        int counter = 0;
-
+        private @Nonnull final String source;
+        public TestModelProvider(@Nonnull String source) {
+            this.source = source;
+        }
+        
         @Override
-        public @Nonnull Collection<ValidationModel> getModels(@Nonnull String relativeResourceType,
+        public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType,
                 @Nonnull Map<String, Validator<?>> validatorsMap) {
             // make sure the date validator is passed along
             Assert.assertThat(validatorsMap,
                     Matchers.<String, Validator<?>> hasEntry(DATE_VALIDATOR_ID, dateValidator));
 
-            Collection<ValidationModel> models = new ArrayList<ValidationModel>();
-            Collection<String> applicablePaths = (Collection<String>) applicablePathPerResourceType
-                    .get(relativeResourceType);
+            List<ValidationModel> models = new ArrayList<ValidationModel>();
+            Collection<String> applicablePaths = applicablePathPerResourceType.get(relativeResourceType);
             if (applicablePaths != null) {
                 for (String applicablePath : applicablePaths) {
                     ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
@@ -105,33 +101,10 @@ public class ValidationModelRetrieverImplTest {
                         modelBuilder.addApplicablePath(applicablePath);
                     }
                     modelBuilder.resourceProperty(new ResourcePropertyBuilder().build(relativeResourceType));
-                    models.add(modelBuilder.build(relativeResourceType));
+                    models.add(modelBuilder.build(relativeResourceType, source));
                 }
             }
-            counter++;
             return models;
-        }
-    }
-
-    /**
-     * Custom Hamcrest matcher which matches Resource Properties based on the equality only on their name.
-     */
-    private static final class ResourcePropertyNameMatcher extends TypeSafeMatcher<ResourceProperty> {
-
-        private final String expectedName;
-
-        public ResourcePropertyNameMatcher(String name) {
-            expectedName = name;
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            description.appendText("ResourceProperty with name=" + expectedName);
-        }
-
-        @Override
-        protected boolean matchesSafely(ResourceProperty resourceProperty) {
-           return expectedName.equals(resourceProperty.getName());
         }
     }
 
@@ -140,11 +113,9 @@ public class ValidationModelRetrieverImplTest {
         dateValidator = new DateValidator();
         applicablePathPerResourceType = new ArrayListValuedHashMap<>();
         validationModelRetriever = new ValidationModelRetrieverImpl();
-        modelProvider = new TestModelProvider();
-        // service id must be set (even if service ranking is not set)
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(Constants.SERVICE_ID, 1L);
-        validationModelRetriever.addModelProvider(modelProvider, properties);
+        modelProvider = new TestModelProvider("source1");
+        validationModelRetriever.modelProviders = new ArrayList<>();
+        validationModelRetriever.modelProviders.add(modelProvider);
         Mockito.doReturn(1l).when(providingBundle).getBundleId();
         Mockito.doReturn(providingBundle).when(validatorServiceReference).getBundle();
         Mockito.doReturn(providingBundle).when(newValidatorServiceReference).getBundle();
@@ -214,36 +185,6 @@ public class ValidationModelRetrieverImplTest {
     }
 
     @Test
-    public void testGetCachedModel() {
-        applicablePathPerResourceType.put("test/type", "/content/site1");
-        // call two times, the second time the counter must be the same (because provider is not called)
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", false);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(1, modelProvider.counter);
-        model = validationModelRetriever.getModel("test/type", "/content/site1", false);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(1, modelProvider.counter);
-
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
-        Assert.assertNull(model);
-        Assert.assertEquals(2, modelProvider.counter);
-        model = validationModelRetriever.getModel("invalid/type", "/content/site1", false);
-        Assert.assertNull(model);
-        Assert.assertEquals(2, modelProvider.counter);
-    }
-
-    @Test
-    public void testGetCachedInvalidation() {
-        applicablePathPerResourceType.put("test/type", "/content/site1");
-        validationModelRetriever.getModel("test/type", "/content/site1", false);
-        Assert.assertEquals(1, modelProvider.counter);
-        validationModelRetriever.handleEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
-        // after cache invalidation the provider is called again
-        validationModelRetriever.getModel("test/type", "/content/site1", false);
-        Assert.assertEquals(2, modelProvider.counter);
-    }
-
-    @Test
     public void testGetModelWithResourceInheritance() {
         // in case no super type is known, just return model
         applicablePathPerResourceType.put("test/type", "/content/site1");
@@ -270,8 +211,6 @@ public class ValidationModelRetrieverImplTest {
         model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNull("Found model although no model has been specified (neither in base nor in super type)", model);
         
-        validationModelRetriever.validationModelsCache.clear();
-        
         // only supertype has model being set
         applicablePathPerResourceType.put("test/supertype", "/content/site1");
         model = validationModelRetriever.getModel("test/type", "/content/site1", true);
@@ -289,5 +228,35 @@ public class ValidationModelRetrieverImplTest {
         ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1", true);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getResourceProperties(), Matchers.contains(new ResourcePropertyNameMatcher("test/type")));
+    }
+    
+    @Test
+    public void testGetModelWithMultipleProvidersHigherRanking() {
+        ValidationModelProvider modelProvider2 = new TestModelProvider("source2");
+        validationModelRetriever.modelProviders.clear();
+        validationModelRetriever.modelProviders.add(modelProvider);
+        validationModelRetriever.modelProviders.add(modelProvider2);
+        // each provider must return the same applicable path but different
+        applicablePathPerResourceType.put("test/type", "/content/site1");
+
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/somepage", false);
+        Assert.assertNotNull(model);
+        Assert.assertEquals("source2", model.getSource());
+        
+    }
+    
+    @Test
+    public void testGetModelWithMultipleProvidersLowerRanking() {
+        ValidationModelProvider modelProvider2 = new TestModelProvider("source2");
+        validationModelRetriever.modelProviders.clear();
+        validationModelRetriever.modelProviders.add(modelProvider2);
+        validationModelRetriever.modelProviders.add(modelProvider);
+        // each provider must return the same applicable path but different
+        applicablePathPerResourceType.put("test/type", "/content/site1");
+
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/somepage", false);
+        Assert.assertNotNull(model);
+        Assert.assertEquals("source1", model.getSource());
+        
     }
 }

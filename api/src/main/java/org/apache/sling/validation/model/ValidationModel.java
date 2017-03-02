@@ -60,5 +60,11 @@ public interface ValidationModel {
      * @return the children list (can be empty if there are no children), never {@code null}
      */
     @Nonnull Collection<ChildResource> getChildren();
+    
+    /**
+     * 
+     * @return a string indicating the original source of this validation model, e.g. a resource path
+     */
+    @Nonnull String getSource();
 
 }

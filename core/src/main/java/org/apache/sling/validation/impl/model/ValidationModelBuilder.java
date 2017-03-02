@@ -20,7 +20,9 @@ package org.apache.sling.validation.impl.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -40,8 +42,8 @@ public class ValidationModelBuilder {
     
     public ValidationModelBuilder() {
         resourceProperties = new ArrayList<ResourceProperty>();
-        children = new ArrayList<ChildResource>();
-        applicablePaths = new ArrayList<String>();
+        children = new ArrayList<>();
+        applicablePaths = new ArrayList<>();
     }
     
     public @Nonnull ValidationModelBuilder resourceProperty(@Nonnull ResourceProperty resourceProperty) {
@@ -49,8 +51,18 @@ public class ValidationModelBuilder {
         return this;
     }
     
+    public @Nonnull ValidationModelBuilder resourceProperties(@Nonnull List<ResourceProperty> resourceProperties) {
+        this.resourceProperties.addAll(resourceProperties);
+        return this;
+    }
+    
     public @Nonnull ValidationModelBuilder childResource(@Nonnull ChildResource childResource) {
         children.add(childResource);
+        return this;
+    }
+    
+    public @Nonnull ValidationModelBuilder childResources(@Nonnull List<ChildResource> childResources) {
+        children.addAll(childResources);
         return this;
     }
     
@@ -65,7 +77,14 @@ public class ValidationModelBuilder {
         return this;
     }
     
-    public @Nonnull ValidationModel build(@Nonnull String validatedResourceType) {
-        return new ValidationModelImpl(resourceProperties, validatedResourceType, applicablePaths.toArray(new String[0]), children);
+    public @Nonnull ValidationModelBuilder addApplicablePaths(@Nonnull String[] applicablePaths) {
+        for (String applicablePath : applicablePaths) {
+            this.applicablePaths.add(applicablePath);
+        }
+        return this;
+    }
+    
+    public @Nonnull ValidationModel build(@Nonnull String validatedResourceType, @Nonnull String source) {
+        return new ValidationModelImpl(resourceProperties, validatedResourceType, applicablePaths.toArray(new String[0]), children, source);
     }
 }

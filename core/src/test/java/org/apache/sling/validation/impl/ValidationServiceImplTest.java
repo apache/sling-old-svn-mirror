@@ -102,7 +102,7 @@ public class ValidationServiceImplTest {
     public void testValueMapWithWrongDataType() throws Exception {
         propertyBuilder.validator(new DateValidator());
         modelBuilder.resourceProperty(propertyBuilder.build("field1"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "1");
@@ -126,7 +126,7 @@ public class ValidationServiceImplTest {
         };
         propertyBuilder.validator(myValidator);
         modelBuilder.resourceProperty(propertyBuilder.build("field1"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "1");
@@ -141,7 +141,7 @@ public class ValidationServiceImplTest {
         modelBuilder.resourceProperty(propertyBuilder.build("field2"));
         modelBuilder.resourceProperty(propertyBuilder.build("field3"));
         modelBuilder.resourceProperty(propertyBuilder.build("field4"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         // this should not be detected as missing property
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -156,7 +156,7 @@ public class ValidationServiceImplTest {
     @Test()
     public void testValueMapWithMissingOptionalValue() throws Exception {
         modelBuilder.resourceProperty(propertyBuilder.optional().build("field1"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field2", "1");
@@ -170,7 +170,7 @@ public class ValidationServiceImplTest {
         propertyBuilder.optional();
         propertyBuilder.validator(new RegexValidator(), 2, RegexValidator.REGEX_PARAM, "abc");
         modelBuilder.resourceProperty(propertyBuilder.build("field1"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "");
@@ -188,7 +188,7 @@ public class ValidationServiceImplTest {
         final String TEST_REGEX = "^test$";
         propertyBuilder.validator(new RegexValidator(), 0, RegexValidator.REGEX_PARAM, TEST_REGEX);
         modelBuilder.resourceProperty(propertyBuilder.build("field2"));
-        ValidationModel vm = modelBuilder.build("sling/validation/test");
+        ValidationModel vm = modelBuilder.build("sling/validation/test", "some source");
 
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "HelloWorld");
@@ -213,7 +213,7 @@ public class ValidationServiceImplTest {
         modelChild = new ChildResourceImpl("optionalChild", null, false, Collections.singletonList(property), Collections.emptyList());
         modelBuilder.childResource(modelChild);
         
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
         ResourceResolver rr = context.resourceResolver();
         Resource nonExistingResource = new NonExistingResource(rr, "non-existing-resource");
         ValidationResult vr = validationService.validate(nonExistingResource, vm);
@@ -237,7 +237,7 @@ public class ValidationServiceImplTest {
         modelChild = new ChildResourceImpl("optionalChild", null, false, Collections.singletonList(property), Collections.emptyList());
         modelBuilder.childResource(modelChild);
         
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
         ResourceResolver rr = context.resourceResolver();
         Resource nonExistingResource = new SyntheticResource(rr, "someresource", "resourceType");
         ValidationResult vr = validationService.validate(nonExistingResource, vm);
@@ -260,7 +260,7 @@ public class ValidationServiceImplTest {
                 Collections.singletonList(modelGrandChild));
         modelBuilder.childResource(modelChild);
 
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
 
         // create a resource
         ResourceResolver rr = context.resourceResolver();
@@ -288,7 +288,7 @@ public class ValidationServiceImplTest {
         ChildResource child = new ChildResourceImpl("child", null, false, Collections.singletonList(property),
                 Collections.<ChildResource> emptyList());
         modelBuilder.childResource(child);
-        ValidationModel vm = modelBuilder.build("type");
+        ValidationModel vm = modelBuilder.build("type", "some source");
 
         // create a resource (lacking the optional "child" sub resource)
         ResourceResolver rr = context.resourceResolver();
@@ -310,7 +310,7 @@ public class ValidationServiceImplTest {
         ChildResource modelChild = new ChildResourceImpl("child", null, true, Collections.singletonList(property),
                 Collections.singletonList(modelGrandChild));
         modelBuilder.childResource(modelChild);
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
 
         // create a resource
         ResourceResolver rr = context.resourceResolver();
@@ -345,7 +345,7 @@ public class ValidationServiceImplTest {
         };
         propertyBuilder.validator(extendedValidator); // accept any digits
         modelBuilder.resourceProperty(propertyBuilder.build("field1"));
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
 
         // create a resource
         ResourceResolver rr = context.resourceResolver();
@@ -371,7 +371,7 @@ public class ValidationServiceImplTest {
 
         modelBuilder.childResource(modelChild);
         modelBuilder.childResource(siblingChild);
-        ValidationModel vm = modelBuilder.build("sometype");
+        ValidationModel vm = modelBuilder.build("sometype", "some source");
 
         ResourceResolver rr = context.resourceResolver();
         Resource testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource",
@@ -405,7 +405,7 @@ public class ValidationServiceImplTest {
         modelBuilder.resourceProperty(propertyBuilder.build("otherfield"));
         propertyBuilder.nameRegex("optionalfield.*").optional();
         modelBuilder.resourceProperty(propertyBuilder.build("optionalfield"));
-        ValidationModel vm = modelBuilder.build("type");
+        ValidationModel vm = modelBuilder.build("type", "some source");
 
         // create a resource
         ResourceResolver rr = context.resourceResolver();
@@ -430,7 +430,7 @@ public class ValidationServiceImplTest {
         propertyBuilder.validator(new RegexValidator(), 0, RegexValidator.REGEX_PARAM, "\\d"); // accept any digits
         propertyBuilder.multiple();
         modelBuilder.resourceProperty(propertyBuilder.build("field"));
-        ValidationModel vm = modelBuilder.build("type");
+        ValidationModel vm = modelBuilder.build("type", "some source");
 
         ResourceResolver rr = context.resourceResolver();
         Resource testResource = ResourceUtil.getOrCreateResource(rr, "/content/validation/1/resource",
@@ -446,10 +446,10 @@ public class ValidationServiceImplTest {
     @Test()
     public void testValidateResourceRecursively() throws Exception {
         modelBuilder.resourceProperty(propertyBuilder.build("field1"));
-        final ValidationModel vm1 = modelBuilder.build("resourcetype1");
+        final ValidationModel vm1 = modelBuilder.build("resourcetype1", "some source");
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.resourceProperty(propertyBuilder.build("field2"));
-        final ValidationModel vm2 = modelBuilder.build("resourcetype2");
+        final ValidationModel vm2 = modelBuilder.build("resourcetype2", "some source");
 
         // set model retriever
         validationService.modelRetriever = new ValidationModelRetriever() {
