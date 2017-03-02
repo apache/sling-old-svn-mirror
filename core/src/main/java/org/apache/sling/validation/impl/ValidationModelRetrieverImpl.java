@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Retrieves the most appropriate model (the one with the longest matching applicablePath) from any of the
- * {@link ValidationModelProvider}s. Also implements a cache of all previously retrieved models. */
+ * {@link ValidationModelProvider}s. */
 @Component
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
 
