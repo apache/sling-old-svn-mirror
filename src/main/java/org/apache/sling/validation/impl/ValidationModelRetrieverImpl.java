@@ -51,8 +51,6 @@ import org.slf4j.LoggerFactory;
 @Component
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
 
-    public static final String CACHE_INVALIDATION_EVENT_TOPIC = "org/apache/sling/validation/cache/INVALIDATE";
-
     /** 
      * Map of validation providers (key=service properties), Declarative Services 1.3 takes care that the list is ordered according to {@link ServiceReference#compareTo(Object)}.
      * Highest ranked service is the last one in the list.
@@ -90,6 +88,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
             try {
                 resourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
                 while ((currentResourceType = resourceResolver.getParentResourceType(currentResourceType)) != null) {
+                    LOG.debug("Retrieving validation models for resource super type {}...", currentResourceType);
                     ValidationModel modelToMerge = getModel(currentResourceType, resourcePath);
                     if (modelToMerge != null) {
                         if (baseModel == null) {
@@ -133,10 +132,16 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
         // fill trie with data from model providers (all models for the given resource type, independent of resource path)
         // lowest ranked model provider inserts first (i.e. higher ranked should overwrite)
         for (ValidationModelProvider modelProvider : modelProviders) {
-            for (ValidationModel model : modelProvider.getModels(resourceType, validators)) {
+            LOG.debug("Retrieving validation models with resource type {} from provider {}...", resourceType, modelProvider.getClass().getName());
+            List<ValidationModel> models = modelProvider.getModels(resourceType, validators);
+            for (ValidationModel model : models) {
                 for (String applicablePath : model.getApplicablePaths()) {
+                    LOG.debug("Found validation model for resource type {} for applicable path {}", resourceType, applicablePath);
                     modelsForResourceType.insert(applicablePath, model);
                 }
+            }
+            if (models.isEmpty()) {
+                LOG.debug("Found no validation model with resource type {} from provider {}", resourceType, modelProvider.getClass().getName());
             }
         }
         return modelsForResourceType;
