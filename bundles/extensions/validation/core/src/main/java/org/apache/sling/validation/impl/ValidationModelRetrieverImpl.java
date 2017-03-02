@@ -35,6 +35,7 @@ import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -68,7 +69,9 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     /**
      * List of all known validators (key=classname of validator)
      */
-    @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
+    @Nonnull Map<String, Validator<?>> validators = new ConcurrentHashMap<>();
+    
+    @Nonnull Map<String, ServiceReference<Validator<?>>> validatorServiceReferences = new ConcurrentHashMap<>();
 
     @Reference
     ResourceResolverFactory resourceResolverFactory;
@@ -165,20 +168,50 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption=ReferencePolicyOption.GREEDY)
-    protected void addValidator(Validator<?> validator) {
-        if (validators.put(validator.getClass().getName(), validator) != null) {
-            LOG.debug("Validator with the name '{}' has been registered in the system already and was now overwritten",
-                    validator.getClass().getName());
+    protected void addValidator(Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
+        String validatorId = getValidatorIdFromServiceProperties(properties, validator, serviceReference);
+        if (validators.containsKey(validatorId)) {
+            ServiceReference<Validator<?>> existingServiceReference = validatorServiceReferences.get(validatorId);
+            if (existingServiceReference == null) {
+                throw new IllegalStateException("Could not find service reference for validator with id " + validatorId);
+            }
+            if (serviceReference.compareTo(existingServiceReference) == 1) {
+                LOG.info("Overwriting already existing validator {} from bundle {} with validator {} from bundle {},"
+                        + " because it has the same id {} and a higher service ranking", 
+                        validators.get(validatorId), existingServiceReference.getBundle().getBundleId(), validator, serviceReference.getBundle().getBundleId(), validatorId);
+                validators.put(validatorId, validator);
+                validatorServiceReferences.put(validatorId, serviceReference);
+            } else {
+                LOG.info("A Validator for the same id '{}' is already registered with class '{}' from bundle {} and has a higher service ranking", 
+                        validatorId, validators.get(validatorId), existingServiceReference.getBundle().getBundleId());
+            }
+        } else {
+            validators.put(validatorId, validator);
+            validatorServiceReferences.put(validatorId, serviceReference);
         }
     }
 
-    protected void removeValidator(Validator<?> validator) {
-        // also remove references to all validators in the cache
-        validator = validators.remove(validator.getClass().getName());
+    protected void removeValidator(Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
+        String validatorId = getValidatorIdFromServiceProperties(properties, validator, serviceReference);
+        validator = validators.remove(validatorId);
+        validatorServiceReferences.remove(validatorId);
         if (validator != null) {
             LOG.debug("Invalidating models cache because validator {} is no longer available", validator);
             validationModelsCache.clear();
         }
+    }
+
+    private String getValidatorIdFromServiceProperties(Map<String, Object> properties, Validator<?> validator, ServiceReference<Validator<?>> serviceReference) {
+        Object object = properties.get(Validator.PROPERTY_VALIDATOR_ID);
+        if (object == null) {
+            throw new IllegalArgumentException("Validator '" + validator.getClass().getName() + "' provided from bundle " + serviceReference.getBundle().getBundleId() +
+                    " is lacking the mandatory service property " + Validator.PROPERTY_VALIDATOR_ID);
+        }
+        if (!(object instanceof String)) {
+            throw new IllegalArgumentException("Validator '" + validator.getClass().getName() + "' provided from bundle " + serviceReference.getBundle().getBundleId() +
+                    " is providing the mandatory service property "+ Validator.PROPERTY_VALIDATOR_ID + " with the wrong type "+ object.getClass() +" (must be of type String)"); 
+        }
+        return (String)object;
     }
 
     @Override
