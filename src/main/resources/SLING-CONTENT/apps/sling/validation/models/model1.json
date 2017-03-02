@@ -11,7 +11,7 @@
             "propertyType": "string",
             "validators": {
                 "jcr:primaryType" : "nt:unstructured",
-                "org.apache.sling.validation.impl.validators.RegexValidator": {
+                "org.apache.sling.validation.core.RegexValidator": {
                     "jcr:primaryType" : "nt:unstructured",
                     "validatorArguments" : ["regex=^\\\p{Upper}+$"],
                     "severity" : "10"
