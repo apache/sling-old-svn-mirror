@@ -19,10 +19,29 @@
 
 package org.apache.sling.jms;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+
 import org.apache.sling.amq.ActiveMQConnectionFactoryService;
 import org.apache.sling.amq.ActiveMQConnectionFactoryServiceTest;
 import org.apache.sling.jms.impl.JMSQueueManager;
-import org.apache.sling.mom.*;
+import org.apache.sling.mom.QueueReader;
+import org.apache.sling.mom.RequeueMessageException;
+import org.apache.sling.mom.Types;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,15 +55,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  */
@@ -76,7 +86,7 @@ public class JMSQueueManagerTest {
         Mockito.when(serviceReference.getPropertyKeys()).thenAnswer(new Answer<String[]>() {
             @Override
             public String[] answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return (String[]) serviceProperties.keySet().toArray(new String[serviceProperties.size()]);
+                return serviceProperties.keySet().toArray(new String[serviceProperties.size()]);
             }
         });
         Mockito.when(serviceReference.getProperty(Mockito.anyString())).thenAnswer(new Answer<Object>() {
@@ -85,7 +95,7 @@ public class JMSQueueManagerTest {
                 return serviceProperties.get(invocationOnMock.getArguments()[0]);
             }
         });
-        amqConnectionFactoryService = ActiveMQConnectionFactoryServiceTest.activate(null);
+        amqConnectionFactoryService = ActiveMQConnectionFactoryServiceTest.activate();
         jmsQueueManager = JMSQueueManagerTest.activate(amqConnectionFactoryService);
         testMap = JsonTest.createTestMap();
         passed = false;
@@ -96,7 +106,7 @@ public class JMSQueueManagerTest {
     private static JMSQueueManager activate(ActiveMQConnectionFactoryService amqConnectionFactoryService) throws NoSuchFieldException, IllegalAccessException, JMSException {
         JMSQueueManager jmsQueueManager = new JMSQueueManager();
         setPrivate(jmsQueueManager, "connectionFactoryService", amqConnectionFactoryService);
-        jmsQueueManager.activate(new HashMap<String, Object>());
+        jmsQueueManager.activate();
         return jmsQueueManager;
 
     }
@@ -117,7 +127,7 @@ public class JMSQueueManagerTest {
     }
 
     public static void deactivate(JMSQueueManager jmsQueueManager) throws JMSException {
-        jmsQueueManager.deactivate(new HashMap<String, Object>());
+        jmsQueueManager.deactivate();
     }
 
     @Test

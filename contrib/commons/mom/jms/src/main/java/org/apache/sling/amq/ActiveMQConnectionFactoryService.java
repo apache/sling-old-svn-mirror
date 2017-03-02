@@ -18,15 +18,19 @@
  */
 package org.apache.sling.amq;
 
+import javax.jms.ConnectionFactory;
+
 import org.apache.activemq.pool.PooledConnectionFactory;
-import org.apache.felix.scr.annotations.*;
 import org.apache.sling.jms.ConnectionFactoryService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import javax.jms.ConnectionFactory;
 
 /**
  * Creates a ConnectionFactoryService that makes a pooled  JMS ConnectionFactory available to consumers. The implementation
@@ -56,47 +60,43 @@ import javax.jms.ConnectionFactory;
  * properties:/foo/bar.properties uses a properties file as per http://activemq.apache.org/broker-properties-uri.html
  *
  */
-@Component(immediate = true, metatype = true, policy = ConfigurationPolicy.REQUIRE)
-@Service(value=ConnectionFactoryService.class)
+@Component(immediate = true,
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           service = ConnectionFactoryService.class)
+@Designate(ocd = ActiveMQConnectionFactoryService.Config.class)
 public class ActiveMQConnectionFactoryService implements ConnectionFactoryService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQConnectionFactoryService.class);
-    private PooledConnectionFactory pooledConnectionFactory;
-
-    // Where the broker is configured out of the box, the shutdown hook must be disabled.
-    // so that the deactivate method can perform the shutdown.
-    // This assumes that OSGi does shutdown properly.
-
     public static final String DEFAULT_BROKER_URI = "vm://localhost:61616?broker.useShutdownHook=false";
-    @Property(value = DEFAULT_BROKER_URI)
-    public static final String BROKER_URI = "jms.brokerUri";
 
-
+    @ObjectClassDefinition(name="Apache Sling Active MQ Connection Factory",
+            description="Connection factory for Active MQ")
+    public @interface Config {
+        // Where the broker is configured out of the box, the shutdown hook must be disabled.
+        // so that the deactivate method can perform the shutdown.
+        // This assumes that OSGi does shutdown properly.
+        @AttributeDefinition(name = "Broker URI", description="The URI to the broker.")
+        String jms_brokerUri() default DEFAULT_BROKER_URI;
+    }
+    private final Logger LOGGER = LoggerFactory.getLogger(ActiveMQConnectionFactoryService.class);
+    private PooledConnectionFactory pooledConnectionFactory;
 
 
     @Activate
-    public void activate(Map<String, Object> props) {
-
-        String brokerURL = (String) props.get(BROKER_URI);
-
-        pooledConnectionFactory = new PooledConnectionFactory(brokerURL);
+    public void activate(Config config) {
+        pooledConnectionFactory = new PooledConnectionFactory(config.jms_brokerUri());
         pooledConnectionFactory.start();
     }
 
 
     @Deactivate
-    public void deactivate(Map<String, Object> props) {
-
+    public void deactivate() {
         LOGGER.info("Stopping ActiveMQ Pooled connection factory");
         pooledConnectionFactory.stop();
         pooledConnectionFactory = null;
     }
 
-
-
     @Override
     public ConnectionFactory getConnectionFactory() {
         return pooledConnectionFactory;
     }
-
 }

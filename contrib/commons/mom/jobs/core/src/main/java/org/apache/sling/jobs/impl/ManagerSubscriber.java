@@ -18,24 +18,23 @@
  */
 package org.apache.sling.jobs.impl;
 
-import org.apache.felix.scr.annotations.*;
+import java.util.Map;
+
 import org.apache.sling.jobs.JobManager;
 import org.apache.sling.jobs.JobUpdateListener;
 import org.apache.sling.mom.Subscriber;
 import org.apache.sling.mom.Types;
-
-import java.util.Map;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Listens to a topic to retrieve control messages.
  */
-@Component(immediate = true, metatype = true)
-@Service(value = Subscriber.class)
-@Properties({
-        @Property(name= Subscriber.TOPIC_NAMES_PROP, cardinality = Integer.MAX_VALUE, value = {"sling/jobupdates"} )
-})
+@Component(service = Subscriber.class,
+           property = {
+                   Subscriber.TOPIC_NAMES_PROP + "=sling/jobupdates"
+           })
 public class ManagerSubscriber implements Subscriber {
-
 
     @Reference
     private JobManager jobManager;

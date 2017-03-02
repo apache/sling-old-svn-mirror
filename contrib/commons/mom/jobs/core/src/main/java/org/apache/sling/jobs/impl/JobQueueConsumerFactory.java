@@ -25,13 +25,6 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jobs.Job;
 import org.apache.sling.jobs.JobCallback;
 import org.apache.sling.jobs.JobConsumer;
@@ -44,6 +37,13 @@ import org.apache.sling.mom.QueueReader;
 import org.apache.sling.mom.RequeueMessageException;
 import org.apache.sling.mom.TopicManager;
 import org.apache.sling.mom.Types;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,17 +52,19 @@ import org.slf4j.LoggerFactory;
  * service and are registered using the OSGi Whiteboard pattern with the QueueManager. The JobManager service must implement JobConsumer.
  *
  */
-@Component(configurationFactory = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        metatype = true,
-        immediate = true)
-@Properties({
-    @Property(name= QueueReader.QUEUE_NAME_PROP)
-})
-@Service(value = QueueReader.class)
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
+           service = QueueReader.class)
+@Designate(factory=true, ocd=JobQueueConsumerFactory.Config.class)
 public class JobQueueConsumerFactory implements QueueReader, MessageFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobQueueConsumerFactory.class);
+    @ObjectClassDefinition()
+    public @interface Config {
+
+        @AttributeDefinition(name = "queue-name")
+        String queuename();
+    }
+
+    private final Logger LOGGER = LoggerFactory.getLogger(JobQueueConsumerFactory.class);
     private static final Set<JobUpdate.JobUpdateCommand> ALLOWED_COMMANDS = Collections.unmodifiableSet(Collections.singleton(JobUpdate.JobUpdateCommand.UPDATE_JOB));
 
     @Reference

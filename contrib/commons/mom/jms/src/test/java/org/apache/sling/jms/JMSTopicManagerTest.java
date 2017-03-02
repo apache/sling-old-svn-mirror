@@ -18,10 +18,23 @@
  */
 package org.apache.sling.jms;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jms.JMSException;
+
 import org.apache.sling.amq.ActiveMQConnectionFactoryService;
 import org.apache.sling.amq.ActiveMQConnectionFactoryServiceTest;
 import org.apache.sling.jms.impl.JMSTopicManager;
-import org.apache.sling.mom.*;
+import org.apache.sling.mom.MessageFilter;
+import org.apache.sling.mom.Subscriber;
+import org.apache.sling.mom.Types;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,15 +48,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.JMSException;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.*;
 
 /**
  */
@@ -75,7 +79,7 @@ public class JMSTopicManagerTest {
         Mockito.when(serviceReference.getPropertyKeys()).thenAnswer(new Answer<String[]>() {
             @Override
             public String[] answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return (String[]) serviceProperties.keySet().toArray(new String[serviceProperties.size()]);
+                return serviceProperties.keySet().toArray(new String[serviceProperties.size()]);
             }
         });
         Mockito.when(serviceReference.getProperty(Mockito.anyString())).thenAnswer(new Answer<Object>() {
@@ -84,7 +88,7 @@ public class JMSTopicManagerTest {
                 return serviceProperties.get(invocationOnMock.getArguments()[0]);
             }
         });
-        amqConnectionFactoryService = ActiveMQConnectionFactoryServiceTest.activate(null);
+        amqConnectionFactoryService = ActiveMQConnectionFactoryServiceTest.activate();
         jsmTopicManager = JMSTopicManagerTest.activate(amqConnectionFactoryService);
         testMap = JsonTest.createTestMap();
         passed = false;
@@ -93,7 +97,7 @@ public class JMSTopicManagerTest {
     public static JMSTopicManager activate(ActiveMQConnectionFactoryService amqConnectionFactoryService) throws NoSuchFieldException, IllegalAccessException, JMSException {
         JMSTopicManager jsmTopicManager = new JMSTopicManager();
         setPrivate(jsmTopicManager, "connectionFactoryService", amqConnectionFactoryService);
-        jsmTopicManager.activate(new HashMap<String, Object>());
+        jsmTopicManager.activate();
         return jsmTopicManager;
 
     }
@@ -113,7 +117,7 @@ public class JMSTopicManagerTest {
     }
 
     public static void deactivate(JMSTopicManager jsmTopicManager) throws JMSException {
-        jsmTopicManager.deactivate(new HashMap<String, Object>());
+        jsmTopicManager.deactivate();
     }
 
 

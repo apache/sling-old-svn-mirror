@@ -18,15 +18,6 @@
  */
 package org.apache.sling.jms.impl;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.sling.jms.ConnectionFactoryService;
-import org.apache.sling.mom.*;
-import org.osgi.framework.ServiceReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import javax.jms.*;
 import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,16 +25,41 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Nonnull;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
+import org.apache.sling.jms.ConnectionFactoryService;
+import org.apache.sling.mom.MessageFilter;
+import org.apache.sling.mom.QueueManager;
+import org.apache.sling.mom.QueueReader;
+import org.apache.sling.mom.RequeueMessageException;
+import org.apache.sling.mom.Types;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A JMS implementation of a QueueManager. It will allow callers to add messages to named queues, and consumers to read
  * messages from named queues in order. The component uses a single connection to the JMS broker, but dedicated sessions
  * for each send and for each Queue reader.
  */
-@Component(immediate = true)
-@Service(value = QueueManager.class)
+@Component(immediate = true, service = QueueManager.class)
 public class JMSQueueManager implements QueueManager {
-
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSQueueManager.class);
     private static final String NRETRIES = "_nr";
@@ -56,24 +72,19 @@ public class JMSQueueManager implements QueueManager {
     /**
      * Holds all QueueReader registrations.
      */
-    @Reference(referenceInterface = QueueReader.class,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-            policy = ReferencePolicy.DYNAMIC,
-            bind="addReader",
-            unbind="removeReader")
     private final Map<ServiceReference<QueueReader>, QueueReaderHolder> registrations =
             new ConcurrentHashMap<ServiceReference<QueueReader>, QueueReaderHolder>();
 
     private Connection connection;
 
     @Activate
-    public synchronized void activate(Map<String, Object> properties) throws JMSException {
+    public synchronized void activate() throws JMSException {
         connection = connectionFactoryService.getConnectionFactory().createConnection();
         connection.start();
     }
 
     @Deactivate
-    public synchronized void deactivate(Map<String, Object> properties) throws JMSException {
+    public synchronized void deactivate() throws JMSException {
         for ( Map.Entry<ServiceReference<QueueReader>, QueueReaderHolder> e : registrations.entrySet()) {
             e.getValue().close();
         }
@@ -111,7 +122,6 @@ public class JMSQueueManager implements QueueManager {
 
     }
 
-
     /**
      * quietly close the session.
      * @param session
@@ -126,8 +136,11 @@ public class JMSQueueManager implements QueueManager {
         }
     }
 
-
     // Register Readers using OSGi Whiteboard pattern
+    @Reference(service = QueueReader.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind="removeReader")
     public synchronized  void addReader(ServiceReference<QueueReader> serviceRef) {
         if (registrations.containsKey(serviceRef)) {
             LOGGER.error("Registration for service reference is already present {}",serviceRef);
@@ -178,6 +191,7 @@ public class JMSQueueManager implements QueueManager {
 
         }
 
+        @Override
         public void close() {
             try {
                 session.close();

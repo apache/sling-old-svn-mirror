@@ -18,12 +18,14 @@
  */
 package org.apache.sling.jms.impl;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.sling.jms.ConnectionFactoryService;
-import org.apache.sling.mom.*;
-import org.osgi.framework.ServiceReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.jms.Connection;
@@ -35,17 +37,27 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.sling.jms.ConnectionFactoryService;
+import org.apache.sling.mom.MessageFilter;
+import org.apache.sling.mom.Subscriber;
+import org.apache.sling.mom.TopicManager;
+import org.apache.sling.mom.Types;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class provides support for sending messages to topics over JMS and subscribing to topics. It uses the ConnectionFactoryService
  * to interact with JMS. There is nothing in
  */
-@Component(immediate = true)
-@Service(value = TopicManager.class)
+@Component(immediate = true, service = TopicManager.class)
 public class JMSTopicManager implements TopicManager {
 
 
@@ -55,11 +67,6 @@ public class JMSTopicManager implements TopicManager {
     /**
      * Holds all QueueReader registrations.
      */
-    @Reference(referenceInterface = Subscriber.class,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-            policy = ReferencePolicy.DYNAMIC,
-            bind="addSubscriber",
-            unbind="removeSubscriber")
     private final Map<ServiceReference<Subscriber>, SubscriberHolder> registrations =
             new ConcurrentHashMap<ServiceReference<Subscriber>, SubscriberHolder>();
 
@@ -69,17 +76,16 @@ public class JMSTopicManager implements TopicManager {
     private Connection connection;
     // A single session is used for listening to messages. Separate sessions are opened for sending to avoid synchronisation on sending operations.
     private Session session;
-    private final Object lock = new Object();
 
     @Activate
-    public synchronized  void activate(Map<String, Object> properties) throws JMSException {
-            connection = connectionFactoryService.getConnectionFactory().createConnection();
-            session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-            connection.start();
+    public synchronized  void activate() throws JMSException {
+        connection = connectionFactoryService.getConnectionFactory().createConnection();
+        session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        connection.start();
     }
 
     @Deactivate
-    public synchronized  void deactivate(Map<String, Object> properties) throws JMSException {
+    public synchronized  void deactivate() throws JMSException {
         for ( Map.Entry<ServiceReference<Subscriber>, SubscriberHolder> e : registrations.entrySet()) {
             e.getValue().close();
         }
@@ -118,6 +124,10 @@ public class JMSTopicManager implements TopicManager {
 
 
     // Register Subscribers using OSGi Whiteboard pattern
+    @Reference(service = Subscriber.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind="removeSubscriber")
     public synchronized  void addSubscriber(ServiceReference<Subscriber> serviceRef) {
         if (registrations.containsKey(serviceRef)) {
             LOGGER.error("Registration for service reference is already present {}",serviceRef);
@@ -174,6 +184,7 @@ public class JMSTopicManager implements TopicManager {
 
         }
 
+        @Override
         public void close() {
             try {
                 filteredTopicSubscriber.close();
