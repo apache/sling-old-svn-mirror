@@ -42,6 +42,7 @@ public class MergedValidationModel implements ValidationModel {
     private final ValidationModel baseModel;
     private final Map<String, ResourceProperty> resourcePropertiesMap;
     private final Map<String, ChildResource> childResourceMap;
+    private final String source;
     
     public MergedValidationModel(ValidationModel baseModel, ValidationModel... modelsToMerge) {
         this.baseModel = baseModel;
@@ -55,7 +56,7 @@ public class MergedValidationModel implements ValidationModel {
         for (ChildResource childResource : baseModel.getChildren()) {
             childResourceMap.put(childResource.getName(), childResource);
         }
-        
+        StringBuilder sourceStringBuilder = new StringBuilder(baseModel.getSource());
         for (ValidationModel modelToMerge : modelsToMerge) {
             for (ResourceProperty resourceProperty : modelToMerge.getResourceProperties()) {
                 // only if name is not already used, the resource property should be considered
@@ -76,7 +77,9 @@ public class MergedValidationModel implements ValidationModel {
                     throw new IllegalArgumentException(msg);
                 }
             }
+            sourceStringBuilder.append(" + ").append(modelToMerge.getSource());
         }
+        source = sourceStringBuilder.toString();
     }
     
     /**
@@ -116,6 +119,12 @@ public class MergedValidationModel implements ValidationModel {
     @Nonnull
     public Collection<ChildResource> getChildren() {
         return childResourceMap.values();
+    }
+
+    @Override
+    @Nonnull
+    public String getSource() {
+        return source;
     }
 
 }

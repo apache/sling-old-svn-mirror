@@ -222,9 +222,10 @@ public class ResourceValidationModelProviderImplTest {
     @Test
     public void testGetValidationModels() throws Exception {
         // build two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         modelBuilder.setApplicablePath("/content/site2");
-        ValidationModel model2 = modelBuilder.build("sling/validation/test");
+        ValidationModel model2 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel2");
 
         // build models in JCR
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
@@ -238,7 +239,7 @@ public class ResourceValidationModelProviderImplTest {
     @Test
     public void testGetValidationModelsOutsideSearchPath() throws Exception {
         // build two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", "some source");
 
         Resource contentValidatorsRoot = ResourceUtil.getOrCreateResource(rr, "/content",
                 (Map<String, Object>) null, "sling:Folder", true);
@@ -263,7 +264,7 @@ public class ResourceValidationModelProviderImplTest {
         ResourceProperty childproperty = resourcePropertyBuilder.build("child1property");
         modelBuilder.childResource(new ChildResourceImpl("child1", null, true,
                 Collections.singletonList(childproperty), Collections.<ChildResource> emptyList()));
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
 
         // build models in JCR
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
@@ -276,11 +277,11 @@ public class ResourceValidationModelProviderImplTest {
     @Test
     public void testGetValidationModelsWithOverlay() throws Exception {
         // create two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         modelBuilder.setApplicablePath("/content/site2");
-        ValidationModel model2 = modelBuilder.build("sling/validation/test");
+        ValidationModel model2 = modelBuilder.build("sling/validation/test", appsValidatorsRoot.getPath() + "/testValidationModel1");
 
-        // create two models in the JCR: one in libs and one in apps (distinguishable via applicablePath)
+        // create two models: one in libs and one in apps (distinguishable via applicablePath)
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", model2);
 
@@ -292,24 +293,43 @@ public class ResourceValidationModelProviderImplTest {
     @Test(expected = IllegalStateException.class)
     public void testGetValidationModelsWithInvalidValidator() throws Exception {
         // create one default model
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // clear validator map to make the referenced validator unknown
         validatorMap.clear();
         modelProvider.getModels("sling/validation/test", validatorMap);
     }
-    
+
     @Test(expected = IllegalStateException.class)
     public void testGetValidationModelsWithMissingChildrenAndProperties() throws Exception {
         // create a model with neither children nor properties
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.addApplicablePath("content/site1");
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         modelProvider.getModels("sling/validation/test", validatorMap);
+    }
+
+    @Test
+    public void testCachingOfGetValidationModels() throws Exception {
+        // build one model
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        modelBuilder.setApplicablePath("/content/site2");
+
+        // build models in JCR
+        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap);
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+        
+        // the 2nd time the same instance should be returned
+        Collection<ValidationModel> models2 = modelProvider.getModels("sling/validation/test", validatorMap);
+        Assert.assertEquals("Due to caching both models should be actually the same instance", System.identityHashCode(models), System.identityHashCode(models2));
     }
 
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
