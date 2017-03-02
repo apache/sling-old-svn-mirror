@@ -43,7 +43,6 @@ import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
-import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
@@ -216,6 +215,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         if (cacheEntry == null) {
             cacheEntry = doGetModels(relativeResourceType, validatorsMap);
             validationModelCacheByResourceType.put(relativeResourceType, cacheEntry);
+        } else {
+            LOG.debug("Found entry in cache for resource type {}", relativeResourceType);
         }
         return cacheEntry;
     }
@@ -237,6 +238,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             String[] searchPaths = resourceResolver.getSearchPath();
             for (String searchPath : searchPaths) {
                 final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, relativeResourceType);
+                LOG.debug("Looking for validation models with query '{}'", queryString);
                 Iterator<Resource> models = resourceResolver.findResources(queryString, "xpath");
                 while (models.hasNext()) {
                     Resource model = models.next();
@@ -245,7 +247,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     try {
                         ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
                         ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                        modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, String[].class));
+                        modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, new String[]{}));
                         Resource propertiesResource = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
                         modelBuilder.resourceProperties(buildProperties(validatorsMap, propertiesResource));
                         modelBuilder.childResources(buildChildren(model, model, validatorsMap));
