@@ -18,22 +18,21 @@
  */
 package org.apache.sling.fscontentparser.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.lang.reflect.Array;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Calendar;
+import java.util.UUID;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
+import javax.jcr.PropertyType;
+
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.vault.util.DocViewProperty;
 
 /**
  * Parses JCR XML files that contains content fragments.
  */
 class JcrXmlValueConverter {
-    
-    private static final Pattern TYPE_PREFIX = Pattern.compile("^\\{([^\\{\\}]+)\\}(.+)$");
-    private static final Pattern VALUE_ARRAY = Pattern.compile("^\\[(.*)\\]$");
     
     private JcrXmlValueConverter() {
         // static methods only
@@ -44,125 +43,106 @@ class JcrXmlValueConverter {
      * @param value XML attribute value
      * @return Value object
      */
-    public static Object parseValue(final String rawValue) {
-        String value = rawValue;
-        String[] valueArray = null;
-        
-        if (rawValue == null) {
+    public static Object parseValue(final String name, final String value) {
+        if (value == null) {
             return null;
         }
+        DocViewProperty prop = DocViewProperty.parse(name, value);
         
-        // detect type prefix
-        String typePrefix = null;
-        Matcher typePrefixMatcher = TYPE_PREFIX.matcher(value);
-        if (typePrefixMatcher.matches()) {
-            typePrefix = typePrefixMatcher.group(1);
-            value = typePrefixMatcher.group(2);
-        }
-        
-        // check for array
-        Matcher arrayMatcher = VALUE_ARRAY.matcher(value);
-        if (arrayMatcher.matches()) {
-            value = null;
-            valueArray = splitPreserveAllTokens(arrayMatcher.group(1), ',');
-        }
-
         // convert values
-        if (valueArray != null) {
-            Object[] result = new Object[valueArray.length];
-            for (int i=0; i<valueArray.length; i++) {
-                result[i] = convertValue(valueArray[i], typePrefix, true);
+        if (prop.isMulti) {
+            Class<?> arrayType = getType(prop.type);
+            if (arrayType == null) {
+                return null;
+            }
+            Object result = Array.newInstance(arrayType, prop.values.length);
+            for (int i=0; i<prop.values.length; i++) {
+                Array.set(result, i, convertValue(prop.values[i], prop.type, true));
             }
             return result;
         }
         else {
-            return convertValue(value, typePrefix, false);
+            return convertValue(prop.values[0], prop.type, false);
         }
-    }
-    
-    /**
-     * Split string preserving all tokens - but ignore separators that are escaped with \.
-     * @param str Combined string
-     * @param sep Separator
-     * @return Tokens
-     */
-    private static String[] splitPreserveAllTokens(String str, char sep) {
-        final int len = str.length();
-        if (len == 0) {
-            return ArrayUtils.EMPTY_STRING_ARRAY;
-        }
-        final List<String> list = new ArrayList<String>();
-        int i = 0, start = 0;
-        boolean match = false;
-        boolean lastMatch = false;
-        boolean escaped = false;
-        while (i < len) {
-            if (str.charAt(i) == '\\' && !escaped) {
-                escaped = true;
-            }
-            else {
-                if (str.charAt(i) == sep && !escaped) {
-                    lastMatch = true;
-                    list.add(str.substring(start, i));
-                    match = false;
-                    start = ++i;
-                    continue;
-                }
-                lastMatch = false;
-                match = true;
-                escaped = false;
-            }
-            i++;
-        }
-        if (match || lastMatch) {
-            list.add(str.substring(start, i));
-        }
-        return list.toArray(new String[list.size()]);        
     }
     
     /**
      * Parse value depending on type prefix.
      * @param value Value
-     * @param typePrefix Type prefix
+     * @param type Type
      * @param inArray Value is in array
      * @return Value object
      */
-    private static Object convertValue(final String value, final String typePrefix, final boolean inArray) {
-        if (typePrefix == null || StringUtils.equals(typePrefix, "Name")) {
-            return deescapeStringValue(value, inArray);
-        }
-        else if (StringUtils.equals(typePrefix, "Boolean")) {
-            return Boolean.valueOf(value);
-        }
-        else if (StringUtils.equals(typePrefix, "Long")) {
-            return Long.valueOf(value);
-        }
-        else if (StringUtils.equals(typePrefix, "Decimal")) {
-            return Double.valueOf(value);
-        }
-        else if (StringUtils.equals(typePrefix, "Date")) {
-            return ISO8601.parse(value);
-        }
-        else {
-            throw new IllegalArgumentException("Unexpected type prefix: " + typePrefix);
+    private static Object convertValue(final String value, final int type, final boolean inArray) {
+        switch (type) {
+            case PropertyType.UNDEFINED:
+            case PropertyType.STRING:
+            case PropertyType.NAME:
+            case PropertyType.PATH:
+                return value;
+            case PropertyType.BOOLEAN:
+                return Boolean.valueOf(value);
+            case PropertyType.LONG:
+                return Long.valueOf(value);
+            case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
+                // TODO: specific handling for BigDecimal? not properly supported in ValueMapDecorator until very recent Sling API versions
+                return Double.valueOf(value);
+            case PropertyType.DATE:
+                return ISO8601.parse(value);
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+                return UUID.fromString(value);
+            case PropertyType.URI:
+                try {
+                    return new URI(value);
+                }
+                catch (URISyntaxException ex) {
+                    throw new IllegalArgumentException("Unexpected URI syntax: " + value);
+                }
+            case PropertyType.BINARY:
+                // not supported - ignore value
+                return null;
+            default:
+                throw new IllegalArgumentException("Unexpected type: " + PropertyType.nameFromValue(type));
+            
         }
     }
     
     /**
-     * De-escape string value.
-     * @param value Escaped string value
-     * @param inArray In array
-     * @return De-escaped string value
+     * Get java type for given JCR type.
+     * @param type Type
+     * @return Type
      */
-    private static String deescapeStringValue(final String value, final boolean inArray) {
-        String descapedValue = value;
-        if (inArray) {
-          descapedValue = StringUtils.replace(descapedValue, "\\,", ",");
+    private static Class<?> getType(final int type) {
+        switch (type) {
+            case PropertyType.UNDEFINED:
+            case PropertyType.STRING:
+            case PropertyType.NAME:
+            case PropertyType.PATH:
+                return String.class;
+            case PropertyType.BOOLEAN:
+                return Boolean.class;
+            case PropertyType.LONG:
+                return Long.class;
+            case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
+                // TODO: specific handling for BigDecimal? not properly supported in ValueMapDecorator until very recent Sling API versions
+                return Double.class;
+            case PropertyType.DATE:
+                return Calendar.class;
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+                return UUID.class;
+            case PropertyType.URI:
+                return URI.class;
+            case PropertyType.BINARY:
+                // not supported - ignore value
+                return null;
+            default:
+                throw new IllegalArgumentException("Unexpected type: " + PropertyType.nameFromValue(type));
+            
         }
-        else if (StringUtils.startsWith(descapedValue, "\\{") || StringUtils.startsWith(descapedValue, "\\[")) {
-            descapedValue = descapedValue.substring(1);
-        }
-        return StringUtils.replace(descapedValue, "\\\\", "\\");
     }
-        
+    
 }

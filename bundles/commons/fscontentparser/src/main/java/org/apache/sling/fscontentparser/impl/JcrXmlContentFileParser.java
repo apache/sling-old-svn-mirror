@@ -129,11 +129,10 @@ public final class JcrXmlContentFileParser implements ContentFileParser {
             for (int i=0; i<attributes.getLength(); i++) {
                 String propertyName = helper.cleanupPropertyName(decodeName(attributes.getQName(i)));
                 if (!helper.ignoreProperty(propertyName)) {
-                    Object value = JcrXmlValueConverter.parseValue(attributes.getValue(i));
-                    if (value instanceof Object[]) {
-                        value = helper.convertSingleTypeArray((Object[])value);
+                    Object value = JcrXmlValueConverter.parseValue(propertyName, attributes.getValue(i));
+                    if (value != null) {
+                        element.put(propertyName, value);
                     }
-                    element.put(propertyName, value);
                 }
             }
         }
