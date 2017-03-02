@@ -1388,27 +1388,23 @@ public class SlingServletResolver
     }
 
     @Override
-	public void onChange(List<ResourceChange> changes) {
+	public void onChange(final List<ResourceChange> changes) {
         if (this.cache != null) {
             boolean flushCache = false;
-            for(ResourceChange change : changes){
-                // we may receive different events
-                final String topic = change.getType().toString();
-                // this is a resource or resource provider event
+            for(final ResourceChange change : changes){
                 // if the path of the event is a sub path of a search path
                 // we flush the whole cache
                 final String path = change.getPath();
-                if ( path != null ) {
-                    int index = 0;
-                    while (!flushCache && index < searchPaths.length) {
-                        if (path.startsWith(this.searchPaths[index])) {
-                            flushCache = true;
-                        }
-                        index++;
+                int index = 0;
+                while (!flushCache && index < searchPaths.length) {
+                    if (path.startsWith(this.searchPaths[index])) {
+                        flushCache = true;
                     }
+                    index++;
                 }
-                if (flushCache) {
+                if ( flushCache ) {
                     flushCache();
+                    break; // we can stop looping
                 }
             }
         }
