@@ -65,7 +65,7 @@ public class ModelValidationImpl implements ModelValidation {
      * Or a {@link InvalidResourceException} in case the given resource (in the adaptable) could not be validated through the {@link ModelValidation}.
      */
     public <ModelType> RuntimeException validate(Object adaptable, Class<ModelType> modelClass, boolean required) throws ValidationException, InvalidModelException {
-        if (!configuration.disabled()) {
+        if (configuration.disabled()) {
             log.debug("Skip validation of model {}, because  validation is disabled through the OSGi configuration for ModelValidationConfiguration", modelClass);
             return null;
         }
