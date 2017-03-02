@@ -21,20 +21,30 @@ package org.apache.sling.fscontentparser;
 /**
  * Content file types.
  */
-public final class ContentFileExtension {
-    
+public enum ContentFileType {
+
     /**
      * JSON content files.
      */
-    public static final String JSON = "json";
+    JSON("json"),
 
     /**
      * JCR XML content files.
      */
-    public static final String JCR_XML = "jcr.xml";
-        
-    private ContentFileExtension() {
-        // constants only
+    JCR_XML("jcr.xml");
+
+
+    private final String extension;
+
+    private ContentFileType(String extension) {
+        this.extension = extension;
     }
-    
+
+    /**
+     * @return Extension
+     */
+    public String getExtension() {
+        return extension;
+    }
+
 }

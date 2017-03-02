@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.fscontentparser.ContentFileExtension;
+import org.apache.sling.fscontentparser.ContentFileType;
 import org.apache.sling.fscontentparser.ContentFileParser;
 import org.apache.sling.fscontentparser.ContentFileParserFactory;
 import org.apache.sling.fscontentparser.ParseException;
@@ -52,7 +52,7 @@ public class JcrXmlContentFileParserTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testParseJcrXml() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileExtension.JCR_XML);
+        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
         Map<String,Object> content = underTest.parse(file);
         assertNotNull(content);
         assertEquals("app:Page", content.get("jcr:primaryType"));
@@ -62,13 +62,13 @@ public class JcrXmlContentFileParserTest {
     @Test(expected=ParseException.class)
     public void testParseInvalidJcrXml() throws Exception {
         file = new File("src/test/resources/invalid-test/invalid.jcr.xml");
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileExtension.JCR_XML);
+        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
         underTest.parse(file);
     }
 
     @Test
     public void testDataTypes() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileExtension.JCR_XML);
+        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
         Map<String,Object> content = underTest.parse(file);
         Map<String,Object> props = getDeep(content, "jcr:content");
         
@@ -99,7 +99,7 @@ public class JcrXmlContentFileParserTest {
 
     @Test
     public void testIgnoreResourcesProperties() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileExtension.JCR_XML, new ParserOptions()
+        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML, new ParserOptions()
                 .ignoreResourceNames(ImmutableSet.of("teaserbar", "aside"))
                 .ignorePropertyNames(ImmutableSet.of("longProp", "jcr:title")));
         Map<String,Object> content = underTest.parse(file);
