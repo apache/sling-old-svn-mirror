@@ -41,7 +41,7 @@ public interface ValidationModelProvider {
      * 
      * @param relativeResourceType
      * @param validatorsMap
-     *            all known validators in a map (key=name of validator). Only one of those should be used in the
+     *            all known validators in a map (key=id of validator). Only one of those should be used in the
      *            returned validation models.
      * @return a Collection of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no
      *         model for the given resource type could be found.
