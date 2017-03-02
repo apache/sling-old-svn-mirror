@@ -37,7 +37,14 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SlingHealthCheck(name = OsgiInstallerHealthCheck.HC_NAME, description = "Checks that all OSGi configurations/bundles are successfully installed by the OSGi Installer (and are not skipped for some reason).", tags = "osgi")
+@SlingHealthCheck(
+    name = OsgiInstallerHealthCheck.HC_NAME,
+    description = "Checks that all OSGi configurations/bundles are successfully installed by the OSGi Installer (and are not skipped for some reason).",
+    tags = {
+        "installer",
+        "osgi"
+    }
+)
 public class OsgiInstallerHealthCheck implements HealthCheck {
     protected static final String HC_NAME = "OSGi Installer Health Check";
 
@@ -48,7 +55,7 @@ public class OsgiInstallerHealthCheck implements HealthCheck {
 
     private static final String DEFAULT_URL_PREFIX = "jcrinstall:/apps/";
 
-    @Property(label = "URL Prefixes to consider", description = "Only those OSGi configurations/bundles whose location are starting with one of the given URL prefixes are checked (whether they are installed correctly). Open /system/console/osgi-installer for a list of valid prefixes. The bundles/configs with those prefixes are asserted to be successfully installed under all circumstances!", cardinality = 1, value = DEFAULT_URL_PREFIX)
+    @Property(label = "URL Prefixes to consider", description = "Only those OSGi configurations/bundles whose location are starting with one of the given URL prefixes are checked (whether they are installed correctly). Open /system/console/osgi-installer for a list of valid prefixes.", cardinality = 1, value = DEFAULT_URL_PREFIX)
     static final String PROP_URL_PREFIXES = "urlPrefixes";
 
     @Property(label = "Check Bundles", description = "If enabled bundles are checked (restricted to the ones matching one of the prefixes)", boolValue = true)
