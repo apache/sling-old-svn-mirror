@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>28</version>
+        <version>29</version>
         <relativePath />
     </parent>
 
@@ -26,13 +26,13 @@
 
     <name>Apache Sling Installer Health Checks</name>
     <description> 
-        Provides Sling health checks related to the Sling Installer.
+        Provides Sling Health Checks related to the Sling Installer.
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/healthcheck</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/healthcheck</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/installer/healthcheck</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/hc</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/hc</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/installer/hc</url>
     </scm>
 
     <!-- make compile with java 7 -->
@@ -58,10 +58,12 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -86,6 +88,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
