@@ -18,12 +18,13 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
@@ -32,12 +33,13 @@ public class ValidationModelImpl implements ValidationModel {
 
     private final @Nonnull List<ResourceProperty> resourceProperties;
     private final @Nonnull String validatedResourceType;
-    private final @Nonnull String[] applicablePaths;
+    private final @Nonnull Collection<String> applicablePaths;
     private final @Nonnull List<ChildResource> children;
     private final @Nonnull String source;
 
     /**
      * Only used from {@link ValidationModelBuilder}
+     * Copy all modifiable properties.
      * @param resourceProperties
      * @param validatedResourceType
      * @param applicablePaths
@@ -45,26 +47,20 @@ public class ValidationModelImpl implements ValidationModel {
      * @param source a string identifying the model's source (e.g. a resource path)
      */
     ValidationModelImpl(@Nonnull List<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
-                              String[] applicablePaths, @Nonnull List<ChildResource> children, @Nonnull String source) {
-        this.resourceProperties = resourceProperties;
+                              Collection<String> applicablePaths, @Nonnull List<ChildResource> children, @Nonnull String source) {
+        this.resourceProperties = new ArrayList<>(resourceProperties);
         this.validatedResourceType = validatedResourceType;
         
         if (resourceProperties.isEmpty() && children.isEmpty()) {
             throw new IllegalStateException("Neither children nor properties set in validation model for " + validatedResourceType + "'");
         }
-        // if this property was not set or is an empty array...
-        if (applicablePaths == null || applicablePaths.length == 0) {
-            // ...set this to the empty string (which matches all paths)
-            this.applicablePaths = new String[] {""};
+        // if this collection is empty, make it contain on entry with the emty string (means no restriction)
+        if (applicablePaths.isEmpty()) {
+            this.applicablePaths = Collections.singletonList("");
         } else {
-            for (String applicablePath : applicablePaths) {
-                if (StringUtils.isBlank(applicablePath)) {
-                    throw new IllegalStateException("applicablePaths may not contain empty values in validation model for " + validatedResourceType + "'");
-                }
-            }
-            this.applicablePaths = applicablePaths;
+            this.applicablePaths = new ArrayList<>(applicablePaths);
         }
-        this.children = children;
+        this.children = new ArrayList<>(children);
         this.source = source;
     }
 
@@ -79,7 +75,7 @@ public class ValidationModelImpl implements ValidationModel {
     }
 
     @Override
-    public @Nonnull String[] getApplicablePaths() {
+    public @Nonnull Collection<String> getApplicablePaths() {
         return applicablePaths;
     }
 
@@ -96,14 +92,14 @@ public class ValidationModelImpl implements ValidationModel {
     @Override
     public String toString() {
         return "ValidationModelImpl [resourceProperties=" + resourceProperties + ", validatedResourceType=" + validatedResourceType
-                + ", applicablePaths=" + Arrays.toString(applicablePaths) + ", children=" + children + ", source="+ source +"]";
+                + ", applicablePaths=" + applicablePaths + ", children=" + children + ", source="+ source +"]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(applicablePaths);
+        result = prime * result + ((applicablePaths == null) ? 0 : applicablePaths.hashCode());
         result = prime * result + ((children == null) ? 0 : children.hashCode());
         result = prime * result + ((resourceProperties == null) ? 0 : resourceProperties.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
@@ -120,7 +116,7 @@ public class ValidationModelImpl implements ValidationModel {
         if (getClass() != obj.getClass())
             return false;
         ValidationModelImpl other = (ValidationModelImpl) obj;
-        if (!Arrays.equals(applicablePaths, other.applicablePaths))
+        if (!applicablePaths.equals(other.applicablePaths))
             return false;
         if (!children.equals(other.children))
             return false;

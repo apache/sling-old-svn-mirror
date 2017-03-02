@@ -170,7 +170,7 @@ public class ValidationModelRetrieverImplTest {
         ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage",
                 false);
         Assert.assertNotNull(model);
-        Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains("/content/site1/subnode/test"));
+        Assert.assertThat(model.getApplicablePaths(), Matchers.contains("/content/site1/subnode/test"));
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ValidationModelRetrieverImplTest {
 
         ValidationModel model = validationModelRetriever.getModel("test/type", null, false);
         Assert.assertNotNull(model);
-        Assert.assertThat(Arrays.asList(model.getApplicablePaths()), Matchers.contains(""));
+        Assert.assertThat(model.getApplicablePaths(), Matchers.contains(""));
     }
 
     @Test
