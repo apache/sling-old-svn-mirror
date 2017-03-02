@@ -63,7 +63,8 @@ public interface MergedResourcePicker2 {
     /**
      * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
      * relative path. The resources returned may be either resources returned from the ResourceResolver
-     * directory or an instance of NonExistingResource.
+     * directory or an instance of NonExistingResource. Returning an empty list will cause the resource 
+     * to not exist for consumers (resolver.getResource(path) will return null). 
      *
      * @param resolver the ResourceResolver
      * @param relativePath the path relative to the merge root
