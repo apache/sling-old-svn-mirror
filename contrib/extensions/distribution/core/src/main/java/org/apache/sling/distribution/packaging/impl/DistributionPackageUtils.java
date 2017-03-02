@@ -318,8 +318,16 @@ public class DistributionPackageUtils {
 
     public static boolean disposable(@Nonnull Resource resource) throws RepositoryException {
         Node parent = resource.adaptTo(Node.class);
-        Node refs = parent.getNode("refs");
-        return !refs.hasNodes() && refs.hasProperty("released");
+        if (parent.hasNode("refs")) {
+            Node refs = parent.getNode("refs");
+            return !refs.hasNodes() && refs.hasProperty("released");
+        } else {
+            // Packages without refs nodes are likely the result of the concurrency
+            // issue fixed in SLING-6503. Yet, we consider them non disposable.
+            log.warn("Package {} has no refs resource. Consider removing it explicitly.", resource.getPath());
+            return false;
+        }
+
     }
 
     public static void release(Resource resource, @Nonnull String[] holderNames) throws RepositoryException {
