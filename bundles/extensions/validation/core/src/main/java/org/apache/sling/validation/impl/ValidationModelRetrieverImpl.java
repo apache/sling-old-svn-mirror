@@ -193,11 +193,14 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever, E
 
     protected void removeValidator(Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
         String validatorId = getValidatorIdFromServiceProperties(properties, validator, serviceReference);
-        validator = validators.remove(validatorId);
-        validatorServiceReferences.remove(validatorId);
-        if (validator != null) {
-            LOG.debug("Invalidating models cache because validator {} is no longer available", validator);
+        // check if this validator is really bound (might not be the case if another validator with a higher service ranking and the same id is bound)
+        boolean removed = validators.remove(validatorId, validator);
+        if (removed) {
+            validatorServiceReferences.remove(validatorId);
+            LOG.debug("Invalidating models cache because validator {} with id '{}' is no longer available", validator, validatorId);
             validationModelsCache.clear();
+        } else {
+            LOG.debug("Removing validator {} with id '{}' has no effect, as another validator with a higher service ranking was bound previously", validator, validatorId);
         }
     }
 
