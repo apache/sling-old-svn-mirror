@@ -166,6 +166,11 @@ public class ResourceChangeListImpl implements ResourceChangeList {
         return this.searchPath.clone();
     }
 
+    @Override
+    public String toString() {
+        return list.toString();
+    }
+
     private static final class UnmodifiableListIterator implements ListIterator<ResourceChange> {
 
         private final ListIterator<ResourceChange> iterator;

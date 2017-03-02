@@ -96,7 +96,7 @@ public class BasicObservationReporter implements ObservationReporter {
                 // find the set of paths that match the provider
                 final Set<Path> paths = new HashSet<>();
                 for(final Path p : info.getPaths()) {
-                    // add when there is an intersection between provider path and resource change listener path 
+                    // add when there is an intersection between provider path and resource change listener path
                     boolean add = providerPath.matches(p.getPath()) || (!p.isPattern() && p.matches(providerPath.getPath()));
                     if ( add ) {
                         if ( p.isPattern() ) {
@@ -232,7 +232,8 @@ public class BasicObservationReporter implements ObservationReporter {
         if ( !infoA.isExternal() && infoB.isExternal() ) {
             return false;
         }
-        return infoA.getResourceChangeTypes().equals(infoB.getResourceChangeTypes());
+        return infoA.getResourceChangeTypes().equals(infoB.getResourceChangeTypes())
+            && infoA.getProviderChangeTypes().equals(infoB.getProviderChangeTypes());
     }
 
     /**
@@ -298,7 +299,7 @@ public class BasicObservationReporter implements ObservationReporter {
      * @return {@code true} whether it matches
      */
     private boolean matches(final ResourceChange change, final ResourceChangeListenerInfo config) {
-        if (!config.getResourceChangeTypes().contains(change.getType())) {
+        if (!config.getResourceChangeTypes().contains(change.getType()) && !config.getProviderChangeTypes().contains(change.getType())) {
             return false;
         }
         if (!config.isExternal() && change.isExternal()) {
