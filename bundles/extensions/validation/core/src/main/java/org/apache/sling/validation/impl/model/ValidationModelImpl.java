@@ -34,12 +34,24 @@ public class ValidationModelImpl implements ValidationModel {
     private final @Nonnull String validatedResourceType;
     private final @Nonnull String[] applicablePaths;
     private final @Nonnull List<ChildResource> children;
+    private final @Nonnull String source;
 
-    // TODO: only call from ValidationModelBuilder
-    public ValidationModelImpl(@Nonnull List<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
-                              String[] applicablePaths, @Nonnull List<ChildResource> children) {
+    /**
+     * Only used from {@link ValidationModelBuilder}
+     * @param resourceProperties
+     * @param validatedResourceType
+     * @param applicablePaths
+     * @param children
+     * @param source a string identifying the model's source (e.g. a resource path)
+     */
+    ValidationModelImpl(@Nonnull List<ResourceProperty> resourceProperties, @Nonnull String validatedResourceType,
+                              String[] applicablePaths, @Nonnull List<ChildResource> children, @Nonnull String source) {
         this.resourceProperties = resourceProperties;
         this.validatedResourceType = validatedResourceType;
+        
+        if (resourceProperties.isEmpty() && children.isEmpty()) {
+            throw new IllegalStateException("Neither children nor properties set in validation model for " + validatedResourceType + "'");
+        }
         // if this property was not set or is an empty array...
         if (applicablePaths == null || applicablePaths.length == 0) {
             // ...set this to the empty string (which matches all paths)
@@ -47,12 +59,13 @@ public class ValidationModelImpl implements ValidationModel {
         } else {
             for (String applicablePath : applicablePaths) {
                 if (StringUtils.isBlank(applicablePath)) {
-                    throw new IllegalArgumentException("applicablePaths may not contain empty values!");
+                    throw new IllegalStateException("applicablePaths may not contain empty values in validation model for " + validatedResourceType + "'");
                 }
             }
             this.applicablePaths = applicablePaths;
         }
         this.children = children;
+        this.source = source;
     }
 
     @Override
@@ -76,9 +89,14 @@ public class ValidationModelImpl implements ValidationModel {
     }
 
     @Override
+    public @Nonnull String getSource() {
+        return source;
+    }
+
+    @Override
     public String toString() {
-        return "ResourceValidationModel [resourceProperties=" + resourceProperties + ", validatedResourceType="
-                + validatedResourceType + ", applicablePaths=" + Arrays.toString(applicablePaths) + ", children=" + children + "]";
+        return "ValidationModelImpl [resourceProperties=" + resourceProperties + ", validatedResourceType=" + validatedResourceType
+                + ", applicablePaths=" + Arrays.toString(applicablePaths) + ", children=" + children + ", source="+ source +"]";
     }
 
     @Override
@@ -88,6 +106,7 @@ public class ValidationModelImpl implements ValidationModel {
         result = prime * result + Arrays.hashCode(applicablePaths);
         result = prime * result + ((children == null) ? 0 : children.hashCode());
         result = prime * result + ((resourceProperties == null) ? 0 : resourceProperties.hashCode());
+        result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + ((validatedResourceType == null) ? 0 : validatedResourceType.hashCode());
         return result;
     }
@@ -107,8 +126,12 @@ public class ValidationModelImpl implements ValidationModel {
             return false;
         if (!resourceProperties.equals(other.resourceProperties))
             return false;
+        if (!source.equals(other.source))
+            return false;
         if (!validatedResourceType.equals(other.validatedResourceType))
             return false;
         return true;
     }
+
+    
 }

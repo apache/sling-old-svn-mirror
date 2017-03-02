@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl;
+package org.apache.sling.validation.impl.util;
 
-import java.util.Dictionary;
-
-import org.apache.sling.validation.model.spi.ValidationModelCache;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
+import org.apache.sling.validation.model.ResourceProperty;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
- * Invalidates the cache of the {@link ValidationModelRetrieverImpl} by sending an event through the {@link EventAdmin}
+ * Custom Hamcrest matcher which matches Resource Properties based on the equality only on their name.
  */
-@Component
-public class ValidationModelCacheImpl implements ValidationModelCache {
+public class ResourcePropertyNameMatcher extends TypeSafeMatcher<ResourceProperty> {
 
-    @Reference
-    protected EventAdmin eventAdmin;
-    
-    @Override
-    public void invalidate() {
-        eventAdmin.sendEvent(new Event(ValidationModelRetrieverImpl.CACHE_INVALIDATION_EVENT_TOPIC, (Dictionary<String, ?>) null));
+    private final String expectedName;
+
+    public ResourcePropertyNameMatcher(String name) {
+        expectedName = name;
     }
 
+    @Override
+    public void describeTo(Description description) {
+        description.appendText("ResourceProperty with name=" + expectedName);
+    }
+
+    @Override
+    protected boolean matchesSafely(ResourceProperty resourceProperty) {
+       return expectedName.equals(resourceProperty.getName());
+    }
 }
