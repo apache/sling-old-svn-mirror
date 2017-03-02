@@ -82,7 +82,7 @@ public final class FileResource extends AbstractResource {
     private static final Logger log = LoggerFactory.getLogger(FileResource.class);
     
     /**
-     * Creates an instance of this Filesystem resource.
+     * Creates an instance of this File system resource.
      *
      * @param resolver The owning resource resolver
      * @param resourcePath The resource path in the resource tree

@@ -57,7 +57,7 @@ public final class ContentFileCache {
             content = contentCache.get(path);
         }
         if (content == null) {
-            content = ContentFileParser.parse(file);
+            content = ContentFileParserUtil.parse(file);
             if (content == null) {
                 content = NULL_MAP;
             }

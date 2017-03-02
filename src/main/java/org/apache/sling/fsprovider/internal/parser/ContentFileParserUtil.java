@@ -25,17 +25,34 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.fscontentparser.ContentFileExtension;
+import org.apache.sling.fscontentparser.ContentFileParser;
+import org.apache.sling.fscontentparser.ContentFileParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Parses files that contains content fragments (e.g. JSON, JCR XML).
  */
-class ContentFileParser {
+class ContentFileParserUtil {
     
-    private static final Logger log = LoggerFactory.getLogger(ContentFileParser.class);
+    private static final Logger log = LoggerFactory.getLogger(ContentFileParserUtil.class);
     
-    private ContentFileParser() {
+    private static final ContentFileParser JSON_PARSER;
+    static {
+        // workaround for JsonProvider classloader issue until https://issues.apache.org/jira/browse/GERONIMO-6560 is fixed
+        ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
+            JSON_PARSER = ContentFileParserFactory.create(ContentFileExtension.JSON);
+        }
+        finally {
+            Thread.currentThread().setContextClassLoader(oldClassLoader);
+        }
+    }
+    private static final ContentFileParser JCR_XML_PARSER = ContentFileParserFactory.create(ContentFileExtension.JCR_XML);
+    
+    private ContentFileParserUtil() {
         // static methods only
     }
     
@@ -47,10 +64,10 @@ class ContentFileParser {
     public static Map<String,Object> parse(File file) {
         try {
             if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
-                return JsonFileParser.parse(file);
+                return JSON_PARSER.parse(file);
             }
             else if (StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
-                return JcrXmlFileParser.parse(file);
+                return JCR_XML_PARSER.parse(file);
             }
         }
         catch (Throwable ex) {

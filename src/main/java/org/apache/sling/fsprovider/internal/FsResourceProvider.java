@@ -63,7 +63,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
            service=ResourceProvider.class,
            configurationPolicy=ConfigurationPolicy.REQUIRE,
            property={
-                   Constants.SERVICE_DESCRIPTION + "=Sling Filesystem Resource Provider",
+                   Constants.SERVICE_DESCRIPTION + "=Sling File System Resource Provider",
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
 @Designate(ocd=FsResourceProvider.Config.class, factory=true)
@@ -74,7 +74,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
      */
     public static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
     
-    @ObjectClassDefinition(name = "Apache Sling Filesystem Resource Provider",
+    @ObjectClassDefinition(name = "Apache Sling File System Resource Provider",
             description = "Configure an instance of the filesystem " +
                           "resource provider in terms of provider root and filesystem location")
     public @interface Config {
@@ -83,8 +83,8 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
          * files and folders mapped into the resource tree (value is
          * "provider.file").
          */
-        @AttributeDefinition(name = "Filesystem Root",
-                description = "Filesystem directory mapped to the virtual " +
+        @AttributeDefinition(name = "File System Root",
+                description = "File system directory mapped to the virtual " +
                         "resource tree. This property must not be an empty string. If the path is " +
                         "relative it is resolved against sling.home or the current working directory. " +
                         "The path may be a file or folder. If the path does not address an existing " +
