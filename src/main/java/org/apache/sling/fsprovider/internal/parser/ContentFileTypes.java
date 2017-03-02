@@ -18,7 +18,7 @@
  */
 package org.apache.sling.fsprovider.internal.parser;
 
-import org.apache.sling.fscontentparser.ContentFileExtension;
+import org.apache.sling.fscontentparser.ContentFileType;
 
 /**
  * Content file types.
@@ -28,12 +28,12 @@ public final class ContentFileTypes {
     /**
      * JSON content files.
      */
-    public static final String JSON_SUFFIX = "." + ContentFileExtension.JSON;
+    public static final String JSON_SUFFIX = "." + ContentFileType.JSON.getExtension();
 
     /**
      * JCR XML content files.
      */
-    public static final String JCR_XML_SUFFIX = "." + ContentFileExtension.JCR_XML;
+    public static final String JCR_XML_SUFFIX = "." + ContentFileType.JCR_XML.getExtension();
         
     private ContentFileTypes() {
         // static methods only

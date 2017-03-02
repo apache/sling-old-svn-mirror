@@ -66,7 +66,7 @@
                         <Embed-Dependency>
                             johnzon-core;scope=compile;inline=false,
                             geronimo-json_1.0_spec;scope=compile;inline=false,
-                            org.apache.sling.fscontentparser;scope=compile;inline=false
+                            org.apache.sling.commons.fscontentparser;scope=compile;inline=false
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -139,7 +139,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.fscontentparser</artifactId>
+            <artifactId>org.apache.sling.commons.fscontentparser</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

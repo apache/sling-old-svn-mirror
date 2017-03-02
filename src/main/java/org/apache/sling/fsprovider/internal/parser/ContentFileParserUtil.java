@@ -25,9 +25,9 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.fscontentparser.ContentFileExtension;
 import org.apache.sling.fscontentparser.ContentFileParser;
 import org.apache.sling.fscontentparser.ContentFileParserFactory;
+import org.apache.sling.fscontentparser.ContentFileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +44,13 @@ class ContentFileParserUtil {
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
-            JSON_PARSER = ContentFileParserFactory.create(ContentFileExtension.JSON);
+            JSON_PARSER = ContentFileParserFactory.create(ContentFileType.JSON);
         }
         finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
     }
-    private static final ContentFileParser JCR_XML_PARSER = ContentFileParserFactory.create(ContentFileExtension.JCR_XML);
+    private static final ContentFileParser JCR_XML_PARSER = ContentFileParserFactory.create(ContentFileType.JCR_XML);
     
     private ContentFileParserUtil() {
         // static methods only
