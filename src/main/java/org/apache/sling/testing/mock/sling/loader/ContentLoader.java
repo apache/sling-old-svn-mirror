@@ -33,9 +33,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.fscontentparser.ContentFileExtension;
 import org.apache.sling.fscontentparser.ContentFileParser;
 import org.apache.sling.fscontentparser.ContentFileParserFactory;
+import org.apache.sling.fscontentparser.ContentFileType;
 import org.apache.sling.fscontentparser.ParseException;
 import org.apache.sling.fscontentparser.ParserOptions;
 import org.osgi.framework.BundleContext;
@@ -65,7 +65,7 @@ public final class ContentLoader {
             "jcr:isCheckedOut",
             "rep:policy");
     
-    private static ContentFileParser JSON_PARSER = ContentFileParserFactory.create(ContentFileExtension.JSON, new ParserOptions()
+    private static ContentFileParser JSON_PARSER = ContentFileParserFactory.create(ContentFileType.JSON, new ParserOptions()
             .detectCalendarValues(true)
             .ignorePropertyNames(IGNORED_NAMES)
             .ignoreResourceNames(IGNORED_NAMES));
