@@ -92,7 +92,7 @@ public class JcrXmlContentTest {
     }
 
     @Test
-    public void testJsonContent_Root() {
+    public void testContent_Root() {
         Resource underTest = fsroot.getChild("folder3/content");
         assertNotNull(underTest);
         assertEquals("app:Page", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -101,7 +101,7 @@ public class JcrXmlContentTest {
     }
 
     @Test
-    public void testJsonContent_Level1() {
+    public void testContent_Level1() {
         Resource underTest = fsroot.getChild("folder3/content/jcr:content");
         assertNotNull(underTest);
         assertEquals("app:PageContent", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -110,7 +110,7 @@ public class JcrXmlContentTest {
     }
 
     @Test
-    public void testJsonContent_Level3() {
+    public void testContent_Level3() {
         Resource underTest = fsroot.getChild("folder3/content/jcr:content/content/contentheadline");
         assertNotNull(underTest);
         assertEquals("nt:unstructured", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -119,7 +119,7 @@ public class JcrXmlContentTest {
     }
 
     @Test
-    public void testJsonContent_Datatypes() {
+    public void testContent_Datatypes() {
         Resource underTest = fsroot.getChild("folder3/content/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(underTest);
         
@@ -133,7 +133,7 @@ public class JcrXmlContentTest {
     }
 
     @Test
-    public void testJsonContent_InvalidPath() {
+    public void testContent_InvalidPath() {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content/xyz");
         assertNull(underTest);
     }

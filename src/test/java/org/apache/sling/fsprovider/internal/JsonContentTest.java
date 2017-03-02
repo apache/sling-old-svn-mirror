@@ -43,6 +43,7 @@ import javax.jcr.nodetype.NodeType;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.fscontentparser.ParserOptions;
 import org.apache.sling.fsprovider.internal.TestUtils.RegisterFsResourcePlugin;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -101,7 +102,7 @@ public class JsonContentTest {
     }
 
     @Test
-    public void testJsonContent_Root() {
+    public void testContent_Root() {
         Resource underTest = fsroot.getChild("folder2/content");
         assertNotNull(underTest);
         assertEquals("app:Page", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -110,7 +111,7 @@ public class JsonContentTest {
     }
 
     @Test
-    public void testJsonContent_Level1() {
+    public void testContent_Level1() {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content");
         assertNotNull(underTest);
         assertEquals("app:PageContent", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -120,7 +121,7 @@ public class JsonContentTest {
     }
 
     @Test
-    public void testJsonContent_Level5() {
+    public void testContent_Level5() {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content/par/image/file/jcr:content");
         assertNotNull(underTest);
         assertEquals("nt:resource", ResourceUtil.getValueMap(underTest).get("jcr:primaryType", String.class));
@@ -128,7 +129,7 @@ public class JsonContentTest {
     }
 
     @Test
-    public void testJsonContent_Datatypes() {
+    public void testContent_Datatypes() {
         Resource underTest = fsroot.getChild("folder2/content/toolbar/profiles/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(underTest);
         
@@ -142,7 +143,7 @@ public class JsonContentTest {
     }
 
     @Test
-    public void testJsonContent_Datatypes_JCR() throws RepositoryException {
+    public void testContent_Datatypes_JCR() throws RepositoryException {
         Resource underTest = fsroot.getChild("folder2/content/toolbar/profiles/jcr:content");
         ValueMap props = ResourceUtil.getValueMap(underTest);
         Node node = underTest.adaptTo(Node.class);
@@ -220,11 +221,11 @@ public class JsonContentTest {
     @Test
     public void testFallbackNodeType() throws RepositoryException {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content/par/title_2");
-        assertEquals(NodeType.NT_UNSTRUCTURED, underTest.adaptTo(Node.class).getPrimaryNodeType().getName());
+        assertEquals(ParserOptions.DEFAULT_PRIMARY_TYPE, underTest.adaptTo(Node.class).getPrimaryNodeType().getName());
     }
     
     @Test
-    public void testJsonContent_InvalidPath() {
+    public void testContent_InvalidPath() {
         Resource underTest = fsroot.getChild("folder2/content/jcr:content/xyz");
         assertNull(underTest);
     }
