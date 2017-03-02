@@ -73,4 +73,11 @@ public interface Validator <T> {
      * @throws SlingValidationException if some expected arguments are missing from the arguments map
      */
     @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
+    
+    /**
+     * Each {@link Validator} must have a service property with name {@code validator.id} of type {@link String}. The validators are only addressable via the value of this property 
+     * from the validation models. If there are multiple validators registered for the same {@code validator.id}, the one with highest service ranking is used.
+     * It is recommended to prefix the value of the validator with the providing bundle symbolic name to prevent any name clashes.
+     */
+    String PROPERTY_VALIDATOR_ID = "validator.id";
 }
