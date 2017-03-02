@@ -57,7 +57,7 @@ public class MergedValidationModelTest {
         ValidationModel baseValidationModel = modelBuilder.build("base", "some source");
         modelBuilder.setApplicablePath("/base");
         ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
-        Assert.assertThat(Arrays.asList(mergedModel.getApplicablePaths()),
+        Assert.assertThat(mergedModel.getApplicablePaths(),
                 Matchers.contains("/base/path", "/base/path2"));
     }
 
