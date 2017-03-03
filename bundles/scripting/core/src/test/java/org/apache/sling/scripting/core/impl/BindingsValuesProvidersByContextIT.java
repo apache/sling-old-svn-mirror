@@ -103,6 +103,7 @@ public class BindingsValuesProvidersByContextIT {
                         mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.api").versionAsInProject(),
                         mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.mime").versionAsInProject(),
                         mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.osgi").versionAsInProject(),
+                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.serviceusermapper").versionAsInProject(),
 
                         mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
                         mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
