@@ -34,7 +34,7 @@ public class ResourcePropertyBuilder {
     private boolean optional;
     private boolean multiple;
     private String nameRegex;
-    private final List<ParameterizedValidator> validators;
+    private final @Nonnull List<ParameterizedValidator> validators;
 
     public ResourcePropertyBuilder() {
         validators = new ArrayList<ParameterizedValidator>();
@@ -86,7 +86,7 @@ public class ResourcePropertyBuilder {
         return this;
     }
 
-    public @Nonnull ResourceProperty build(String name) {
+    public @Nonnull ResourceProperty build(@Nonnull String name) {
         return new ResourcePropertyImpl(name, nameRegex, multiple, !optional, validators);
     }
 }
