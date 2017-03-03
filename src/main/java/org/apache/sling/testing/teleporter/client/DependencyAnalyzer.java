@@ -89,6 +89,7 @@ class DependencyAnalyzer {
         if(input == null) {
             throw new RuntimeException("Class resource not found: " + path);
         }
+        log.trace("Analyzing dependencies of {}...", c);
         try {
             try {
                 final DependencyClassFileVisitor v = new DependencyClassFileVisitor();
