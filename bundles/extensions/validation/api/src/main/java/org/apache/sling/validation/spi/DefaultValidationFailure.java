@@ -46,9 +46,8 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
     public final static int DEFAULT_SEVERITY = 0;
 
     /**
-     * Constructor of a validation failure. The message is constructed by looking up the given messageKey from a resourceBundle.
-     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
-     * @param location the location
+     * Constructor of a validation failure.
+     * @param location the location where the validation error occured
      * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
      * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} in {@link #getMessage(ResourceBundle)}
      *  if {@code null} is provided as parameter.
