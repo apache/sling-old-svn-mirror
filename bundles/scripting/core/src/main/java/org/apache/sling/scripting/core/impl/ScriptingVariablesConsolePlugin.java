@@ -35,7 +35,6 @@ import org.apache.felix.webconsole.WebConsoleConstants;
 
 /**
  * Web Console Plugin exposing all binding provider values.
- * @see <a href="http://felix.apache.org/documentation/subprojects/apache-felix-web-console/extending-the-apache-felix-web-console/providing-web-console-plugins.html></a>
  */
 @Component
 @Service
