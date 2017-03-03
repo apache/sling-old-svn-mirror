@@ -39,6 +39,7 @@
     <properties>
         <sling.java.version>8</sling.java.version>
         <http.host>localhost</http.host>
+        
     </properties>
 
     <scm>
@@ -107,8 +108,9 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <!-- set value to true to allow to run IT from your IDE while the quickstart server is still running -->
                         <configuration>
-                            <shouldBlockUntilKeyIsPressed>true</shouldBlockUntilKeyIsPressed>
+                            <shouldBlockUntilKeyIsPressed>false</shouldBlockUntilKeyIsPressed>
                         </configuration>
                     </execution>
                 </executions>
@@ -122,7 +124,6 @@
                         </server>
                     </servers>
                     <disableExtendingMavenClasspath>true</disableExtendingMavenClasspath>
-                    <keepLaunchpadRunning>false</keepLaunchpadRunning>
                 </configuration>
             </plugin>
             <plugin>
@@ -142,6 +143,7 @@
                         <ClientSideTeleporter.testReadyTimeoutSeconds>20</ClientSideTeleporter.testReadyTimeoutSeconds>
                         <ClientSideTeleporter.testBundleDirectory>${project.build.directory}/test-bundles</ClientSideTeleporter.testBundleDirectory>
                         <ClientSideTeleporter.enableLogging>true</ClientSideTeleporter.enableLogging>
+                        <!-- deploy test content and some Sling models with the test bundle -->
                         <ClientSideTeleporter.additionalBundleHeaders>Sling-Initial-Content:SLING-CONTENT;overwrite:=true,Sling-Model-Packages:org.apache.sling.models.validation.impl.it</ClientSideTeleporter.additionalBundleHeaders>
                         <ClientSideTeleporter.includeDependencyPrefixes>org.apache.sling.models.validation.impl.it</ClientSideTeleporter.includeDependencyPrefixes>
                     </systemPropertyVariables>
