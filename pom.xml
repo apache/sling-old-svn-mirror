@@ -133,6 +133,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
             <version>1.2.0</version>
@@ -216,12 +222,6 @@
             <artifactId>slf4j-simple</artifactId>
              <scope>test</scope>
          </dependency>
-         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.1</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Apache Felix -->
         <dependency>

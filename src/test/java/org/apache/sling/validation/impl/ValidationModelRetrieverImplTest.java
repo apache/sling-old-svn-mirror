@@ -166,17 +166,28 @@ public class ValidationModelRetrieverImplTest {
         applicablePathPerResourceType.put("test/type", "/content/site1");
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode/test");
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
+        applicablePathPerResourceType.put("test/type", "/content/site1/subnode/test/somepage/within");
+        applicablePathPerResourceType.put("test/type", "/content/site1/subnode/test/testoutside");
 
-        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage",
-                false);
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage", false);
         Assert.assertNotNull(model);
         Assert.assertThat(model.getApplicablePaths(), Matchers.contains("/content/site1/subnode/test"));
+    }
+    
+    @Test
+    public void testGetModelWithExactlyMatchingApplicablePath() {
+        applicablePathPerResourceType.put("test/type", "/content/site1/subnode/test/somepage");
+        applicablePathPerResourceType.put("test/type", "/content/site1/subnode/test/somepage/");
+
+        ValidationModel model = validationModelRetriever.getModel("test/type", "/content/site1/subnode/test/somepage", false);
+        Assert.assertNotNull(model);
+        Assert.assertThat(model.getApplicablePaths(), Matchers.contains("/content/site1/subnode/test/somepage"));
     }
 
     @Test
     public void testGetModelWithNullApplicablePathPath() {
         applicablePathPerResourceType.put("test/type", "/content/site1");
-        applicablePathPerResourceType.put("test/type", null);
+        applicablePathPerResourceType.put("test/type", "");
         applicablePathPerResourceType.put("test/type", "/content/site1/subnode");
 
         ValidationModel model = validationModelRetriever.getModel("test/type", null, false);
