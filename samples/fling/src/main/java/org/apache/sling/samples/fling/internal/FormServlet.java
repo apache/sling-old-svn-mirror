@@ -20,6 +20,8 @@ package org.apache.sling.samples.fling.internal;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -35,10 +37,10 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.messaging.MessageService;
 import org.apache.sling.commons.messaging.Result;
 import org.apache.sling.samples.fling.form.Form;
@@ -106,10 +108,16 @@ public class FormServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doPost(@Nonnull SlingHttpServletRequest request, @Nonnull SlingHttpServletResponse response) throws ServletException, IOException {
-        final ValueMap parameters = request.adaptTo(ValueMap.class);
+        final Map<String, Object> base = new LinkedHashMap<>();
+        final ValueMapDecorator parameters = new ValueMapDecorator(base);
+        final Enumeration<String> names = request.getParameterNames();
+        while (names.hasMoreElements()) {
+            final String name = names.nextElement();
+            parameters.put(name, request.getRequestParameter(name));
+        }
         logger.debug("parameters: {}", parameters);
 
-        final String formType = parameters.get("formType", String.class);
+        final String formType = request.getParameter("formType");
         logger.debug("form type is '{}'", formType);
 
         final Form form = FormFactory.build(formType, parameters);
