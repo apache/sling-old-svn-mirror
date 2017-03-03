@@ -35,7 +35,16 @@ public class ResourcePropertyImpl implements ResourceProperty {
     private final @Nonnull List<ParameterizedValidator> validators;
     private final Pattern namePattern;
 
-    public ResourcePropertyImpl(@Nonnull String name, String nameRegex, boolean isMultiple, boolean isRequired,
+    /**
+     * Is only supposed to be used from {@link ResourcePropertyBuilder}.
+     * @param name
+     * @param nameRegex
+     * @param isMultiple
+     * @param isRequired
+     * @param validators
+     * @throws IllegalArgumentException
+     */
+    protected ResourcePropertyImpl(@Nonnull String name, String nameRegex, boolean isMultiple, boolean isRequired,
             @Nonnull List<ParameterizedValidator> validators) throws IllegalArgumentException {
         if (nameRegex != null) {
             try {

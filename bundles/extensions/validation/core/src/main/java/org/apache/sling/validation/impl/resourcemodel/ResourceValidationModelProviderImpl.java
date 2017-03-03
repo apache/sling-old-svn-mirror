@@ -19,6 +19,7 @@
 package org.apache.sling.validation.impl.resourcemodel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
+import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ChildResource;
@@ -167,17 +169,21 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     LOG.warn("Could not get covered resource type of newly added validation model at " + path, e);
                 }
                 if (resourceTypeToInvalidate != null) {
-                    LOG.debug("Invalidate validation models for resource type {}, because resource at {} provides a new/modified validation model for that type", resourceType, path);
+                    LOG.debug(
+                            "Invalidate validation models for resource type {}, because resource at {} provides a new/modified validation model for that type",
+                            resourceType, path);
                     resourceTypesToInvalidate.add(resourceTypeToInvalidate);
                 } else {
-                    LOG.debug("Resource at {} provides a new/modified validation model but could not yet determine for which resource type", path);
+                    LOG.debug("Resource at {} provides a new/modified validation model but could not yet determine for which resource type",
+                            path);
                 }
             }
             // or paths already covered by the cache
             for (Entry<String, List<ValidationModel>> validationModelByResourceType : validationModelCacheByResourceType.entrySet()) {
                 for (ValidationModel model : validationModelByResourceType.getValue()) {
                     if (path.startsWith(model.getSource())) {
-                        LOG.debug("Invalidate validation model at {}, because resource below (at {}) has been modified", model.getSource(), path);
+                        LOG.debug("Invalidate validation model at {}, because resource below (at {}) has been modified", model.getSource(),
+                                path);
                         resourceTypesToInvalidate.add(validationModelByResourceType.getKey());
                     }
                 }
@@ -207,10 +213,12 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.sling.validation.model.spi.ValidationModelProvider#getModels(java.lang.String, java.util.Map)
      */
     @Override
-    public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
+    public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType,
+            @Nonnull Map<String, Validator<?>> validatorsMap) {
         List<ValidationModel> cacheEntry = validationModelCacheByResourceType.get(relativeResourceType);
         if (cacheEntry == null) {
             cacheEntry = doGetModels(relativeResourceType, validatorsMap);
@@ -220,14 +228,14 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         }
         return cacheEntry;
     }
-    
-    /** 
-     * Searches for validation models bound to a specific resource type through a search query. 
+
+    /** Searches for validation models bound to a specific resource type through a search query.
      *
      * @param relativeResourceType the resource type to look for
-     * @param validatorsMap  all known validators in a map (key=id of validator). Only one of those should be used in the returned validation models.
-     * @return a List of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no
-     *         model for the given resource type could be found. Returns the models below "/apps" before the models below "/libs".
+     * @param validatorsMap all known validators in a map (key=id of validator). Only one of those should be used in the returned validation
+     *            models.
+     * @return a List of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no model for the given resource
+     *         type could be found. Returns the models below "/apps" before the models below "/libs".
      * @throws IllegalStateException in case a validation model is found but it is invalid */
     @Nonnull
     private List<ValidationModel> doGetModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
@@ -247,7 +255,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     try {
                         ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
                         ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                        modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, new String[]{}));
+                        modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, new String[] {}));
                         Resource propertiesResource = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
                         modelBuilder.resourceProperties(buildProperties(validatorsMap, propertiesResource));
                         modelBuilder.childResources(buildChildren(model, model, validatorsMap));
@@ -285,20 +293,28 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource property : propertiesResource.getChildren()) {
+                ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
                 String fieldName = property.getName();
                 ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
-                Boolean propertyMultiple = propertyValueMap.get(ResourceValidationModelProviderImpl.PROPERTY_MULTIPLE, false);
-                Boolean propertyRequired = !propertyValueMap.get(ResourceValidationModelProviderImpl.OPTIONAL, false);
+                if (propertyValueMap.get(ResourceValidationModelProviderImpl.PROPERTY_MULTIPLE, false)) {
+                    resourcePropertyBuilder.multiple();
+                }
+                if (propertyValueMap.get(ResourceValidationModelProviderImpl.OPTIONAL, false)) {
+                    resourcePropertyBuilder.optional();
+                }
                 String nameRegex = propertyValueMap.get(ResourceValidationModelProviderImpl.NAME_REGEX, null);
+                if (nameRegex != null) {
+                    resourcePropertyBuilder.nameRegex(nameRegex);
+                }
                 Resource validators = property.getChild(ResourceValidationModelProviderImpl.VALIDATORS);
-                List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
                 if (validators != null) {
                     Iterator<Resource> validatorsIterator = validators.listChildren();
                     while (validatorsIterator.hasNext()) {
                         Resource validatorResource = validatorsIterator.next();
                         ValueMap validatorProperties = validatorResource.adaptTo(ValueMap.class);
                         if (validatorProperties == null) {
-                            throw new IllegalStateException("Could not adapt resource " + validatorResource.getPath() + " to ValueMap");
+                            throw new IllegalStateException(
+                                    "Could not adapt resource at '" + validatorResource.getPath() + "' to ValueMap");
                         }
                         String validatorId = validatorResource.getName();
                         Validator<?> validator = validatorsMap.get(validatorId);
@@ -311,21 +327,39 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                         Map<String, Object> validatorArgumentsMap = new HashMap<String, Object>();
                         if (validatorArguments != null) {
                             for (String arg : validatorArguments) {
-                                String[] keyValuePair = arg.split("=");
-                                if (keyValuePair.length != 2) {
-                                    continue;
+                                int positionOfSeparator = arg.indexOf("=");
+                                if (positionOfSeparator < 1 || positionOfSeparator >= arg.length()-1) {
+                                    throw new IllegalArgumentException("Invalid validator argument '" + arg
+                                            + "' found, because it does not follow the format '<key>=<value>'");
                                 }
-                                validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
+                                String key = arg.substring(0, positionOfSeparator);
+                                String value = arg.substring(positionOfSeparator + 1);
+                                Object newValue;
+                                if (validatorArgumentsMap.containsKey(key)) {
+                                    Object oldValue = validatorArgumentsMap.get(key);
+                                    // either extend old array
+                                    if (oldValue instanceof String[]) {
+                                        String[] oldArray = (String[]) oldValue;
+                                        int newLength = oldArray.length + 1;
+                                        String[] newArray = Arrays.copyOf(oldArray, oldArray.length + 1);
+                                        newArray[newLength - 1] = value;
+                                        newValue = newArray;
+                                    } else {
+                                        // or turn the single value into a multi-value array
+                                        newValue = new String[] { (String) oldValue, value };
+                                    }
+                                } else {
+                                    newValue = value;
+                                }
+                                validatorArgumentsMap.put(key, newValue);
                             }
                         }
                         // get severity
                         Integer severity = validatorProperties.get(SEVERITY, Integer.class);
-                        parameterizedValidators.add(new ParameterizedValidatorImpl(validator, validatorArgumentsMap, severity));
+                        resourcePropertyBuilder.validator(validator, severity, validatorArgumentsMap);
                     }
                 }
-                ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, propertyRequired,
-                        parameterizedValidators);
-                properties.add(f);
+                properties.add(resourcePropertyBuilder.build(fieldName));
             }
         }
         return properties;

@@ -31,10 +31,10 @@ import org.apache.sling.validation.spi.Validator;
 
 public class ResourcePropertyBuilder {
 
-    public boolean optional;
-    public boolean multiple;
-    String nameRegex;
-    final List<ParameterizedValidator> validators;
+    private boolean optional;
+    private boolean multiple;
+    private String nameRegex;
+    private final List<ParameterizedValidator> validators;
 
     public ResourcePropertyBuilder() {
         validators = new ArrayList<ParameterizedValidator>();
@@ -48,11 +48,17 @@ public class ResourcePropertyBuilder {
         return this;
     }
 
+    /** 
+     * should only be used from test classes 
+     */
     public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator) {
         validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>(), null));
         return this;
     }
 
+    /** 
+     * should only be used from test classes 
+     */
     public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, Integer severity, String... parametersNamesAndValues) {
         if (parametersNamesAndValues.length % 2 != 0) {
             throw new IllegalArgumentException("array parametersNamesAndValues must be even! (first specify name then value, separated by comma)");
@@ -62,7 +68,11 @@ public class ResourcePropertyBuilder {
         for (int i=0; i<parametersNamesAndValues.length; i=i+2) {
             parameterMap.put(parametersNamesAndValues[i], parametersNamesAndValues[i+1]);
         }
-        validators.add(new ParameterizedValidatorImpl(validator, parameterMap, severity));
+        return validator(validator, severity, parameterMap);
+    }
+    
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, Integer severity, @Nonnull Map<String, Object> parameters) {
+        validators.add(new ParameterizedValidatorImpl(validator, parameters, severity));
         return this;
     }
 
