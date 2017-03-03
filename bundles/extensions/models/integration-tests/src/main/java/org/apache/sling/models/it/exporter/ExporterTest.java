@@ -153,7 +153,7 @@ public class ExporterTest {
             Assert.assertTrue(resource.getBoolean("sampleBooleanValue"));
             Assert.assertEquals(1, resource.getLong("sampleLongValue"));
             Assert.assertEquals(3, resource.getLong(":sampleBinary"));
-            Assert.assertEquals(0, resource.getJSONArray("sampleEmptyArray"));
+            Assert.assertEquals(0, resource.getJSONArray("sampleEmptyArray").length());
 
             final Resource extendedComponentResource = resolver.getResource(extendedComponentPath);
             Assert.assertNotNull(extendedComponentResource);
