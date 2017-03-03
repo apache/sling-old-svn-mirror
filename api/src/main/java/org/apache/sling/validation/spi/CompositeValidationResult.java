@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl;
+package org.apache.sling.validation.spi;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,13 +28,16 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.DefaultValidationResult;
 
 /**
  * Aggregates multiple {@link ValidationResult}s.
  */
-public class CompositeValidationResult implements ValidationResult {
+public class CompositeValidationResult implements ValidationResult, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1019113908128276733L;
     private final @Nonnull List<ValidationResult> results;
 
     public CompositeValidationResult() {

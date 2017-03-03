@@ -47,6 +47,7 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.spi.CompositeValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,8 +34,12 @@ import org.apache.sling.validation.ValidationResult;
  * Default implementation of {@link ValidationResult} wrapping a list of {@link ValidationFailure}s.
  *
  */
-public class DefaultValidationResult implements ValidationResult {
+public class DefaultValidationResult implements ValidationResult, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3370520716090956033L;
     private final boolean isValid;
     private final @Nonnull List<ValidationFailure> failures;
 
