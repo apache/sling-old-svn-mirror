@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
 import javax.annotation.CheckForNull;
@@ -40,6 +41,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.validation.ValidationFailure;
@@ -64,6 +66,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -83,12 +86,20 @@ public class ValidationServiceImplTest {
 
     @Rule
     public SlingContext context = new SlingContext();
+    
+    @Mock
+    private ResourceBundle defaultResourceBundle;
+    
+    @Mock
+    private ResourceBundleProvider resourceBundleProvider;
 
     @Before
     public void setUp() throws LoginException, PersistenceException, RepositoryException {
         validationService = new ValidationServiceImpl();
         validationService.searchPaths = Arrays.asList(context.resourceResolver().getSearchPath());
         validationService.configuration = configuration;
+        validationService.resourceBundleProviders = Collections.singletonList(resourceBundleProvider);
+        Mockito.doReturn(defaultResourceBundle).when(resourceBundleProvider).getResourceBundle(Mockito.anyObject());
         modelBuilder = new ValidationModelBuilder();
         propertyBuilder = new ResourcePropertyBuilder();
     }
@@ -107,7 +118,7 @@ public class ValidationServiceImplTest {
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         hashMap.put("field1", "1");
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", null, ValidationServiceImpl.I18N_KEY_WRONG_PROPERTY_TYPE, Date.class)));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", null, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_WRONG_PROPERTY_TYPE, Date.class)));
     }
 
     @Test
@@ -150,7 +161,7 @@ public class ValidationServiceImplTest {
         hashMap.put("field3", "");
 
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("", null, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field4")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("", null, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field4")));
     }
 
     @Test()
@@ -177,7 +188,7 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
 
         Assert.assertFalse(vr.isValid()); // check for correct error message Map<String, List<String>>
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", 2, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "abc")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field1", 2, defaultResourceBundle, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "abc")));
     }
 
     @Test
@@ -197,7 +208,7 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(new ValueMapDecorator(hashMap), vm);
 
         Assert.assertFalse(vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure> hasItem(new DefaultValidationFailure("field2", 0, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, TEST_REGEX)));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure> hasItem(new DefaultValidationFailure("field2", 0, defaultResourceBundle, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, TEST_REGEX)));
     }
 
     // see https://issues.apache.org/jira/browse/SLING-5674
@@ -219,8 +230,8 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(nonExistingResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
                 ));
     }
 
@@ -243,8 +254,8 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validate(nonExistingResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, "child")
                 ));
     }
 
@@ -277,7 +288,7 @@ public class ValidationServiceImplTest {
 
         ValidationResult vr = validationService.validate(testResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("child/grandchild", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("child/grandchild", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1")));
     }
 
     @Test
@@ -390,10 +401,10 @@ public class ValidationServiceImplTest {
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>containsInAnyOrder(
-                new DefaultValidationFailure("child2", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
-                new DefaultValidationFailure("child3", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
-                new DefaultValidationFailure("child3", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "siblingchild.*")));
+                new DefaultValidationFailure("child2", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
+                new DefaultValidationFailure("child3", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "grandchild.*"),
+                new DefaultValidationFailure("child3", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, "siblingchild.*")));
     }
 
     @Test
@@ -421,8 +432,8 @@ public class ValidationServiceImplTest {
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(
-                new DefaultValidationFailure("field3", 0, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d"),
-                new DefaultValidationFailure("", 0, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, "otherfield.*")));
+                new DefaultValidationFailure("field3", 0, defaultResourceBundle, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d"),
+                new DefaultValidationFailure("", 0, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, "otherfield.*")));
     }
 
     @Test
@@ -440,7 +451,7 @@ public class ValidationServiceImplTest {
 
         ValidationResult vr = validationService.validate(testResource, vm);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
-        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field[1]", 0, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d")));
+        Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(new DefaultValidationFailure("field[1]", 0, defaultResourceBundle, RegexValidator.I18N_KEY_PATTERN_DOES_NOT_MATCH, "\\d")));
     }
 
     @Test()
@@ -497,8 +508,8 @@ public class ValidationServiceImplTest {
         ValidationResult vr = validationService.validateResourceRecursively(testResource, true, ignoreResourceType3Filter, false);
         Assert.assertFalse("resource should have been considered invalid", vr.isValid());
         Assert.assertThat(vr.getFailures(), Matchers.<ValidationFailure>contains(
-                new DefaultValidationFailure("", null,  ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
-                new DefaultValidationFailure("child2", null, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field2")));
+                new DefaultValidationFailure("", null, defaultResourceBundle,  ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field1"),
+                new DefaultValidationFailure("child2", null, defaultResourceBundle, ValidationServiceImpl.I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, "field2")));
     }
 
     // see https://issues.apache.org/jira/browse/SLING-5674

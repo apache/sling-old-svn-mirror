@@ -35,6 +35,7 @@ public class DefaultValidationFailure implements ValidationFailure {
     private final @Nonnull String location;
     private final @Nonnull String messageKey;
     private final Object[] messageArguments;
+    private final @Nonnull ResourceBundle defaultResourceBundle;
     private final int severity;
 
     public final static int DEFAULT_SEVERITY = 0;
@@ -44,10 +45,12 @@ public class DefaultValidationFailure implements ValidationFailure {
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param location the location
      * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} in {@link #getMessage(ResourceBundle)}
+     *  if {@code null} is provided as parameter.
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
      */
-    public DefaultValidationFailure(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationFailure(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
         this.location = location;
         if (severity != null) {
             this.severity = severity;
@@ -56,13 +59,14 @@ public class DefaultValidationFailure implements ValidationFailure {
         }
         this.messageKey = messageKey;
         this.messageArguments = messageArguments;
+        this.defaultResourceBundle = defaultResourceBundle;
     }
 
     @SuppressWarnings("null")
     @Override
-    public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle) {
+    public @Nonnull String getMessage(ResourceBundle resourceBundle) {
         if (resourceBundle == null) {
-            throw new NullPointerException("ResourceBundle must not be null");
+            resourceBundle = defaultResourceBundle;
         }
         return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
     }

@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
@@ -43,8 +44,8 @@ public class CompositeValidationResult implements ValidationResult {
         results.add(result);
     }
 
-    public void addFailure(@Nonnull String location, Integer severity, @Nonnull String message, Object... messageArguments) {
-        results.add(new DefaultValidationResult(location, severity, message, messageArguments));
+    public void addFailure(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String message, Object... messageArguments) {
+        results.add(new DefaultValidationResult(location, severity, defaultResourceBundle, message, messageArguments));
     }
 
     /**

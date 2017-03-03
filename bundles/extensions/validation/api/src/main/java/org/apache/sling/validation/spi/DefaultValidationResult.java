@@ -22,6 +22,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
@@ -47,12 +48,13 @@ public class DefaultValidationResult implements ValidationResult {
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param location the location.
      * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} if no other bundle is provided.
      * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationResult(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
-        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, messageKey, messageArguments));
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, defaultResourceBundle, messageKey, messageArguments));
     }
 
     public DefaultValidationResult(ValidationFailure... failures) {

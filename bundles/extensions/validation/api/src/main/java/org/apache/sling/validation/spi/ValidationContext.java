@@ -18,6 +18,8 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.util.ResourceBundle;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -54,4 +56,10 @@ public interface ValidationContext {
      * @return the severity of the validation failure. May be {@code null} when no explicit severity has been set in the model.
      */
     @CheckForNull Integer getSeverity();
+    
+    /**
+     * The default resource bundle which should be able to give out the error message of the validator in English. 
+     * @return
+     */
+    @Nonnull ResourceBundle getDefaultResourceBundle();
 }
