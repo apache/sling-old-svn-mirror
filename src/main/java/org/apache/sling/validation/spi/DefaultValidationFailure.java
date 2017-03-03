@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.ResourceBundle;
@@ -30,12 +31,16 @@ import org.apache.sling.validation.ValidationFailure;
  * Wraps a message key (being looked up in a {@link ResourceBundle}), messageArguments (being used with {@link MessageFormat#format(String, Object...)}
  * and the location where the validation failure occurred.
  */
-public class DefaultValidationFailure implements ValidationFailure {
+public class DefaultValidationFailure implements ValidationFailure, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1748031688917555982L;
     private final @Nonnull String location;
     private final @Nonnull String messageKey;
     private final Object[] messageArguments;
-    private final @Nonnull ResourceBundle defaultResourceBundle;
+    private final transient @Nonnull ResourceBundle defaultResourceBundle;
     private final int severity;
 
     public final static int DEFAULT_SEVERITY = 0;
@@ -62,11 +67,15 @@ public class DefaultValidationFailure implements ValidationFailure {
         this.defaultResourceBundle = defaultResourceBundle;
     }
 
-    @SuppressWarnings("null")
+    @SuppressWarnings({ "null", "unused" })
     @Override
     public @Nonnull String getMessage(ResourceBundle resourceBundle) {
         if (resourceBundle == null) {
             resourceBundle = defaultResourceBundle;
+        }
+        if (resourceBundle == null) {
+            // this should only happen if this class was deserialized because there the default resource bundle is missing
+            return "No defaultResourceBundle found to resolve, messageKey = " + messageKey + ", messageArguments: " + Arrays.toString(messageArguments);
         }
         return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
     }
