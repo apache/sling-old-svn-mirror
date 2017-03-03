@@ -271,11 +271,13 @@
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
   </feature>
   <feature name="sling-extension-validation" version="${project.version}">
-    <configfile finalname="/etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation</configfile>
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation</configfile>
     <bundle>mvn:org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
+    <feature version="${project.version}">sling-extension-i18n</feature>
+    <bundle dependency="true">mvn:org.apache.commons/commons-collections4/4.1</bundle>
   </feature>
   <feature name="sling-extension-xss" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss</configfile>
