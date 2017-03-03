@@ -58,6 +58,7 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.CachingMap;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -124,6 +125,9 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
     boolean active = false;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     public ScriptCacheImpl() {
         internalMap = new CachingMap<>(DEFAULT_CACHE_SIZE);
