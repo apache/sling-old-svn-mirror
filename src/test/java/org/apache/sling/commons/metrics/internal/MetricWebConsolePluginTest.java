@@ -13,7 +13,7 @@
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
+ * specific langauge governing permissions and limitations
  * under the License.
  */
 
@@ -145,7 +145,7 @@ public class MetricWebConsolePluginTest {
         assertTable("data-counters", page);
         assertTable("data-timers", page);
         assertTable("data-histograms", page);
-        assertTable("data-guages", page);
+        assertTable("data-gauges", page);
     }
 
     private void assertTable(String name, HtmlPage page) {

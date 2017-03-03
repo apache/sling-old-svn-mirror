@@ -13,7 +13,7 @@
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
+ * specific langauge governing permissions and limitations
  * under the License.
  */
 
@@ -163,7 +163,7 @@ class JSONReporter implements Reporter, Closeable {
                         SortedMap<String, Timer> timers) throws IOException {
         json.object();
         if (!gauges.isEmpty()) {
-            json.key("guages").object();
+            json.key("gauges").object();
             for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
                 printGauge(entry);
             }
