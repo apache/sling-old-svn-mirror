@@ -1,0 +1,41 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+#
+[feature name=sling-validation]
+
+[artifacts]
+    org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT
+    org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT
+
+[:repoinit]
+    create service user sling-validation
+
+    create path (sling:Folder) /apps
+    create path (sling:Folder) /libs
+
+    set ACL for sling-validation
+        allow   jcr:read    on /apps
+        allow   jcr:read    on /libs
+    end
+
+[configurations]
+    org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation
+        user.mapping=[
+            "org.apache.sling.validation.core\=sling-validation"
+        ]
