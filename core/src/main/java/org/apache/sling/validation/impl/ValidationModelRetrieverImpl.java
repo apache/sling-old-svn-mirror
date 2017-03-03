@@ -22,16 +22,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import org.apache.commons.collections4.trie.PatriciaTrie;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.MergedValidationModel;
-import org.apache.sling.validation.impl.util.Trie;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
@@ -114,20 +116,28 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
     }
 
     private @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath) {
+        PatriciaTrie<ValidationModel> modelsForResourceType = fillTrieForResourceType(resourceType);
         ValidationModel model = null;
-        Trie<ValidationModel> modelsForResourceType = fillTrieForResourceType(resourceType);
-
-        model = modelsForResourceType.getElementForLongestMatchingKey(resourcePath).getValue();
+        // for empty/null resource paths, always return the entry stored for ""
+        if (StringUtils.isEmpty(resourcePath)) {
+            model = modelsForResourceType.get("");
+        } else {
+            // get longest prefix entry, which still matches
+            SortedMap<String, ValidationModel> modelMap = modelsForResourceType.subMap("", resourcePath + "/");
+            if (!modelMap.isEmpty()) {
+                model =  modelMap.get(modelMap.lastKey());
+            }
+        }
         if (model == null && !modelsForResourceType.isEmpty()) {
-            LOG.warn("Although model for resource type {} is available, it is not allowed for path {}", resourceType,
+            LOG.warn("Although at least one model for resource type '{}' is available, none of them are allowed to be applied to path {}", resourceType,
                     resourcePath);
         }
         return model;
     }
 
-    private @Nonnull Trie<ValidationModel> fillTrieForResourceType(@Nonnull String resourceType) {
+    private @Nonnull PatriciaTrie<ValidationModel> fillTrieForResourceType(@Nonnull String resourceType) {
         // create a new (empty) trie
-        Trie<ValidationModel> modelsForResourceType = new Trie<ValidationModel>();
+        PatriciaTrie<ValidationModel> modelsForResourceType = new PatriciaTrie<ValidationModel>();
 
         // fill trie with data from model providers (all models for the given resource type, independent of resource path)
         // lowest ranked model provider inserts first (i.e. higher ranked should overwrite)
@@ -137,7 +147,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
             for (ValidationModel model : models) {
                 for (String applicablePath : model.getApplicablePaths()) {
                     LOG.debug("Found validation model for resource type {} for applicable path {}", resourceType, applicablePath);
-                    modelsForResourceType.insert(applicablePath, model);
+                    modelsForResourceType.put(applicablePath, model);
                 }
             }
             if (models.isEmpty()) {

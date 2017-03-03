@@ -87,7 +87,8 @@ public class ValidationTestSupport extends TestSupport {
         return composite(
             slingLaunchpadOakTar(workingDirectory, httpPort),
             slingExtensionI18n(),
-            slingInstallerProviderJcr()
+            slingInstallerProviderJcr(),
+            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject()
         );
     }
 
