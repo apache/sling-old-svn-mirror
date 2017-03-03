@@ -36,8 +36,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/** These tests leverage the {@link ValidationPostOperation} to validate the given request parameters. The according validation model
- * enforces the properties "field1" matching regex=^\\\p{Upper}$ and "field2" (having an arbitrary value). */
 public class ModelValidationIT {
 
     @Rule
