@@ -13,7 +13,7 @@
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
+ * specific langauge governing permissions and limitations
  * under the License.
  */
 
@@ -397,7 +397,7 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<br>");
         pw.println("<div class='table'>");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Gauges</div>");
-        pw.println("<table class='nicetable' id='data-guages'>");
+        pw.println("<table class='nicetable' id='data-gauges'>");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class='header'>Name</th>");
