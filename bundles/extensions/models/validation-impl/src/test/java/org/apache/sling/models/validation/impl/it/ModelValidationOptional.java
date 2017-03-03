@@ -20,7 +20,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
 
-@Model(validation=ValidationStrategy.REQUIRED, adaptables = { Resource.class })
-public class ResourceType1ModelValidationRequired {
+@Model(validation=ValidationStrategy.OPTIONAL, adaptables = { Resource.class })
+public class ModelValidationOptional {
 
 }

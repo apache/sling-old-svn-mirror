@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.models.factory.ValidationException;
 import org.apache.sling.models.validation.InvalidResourceException;
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
@@ -41,18 +42,18 @@ public class ModelValidationIT {
 
     @Rule
     public final TeleporterRule teleporter = TeleporterRule.forClass(getClass()).withResources("/SLING-CONTENT/");
-    
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
     private ValidationService validationService;
 
     private ValidationModel validationModel;
-    
+
     private ModelFactory modelFactory;
-    
+
     private ResourceResolverFactory resourceResolverFactory;
-    
+
     private ResourceResolver resourceResolver = null;
 
     private static final int MODEL_AVAILABLE_TIMEOUT_SECONDS = Integer.getInteger("ValidationServiceIT.ModelAvailabelTimeoutSeconds", 10);
@@ -60,7 +61,7 @@ public class ModelValidationIT {
     @Before
     public void setUp() throws InterruptedException, LoginException {
         validationService = teleporter.getService(ValidationService.class);
-        
+
         long timeoutMs = System.currentTimeMillis() + MODEL_AVAILABLE_TIMEOUT_SECONDS * 1000l;
         // wait for the model to become available (internally relies on search, is therefore asynchronous)
         do {
@@ -76,7 +77,7 @@ public class ModelValidationIT {
         resourceResolverFactory = teleporter.getService(ResourceResolverFactory.class);
         resourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
     }
-    
+
     @After
     public void tearDown() {
         if (resourceResolver != null) {
@@ -90,7 +91,7 @@ public class ModelValidationIT {
         Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentValid");
         Assert.assertNotNull("Content resource must exist", contentResource);
         // generate a model
-        ResourceType1ModelValidationRequired model = modelFactory.createModel(contentResource, ResourceType1ModelValidationRequired.class);
+        ModelValidationRequired model = modelFactory.createModel(contentResource, ModelValidationRequired.class);
         Assert.assertNotNull("model must have been created", model);
     }
 
@@ -100,8 +101,40 @@ public class ModelValidationIT {
         Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentInvalid");
         Assert.assertNotNull("Content resource must exist", contentResource);
         expectedEx.expect(InvalidResourceException.class);
-        expectedEx.expectMessage("Validation errors for '/apps/sling/validation/content/contentInvalid':\nfield1:Property does not match the pattern \"^\\p{Upper}+$\"");
+        expectedEx.expectMessage(
+                "Validation errors for '/apps/sling/validation/content/contentInvalid':\nfield1:Property does not match the pattern \"^\\p{Upper}+$\"");
         // generate a model
-        modelFactory.createModel(contentResource, ResourceType1ModelValidationRequired.class);
+        modelFactory.createModel(contentResource, ModelValidationRequired.class);
+    }
+
+    @Test
+    public void testModelWithoutRequiredValidationModel() {
+        // create a valid resource
+        Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentWithNoValidationModel");
+        Assert.assertNotNull("Content resource must exist", contentResource);
+        expectedEx.expect(ValidationException.class);
+        expectedEx.expectMessage("Could not find validation model for resource '/apps/sling/validation/content/contentWithNoValidationModel' with type 'test/resourceType1'");
+        // generate a model
+        modelFactory.createModel(contentResource, ModelValidationRequired.class);
+    }
+
+    @Test
+    public void testModelWithoutOptionalValidationModel() {
+        // create a valid resource
+        Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentWithNoValidationModel");
+        Assert.assertNotNull("Content resource must exist", contentResource);
+        // generate a model
+        ModelValidationOptional model = modelFactory.createModel(contentResource, ModelValidationOptional.class);
+        Assert.assertNotNull("model must have been created", model);
+    }
+
+    @Test
+    public void testInvalidModelWithValidationDisabled() {
+        // create a valid resource
+        Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentWithNoValidationModel");
+        Assert.assertNotNull("Content resource must exist", contentResource);
+        // generate a model
+        ModelValidationDisabled model = modelFactory.createModel(contentResource, ModelValidationDisabled.class);
+        Assert.assertNotNull("model must have been created", model);
     }
 }
