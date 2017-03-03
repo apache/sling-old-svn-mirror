@@ -1,0 +1,45 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+[feature name=models.validation-impl.it]
+# Dependencies
+[artifacts]
+  org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
+  # this is necessary to execute the tests
+  org.apache.sling/org.apache.sling.junit.core/1.0.23
+  # deploy the validation framework
+  org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT
+  org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT
+  # deploy the to be tested bundle as well
+  org.apache.sling/org.apache.sling.models.validation-impl/1.0.0-SNAPSHOT
+
+[configurations]
+  # configure service user mapping for validation framework
+  org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation
+    user.mapping=[ \
+    "org.apache.sling.validation.core\=sling-readall", \
+    ]
+    
+  # configure service user mapping for junit core (being used in the IT itself)
+  org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-junit
+    user.mapping=[ \
+    "org.apache.sling.junit.core\=sling-readall", \
+    ]
+
+[settings]
+  org.apache.sling.commons.log.julenabled=true
