@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
 
     /** 
-     * Map of validation providers (key=service properties), Declarative Services 1.3 takes care that the list is ordered according to {@link ServiceReference#compareTo(Object)}.
+     * List of validation providers, Declarative Services 1.3 takes care that the list is ordered according to {@link ServiceReference#compareTo(Object)}.
      * Highest ranked service is the last one in the list.
      * 
      * @see OSGi R6 Comp, 112.3.8.1

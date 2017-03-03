@@ -18,6 +18,8 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.ResourceBundle;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -31,13 +33,15 @@ public class ValidationContextImpl implements ValidationContext {
     private final Integer severity;
     private final @Nonnull ValueMap valueMap;
     private final Resource resource;
+    private final @Nonnull ResourceBundle defaultResourceBundle;
 
-    public ValidationContextImpl(@Nonnull String location, Integer severity,  @Nonnull ValueMap valueMap, Resource resource) {
+    public ValidationContextImpl(@Nonnull String location, Integer severity,  @Nonnull ValueMap valueMap, Resource resource, @Nonnull ResourceBundle defaultResourceBundle) {
         super();
         this.location = location;
         this.severity = severity;
         this.valueMap = valueMap;
         this.resource = resource;
+        this.defaultResourceBundle = defaultResourceBundle;
     }
 
     @Override
@@ -62,6 +66,11 @@ public class ValidationContextImpl implements ValidationContext {
     @CheckForNull
     public Integer getSeverity() {
         return severity;
+    }
+
+    @Override
+    public @Nonnull ResourceBundle getDefaultResourceBundle() {
+        return defaultResourceBundle;
     }
 
 }
