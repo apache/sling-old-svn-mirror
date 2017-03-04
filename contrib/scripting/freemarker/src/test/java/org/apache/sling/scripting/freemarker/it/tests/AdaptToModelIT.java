@@ -27,7 +27,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -68,13 +67,11 @@ public class AdaptToModelIT extends FreemarkerTestSupport {
     }
 
     @Test
-    @Ignore
     public void testTitle() {
         assertThat(document.title(), is("Sling Models adaptTo()"));
     }
 
     @Test
-    @Ignore
     public void testPageName() {
         final Element name = document.getElementById("name");
         assertThat(name.text(), is("adaptto"));
