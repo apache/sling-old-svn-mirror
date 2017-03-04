@@ -77,7 +77,7 @@ public class AdaptToModelIT extends FreemarkerTestSupport {
     @Ignore
     public void testPageName() {
         final Element name = document.getElementById("name");
-        assertThat("adaptto", is(name.text()));
+        assertThat(name.text(), is("adaptto"));
     }
 
 }
