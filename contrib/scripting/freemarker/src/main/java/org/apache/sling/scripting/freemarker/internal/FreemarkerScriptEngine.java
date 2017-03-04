@@ -50,8 +50,11 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
     private final TemplateHashModel statics;
 
-    public FreemarkerScriptEngine(ScriptEngineFactory factory) {
-        super(factory);
+    private final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory;
+
+    public FreemarkerScriptEngine(final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory) {
+        super(freemarkerScriptEngineFactory);
+        this.freemarkerScriptEngineFactory = freemarkerScriptEngineFactory;
         configuration = new Configuration(version);
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         beansWrapper = new BeansWrapper(version);
@@ -77,6 +80,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
             bindings.put("statics", statics);
+            freemarkerScriptEngineFactory.getTemplateModels().forEach(bindings::put);
             tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
             log.error("Failure running Freemarker script.", t);

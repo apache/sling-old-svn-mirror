@@ -20,13 +20,19 @@ package org.apache.sling.scripting.freemarker.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
+import freemarker.template.TemplateModel;
+import org.apache.sling.commons.osgi.SortingServiceTracker;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -77,6 +83,10 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
      */
     private final String languageVersion;
 
+    private BundleContext bundleContext;
+
+    private SortingServiceTracker<TemplateModel> templateModelTracker;
+
     private final Logger logger = LoggerFactory.getLogger(FreemarkerScriptEngineFactory.class);
 
     public FreemarkerScriptEngineFactory() {
@@ -111,9 +121,12 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
     }
 
     @Activate
-    private void activate(final FreemarkerScriptEngineFactoryConfiguration configuration) {
+    private void activate(final FreemarkerScriptEngineFactoryConfiguration configuration, final BundleContext bundleContext) {
         logger.debug("activate");
         configure(configuration);
+        this.bundleContext = bundleContext;
+        templateModelTracker = new SortingServiceTracker<>(bundleContext, TemplateModel.class.getName());
+        templateModelTracker.open();
     }
 
     @Modified
@@ -125,6 +138,9 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
     @Deactivate
     private void deactivate() {
         logger.debug("deactivate");
+        templateModelTracker.close();
+        templateModelTracker = null;
+        bundleContext = null;
     }
 
     private void configure(final FreemarkerScriptEngineFactoryConfiguration configuration) {
@@ -144,4 +160,13 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
     public String getLanguageVersion() {
         return languageVersion;
     }
+
+    Map<String, TemplateModel> getTemplateModels() {
+        final Map<String, TemplateModel> models = new HashMap<>();
+        for (final ServiceReference<TemplateModel> serviceReference : templateModelTracker.getSortedServiceReferences()) {
+            models.put(serviceReference.getProperty("name").toString(), bundleContext.getService(serviceReference));
+        }
+        return models;
+    }
+
 }
