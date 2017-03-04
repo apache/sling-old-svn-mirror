@@ -182,6 +182,10 @@ def modules = [
         jdks: ["1.8"]
     ],
     [
+        location: 'bundles/extensions/org.apache.sling.resource.presence',
+        jdks: ["1.8"]
+    ],
+    [
         location: 'bundles/extensions/serviceusermapper'
     ],
     [
