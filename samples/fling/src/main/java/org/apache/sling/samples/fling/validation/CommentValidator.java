@@ -35,7 +35,8 @@ import org.osgi.service.component.annotations.Component;
     service = Validator.class,
     property = {
         Constants.SERVICE_DESCRIPTION + "=Apache Sling Fling Sample “Comment Validator”",
-        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        "validator.id=org.apache.sling.samples.fling.validation.CommentValidator"
     },
     immediate = true
 )
@@ -56,7 +57,7 @@ public class CommentValidator implements Validator<String> {
             return DefaultValidationResult.VALID;
 
         } else {
-            final ValidationFailure failure = new DefaultValidationFailure(validationContext.getLocation(), 0, I18N_MESSAGE_KEY, comment);
+            final ValidationFailure failure = new DefaultValidationFailure(validationContext.getLocation(), 0, validationContext.getDefaultResourceBundle(), I18N_MESSAGE_KEY, comment);
             return new DefaultValidationResult(failure);
         }
     }
