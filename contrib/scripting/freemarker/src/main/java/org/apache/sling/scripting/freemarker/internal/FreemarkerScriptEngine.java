@@ -21,12 +21,9 @@ import java.nio.charset.StandardCharsets;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
-import freemarker.ext.beans.BeansWrapper;
 import freemarker.log.Logger;
-import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -46,10 +43,6 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
     private final Configuration configuration;
 
-    private final BeansWrapper beansWrapper;
-
-    private final TemplateHashModel statics;
-
     private final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory;
 
     public FreemarkerScriptEngine(final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory) {
@@ -57,8 +50,6 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         this.freemarkerScriptEngineFactory = freemarkerScriptEngineFactory;
         configuration = new Configuration(version);
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
-        beansWrapper = new BeansWrapper(version);
-        statics = beansWrapper.getStaticModels();
     }
 
     public Object eval(Reader reader, ScriptContext scriptContext)
@@ -79,7 +70,6 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
-            bindings.put("statics", statics);
             freemarkerScriptEngineFactory.getTemplateModels().forEach(bindings::put);
             tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
