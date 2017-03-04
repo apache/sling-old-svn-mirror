@@ -20,6 +20,8 @@ package org.apache.sling.scripting.freemarker.it.tests;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
@@ -33,6 +35,13 @@ import static org.junit.Assert.assertThat;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class FreemarkerScriptEngineFactoryIT extends FreemarkerTestSupport {
+
+    @Configuration
+    public Option[] configuration() {
+        return new Option[]{
+            baseConfiguration()
+        };
+    }
 
     @Test
     public void testScriptEngineFactory() {
