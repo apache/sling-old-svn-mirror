@@ -209,7 +209,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-event</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -217,7 +217,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-event</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -233,7 +233,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -241,7 +241,15 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr_resource</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -258,6 +266,22 @@
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
       <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_thymeleaf</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
