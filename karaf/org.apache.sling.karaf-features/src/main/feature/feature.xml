@@ -245,6 +245,12 @@
     <feature version="${project.version}">sling</feature>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.inventory/1.0.4</bundle>
   </feature>
+  <feature name="sling-extension-resource-presence" version="${project.version}">
+    <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resource_presence.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resource_presence</configfile>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resource.presence/0.0.1-SNAPSHOT</bundle>
+    <!-- dependencies -->
+    <feature version="${project.version}">sling</feature>
+  </feature>
   <feature name="sling-extension-resourcemerger" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.3.2</bundle>
     <!-- dependencies -->
