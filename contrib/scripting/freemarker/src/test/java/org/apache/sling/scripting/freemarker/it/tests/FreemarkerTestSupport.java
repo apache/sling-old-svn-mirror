@@ -66,6 +66,7 @@ public abstract class FreemarkerTestSupport extends TestSupport {
             launchpad(),
             // Sling Scripting FreeMarker
             testBundle("bundle.filename"),
+            mavenBundle().groupId("org.freemarker").artifactId("freemarker").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jaxp-api-1.4").versionAsInProject(),
             bootDelegationPackage("javax.swing.*"),
             // testing
