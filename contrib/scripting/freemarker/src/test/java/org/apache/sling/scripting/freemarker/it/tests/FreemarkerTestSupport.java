@@ -36,7 +36,6 @@ import org.osgi.service.http.HttpService;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionModels;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScripting;
-import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -69,7 +68,6 @@ public abstract class FreemarkerTestSupport extends TestSupport {
             testBundle("bundle.filename"),
             mavenBundle().groupId("org.freemarker").artifactId("freemarker").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jaxp-api-1.4").versionAsInProject(),
-            bootDelegationPackage("javax.swing.*"),
             // testing
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.resource.presence").versionAsInProject(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
