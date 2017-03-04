@@ -381,6 +381,7 @@
             <feature>sling-extension-pipes</feature>
             <feature>sling-extension-query</feature>
             <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-resource-presence</feature>
             <feature>sling-extension-resourcemerger</feature>
             <feature>sling-extension-rewriter</feature>
             <feature>sling-extension-security</feature>
