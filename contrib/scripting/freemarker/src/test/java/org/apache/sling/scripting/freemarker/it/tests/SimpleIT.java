@@ -74,7 +74,7 @@ public class SimpleIT extends FreemarkerTestSupport {
     @Test
     public void testPageName() {
         final Element name = document.getElementById("name");
-        assertThat("simple", is(name.text()));
+        assertThat(name.text(), is("simple"));
     }
 
 }
