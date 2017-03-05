@@ -41,12 +41,9 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.impl.model.ChildResourceImpl;
-import org.apache.sling.validation.impl.model.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
-import org.apache.sling.validation.impl.model.ResourcePropertyImpl;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ChildResource;
-import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
@@ -73,17 +70,17 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     static final String[] TOPICS = { SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED };
 
-    public static final String NAME_REGEX = "nameRegex";
-    public static final String CHILDREN = "children";
-    public static final String VALIDATOR_ARGUMENTS = "validatorArguments";
-    public static final String VALIDATORS = "validators";
-    public static final String OPTIONAL = "optional";
-    public static final String PROPERTY_MULTIPLE = "propertyMultiple";
-    public static final String PROPERTIES = "properties";
-    public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
-    public static final String APPLICABLE_PATHS = "applicablePaths";
-    public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
-    public static final String SEVERITY = "severity";
+    public static final @Nonnull String NAME_REGEX = "nameRegex";
+    public static final @Nonnull String CHILDREN = "children";
+    public static final @Nonnull String VALIDATOR_ARGUMENTS = "validatorArguments";
+    public static final @Nonnull String VALIDATORS = "validators";
+    public static final @Nonnull String OPTIONAL = "optional";
+    public static final @Nonnull String PROPERTY_MULTIPLE = "propertyMultiple";
+    public static final @Nonnull String PROPERTIES = "properties";
+    public static final @Nonnull String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
+    public static final @Nonnull String APPLICABLE_PATHS = "applicablePaths";
+    public static final @Nonnull String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
+    public static final @Nonnull String SEVERITY = "severity";
 
     @Reference
     ResourceResolverFactory rrf = null;
@@ -194,16 +191,19 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         }
     }
 
-    private String getResourceTypeOfValidationModel(String path) throws LoginException {
+    private String getResourceTypeOfValidationModel(@Nonnull String path) throws LoginException {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = rrf.getServiceResourceResolver(null);
             Resource modelResource = resourceResolver.getResource(path);
+            if (modelResource == null) {
+                throw new IllegalStateException("Can no longer access resource at " + path);
+            }
             ValueMap properties = modelResource.adaptTo(ValueMap.class);
             if (properties == null) {
                 throw new IllegalStateException("Could not adapt resource at " + path + " to a ValueMap");
             }
-            return properties.get(VALIDATED_RESOURCE_TYPE, null);
+            return properties.get(VALIDATED_RESOURCE_TYPE, String.class);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
@@ -254,7 +254,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                     String resourcePath = model.getPath();
                     try {
                         ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
-                        ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
+                        ValueMap validationModelProperties = model.getValueMap();
                         modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, new String[] {}));
                         Resource propertiesResource = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
                         modelBuilder.resourceProperties(buildProperties(validatorsMap, propertiesResource));
@@ -292,21 +292,21 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
         List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
         if (propertiesResource != null) {
-            for (Resource property : propertiesResource.getChildren()) {
+            for (Resource propertyResource : propertiesResource.getChildren()) {
                 ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
-                String fieldName = property.getName();
-                ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
+                String fieldName = propertyResource.getName();
+                ValueMap propertyValueMap = propertyResource.getValueMap();
                 if (propertyValueMap.get(ResourceValidationModelProviderImpl.PROPERTY_MULTIPLE, false)) {
                     resourcePropertyBuilder.multiple();
                 }
                 if (propertyValueMap.get(ResourceValidationModelProviderImpl.OPTIONAL, false)) {
                     resourcePropertyBuilder.optional();
                 }
-                String nameRegex = propertyValueMap.get(ResourceValidationModelProviderImpl.NAME_REGEX, null);
+                String nameRegex = propertyValueMap.get(ResourceValidationModelProviderImpl.NAME_REGEX, String.class);
                 if (nameRegex != null) {
                     resourcePropertyBuilder.nameRegex(nameRegex);
                 }
-                Resource validators = property.getChild(ResourceValidationModelProviderImpl.VALIDATORS);
+                Resource validators = propertyResource.getChild(ResourceValidationModelProviderImpl.VALIDATORS);
                 if (validators != null) {
                     Iterator<Resource> validatorsIterator = validators.listChildren();
                     while (validatorsIterator.hasNext()) {
