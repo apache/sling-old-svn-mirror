@@ -76,7 +76,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
      * 
      * @return {@code true} in case the given resource should have its own Sling Validation model
      */
-    private boolean isValidSubResource(Resource resource) {
+    private boolean isValidSubResource(@Nonnull Resource resource) {
         if (ResourceUtil.isNonExistingResource(resource)) {
             return false;
         }

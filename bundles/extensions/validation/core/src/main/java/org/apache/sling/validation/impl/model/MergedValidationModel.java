@@ -18,7 +18,6 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class MergedValidationModel implements ValidationModel {
     private final ValidationModel baseModel;
     private final Map<String, ResourceProperty> resourcePropertiesMap;
     private final Map<String, ChildResource> childResourceMap;
-    private final String source;
+    private final @Nonnull String source;
     
     public MergedValidationModel(ValidationModel baseModel, ValidationModel... modelsToMerge) {
         this.baseModel = baseModel;
