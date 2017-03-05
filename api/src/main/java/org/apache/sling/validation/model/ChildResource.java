@@ -40,7 +40,7 @@ public interface ChildResource {
      *
      * @return the name
      */
-     String getName();
+     @Nonnull String getName();
     
     /**
      * Returns this resource's name pattern. In case this is not returning {@code null}, this pattern is used for finding the child resources which should be validated.
