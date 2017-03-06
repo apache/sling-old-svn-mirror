@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.spi;
+package org.apache.sling.validation.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,9 +28,11 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.Validator;
 
 /**
- * Aggregates multiple {@link ValidationResult}s.
+ * Aggregates multiple {@link ValidationResult}s. Should not be from {@link Validator}s.
  */
 public class CompositeValidationResult implements ValidationResult, Serializable {
 
@@ -48,7 +50,7 @@ public class CompositeValidationResult implements ValidationResult, Serializable
         results.add(result);
     }
 
-    public void addFailure(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String message, Object... messageArguments) {
+    public void addFailure(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String message, Object... messageArguments) {
         results.add(new DefaultValidationResult(location, severity, defaultResourceBundle, message, messageArguments));
     }
 

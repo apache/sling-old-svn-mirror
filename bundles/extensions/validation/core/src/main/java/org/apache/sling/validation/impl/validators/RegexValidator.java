@@ -39,8 +39,8 @@ import org.osgi.service.component.annotations.Component;
 @Component(property=Validator.PROPERTY_VALIDATOR_ID+"=org.apache.sling.validation.core.RegexValidator")
 public class RegexValidator implements Validator<String> {
 
-    public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
-    public static final String REGEX_PARAM = "regex";
+    public static final @Nonnull String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
+    public static final @Nonnull String REGEX_PARAM = "regex";
 
     @Override
     public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
@@ -54,7 +54,7 @@ public class RegexValidator implements Validator<String> {
             if (pattern.matcher((String)data).matches()) {
                 return DefaultValidationResult.VALID;
             }
-            return new DefaultValidationResult(context.getLocation(), context.getSeverity(), context.getDefaultResourceBundle(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+            return new DefaultValidationResult(context, I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
         } catch (PatternSyntaxException e) {
             throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }

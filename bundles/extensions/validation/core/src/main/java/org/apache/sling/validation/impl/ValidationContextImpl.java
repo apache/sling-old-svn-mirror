@@ -30,12 +30,12 @@ import org.apache.sling.validation.spi.ValidationContext;
 public class ValidationContextImpl implements ValidationContext {
 
     private final @Nonnull String location;
-    private final Integer severity;
+    private final int severity;
     private final @Nonnull ValueMap valueMap;
     private final Resource resource;
     private final @Nonnull ResourceBundle defaultResourceBundle;
 
-    public ValidationContextImpl(@Nonnull String location, Integer severity,  @Nonnull ValueMap valueMap, Resource resource, @Nonnull ResourceBundle defaultResourceBundle) {
+    public ValidationContextImpl(@Nonnull String location, int severity, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ResourceBundle defaultResourceBundle) {
         super();
         this.location = location;
         this.severity = severity;
@@ -63,8 +63,7 @@ public class ValidationContextImpl implements ValidationContext {
     }
 
     @Override
-    @CheckForNull
-    public Integer getSeverity() {
+    public int getSeverity() {
         return severity;
     }
 

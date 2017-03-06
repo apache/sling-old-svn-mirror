@@ -27,7 +27,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.CompositeValidationResult;
 
 public class ValidationResourceVisitor extends AbstractResourceVisitor {
 

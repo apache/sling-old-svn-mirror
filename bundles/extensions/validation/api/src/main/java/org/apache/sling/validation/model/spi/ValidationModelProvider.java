@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.osgi.annotation.versioning.ProviderType;
 
 
@@ -52,6 +52,6 @@ public interface ValidationModelProvider {
      *             in case a validation model was found but it is invalid
      */
     @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType,
-            @Nonnull Map<String, Validator<?>> validatorsMap) throws IllegalStateException;
+            @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) throws IllegalStateException;
 
 }

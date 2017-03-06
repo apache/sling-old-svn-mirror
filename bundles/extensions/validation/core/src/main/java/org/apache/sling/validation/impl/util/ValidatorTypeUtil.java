@@ -30,12 +30,9 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.sling.validation.spi.Validator;
 
 public class ValidatorTypeUtil {
-    
-    /**
-     * 
-     * @param validator
-     * @return the type parametrization value on the {@link Validator} interface
-     */
+
+    /** @param validator
+     * @return the type parametrization value on the {@link Validator} interface */
     public static @Nonnull Class<?> getValidatorType(Validator<?> validator) {
         // get all type arguments from the current validator class up to the Validator interface
         Map<TypeVariable<?>, java.lang.reflect.Type> typeMap = TypeUtils.getTypeArguments(validator.getClass(), Validator.class);
@@ -44,24 +41,25 @@ public class ValidatorTypeUtil {
             type = entry.getValue();
             // check if this is really the type argument defined on the interface {@link Validator}
             if (entry.getKey().getGenericDeclaration() instanceof Class<?>) {
-                Class<?> clazz = (Class<?>)entry.getKey().getGenericDeclaration();
+                Class<?> clazz = (Class<?>) entry.getKey().getGenericDeclaration();
                 if (clazz.equals(Validator.class)) {
-                	// Java6 doesn't return the class for array types due to this bug: http://bugs.java.com/view_bug.do?bug_id=5041784
-                	if (type instanceof GenericArrayType) {
-                		// as a workaround make a new array class out of the generic component type encapsulated in the generic array type
-                    	type = Array.newInstance((Class<?>) ((GenericArrayType)type).getGenericComponentType(), 0).getClass();
+                    // Java6 doesn't return the class for array types due to this bug: http://bugs.java.com/view_bug.do?bug_id=5041784
+                    if (type instanceof GenericArrayType) {
+                        // as a workaround make a new array class out of the generic component type encapsulated in the generic array type
+                        type = Array.newInstance((Class<?>) ((GenericArrayType) type).getGenericComponentType(), 0).getClass();
                     }
                     if (type instanceof Class<?>) {
-                        return (Class<?>)type;
+                        return (Class<?>) type;
                     }
                     // type may also be a parameterized type (e.g. for Collection<String>), this is not allowed!
                     else {
-                        throw new IllegalArgumentException("Validators may not use parameterized types as type parameter. Only simple class types and arrays of class types are allowed.");
+                        throw new IllegalArgumentException(
+                                "Validators may not use parameterized types as type parameter. Only simple class types and arrays of class types are allowed.");
                     }
                 }
             }
-           
+
         }
-        throw new IllegalArgumentException("Validator '" + validator +"' has not valid type parameter!");
-}
+        throw new IllegalArgumentException("Validator '" + validator + "' has not valid type parameter!");
+    }
 }

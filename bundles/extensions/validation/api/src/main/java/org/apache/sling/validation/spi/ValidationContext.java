@@ -53,9 +53,9 @@ public interface ValidationContext {
 
     /**
      * Returns the severity to be issued for validation failures in this context.
-     * @return the severity of the validation failure. May be {@code null} when no explicit severity has been set in the model.
+     * @return the severity of the validation failure.
      */
-    @CheckForNull Integer getSeverity();
+    int getSeverity();
     
     /**
      * The default resource bundle which should be able to give out the error message of the validator in English. 

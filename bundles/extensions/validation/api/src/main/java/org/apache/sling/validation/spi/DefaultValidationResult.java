@@ -51,13 +51,25 @@ public class DefaultValidationResult implements ValidationResult, Serializable {
     /** 
      * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
+     * @param validationContext the context from which to take the location, severity and default resource bundle
+     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
+     * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
+     */
+    public DefaultValidationResult(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
+        this.isValid = false;
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(validationContext, messageKey, messageArguments));
+    }
+
+    /** 
+     * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
+     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param location the location.
      * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
      * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} if no other bundle is provided.
      * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationResult(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
         this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, defaultResourceBundle, messageKey, messageArguments));
     }
@@ -79,7 +91,7 @@ public class DefaultValidationResult implements ValidationResult, Serializable {
     }
 
     /**
-     * Used to indicated a valid result. Use this instead of instantiating your own {@link DefaultValidationResult}.
+     * Used to indicated a valid result.
      */
     public static final @Nonnull DefaultValidationResult VALID = new DefaultValidationResult(true);
 }
