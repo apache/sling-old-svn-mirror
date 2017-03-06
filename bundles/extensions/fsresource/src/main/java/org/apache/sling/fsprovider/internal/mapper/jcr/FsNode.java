@@ -110,22 +110,22 @@ public final class FsNode extends FsItem implements Node {
             else {
                 subPath = path.substring(contentFile.getPath().length() + 1);
             }
-            ContentFile referencedFile = contentFile.navigateTo(subPath);
+            ContentFile referencedFile = contentFile.navigateToAbsolute(subPath);
             if (referencedFile.hasContent()) {
                 return new FsNode(referencedFile, resolver);
             }
         }
-        else {
-            // node is outside content file
-            Node refNode = null;
-            Resource resource = resolver.getResource(path);
-            if (resource != null) {
-                refNode = resource.adaptTo(Node.class);
-                if (refNode != null) {
-                    return refNode;
-                }
+        
+        // check if node is outside content file
+        Node refNode = null;
+        Resource resource = resolver.getResource(path);
+        if (resource != null) {
+            refNode = resource.adaptTo(Node.class);
+            if (refNode != null) {
+                return refNode;
             }
         }
+
         throw new PathNotFoundException(relPath);
     }
 

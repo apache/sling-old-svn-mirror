@@ -19,8 +19,11 @@
 package org.apache.sling.fsprovider.internal.mapper;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
@@ -48,19 +51,6 @@ public final class ContentFile {
         this.path = path;
         this.subPath = subPath;
         this.contentFileCache = contentFileCache;
-    }
-
-    /**
-     * @param file File with content fragment
-     * @param path Root path of the content file
-     * @param subPath Relative path addressing content fragment inside file
-     * @param contentFileCache Content file cache
-     * @param content Content
-     */
-    public ContentFile(File file, String path, String subPath, ContentFileCache contentFileCache, Object content) {
-        this(file, path, subPath, contentFileCache);
-        this.contentInitialized = true;
-        this.content = content;
     }
 
     /**
@@ -129,12 +119,45 @@ public final class ContentFile {
     }
     
     /**
+     * @return Child maps.
+     */
+    @SuppressWarnings("unchecked")
+    public Iterator<Map.Entry<String,Map<String,Object>>> getChildren() {
+        if (!isResource()) {
+            return IteratorUtils.emptyIterator();
+        }
+        return IteratorUtils.filteredIterator(((Map)getContent()).entrySet().iterator(), new Predicate() {
+            @Override
+            public boolean evaluate(Object object) {
+                Map.Entry<String,Object> entry = (Map.Entry<String,Object>)object;
+                return entry.getValue() instanceof Map;
+            }
+        });
+    }
+    
+    /**
      * Navigate to another sub path position in content file.
-     * @param newSubPath New sub path
+     * @param newSubPath New sub path related to root path of content file
      * @return Content file
      */
-    public ContentFile navigateTo(String newSubPath) {
+    public ContentFile navigateToAbsolute(String newSubPath) {
         return new ContentFile(file, path, newSubPath, contentFileCache);
+    }
+        
+    /**
+     * Navigate to another sub path position in content file.
+     * @param newSubPath New sub path relative to current sub path in content file
+     * @return Content file
+     */
+    public ContentFile navigateToRelative(String newSubPath) {
+        String absoluteSubPath;
+        if (newSubPath == null) {
+            absoluteSubPath = this.subPath;
+        }
+        else {
+            absoluteSubPath = (this.subPath != null ? this.subPath + "/" : "") + newSubPath;
+        }
+        return new ContentFile(file, path, absoluteSubPath, contentFileCache);
     }
         
     @SuppressWarnings("unchecked")

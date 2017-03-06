@@ -39,8 +39,6 @@
         dc:format="image/png"
         dc:modified="{Date}2014-09-19T21:20:26.812+02:00"
         jcr:primaryType="nt:unstructured"
-        tiff:ImageLength="{Long}270"
-        tiff:ImageWidth="{Long}480"
         writebackEnable="{Boolean}true" />
   </jcr:content>
 </jcr:root>

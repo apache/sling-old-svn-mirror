@@ -28,13 +28,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.osgi.MapUtil;
 import org.apache.sling.testing.mock.osgi.context.AbstractContextPlugin;
@@ -53,6 +58,7 @@ class TestUtils {
             config.put("provider.file", "src/test/resources/fs-test");
             config.put("provider.root", "/fs-test");
             config.put("provider.checkinterval", 0);
+            config.put("provider.fs.mode", FsMode.INITIAL_CONTENT_FILES_FOLDERS.name());
             config.putAll(props);
             context.registerInjectActivateService(new FsResourceProvider(), config);
         }
@@ -93,5 +99,27 @@ class TestUtils {
             }
         }
     }    
+
+    public static void assertChange(List<ResourceChange> changes, String path, ChangeType changeType) {
+        boolean found = false;
+        for (ResourceChange change : changes) {
+            if (StringUtils.equals(change.getPath(), path) && change.getType() == changeType) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue("Change with path=" + path + ", changeType=" + changeType + " expected", found);
+    }
+    
+    public static class ResourceListener implements ResourceChangeListener {
+        private final List<ResourceChange> allChanges = new ArrayList<>();
+        @Override
+        public void onChange(List<ResourceChange> changes) {
+            allChanges.addAll(changes);
+        }
+        public List<ResourceChange> getChanges() {
+            return allChanges;
+        }
+    }
 
 }

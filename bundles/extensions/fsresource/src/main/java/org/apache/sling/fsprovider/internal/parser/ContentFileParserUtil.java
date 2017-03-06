@@ -18,6 +18,7 @@
  */
 package org.apache.sling.fsprovider.internal.parser;
 
+import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
@@ -62,11 +63,14 @@ class ContentFileParserUtil {
      * @return Content or null if content could not be parsed.
      */
     public static Map<String,Object> parse(File file) {
+        if (!file.exists()) {
+            return null;
+        }
         try {
             if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
                 return JSON_PARSER.parse(file);
             }
-            else if (StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+            else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
                 return JCR_XML_PARSER.parse(file);
             }
         }

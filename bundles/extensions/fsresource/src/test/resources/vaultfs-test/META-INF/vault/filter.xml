@@ -19,5 +19,7 @@
 -->
 <workspaceFilter version="1.0">
     <filter root="/content/dam/talk.png" />
-    <filter root="/content/samples" />
+    <filter root="/content/samples">
+        <exclude pattern="/content/samples/en/conference(/.*)?"/>
+    </filter>
 </workspaceFilter>

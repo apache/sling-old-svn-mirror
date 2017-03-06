@@ -41,8 +41,9 @@ public final class ContentFileExtensions {
      * @return Content file name suffix or null if not a context file.
      */
     public String getSuffix(File file) {
+        String fileName = "/" + file.getName();
         for (String suffix : contentFileSuffixes) {
-            if (StringUtils.endsWith(file.getName(), suffix)) {
+            if (StringUtils.endsWith(fileName, suffix)) {
                 return suffix;
             }
         }
