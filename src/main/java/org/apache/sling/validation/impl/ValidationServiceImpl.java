@@ -47,7 +47,6 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.CompositeValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;
@@ -57,10 +56,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
+@Designate(ocd=ValidationServiceConfiguration.class)
 public class ValidationServiceImpl implements ValidationService{
 
     /** Keys whose values are defined in the JCR resource bundle contained in the content-repository section of this bundle */
@@ -172,6 +173,15 @@ public class ValidationServiceImpl implements ValidationService{
         throw new IllegalStateException("There is no resource provider in the system, providing a resource bundle for locale");
     }
 
+    private int getSeverityForValidator(ParameterizedValidator validator) {
+        Integer validatorSeverity = validator.getSeverity();
+        if (validatorSeverity == null) {
+            return configuration.defaultSeverity();
+        } else {
+            return validatorSeverity;
+        }
+    }
+
     protected @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model, @Nonnull String relativePath) {
         if (resource == null || model == null || relativePath == null) {
             throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
@@ -221,14 +231,14 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && childResource.isRequired()) {
-                    result.addFailure(relativePath, null, defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, pattern.toString());
+                    result.addFailure(relativePath, configuration.defaultSeverity(), defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 Resource expectedResource = resource.getChild(childResource.getName());
                 if (expectedResource != null) {
                     validateChildResource(expectedResource, relativePath, childResource, result, defaultResourceBundle);
                 } else if (childResource.isRequired()) {
-                    result.addFailure(relativePath, null, defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, childResource.getName());
+                    result.addFailure(relativePath, configuration.defaultSeverity(), defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_CHILD_RESOURCE_WITH_NAME, childResource.getName());
                 }
             } 
         }
@@ -280,7 +290,7 @@ public class ValidationServiceImpl implements ValidationService{
                     }
                 }
                 if (!foundMatch && resourceProperty.isRequired()) {
-                    result.addFailure(relativePath, null, defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, pattern.toString());
+                    result.addFailure(relativePath, configuration.defaultSeverity(), defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_PROPERTY_MATCHING_PATTERN, pattern.toString());
                 }
             } else {
                 validatePropertyValue(resourceProperty.getName(), valueMap, resource, relativePath, resourceProperty, result, defaultResourceBundle);
@@ -288,23 +298,24 @@ public class ValidationServiceImpl implements ValidationService{
         }
     }
 
-    private void validatePropertyValue(String property, ValueMap valueMap, Resource resource, @Nonnull String relativePath, @Nonnull ResourceProperty resourceProperty, @Nonnull CompositeValidationResult result, @Nonnull ResourceBundle defaultResourceBundle) {
+    private void validatePropertyValue(@Nonnull String property, ValueMap valueMap, Resource resource, @Nonnull String relativePath, @Nonnull ResourceProperty resourceProperty, @Nonnull CompositeValidationResult result, @Nonnull ResourceBundle defaultResourceBundle) {
         Object fieldValues = valueMap.get(property);
         if (fieldValues == null) {
             if (resourceProperty.isRequired()) {
-                result.addFailure(relativePath, null, defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, property);
+                result.addFailure(relativePath, configuration.defaultSeverity(), defaultResourceBundle, I18N_KEY_MISSING_REQUIRED_PROPERTY_WITH_NAME, property);
             }
             return;
         }
         List<ParameterizedValidator> validators = resourceProperty.getValidators();
         if (resourceProperty.isMultiple()) {
             if (!fieldValues.getClass().isArray()) {
-                result.addFailure(relativePath + property, null, defaultResourceBundle, I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY);
+                result.addFailure(relativePath + property, configuration.defaultSeverity(), defaultResourceBundle, I18N_KEY_EXPECTED_MULTIVALUE_PROPERTY);
                 return;
             }
         }
         
         for (ParameterizedValidator validator : validators) {
+            int severity = getSeverityForValidator(validator);
             // convert the type always to an array
             Class<?> type = validator.getType();
             if (!type.isArray()) {
@@ -320,23 +331,23 @@ public class ValidationServiceImpl implements ValidationService{
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
             if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
-                result.addFailure(relativePath + property, validator.getSeverity(), defaultResourceBundle, I18N_KEY_WRONG_PROPERTY_TYPE, validator.getType());
+                result.addFailure(relativePath + property, severity, defaultResourceBundle, I18N_KEY_WRONG_PROPERTY_TYPE, validator.getType());
                 return;
             }
             
             // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue properties are treated with ValueMap
             if (validator.getType().isArray()) {
                 // ValueMap already returns an array in both cases (property is single value or multivalue)
-                validateValue(result, typedValue, property, relativePath, valueMap, resource, validator, defaultResourceBundle);
+                validateValue(result, typedValue, property, relativePath, valueMap, resource, validator, defaultResourceBundle, severity);
             } else {
                 // call validate for each entry in the array (supports both singlevalue and multivalue)
                 @Nonnull Object[] array = (Object[])typedValue;
                 if (array.length == 1) {
-                   validateValue(result, array[0], property, relativePath, valueMap, resource, validator, defaultResourceBundle);
+                   validateValue(result, array[0], property, relativePath, valueMap, resource, validator, defaultResourceBundle, severity);
                 } else {
                     int n = 0;
                     for (Object item : array) {
-                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, resource, validator, defaultResourceBundle);
+                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, resource, validator, defaultResourceBundle, severity);
                     }
                 }
             }
@@ -344,9 +355,9 @@ public class ValidationServiceImpl implements ValidationService{
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator, @Nonnull ResourceBundle defaultResourceBundle) {
+    private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, ParameterizedValidator validator, @Nonnull ResourceBundle defaultResourceBundle, int severity) {
         try {
-            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, validator.getSeverity(), valueMap, resource, defaultResourceBundle);
+            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
             ValidationResult validatorResult = ((Validator)validator.getValidator()).validate(value, validationContext, validator.getParameters());
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {
