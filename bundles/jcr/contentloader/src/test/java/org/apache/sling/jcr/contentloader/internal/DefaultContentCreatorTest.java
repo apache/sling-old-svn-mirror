@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import javax.jcr.*;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.text.ParseException;
@@ -345,6 +346,28 @@ public class DefaultContentCreatorTest {
         assertNotNull(createdNode);
         assertTrue(createdNode.getPrimaryNodeType().isNodeType(NodeType.NT_UNSTRUCTURED));
         mockery.assertIsSatisfied();
+    }
+
+    @Test
+    public void createNodeUnderProtectedNode() throws RepositoryException {
+        final String newNodeName = uniqueId();
+        final List<String> createdNodes = new ArrayList<String>();
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+        parentNode = mockery.mock(Node.class);
+        final NodeDefinition parentNodeDefinition = mockery.mock(NodeDefinition.class);
+
+        this.mockery.checking(new Expectations(){{
+            never(listener).onCreate(with(any(String.class)));
+            allowing(parentNode).hasNode(with(any(String.class))); will(returnValue(false));
+            allowing(parentNode).getDefinition(); will(returnValue(parentNodeDefinition));
+            allowing(parentNodeDefinition).isProtected(); will(returnValue(true));
+        }});
+
+        contentCreator.init(ImportOptionsFactory.createImportOptions(true, false, true, false, false),
+                new HashMap<String, ContentReader>(), createdNodes, listener);
+        contentCreator.prepareParsing(parentNode, DEFAULT_NAME);
+
+        contentCreator.createNode(newNodeName, NodeType.NT_UNSTRUCTURED, null);
     }
 
     //----- DefaultContentCreator#createProperty(String name, int propertyType, String[] values)-------//
