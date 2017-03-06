@@ -46,6 +46,7 @@ import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceRegistration;
@@ -92,7 +93,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     @Reference
     private ServiceUserMapped serviceUserMapped;
 
-    /** key = resource type of validation models value = a list of all validation models for the resource type given in the key */
+    /** key = resource type, value = a list of all validation models for the resource type given in the key */
     final Map<String, List<ValidationModel>> validationModelCacheByResourceType = new ConcurrentHashMap<>();
 
     @Activate
@@ -218,7 +219,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      */
     @Override
     public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType,
-            @Nonnull Map<String, Validator<?>> validatorsMap) {
+            @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
         List<ValidationModel> cacheEntry = validationModelCacheByResourceType.get(relativeResourceType);
         if (cacheEntry == null) {
             cacheEntry = doGetModels(relativeResourceType, validatorsMap);
@@ -238,7 +239,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      *         type could be found. Returns the models below "/apps" before the models below "/libs".
      * @throws IllegalStateException in case a validation model is found but it is invalid */
     @Nonnull
-    private List<ValidationModel> doGetModels(@Nonnull String relativeResourceType, @Nonnull Map<String, Validator<?>> validatorsMap) {
+    private List<ValidationModel> doGetModels(@Nonnull String relativeResourceType, @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
         List<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         ResourceResolver resourceResolver = null;
         try {
@@ -289,7 +290,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty */
-    private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
+    private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap, Resource propertiesResource) {
         List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource propertyResource : propertiesResource.getChildren()) {
@@ -317,7 +318,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                                     "Could not adapt resource at '" + validatorResource.getPath() + "' to ValueMap");
                         }
                         String validatorId = validatorResource.getName();
-                        Validator<?> validator = validatorsMap.get(validatorId);
+                        ValidatorAndSeverity<?> validator = validatorsMap.get(validatorId);
                         if (validator == null) {
                             throw new IllegalArgumentException("Could not find validator with id '" + validatorId + "'");
                         }
@@ -374,7 +375,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @param validatorsMap a map containing {@link Validator}s as values and their class names as values
      * @return a list of all the children resources; the list will be empty if there are no children resources */
     private @Nonnull List<ChildResource> buildChildren(@Nonnull Resource modelResource, @Nonnull Resource rootResource,
-            @Nonnull Map<String, Validator<?>> validatorsMap) {
+            @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
         List<ChildResource> children = new ArrayList<ChildResource>();
         Resource childrenResource = rootResource.getChild(ResourceValidationModelProviderImpl.CHILDREN);
         if (childrenResource != null) {

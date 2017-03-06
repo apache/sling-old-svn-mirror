@@ -43,7 +43,19 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
     private final transient @Nonnull ResourceBundle defaultResourceBundle;
     private final int severity;
 
-    public final static int DEFAULT_SEVERITY = 0;
+    /**
+    * Constructor of a validation failure.
+    * @param validationContext the context from which to extract location, severity and default resource bundle
+    * @param messageKey the key to look up in the resource bundle
+    * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
+    */
+   public DefaultValidationFailure(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
+       this.location = validationContext.getLocation();
+       this.severity = validationContext.getSeverity();
+       this.defaultResourceBundle = validationContext.getDefaultResourceBundle();
+       this.messageKey = messageKey;
+       this.messageArguments = messageArguments;
+   }
 
     /**
      * Constructor of a validation failure.
@@ -54,13 +66,9 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
      */
-    public DefaultValidationFailure(@Nonnull String location, Integer severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationFailure(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
         this.location = location;
-        if (severity != null) {
-            this.severity = severity;
-        } else {
-            this.severity = DEFAULT_SEVERITY;
-        }
+        this.severity = severity;
         this.messageKey = messageKey;
         this.messageArguments = messageArguments;
         this.defaultResourceBundle = defaultResourceBundle;
@@ -115,17 +123,11 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
         if (getClass() != obj.getClass())
             return false;
         DefaultValidationFailure other = (DefaultValidationFailure) obj;
-        if (location == null) {
-            if (other.location != null)
-                return false;
-        } else if (!location.equals(other.location))
+        if (!location.equals(other.location))
             return false;
         if (!Arrays.equals(messageArguments, other.messageArguments))
             return false;
-        if (messageKey == null) {
-            if (other.messageKey != null)
-                return false;
-        } else if (!messageKey.equals(other.messageKey))
+        if (!messageKey.equals(other.messageKey))
             return false;
         if (severity != other.severity)
             return false;

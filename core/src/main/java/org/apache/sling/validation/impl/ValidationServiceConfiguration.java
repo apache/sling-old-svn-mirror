@@ -25,4 +25,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 public @interface ValidationServiceConfiguration {
     @AttributeDefinition(name = "Cache Validation Results on Resources", description = "If enabled will cache the validation result from calls to ValidationService.validate(Resource,ValidationModel) and expose it via Resource.adaptTo('ValidationResult.class').")
     boolean cacheValidationResultsOnResources() default false;
+    @AttributeDefinition(name = "Default Severity of Validation Failures", description = "The default severity set for all validation failures where no explicit severity has been set in the model or on the according Validator.")
+    int defaultSeverity() default 0;
 }

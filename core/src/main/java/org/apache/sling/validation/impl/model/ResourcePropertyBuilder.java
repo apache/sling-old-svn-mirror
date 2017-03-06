@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.spi.Validator;
 
 public class ResourcePropertyBuilder {
@@ -51,7 +52,7 @@ public class ResourcePropertyBuilder {
     /** 
      * should only be used from test classes 
      */
-    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator) {
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull ValidatorAndSeverity<?> validator) {
         validators.add(new ParameterizedValidatorImpl(validator, new HashMap<String, Object>(), null));
         return this;
     }
@@ -59,7 +60,7 @@ public class ResourcePropertyBuilder {
     /** 
      * should only be used from test classes 
      */
-    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, Integer severity, String... parametersNamesAndValues) {
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull ValidatorAndSeverity<?> validator, Integer severity, String... parametersNamesAndValues) {
         if (parametersNamesAndValues.length % 2 != 0) {
             throw new IllegalArgumentException("array parametersNamesAndValues must be even! (first specify name then value, separated by comma)");
         }
@@ -71,7 +72,7 @@ public class ResourcePropertyBuilder {
         return validator(validator, severity, parameterMap);
     }
     
-    public @Nonnull ResourcePropertyBuilder validator(@Nonnull Validator<?> validator, Integer severity, @Nonnull Map<String, Object> parameters) {
+    public @Nonnull ResourcePropertyBuilder validator(@Nonnull ValidatorAndSeverity<?> validator, Integer severity, @Nonnull Map<String, Object> parameters) {
         validators.add(new ParameterizedValidatorImpl(validator, parameters, severity));
         return this;
     }

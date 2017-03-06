@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.validation.impl.model.MergedValidationModel;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;
@@ -62,9 +63,9 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY, fieldOption = FieldOption.REPLACE)
     protected volatile List<ValidationModelProvider> modelProviders;
 
-    /** List of all known validators (key=classname of validator) */
+    /** List of all known validators (key=id of validator) */
     @Nonnull
-    Map<String, Validator<?>> validators = new ConcurrentHashMap<>();
+    Map<String, ValidatorAndSeverity<?>> validators = new ConcurrentHashMap<>();
 
     @Nonnull
     Map<String, ServiceReference<Validator<?>>> validatorServiceReferences = new ConcurrentHashMap<>();
@@ -160,6 +161,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
     protected void addValidator(Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
         String validatorId = getValidatorIdFromServiceProperties(properties, validator, serviceReference);
+        Integer severity = getValidatorSeverityFromServiceProperties(properties, validator, serviceReference);
         if (validators.containsKey(validatorId)) {
             ServiceReference<Validator<?>> existingServiceReference = validatorServiceReferences.get(validatorId);
             if (existingServiceReference == null) {
@@ -170,7 +172,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
                         + " because it has the same id '{}' and a higher service ranking",
                         validators.get(validatorId), existingServiceReference.getBundle().getBundleId(), validator,
                         serviceReference.getBundle().getBundleId(), validatorId);
-                validators.put(validatorId, validator);
+                validators.put(validatorId, new ValidatorAndSeverity<>(validator, severity));
                 validatorServiceReferences.put(validatorId, serviceReference);
             } else {
                 LOG.info(
@@ -178,7 +180,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
                         validatorId, validators.get(validatorId), existingServiceReference.getBundle().getBundleId());
             }
         } else {
-            validators.put(validatorId, validator);
+            validators.put(validatorId, new ValidatorAndSeverity<>(validator, severity));
             validatorServiceReferences.put(validatorId, serviceReference);
         }
     }
@@ -191,19 +193,35 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
 
     private String getValidatorIdFromServiceProperties(Map<String, Object> properties, Validator<?> validator,
             ServiceReference<Validator<?>> serviceReference) {
-        Object object = properties.get(Validator.PROPERTY_VALIDATOR_ID);
-        if (object == null) {
+        Object id = properties.get(Validator.PROPERTY_VALIDATOR_ID);
+        if (id == null) {
             throw new IllegalArgumentException("Validator '" + validator.getClass().getName() + "' provided from bundle "
                     + serviceReference.getBundle().getBundleId() +
                     " is lacking the mandatory service property " + Validator.PROPERTY_VALIDATOR_ID);
         }
-        if (!(object instanceof String)) {
+        if (!(id instanceof String)) {
             throw new IllegalArgumentException("Validator '" + validator.getClass().getName() + "' provided from bundle "
                     + serviceReference.getBundle().getBundleId() +
                     " is providing the mandatory service property " + Validator.PROPERTY_VALIDATOR_ID + " with the wrong type "
-                    + object.getClass() + " (must be of type String)");
+                    + id.getClass() + " (must be of type String)");
         }
-        return (String) object;
+        return (String) id;
+    }
+    
+    private Integer getValidatorSeverityFromServiceProperties(Map<String, Object> properties, Validator<?> validator,
+            ServiceReference<Validator<?>> serviceReference) {
+        Object severity = properties.get(Validator.PROPERTY_VALIDATOR_SEVERITY);
+        if (severity == null) {
+            LOG.debug("Validator '{}' is not setting an explicit severity via the OSGi service property {}", validator.getClass().getName(), Validator.PROPERTY_VALIDATOR_SEVERITY);
+            return null;
+        }
+        if (!(severity instanceof Integer)) {
+            throw new IllegalArgumentException("Validator '" + validator.getClass().getName() + "' provided from bundle "
+                    + serviceReference.getBundle().getBundleId() +
+                    " is providing the optional service property " + Validator.PROPERTY_VALIDATOR_SEVERITY + " with the wrong type "
+                    + severity.getClass() + " (must be of type Integer)");
+        }
+        return (Integer) severity;
     }
 
 }

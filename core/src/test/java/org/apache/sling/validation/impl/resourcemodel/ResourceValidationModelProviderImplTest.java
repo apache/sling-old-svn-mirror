@@ -57,6 +57,7 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -132,7 +133,7 @@ public class ResourceValidationModelProviderImplTest {
     private ResourceResolverFactory resourceResolverFactory;
     private MockQueryResultHandler prefixBasedResultHandler;
     private Map<PrefixAndResourceType, List<Node>> validatorModelNodesPerPrefixAndResourceType;
-    private Map<String, Validator<?>> validatorMap;
+    private Map<String, ValidatorAndSeverity<?>> validatorMap;
     private Map<String, Object> regexValdidatorParametrization;
     private ValidationModelBuilder modelBuilder;
 
@@ -149,14 +150,14 @@ public class ResourceValidationModelProviderImplTest {
         primaryTypeUnstructuredMap.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
         
         modelProvider = new ResourceValidationModelProviderImpl();
-        validatorMap = new HashMap<String, Validator<?>>();
-        validatorMap.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+        validatorMap = new HashMap<>();
+        validatorMap.put("org.apache.sling.validation.impl.validators.RegexValidator", new ValidatorAndSeverity<String>(new RegexValidator(), 2));
 
         // one default model
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.setApplicablePath("/content/site1");
         ResourcePropertyBuilder propertyBuilder = new ResourcePropertyBuilder();
-        propertyBuilder.validator(new RegexValidator(), 10, RegexValidator.REGEX_PARAM, "prefix.*");
+        propertyBuilder.validator(new ValidatorAndSeverity<String>(new RegexValidator(), 2), 10, RegexValidator.REGEX_PARAM, "prefix.*");
         ResourceProperty property = propertyBuilder.build("field1");
         modelBuilder.resourceProperty(property);
 
@@ -358,7 +359,7 @@ public class ResourceValidationModelProviderImplTest {
         validatorArguments.put("key2", "value1");
         validatorArguments.put("key3", "value1=value2");
         modelBuilder = new ValidationModelBuilder();
-        modelBuilder.resourceProperty(new ResourcePropertyBuilder().validator(new RegexValidator(), 10, validatorArguments).build("field1"));
+        modelBuilder.resourceProperty(new ResourcePropertyBuilder().validator(new ValidatorAndSeverity<String>(new RegexValidator(), 2), 10, validatorArguments).build("field1"));
         modelBuilder.addApplicablePath("content/site1");
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);

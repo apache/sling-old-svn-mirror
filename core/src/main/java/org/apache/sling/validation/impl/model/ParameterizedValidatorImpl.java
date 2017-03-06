@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
 import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.spi.Validator;
 
 public class ParameterizedValidatorImpl implements ParameterizedValidator {
@@ -42,13 +43,17 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
      * @param parameters
      * @param severity
      */
-    public ParameterizedValidatorImpl(@Nonnull Validator<?> validator, @Nonnull Map<String, Object> parameters, Integer severity) {
+    public ParameterizedValidatorImpl(@Nonnull ValidatorAndSeverity<?> validator, @Nonnull Map<String, Object> parameters, Integer severity) {
         super();
-        this.validator = validator;
+        this.validator = validator.getValidator();
         this.parameters = parameters;
         // cache type information as this is using reflection
-        this.type = ValidatorTypeUtil.getValidatorType(validator);
-        this.severity = severity;
+        this.type = ValidatorTypeUtil.getValidatorType(this.validator);
+        if (severity == null) {
+            this.severity = validator.getSeverity();
+        } else {
+            this.severity = severity;
+        }
     }
 
     /* (non-Javadoc)

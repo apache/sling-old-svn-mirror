@@ -53,7 +53,9 @@ public interface ParameterizedValidator {
 
     /**
      *
-     * @return the severity of validation failures emitted by this validator. May be {@code null} in case it is not specified.
+     * @return the severity of validation failures emitted by this validator.
+     * Was either set on the model or on the {@link Validator} itself.
+     * May be {@code null} in case it was set on none of them.
      */
     @CheckForNull Integer getSeverity();
 
