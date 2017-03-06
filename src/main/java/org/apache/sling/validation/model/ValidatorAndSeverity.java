@@ -29,7 +29,7 @@ import org.apache.sling.validation.spi.Validator;
  * @param <T> the type param of the encapsulated {@link Validator}
  */
 public final class ValidatorAndSeverity<T> {
-    private final Validator<T> validator;
+    private final @Nonnull Validator<T> validator;
     private final Integer severity;
 
     public ValidatorAndSeverity(@Nonnull Validator<T> validator, Integer severity) {
@@ -67,16 +67,13 @@ public final class ValidatorAndSeverity<T> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ValidatorAndSeverity other = (ValidatorAndSeverity) obj;
+        ValidatorAndSeverity<?> other = (ValidatorAndSeverity<?>) obj;
         if (severity == null) {
             if (other.severity != null)
                 return false;
         } else if (!severity.equals(other.severity))
             return false;
-        if (validator == null) {
-            if (other.validator != null)
-                return false;
-        } else if (!validator.equals(other.validator))
+        if (!validator.equals(other.validator))
             return false;
         return true;
     }
