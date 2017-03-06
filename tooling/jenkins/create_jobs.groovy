@@ -256,9 +256,6 @@ def modules = [
         location: 'bundles/jcr/jackrabbit-base'
     ],
     [
-        location: 'bundles/jcr/jackrabbit-server'
-    ],
-    [
         location: 'bundles/jcr/jackrabbit-usermanager'
     ],
     [
