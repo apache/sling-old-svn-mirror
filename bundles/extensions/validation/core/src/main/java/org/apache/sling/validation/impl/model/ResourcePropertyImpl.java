@@ -29,7 +29,7 @@ import org.apache.sling.validation.model.ResourceProperty;
 
 public class ResourcePropertyImpl implements ResourceProperty {
 
-    private final String name;
+    private final @Nonnull String name;
     private final boolean isMultiple;
     private final boolean isRequired;
     private final @Nonnull List<ParameterizedValidator> validators;
@@ -117,10 +117,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
             return false;
         if (isRequired != other.isRequired)
             return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
+        if (!name.equals(other.name))
             return false;
         if (namePattern == null) {
             if (other.namePattern != null)

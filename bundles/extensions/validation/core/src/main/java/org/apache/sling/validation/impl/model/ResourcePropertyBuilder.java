@@ -28,7 +28,6 @@ import javax.annotation.Nonnull;
 import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidatorAndSeverity;
-import org.apache.sling.validation.spi.Validator;
 
 public class ResourcePropertyBuilder {
 
