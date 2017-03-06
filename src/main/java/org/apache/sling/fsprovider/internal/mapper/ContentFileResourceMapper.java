@@ -106,18 +106,10 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
         // get child resources from content fragments in content file
         List<ContentFile> children = new ArrayList<>();
         if (parentContentFile.hasContent() && parentContentFile.isResource()) {
-            Map<String,Object> content = (Map<String,Object>)parentContentFile.getContent();
-            for (Map.Entry<String, Object> entry: content.entrySet()) {
-                if (entry.getValue() instanceof Map) {
-                    String subPath;
-                    if (parentContentFile.getSubPath() == null) {
-                        subPath = entry.getKey();
-                    }
-                    else {
-                        subPath = parentContentFile.getSubPath() + "/" + entry.getKey();
-                    }
-                    children.add(new ContentFile(parentContentFile.getFile(), parentContentFile.getPath(), subPath, contentFileCache, entry.getValue()));
-                }
+            Iterator<Map.Entry<String,Map<String,Object>>> childMaps = parentContentFile.getChildren();
+            while (childMaps.hasNext()) {
+                Map.Entry<String,Map<String,Object>> entry = childMaps.next();
+                children.add(parentContentFile.navigateToRelative(entry.getKey()));
             }
         }
         if (children.isEmpty()) {
