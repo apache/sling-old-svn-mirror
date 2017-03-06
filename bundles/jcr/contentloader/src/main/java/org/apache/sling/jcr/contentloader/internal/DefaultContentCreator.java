@@ -40,6 +40,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -226,6 +227,10 @@ public class DefaultContentCreator implements ContentCreator {
             if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
                 checkoutIfNecessary(parentNode);
                 parentNode.getNode(name).remove();
+            }
+
+            if (isParentNodeProtected(parentNode)) {
+                return;
             }
 
             // ensure repository node
@@ -934,4 +939,8 @@ public class DefaultContentCreator implements ContentCreator {
         return false;
     }
 
+    private boolean isParentNodeProtected(Node parentNode) throws RepositoryException {
+        NodeDefinition definition = parentNode.getDefinition();
+        return definition.isProtected();
+    }
 }
