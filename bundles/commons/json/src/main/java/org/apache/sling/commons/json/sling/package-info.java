@@ -20,5 +20,4 @@
 @Version("1.0.0")
 package org.apache.sling.commons.json.sling;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;
