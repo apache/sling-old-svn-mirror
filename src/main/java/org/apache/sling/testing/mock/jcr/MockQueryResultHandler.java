@@ -18,7 +18,7 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Allows to set mocked query results for a mocked {@link javax.jcr.query.QueryManager}.

@@ -29,8 +29,7 @@ import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
