@@ -18,19 +18,19 @@
  ******************************************************************************/
 package org.apache.sling.hapi.client.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.sling.hapi.client.HtmlClient;
 import org.apache.sling.hapi.client.HtmlClientService;
 import org.apache.sling.hapi.client.impl.microdata.MicrodataHtmlClient;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 
-@Component(metatype = false)
-@Service(value = HtmlClientService.class)
+@Component(
+    service = HtmlClientService.class
+)
 public class HtmlClientServiceImpl implements HtmlClientService {
     private final Logger LOG = LoggerFactory.getLogger(HtmlClientService.class);
 
