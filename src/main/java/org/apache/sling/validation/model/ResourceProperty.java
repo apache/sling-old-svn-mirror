@@ -38,7 +38,7 @@ public interface ResourceProperty {
      *
      * @return the name
      */
-    String getName();
+    @Nonnull String getName();
     
     /**
      * Returns the name pattern for this property. In case this is not returning {@code null}, this pattern is used for finding the properties which should be validated.

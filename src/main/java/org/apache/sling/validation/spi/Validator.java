@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.SlingValidationException;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -80,4 +81,11 @@ public interface Validator <T> {
      * It is recommended to prefix the value of the validator with the providing bundle symbolic name to prevent any name clashes.
      */
     String PROPERTY_VALIDATOR_ID = "validator.id";
+    
+    /***
+     * Each {@link Validator} may have a service property with name {@code validator.severity} of type {@link String}. This is taken as the severity of all 
+     * {@link ValidationFailure}s constructed by this {@link Validator} in case the model has not overwritten the severity. 
+     * If this property is not set the default severity is being used.
+     */
+    String PROPERTY_VALIDATOR_SEVERITY = "validator.severity";
 }
