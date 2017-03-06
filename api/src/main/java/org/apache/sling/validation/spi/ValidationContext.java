@@ -25,7 +25,6 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.ValidationService;
 import org.osgi.annotation.versioning.ProviderType;
 
 
