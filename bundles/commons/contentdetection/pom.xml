@@ -61,7 +61,16 @@
             <artifactId>osgi.core</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bndlib</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- Sling Dependencies-->
         <dependency>
             <version>2.1.8</version>
