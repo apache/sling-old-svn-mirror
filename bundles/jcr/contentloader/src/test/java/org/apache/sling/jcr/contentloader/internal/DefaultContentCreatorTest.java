@@ -450,6 +450,29 @@ public class DefaultContentCreatorTest {
         assertTrue(parentNode.hasProperty(propName));
     }
 
+    @Test
+    public void createProtectedProperty() throws RepositoryException, ParseException {
+        parentNode = mockery.mock(Node.class);
+        final String propName = "jcr:created";
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+
+        final Property property = mockery.mock(Property.class);
+        final PropertyDefinition propDefinition = mockery.mock(PropertyDefinition.class);
+        this.mockery.checking(new Expectations(){{
+            never(listener).onCreate(with(any(String.class)));
+            exactly (2).of(parentNode).hasProperty(with(any(String.class))); will(returnValue(Boolean.TRUE));
+            oneOf (property).isNew(); will(returnValue(Boolean.FALSE));
+            allowing(parentNode).getProperty(propName); will(returnValue(property));
+            allowing(property).getDefinition(); will(returnValue(propDefinition));
+            allowing(propDefinition).isProtected(); will(returnValue(true));
+        }});
+
+        contentCreator.init(ImportOptionsFactory.createImportOptions(false, false, true, false, false),
+                new HashMap<String, ContentReader>(), null, listener);
+        contentCreator.prepareParsing(parentNode, null);
+        contentCreator.createProperty(propName, PropertyType.DATE, "2012-10-01T09:45:00.000+02:00");
+    }
+
     //------DefaultContentCreator#finishNode()------//
 
     @Test
