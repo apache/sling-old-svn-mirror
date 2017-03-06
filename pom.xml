@@ -130,7 +130,6 @@
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
         -->
-        <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/jcr-wrapper</module>
