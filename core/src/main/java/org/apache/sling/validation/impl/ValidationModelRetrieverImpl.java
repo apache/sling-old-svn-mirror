@@ -159,7 +159,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    protected void addValidator(Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
+    protected void addValidator(@Nonnull Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
         String validatorId = getValidatorIdFromServiceProperties(properties, validator, serviceReference);
         Integer severity = getValidatorSeverityFromServiceProperties(properties, validator, serviceReference);
         if (validators.containsKey(validatorId)) {
