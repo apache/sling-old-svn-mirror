@@ -16,6 +16,8 @@
  */
 package org.apache.sling.models.validation.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.InvalidModelException;
@@ -82,7 +84,7 @@ public class ModelValidationImpl implements ModelValidation {
         }
     }
     
-    private RuntimeException validate(Resource resource, boolean required) {
+    private RuntimeException validate(@Nonnull Resource resource, boolean required) {
         try {
             ValidationModel validationModel = validation.getValidationModel(resource, true);
             if (validationModel == null) {
