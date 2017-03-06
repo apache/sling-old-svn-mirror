@@ -20,5 +20,4 @@
 @Version("2.1.0")
 package org.apache.sling.testing.clients.html;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;
