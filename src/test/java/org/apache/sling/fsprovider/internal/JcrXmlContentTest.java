@@ -55,7 +55,10 @@ public class JcrXmlContentTest {
 
     @Rule
     public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
-        .plugin(new RegisterFsResourcePlugin("provider.jcrxml.content", true))
+            .plugin(new RegisterFsResourcePlugin(
+                    "provider.fs.mode", FsMode.INITIAL_CONTENT.name(),
+                    "provider.initial.content.import.options", "overwrite:=true;ignoreImportProviders:=json"
+                    ))
         .build();
 
     @Before

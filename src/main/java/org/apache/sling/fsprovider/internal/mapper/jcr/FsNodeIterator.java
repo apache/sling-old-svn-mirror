@@ -63,14 +63,7 @@ class FsNodeIterator implements NodeIterator {
     @Override
     public Node nextNode() {
         Map.Entry<String,Map<String,Object>> nextEntry = children.next();
-        String subPath;
-        if (contentFile.getSubPath() == null) {
-            subPath = nextEntry.getKey();
-        }
-        else {
-            subPath = contentFile.getSubPath() + "/" + nextEntry.getKey();
-        }
-        return new FsNode(contentFile.navigateTo(subPath), resolver);
+        return new FsNode(contentFile.navigateToRelative(nextEntry.getKey()), resolver);
     }
 
     

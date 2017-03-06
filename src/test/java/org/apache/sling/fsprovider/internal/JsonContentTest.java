@@ -56,7 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Test access to files and folders from filesystem.
+ * Test access to files and folders and JSON content from filesystem.
  */
 public class JsonContentTest {
 
@@ -65,7 +65,10 @@ public class JsonContentTest {
 
     @Rule
     public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
-        .plugin(new RegisterFsResourcePlugin("provider.json.content", true))
+        .plugin(new RegisterFsResourcePlugin(
+                "provider.fs.mode", FsMode.INITIAL_CONTENT.name(),
+                "provider.initial.content.import.options", "overwrite:=true;ignoreImportProviders:=jcr.xml"
+                ))
         .build();
 
     @Before
