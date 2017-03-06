@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.spi.Validator;
 import org.osgi.annotation.versioning.ProviderType;
 
 
