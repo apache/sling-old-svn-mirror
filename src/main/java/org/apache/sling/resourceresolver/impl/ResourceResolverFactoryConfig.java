@@ -26,7 +26,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             description = "Configures the Resource Resolver for request URL and resource path rewriting.")
 public @interface ResourceResolverFactoryConfig {
 
-	String LEGACY_REQUIRED_PROVIDER_PID = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider";
+	String LEGACY_REQUIRED_PROVIDER_PID = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory";
 	String REQUIRED_PROVIDER_NAME = "JCR";
 	
     @AttributeDefinition(name = "Resource Search Path",
