@@ -559,7 +559,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             throw new MojoExecutionException("No resources configured for this project.");
         }
         // now get current configurations
-        final Map oldConfigs = this.getCurrentFileProviderConfigs(targetURL, client);
+        final Map<String,String[]> oldConfigs = this.getCurrentFileProviderConfigs(targetURL, client);
 
         final Entry[] entries = header.getEntries();
         for(final Entry entry : entries) {
@@ -608,10 +608,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
             // check if this is already configured
             boolean found = false;
-            final Iterator entryIterator = oldConfigs.entrySet().iterator();
+            final Iterator<Map.Entry<String,String[]>> entryIterator = oldConfigs.entrySet().iterator();
             while ( !found && entryIterator.hasNext() ) {
-                final Map.Entry current = (Map.Entry) entryIterator.next();
-                final String[] value = (String[])current.getValue();
+                final Map.Entry<String,String[]> current = entryIterator.next();
+                final String[] value = current.getValue();
                 getLog().debug("Comparing " + dir.getAbsolutePath() + " with " + value[0] + " (" + value[1] + ")");
                 if ( dir.getAbsolutePath().equals(value[0]) ) {
                     if ( installPath.equals(value[1]) ) {
@@ -631,10 +631,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             }
         }
         // finally remove old configs
-        final Iterator entryIterator = oldConfigs.entrySet().iterator();
+        final Iterator<Map.Entry<String,String[]>> entryIterator = oldConfigs.entrySet().iterator();
         while ( entryIterator.hasNext() ) {
-            final Map.Entry current = (Map.Entry) entryIterator.next();
-            final String[] value = (String[])current.getValue();
+            final Map.Entry<String,String[]> current = entryIterator.next();
+            final String[] value = current.getValue();
             getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
             // remove old config
             removeConfiguration(client, targetURL, current.getKey().toString());
@@ -713,10 +713,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      *         containing the path and the root
      * @throws MojoExecutionException
      */
-    protected Map getCurrentFileProviderConfigs(final String targetURL, final HttpClient client)
+    protected Map<String,String[]> getCurrentFileProviderConfigs(final String targetURL, final HttpClient client)
     throws MojoExecutionException {
         getLog().debug("Getting current file provider configurations.");
-        final Map result = new HashMap();
+        final Map<String,String[]> result = new HashMap<>();
         final String getUrl = targetURL  + "/configMgr/(service.factoryPid=" + FS_FACTORY + ").json";
         final GetMethod get = new GetMethod(getUrl);
 
