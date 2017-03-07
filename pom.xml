@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/fsresource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/fsresource</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/fsresource</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/branches/fsresource-1.x</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/branches/fsresource-1.x</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/branches/fsresource-1.x</url>
     </scm>
     
     <build>
