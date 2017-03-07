@@ -117,11 +117,11 @@ public final class FsResourceProvider implements ResourceProvider {
                 description = "Filesystem layout mode for files, folders and content.",
                 options={
                         @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
-                                + "Sling-Initial-Content filesystem layout, with full support for JSON and jcr.xml content files."),
+                                + "Sling-Initial-Content filesystem layout, with full support for JSON and jcr.xml content files"),
                         @Option(value="INITIAL_CONTENT_FILES_FOLDERS", label="INITIAL_CONTENT_FILES_FOLDERS - "
-                                + "Sling-Initial-Content filesystem layout, support only files and folders (classic mode)."),
+                                + "Sling-Initial-Content filesystem layout, support only files and folders (classic mode)"),
                         @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
-                                + "FileVault XML format (expanded content package)."),
+                                + "FileVault XML format (expanded content package)"),
                 })
         FsMode provider_fs_mode() default FsMode.INITIAL_CONTENT;
         
@@ -136,7 +136,7 @@ public final class FsResourceProvider implements ResourceProvider {
         /**
          * Internal Name hint for web console.
          */
-        String webconsole_configurationFactory_nameHint() default "Root paths: {" + ResourceProvider.ROOTS + "}";
+        String webconsole_configurationFactory_nameHint() default "{provider.fs.mode}: {" + ResourceProvider.ROOTS + "}";
     }
 
     // The location in the resource tree where the resources are mapped
