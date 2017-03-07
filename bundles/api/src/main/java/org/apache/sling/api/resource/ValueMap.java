@@ -74,7 +74,7 @@ public interface ValueMap extends Map<String, Object> {
      * case.
      * <br><br>
      * <b>Implementation hint</b>: In the past it was allowed to call this with a 2nd parameter being {@code null}. 
-     * Therefore all implementations should internally call {@link #get(String, Class)} when the 2nd parameter
+     * Therefore all implementations should internally call {@link #get(String)} when the 2nd parameter
      * has value {@code null}.
      *
      * @param name The name of the property
