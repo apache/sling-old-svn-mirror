@@ -26,12 +26,14 @@ import java.util.ResourceBundle;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Wraps a message key (being looked up in a {@link ResourceBundle}), messageArguments (being used with {@link MessageFormat#format(String, Object...)}
  * and the location where the validation failure occurred.
  */
-public class DefaultValidationFailure implements ValidationFailure, Serializable {
+@ProviderType
+public final class DefaultValidationFailure implements ValidationFailure, Serializable {
 
     /**
      * 
