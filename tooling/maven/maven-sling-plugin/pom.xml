@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -37,7 +37,7 @@
     </description>
 
     <prerequisites>
-       <maven>3.0.0</maven> <!-- for supporting enums as parameters (https://issues.apache.org/jira/browse/MNG-4292) -->
+       <maven>3.0.4</maven>  <!-- still support older maven version than required in parent pom -->
     </prerequisites>
 
     <scm>
@@ -83,11 +83,6 @@
     </reporting>
 
     <dependencies>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
