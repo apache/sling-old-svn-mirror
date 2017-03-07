@@ -28,12 +28,14 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Default implementation of {@link ValidationResult} wrapping a list of {@link ValidationFailure}s.
  *
  */
-public class DefaultValidationResult implements ValidationResult, Serializable {
+@ProviderType
+public final class DefaultValidationResult implements ValidationResult, Serializable {
 
     /**
      * 
