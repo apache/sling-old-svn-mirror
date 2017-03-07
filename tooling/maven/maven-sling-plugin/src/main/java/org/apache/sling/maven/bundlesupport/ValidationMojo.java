@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -111,7 +112,7 @@ public class ValidationMojo extends AbstractMojo {
                 String json = null;
                 try {
                     fis = new FileInputStream(file);
-                    json = IOUtils.toString(fis);
+                    json = IOUtils.toString(fis, CharEncoding.UTF_8);
                 } catch (IOException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 } finally {
