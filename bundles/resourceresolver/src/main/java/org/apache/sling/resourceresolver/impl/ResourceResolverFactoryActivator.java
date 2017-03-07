@@ -335,15 +335,7 @@ public class ResourceResolverFactoryActivator {
 
         boolean hasLegacyRequiredProvider = false;
         if ( requiredResourceProvidersLegacy != null ) {
-            for(final String name : requiredResourceProvidersLegacy) {
-            	if ( name.equals(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID)) {
-                	hasLegacyRequiredProvider = true;
-                	break;
-            	}
-            }
-            if ( hasLegacyRequiredProvider ) {
-            	requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
-            }
+            hasLegacyRequiredProvider = requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
             if ( !requiredResourceProvidersLegacy.isEmpty() ) {
                 logger.error("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
                         "). Please change to use the property resource.resolver.required.providernames for values: " + requiredResourceProvidersLegacy);
