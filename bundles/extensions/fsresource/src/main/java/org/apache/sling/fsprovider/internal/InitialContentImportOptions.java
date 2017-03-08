@@ -19,13 +19,14 @@
 package org.apache.sling.fsprovider.internal;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.commons.osgi.ManifestHeader;
+import org.apache.sling.commons.osgi.ManifestHeader.Entry;
 
 class InitialContentImportOptions {
 
@@ -46,25 +47,19 @@ class InitialContentImportOptions {
     private final Set<String> ignoreImportProviders;
     
     public InitialContentImportOptions(String optionsString) {
-        Map<String,String> options = parseOptions(optionsString);
-        overwrite = BooleanUtils.toBoolean(options.get(OVERWRITE_DIRECTIVE));
-        ignoreImportProviders = new HashSet<>(Arrays.asList(StringUtils.split(StringUtils.defaultString(options.get(IGNORE_CONTENT_READERS_DIRECTIVE)))));
+        ManifestHeader header = ManifestHeader.parse("/dummy/path;" + optionsString);
+        Entry[] entries = header.getEntries();
+        if (entries.length > 0) {
+            overwrite = BooleanUtils.toBoolean(entries[0].getDirectiveValue(OVERWRITE_DIRECTIVE));
+            String ignoreImportProvidersString = StringUtils.defaultString(entries[0].getDirectiveValue(IGNORE_CONTENT_READERS_DIRECTIVE));
+            ignoreImportProviders = new HashSet<>(Arrays.asList(StringUtils.split(ignoreImportProvidersString, ",")));
+        }
+        else {
+            overwrite = false;
+            ignoreImportProviders = Collections.emptySet();
+        }
     }
     
-    private static Map<String,String> parseOptions(String optionsString) {
-        Map<String,String> options = new HashMap<>();
-        String[] optionsList = StringUtils.split(optionsString, ";");
-        if (optionsList != null) {
-            for (String keyValueString : optionsList) {
-                String[] keyValue = StringUtils.splitByWholeSeparator(keyValueString, ":=");
-                if (keyValue.length == 2) {
-                    options.put(StringUtils.trim(keyValue[0]), StringUtils.trim(keyValue[1]));
-                }
-            }
-        }
-        return options;
-    }
-
     public boolean isOverwrite() {
         return overwrite;
     }
