@@ -44,9 +44,9 @@ public class InitialContentImportOptionsTest {
 
     @Test
     public void testOptions1() {
-        InitialContentImportOptions underTest = new InitialContentImportOptions("overwrite:=true;ignoreImportProviders:=xml,json");
+        InitialContentImportOptions underTest = new InitialContentImportOptions("overwrite:=true;ignoreImportProviders:=\"xml,json\"");
         assertTrue(underTest.isOverwrite());
-        assertEquals(ImmutableSet.of("xml,json"), underTest.getIgnoreImportProviders());
+        assertEquals(ImmutableSet.of("xml","json"), underTest.getIgnoreImportProviders());
     }
 
     @Test
