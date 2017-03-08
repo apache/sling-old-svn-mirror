@@ -48,10 +48,9 @@ abstract class ConfigUtil {
     private static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
 
     /**
-     * This property has been used in older versions to keep track of factory
-     * configurations.
+     * This property is used to keep track of factory configurations.
      */
-    private static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
+    static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
 
     /** Configuration properties to ignore when comparing configs */
     private static final Set<String> IGNORED_PROPERTIES = new HashSet<String>();
