@@ -23,11 +23,44 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 abstract class AbstractBundlePostMojo extends AbstractMojo {
 
+    /**
+     * The URL of the running Sling instance. The default is only useful for <strong>WebConsole</strong> deployment (see {@link #deploymentMethod}).
+     */
+    @Parameter(property="sling.url", defaultValue="http://localhost:8080/system/console", required = true)
+    protected String slingUrl;
+
+    /**
+     * An optional url suffix which will be appended to the <code>sling.url</code>
+     * for use as the real target url. This allows to configure different target URLs
+     * in each POM, while using the same common <code>sling.url</code> in a parent
+     * POM (eg. <code>sling.url=http://localhost:8080</code> and
+     * <code>sling.urlSuffix=/project/specific/path</code>). This is typically used
+     * in conjunction with WebDAV or SlingPostServlet deployment methods.
+     */
+    @Parameter(property="sling.urlSuffix")
+    protected String slingUrlSuffix;
+    
+    /**
+     * The user name to authenticate at the running Sling instance.
+     */
+    @Parameter(property="sling.user", defaultValue = "admin", required = true)
+    private String user;
+
+    /**
+     * The password to authenticate at the running Sling instance.
+     */
+    @Parameter(property="sling.password", defaultValue = "admin", required = true)
+    private String password;
+    
     /**
      * Determines whether or not to fail the build if
      * the HTTP POST or PUT returns an non-OK response code.
@@ -96,6 +129,35 @@ abstract class AbstractBundlePostMojo extends AbstractMojo {
 
         // fall back to not being a bundle
         return null;
+    }
+
+    /**
+     * Returns the combination of <code>sling.url</code> and
+     * <code>sling.urlSuffix</code>.
+     */
+    protected String getTargetURL() {
+        String targetURL = slingUrl;
+        if (slingUrlSuffix != null) {
+            targetURL += slingUrlSuffix;
+        }
+        return targetURL;
+    }
+
+    /**
+     * Get the http client
+     */
+    protected HttpClient getHttpClient() {
+        final HttpClient client = new HttpClient();
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(
+            5000);
+
+        // authentication stuff
+        client.getParams().setAuthenticationPreemptive(true);
+        Credentials defaultcreds = new UsernamePasswordCredentials(user,
+            password);
+        client.getState().setCredentials(AuthScope.ANY, defaultcreds);
+
+        return client;
     }
 
 }
