@@ -184,7 +184,7 @@ class FsMountHelper {
     }
 
     /**
-     * Add configurations to a running OSGi instance for initial content.
+     * Remove configurations from a running OSGi instance for initial content.
      * @param targetURL The web console base url
      * @param file The artifact (bundle)
      * @throws MojoExecutionException
@@ -205,7 +205,7 @@ class FsMountHelper {
         }
     }
     
-    public void removeConfiguration(final String targetURL, final String pid) throws MojoExecutionException {
+    private void removeConfiguration(final String targetURL, final String pid) throws MojoExecutionException {
         final String postUrl = targetURL  + "/configMgr/" + pid;
         final PostMethod post = new PostMethod(postUrl);
         post.addParameter("apply", "true");
@@ -255,9 +255,7 @@ class FsMountHelper {
                 log.info("Configuration created.");
             }
             else {
-                log.error(
-                    "Configuration failed, cause: "
-                        + HttpStatus.getStatusText(status));
+                log.error("Configuration failed, cause: " + HttpStatus.getStatusText(status));
             }
         }
         catch (HttpException ex) {
@@ -280,7 +278,7 @@ class FsMountHelper {
      *         containing the path and the root
      * @throws MojoExecutionException
      */
-    public Map<String,String[]> getCurrentFileProviderConfigs(final String targetURL) throws MojoExecutionException {
+    private Map<String,String[]> getCurrentFileProviderConfigs(final String targetURL) throws MojoExecutionException {
         log.debug("Getting current file provider configurations.");
         final Map<String,String[]> result = new HashMap<>();
         final String getUrl = targetURL  + "/configMgr/(service.factoryPid=" + FS_FACTORY + ").json";
