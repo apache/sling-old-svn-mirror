@@ -19,10 +19,7 @@
 package org.apache.sling.maven.bundlesupport;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -165,30 +162,10 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
         }
     }
 
-    /**
-     * Add configurations to a running OSGi instance for initial content.
-     * @param targetURL The web console base url
-     * @param file The artifact (bundle)
-     * @throws MojoExecutionException
-     */
     @Override
-    protected void configure(String targetURL, File file)
-    throws MojoExecutionException {
-        getLog().info("Removing file system provider configurations...");
-
-        // now get current configurations
-        final HttpClient client = this.getHttpClient();
-        final Map oldConfigs = this.getCurrentFileProviderConfigs(targetURL, client);
-
-
-        final Iterator entryIterator = oldConfigs.entrySet().iterator();
-        while ( entryIterator.hasNext() ) {
-            final Map.Entry current = (Map.Entry) entryIterator.next();
-            final String[] value = (String[])current.getValue();
-            getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
-            // remove old config
-            removeConfiguration(client, targetURL, current.getKey().toString());
-        }
+    protected void configure(final String targetURL, final File file) throws MojoExecutionException {
+        FsMountHelper fsMountHelper = new FsMountHelper(getLog(), getHttpClient(), project);
+        fsMountHelper.configureUninstall(targetURL, file);
     }
-
+    
 }
