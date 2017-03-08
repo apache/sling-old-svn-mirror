@@ -21,37 +21,17 @@ import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
 /**
  * Removes OSGi configurations for File System Resource provider.
  */
 @Mojo(name = "fsunmount", requiresProject = true)
-public class FsUnMountMojo extends AbstractBundlePostMojo {
+public class FsUnMountMojo extends AbstractFsMountMojo {
 
-    /**
-     * The name of the generated JAR file.
-     */
-    @Parameter(property = "sling.file", defaultValue = "${project.build.directory}/${project.build.finalName}.jar", required = true)
-    private String bundleFileName;
-
-    /**
-     * The Maven project.
-     */
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    protected MavenProject project;
-    
     @Override
-    public void execute() throws MojoExecutionException {
-        File file = new File(bundleFileName);
-        if(!file.exists()) {
-            getLog().info(file + " does not exist, skipping.");
-            return;
-        }
-        
+    protected void configureSlingInitialContent(final String targetUrl, final File file) throws MojoExecutionException {
         FsMountHelper fsMountHelper = new FsMountHelper(getLog(), getHttpClient(), project);
-        fsMountHelper.configureUninstall(getTargetURL(), file);
+        fsMountHelper.configureUninstall(targetUrl, file);
     }
 
 }
