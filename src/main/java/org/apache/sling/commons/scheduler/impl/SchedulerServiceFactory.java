@@ -21,13 +21,12 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This is a proxy implementation of the scheduler service.
@@ -35,8 +34,10 @@ import org.osgi.service.component.ComponentContext;
  * scheduler implementation, the QuartzScheduler has the same
  * API however in addition each method gets the using bundleId.
  */
-@Component
-@Service(value=Scheduler.class, serviceFactory=true)
+@Component(
+    service = Scheduler.class,
+    servicefactory = true
+)
 public class SchedulerServiceFactory implements Scheduler {
 
     private long bundleId;
