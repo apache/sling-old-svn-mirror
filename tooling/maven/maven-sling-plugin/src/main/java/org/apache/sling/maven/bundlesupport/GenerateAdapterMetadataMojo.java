@@ -25,10 +25,16 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonWriter;
 
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -41,9 +47,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adaptables;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -57,8 +60,6 @@ import org.scannotation.AnnotationDB;
 @Mojo(name="generate-adapter-metadata", defaultPhase = LifecyclePhase.PROCESS_CLASSES, 
     threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateAdapterMetadataMojo extends AbstractMojo {
-
-    private static final int JSON_INDENTATION = 4;
 
     private static final String ADAPTABLE_DESC = "L" + Adaptable.class.getName().replace('.', '/') + ";";
 
@@ -96,7 +97,7 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            final JSONObject descriptor = new JSONObject();
+            final Map<String,Object> descriptor = new HashMap<>();
 
             final AnnotationDB annotationDb = new AnnotationDB();
             annotationDb.scanArchives(buildOutputDirectory.toURI().toURL());
@@ -133,22 +134,20 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
             final File outputFile = new File(outputDirectory, fileName);
             outputFile.getParentFile().mkdirs();
-            final FileWriter writer = new FileWriter(outputFile);
-            try {
-                IOUtil.copy(descriptor.toString(JSON_INDENTATION), writer);
-            } finally {
-                IOUtil.close(writer);
+            try (FileWriter writer = new FileWriter(outputFile);
+                    JsonWriter jsonWriter = Json.createWriter(writer)) {
+                jsonWriter.writeObject(JsonSupport.toJson(descriptor));
             }
             addResource();
 
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to generate metadata", e);
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             throw new MojoExecutionException("Unable to generate metadata", e);
         }
 
     }
-
+    
     private void addAnnotatedClasses(final AnnotationDB annotationDb, final Set<String> annotatedClassNames, final Class<? extends Annotation> clazz) {
         Set<String> classNames = annotationDb.getAnnotationIndex().get(clazz.getName());
         if (classNames == null || classNames.isEmpty()) {
@@ -176,7 +175,7 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
     }
 
     private void parseAdaptablesAnnotation(final AnnotationNode annotation, final ClassNode classNode,
-            final JSONObject descriptor) throws JSONException {
+            final Map<String,Object> descriptor) throws JsonException {
         final Iterator<?> it = annotation.values.iterator();
         while (it.hasNext()) {
             Object name = it.next();
@@ -195,7 +194,7 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     @SuppressWarnings("unchecked")
     private void parseAdaptableAnnotation(final AnnotationNode annotation, final ClassNode annotatedClass,
-            final JSONObject descriptor) throws JSONException {
+            final Map<String,Object> descriptor) throws JsonException {
         String adaptableClassName = null;
         List<AnnotationNode> adapters = null;
 
@@ -218,11 +217,11 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
                     "Adaptable annotation is malformed. Expecting a classname and a list of adapter annotation.");
         }
 
-        JSONObject adaptableDescription;
-        if (descriptor.has(adaptableClassName)) {
-            adaptableDescription = descriptor.getJSONObject(adaptableClassName);
+        Map<String,Object> adaptableDescription;
+        if (descriptor.containsKey(adaptableClassName)) {
+            adaptableDescription = (Map<String,Object>)descriptor.get(adaptableClassName);
         } else {
-            adaptableDescription = new JSONObject();
+            adaptableDescription = new HashMap<>();
             descriptor.put(adaptableClassName, adaptableDescription);
         }
 
@@ -233,7 +232,7 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     @SuppressWarnings("unchecked")
     private void parseAdapterAnnotation(final AnnotationNode annotation, final ClassNode annotatedClass,
-            final JSONObject adaptableDescription) throws JSONException {
+            final Map<String,Object> adaptableDescription) throws JsonException {
         String condition = null;
         List<Type> adapterClasses = null;
 
@@ -260,7 +259,8 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
         }
         
         for (final Type adapterClass : adapterClasses) {
-            adaptableDescription.accumulate(condition, adapterClass.getClassName());
+            JsonSupport.accumulate(adaptableDescription, condition, adapterClass.getClassName());
         }
     }
+    
 }

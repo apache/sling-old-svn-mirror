@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.json.JsonException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.maven.model.Resource;
@@ -32,8 +34,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.util.Validator;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
@@ -118,10 +118,10 @@ public class ValidationMojo extends AbstractMojo {
                 } finally {
                     IOUtils.closeQuietly(fis);
                 }
-                // first, let's see if this is a json array
+                // validate JSON
                 try {
-                    Validator.validate(json);
-                } catch (JSONException e) {
+                    JsonSupport.validateJsonStructure(json);
+                } catch (JsonException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 }
             }

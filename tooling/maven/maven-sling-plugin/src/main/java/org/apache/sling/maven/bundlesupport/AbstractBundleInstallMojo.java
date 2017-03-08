@@ -28,6 +28,10 @@ import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -48,9 +52,6 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.commons.osgi.ManifestHeader.Entry;
 
@@ -734,25 +735,25 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 }
                 final String jsonText = get.getResponseBodyAsString();
                 try {
-                    JSONArray array = new JSONArray(jsonText);
-                    for(int i=0; i<array.length(); i++) {
-                        final JSONObject obj = array.getJSONObject(i);
+                    JsonArray array = JsonSupport.parseArray(jsonText);
+                    for(int i=0; i<array.size(); i++) {
+                        final JsonObject obj = array.getJsonObject(i);
                         final String pid = obj.getString("pid");
-                        final JSONObject properties = obj.getJSONObject("properties");
-                        final String path = properties.getJSONObject("provider.file").optString("value");
+                        final JsonObject properties = obj.getJsonObject("properties");
+                        final String path = properties.getJsonObject("provider.file").getString("value", null);
                         final String roots;
-                        if (properties.has("provider.roots")) {
-                            roots = properties.getJSONObject("provider.roots").optString("value");
+                        if (properties.containsKey("provider.roots")) {
+                            roots = properties.getJsonObject("provider.roots").getString("value", null);
                         }
                         else {
-                            roots = properties.getJSONObject("provider.root").optString("value");
+                            roots = properties.getJsonObject("provider.root").getString("value", null);
                         }
                         if ( path != null && path.startsWith(this.project.getBasedir().getAbsolutePath()) && roots != null ) {
                             getLog().debug("Found configuration with pid: " + pid + ", path: " + path + ", roots: " + roots);
                             result.put(pid, new String[] {path, roots});
                         }
                     }
-                } catch (JSONException ex) {
+                } catch (JsonException ex) {
                     throw new MojoExecutionException("Reading configuration from " + getUrl
                             + " failed, cause: " + ex.getMessage(), ex);
                 }
@@ -809,10 +810,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 }
                 final String jsonText = gm.getResponseBodyAsString();
                 try {
-                    final JSONObject obj = new JSONObject(jsonText);
-                    final JSONArray props = obj.getJSONArray("props");
-                    for(int i=0; i<props.length(); i++) {
-                        final JSONObject property = props.getJSONObject(i);
+                    final JsonObject obj = JsonSupport.parseObject(jsonText);
+                    final JsonArray props = obj.getJsonArray("props");
+                    for(int i=0; i<props.size(); i++) {
+                        final JsonObject property = props.getJsonObject(i);
                         if ( "Version".equals(property.get("key")) ) {
                             final String version = property.getString("value");
                             getLog().debug("Found web console version " + version);
@@ -821,14 +822,14 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                     }
                     getLog().debug("Version property not found in response. Assuming older version.");
                     return null;
-                } catch (JSONException ex) {
+                } catch (JsonException ex) {
                     getLog().debug("Converting response to JSON failed. Assuming older version: " + ex.getMessage());
                     return null;
                 }
 
             }
             getLog().debug("Status code from web console: " + status);
-       } catch (HttpException e) {
+        } catch (HttpException e) {
             getLog().debug("HttpException: " + e.getMessage());
         } catch (IOException e) {
             getLog().debug("IOException: " + e.getMessage());
