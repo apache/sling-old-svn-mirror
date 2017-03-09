@@ -22,9 +22,6 @@ create service user sling-validation
 create path (sling:Folder) /apps
 create path (sling:Folder) /libs
 
-# TODO remove workaround
-create path (sling:Folder) /var/SLING-6182/OAK-5496/sling-validation
-
 set ACL for sling-validation
     allow   jcr:read    on /apps
     allow   jcr:read    on /libs

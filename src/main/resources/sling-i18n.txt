@@ -19,9 +19,6 @@
 
 create service user sling-i18n
 
-# TODO remove workaround
-create path (sling:Folder) /var/SLING-6182/OAK-5496/sling-i18n
-
 set ACL for sling-i18n
     allow   jcr:read    on /
 end
