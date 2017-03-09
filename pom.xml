@@ -31,9 +31,9 @@
     <version>2.1.11-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Apache Sling Maven Plugin for Supporting Bundle Development</name>
+    <name>Apache Sling Maven Sling Plugin</name>
     <description>
-        Maven Plugin supporting various Sling Development Tasks
+        Apache Sling Maven Plugin for Supporting Bundle Development
     </description>
 
     <prerequisites>
@@ -55,7 +55,7 @@
     </distributionManagement>
 
     <properties>
-        <maven.site.path>maven-sling-plugin-archives/maven-sling-plugin-LATEST</maven.site.path>
+        <maven.site.path>${project.artifactId}-archives/${project.artifactId}-LATEST</maven.site.path>
     </properties>
 
     <build>
