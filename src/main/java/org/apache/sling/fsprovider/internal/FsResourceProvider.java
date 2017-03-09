@@ -129,6 +129,10 @@ public final class FsResourceProvider implements ResourceProvider {
                 description = "Import options for Sling-Initial-Content filesystem layout. Supported options: overwrite, ignoreImportProviders.")
         String provider_initial_content_import_options();
         
+        @AttributeDefinition(name = "FileVault Filter",
+                description = "Path to META-INF/vault/filter.xml when using FileVault XML filesystem layout.")
+        String provider_filevault_filterxml_path();
+        
         @AttributeDefinition(name = "Cache Size",
                 description = "Max. number of content files cached in memory.")
         int provider_cache_size() default 10000;
@@ -264,10 +268,14 @@ public final class FsResourceProvider implements ResourceProvider {
         this.providerFile = getProviderFile(providerFileName, bundleContext);
         
         InitialContentImportOptions options = new InitialContentImportOptions(config.provider_initial_content_import_options());
+        File filterXmlFile = null;
                 
         List<String> contentFileSuffixes = new ArrayList<>();
         if (fsMode == FsMode.FILEVAULT_XML) {
             contentFileSuffixes.add("/" + DOT_CONTENT_XML);
+            if (StringUtils.isNotBlank(config.provider_filevault_filterxml_path())) {
+                filterXmlFile = new File(config.provider_filevault_filterxml_path());
+            }
         }
         else if (fsMode == FsMode.INITIAL_CONTENT) {
             if (!options.getIgnoreImportProviders().contains("json")) {
@@ -281,7 +289,7 @@ public final class FsResourceProvider implements ResourceProvider {
         
         this.contentFileCache = new ContentFileCache(config.provider_cache_size());
         if (fsMode == FsMode.FILEVAULT_XML) {
-            this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, this.contentFileCache);
+            this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, filterXmlFile, this.contentFileCache);
         }
         else {
             this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
