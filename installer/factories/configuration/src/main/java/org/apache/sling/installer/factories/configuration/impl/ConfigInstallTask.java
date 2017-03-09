@@ -18,8 +18,6 @@
  */
 package org.apache.sling.installer.factories.configuration.impl;
 
-import java.util.Dictionary;
-
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
@@ -74,11 +72,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 }
 
                 if (config != null) {
-                    Dictionary<String, Object> dictionary = getDictionary();
-                    if ( this.factoryPid != null && this.configPid != null ) {
-                        dictionary.put(ConfigUtil.ALIAS_KEY, this.configPid);
-                    }
-                    config.update(dictionary);
+                    config.update(getDictionary());
                     ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
                     if ( this.factoryPid != null ) {
                         this.aliasPid = config.getPid();
