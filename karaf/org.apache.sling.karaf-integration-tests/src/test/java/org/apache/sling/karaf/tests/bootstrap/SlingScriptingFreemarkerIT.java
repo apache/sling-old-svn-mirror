@@ -50,4 +50,11 @@ public class SlingScriptingFreemarkerIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
+    @Test
+    public void testOrgFreemarkerFreemarker() {
+        final Bundle bundle = findBundle("org.freemarker.freemarker");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
 }
