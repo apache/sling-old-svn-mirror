@@ -95,12 +95,12 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.jackrabbit:jackrabbit-spi", "2.14.0");
         versions.put("org.apache.jackrabbit:jackrabbit-spi-commons", "2.14.0");
         versions.put("org.apache.jackrabbit:jackrabbit-webdav", "2.14.0");
-        versions.put("org.apache.jackrabbit:oak-blob", "1.6.0");
-        versions.put("org.apache.jackrabbit:oak-commons", "1.6.0");
-        versions.put("org.apache.jackrabbit:oak-core", "1.6.0");
-        versions.put("org.apache.jackrabbit:oak-jcr", "1.6.0");
-        versions.put("org.apache.jackrabbit:oak-lucene", "1.6.0");
-        versions.put("org.apache.jackrabbit:oak-segment", "1.6.0");
+        versions.put("org.apache.jackrabbit:oak-blob", "1.6.1");
+        versions.put("org.apache.jackrabbit:oak-commons", "1.6.1");
+        versions.put("org.apache.jackrabbit:oak-core", "1.6.1");
+        versions.put("org.apache.jackrabbit:oak-jcr", "1.6.1");
+        versions.put("org.apache.jackrabbit:oak-lucene", "1.6.1");
+        versions.put("org.apache.jackrabbit:oak-segment-tar", "1.6.1");
         versions.put("org.apache.jackrabbit.vault:org.apache.jackrabbit.vault", "3.1.30");
         versions.put("org.apache.servicemix.bundles:org.apache.servicemix.bundles.ognl", "3.2_1");
         versions.put("org.apache.servicemix.bundles:org.apache.servicemix.bundles.rhino", "1.7.7.1_1");
@@ -158,7 +158,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.jcr.jackrabbit.usermanager", "2.2.4");
         versions.put("org.apache.sling:org.apache.sling.jcr.oak.server", "1.1.3-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.registration", "1.0.2");
-        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.2");
+        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.3-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.resource", "2.9.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webconsole", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.8");

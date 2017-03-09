@@ -122,12 +122,12 @@ public class SlingOptions {
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             slingLaunchpadOak(),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment-tar").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
             newConfiguration("org.apache.felix.http")
                 .put("org.osgi.service.http.port", httpPort)
                 .asOption(),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
+            newConfiguration("org.apache.jackrabbit.oak.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
                 .asOption(),
