@@ -171,8 +171,8 @@ public abstract class OakServerTestSupport extends TestSupport {
             scr(),
             slingJcr(),
             slingJcrRepoinit(),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(versionResolver),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment-tar").version(versionResolver),
+            newConfiguration("org.apache.jackrabbit.oak.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
                 .asOption(),
