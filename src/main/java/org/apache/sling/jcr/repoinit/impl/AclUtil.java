@@ -33,7 +33,9 @@ import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
+import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,21 +54,30 @@ public class AclUtil {
         return (JackrabbitAccessControlManager) acm;
     }
 
-    public static void setAcl(Session s, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow)
+    public static void setAcl(Session session, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow)
             throws UnsupportedRepositoryOperationException, RepositoryException {
 
         final String [] privArray = privileges.toArray(new String[privileges.size()]);
-        final Privilege[] jcrPriv = AccessControlUtils.privilegesFromNames(s, privArray);
+        final Privilege[] jcrPriv = AccessControlUtils.privilegesFromNames(session, privArray);
 
         for(String path : paths) {
-            if(!s.nodeExists(path)) {
+            if(!session.nodeExists(path)) {
                 throw new PathNotFoundException("Cannot set ACL on non-existent path " + path);
             }
-            JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(s, path);
+            JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(session, path);
             AccessControlEntry[] existingAces = acl.getAccessControlEntries();
             boolean changed = false;
             for (String name : principals) {
-                final Principal principal = AccessControlUtils.getPrincipal(s, name);
+                final Principal principal;
+                if (EveryonePrincipal.NAME.equals(name)) {
+                    principal = AccessControlUtils.getPrincipal(session, name);
+                } else {
+                    final Authorizable authorizable = UserUtil.getAuthorizable(session, name);
+                    if (authorizable == null) {
+                        throw new IllegalStateException("Authorizable not found:" + name);
+                    }
+                    principal = authorizable.getPrincipal();
+                }
                 if (principal == null) {
                     throw new IllegalStateException("Principal not found: " + name);
                 }
@@ -79,7 +90,7 @@ public class AclUtil {
                 changed = true;
             }
             if ( changed ) {
-                getJACM(s).setPolicy(path, acl);
+                getJACM(session).setPolicy(path, acl);
             }
             
         }
