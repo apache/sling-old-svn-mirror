@@ -46,6 +46,18 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/maven-sling-plugin</url>
     </scm>
 
+    <!-- Support for publishing the mvn site. -->
+    <distributionManagement>
+        <site>
+            <id>apache.website</id>
+            <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/sling/content/components/${maven.site.path}</url>
+        </site>
+    </distributionManagement>
+
+    <properties>
+        <maven.site.path>maven-sling-plugin-archives/maven-sling-plugin-LATEST</maven.site.path>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -63,12 +75,25 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>        
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-publish-plugin</artifactId>
+                <version>1.1</version>
+                <configuration>
+                    <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
+                    <tryUpdate>true</tryUpdate>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <reporting>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
