@@ -34,7 +34,7 @@
     org.apache.jackrabbit/oak-jcr/${oak.version}
 
 [artifacts startLevel=15 runModes=oak_tar]
-    org.apache.jackrabbit/oak-segment/${oak.version}
+    org.apache.jackrabbit/oak-segment-tar/${oak.version}
 
 [artifacts startLevel=15 runModes=oak_mongo]
     org.mongodb/mongo-java-driver/3.4.1
@@ -82,7 +82,7 @@
     groupPrivilegeNames=["jcr:read"]
 
 [configurations runModes=oak_tar]
-  org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+  org.apache.jackrabbit.oak.segment.SegmentNodeStoreService
     name="Default\ NodeStore"
 
 [configurations runModes=oak_mongo]
