@@ -17,12 +17,19 @@
 
 package org.apache.sling.maven.bundlesupport;
 
+import static org.apache.jackrabbit.vault.util.Constants.FILTER_XML;
+import static org.apache.jackrabbit.vault.util.Constants.META_DIR;
+import static org.apache.jackrabbit.vault.util.Constants.META_INF;
+import static org.apache.jackrabbit.vault.util.Constants.ROOT_DIR;
+import static org.apache.jackrabbit.vault.util.Constants.VAULT_DIR;
+
 import java.io.File;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
@@ -57,7 +64,7 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
     protected MavenProject project;
 
     @Override
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         String targetUrl = getConsoleTargetURL();
         
         // check for Sling-Initial-Content
@@ -87,7 +94,7 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
             return;
         }
         
-        getLog().info(bundleFile + " does not exist, skipping.");
+        throw new MojoFailureException("No Bundle with initial content or FileVault content package found.");
     }
 
     @SuppressWarnings("unchecked")
@@ -96,7 +103,8 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
         if (resources != null) {
             for (Resource resource : resources) {
                 File dir = new File(resource.getDirectory());
-                if (dir.exists() && dir.isDirectory() && StringUtils.equals(dir.getName(), "jcr_root")) {
+                // look for dir ending with /jcr_root
+                if (dir.exists() && dir.isDirectory() && StringUtils.equals(dir.getName(), ROOT_DIR)) {
                     return dir;
                 }
             }
@@ -111,14 +119,23 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
             for (Resource resource : resources) {
                 File dir = new File(resource.getDirectory());
                 if (dir.exists() && dir.isDirectory() ) {
-                    if (StringUtils.equals(dir.getName(), "META-INF")) {
-                        File filterXml = new File(dir, "vault/filter.xml");
+                    // look for META-INF -> vault/filter.xml
+                    if (StringUtils.equals(dir.getName(), META_INF)) {
+                        File filterXml = new File(dir, VAULT_DIR + "/" + FILTER_XML);
                         if (filterXml.exists()) {
                             return filterXml;
                         }
                     }
-                    else if (StringUtils.equals(dir.getName(), "vault")) {
-                        File filterXml = new File(dir, "filter.xml");
+                    // look for META-INF/vault -> filter.xml
+                    else if (StringUtils.equals(dir.getName(), VAULT_DIR)) {
+                        File filterXml = new File(dir, FILTER_XML);
+                        if (filterXml.exists()) {
+                            return filterXml;
+                        }
+                    }
+                    // look for jcr_root -> ../META-INF/vault/filter.xml
+                    else if (StringUtils.equals(dir.getName(), ROOT_DIR)) {
+                        File filterXml = new File(dir.getParentFile(), META_DIR + "/" + FILTER_XML);
                         if (filterXml.exists()) {
                             return filterXml;
                         }
