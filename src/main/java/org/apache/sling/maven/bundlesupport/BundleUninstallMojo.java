@@ -18,6 +18,8 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
+import static org.apache.sling.maven.bundlesupport.JsonSupport.JSON_MIME_TYPE;
+
 import java.io.File;
 
 import org.apache.commons.httpclient.HttpStatus;
@@ -29,6 +31,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounter;
 
 /**
  * Uninstall an OSGi bundle from a running Sling instance.
@@ -164,8 +167,7 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
 
     @Override
     protected void configure(final String targetURL, final File file) throws MojoExecutionException {
-        FsMountHelper fsMountHelper = new FsMountHelper(getLog(), getHttpClient(), project);
-        fsMountHelper.configureUninstall(targetURL, file);
+        new SlingInitialContentMounter(getLog(), getHttpClient(), project).unmount(targetURL, file);
     }
     
 }

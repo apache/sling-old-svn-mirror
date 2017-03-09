@@ -21,6 +21,8 @@ import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.sling.maven.bundlesupport.fsresource.FileVaultXmlMounter;
+import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounter;
 
 /**
  * Removes OSGi configurations for File System Resource provider.
@@ -29,9 +31,13 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class FsUnMountMojo extends AbstractFsMountMojo {
 
     @Override
-    protected void configureSlingInitialContent(final String targetUrl, final File file) throws MojoExecutionException {
-        FsMountHelper fsMountHelper = new FsMountHelper(getLog(), getHttpClient(), project);
-        fsMountHelper.configureUninstall(targetUrl, file);
+    protected void configureSlingInitialContent(final String targetUrl, final File bundleFile) throws MojoExecutionException {
+        new SlingInitialContentMounter(getLog(), getHttpClient(), project).unmount(targetUrl, bundleFile);
+    }
+
+    @Override
+    protected void configureFileVaultXml(String targetUrl, File jcrRootFile, File filterXmlFile) throws MojoExecutionException {
+        new FileVaultXmlMounter(getLog(), getHttpClient(), project).unmount(targetUrl, jcrRootFile, filterXmlFile);
     }
 
 }

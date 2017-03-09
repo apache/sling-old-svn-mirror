@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -38,6 +39,13 @@ abstract class AbstractBundlePostMojo extends AbstractMojo {
     @Parameter(property="sling.url", defaultValue="http://localhost:8080/system/console", required = true)
     protected String slingUrl;
 
+    /**
+     * The WebConsole URL of the running Sling instance. This is required for file system provider operations.
+     * If not configured the value of slingUrl is used.
+     */
+    @Parameter(property="sling.console.url")
+    protected String slingConsoleUrl;
+        
     /**
      * An optional url suffix which will be appended to the <code>sling.url</code>
      * for use as the real target url. This allows to configure different target URLs
@@ -132,11 +140,21 @@ abstract class AbstractBundlePostMojo extends AbstractMojo {
     }
 
     /**
-     * Returns the combination of <code>sling.url</code> and
-     * <code>sling.urlSuffix</code>.
+     * Returns the combination of <code>sling.url</code> and <code>sling.urlSuffix</code>.
      */
     protected String getTargetURL() {
         String targetURL = slingUrl;
+        if (slingUrlSuffix != null) {
+            targetURL += slingUrlSuffix;
+        }
+        return targetURL;
+    }
+
+    /**
+     * Returns the combination of <code>sling.console.url</code> and <code>sling.urlSuffix</code>.
+     */
+    protected String getConsoleTargetURL() {
+        String targetURL = StringUtils.defaultString(slingConsoleUrl, slingUrl);
         if (slingUrlSuffix != null) {
             targetURL += slingUrlSuffix;
         }

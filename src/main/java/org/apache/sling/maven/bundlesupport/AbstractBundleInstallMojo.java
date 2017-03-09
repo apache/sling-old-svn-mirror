@@ -18,6 +18,8 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
+import static org.apache.sling.maven.bundlesupport.JsonSupport.JSON_MIME_TYPE;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,11 +39,9 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounter;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
-
-    /** Mime type for json response. */
-    public static final String JSON_MIME_TYPE = "application/json";
 
     /**
      * If a PUT via WebDAV should be used instead of the standard POST to the
@@ -185,13 +185,12 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         }
 
         if ( mountByFS ) {
-            configure(targetURL, bundleFile);
+            configure(getConsoleTargetURL(), bundleFile);
         }
     }
     
     protected void configure(final String targetURL, final File file) throws MojoExecutionException {
-        FsMountHelper fsMountHelper = new FsMountHelper(getLog(), getHttpClient(), project);
-        fsMountHelper.configureInstall(targetURL, file);
+        new SlingInitialContentMounter(getLog(), getHttpClient(), project).mount(targetURL, file);
     }
 
     /**

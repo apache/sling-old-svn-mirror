@@ -32,8 +32,11 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
 
-final class JsonSupport {
+public final class JsonSupport {
 
+    /** Mime type for json response. */
+    public static final String JSON_MIME_TYPE = "application/json";
+    
     private static final JsonReaderFactory JSON_READER_FACTORY;
     static {
         // allow comments in JSON files
