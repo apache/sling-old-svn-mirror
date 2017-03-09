@@ -182,6 +182,7 @@ public class SlingOptions {
             webconsole(),
             slingCommonsClassloader(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.fsclassloader").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.osgi").version(versionResolver),
             mavenBundle().groupId("commons-io").artifactId("commons-io").version(versionResolver),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").version(versionResolver)
         );
@@ -381,6 +382,16 @@ public class SlingOptions {
         );
     }
 
+    public static Option slingExtensionResourcePresence() {
+        return composite(
+            sling(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.resource.presence").version(versionResolver),
+            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                .put("user.mapping", new String[]{"org.apache.sling.resource.presence=sling-readall"})
+                .asOption()
+        );
+    }
+
     public static Option slingExtensionResourcemerger() {
         return composite(
             sling(),
@@ -417,6 +428,19 @@ public class SlingOptions {
         );
     }
 
+    public static Option slingExtensionValidation() {
+        return composite(
+            sling(),
+            slingExtensionI18n(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.api").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.core").version(versionResolver),
+            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").version(versionResolver),
+            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                .put("user.mapping", new String[]{"org.apache.sling.validation.core=sling-validation"})
+                .asOption()
+        );
+    }
+
     public static Option slingExtensionXss() {
         return composite(
             sling(),
@@ -434,6 +458,14 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.installer.console").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.installer.core").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.installer.factory.configuration").version(versionResolver)
+        );
+    }
+
+    public static Option slingInstallerHealthcheck() {
+        return composite(
+            slingInstaller(),
+            slingExtensionHealthcheck(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.installer.hc").version(versionResolver)
         );
     }
 
@@ -472,7 +504,7 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webconsole").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.webdav").version(versionResolver),
             factoryConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment")
-                .put("whitelist.bundles", new String[]{"org.apache.sling.discovery.commons", "org.apache.sling.discovery.base", "org.apache.sling.discovery.oak", "org.apache.sling.extensions.webconsolesecurityprovider", "org.apache.sling.i18n", "org.apache.sling.jcr.base", "org.apache.sling.jcr.classloader", "org.apache.sling.jcr.contentloader", "org.apache.sling.jcr.davex", "org.apache.sling.jcr.jackrabbit.usermanager", "org.apache.sling.jcr.oak.server", "org.apache.sling.jcr.repoinit", "org.apache.sling.jcr.resource", "org.apache.sling.jcr.webconsole", "org.apache.sling.servlets.post", "org.apache.sling.servlets.resolver"})
+                .put("whitelist.bundles", new String[]{"org.apache.sling.discovery.commons", "org.apache.sling.discovery.base", "org.apache.sling.discovery.oak", "org.apache.sling.extensions.webconsolesecurityprovider", "org.apache.sling.jcr.base", "org.apache.sling.jcr.classloader", "org.apache.sling.jcr.contentloader", "org.apache.sling.jcr.davex", "org.apache.sling.jcr.jackrabbit.usermanager", "org.apache.sling.jcr.oak.server", "org.apache.sling.jcr.repoinit", "org.apache.sling.jcr.resource", "org.apache.sling.jcr.webconsole"})
                 .put("whitelist.name", "sling")
                 .asOption(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
@@ -563,7 +595,7 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.memoryusage").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.webconsole.plugins.packageadmin").version(versionResolver),
             newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
-                .put("references", new String[]{"raw:classpath://org.apache.sling.karaf-repoinit/sling.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-discovery.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-event.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-i18n.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-installer-jcr.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-scripting.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-xss.txt"})
+                .put("references", new String[]{"raw:classpath://org.apache.sling.karaf-repoinit/sling.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-discovery.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-event.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-i18n.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-installer-jcr.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-scripting.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-validation.txt", "raw:classpath://org.apache.sling.karaf-repoinit/sling-xss.txt"})
                 .asOption(),
             factoryConfiguration("org.apache.felix.jaas.Configuration.factory")
                 .put("jaas.classname", "org.apache.jackrabbit.oak.spi.security.authentication.GuestLoginModule")
@@ -731,6 +763,9 @@ public class SlingOptions {
             slingScripting(),
             slingExtensionI18n(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.thymeleaf").version(versionResolver),
+            mavenBundle().groupId("org.attoparser").artifactId("attoparser").version(versionResolver),
+            mavenBundle().groupId("org.unbescape").artifactId("unbescape").version(versionResolver),
+            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.ognl").version(versionResolver),
             mavenBundle().groupId("org.javassist").artifactId("javassist").version(versionResolver),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", new String[]{"org.apache.sling.scripting.thymeleaf=sling-scripting"})
