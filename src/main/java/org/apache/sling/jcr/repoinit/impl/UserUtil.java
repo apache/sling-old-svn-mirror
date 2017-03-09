@@ -24,7 +24,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
-/** Utilities for (Service) Users management */
+/** Utilities for User management */
 public class UserUtil {
 
     public static UserManager getUserManager(Session session) throws RepositoryException {
@@ -34,55 +34,55 @@ public class UserUtil {
         return ((JackrabbitSession)session).getUserManager();
     }
 
-    public static Authorizable getAuthorizable(Session session, String username) throws RepositoryException {
-        return getUserManager(session).getAuthorizable(username);
+    public static Authorizable getAuthorizable(Session session, String id) throws RepositoryException {
+        return getUserManager(session).getAuthorizable(id);
     }
 
     /** Create a service user - fails if it already exists */
-    public static void createServiceUser(Session s, String username) throws RepositoryException {
-        getUserManager(s).createSystemUser(username, null);
+    public static void createServiceUser(Session session, String username) throws RepositoryException {
+        getUserManager(session).createSystemUser(username, null);
     }
 
     /** True if specified service user exists */
     public static boolean serviceUserExists(Session session, String username) throws RepositoryException {
         boolean result = false;
-        final Authorizable a = getAuthorizable(session, username);
-        if(a != null) {
-            final User u = (User)a;
-            result = u.isSystemUser();
+        final Authorizable authorizable = getAuthorizable(session, username);
+        if(authorizable != null) {
+            final User user = (User)authorizable;
+            result = user.isSystemUser();
         }
         return result;
     }
 
-    public static void deleteUser(Session s, String username) throws RepositoryException {
-        final Authorizable a = getUserManager(s).getAuthorizable(username);
-        if(a == null) {
-            throw new IllegalStateException("Authorizable not found:" + username);
+    public static void deleteUser(Session session, String id) throws RepositoryException {
+        final Authorizable authorizable = getUserManager(session).getAuthorizable(id);
+        if(authorizable == null) {
+            throw new IllegalStateException("Authorizable not found:" + id);
         }
-        a.remove();
+        authorizable.remove();
     }
 
-    /** Create a service user - fails if it already exists */
-    public static void createUser(Session s, String username, String password) throws RepositoryException {
-        getUserManager(s).createUser(username, password);
+    /** Create a user - fails if it already exists */
+    public static void createUser(Session session, String username, String password) throws RepositoryException {
+        getUserManager(session).createUser(username, password);
     }
 
     /** True if specified user exists */
-    public static boolean serviceExists(Session session, String username) throws RepositoryException {
+    public static boolean userExists(Session session, String id) throws RepositoryException {
         boolean result = false;
-        final Authorizable a = getAuthorizable(session, username);
-        if (a != null) {
-            final User u = (User)a;
-            result = !u.isSystemUser();
+        final Authorizable authorizable = getAuthorizable(session, id);
+        if (authorizable != null) {
+            final User user = (User)authorizable;
+            result = !user.isSystemUser(); // TODO
         }
         return result;
     }
 
     public static void deleteServiceUser(Session s, String username) throws RepositoryException {
-        final Authorizable a = getUserManager(s).getAuthorizable(username);
-        if(a == null) {
+        final Authorizable authorizable = getUserManager(s).getAuthorizable(username);
+        if(authorizable == null) {
             throw new IllegalStateException("Authorizable not found:" + username);
         }
-        a.remove();
+        authorizable.remove();
     }
 }
