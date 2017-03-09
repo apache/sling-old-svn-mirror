@@ -531,7 +531,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 final LogConfig cfg = configByCategory.get(cat);
                 if (cfg != null && !pid.equals(cfg.getConfigPid())) {
                     throw new ConfigurationException(LogConfigManager.LOG_LOGGERS, "Category " + cat
-                        + " already defined by configuration " + pid);
+                        + " already defined by configuration " + cfg.getConfigPid());
                 }
             }
 
