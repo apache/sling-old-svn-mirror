@@ -24,7 +24,6 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
 import freemarker.log.Logger;
-import freemarker.template.Version;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -39,8 +38,6 @@ import freemarker.template.Template;
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
     private static final Logger log = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
-    private final Version version = new Version(2, 3, 25);
-
     private final Configuration configuration;
 
     private final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory;
@@ -48,7 +45,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
     public FreemarkerScriptEngine(final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory) {
         super(freemarkerScriptEngineFactory);
         this.freemarkerScriptEngineFactory = freemarkerScriptEngineFactory;
-        configuration = new Configuration(version);
+        configuration = new Configuration(Configuration.getVersion());
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
     }
 
