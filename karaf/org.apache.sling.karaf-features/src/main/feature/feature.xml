@@ -412,9 +412,9 @@
     <bundle>mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.4</bundle>
   </feature>
   <feature name="sling-launchpad-oak-tar" version="${project.version}">
-    <configfile finalname="/etc/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService</configfile>
+    <configfile finalname="/etc/org.apache.jackrabbit.oak.segment.SegmentNodeStoreService.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.segment.SegmentNodeStoreService</configfile>
     <feature version="${project.version}">sling-launchpad-oak</feature>
-    <bundle>mvn:org.apache.jackrabbit/oak-segment/${org.apache.jackrabbit.oak.version}</bundle>
+    <bundle>mvn:org.apache.jackrabbit/oak-segment-tar/${org.apache.jackrabbit.oak.version}</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.oak.server/1.1.3-SNAPSHOT</bundle>
   </feature>
   <feature name="sling-launchpad-oak-mongo" version="${project.version}">
