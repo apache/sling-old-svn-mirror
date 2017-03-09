@@ -88,8 +88,8 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService</classifier>
-                  <file>src/main/resources/org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService.config</file>
+                  <classifier>org.apache.jackrabbit.oak.segment.SegmentNodeStoreService</classifier>
+                  <file>src/main/resources/org.apache.jackrabbit.oak.segment.SegmentNodeStoreService.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>
