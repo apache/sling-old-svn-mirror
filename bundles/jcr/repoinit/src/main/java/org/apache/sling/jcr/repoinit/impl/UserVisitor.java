@@ -39,61 +39,61 @@ class UserVisitor extends DoNothingVisitor {
 
     @Override
     public void visitCreateServiceUser(CreateServiceUser s) {
-        final String id = s.getUsername();
+        final String username = s.getUsername();
         try {
-            if(!UserUtil.serviceUserExists(session, id)) {
-                log.info("Creating service user {}", id);
-                UserUtil.createServiceUser(session, id);
+            if(!UserUtil.serviceUserExists(session, username)) {
+                log.info("Creating service user {}", username);
+                UserUtil.createServiceUser(session, username);
             } else {
-                log.info("Service user {} already exists, no changes made", id);
+                log.info("Service user {} already exists, no changes made", username);
             }
         } catch(Exception e) {
-            report(e, "Unable to create service user [" + id + "]:" + e);
+            report(e, "Unable to create service user [" + username + "]:" + e);
         }
     }
 
     @Override
     public void visitDeleteServiceUser(DeleteServiceUser s) {
-        final String id = s.getUsername();
-        log.info("Deleting service user {}", id);
+        final String username = s.getUsername();
+        log.info("Deleting service user {}", username);
         try {
-            UserUtil.deleteServiceUser(session, id);
+            UserUtil.deleteServiceUser(session, username);
         } catch(Exception e) {
-            report(e, "Unable to delete service user [" + id + "]:" + e);
+            report(e, "Unable to delete service user [" + username + "]:" + e);
         }
     }
 
     @Override
     public void visitCreateUser(CreateUser u) {
-        final String id = u.getUsername();
+        final String username = u.getUsername();
         try {
-            if(!UserUtil.serviceExists(session, id)) {
+            if(!UserUtil.userExists(session, username)) {
                 final String pwd = u.getPassword();
                 if(pwd != null) {
                     // TODO we might revise this warning once we're able
                     // to create users by providing their encoded password
                     // using u.getPasswordEncoding - for now I think only cleartext works
-                    log.warn("Creating user {} with cleartext password - should NOT be used on production systems", id);
+                    log.warn("Creating user {} with cleartext password - should NOT be used on production systems", username);
                 } else {
-                    log.info("Creating user {}", id);
+                    log.info("Creating user {}", username);
                 }
-                UserUtil.createUser(session, id, pwd);
+                UserUtil.createUser(session, username, pwd);
             } else {
-                log.info("User {} already exists, no changes made", id);
+                log.info("User {} already exists, no changes made", username);
             }
         } catch(Exception e) {
-            report(e, "Unable to create user [" + id + "]:" + e);
+            report(e, "Unable to create user [" + username + "]:" + e);
         }
     }
 
     @Override
     public void visitDeleteUser(DeleteUser u) {
-        final String id = u.getUsername();
-        log.info("Deleting user {}", id);
+        final String username = u.getUsername();
+        log.info("Deleting user {}", username);
         try {
-            UserUtil.deleteUser(session, id);
+            UserUtil.deleteUser(session, username);
         } catch(Exception e) {
-            report(e, "Unable to delete user [" + id + "]:" + e);
+            report(e, "Unable to delete user [" + username + "]:" + e);
         }
     }
 
