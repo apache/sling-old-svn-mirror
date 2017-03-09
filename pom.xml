@@ -32,6 +32,7 @@
 
     <properties>
         <maven.version>3.0.5</maven.version>
+        <maven.site.path>${project.artifactId}-archives/${project.artifactId}-LATEST</maven.site.path>
     </properties>
 
     <scm>
@@ -39,6 +40,14 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/slingstart-maven-plugin</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/slingstart-maven-plugin</url>
     </scm>
+
+    <!-- Support for publishing the mvn site. -->
+    <distributionManagement>
+        <site>
+            <id>apache.website</id>
+            <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/sling/content/components/${maven.site.path}</url>
+        </site>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -75,6 +84,15 @@
                 </executions>
                 <configuration>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-publish-plugin</artifactId>
+                <version>1.1</version>
+                <configuration>
+                    <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
+                    <tryUpdate>true</tryUpdate>
                 </configuration>
             </plugin>
         </plugins>
@@ -210,4 +228,14 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+
 </project>
