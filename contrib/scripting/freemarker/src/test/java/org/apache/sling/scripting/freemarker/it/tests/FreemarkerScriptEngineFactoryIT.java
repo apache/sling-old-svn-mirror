@@ -50,17 +50,17 @@ public class FreemarkerScriptEngineFactoryIT extends FreemarkerTestSupport {
 
     @Test
     public void testScriptEngineFactoryEngineName() {
-        assertThat("Apache Sling Scripting FreeMarker", is(scriptEngineFactory.getEngineName()));
+        assertThat(scriptEngineFactory.getEngineName(), is("Apache Sling Scripting FreeMarker"));
     }
 
     @Test
     public void testScriptEngineFactoryLanguageName() {
-        assertThat("FreeMarker", is(scriptEngineFactory.getLanguageName()));
+        assertThat(scriptEngineFactory.getLanguageName(), is("FreeMarker"));
     }
 
     @Test
     public void testScriptEngineFactoryLanguageVersion() {
-        assertThat(scriptEngineFactory.getLanguageVersion(), startsWith("2.3"));
+        assertThat(scriptEngineFactory.getLanguageVersion(), startsWith("2.3."));
     }
 
     @Test
