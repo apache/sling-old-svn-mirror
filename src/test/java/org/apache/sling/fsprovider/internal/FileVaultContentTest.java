@@ -57,12 +57,14 @@ public class FileVaultContentTest {
     public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK)
         .plugin(new RegisterFsResourcePlugin(
                 "provider.fs.mode", FsMode.FILEVAULT_XML.name(),
-                "provider.file", "src/test/resources/vaultfs-test",
+                "provider.file", "src/test/resources/vaultfs-test/jcr_root",
+                "provider.filevault.filterxml.path", "src/test/resources/vaultfs-test/META-INF/vault/filter.xml",
                 "provider.root", "/content/dam/talk.png"
                 ))
         .plugin(new RegisterFsResourcePlugin(
                 "provider.fs.mode", FsMode.FILEVAULT_XML.name(),
-                "provider.file", "src/test/resources/vaultfs-test",
+                "provider.file", "src/test/resources/vaultfs-test/jcr_root",
+                "provider.filevault.filterxml.path", "src/test/resources/vaultfs-test/META-INF/vault/filter.xml",
                 "provider.root", "/content/samples"
                 ))
         .build();

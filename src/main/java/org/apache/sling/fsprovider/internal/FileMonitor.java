@@ -18,8 +18,6 @@
  */
 package org.apache.sling.fsprovider.internal;
 
-import static org.apache.jackrabbit.vault.util.Constants.ROOT_DIR;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +69,7 @@ public final class FileMonitor extends TimerTask {
         
         File rootFile = this.provider.getRootFile();
         if (fsMode == FsMode.FILEVAULT_XML) {
-            rootFile = new File(this.provider.getRootFile(), ROOT_DIR + PlatformNameFormat.getPlatformPath(this.provider.getProviderRoot()));
+            rootFile = new File(this.provider.getRootFile(), "." + PlatformNameFormat.getPlatformPath(this.provider.getProviderRoot()));
         }
         this.root = new Monitorable(this.provider.getProviderRoot(), rootFile, null);
         
