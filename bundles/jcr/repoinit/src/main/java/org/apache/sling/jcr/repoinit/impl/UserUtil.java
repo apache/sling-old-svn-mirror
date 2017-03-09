@@ -44,11 +44,11 @@ public class UserUtil {
     }
 
     /** True if specified service user exists */
-    public static boolean serviceUserExists(Session session, String username) throws RepositoryException {
+    public static boolean isServiceUser(Session session, String id) throws RepositoryException {
         boolean result = false;
-        final Authorizable authorizable = getAuthorizable(session, username);
-        if(authorizable != null) {
-            final User user = (User)authorizable;
+        final Authorizable authorizable = getAuthorizable(session, id);
+        if (authorizable != null && !authorizable.isGroup()) {
+            final User user = (User) authorizable;
             result = user.isSystemUser();
         }
         return result;
@@ -72,17 +72,9 @@ public class UserUtil {
         boolean result = false;
         final Authorizable authorizable = getAuthorizable(session, id);
         if (authorizable != null) {
-            final User user = (User)authorizable;
-            result = !user.isSystemUser(); // TODO
+            result = !authorizable.isGroup();
         }
         return result;
     }
 
-    public static void deleteServiceUser(Session s, String username) throws RepositoryException {
-        final Authorizable authorizable = getUserManager(s).getAuthorizable(username);
-        if(authorizable == null) {
-            throw new IllegalStateException("Authorizable not found:" + username);
-        }
-        authorizable.remove();
-    }
 }

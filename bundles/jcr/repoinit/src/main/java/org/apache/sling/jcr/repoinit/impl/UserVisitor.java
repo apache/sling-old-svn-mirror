@@ -41,11 +41,14 @@ class UserVisitor extends DoNothingVisitor {
     public void visitCreateServiceUser(CreateServiceUser s) {
         final String username = s.getUsername();
         try {
-            if(!UserUtil.serviceUserExists(session, username)) {
+            if (!UserUtil.userExists(session, username)) {
                 log.info("Creating service user {}", username);
                 UserUtil.createServiceUser(session, username);
+            } else if (UserUtil.isServiceUser(session, username)) {
+                log.info("Service user {} already exists, no changes made.", username);
             } else {
-                log.info("Service user {} already exists, no changes made", username);
+                final String message = String.format("Existing user %s is not a service user.", username);
+                throw new RuntimeException(message);
             }
         } catch(Exception e) {
             report(e, "Unable to create service user [" + username + "]:" + e);
@@ -57,7 +60,7 @@ class UserVisitor extends DoNothingVisitor {
         final String username = s.getUsername();
         log.info("Deleting service user {}", username);
         try {
-            UserUtil.deleteServiceUser(session, username);
+            UserUtil.deleteUser(session, username);
         } catch(Exception e) {
             report(e, "Unable to delete service user [" + username + "]:" + e);
         }
