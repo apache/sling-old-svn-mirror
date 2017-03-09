@@ -175,6 +175,7 @@
                     <excludes>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**/*</exclude>
+                        <exclude>src/site/markdown/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
