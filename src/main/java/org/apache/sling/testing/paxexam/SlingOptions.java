@@ -47,8 +47,8 @@ public class SlingOptions {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver),
-            mavenBundle().groupId("javax.servlet.jsp").artifactId("javax.servlet.jsp-api").version(versionResolver),
-            mavenBundle().groupId("javax.el").artifactId("javax.el-api").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.jsp-wrapper").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.el-wrapper").version(versionResolver),
             config()
         );
     }
@@ -615,9 +615,6 @@ public class SlingOptions {
                 .put("jaas.configProviderName", "FelixJaasProvider")
                 .put("jaas.defaultRealmName", "jackrabbit.oak")
                 .asOption(),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
-                .put("localIndexDir", "sling/repository/index")
-                .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl")
                 .put("org.apache.jackrabbit.oak.authentication.configSpiName", "FelixJaasProvider")
                 .asOption(),
@@ -641,8 +638,12 @@ public class SlingOptions {
     public static Option slingLaunchpadOakTar() {
         return composite(
             slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment-tar").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", "sling/repository/index")
+                .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.segment.SegmentNodeStoreService")
                 .put("name", "Default NodeStore")
                 .put("repository.home", "sling/repository")
@@ -653,9 +654,13 @@ public class SlingOptions {
     public static Option slingLaunchpadOakMongo() {
         return composite(
             slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(versionResolver),
             mavenBundle().groupId("org.mongodb").artifactId("mongo-java-driver").version(versionResolver),
             mavenBundle().groupId("com.h2database").artifactId("h2-mvstore").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", "sling/repository/index")
+                .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService")
                 .put("db", "sling")
                 .put("mongouri", "mongodb://localhost:27017")
@@ -823,7 +828,6 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-commons").version(versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-blob").version(versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-jcr").version(versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(versionResolver),
             mavenBundle().groupId("com.google.guava").artifactId("guava").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(versionResolver)
         );
@@ -861,6 +865,7 @@ public class SlingOptions {
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment-tar").version(versionResolver),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
             newConfiguration("org.apache.felix.http")
