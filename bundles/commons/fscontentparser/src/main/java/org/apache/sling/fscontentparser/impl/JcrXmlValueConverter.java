@@ -19,6 +19,7 @@
 package org.apache.sling.fscontentparser.impl;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
@@ -85,9 +86,9 @@ class JcrXmlValueConverter {
             case PropertyType.LONG:
                 return Long.valueOf(value);
             case PropertyType.DOUBLE:
-            case PropertyType.DECIMAL:
-                // TODO: specific handling for BigDecimal? not properly supported in ValueMapDecorator until very recent Sling API versions
                 return Double.valueOf(value);
+            case PropertyType.DECIMAL:
+                return new BigDecimal(value);
             case PropertyType.DATE:
                 return ISO8601.parse(value);
             case PropertyType.REFERENCE:
@@ -126,9 +127,9 @@ class JcrXmlValueConverter {
             case PropertyType.LONG:
                 return Long.class;
             case PropertyType.DOUBLE:
-            case PropertyType.DECIMAL:
-                // TODO: specific handling for BigDecimal? not properly supported in ValueMapDecorator until very recent Sling API versions
                 return Double.class;
+            case PropertyType.DECIMAL:
+                return BigDecimal.class;
             case PropertyType.DATE:
                 return Calendar.class;
             case PropertyType.REFERENCE:
