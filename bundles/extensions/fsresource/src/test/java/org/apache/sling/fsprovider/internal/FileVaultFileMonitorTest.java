@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Test events when changing filesystem content (FileVault XML).
+ * Test events when changing file system content (FileVault XML).
  */
 public class FileVaultFileMonitorTest {
     

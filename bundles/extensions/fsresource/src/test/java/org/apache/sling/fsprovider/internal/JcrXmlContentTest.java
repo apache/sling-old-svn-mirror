@@ -46,7 +46,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Test access to files and folders from filesystem.
+ * Test access to files and folders from file system.
  */
 public class JcrXmlContentTest {
 

@@ -104,7 +104,7 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
             }
         }
         
-        // additional check for children in filesystem
+        // additional check for children in file system
         File parentFile = getFile(parentPath);
         if (parentFile != null && parentFile.isDirectory()) {
             for (File childFile : parentFile.listFiles()) {

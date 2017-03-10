@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Test access to files and folders from filesystem.
+ * Test access to files and folders from file system.
  */
 public class FilesFolderTest {
 

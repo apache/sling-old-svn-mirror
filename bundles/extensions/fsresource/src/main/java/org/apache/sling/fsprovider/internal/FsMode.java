@@ -29,7 +29,7 @@ public enum FsMode {
     FILES_FOLDERS,
 
     /**
-     * Sling-Initial-Content filesystem layout, supports file and folders ant content files in JSON and jcr.xml format.
+     * Sling-Initial-Content file system layout, supports file and folders ant content files in JSON and jcr.xml format.
      */
     INITIAL_CONTENT,
     

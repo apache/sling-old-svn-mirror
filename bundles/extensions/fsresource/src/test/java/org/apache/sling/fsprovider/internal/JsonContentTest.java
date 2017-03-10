@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Test access to files and folders and JSON content from filesystem.
+ * Test access to files and folders and JSON content from file system.
  */
 public class JsonContentTest {
 
