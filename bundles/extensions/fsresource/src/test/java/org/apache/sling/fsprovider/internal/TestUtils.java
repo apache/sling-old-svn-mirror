@@ -58,7 +58,7 @@ class TestUtils {
             config.put("provider.file", "src/test/resources/fs-test");
             config.put("provider.root", "/fs-test");
             config.put("provider.checkinterval", 0);
-            config.put("provider.fs.mode", FsMode.INITIAL_CONTENT_FILES_FOLDERS.name());
+            config.put("provider.fs.mode", FsMode.FILES_FOLDERS.name());
             config.putAll(props);
             context.registerInjectActivateService(new FsResourceProvider(), config);
         }

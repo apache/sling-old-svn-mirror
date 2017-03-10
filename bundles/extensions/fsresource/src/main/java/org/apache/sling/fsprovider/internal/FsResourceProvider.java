@@ -115,9 +115,9 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
                 description = "Filesystem layout mode for files, folders and content.",
                 options={
                         @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
-                                + "Sling-Initial-Content filesystem layout, with full support for JSON and jcr.xml content files"),
-                        @Option(value="INITIAL_CONTENT_FILES_FOLDERS", label="INITIAL_CONTENT_FILES_FOLDERS - "
-                                + "Sling-Initial-Content filesystem layout, support only files and folders (classic mode)"),
+                                + "Sling-Initial-Content filesystem layout, supports file and folders ant content files in JSON and jcr.xml format"),
+                        @Option(value="FILES_FOLDERS", label="FILES_FOLDERS - "
+                                + "Support only files and folders (classic mode)"),
                         @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
                                 + "FileVault XML format (expanded content package)"),
                 })
@@ -325,7 +325,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
                 filterXmlFile = new File(config.provider_filevault_filterxml_path());
             }
         }
-        else if (fsMode == FsMode.INITIAL_CONTENT_FILES_FOLDERS) {
+        else if (fsMode == FsMode.FILES_FOLDERS) {
             overlayParentResourceProvider = true;
         }
         else if (fsMode == FsMode.INITIAL_CONTENT) {
