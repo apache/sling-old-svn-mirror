@@ -55,6 +55,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.ops4j.pax.swissbox:pax-swissbox-property", "1.8.2");
         versions.put("org.ops4j.pax.url:pax-url-classpath", "2.5.2");
         versions.put("org.ops4j.pax.url:pax-url-commons", "2.5.2");
+        versions.put("org.slf4j:log4j-over-slf4j", "1.7.24");
         versions.put("com.composum.sling.core:composum-sling-core-commons", "1.7.0");
         versions.put("com.composum.sling.core:composum-sling-core-console", "1.7.0");
         versions.put("com.composum.sling.core:composum-sling-core-jslibs", "1.7.0");
