@@ -26,9 +26,10 @@ import org.apache.maven.plugins.annotations.Parameter;
  * Install an OSGi bundle to a running Sling instance.
  * The plugin places an HTTP POST request to
  * <a href="http://felix.apache.org/documentation/subprojects/apache-felix-web-console/web-console-restful-api.html#post-requests">Felix Web Console</a>.
- * It's also possible to HTTP PUT instead of POST leveraging the <a href="https://sling.apache.org/documentation/development/repository-based-development.html">WebDAV bundle from Sling</a>.
- * Since version 2.1.8 you can also leverage the Sling POST servlet for that.
- * 
+ * It's also possible to HTTP PUT instead of POST leveraging the <a href="http://sling.apache.org/documentation/development/repository-based-development.html">WebDAV bundle from Sling</a>.
+ * Since version 2.1.8 you can also leverage the the <a href="http://sling.apache.org/documentation/bundles/manipulating-content-the-slingpostservlet-servlets-post.html">Sling POST servlet</a>
+ * for that The chosen method depends on the parameter {@link #deploymentMethod}.
+ * <br>
  * <p><strong>Intermediate Node Creation</strong></p>
  * <p>
  * For all <code>deploymentMethod</code>s except WebDAV the bundle is not directly deployed within the OSGi container,
