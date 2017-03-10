@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ValueMap;
 /**
  * This is copied from org.apache.sling.api.wrappers.ValueMapDectorator
  * to avoid dependency to latest Sling API.
+ * This can be removed when Sling API 2.17.0 or higher is referenced.
  */
 class ValueMapDecorator implements ValueMap {
 

@@ -28,6 +28,7 @@ import java.util.List;
 /**
  * This is copied from org.apache.sling.api.wrappers.impl.ObjectConverter
  * to avoid dependency to latest Sling API.
+ * This can be removed when Sling API 2.17.0 or higher is referenced.
  */
 final class ObjectConverter {
     
