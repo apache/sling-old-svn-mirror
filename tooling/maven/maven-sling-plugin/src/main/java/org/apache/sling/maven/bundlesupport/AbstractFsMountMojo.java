@@ -94,7 +94,7 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
             return;
         }
         
-        throw new MojoFailureException("No Bundle with initial content or FileVault content package found.");
+        getLog().info("No Bundle with initial content or FileVault content package found - skipping.");
     }
 
     @SuppressWarnings("unchecked")
