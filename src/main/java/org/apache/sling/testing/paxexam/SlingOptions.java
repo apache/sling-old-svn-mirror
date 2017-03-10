@@ -872,7 +872,8 @@ public class SlingOptions {
                 .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
                 .put("localIndexDir", localIndexDir)
-                .asOption()
+                .asOption(),
+            mavenBundle().groupId("org.slf4j").artifactId("log4j-over-slf4j").version(versionResolver) // OAK-5921
         );
     }
 
