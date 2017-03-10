@@ -42,7 +42,7 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 
 /**
- * Test events when changing filesystem content (FileVault XML).
+ * Test events when changing file system content (FileVault XML).
  */
 public class FileVaultFileMonitorTest {
     

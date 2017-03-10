@@ -42,7 +42,7 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 
 /**
- * Test events when changing filesystem content (Sling-Initial-Content).
+ * Test events when changing file system content (Sling-Initial-Content).
  */
 public class FileMonitorTest {
 
