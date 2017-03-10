@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
- * Stops the running launchpad instances.
+ * Stop one or multiple running launchpad instance(s).
  *
  */
 @Mojo(

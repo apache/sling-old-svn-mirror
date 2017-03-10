@@ -43,7 +43,7 @@ import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
- * Create a mvn repository structure from the artifacts
+ * Create a Maven repository structure from the referenced artifacts in the model.
  */
 @Mojo(
         name = "repository",
