@@ -35,6 +35,8 @@ import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounte
 
 /**
  * Uninstall an OSGi bundle from a running Sling instance.
+ * The plugin uninstalles a bundle via a HTTP <code>POST</code> request.
+ * It's also possible to use HTTP <code>DELETE</code> instead of <code>POST</code> for WebDAV.
  */
 @Mojo(name = "uninstall")
 public class BundleUninstallMojo extends AbstractBundleInstallMojo {

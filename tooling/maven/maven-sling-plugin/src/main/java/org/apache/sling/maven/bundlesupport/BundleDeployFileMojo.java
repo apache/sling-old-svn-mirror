@@ -25,8 +25,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Deploy a JAR representing an OSGi Bundle. This method posts the bundle built
- * by maven to an OSGi Bundle Repository accepting the bundle. The plugin uses
+ * Deploy a JAR representing an OSGi Bundle to a Sling OSGi Bundle Repository.
+ * This method posts the bundle referenced via <code>sling.file</code>
+ * to an OSGi Bundle Repository accepting the bundle. The plugin uses
  * a <em>multipart/format-data</em> POST request to just post the file to
  * the URL configured in the <code>obr</code> property. 
  */

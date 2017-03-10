@@ -37,8 +37,7 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
- * Plugin to validate resources:
- * - validate json files
+ * The <code>validate</code> goal checks the JSON code of a bundle.
  */
 @Mojo(name = "validate", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class ValidationMojo extends AbstractMojo {
@@ -50,13 +49,14 @@ public class ValidationMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
-     * Whether to skip the validation
+     * Whether to skip the validation. 
      */
     @Parameter(property = "sling.validation.skip", defaultValue = "false", required = true)
     private boolean skip;
 
     /**
-     * Whether to skip the json validation
+     * Whether to skip the json validation.
+     * At the time, there's no difference between <code>skip</code> and <code>skipJson</code> because only JSON files will be validated by now.
      */
     @Parameter(property = "sling.validation.skipJson", defaultValue = "false", required = true)
     private boolean skipJson;
