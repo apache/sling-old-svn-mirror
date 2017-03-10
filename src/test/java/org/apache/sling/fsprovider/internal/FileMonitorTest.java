@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Test events when changing filesystem content (Sling-Initial-Content).
+ * Test events when changing file system content (Sling-Initial-Content).
  */
 public class FileMonitorTest {
 
