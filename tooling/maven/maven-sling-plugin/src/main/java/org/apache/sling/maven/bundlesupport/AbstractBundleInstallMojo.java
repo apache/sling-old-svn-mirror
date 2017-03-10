@@ -117,7 +117,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     private boolean refreshPackages;
 
     /**
-     * Whether to add the mapping for the fs provider
+     * Whether to add the mapping for the
+     * <a href="https://sling.apache.org/documentation/bundles/accessing-filesystem-resources-extensions-fsresource.html">Apache Sling File System Resource Provider</a>.
      */
     @Parameter(property="sling.mountByFS", defaultValue = "false", required = true)
     private boolean mountByFS;
