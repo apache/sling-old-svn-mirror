@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapUtil;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 /**
