@@ -31,7 +31,7 @@ import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
- * Attaches the model as a project artifact.
+ * Attach the model as a project artifact.
  */
 @Mojo(
         name = "attach-slingfeature",

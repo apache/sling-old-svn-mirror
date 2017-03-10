@@ -39,7 +39,7 @@ import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.io.ModelArchiveWriter;
 
 /**
- * Attaches the model archive as a project artifact.
+ * Attach the model archive as a project artifact.
  */
 @Mojo(
         name = "attach-modelarchive",

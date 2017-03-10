@@ -67,7 +67,7 @@ import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
- * Prepare the sling start applications.
+ * Prepare the packaging of the Sling quickstart artifact (either JAR or WAR).
  */
 @Mojo(
         name = "prepare-package",

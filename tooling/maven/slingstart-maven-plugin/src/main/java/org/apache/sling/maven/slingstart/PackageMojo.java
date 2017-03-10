@@ -33,8 +33,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 
 /**
- * Initialize a Sling application project by extracting bundles into the correct
- * locations.
+ * Create a Sling quickstart package (either JAR or WAR) based on the referenced model.
  */
 @Mojo(
         name = "package",
