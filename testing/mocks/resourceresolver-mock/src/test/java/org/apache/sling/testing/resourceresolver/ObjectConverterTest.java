@@ -33,7 +33,7 @@ import java.util.TimeZone;
 import org.junit.Test;
 
 /**
- * This is copied from org.apache.sling.testing.resourceresolver.ObjectConverterTest
+ * This is copied from org.apache.sling.api.wrappers.impl.ObjectConverterTest
  */
 public class ObjectConverterTest {
     

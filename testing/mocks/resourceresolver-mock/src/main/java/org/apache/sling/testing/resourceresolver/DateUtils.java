@@ -26,6 +26,7 @@ import org.apache.jackrabbit.util.ISO8601;
 /**
  * This is copied from org.apache.sling.api.wrappers.impl.DateUtils
  * to avoid dependency to latest Sling API.
+ * This can be removed when Sling API 2.17.0 or higher is referenced.
  */
 final class DateUtils {
     
