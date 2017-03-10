@@ -79,7 +79,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-scm-publish-plugin</artifactId>
-                <version>1.1</version>
                 <configuration>
                     <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
                     <tryUpdate>true</tryUpdate>
