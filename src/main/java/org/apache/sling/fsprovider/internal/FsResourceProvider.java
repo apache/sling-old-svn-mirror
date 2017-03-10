@@ -18,13 +18,14 @@
  */
 package org.apache.sling.fsprovider.internal;
 
+import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.Predicate;

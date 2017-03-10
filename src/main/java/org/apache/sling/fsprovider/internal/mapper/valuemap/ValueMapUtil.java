@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fsprovider.internal.mapper;
+package org.apache.sling.fsprovider.internal.mapper.valuemap;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-final class ValueMapUtil {
+public final class ValueMapUtil {
     
     private ValueMapUtil() {
         // static methods only

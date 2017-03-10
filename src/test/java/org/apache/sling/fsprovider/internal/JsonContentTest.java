@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -138,6 +139,7 @@ public class JsonContentTest {
         assertEquals(true, props.get("booleanProp", false));
         assertEquals((Long)1234567890123L, props.get("longProp", Long.class));
         assertEquals((Double)1.2345d, props.get("decimalProp", Double.class), 0.00001d);
+        assertEquals(new BigDecimal("1.2345"), props.get("decimalProp", BigDecimal.class));
         
         assertArrayEquals(new String[] { "aa", "bb", "cc" }, props.get("stringPropMulti", String[].class));
         assertArrayEquals(new Long[] { 1234567890123L, 55L }, props.get("longPropMulti", Long[].class));
@@ -162,8 +164,9 @@ public class JsonContentTest {
         assertEquals(true, node.getProperty("booleanProp").getBoolean());
         assertEquals(PropertyType.LONG, node.getProperty("longProp").getType());
         assertEquals(1234567890123L, node.getProperty("longProp").getLong());
-        assertEquals(PropertyType.DOUBLE, node.getProperty("decimalProp").getType());
+        assertEquals(PropertyType.DECIMAL, node.getProperty("decimalProp").getType());
         assertEquals(1.2345d, node.getProperty("decimalProp").getDouble(), 0.00001d);
+        assertEquals(new BigDecimal("1.2345"), node.getProperty("decimalProp").getDecimal());
         
         assertEquals(PropertyType.STRING, node.getProperty("stringPropMulti").getType());
         assertTrue(node.getProperty("stringPropMulti").isMultiple());
