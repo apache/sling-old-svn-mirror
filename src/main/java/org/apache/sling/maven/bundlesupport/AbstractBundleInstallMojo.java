@@ -78,7 +78,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      *  <li><strong>WebDAV</strong>, uses <a href="https://sling.apache.org/documentation/development/repository-based-development.html">
      *  WebDAV</a> for deployment (HTTP PUT). Make sure that {@link #slingUrl} points to the entry path of 
      *  the Sling WebDAV bundle (usually below regular Sling root URL). Issues a HTTP Delete for the uninstall goal.
-     *  <li><strong>SlingPostServlet</strong>, uses the Sling Post Servlet for deployment (HTTP POST).
+     *  <li><strong>SlingPostServlet</strong>, uses the
+     *  <a href="https://sling.apache.org/documentation/bundles/manipulating-content-the-slingpostservlet-servlets-post.html">Sling Post Servlet</a> for deployment (HTTP POST).
      *  Make sure that {@link #slingUrl} points a path which is handled by the Sling POST Servlet (usually below regular Sling root URL).</li>
      * </ol>
      * 
@@ -94,8 +95,9 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     protected String mimeType;
 
     /**
-     * The startlevel for the uploaded bundle. Only applies when POSTing to
-     * Felix Web Console.
+     * The start level to set on the installed bundle. If the bundle is already installed and therefore is only 
+     * updated this parameter is ignored. The parameter is also ignored if the running Sling instance has no 
+     * StartLevel service (which is unusual actually). Only applies when POSTing to Felix Web Console.
      */
     @Parameter(property="sling.bundle.startlevel", defaultValue = "20", required = true)
     private String bundleStartLevel;
