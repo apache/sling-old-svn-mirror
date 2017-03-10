@@ -23,6 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.UUID;
@@ -85,12 +86,12 @@ public class JcrXmlValueConverterTest {
 
     @Test
     public void testDouble() {
-        assertEquals(1.234d, parseValue(NAME, "{Decimal}1.234"));
+        assertEquals(new BigDecimal("1.234"), parseValue(NAME, "{Decimal}1.234"));
     }
 
     @Test
     public void testDoubleArray() {
-        assertArrayEquals(new Object[] { 1.234d, 2.345d }, (Object[]) parseValue(NAME, "{Decimal}[1.234,2.345]"));
+        assertArrayEquals(new Object[] { new BigDecimal("1.234"), new BigDecimal("2.345") }, (Object[]) parseValue(NAME, "{Decimal}[1.234,2.345]"));
     }
 
     @Test

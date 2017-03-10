@@ -113,7 +113,7 @@ public final class JsonContentFileParser implements ContentFileParser {
                     return numberValue.longValue();
                 }
                 else {
-                    return numberValue.doubleValue();
+                    return numberValue.bigDecimalValue();
                 }
             case TRUE:
                 return true;

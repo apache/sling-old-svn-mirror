@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.TimeZone;
@@ -75,7 +76,7 @@ public class JcrXmlContentFileParserTest {
         assertEquals("en", props.get("jcr:title"));
         assertEquals(true, props.get("includeAside"));
         assertEquals((Long)1234567890123L, props.get("longProp"));
-        assertEquals((Double)1.2345d, (Double)props.get("decimalProp"), 0.00001d);
+        assertEquals(new BigDecimal("1.2345"), props.get("decimalProp"));
         
         assertArrayEquals(new String[] { "aa", "bb", "cc" }, (String[])props.get("stringPropMulti"));
         assertArrayEquals(new Long[] { 1234567890123L, 55L }, (Long[])props.get("longPropMulti"));
