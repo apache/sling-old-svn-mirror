@@ -114,14 +114,14 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         @AttributeDefinition(name = "Filesystem layout",
                 description = "Filesystem layout mode for files, folders and content.",
                 options={
-                        @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
-                                + "Sling-Initial-Content filesystem layout, supports file and folders ant content files in JSON and jcr.xml format"),
                         @Option(value="FILES_FOLDERS", label="FILES_FOLDERS - "
                                 + "Support only files and folders (classic mode)"),
+                        @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
+                                + "Sling-Initial-Content filesystem layout, supports file and folders ant content files in JSON and jcr.xml format"),
                         @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
                                 + "FileVault XML format (expanded content package)"),
                 })
-        FsMode provider_fs_mode() default FsMode.INITIAL_CONTENT;
+        FsMode provider_fs_mode() default FsMode.FILES_FOLDERS;
         
         @AttributeDefinition(name = "Init. Content Options",
                 description = "Import options for Sling-Initial-Content filesystem layout. Supported options: overwrite, ignoreImportProviders.")
