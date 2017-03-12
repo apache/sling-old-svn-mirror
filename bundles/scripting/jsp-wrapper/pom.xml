@@ -73,7 +73,7 @@
       <groupId>org.apache.tomcat</groupId>
       <artifactId>jsp-api</artifactId>
       <version>6.0.14</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
