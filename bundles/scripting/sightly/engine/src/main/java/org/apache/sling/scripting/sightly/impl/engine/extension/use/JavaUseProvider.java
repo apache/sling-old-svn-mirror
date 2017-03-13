@@ -28,8 +28,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.impl.engine.ResourceBackedPojoChangeMonitor;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -39,8 +39,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
-import org.osgi.service.metatype.annotations.Designate;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,50 +87,39 @@ public class JavaUseProvider implements UseProvider {
 
         Object result;
         try {
-            LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
-            Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
-            if (resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(identifier) > 0) {
-                // the object is a POJO that was changed in the repository but not recompiled;
-                LOG.debug("Class {} is available in the classloader cache but it needs to be recompiled.", identifier);
-                result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
+            result = sightlyJavaCompilerService.getResourceBackedUseObject(renderContext, identifier);
+            if (result != null) {
                 if (result instanceof Use) {
                     ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
                 }
-                return ProviderOutcome.success(result);
-            }
-            // attempt OSGi service load
-            result = sling.getService(cls);
-            if (result != null) {
-                return ProviderOutcome.success(result);
-            }
-            result = request.adaptTo(cls);
-            if (result == null) {
-                Resource resource = BindingsUtils.getResource(globalBindings);
-                result = resource.adaptTo(cls);
-            }
-            if (result != null) {
                 return ProviderOutcome.success(result);
             } else {
-                /**
-                 * the object was cached by the class loader but it's not adaptable from {@link Resource} or {@link
-                 * SlingHttpServletRequest}; attempt to load it like a regular POJO that optionally could implement {@link Use}
-                 */
-                result = cls.newInstance();
-                if (result instanceof Use) {
-                    ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
+                LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
+                Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
+                // attempt OSGi service load
+                result = sling.getService(cls);
+                if (result != null) {
+                    return ProviderOutcome.success(result);
                 }
-                return ProviderOutcome.notNullOrFailure(result);
+                result = request.adaptTo(cls);
+                if (result == null) {
+                    Resource resource = BindingsUtils.getResource(globalBindings);
+                    result = resource.adaptTo(cls);
+                }
+                if (result != null) {
+                    return ProviderOutcome.success(result);
+                } else {
+                    /*
+                     * the object was cached by the class loader but it's not adaptable from {@link Resource} or {@link
+                     * SlingHttpServletRequest}; attempt to load it like a regular POJO that optionally could implement {@link Use}
+                     */
+                    result = cls.newInstance();
+                    if (result instanceof Use) {
+                        ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
+                    }
+                    return ProviderOutcome.notNullOrFailure(result);
+                }
             }
-        } catch (ClassNotFoundException e) {
-            /**
-             * this object is either not exported from a bundle, or it's a POJO from the repository that wasn't loaded before
-             */
-            LOG.debug("Class {} was not found in the classloader cache.", identifier);
-            result = sightlyJavaCompilerService.getInstance(renderContext, identifier);
-            if (result instanceof Use) {
-                ((Use) result).init(BindingsUtils.merge(globalBindings, arguments));
-            }
-            return ProviderOutcome.success(result);
         } catch (Exception e) {
             // any other exception is an error
             return ProviderOutcome.failure(e);

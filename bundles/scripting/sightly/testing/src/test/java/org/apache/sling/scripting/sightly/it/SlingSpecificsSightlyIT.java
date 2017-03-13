@@ -28,6 +28,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.sling.testing.clients.util.FormEntityBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -220,6 +221,27 @@ public class SlingSpecificsSightlyIT {
     }
 
     @Test
+    public void testRepositoryPojoUpdateDirty() throws Exception {
+        String url = launchpadURL + SLING_JAVA_USE_POJO_UPDATE;
+        String pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+
+        uploadFile("RepoPojo.java.updated", "RepoPojo.java", "/apps/sightly/scripts/use");
+        Thread.sleep(1000);
+        restartSightlyEngineBundle();
+
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("updated", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+
+        uploadFile("RepoPojo.java.original", "RepoPojo.java", "/apps/sightly/scripts/use");
+        Thread.sleep(1000);
+        restartSightlyEngineBundle();
+
+        pageContent = client.getStringContent(url, 200);
+        assertEquals("original", HTMLExtractor.innerHTML(url + System.currentTimeMillis(), pageContent, "#repopojo"));
+    }
+
+    @Test
     public void testScriptUpdate() throws Exception {
         String url = launchpadURL + SLING_SCRIPT_UPDATE;
         String pageContent = client.getStringContent(url, 200);
@@ -333,6 +355,25 @@ public class SlingSpecificsSightlyIT {
         assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#nbsp"));
         assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#tab"));
         assertEquals("true", HTMLExtractor.innerHTML(url, pageContent, "#newline"));
+    }
+
+    private void restartSightlyEngineBundle() throws InterruptedException, IOException {
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(launchpadURL + "/system/console/bundles/org.apache.sling.scripting.sightly");
+        // Stop bundle
+        FormEntityBuilder formBuilder = FormEntityBuilder.create();
+        post.setHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        formBuilder.addParameter("action", "stop");
+        post.setEntity(formBuilder.build());
+        httpClient.execute(post);
+        Thread.sleep(1000);
+        // Start bundle
+        formBuilder = FormEntityBuilder.create();
+        post.setHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        formBuilder.addParameter("action", "start");
+        post.setEntity(formBuilder.build());
+        httpClient.execute(post);
+        Thread.sleep(1000);
     }
 
     private void uploadFile(String fileName, String serverFileName, String url) throws IOException {

@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
@@ -36,6 +37,7 @@ import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider
 import org.apache.sling.scripting.sightly.impl.engine.ResourceBackedPojoChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -52,85 +54,136 @@ public class SightlyJavaCompilerServiceTest {
 
     private SightlyJavaCompilerService compiler;
     private ResourceBackedPojoChangeMonitor resourceBackedPojoChangeMonitor;
+    private ClassLoaderWriter classLoaderWriter;
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
 
     @Before
     public void setUp() throws Exception {
-        compiler = new SightlyJavaCompilerService();
+        compiler = spy(new SightlyJavaCompilerService());
         resourceBackedPojoChangeMonitor = spy(new ResourceBackedPojoChangeMonitor());
         SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
+        when(sightlyEngineConfiguration.getBundleSymbolicName()).thenReturn("org.apache.sling.scripting.sightly");
+        when(sightlyEngineConfiguration.getScratchFolder()).thenReturn("/org/apache/sling/scripting/sightly");
         Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
         Whitebox.setInternalState(compiler, "resourceBackedPojoChangeMonitor", resourceBackedPojoChangeMonitor);
+        classLoaderWriter = Mockito.mock(ClassLoaderWriter.class);
+        ClassLoader classLoader = Mockito.mock(ClassLoader.class);
+        when(classLoaderWriter.getClassLoader()).thenReturn(classLoader);
     }
 
     @After
     public void tearDown() throws Exception {
         compiler = null;
         resourceBackedPojoChangeMonitor = null;
+        classLoaderWriter = null;
     }
 
     @Test
-    /**
-     * Tests that class names whose packages contain underscores are correctly expanded to JCR paths containing symbols that might be
-     * replaced with an underscores in order to obey Java naming conventions.
-     */
-    public void testGetInstanceForPojoFromRepoWithAmbigousPath() throws Exception {
-        String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
-        String className = "apps.my_project.test_components.a.Pojo";
-        getInstancePojoTest(pojoPath, className);
-    }
-
-    @Test
-    /**
-     * Tests that class names whose package names don't contain underscores are correctly expanded to JCR paths.
-     */
-    public void testGetInstanceForPojoFromRepo() throws Exception {
+    public void testDiskCachedUseObject() throws Exception {
         String pojoPath = "/apps/myproject/testcomponents/a/Pojo.java";
         String className = "apps.myproject.testcomponents.a.Pojo";
-        getInstancePojoTest(pojoPath, className);
+        scriptingResourceResolverProvider = Mockito.mock(ScriptingResourceResolverProvider.class);
+        ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
+        when(scriptingResourceResolverProvider.getRequestScopedResourceResolver()).thenReturn(resolver);
+        Resource pojoResource = Mockito.mock(Resource.class);
+        when(pojoResource.getPath()).thenReturn(pojoPath);
+        ResourceMetadata mockMetadata = Mockito.mock(ResourceMetadata.class);
+        when(mockMetadata.getModificationTime()).thenReturn(1l);
+        when(pojoResource.getResourceMetadata()).thenReturn(mockMetadata);
+        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY", "UTF-8"));
+        when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
+        when(classLoaderWriter.getLastModified("/apps/myproject/testcomponents/a/Pojo.class")).thenReturn(2l);
+        getInstancePojoTest(className);
+        /*
+         * assuming the compiled class has a last modified date greater than the source, then the compiler should not recompile the Use
+         * object
+         */
+        verify(compiler, never()).compileSource(any(SourceIdentifier.class), anyString());
     }
 
     @Test
-    public void testGetInstanceForCachedPojoFromRepo() throws Exception {
-        final String pojoPath = "/apps/my-project/test_components/a/Pojo.java";
-        final String className = "apps.my_project.test_components.a.Pojo";
-        Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<String, Long>() {{
-            put(className, System.currentTimeMillis());
-        }};
-        Whitebox.setInternalState(resourceBackedPojoChangeMonitor, "slyJavaUseMap", slyJavaUseMap);
-        getInstancePojoTest(pojoPath, className);
-        verify(resourceBackedPojoChangeMonitor).clearJavaUseObject(className);
-    }
-
-    private void getInstancePojoTest(String pojoPath, String className) throws Exception {
-        RenderContextImpl renderContext = Mockito.mock(RenderContextImpl.class);
-        ScriptingResourceResolverProvider scriptingResourceResolverProvider = Mockito.mock(ScriptingResourceResolverProvider.class);
-        Resource pojoResource = Mockito.mock(Resource.class);
-        when(pojoResource.getPath()).thenReturn(pojoPath);
+    public void testObsoleteDiskCachedUseObject() throws Exception {
+        String pojoPath = "/apps/myproject/testcomponents/a/Pojo.java";
+        String className = "apps.myproject.testcomponents.a.Pojo";
+        scriptingResourceResolverProvider = Mockito.mock(ScriptingResourceResolverProvider.class);
         ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         when(scriptingResourceResolverProvider.getRequestScopedResourceResolver()).thenReturn(resolver);
-        when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
+        Resource pojoResource = Mockito.mock(Resource.class);
+        when(pojoResource.getPath()).thenReturn(pojoPath);
+        ResourceMetadata mockMetadata = Mockito.mock(ResourceMetadata.class);
+        when(mockMetadata.getModificationTime()).thenReturn(2l);
+        when(pojoResource.getResourceMetadata()).thenReturn(mockMetadata);
         when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY", "UTF-8"));
+        when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
+        when(classLoaderWriter.getLastModified("/apps/myproject/testcomponents/a/Pojo.class")).thenReturn(1l);
+        getInstancePojoTest(className);
+        /*
+         * assuming the compiled class has a last modified date greater than the source, then the compiler should not recompile the Use
+         * object
+         */
+        verify(compiler).compileSource(any(SourceIdentifier.class), anyString());
+    }
+
+    @Test
+    public void testMemoryCachedUseObject() throws Exception {
+        String pojoPath = "/apps/myproject/testcomponents/a/Pojo.java";
+        String className = "apps.myproject.testcomponents.a.Pojo";
+        scriptingResourceResolverProvider = Mockito.mock(ScriptingResourceResolverProvider.class);
+        ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
+        when(scriptingResourceResolverProvider.getRequestScopedResourceResolver()).thenReturn(resolver);
+        Resource pojoResource = Mockito.mock(Resource.class);
+        when(pojoResource.getPath()).thenReturn(pojoPath);
+        when(resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(pojoPath)).thenReturn(1l);
+        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY", "UTF-8"));
+        when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
+        when(classLoaderWriter.getLastModified("/apps/myproject/testcomponents/a/Pojo.class")).thenReturn(2l);
+        getInstancePojoTest(className);
+        /*
+         * assuming the compiled class has a last modified date greater than the source, then the compiler should not recompile the Use
+         * object
+         */
+        verify(compiler, never()).compileSource(any(SourceIdentifier.class), anyString());
+    }
+
+    @Test
+    public void testObsoleteMemoryCachedUseObject() throws Exception {
+        String pojoPath = "/apps/myproject/testcomponents/a/Pojo.java";
+        String className = "apps.myproject.testcomponents.a.Pojo";
+        scriptingResourceResolverProvider = Mockito.mock(ScriptingResourceResolverProvider.class);
+        ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
+        when(scriptingResourceResolverProvider.getRequestScopedResourceResolver()).thenReturn(resolver);
+        Resource pojoResource = Mockito.mock(Resource.class);
+        when(pojoResource.getPath()).thenReturn(pojoPath);
+        when(resourceBackedPojoChangeMonitor.getLastModifiedDateForJavaUseObject(pojoPath)).thenReturn(2l);
+        when(pojoResource.adaptTo(InputStream.class)).thenReturn(IOUtils.toInputStream("DUMMY", "UTF-8"));
+        when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
+        when(classLoaderWriter.getLastModified("/apps/myproject/testcomponents/a/Pojo.class")).thenReturn(1l);
+        getInstancePojoTest(className);
+        /*
+         * assuming the compiled class has a last modified date greater than the source, then the compiler should not recompile the Use
+         * object
+         */
+        verify(compiler).compileSource(any(SourceIdentifier.class), anyString());
+    }
+
+    private void getInstancePojoTest(String className) throws Exception {
+        RenderContextImpl renderContext = Mockito.mock(RenderContextImpl.class);
+
+
         JavaCompiler javaCompiler = Mockito.mock(JavaCompiler.class);
         CompilationResult compilationResult = Mockito.mock(CompilationResult.class);
         when(compilationResult.getErrors()).thenReturn(new ArrayList<CompilerMessage>());
         when(javaCompiler.compile(Mockito.any(CompilationUnit[].class), Mockito.any(Options.class))).thenReturn(compilationResult);
-        ClassLoaderWriter clw = Mockito.mock(ClassLoaderWriter.class);
-        ClassLoader classLoader = Mockito.mock(ClassLoader.class);
-        when(clw.getClassLoader()).thenReturn(classLoader);
-        when(classLoader.loadClass(className)).thenAnswer(new Answer<Object>() {
+        when(classLoaderWriter.getClassLoader().loadClass(className)).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 return MockPojo.class;
             }
         });
-        SightlyEngineConfiguration sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
-        when(sightlyEngineConfiguration.getBundleSymbolicName()).thenReturn("org.apache.sling.scripting.sightly");
-        when(sightlyEngineConfiguration.getScratchFolder()).thenReturn("/org/apache/sling/scripting/sightly");
-        Whitebox.setInternalState(compiler, "classLoaderWriter", clw);
+        Whitebox.setInternalState(compiler, "classLoaderWriter", classLoaderWriter);
         Whitebox.setInternalState(compiler, "javaCompiler", javaCompiler);
         Whitebox.setInternalState(compiler, "scriptingResourceResolverProvider", scriptingResourceResolverProvider);
-        Whitebox.setInternalState(compiler, "sightlyEngineConfiguration", sightlyEngineConfiguration);
-        Object obj = compiler.getInstance(renderContext, className);
+        Object obj = compiler.getResourceBackedUseObject(renderContext, className);
         assertTrue("Expected to obtain a " + MockPojo.class.getName() + " object.", obj instanceof MockPojo);
     }
 }

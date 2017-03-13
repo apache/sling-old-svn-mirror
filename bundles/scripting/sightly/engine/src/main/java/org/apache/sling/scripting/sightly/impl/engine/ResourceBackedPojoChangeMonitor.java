@@ -21,14 +21,12 @@ package org.apache.sling.scripting.sightly.impl.engine;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
         service = {ResourceBackedPojoChangeMonitor.class, ResourceChangeListener.class},
         property = {
                 ResourceChangeListener.PATHS + "=glob:**/*.java",
-                ResourceChangeListener.CHANGES + "=ADDED",
                 ResourceChangeListener.CHANGES + "=CHANGED",
                 ResourceChangeListener.CHANGES + "=REMOVED",
         }
@@ -53,23 +50,30 @@ public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener, 
     private SightlyEngineConfiguration sightlyEngineConfiguration = null;
 
     /**
-     * Returns the last modified date for a Java Use-API object stored in the repository.
+     * Records the usage of the Use-object available at the provided {@code path}.
      *
-     * @param className the fully qualified class name
-     * @return the Java Use-API file's last modified date or 0 if there's no information about this file
+     * @param path      the path of the Use-object
+     * @param timestamp the timestamp when the object identified by the resource from {@code path} was last modified
      */
-    public long getLastModifiedDateForJavaUseObject(String className) {
-        if (className == null) {
-            return 0;
+    public void recordLastModifiedTimestamp(String path, long timestamp) {
+        if (path == null) {
+            throw new SightlyException("Path value cannot be null.");
         }
-        Long date = slyJavaUseMap.get(className);
-        return date != null ? date : 0;
+        slyJavaUseMap.put(path, timestamp);
     }
 
-    public void clearJavaUseObject(String className) {
-        if (StringUtils.isNotEmpty(className)) {
-            slyJavaUseMap.remove(className);
+    /**
+     * Returns the last modified date for a Java Use-API object stored in the repository.
+     *
+     * @param path the {@code Resource} path of the Use-object
+     * @return the Java Use-API file's last modified date or 0 if there's no information about this file
+     */
+    public long getLastModifiedDateForJavaUseObject(String path) {
+        if (path == null) {
+            return 0;
         }
+        Long date = slyJavaUseMap.get(path);
+        return date != null ? date : 0;
     }
 
     @Override
@@ -77,14 +81,16 @@ public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener, 
         for (ResourceChange change : changes) {
             String path = change.getPath();
             ResourceChange.ChangeType changeType = change.getType();
-            SourceIdentifier sourceIdentifier = new SourceIdentifier(sightlyEngineConfiguration, path);
             switch (changeType) {
-                case ADDED:
                 case CHANGED:
-                    slyJavaUseMap.put(sourceIdentifier.getFullyQualifiedClassName(), System.currentTimeMillis());
+                    if (slyJavaUseMap.containsKey(path)) {
+                        slyJavaUseMap.put(path, System.currentTimeMillis());
+                    }
                     break;
                 case REMOVED:
-                    slyJavaUseMap.remove(sourceIdentifier.getFullyQualifiedClassName());
+                    if (slyJavaUseMap.containsKey(path)) {
+                        slyJavaUseMap.remove(path);
+                    }
                     break;
                 default:
                     break;
