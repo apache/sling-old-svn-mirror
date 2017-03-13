@@ -159,7 +159,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.jcr.jackrabbit.usermanager", "2.2.4");
         versions.put("org.apache.sling:org.apache.sling.jcr.oak.server", "1.1.3-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.registration", "1.0.2");
-        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.3-SNAPSHOT");
+        versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.4");
         versions.put("org.apache.sling:org.apache.sling.jcr.resource", "2.9.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webconsole", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.8");
@@ -179,7 +179,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.resource.inventory", "1.0.6");
         versions.put("org.apache.sling:org.apache.sling.resource.presence", "0.0.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.resourcemerger", "1.3.2");
-        versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.5.18");
+        versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.5.20");
         versions.put("org.apache.sling:org.apache.sling.rewriter", "1.2.0");
         versions.put("org.apache.sling:org.apache.sling.scripting.api", "2.1.12");
         versions.put("org.apache.sling:org.apache.sling.scripting.core", "2.0.46");
