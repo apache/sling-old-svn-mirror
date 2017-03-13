@@ -38,7 +38,8 @@
       pageTitle="Sample Site">
     <teaserbar
         jcr:primaryType="nt:unstructured"
-        sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarParsys">
+        sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarParsys"
+        teaserbaritem="test">
       <teaserbaritem
           jcr:primaryType="nt:unstructured"
           sling:resourceType="samples/sample-app/components/content/teaserbar/teaserbarItem"
