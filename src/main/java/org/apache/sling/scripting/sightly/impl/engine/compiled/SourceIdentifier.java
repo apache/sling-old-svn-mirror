@@ -39,17 +39,16 @@ import org.apache.sling.scripting.sightly.java.compiler.JavaEscapeUtils;
  */
 public class SourceIdentifier implements ClassInfo {
 
-    public static final Pattern MANGLED_CHAR_PATTERN = Pattern.compile("(.*)(__[0-9a-f]{4}__)(.*)");
-
+    private static final Pattern MANGLED_CHAR_PATTERN = Pattern.compile("(.*)(__[0-9a-f]{4}__)(.*)");
     private SightlyEngineConfiguration engineConfiguration;
     private String scriptName;
     private String simpleClassName;
     private String packageName;
     private String fullyQualifiedClassName;
 
-    public SourceIdentifier(SightlyEngineConfiguration engineConfiguration, String scriptName) {
+    public SourceIdentifier(SightlyEngineConfiguration engineConfiguration, String resourcePath) {
         this.engineConfiguration = engineConfiguration;
-        this.scriptName = scriptName;
+        this.scriptName = resourcePath;
     }
 
     @Override
@@ -98,6 +97,15 @@ public class SourceIdentifier implements ClassInfo {
         return fullyQualifiedClassName;
     }
 
+    /**
+     * Given a {@code fullyQualifiedClassName} and optionally a sub-package that should be stripped ({@code slashSubpackage}), this
+     * method will try to locate a {@code Resource} in the repository that provides the source code for the Java class.
+     *
+     * @param resolver                a resource resolver with access to the script paths
+     * @param slashSubpackage         an optional sub-package that will be stripped from the {@code fullyQualifiedClassName}
+     * @param fullyQualifiedClassName the FQCN
+     * @return the {@code Resource} backing the class, or {@code null} if one cannot be found
+     */
     public static Resource getPOJOFromFQCN(ResourceResolver resolver, String slashSubpackage, String fullyQualifiedClassName) {
         String className = fullyQualifiedClassName;
         StringBuilder pathElements = new StringBuilder("/");
@@ -151,9 +159,9 @@ public class SourceIdentifier implements ClassInfo {
      * the {@code originalPath}
      */
     private static Set<String> getPossiblePojoPaths(String originalPath) {
-        Set<String> possiblePaths = new LinkedHashSet<String>();
+        Set<String> possiblePaths = new LinkedHashSet<>();
         possiblePaths.add(originalPath);
-        Map<Integer, String> chars = new HashMap<Integer, String>();
+        Map<Integer, String> chars = new HashMap<>();
         AmbiguousPathSymbol[] symbols = AmbiguousPathSymbol.values();
         for (AmbiguousPathSymbol symbol : symbols) {
             String pathCopy = originalPath.substring(0, originalPath.lastIndexOf("/"));
@@ -171,7 +179,7 @@ public class SourceIdentifier implements ClassInfo {
             }
         }
         if (chars.size() > 0) {
-            ArrayList<AmbiguousPathSymbol[]> possibleArrangements = new ArrayList<AmbiguousPathSymbol[]>();
+            ArrayList<AmbiguousPathSymbol[]> possibleArrangements = new ArrayList<>();
             populateArray(possibleArrangements, new AmbiguousPathSymbol[chars.size()], 0);
             Integer[] indexes = chars.keySet().toArray(new Integer[chars.size()]);
             for (AmbiguousPathSymbol[] arrangement : possibleArrangements) {
