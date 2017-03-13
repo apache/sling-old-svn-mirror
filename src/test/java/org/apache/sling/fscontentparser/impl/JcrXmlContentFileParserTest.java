@@ -37,6 +37,7 @@ import org.apache.sling.fscontentparser.ContentFileParserFactory;
 import org.apache.sling.fscontentparser.ParseException;
 import org.apache.sling.fscontentparser.ParserOptions;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -113,6 +114,16 @@ public class JcrXmlContentFileParserTest {
         assertNull(props.get("teaserbar"));
         assertNull(props.get("aside"));
         assertNotNull(props.get("content"));
+    }
+
+    @Test
+    @Ignore
+    public void testSameNamePropertyAndSubResource() throws Exception {
+        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+        Map<String,Object> content = underTest.parse(file);
+        Map<String,Object> props = getDeep(content, "jcr:content/teaserbar");
+        // teaserbaritem is a direct property as well as a sub resource
+        assertEquals("test", props.get("teaserbaritem"));
     }
 
 }
