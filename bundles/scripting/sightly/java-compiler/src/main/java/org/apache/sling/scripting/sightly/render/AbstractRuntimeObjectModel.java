@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.sling.scripting.sightly.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,11 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
 
     @Override
     public boolean isNumber(Object target) {
-        return (target instanceof Number);
+        if (target == null) {
+            return false;
+        }
+        String value = toString(target);
+        return NumberUtils.isNumber(value);
     }
 
     @Override
@@ -102,10 +107,12 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
 
     @Override
     public Number toNumber(Object object) {
-        if (object instanceof Number) {
-            return (Number) object;
+        String stringValue = toString(object);
+        try {
+            return NumberUtils.createNumber(stringValue);
+        } catch (NumberFormatException e) {
+            return null;
         }
-        return null;
     }
 
     public Date toDate(Object object) {
