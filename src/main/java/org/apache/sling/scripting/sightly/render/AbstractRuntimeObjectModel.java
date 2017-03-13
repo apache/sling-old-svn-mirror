@@ -79,6 +79,9 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
         if (target == null) {
             return false;
         }
+        if (target instanceof Number) {
+            return true;
+        }
         String value = toString(target);
         return NumberUtils.isNumber(value);
     }
@@ -107,6 +110,12 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
 
     @Override
     public Number toNumber(Object object) {
+        if (object == null) {
+            return null;
+        }
+        if (object instanceof Number) {
+            return (Number) object;
+        }
         String stringValue = toString(object);
         try {
             return NumberUtils.createNumber(stringValue);
