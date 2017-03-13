@@ -79,8 +79,11 @@ public class FormatFilterExtension implements RuntimeExtension {
             Locale locale = getLocale(runtimeObjectModel, options);
             return formatNumber(source, runtimeObjectModel.toNumber(formatObject), locale);
         }
-        Object[] params = decodeParams(runtimeObjectModel, formatObject);
-        return formatString(runtimeObjectModel, source, params);
+        if (hasPlaceHolders) {
+            Object[] params = decodeParams(runtimeObjectModel, formatObject);
+            return formatString(runtimeObjectModel, source, params);
+        }
+        return null;
     }
 
     private Locale getLocale(RuntimeObjectModel runtimeObjectModel, Map<String, Object> options) {
