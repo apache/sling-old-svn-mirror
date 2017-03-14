@@ -18,9 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,6 +49,7 @@ import org.apache.sling.resourcebuilder.impl.ResourceBuilderFactoryService;
 import org.apache.sling.scripting.core.impl.BindingsValuesProvidersByContextImpl;
 import org.apache.sling.scripting.core.impl.ScriptEngineManagerFactory;
 import org.apache.sling.settings.SlingSettingsService;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -65,10 +63,6 @@ import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -86,8 +80,6 @@ public class SlingContextImpl extends OsgiContextImpl {
     static final Set<String> DEFAULT_RUN_MODES = ImmutableSet.<String> builder().add("publish").build();
 
     private static final String RESOURCERESOLVERFACTORYACTIVATOR_PID = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl";
-    
-    private static final Logger log = LoggerFactory.getLogger(SlingContextImpl.class);
     
     protected ResourceResolverFactory resourceResolverFactory;
     protected ResourceResolverType resourceResolverType;
@@ -123,23 +115,7 @@ public class SlingContextImpl extends OsgiContextImpl {
         
         if (this.resourceResolverFactoryActivatorProps != null) {
             // use OSGi ConfigurationAdmin to pass over customized configuration to Resource Resolver Factory Activator service
-            ConfigurationAdmin configAdmin = getService(ConfigurationAdmin.class);
-            if (configAdmin == null) {
-              log.warn("ConfigAdmin not found in osgi-mock context - please make sure osgi-mock 1.7.0 or higher is used.");
-            }
-            else {
-              try {
-                Configuration resourceResolverFactoryActivatorConfig = configAdmin.getConfiguration(RESOURCERESOLVERFACTORYACTIVATOR_PID);
-                Dictionary<String, Object> props = new Hashtable<String, Object>();
-                for (Map.Entry<String, Object> item : this.resourceResolverFactoryActivatorProps.entrySet()) {
-                    props.put(item.getKey(), item.getValue());
-                }
-                resourceResolverFactoryActivatorConfig.update(props);
-              }
-              catch (IOException ex) {
-                throw new RuntimeException(ex);
-              }
-            }
+            MockOsgi.setConfigForPid(bundleContext(), RESOURCERESOLVERFACTORYACTIVATOR_PID, this.resourceResolverFactoryActivatorProps);
         }
         
         this.resourceResolverFactory = newResourceResolverFactory();
