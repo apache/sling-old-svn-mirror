@@ -16,33 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
+/**
+ * Parses repository content from a file.
+ * Implementations have to be thread-safe.
+ */
+public interface ContentParser {
 
-public final class TestUtils {
+    /**
+     * Parse content file.
+     * @param file File
+     * @return Content
+     * @throws IOException When I/O error occurs.
+     * @throws ParseException When parsing error occurs.
+     */
+    Map<String,Object> parse(File file) throws IOException, ParseException;
     
-    private TestUtils() {
-        // static methods only
-    }
+    /**
+     * Parse content.
+     * @param is Stream with serialized content
+     * @return Content as Map
+     * @throws IOException When I/O error occurs.
+     * @throws ParseException When parsing error occurs.
+     */
+    Map<String,Object> parse(InputStream is) throws IOException, ParseException;
 
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> getDeep(Map<String, Object> map, String path) {
-      String name = StringUtils.substringBefore(path, "/");
-      Object object = map.get(name);
-      if (object == null || !(object instanceof Map)) {
-        return null;
-      }
-      String remainingPath = StringUtils.substringAfter(path, "/");
-      Map<String, Object> childMap = (Map<String, Object>)object;
-      if (StringUtils.isEmpty(remainingPath)) {
-        return childMap;
-      }
-      else {
-        return getDeep(childMap, remainingPath);
-      }
-    }
-    
 }

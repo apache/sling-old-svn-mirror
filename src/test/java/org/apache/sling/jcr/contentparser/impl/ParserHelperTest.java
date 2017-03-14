@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
-import static org.apache.sling.fscontentparser.ParserOptions.DEFAULT_PRIMARY_TYPE;
-import static org.apache.sling.fscontentparser.impl.ParserHelper.JCR_PRIMARYTYPE;
+import static org.apache.sling.jcr.contentparser.ParserOptions.DEFAULT_PRIMARY_TYPE;
+import static org.apache.sling.jcr.contentparser.impl.ParserHelper.JCR_PRIMARYTYPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,8 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.sling.fscontentparser.ParseException;
-import org.apache.sling.fscontentparser.ParserOptions;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;

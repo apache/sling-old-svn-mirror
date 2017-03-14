@@ -16,43 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser;
+package org.apache.sling.jcr.contentparser;
 
-import org.apache.sling.fscontentparser.impl.JcrXmlContentFileParser;
-import org.apache.sling.fscontentparser.impl.JsonContentFileParser;
+import org.apache.sling.jcr.contentparser.impl.JcrXmlContentParser;
+import org.apache.sling.jcr.contentparser.impl.JsonContentParser;
 
 /**
  * Factory for content file parsers.
  */
-public final class ContentFileParserFactory {
+public final class ContentParserFactory {
 
-    private ContentFileParserFactory() {
+    private ContentParserFactory() {
         // static methods only
     }
     
     /**
-     * Create content file parser.
-     * @param type Content file type
-     * @return Content file parser
+     * Create content parser.
+     * @param type Content type
+     * @return Content parser
      */
-    public static ContentFileParser create(ContentFileType type) {
+    public static ContentParser create(ContentType type) {
         return create(type, new ParserOptions());
     }
     
     /**
-     * Create content file parser.
-     * @param type Content file type
+     * Create content parser.
+     * @param type Content type
      * @param options Parser options
-     * @return Content file parser
+     * @return Content parser
      */
-    public static ContentFileParser create(ContentFileType type, ParserOptions options) {
+    public static ContentParser create(ContentType type, ParserOptions options) {
         switch (type) {
             case JSON:
-                return new JsonContentFileParser(options);
+                return new JsonContentParser(options);
             case JCR_XML:
-                return new JcrXmlContentFileParser(options);
+                return new JcrXmlContentParser(options);
             default:
-                throw new IllegalArgumentException("Unsupported file extension: " + type);
+                throw new IllegalArgumentException("Unsupported type: " + type);
         }
     }
     

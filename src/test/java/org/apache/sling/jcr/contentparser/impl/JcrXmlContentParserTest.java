@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
-import static org.apache.sling.fscontentparser.impl.TestUtils.getDeep;
+import static org.apache.sling.jcr.contentparser.impl.TestUtils.getDeep;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,18 +31,18 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.fscontentparser.ContentFileType;
-import org.apache.sling.fscontentparser.ContentFileParser;
-import org.apache.sling.fscontentparser.ContentFileParserFactory;
-import org.apache.sling.fscontentparser.ParseException;
-import org.apache.sling.fscontentparser.ParserOptions;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ContentParserFactory;
+import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class JcrXmlContentFileParserTest {
+public class JcrXmlContentParserTest {
 
     private File file;
 
@@ -54,7 +54,7 @@ public class JcrXmlContentFileParserTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testParseJcrXml() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
         Map<String,Object> content = underTest.parse(file);
         assertNotNull(content);
         assertEquals("app:Page", content.get("jcr:primaryType"));
@@ -64,13 +64,13 @@ public class JcrXmlContentFileParserTest {
     @Test(expected=ParseException.class)
     public void testParseInvalidJcrXml() throws Exception {
         file = new File("src/test/resources/invalid-test/invalid.jcr.xml");
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
         underTest.parse(file);
     }
 
     @Test
     public void testDataTypes() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
         Map<String,Object> content = underTest.parse(file);
         Map<String,Object> props = getDeep(content, "jcr:content");
         
@@ -95,13 +95,13 @@ public class JcrXmlContentFileParserTest {
 
     @Test
     public void testDecodeName() {
-        assertEquals("jcr:title", JcrXmlContentFileParser.decodeName("jcr:" + ISO9075.encode("title")));
-        assertEquals("sling:123", JcrXmlContentFileParser.decodeName("sling:" + ISO9075.encode("123")));
+        assertEquals("jcr:title", JcrXmlContentParser.decodeName("jcr:" + ISO9075.encode("title")));
+        assertEquals("sling:123", JcrXmlContentParser.decodeName("sling:" + ISO9075.encode("123")));
     }
 
     @Test
     public void testIgnoreResourcesProperties() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML, new ParserOptions()
+        ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML, new ParserOptions()
                 .ignoreResourceNames(ImmutableSet.of("teaserbar", "aside"))
                 .ignorePropertyNames(ImmutableSet.of("longProp", "jcr:title")));
         Map<String,Object> content = underTest.parse(file);
@@ -119,7 +119,7 @@ public class JcrXmlContentFileParserTest {
     @Test
     @Ignore
     public void testSameNamePropertyAndSubResource() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
         Map<String,Object> content = underTest.parse(file);
         Map<String,Object> props = getDeep(content, "jcr:content/teaserbar");
         // teaserbaritem is a direct property as well as a sub resource

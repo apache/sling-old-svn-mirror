@@ -16,27 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser;
+package org.apache.sling.jcr.contentparser;
 
 /**
- * Parsing exception.
+ * Content types.
  */
-public final class ParseException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+public enum ContentType {
 
     /**
-     * @param message Message
+     * JSON content.
      */
-    public ParseException(String message) {
-        super(message);
-    }
-    
+    JSON("json"),
+
     /**
-     * @param message Message
-     * @param cause Cause
+     * JCR XML content.
      */
-    public ParseException(String message, Throwable cause) {
-        super(message, cause);
+    JCR_XML("jcr.xml");
+
+
+    private final String extension;
+
+    private ContentType(String extension) {
+        this.extension = extension;
     }
-    
+
+    /**
+     * @return Extension
+     */
+    public String getExtension() {
+        return extension;
+    }
+
 }

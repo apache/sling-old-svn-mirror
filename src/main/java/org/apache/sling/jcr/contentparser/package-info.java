@@ -20,4 +20,4 @@
  * Parser for repository content stored in files (e.g. JSON, JCR XML).
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.apache.sling.fscontentparser;
+package org.apache.sling.jcr.contentparser;

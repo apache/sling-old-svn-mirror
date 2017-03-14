@@ -16,35 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+package org.apache.sling.jcr.contentparser;
 
 /**
- * Parses repository content from a file.
- * Implementations have to be thread-safe.
+ * Parsing exception.
  */
-public interface ContentFileParser {
+public final class ParseException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Parse content file.
-     * @param file File
-     * @return Content
-     * @throws IOException When I/O error occurs.
-     * @throws ParseException When parsing error occurs.
+     * @param message Message
      */
-    Map<String,Object> parse(File file) throws IOException, ParseException;
+    public ParseException(String message) {
+        super(message);
+    }
     
     /**
-     * Parse content file.
-     * @param file File
-     * @return Content
-     * @throws IOException When I/O error occurs.
-     * @throws ParseException When parsing error occurs.
+     * @param message Message
+     * @param cause Cause
      */
-    Map<String,Object> parse(InputStream is) throws IOException, ParseException;
-
+    public ParseException(String message, Throwable cause) {
+        super(message, cause);
+    }
+    
 }

@@ -26,19 +26,19 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.commons.fscontentparser</artifactId>
+    <artifactId>org.apache.sling.jcr.contentparser</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>Apache Sling File System Content File Parser</name>
+    <name>Apache Sling Content Parser</name>
     <description>
-        Parser for repository content stored in files (e.g. JSON, JCR XML).
+        Parser for JCR repository content stored in files (e.g. JSON, FileVault XML).
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fscontentparser</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/fscontentparser</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/fscontentparser</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentparser</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentparser</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/contentparser</url>
     </scm>
 
     <build>

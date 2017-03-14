@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,9 +32,9 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.fscontentparser.ContentFileParser;
-import org.apache.sling.fscontentparser.ParseException;
-import org.apache.sling.fscontentparser.ParserOptions;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -44,12 +44,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * Parses JCR XML files that contains content fragments.
  * Instance of this class is thread-safe.
  */
-public final class JcrXmlContentFileParser implements ContentFileParser {
+public final class JcrXmlContentParser implements ContentParser {
     
     private final ParserHelper helper;    
     private final SAXParserFactory saxParserFactory;
     
-    public JcrXmlContentFileParser(ParserOptions options) {
+    public JcrXmlContentParser(ParserOptions options) {
         this.helper = new ParserHelper(options);
         saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setNamespaceAware(true);

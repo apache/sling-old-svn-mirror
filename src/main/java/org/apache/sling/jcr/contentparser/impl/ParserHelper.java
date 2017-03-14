@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
 import java.lang.reflect.Array;
 import java.text.DateFormat;
@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.fscontentparser.ParseException;
-import org.apache.sling.fscontentparser.ParserOptions;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 
 /**
  * Helper parsing logic based on parser options.

@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
-import static org.apache.sling.fscontentparser.impl.JcrXmlValueConverter.parseValue;
+import static org.apache.sling.jcr.contentparser.impl.JcrXmlValueConverter.parseValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

@@ -16,35 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser;
+package org.apache.sling.jcr.contentparser.impl;
 
-/**
- * Content file types.
- */
-public enum ContentFileType {
+import java.util.Map;
 
-    /**
-     * JSON content files.
-     */
-    JSON("json"),
+import org.apache.commons.lang3.StringUtils;
 
-    /**
-     * JCR XML content files.
-     */
-    JCR_XML("jcr.xml");
-
-
-    private final String extension;
-
-    private ContentFileType(String extension) {
-        this.extension = extension;
+public final class TestUtils {
+    
+    private TestUtils() {
+        // static methods only
     }
 
-    /**
-     * @return Extension
-     */
-    public String getExtension() {
-        return extension;
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getDeep(Map<String, Object> map, String path) {
+      String name = StringUtils.substringBefore(path, "/");
+      Object object = map.get(name);
+      if (object == null || !(object instanceof Map)) {
+        return null;
+      }
+      String remainingPath = StringUtils.substringAfter(path, "/");
+      Map<String, Object> childMap = (Map<String, Object>)object;
+      if (StringUtils.isEmpty(remainingPath)) {
+        return childMap;
+      }
+      else {
+        return getDeep(childMap, remainingPath);
+      }
     }
-
+    
 }

@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fscontentparser.impl;
+package org.apache.sling.jcr.contentparser.impl;
 
-import static org.apache.sling.fscontentparser.impl.TestUtils.getDeep;
+import static org.apache.sling.jcr.contentparser.impl.TestUtils.getDeep;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,17 +30,17 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.sling.fscontentparser.ContentFileType;
-import org.apache.sling.fscontentparser.ContentFileParser;
-import org.apache.sling.fscontentparser.ContentFileParserFactory;
-import org.apache.sling.fscontentparser.ParseException;
-import org.apache.sling.fscontentparser.ParserOptions;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ContentParserFactory;
+import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class JsonContentFileParserTest {
+public class JsonContentParserTest {
 
     private File file;
 
@@ -51,7 +51,7 @@ public class JsonContentFileParserTest {
 
     @Test
     public void testPageJcrPrimaryType() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
 
         assertEquals("app:Page", content.get("jcr:primaryType"));
@@ -59,7 +59,7 @@ public class JsonContentFileParserTest {
 
     @Test
     public void testDataTypes() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
 
         Map<String, Object> props = getDeep(content, "toolbar/profiles/jcr:content");
@@ -76,7 +76,7 @@ public class JsonContentFileParserTest {
 
     @Test
     public void testContentProperties() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
 
         Map<String, Object> props = getDeep(content, "jcr:content/header");
@@ -85,7 +85,7 @@ public class JsonContentFileParserTest {
 
     @Test
     public void testCalendar() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON,
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
                 new ParserOptions().detectCalendarValues(true));
         Map<String, Object> content = underTest.parse(file);
 
@@ -107,7 +107,7 @@ public class JsonContentFileParserTest {
 
     @Test
     public void testUTF8Chars() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
 
         Map<String, Object> props = getDeep(content, "jcr:content");
@@ -118,7 +118,7 @@ public class JsonContentFileParserTest {
     @Test(expected = ParseException.class)
     public void testParseInvalidJson() throws Exception {
         file = new File("src/test/resources/invalid-test/invalid.json");
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
         assertNull(content);
     }
@@ -126,14 +126,14 @@ public class JsonContentFileParserTest {
     @Test(expected = ParseException.class)
     public void testParseInvalidJsonWithObjectList() throws Exception {
         file = new File("src/test/resources/invalid-test/contentWithObjectList.json");
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON);
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
         Map<String, Object> content = underTest.parse(file);
         assertNull(content);
     }
 
     @Test
     public void testIgnoreResourcesProperties() throws Exception {
-        ContentFileParser underTest = ContentFileParserFactory.create(ContentFileType.JSON,
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
                 new ParserOptions().ignoreResourceNames(ImmutableSet.of("header", "newslist"))
                         .ignorePropertyNames(ImmutableSet.of("jcr:title")));
         Map<String, Object> content = underTest.parse(file);
