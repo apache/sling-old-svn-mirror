@@ -58,9 +58,6 @@ def modules = [
         location: 'bundles/commons/fsclassloader'
     ],
     [
-        location: 'bundles/commons/fscontentparser'
-    ],
-    [
         location: 'bundles/commons/contentdetection'
     ],
     [
@@ -242,6 +239,9 @@ def modules = [
     ],
     [
         location: 'bundles/jcr/contentloader'
+    ],
+    [
+        location: 'bundles/jcr/contentparser'
     ],
     [
         location: 'bundles/jcr/davex'
