@@ -26,9 +26,9 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.fscontentparser.ContentFileParser;
-import org.apache.sling.fscontentparser.ContentFileParserFactory;
-import org.apache.sling.fscontentparser.ContentFileType;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ContentParserFactory;
+import org.apache.sling.jcr.contentparser.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,19 +39,19 @@ class ContentFileParserUtil {
     
     private static final Logger log = LoggerFactory.getLogger(ContentFileParserUtil.class);
     
-    private static final ContentFileParser JSON_PARSER;
+    private static final ContentParser JSON_PARSER;
     static {
         // workaround for JsonProvider classloader issue until https://issues.apache.org/jira/browse/GERONIMO-6560 is fixed
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
-            JSON_PARSER = ContentFileParserFactory.create(ContentFileType.JSON);
+            JSON_PARSER = ContentParserFactory.create(ContentType.JSON);
         }
         finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
     }
-    private static final ContentFileParser JCR_XML_PARSER = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+    private static final ContentParser JCR_XML_PARSER = ContentParserFactory.create(ContentType.JCR_XML);
     
     private ContentFileParserUtil() {
         // static methods only

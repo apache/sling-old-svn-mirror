@@ -43,9 +43,9 @@ import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.fscontentparser.ParserOptions;
 import org.apache.sling.fsprovider.internal.TestUtils.RegisterFsResourcePlugin;
 import org.apache.sling.hamcrest.ResourceMatchers;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.junit.SlingContextBuilder;
