@@ -22,7 +22,10 @@ import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -68,16 +71,23 @@ class ContentFileParserUtil {
         }
         try {
             if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
-                return JSON_PARSER.parse(file);
+                return parse(JSON_PARSER, file);
             }
             else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
-                return JCR_XML_PARSER.parse(file);
+                return parse(JCR_XML_PARSER, file);
             }
         }
         catch (Throwable ex) {
             log.warn("Error parsing content from " + file.getPath(), ex);
         }
         return null;
+    }
+    
+    private static Map<String,Object> parse(ContentParser contentParser, File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis)) {
+            return contentParser.parse(bis);
+        }
     }
 
 }
