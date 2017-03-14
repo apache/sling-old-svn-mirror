@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.contentparser.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -56,13 +54,6 @@ public final class JsonContentParser implements ContentParser {
         Map<String,Object> jsonReaderFactoryConfig = new HashMap<>();
         jsonReaderFactoryConfig.put("org.apache.johnzon.supports-comments", true);
         jsonReaderFactory = Json.createReaderFactory(jsonReaderFactoryConfig);
-    }
-    
-    @Override
-    public Map<String,Object> parse(File file) throws IOException, ParseException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            return parse(fis);
-        }
     }
     
     @Override

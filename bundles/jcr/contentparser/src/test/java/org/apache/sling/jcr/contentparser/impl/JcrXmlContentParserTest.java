@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.contentparser.impl;
 
 import static org.apache.sling.jcr.contentparser.impl.TestUtils.getDeep;
+import static org.apache.sling.jcr.contentparser.impl.TestUtils.parse;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,7 +56,7 @@ public class JcrXmlContentParserTest {
     @Test
     public void testParseJcrXml() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
-        Map<String,Object> content = underTest.parse(file);
+        Map<String,Object> content = parse(underTest, file);
         assertNotNull(content);
         assertEquals("app:Page", content.get("jcr:primaryType"));
         assertEquals("app:PageContent", ((Map<String,Object>)content.get("jcr:content")).get("jcr:primaryType"));
@@ -65,13 +66,13 @@ public class JcrXmlContentParserTest {
     public void testParseInvalidJcrXml() throws Exception {
         file = new File("src/test/resources/invalid-test/invalid.jcr.xml");
         ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
-        underTest.parse(file);
+        parse(underTest, file);
     }
 
     @Test
     public void testDataTypes() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
-        Map<String,Object> content = underTest.parse(file);
+        Map<String,Object> content = parse(underTest, file);
         Map<String,Object> props = getDeep(content, "jcr:content");
         
         assertEquals("en", props.get("jcr:title"));
@@ -104,7 +105,7 @@ public class JcrXmlContentParserTest {
         ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML, new ParserOptions()
                 .ignoreResourceNames(ImmutableSet.of("teaserbar", "aside"))
                 .ignorePropertyNames(ImmutableSet.of("longProp", "jcr:title")));
-        Map<String,Object> content = underTest.parse(file);
+        Map<String,Object> content = parse(underTest, file);
         Map<String,Object> props = getDeep(content, "jcr:content");
         
         assertEquals("HOME", props.get("navTitle"));
@@ -120,7 +121,7 @@ public class JcrXmlContentParserTest {
     @Ignore
     public void testSameNamePropertyAndSubResource() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JCR_XML);
-        Map<String,Object> content = underTest.parse(file);
+        Map<String,Object> content = parse(underTest, file);
         Map<String,Object> props = getDeep(content, "jcr:content/teaserbar");
         // teaserbaritem is a direct property as well as a sub resource
         assertEquals("test", props.get("teaserbaritem"));
