@@ -22,12 +22,14 @@ import static org.apache.sling.testing.mock.osgi.MapMergeUtil.propertiesMergeWit
 import static org.apache.sling.testing.mock.osgi.MapUtil.toDictionary;
 import static org.apache.sling.testing.mock.osgi.MapUtil.toMap;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -269,6 +271,40 @@ public final class MockOsgi {
      */
     public static boolean modified(Object target, BundleContext bundleContext, Object... properties) {
         return modified(target, bundleContext, toDictionary(properties));
+    }
+    
+    /**
+     * Set configuration via ConfigurationAdmin service in bundle context for component with given pid.
+     * @param bundleContext Bundle context
+     * @param pid PID
+     * @param properties Configuration properties
+     */
+    public static void setConfigForPid(BundleContext bundleContext, String pid, Map<String,Object> properties) {
+        setConfigForPid(bundleContext, pid, toDictionary(properties));
+    }
+    
+    /**
+     * Set configuration via ConfigurationAdmin service in bundle context for component with given pid.
+     * @param bundleContext Bundle context
+     * @param pid PID
+     * @param properties Configuration properties
+     */
+    public static void setConfigForPid(BundleContext bundleContext, String pid, Object... properties) {
+        setConfigForPid(bundleContext, pid, toDictionary(properties));
+    }
+    
+    private static void setConfigForPid(BundleContext bundleContext, String pid, Dictionary<String, Object> properties) {
+        ConfigurationAdmin configAdmin = getConfigAdmin(bundleContext);
+        if (configAdmin == null) {
+            throw new RuntimeException("ConfigurationAdmin service is not registered in bundle context.");
+        }
+        try {
+            Configuration config = configAdmin.getConfiguration(pid);
+            config.update(properties);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Unable to update configuration for pid '" + pid + "'.", ex);
+        }
     }
     
     /**
