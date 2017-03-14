@@ -18,9 +18,14 @@
  */
 package org.apache.sling.jcr.contentparser.impl;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.jcr.contentparser.ContentParser;
 
 public final class TestUtils {
     
@@ -43,6 +48,13 @@ public final class TestUtils {
       else {
         return getDeep(childMap, remainingPath);
       }
+    }
+    
+    public static Map<String,Object> parse(ContentParser contentParser, File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis)) {
+            return contentParser.parse(bis);
+        }
     }
     
 }

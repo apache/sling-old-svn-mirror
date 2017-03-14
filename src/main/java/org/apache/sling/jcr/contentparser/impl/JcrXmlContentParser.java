@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.contentparser.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -53,13 +51,6 @@ public final class JcrXmlContentParser implements ContentParser {
         this.helper = new ParserHelper(options);
         saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setNamespaceAware(true);
-    }
-    
-    @Override
-    public Map<String,Object> parse(File file) throws IOException, ParseException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            return parse(fis);
-        }
     }
     
     @Override

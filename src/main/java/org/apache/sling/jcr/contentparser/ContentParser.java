@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.contentparser;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -29,15 +28,6 @@ import java.util.Map;
  */
 public interface ContentParser {
 
-    /**
-     * Parse content file.
-     * @param file File
-     * @return Content
-     * @throws IOException When I/O error occurs.
-     * @throws ParseException When parsing error occurs.
-     */
-    Map<String,Object> parse(File file) throws IOException, ParseException;
-    
     /**
      * Parse content.
      * @param is Stream with serialized content

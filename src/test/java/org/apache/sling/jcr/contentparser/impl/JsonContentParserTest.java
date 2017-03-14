@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.contentparser.impl;
 
 import static org.apache.sling.jcr.contentparser.impl.TestUtils.getDeep;
+import static org.apache.sling.jcr.contentparser.impl.TestUtils.parse;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +53,7 @@ public class JsonContentParserTest {
     @Test
     public void testPageJcrPrimaryType() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
 
         assertEquals("app:Page", content.get("jcr:primaryType"));
     }
@@ -60,7 +61,7 @@ public class JsonContentParserTest {
     @Test
     public void testDataTypes() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
 
         Map<String, Object> props = getDeep(content, "toolbar/profiles/jcr:content");
         assertEquals(true, props.get("hideInNav"));
@@ -77,7 +78,7 @@ public class JsonContentParserTest {
     @Test
     public void testContentProperties() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
 
         Map<String, Object> props = getDeep(content, "jcr:content/header");
         assertEquals("/content/dam/sample/header.png", props.get("imageReference"));
@@ -87,7 +88,7 @@ public class JsonContentParserTest {
     public void testCalendar() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
                 new ParserOptions().detectCalendarValues(true));
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
 
         Map<String, Object> props = getDeep(content, "jcr:content");
 
@@ -108,7 +109,7 @@ public class JsonContentParserTest {
     @Test
     public void testUTF8Chars() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
 
         Map<String, Object> props = getDeep(content, "jcr:content");
 
@@ -119,7 +120,7 @@ public class JsonContentParserTest {
     public void testParseInvalidJson() throws Exception {
         file = new File("src/test/resources/invalid-test/invalid.json");
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
         assertNull(content);
     }
 
@@ -127,7 +128,7 @@ public class JsonContentParserTest {
     public void testParseInvalidJsonWithObjectList() throws Exception {
         file = new File("src/test/resources/invalid-test/contentWithObjectList.json");
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON);
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
         assertNull(content);
     }
 
@@ -136,7 +137,7 @@ public class JsonContentParserTest {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
                 new ParserOptions().ignoreResourceNames(ImmutableSet.of("header", "newslist"))
                         .ignorePropertyNames(ImmutableSet.of("jcr:title")));
-        Map<String, Object> content = underTest.parse(file);
+        Map<String, Object> content = parse(underTest, file);
         Map<String, Object> props = getDeep(content, "jcr:content");
 
         assertEquals("Sample Homepage", props.get("pageTitle"));
