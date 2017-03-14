@@ -18,22 +18,35 @@
  */
 package org.apache.sling.jcr.contentparser;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Map;
 
 /**
- * Parses repository content from a file.
- * Implementations have to be thread-safe.
+ * Represents a resource or node in the content hierarchy.
  */
-public interface ContentParser {
+public interface Content {
 
     /**
-     * Parse content.
-     * @param is Stream with serialized content
-     * @return Content
-     * @throws IOException When I/O error occurs.
-     * @throws ParseException When parsing error occurs.
+     * @return Resource name. The root resource has no name (null).
      */
-    Content parse(InputStream is) throws IOException, ParseException;
-
+    String getName();
+    
+    /**
+     * Properties of this resource.
+     * @return Properties (keys, values)
+     */
+    Map<String, Object> getProperties();
+    
+    /**
+     * Get children of current resource. The Map preserves the ordering of children.
+     * @return Children (child names, child objects)
+     */
+    Map<String, Content> getChildren();
+    
+    /**
+     * Get child or descendant
+     * @param path Relative path to address child or one of it's descendants (use "/" as hierarchy separator).
+     * @return Child or null if no child found with this path
+     */
+    Content getChild(String path);
+    
 }

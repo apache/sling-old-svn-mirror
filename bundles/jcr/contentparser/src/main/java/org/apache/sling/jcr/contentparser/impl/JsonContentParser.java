@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.json.Json;
@@ -35,6 +34,7 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 
+import org.apache.sling.jcr.contentparser.Content;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
@@ -57,22 +57,25 @@ public final class JsonContentParser implements ContentParser {
     }
     
     @Override
-    public Map<String,Object> parse(InputStream is) throws IOException, ParseException {
+    public Content parse(InputStream is) throws IOException, ParseException {
         try (JsonReader reader = jsonReaderFactory.createReader(is)) {
-            return toMap(reader.readObject());
+            return toContent(null, reader.readObject());
         }
         catch (JsonParsingException ex) {
             throw new ParseException("Error parsing JSON content.", ex);
         }
     }
     
-    private Map<String,Object> toMap(JsonObject object) {
-        Map<String,Object> map = new LinkedHashMap<>();
+    private Content toContent(String name, JsonObject object) {
+        Content content = new ContentImpl(name);
+        Map<String,Object> properties = content.getProperties();
+        Map<String,Content> children = content.getChildren();
         for (Map.Entry<String, JsonValue> entry : object.entrySet()) {
             String childName = entry.getKey();
-            Object value = convertValue(entry.getValue());
+            Object value = convertValue(childName, entry.getValue());
+            boolean isResource = (value instanceof Content);
             boolean ignore = false;
-            if (value instanceof Map) {
+            if (isResource) {
                 ignore = helper.ignoreResource(childName);
             }
             else {
@@ -80,14 +83,19 @@ public final class JsonContentParser implements ContentParser {
                 ignore = helper.ignoreProperty(childName);
             }
             if (!ignore) {
-                map.put(childName, value);
+                if (isResource) {
+                    children.put(childName, (Content)value);
+                }
+                else {
+                    properties.put(childName, value);
+                }
             }
         }
-        helper.ensureDefaultPrimaryType(map);
-        return map;
+        helper.ensureDefaultPrimaryType(content);
+        return content;
     }
     
-    private Object convertValue(JsonValue value) {
+    private Object convertValue(String name, JsonValue value) {
         switch (value.getValueType()) {
             case STRING:
                 String stringValue = ((JsonString)value).getString();
@@ -116,11 +124,11 @@ public final class JsonContentParser implements ContentParser {
                 JsonArray arrayValue = (JsonArray)value;
                 Object[] values = new Object[arrayValue.size()];
                 for (int i=0; i<values.length; i++) {
-                    values[i] = convertValue(arrayValue.get(i));
+                    values[i] = convertValue(name, arrayValue.get(i));
                 }
                 return helper.convertSingleTypeArray(values);
             case OBJECT:
-                return toMap((JsonObject)value);
+                return toContent(name, (JsonObject)value);
             default:
                 throw new ParseException("Unexpected JSON value type: " + value.getValueType());
         }

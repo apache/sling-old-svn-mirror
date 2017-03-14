@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.jcr.contentparser.Content;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 
@@ -54,11 +55,12 @@ class ParserHelper {
         }
     }
 
-    public void ensureDefaultPrimaryType(Map<String, Object> map) {
+    public void ensureDefaultPrimaryType(Content content) {
+        Map<String,Object> props = content.getProperties();
         String defaultPrimaryType = options.getDefaultPrimaryType();
         if (defaultPrimaryType != null) {
-            if (!map.containsKey(JCR_PRIMARYTYPE)) {
-                map.put(JCR_PRIMARYTYPE, defaultPrimaryType);
+            if (!props.containsKey(JCR_PRIMARYTYPE)) {
+                props.put(JCR_PRIMARYTYPE, defaultPrimaryType);
             }
         }
     }
@@ -113,7 +115,7 @@ class ParserHelper {
             if (value == null) {
                 throw new ParseException("Multivalue array must not contain null values.");
             }
-            if (value instanceof Map) {
+            if (value instanceof Map || value instanceof Content) {
                 throw new ParseException("Multivalue array must not contain maps/objects.");
             }
             if (itemType == null) {
