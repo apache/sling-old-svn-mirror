@@ -137,7 +137,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.fscontentparser</artifactId>
+            <artifactId>org.apache.sling.jcr.contentparser</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
