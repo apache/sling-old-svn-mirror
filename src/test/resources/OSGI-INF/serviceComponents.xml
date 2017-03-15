@@ -28,7 +28,6 @@
     </service>
     <property name="service.ranking" type="Integer" value="5000"/>
     <property name="service.vendor" value="The Apache Software Foundation"/>
-    <property name="service.pid" value="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
     <property name="adaptables">
        org.apache.sling.api.resource.Resource
        org.apache.sling.api.resource.ResourceResolver
