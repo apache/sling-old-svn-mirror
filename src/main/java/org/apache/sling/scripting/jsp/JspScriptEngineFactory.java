@@ -78,6 +78,11 @@ import org.slf4j.LoggerFactory;
  */
 @Component(service = {javax.script.ScriptEngineFactory.class,ResourceChangeListener.class,ClassLoaderWriterListener.class},
            property = {
+                   "extensions=jsp",
+                   "extensions=jspf",
+                   "extensions=jspx",
+                   "names=jsp",
+                   "names=JSP",
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                    Constants.SERVICE_DESCRIPTION + "=JSP Script Handler",
                    ResourceChangeListener.CHANGES + "=CHANGED",
