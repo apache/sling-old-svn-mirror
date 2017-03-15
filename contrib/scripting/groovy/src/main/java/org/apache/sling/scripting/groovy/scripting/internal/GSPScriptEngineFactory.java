@@ -38,6 +38,8 @@ import org.codehaus.groovy.util.ReleaseInfo;
 @Properties({
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="service.description", value="GSP Script Engine"),
+    @Property(name="extensions", value = {"gsp"}),
+    @Property(name="names", value = {"gsp", "GSP"}),
     @Property(name="compatible.javax.script.name", value="groovy")
 })
 public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
