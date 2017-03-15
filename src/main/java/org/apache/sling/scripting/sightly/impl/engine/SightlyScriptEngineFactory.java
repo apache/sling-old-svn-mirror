@@ -43,6 +43,9 @@ import org.slf4j.LoggerFactory;
 @Component(
         service = ScriptEngineFactory.class,
         property = {
+                "extensions=html",
+                "names=htl",
+                "names=HTL",
                 Constants.SERVICE_DESCRIPTION + "=HTL Templating Engine",
                 "compatible.javax.script.name=sly"
         }
