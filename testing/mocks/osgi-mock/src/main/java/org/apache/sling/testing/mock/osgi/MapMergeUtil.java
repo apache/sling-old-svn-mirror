@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
-import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -79,7 +78,7 @@ final class MapMergeUtil {
 
                 // merge with configuration from config admin
                 if (configAdmin != null) {
-                    Object pid = metadataProperties.get(Constants.SERVICE_PID);
+                    Object pid = metadata.getPID();
                     if (pid != null) {
                         try {
                             Configuration config = configAdmin.getConfiguration(pid.toString());

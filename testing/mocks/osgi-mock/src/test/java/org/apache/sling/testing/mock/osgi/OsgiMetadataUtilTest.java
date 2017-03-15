@@ -39,6 +39,8 @@ public class OsgiMetadataUtilTest {
     public void testMetadata() {
         OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(ServiceWithMetadata.class);
 
+        assertEquals("org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata", metadata.getPID());
+
         Set<String> serviceInterfaces = metadata.getServiceInterfaces();
         assertEquals(3, serviceInterfaces.size());
         assertTrue(serviceInterfaces.contains("org.apache.sling.models.spi.Injector"));
@@ -47,10 +49,9 @@ public class OsgiMetadataUtilTest {
         assertTrue(serviceInterfaces.contains("java.lang.Comparable"));
 
         Map<String, Object> props = metadata.getProperties();
-        assertEquals(4, props.size());
+        assertEquals(3, props.size());
         assertEquals(5000, props.get("service.ranking"));
         assertEquals("The Apache Software Foundation", props.get(Constants.SERVICE_VENDOR));
-        assertEquals("org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata", props.get(Constants.SERVICE_PID));
         assertArrayEquals(new String[] { "org.apache.sling.api.resource.Resource", "org.apache.sling.api.resource.ResourceResolver" },
                 (String[])props.get("adaptables"));
     }

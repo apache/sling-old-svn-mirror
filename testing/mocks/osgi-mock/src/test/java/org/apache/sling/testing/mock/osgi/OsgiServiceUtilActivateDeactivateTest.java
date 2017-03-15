@@ -72,7 +72,7 @@ public class OsgiServiceUtilActivateDeactivateTest {
         
         assertTrue(MockOsgi.activate(service, bundleContext, map));
         assertTrue(service.isActivated());
-        assertEquals(map, ImmutableMap.copyOf(service.getMap()));
+        assertEquals("value1", service.getMap().get("prop1"));
         
         assertTrue(MockOsgi.deactivate(service, bundleContext, map));
         assertFalse(service.isActivated());
@@ -109,7 +109,7 @@ public class OsgiServiceUtilActivateDeactivateTest {
         assertTrue(service.isActivated());
         assertSame(bundleContext, service.getComponentContext().getBundleContext());
         assertSame(bundleContext, service.getBundleContext());
-        assertEquals(map, ImmutableMap.copyOf(service.getMap()));
+        assertEquals("value1", service.getMap().get("prop1"));
         
         assertTrue(MockOsgi.deactivate(service, bundleContext, map));
         assertFalse(service.isActivated());
