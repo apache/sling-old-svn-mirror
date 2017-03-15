@@ -28,7 +28,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,16 +100,8 @@ public class MainQueueConfiguration {
         queueProps.put(ConfigurationConstants.PROP_TOPICS, "*");
         queueProps.put(ConfigurationConstants.PROP_NAME, MAIN_QUEUE_NAME);
         queueProps.put(ConfigurationConstants.PROP_TYPE, InternalQueueConfiguration.Type.UNORDERED);
-
-        // check max parallel - this should never be lower than 2!
-        final int maxParallel = PropertiesUtil.toInteger(queueProps.get(ConfigurationConstants.PROP_MAX_PARALLEL),
-                ConfigurationConstants.DEFAULT_MAX_PARALLEL);
-        if ( maxParallel < 2 ) {
-            this.logger.debug("Ignoring invalid setting of {} for {}. Setting to minimum value: 2",
-                    maxParallel, ConfigurationConstants.PROP_MAX_PARALLEL);
-            queueProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, 2);
-        }
         queueProps.put(Constants.SERVICE_PID, "org.apache.sling.event.impl.jobs.DefaultJobManager");
+        logger.debug("properties for queue {}: {}", MAIN_QUEUE_NAME, queueProps);
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
     }
 
