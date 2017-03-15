@@ -22,18 +22,12 @@ import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.scripting.SlingScriptConstants;
-import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.ExtensionRegistryService;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
-import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 
 /**
