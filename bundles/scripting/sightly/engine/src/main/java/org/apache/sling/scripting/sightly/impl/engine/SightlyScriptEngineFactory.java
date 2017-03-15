@@ -80,7 +80,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     public static final String SIGHTLY_CONFIG_FILE = "/sightly.config";
 
     public SightlyScriptEngineFactory() {
-        setNames(SHORT_NAME);
+        setNames("htl", "HTL", SHORT_NAME);
         setExtensions(EXTENSION);
     }
 
