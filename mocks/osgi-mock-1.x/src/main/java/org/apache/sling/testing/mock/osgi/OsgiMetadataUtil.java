@@ -42,6 +42,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -257,6 +258,15 @@ final class OsgiMetadataUtil {
         return StringUtils.substringBefore(className, "$$Enhancer");
     }
     
+    private static String getComponentName(Class clazz, Document metadata) {
+        String query = getComponentXPathQuery(clazz);
+        NodeList nodes = queryNodes(metadata, query);
+        if (nodes != null && nodes.getLength() > 0) {
+            return getAttributeValue(nodes.item(0), "name");
+        }
+        return null;
+    }
+
     private static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
         Set<String> serviceInterfaces = new HashSet<String>();
         String query = getComponentXPathQuery(clazz) + "/service/provide[@interface!='']";
@@ -367,6 +377,7 @@ final class OsgiMetadataUtil {
     static class OsgiMetadata {
 
         private final Class<?> clazz;
+        private final String name;
         private final Set<String> serviceInterfaces;
         private final Map<String, Object> properties;
         private final List<Reference> references;
@@ -376,6 +387,7 @@ final class OsgiMetadataUtil {
 
         private OsgiMetadata(Class<?> clazz, Document metadataDocument) {
             this.clazz = clazz;
+            this.name = OsgiMetadataUtil.getComponentName(clazz, metadataDocument);
             this.serviceInterfaces = OsgiMetadataUtil.getServiceInterfaces(clazz, metadataDocument);
             this.properties = OsgiMetadataUtil.getProperties(clazz, metadataDocument);
             this.references = OsgiMetadataUtil.getReferences(clazz, metadataDocument);
@@ -386,6 +398,7 @@ final class OsgiMetadataUtil {
 
         private OsgiMetadata() {
             this.clazz = null;
+            this.name = null;
             this.serviceInterfaces = null;
             this.properties = null;
             this.references = null;
@@ -396,6 +409,18 @@ final class OsgiMetadataUtil {
 
         public Class<?> getServiceClass() {
             return clazz;
+        }
+        
+        public String getName() {
+            return name;
+        }
+        
+        public String getPID() {
+            String pid = null;
+            if (properties != null) {
+                pid = (String)properties.get(Constants.SERVICE_PID);
+            }
+            return StringUtils.defaultString(pid, name);
         }
 
         public Set<String> getServiceInterfaces() {
