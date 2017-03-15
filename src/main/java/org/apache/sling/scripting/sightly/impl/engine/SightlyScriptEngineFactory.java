@@ -73,7 +73,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public final static String LANGUAGE_NAME = "The HTL Templating Language";
 
-    public final static String LANGUAGE_VERSION = "1.0";
+    public final static String LANGUAGE_VERSION = "1.3";
 
     public final static String EXTENSION = "html";
 
