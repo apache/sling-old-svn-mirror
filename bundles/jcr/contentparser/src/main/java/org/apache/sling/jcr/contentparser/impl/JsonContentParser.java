@@ -48,7 +48,7 @@ public final class JsonContentParser implements ContentParser {
     
     private final ParserHelper helper;
     /*
-     * Implementation note: This parser uses JsonReader instead of the (the more memory-efficient) 
+     * Implementation note: This parser uses JsonReader instead of the (more memory-efficient) 
      * JsonParser Stream API because otherwise it would not be possible to report parent resources
      * including all properties properly before their children.
      */
