@@ -50,6 +50,7 @@ public interface ModelFactory {
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
 
     /**
+     *
      * @param adaptable the adaptable to check
      * @param type the class to check
      * @return {@code true} in case the given class can be created from the given adaptable, otherwise {@code false}
@@ -57,6 +58,7 @@ public interface ModelFactory {
     public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type);
 
     /**
+     *
      * @param adaptable the adaptable to check
      * @param type the class to check
      * @return false in case no class with the Model annotation adapts to the requested type
@@ -76,6 +78,7 @@ public interface ModelFactory {
      * Only if both conditions are fulfilled this method will return {@code true}.
      * @param type the class to check
      * @return {@code true} in case the given type can be instantiated though Sling Models.
+     *
      */
     public boolean isModelClass(@Nonnull Class<?> type);
 
