@@ -21,8 +21,9 @@ package org.apache.sling.jcr.contentparser;
 import java.util.Map;
 
 /**
- * Handle that gets noticed while parsing content with {@link ContentParser}.
- * The resources are already reported in order of their paths as found in the content source.
+ * Handler that gets noticed while parsing content with {@link ContentParser}.
+ * The resources are always reported in order of their paths as found in the content fragment.
+ * Parents are always reported before their children.
  */
 public interface ContentHandler {
 
