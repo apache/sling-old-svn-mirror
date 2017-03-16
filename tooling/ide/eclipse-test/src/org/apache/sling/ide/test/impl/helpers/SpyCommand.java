@@ -35,7 +35,8 @@ import org.apache.sling.ide.transport.Result;
 public class SpyCommand<T> implements Command<T> {
 
     public enum Kind {
-        ADD_OR_UPDATE;
+        ADD_OR_UPDATE,
+        DELETE
     }
 
     private final ResourceProxy resourceProxy;

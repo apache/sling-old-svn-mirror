@@ -53,6 +53,7 @@ Export-Package: org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.eclipse.core.facet,
  org.apache.sling.ide.eclipse.core.internal,
  org.apache.sling.ide.eclipse.core.launch,
+ org.apache.sling.ide.eclipse.core.preferences,
  org.apache.sling.ide.eclipse.core.progress,
  org.apache.sling.ide.eclipse.internal.validation;x-friends:="org.apache.sling.ide.eclipse-test"
 Service-Component: OSGI-INF/TraceCommandExecutionEventsHandler.xml

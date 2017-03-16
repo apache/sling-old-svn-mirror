@@ -19,12 +19,17 @@ package org.apache.sling.ide.test.impl;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.internal.ResourceChangeCommandFactory;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
@@ -65,10 +70,49 @@ public class ResourceChangeCommandFactoryTest {
         // create filter.xml
         project.createVltFilterWithRoots("/content");
 
-        factory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager());
+        Set<String> ignoredFileNames = new HashSet<>();
+        ignoredFileNames.add(".gitignore");
+        factory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager(), ignoredFileNames);
 
         spyRepo = new SpyRepository();
+    }
 
+    @Test
+    public void commandsForIgnoredFile() throws CoreException, IOException {
+        byte[] buffer = new byte[0];
+        try (InputStream inputStream = new ByteArrayInputStream(buffer)) {
+            // create a file at at /content/test-root/nested/.gitignore (the input stream does not matter here)
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/.gitignore"),
+                    inputStream);
+        }
+        SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root/nested/.gitignore"));
+        assertNull(command);
+        command = (SpyCommand<?>) factory.newCommandForRemovedResources(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root/nested/.gitignore"));
+        assertNull(command);
+    }
+
+    @Test
+    public void commandsForNotIgnoredFile() throws CoreException, IOException {
+        byte[] buffer = new byte[0];
+        try (InputStream inputStream = new ByteArrayInputStream(buffer)) {
+            // create a file at at /content/test-root/nested/gitignore (the input stream does not matter here)
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/gitignore"),
+                    inputStream);
+        }
+        SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root/nested/gitignore"));
+        assertThat("command.path", command.getPath(), nullValue());
+        assertThat("command.resource.path", command.getResourceProxy().getPath(), equalTo("/content/test-root/nested/gitignore"));
+        assertThat("command.resource.properties", command.getResourceProxy().getProperties(),
+                equalTo(singletonMap("jcr:primaryType", (Object) "nt:file")));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+        
+        command = (SpyCommand<?>) factory.newCommandForRemovedResources(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root/nested/gitignore"));
+        assertThat("command.path", command.getPath(), equalTo("/content/test-root/nested/gitignore"));
+        assertThat("command.kind", command.getSpyKind(), equalTo(SpyCommand.Kind.DELETE));
     }
 
     @Test

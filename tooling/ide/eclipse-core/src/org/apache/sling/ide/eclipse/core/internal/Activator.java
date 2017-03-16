@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
+import org.apache.sling.ide.eclipse.core.Preferences;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.eclipse.core.launch.SourceReferenceResolver;
@@ -31,6 +32,8 @@ import org.apache.sling.ide.transport.BatcherFactory;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -64,6 +67,8 @@ public class Activator extends Plugin {
     private ServiceTracker<SourceReferenceResolver, Object> sourceReferenceLocator;
     
     private ServiceRegistration<Logger> tracerRegistration;
+
+    private Preferences preferences;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -185,5 +190,13 @@ public class Activator extends Plugin {
      */
     public SourceReferenceResolver getSourceReferenceResolver() {
         return (SourceReferenceResolver) sourceReferenceLocator.getService();
+    }
+    
+    public Preferences getPreferences() {
+        // Create the preferences lazily.
+        if (preferences == null) {
+            preferences = new Preferences();
+        }
+        return preferences;
     }
 }

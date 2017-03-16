@@ -309,4 +309,9 @@
  		<scope name="project" class="org.eclipse.core.internal.resources.ProjectPreferences">
  		</scope>
  	</extension>
+ 	
+ 	<extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="org.apache.sling.ide.eclipse.core.internal.PreferencesInitializer">
+      </initializer>
+    </extension>
 </plugin>    

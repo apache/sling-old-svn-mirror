@@ -51,7 +51,7 @@ public class SpyRepository implements Repository {
 
     @Override
     public Command<Void> newDeleteNodeCommand(String path) {
-        throw new UnsupportedOperationException("Not implemented");
+        return new SpyCommand<>(null, null, path, SpyCommand.Kind.DELETE);
     }
 
     @Override

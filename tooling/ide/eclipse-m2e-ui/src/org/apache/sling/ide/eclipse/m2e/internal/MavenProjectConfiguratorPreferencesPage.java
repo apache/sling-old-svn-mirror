@@ -28,13 +28,13 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-public class SlingIdePreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class MavenProjectConfiguratorPreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
     private BooleanFieldEditor enableProjectConfiguratorEditor;
     private BooleanFieldEditor enableExtendedProjectConfigurationEditor;
     private Group m2eProjectConfiguratorsForContentPackagesGroup;
     
-    public SlingIdePreferencePage() {
+    public MavenProjectConfiguratorPreferencesPage() {
         super(GRID);
     }
 
