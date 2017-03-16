@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.osgi.annotation.versioning.ProviderType;

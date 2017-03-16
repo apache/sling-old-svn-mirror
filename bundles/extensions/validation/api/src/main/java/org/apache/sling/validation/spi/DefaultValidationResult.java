@@ -19,6 +19,7 @@
 package org.apache.sling.validation.spi;
 
 import java.io.Serializable;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +54,7 @@ public final class DefaultValidationResult implements ValidationResult, Serializ
      * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
      * @param validationContext the context from which to take the location, severity and default resource bundle
-     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
+     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
     public DefaultValidationResult(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
@@ -64,10 +65,10 @@ public final class DefaultValidationResult implements ValidationResult, Serializ
     /** 
      * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
-     * @param location the location.
-     * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
-     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} if no other bundle is provided.
-     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
+     * @param location the location
+     * @param severity the severity of the embedded failure (may be {@code null} which leads to using the validator's default severity)
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@code messageKey} if no other bundle is provided
+     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
     public DefaultValidationResult(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {

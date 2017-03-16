@@ -26,7 +26,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
- * A {@code ValidationResult} contains validation information either from a single {@link Validator} or from multiple Validator invocations.
+ * A {@code ValidationResult} contains validation information either from a single {@link org.apache.sling.validation.spi.Validator} or from multiple Validator invocations.
  */
 @ProviderType
 public interface ValidationResult {

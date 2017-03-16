@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.validation.ValidationService;
 import org.osgi.annotation.versioning.ProviderType;
 
 
@@ -57,8 +58,7 @@ public interface ValidationContext {
     int getSeverity();
     
     /**
-     * The default resource bundle which should be able to give out the error message of the validator in English. 
-     * @return
+     * @return resource bundle which should be able to give out the error message of the {@link Validator} in English.
      */
     @Nonnull ResourceBundle getDefaultResourceBundle();
 }
