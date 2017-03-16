@@ -114,7 +114,6 @@ public class ValidationServiceImpl implements ValidationService{
 
     // ValidationService ###################################################################################################################
     
-    @SuppressWarnings("unused")
     public @CheckForNull ValidationModel getValidationModel(@Nonnull String validatedResourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=459256
         if (validatedResourceType == null) {
