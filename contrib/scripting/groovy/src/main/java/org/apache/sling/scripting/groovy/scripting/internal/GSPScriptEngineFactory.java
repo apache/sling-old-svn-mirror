@@ -31,7 +31,7 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.codehaus.groovy.util.ReleaseInfo;
 
 /**
- * Script engine for Groovy Scripting Pages.
+ * Script engine for Groovy Server Pages.
  */
 @Component
 @Service
@@ -52,7 +52,7 @@ public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public String getLanguageName() {
-        return "Groovy Scripting Pages";
+        return "Groovy Server Pages";
     }
     
     @Override
