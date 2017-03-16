@@ -37,7 +37,7 @@
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/core</url>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/test-services</url>
     </scm>
 
     <build>
