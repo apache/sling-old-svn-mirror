@@ -296,19 +296,19 @@ def modules = [
         location: 'bundles/scripting/core'
     ],
     [
-        location: 'bundles/scripting/el-wrapper'
+        location: 'bundles/scripting/el-api'
     ],
     [
         location: 'bundles/scripting/javascript'
+    ],
+    [
+        location: 'bundles/scripting/jsp-api'
     ],
     [
         location: 'bundles/scripting/jsp-jstl'
     ],
     [
         location: 'bundles/scripting/jsp-taglib'
-    ],
-    [
-        location: 'bundles/scripting/jsp-wrapper'
     ],
     [
         location: 'bundles/scripting/jsp'
