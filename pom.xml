@@ -101,7 +101,6 @@
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/fsclassloader</module>
-        <module>bundles/commons/fscontentparser</module>
         <module>bundles/commons/compiler</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
@@ -127,6 +126,7 @@
         <module>bundles/jcr/api</module>
         <module>bundles/jcr/base</module>
         <module>bundles/jcr/contentloader</module>
+        <module>bundles/jcr/contentparser</module>
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
         -->
