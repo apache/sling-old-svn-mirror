@@ -18,22 +18,19 @@
  */
 package org.apache.sling.jcr.contentparser;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Map;
 
 /**
- * Parses repository content from a file.
- * Implementations have to be thread-safe.
+ * Handle that gets noticed while parsing content with {@link ContentParser}.
+ * The resources are already reported in order of their paths as found in the content source.
  */
-public interface ContentParser {
+public interface ContentHandler {
 
     /**
-     * Parse content in a "stream-based" way. Each resource that is found in the content is reported to the contentHandler.
-     * @param contentHandler Content handler that accepts the parsed content.
-     * @param inputStream Stream with serialized content
-     * @throws IOException When I/O error occurs.
-     * @throws ParseException When parsing error occurs.
+     * Resource found in parsed content.
+     * @param path Path of resource inside the content fragment. The root resource from the content fragment has a path "/".
+     * @param properties Resource properties
      */
-    void parse(ContentHandler contentHandler, InputStream inputStream) throws IOException, ParseException;
-
+    void resource(String path, Map<String,Object> properties);
+    
 }

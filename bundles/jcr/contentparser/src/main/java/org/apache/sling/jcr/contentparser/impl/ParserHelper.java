@@ -27,6 +27,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.json.JsonObject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
@@ -113,7 +115,7 @@ class ParserHelper {
             if (value == null) {
                 throw new ParseException("Multivalue array must not contain null values.");
             }
-            if (value instanceof Map) {
+            if (value instanceof Map || value instanceof JsonObject) {
                 throw new ParseException("Multivalue array must not contain maps/objects.");
             }
             if (itemType == null) {
@@ -129,6 +131,15 @@ class ParserHelper {
             Array.set(convertedArray, i, values[i]);
         }
         return convertedArray;
+    }
+    
+    public String concatenatePath(String parentPath, String name) {
+        if (StringUtils.endsWith(parentPath, "/")) {
+            return parentPath + name;
+        }
+        else {
+            return parentPath + "/" + name;
+        }
     }
     
 }
