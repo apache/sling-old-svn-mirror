@@ -37,7 +37,7 @@ public interface ValidationFailure {
      * Returns the relative location of the property/resource/value which triggered this validation failure.
      * The location 
      * <ul>
-     * <li>is relative to the resource given in the first parameter in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.Resource, org.apache.sling.validation.model.ValidationModel)} or {@link ValidationService#validateResourceRecursively(org.apache.sling.api.resource.Resource, boolean, org.apache.commons.collections.Predicate, boolean)} or</li>
+     * <li>is relative to the resource given in the first parameter in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.Resource, org.apache.sling.validation.model.ValidationModel)} or {@link ValidationService#validateResourceRecursively(org.apache.sling.api.resource.Resource, boolean, java.util.function.Predicate, boolean)} or</li>
      * <li>contains just the value name in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.ValueMap, org.apache.sling.validation.model.ValidationModel)}</li>
      * </ul>
      * @return the location (usually the validated resource's property path).
