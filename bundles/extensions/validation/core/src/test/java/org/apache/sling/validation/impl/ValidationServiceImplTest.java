@@ -500,7 +500,7 @@ public class ValidationServiceImplTest {
         properties.put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, "resourcetype3");
         rr.create(testResource, "child3", properties);
 
-        final Predicate ignoreResourceType3Filter = new Predicate<Resource>() {
+        final Predicate<Resource> ignoreResourceType3Filter = new Predicate<Resource>() {
             @Override
             public boolean test(final Resource resource) {
                 return !"resourcetype3".equals(resource.getResourceType());

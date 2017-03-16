@@ -58,7 +58,6 @@ import org.apache.sling.validation.model.ParameterizedValidator;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.ValidatorAndSeverity;
-import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -68,9 +67,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ResourceValidationModelProviderImplTest {
@@ -134,7 +131,6 @@ public class ResourceValidationModelProviderImplTest {
     private MockQueryResultHandler prefixBasedResultHandler;
     private Map<PrefixAndResourceType, List<Node>> validatorModelNodesPerPrefixAndResourceType;
     private Map<String, ValidatorAndSeverity<?>> validatorMap;
-    private Map<String, Object> regexValdidatorParametrization;
     private ValidationModelBuilder modelBuilder;
 
     // extract resource type from strings like
