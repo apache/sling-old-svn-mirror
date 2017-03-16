@@ -18,15 +18,11 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 
 import org.apache.sling.validation.impl.util.ChildResourceNameRegexMatcher;
 import org.apache.sling.validation.impl.util.ResourcePropertyNameRegexMatcher;
-import org.apache.sling.validation.model.ChildResource;
-import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,14 +75,12 @@ public class MergedValidationModelTest {
         modelBuilder.childResource(childResourceBuilder.nameRegex("originalNameNotOverwritten").build(
                 "nameNotOverwritten"));
         ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
-        Collection<Matcher<ResourceProperty>> resourcePropertyMatchers = new ArrayList<>();
-        resourcePropertyMatchers.add(new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"));
-        resourcePropertyMatchers.add(new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten"));
-        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(resourcePropertyMatchers));
-        Collection<Matcher<ChildResource>> childMatchers = new ArrayList<>();
-        childMatchers.add(new ChildResourceNameRegexMatcher("overwrittenNameToOverwrite"));
-        childMatchers.add(new ChildResourceNameRegexMatcher("originalNameNotOverwritten"));
-        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(childMatchers));
+        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten"))));
+        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ChildResourceNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ChildResourceNameRegexMatcher("originalNameNotOverwritten"))));
     }
 
     @Test
