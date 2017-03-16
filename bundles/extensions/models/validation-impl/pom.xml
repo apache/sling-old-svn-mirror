@@ -39,7 +39,8 @@
     <properties>
         <sling.java.version>8</sling.java.version>
         <http.host>localhost</http.host>
-        
+        <!-- start with -DkeepITServerRunning=true to allow to rerun ITs or inspect the server after the ITs have been executed there -->
+        <keepITServerRunning>false</keepITServerRunning>
     </properties>
 
     <scm>
@@ -78,7 +79,6 @@
                 <!-- the Sling instance is provisioned from the model in src/main/provisioning/model.txt -->
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.7.2</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -108,9 +108,8 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
-                        <!-- set value to true to allow to run IT from your IDE while the quickstart server is still running -->
                         <configuration>
-                            <shouldBlockUntilKeyIsPressed>false</shouldBlockUntilKeyIsPressed>
+                            <shouldBlockUntilKeyIsPressed>${keepITServerRunning}</shouldBlockUntilKeyIsPressed>
                         </configuration>
                     </execution>
                 </executions>
