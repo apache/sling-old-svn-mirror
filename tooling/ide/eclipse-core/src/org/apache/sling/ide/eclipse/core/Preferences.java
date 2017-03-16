@@ -30,7 +30,7 @@ import org.eclipse.core.runtime.preferences.IPreferencesService;
  */
 public class Preferences {
 
-    public static final String IGNORED_FILE_NAMES_FOR_SYNC = "exclusionList";
+    public static final String IGNORED_FILE_NAMES_FOR_SYNC = "ignoredFileNamesForSync";
     public static final String LIST_SEPARATOR = ";";
 
     private final IPreferencesService preferenceService;
