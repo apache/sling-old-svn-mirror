@@ -151,12 +151,12 @@
         <!-- Scripting Support -->
         <module>bundles/scripting/api</module>
         <module>bundles/scripting/core</module>
-        <module>bundles/scripting/el-wrapper</module>
+        <module>bundles/scripting/el-api</module>
         <module>bundles/scripting/javascript</module>
         <module>bundles/scripting/jsp</module>
+        <module>bundles/scripting/jsp-api</module>
         <module>bundles/scripting/jsp-taglib</module>
         <module>bundles/scripting/jsp-jstl</module>
-        <module>bundles/scripting/jsp-wrapper</module>
         <module>bundles/scripting/sightly</module>
 
         <!-- Extensions -->
