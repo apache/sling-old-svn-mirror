@@ -76,7 +76,6 @@ public final class DefaultValidationFailure implements ValidationFailure, Serial
         this.defaultResourceBundle = defaultResourceBundle;
     }
 
-    @SuppressWarnings({ "null", "unused" })
     @Override
     public @Nonnull String getMessage(ResourceBundle resourceBundle) {
         if (resourceBundle == null) {
