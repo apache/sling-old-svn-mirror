@@ -17,7 +17,11 @@
 package org.apache.sling.models.impl;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.annotation.Nonnull;
 
@@ -42,8 +46,8 @@ public class ResourceTypeBasedResourcePicker implements ImplementationPicker {
             return null;
         }
 
-        Map<String, Class<?>> implementationsByRT = mapByResourceType(implementationsTypes);
-        return AdapterImplementations.getModelClassForResource(resource, implementationsByRT);
+        Map<String, ConcurrentNavigableMap<String, Class<?>>> implementationsByRT = mapByResourceType(implementationsTypes);
+        return AdapterImplementations.getModelClassForResource(resource, implementationsByRT, null);
     }
 
     private Resource findResource(Object adaptable) {
@@ -56,8 +60,8 @@ public class ResourceTypeBasedResourcePicker implements ImplementationPicker {
         }
     }
 
-    private Map<String, Class<?>> mapByResourceType(Class<?>[] implementationTypes) {
-        Map<String, Class<?>> retval = new HashMap<String, Class<?>>(implementationTypes.length);
+    private Map<String, ConcurrentNavigableMap<String, Class<?>>> mapByResourceType(Class<?>[] implementationTypes) {
+        Map<String, ConcurrentNavigableMap<String, Class<?>>> retval = new HashMap<String, ConcurrentNavigableMap<String, Class<?>>>(implementationTypes.length);
 
         for (Class<?> clazz : implementationTypes) {
             Model modelAnnotation = clazz.getAnnotation(Model.class);
@@ -66,12 +70,14 @@ public class ResourceTypeBasedResourcePicker implements ImplementationPicker {
                 String[] resourceTypes = modelAnnotation.resourceType();
                 for (String resourceType : resourceTypes) {
                     if (!retval.containsKey(resourceType)) {
-                        retval.put(resourceType, clazz);
+                        retval.put(resourceType, new ConcurrentSkipListMap<String, Class<?>>());
+                    }
+                    if(!retval.get(resourceType).containsKey(clazz.getName())) {
+                        retval.get(resourceType).put(clazz.getName(), clazz);
                     }
                 }
             }
         }
         return retval;
     }
-
 }

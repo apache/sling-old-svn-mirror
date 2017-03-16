@@ -157,9 +157,10 @@ public class AdapterImplementationsTest {
         // ensure that trying to reregister the resource type is a no-op
         BundleContext secondBundleContext = MockOsgi.newBundleContext();
         underTest.registerModelToResourceType(secondBundleContext.getBundle(), "sling/rt/one", Resource.class, Integer.class);
-        assertEquals(String.class, underTest.getModelClassForResource(resource));
-        assertEquals(String.class, underTest.getModelClassForResource(childResource));
+        assertEquals(Integer.class, underTest.getModelClassForResource(resource));
+        assertEquals(Integer.class, underTest.getModelClassForResource(childResource));
 
+        underTest.removeResourceTypeBindings(secondBundleContext.getBundle());
         underTest.removeResourceTypeBindings(bundleContext.getBundle());
         assertNull(underTest.getModelClassForResource(resource));
         assertNull(underTest.getModelClassForResource(childResource));
@@ -234,11 +235,13 @@ public class AdapterImplementationsTest {
         assertEquals(String.class, underTest.getModelClassForRequest(request));
         assertEquals(Integer.class, underTest.getModelClassForResource(resource));
 
-        // ensure that trying to reregister the resource type is a no-op
+        // ensure that trying to reregister the resource type which is smaller in natural order, will be ordered in front of the existing
+        // adapater implementation for the same resource type
         BundleContext secondBundleContext = MockOsgi.newBundleContext();
         underTest.registerModelToResourceType(secondBundleContext.getBundle(), "sling/rt/one", SlingHttpServletRequest.class, Integer.class);
-        assertEquals(String.class, underTest.getModelClassForRequest(request));
+        assertEquals(Integer.class, underTest.getModelClassForRequest(request));
 
+        underTest.removeResourceTypeBindings(secondBundleContext.getBundle());
         underTest.removeResourceTypeBindings(bundleContext.getBundle());
         assertNull(underTest.getModelClassForRequest(request));
         assertNull(underTest.getModelClassForResource(resource));

@@ -1091,17 +1091,24 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public boolean isModelAvailableForRequest(@Nonnull SlingHttpServletRequest request) {
-        return adapterImplementations.getModelClassForRequest(request) != null;
+        return adapterImplementations.getModelClassForRequest(request, null) != null;
     }
 
     @Override
     public boolean isModelAvailableForResource(@Nonnull Resource resource) {
-        return adapterImplementations.getModelClassForResource(resource) != null;
+        return adapterImplementations.getModelClassForResource(resource, null) != null;
     }
 
     @Override
     public Object getModelFromResource(Resource resource) {
-        Class<?> clazz = this.adapterImplementations.getModelClassForResource(resource);
+        return this.getModelFromResource(resource, null);
+    }
+
+    @Override
+    public <ModelType> ModelType getModelFromResource(@Nonnull Resource resource, Class<ModelType> adapterType)
+            throws MissingElementsException, InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException,
+            InvalidModelException {
+        Class<ModelType> clazz = this.adapterImplementations.getModelClassForResource(resource, adapterType);
         if (clazz == null) {
             throw new ModelClassException("Could find model registered for resource type: " + resource.getResourceType());
         }
@@ -1110,14 +1117,21 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public Object getModelFromRequest(SlingHttpServletRequest request) {
-        Class<?> clazz = this.adapterImplementations.getModelClassForRequest(request);
+        return getModelFromRequest(request, null);
+    }
+
+    @Override
+    public <ModelType> ModelType getModelFromRequest(@Nonnull SlingHttpServletRequest request, Class<ModelType> adapterType)
+            throws MissingElementsException, InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException,
+            InvalidModelException {
+        Class<ModelType> clazz = this.adapterImplementations.getModelClassForRequest(request, adapterType);
         if (clazz == null) {
             throw new ModelClassException("Could find model registered for request path: " + request.getServletPath());
         }
         return handleBoundModelResult(internalCreateModel(request, clazz));
     }
 
-    private Object handleBoundModelResult(Result<?> result) {
+    private <ModelType> ModelType handleBoundModelResult(Result<ModelType> result) {
         if (!result.wasSuccessful()) {
             throw result.getThrowable();
         } else {
@@ -1142,23 +1156,41 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Override
     public <T> T exportModelForResource(Resource resource, String name, Class<T> targetClass, Map<String, String> options)
             throws ExportException, MissingExporterException {
-        Class<?> clazz = this.adapterImplementations.getModelClassForResource(resource);
+        return this.exportModelForResource(resource, name, targetClass, null, options);
+    }
+
+    @Override
+    public <T, ModelType> T exportModelForResource(Resource resource, String exporterName, Class<T> targetClass,
+            Class<ModelType> usingAdapterType, Map<String, String> options)
+            throws MissingElementsException, InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException,
+            InvalidModelException, ExportException, MissingExporterException {
+        Class<ModelType> clazz = this.adapterImplementations.getModelClassForResource(resource, usingAdapterType);
         if (clazz == null) {
             throw new ModelClassException("Could find model registered for resource type: " + resource.getResourceType());
         }
         Result<?> result = internalCreateModel(resource, clazz);
-        return handleAndExportResult(result, name, targetClass, options);
+        return handleAndExportResult(result, exporterName, targetClass, options);
     }
 
     @Override
-    public <T> T exportModelForRequest(SlingHttpServletRequest request, String name, Class<T> targetClass, Map<String, String> options)
-            throws ExportException, MissingExporterException {
-        Class<?> clazz = this.adapterImplementations.getModelClassForRequest(request);
+    public <T, ModelType> T exportModelForRequest(SlingHttpServletRequest request, String exporterName, Class<T> targetClass,
+            Map<String, String> options)
+            throws MissingElementsException, InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException,
+            InvalidModelException, ExportException, MissingExporterException {
+        return this.exportModelForRequest(request, exporterName, targetClass, null, options);
+    }
+
+    @Override
+    public <T, ModelType> T exportModelForRequest(SlingHttpServletRequest request, String exporterName, Class<T> targetClass,
+            Class<ModelType> usingAdapterType, Map<String, String> options)
+            throws MissingElementsException, InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException,
+            InvalidModelException, ExportException, MissingExporterException {
+        Class<ModelType> clazz = this.adapterImplementations.getModelClassForRequest(request, usingAdapterType);
         if (clazz == null) {
             throw new ModelClassException("Could find model registered for request path: " + request.getServletPath());
         }
         Result<?> result = internalCreateModel(request, clazz);
-        return handleAndExportResult(result, name, targetClass, options);
+        return handleAndExportResult(result, exporterName, targetClass, options);
     }
 
     private <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
