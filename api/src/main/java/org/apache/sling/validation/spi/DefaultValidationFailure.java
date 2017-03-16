@@ -61,9 +61,9 @@ public final class DefaultValidationFailure implements ValidationFailure, Serial
 
     /**
      * Constructor of a validation failure.
-     * @param location the location where the validation error occured
-     * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
-     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} in {@link #getMessage(ResourceBundle)}
+     * @param location the location where the validation error occurred
+     * @param severity the severity of this failure (may be {@code null} which leads to using the validator's default severity)
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@code messageKey} in {@link #getMessage(ResourceBundle)}
      *  if {@code null} is provided as parameter.
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
