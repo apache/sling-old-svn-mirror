@@ -28,7 +28,7 @@
     <relativePath/>
   </parent>
 
-  <artifactId>org.apache.sling.scripting.el-wrapper</artifactId>
+  <artifactId>org.apache.sling.scripting.el-api</artifactId>
   <packaging>bundle</packaging>
   <version>1.0.0-SNAPSHOT</version>
 
@@ -36,9 +36,9 @@
   <description>This bundle wraps the Apache Tomcat 6.0.14 EL API used by Apache Sling Scripting JSP.</description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jcr-wrapper</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jcr-wrapper</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/jcr-wrapper</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/el-api</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/el-api</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/el-api</url>
   </scm>
 
   <build>
