@@ -85,7 +85,7 @@ public class ImplementsExtendsTest {
     }
 
     /**
-     * Ensure that the implementation class itself cannot be adapted to if it is not part of the "adapter" property in the annotation.
+     * Ensure that the implementation class itself can be adapted to, even if it is not part of the "adapter" property in the annotation.
      */
     @Test
     public void testImplementsInterfaceModel_ImplClassImplicitlyMapped() {
