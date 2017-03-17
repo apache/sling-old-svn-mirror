@@ -42,6 +42,12 @@
     <org.apache.tika.version>1.14</org.apache.tika.version>
   </properties>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-features</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-features</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-features</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
