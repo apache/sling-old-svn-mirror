@@ -50,7 +50,7 @@ public interface ModelFactory {
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
 
     /**
-     * 
+     *
      * @param adaptable the adaptable to check
      * @param type the class to check
      * @return {@code true} in case the given class can be created from the given adaptable, otherwise {@code false}
@@ -58,11 +58,11 @@ public interface ModelFactory {
     public boolean canCreateFromAdaptable(@Nonnull Object adaptable, @Nonnull Class<?> type);
 
     /**
-     * 
+     *
      * @param adaptable the adaptable to check
      * @param type the class to check
      * @return false in case no class with the Model annotation adapts to the requested type
-     * 
+     *
      * @see org.apache.sling.models.annotations.Model
      * @deprecated Use {@link #isModelClass(Class)} instead!
      */
@@ -77,8 +77,8 @@ public interface ModelFactory {
      * </ul>
      * Only if both conditions are fulfilled this method will return {@code true}.
      * @param type the class to check
-     * @return {@code true} in case the given type can be instantiated though Sling Models. 
-     * 
+     * @return {@code true} in case the given type can be instantiated though Sling Models.
+     *
      */
     public boolean isModelClass(@Nonnull Class<?> type);
 
@@ -99,7 +99,8 @@ public interface ModelFactory {
     public boolean isModelAvailableForRequest(@Nonnull SlingHttpServletRequest request);
 
     /**
-     * Obtain an adapted model class based on the resource type of the provided resource.
+     * Obtain an adapted model class based on the resource type of the provided resource. If multiple adapter implementations are registered
+     * for the resource's resourceType the first one in alphabetical order will be used.
      *
      * @param resource a resource
      * @return an adapted model object
@@ -110,11 +111,31 @@ public interface ModelFactory {
      * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
      * @throws InvalidModelException in case the given model type could not be validated through the model validation
      */
+    @Deprecated
     public Object getModelFromResource(@Nonnull Resource resource) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
 
+
     /**
-     * Obtain an adapted model class based on the resource type of the request's resource.
+     * Obtain an adapted model class based on the resource type of the provided resource, only if the the given adapterType is registered
+     * with that resourceType.
+     *
+     * @param resource a resource
+     * @param adapterType the adapterType to return the model for if registered for the resourceType
+     * @return an adapted model object
+     * @throws MissingElementsException in case no injector was able to inject some required values with the given types
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found, model was not registered as adapter factory yet, or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
+     * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
+     */
+    public <ModelType> ModelType getModelFromResource(@Nonnull Resource resource, Class<ModelType> adapterType) throws MissingElementsException,
+            InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
+
+    /**
+     * Obtain an adapted model class based on the resource type of the request's resource. If multiple adapter implementations are
+     * registered for the request's resource's resourceType the first one in alphabetical order will be used.
      *
      * @param request a request
      * @return an adapted model object
@@ -125,7 +146,25 @@ public interface ModelFactory {
      * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
      * @throws InvalidModelException in case the given model type could not be validated through the model validation
      */
+    @Deprecated
     public Object getModelFromRequest(@Nonnull SlingHttpServletRequest request) throws MissingElementsException,
+            InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
+
+    /**
+     * Obtain an adapted model class based on the resource type of the request's resource, only if the the given adapterType is registered
+     * with that resourceType.
+     *
+     * @param request a request
+     * @param adapterType the adapterType to return the model for if registered for the resourceType
+     * @return an adapted model object
+     * @throws MissingElementsException in case no injector was able to inject some required values with the given types
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found, model was not registered as adapter factory yet, or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
+     * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
+     */
+    public <ModelType> ModelType getModelFromRequest(@Nonnull SlingHttpServletRequest request, Class<ModelType> adapterType) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException;
 
     /**
@@ -160,7 +199,32 @@ public interface ModelFactory {
      * @throws ExportException if the export fails
      * @throws MissingExporterException if the named exporter can't be found
      */
+    @Deprecated
     public <T> T exportModelForResource(Resource resource, String exporterName, Class<T> targetClass, Map<String, String> options) throws MissingElementsException,
+            InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException,
+            ExportException, MissingExporterException;
+
+    /**
+     * Export the model object registered to the resource's type using the defined target class using the named exporter and using the given
+     * adapterType for retrieving the model.
+     *
+     * @param resource the resource
+     * @param exporterName the exporter name
+     * @param targetClass the target class
+     * @param usingAdapterType the adapterType used to get the model from the resource
+     * @param options any exporter options
+     * @param <T> the target class
+     * @return an instance of the target class
+     * @throws MissingElementsException in case no injector was able to inject some required values with the given types
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found, model was not registered as adapter factory yet, or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
+     * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
+     * @throws ExportException if the export fails
+     * @throws MissingExporterException if the named exporter can't be found
+     */
+    public <T, ModelType> T exportModelForResource(Resource resource, String exporterName, Class<T> targetClass, Class<ModelType> usingAdapterType, Map<String, String> options) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException,
             ExportException, MissingExporterException;
 
@@ -182,7 +246,32 @@ public interface ModelFactory {
      * @throws ExportException if the export fails
      * @throws MissingExporterException if the named exporter can't be found
      */
-    public <T> T exportModelForRequest(SlingHttpServletRequest request, String exporterName, Class<T> targetClass, Map<String, String> options) throws MissingElementsException,
+    @Deprecated
+    public <T, ModelType> T exportModelForRequest(SlingHttpServletRequest request, String exporterName, Class<T> targetClass, Map<String, String> options) throws MissingElementsException,
+            InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException,
+            ExportException, MissingExporterException;
+
+    /**
+     * Export the model object registered to the request's resource's type using the defined target class using the named exporter and using
+     * the given adapterType for retrieving the model.
+     *
+     * @param request the request
+     * @param exporterName the exporter name
+     * @param targetClass the target class
+     * @param usingAdapterType the adapterType used to get the model from the resource
+     * @param options any exporter options
+     * @param <T> the target class
+     * @return an instance of the target class
+     * @throws MissingElementsException in case no injector was able to inject some required values with the given types
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws ModelClassException in case the model could not be instantiated because model annotation was missing, reflection failed, no valid constructor was found, model was not registered as adapter factory yet, or post-construct could not be called
+     * @throws PostConstructException in case the post-construct method has thrown an exception itself
+     * @throws ValidationException in case validation could not be performed for some reason (e.g. no validation information available)
+     * @throws InvalidModelException in case the given model type could not be validated through the model validation
+     * @throws ExportException if the export fails
+     * @throws MissingExporterException if the named exporter can't be found
+     */
+    public <T, ModelType> T exportModelForRequest(SlingHttpServletRequest request, String exporterName, Class<T> targetClass, Class<ModelType> usingAdapterType, Map<String, String> options) throws MissingElementsException,
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException,
             ExportException, MissingExporterException;
 

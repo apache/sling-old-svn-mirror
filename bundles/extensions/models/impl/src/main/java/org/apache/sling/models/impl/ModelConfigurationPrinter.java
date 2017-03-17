@@ -18,7 +18,9 @@ package org.apache.sling.models.impl;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentNavigableMap;
 
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
@@ -102,18 +104,22 @@ public class ModelConfigurationPrinter {
 
         // models bound to resource types
         printWriter.println("Sling Models Bound to Resource Types *For Resources*:");
-        for (Map.Entry<String, Class<?>> entry : adapterImplementations.getResourceTypeMappingsForResources().entrySet()) {
-            printWriter.print(entry.getValue().getName());
-            printWriter.print(" - ");
-            printWriter.println(entry.getKey());
+        for (Map.Entry<String, ConcurrentNavigableMap<String, Class<?>>> entry : adapterImplementations.getResourceTypeMappingsForResources().entrySet()) {
+            for(Class<?> clazz : entry.getValue().values()) {
+                printWriter.print(clazz.getName());
+                printWriter.print(" - ");
+                printWriter.println(entry.getKey());
+            }
         }
         printWriter.println();
 
         printWriter.println("Sling Models Bound to Resource Types *For Requests*:");
-        for (Map.Entry<String, Class<?>> entry : adapterImplementations.getResourceTypeMappingsForRequests().entrySet()) {
-            printWriter.print(entry.getValue().getName());
-            printWriter.print(" - ");
-            printWriter.println(entry.getKey());
+        for (Map.Entry<String, ConcurrentNavigableMap<String, Class<?>>> entry : adapterImplementations.getResourceTypeMappingsForRequests().entrySet()) {
+            for(Class<?> clazz : entry.getValue().values()) {
+                printWriter.print(clazz.getName());
+                printWriter.print(" - ");
+                printWriter.println(entry.getKey());
+            }
         }
 
         printWriter.println();
