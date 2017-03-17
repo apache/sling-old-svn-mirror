@@ -20,16 +20,20 @@ package org.apache.sling.jcr.contentparser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Stack;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.sling.jcr.contentparser.ContentHandler;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
@@ -54,15 +58,14 @@ public final class JcrXmlContentParser implements ContentParser {
     }
     
     @Override
-    public Map<String,Object> parse(InputStream is) throws IOException, ParseException {
+    public void parse(ContentHandler handler, InputStream is) throws IOException, ParseException {
         try {
-            XmlHandler xmlHandler = new XmlHandler();
+            XmlHandler xmlHandler = new XmlHandler(handler);
             SAXParser parser = saxParserFactory.newSAXParser();
             parser.parse(is, xmlHandler);
             if (xmlHandler.hasError()) {
                 throw xmlHandler.getError();
             }
-            return xmlHandler.getContent();
         }
         catch (ParserConfigurationException | SAXException ex) {
             throw new ParseException("Error parsing JCR XML content.", ex);
@@ -82,12 +85,13 @@ public final class JcrXmlContentParser implements ContentParser {
      * Parses XML stream to Map.
      */
     class XmlHandler extends DefaultHandler {
-        private final Map<String,Object> content = new LinkedHashMap<>();
-        private final Stack<Map<String,Object>> elements = new Stack<>();
+        private final ContentHandler contentHandler;
+        private final Deque<String> paths = new ArrayDeque<>();
+        private final Set<String> ignoredPaths = new HashSet<>();
         private SAXParseException error;
         
-        public Map<String,Object> getContent() {
-            return content;
+        public XmlHandler(ContentHandler contentHandler) {
+            this.contentHandler = contentHandler;
         }
         
         public boolean hasError() {
@@ -102,36 +106,55 @@ public final class JcrXmlContentParser implements ContentParser {
         public void startElement(String uri, String localName, String qName, Attributes attributes)
                 throws SAXException {
             
-            // prepare map for element
-            Map<String,Object> element;
-            if (elements.isEmpty()) {
-                element = content;
+            String resourceName = decodeName(qName);
+
+            // generate path for element
+            String path;
+            if (paths.isEmpty()) {
+                path = "/";
             }
             else {
-                element = new HashMap<>();
-                String resourceName = decodeName(qName);
-                if (!helper.ignoreResource(resourceName)) {
-                    elements.peek().put(resourceName, element);
+                path = helper.concatenatePath(paths.peek(), resourceName);
+                if (helper.ignoreResource(resourceName)) {
+                    ignoredPaths.add(path);
                 }
             }
-            elements.push(element);
+            paths.push(path);
             
-            // get attributes
+            // skip further processing if this path or a parent path is ignored
+            if (isIgnoredPath(path)) {
+                return;
+            }
+            
+            // get properties
+            Map<String,Object> properties = new HashMap<>();
             for (int i=0; i<attributes.getLength(); i++) {
                 String propertyName = helper.cleanupPropertyName(decodeName(attributes.getQName(i)));
                 if (!helper.ignoreProperty(propertyName)) {
                     Object value = JcrXmlValueConverter.parseValue(propertyName, attributes.getValue(i));
                     if (value != null) {
-                        element.put(propertyName, value);
+                        properties.put(propertyName, value);
                     }
                 }
             }
+            helper.ensureDefaultPrimaryType(properties);
+            contentHandler.resource(path, properties);
+        }
+        
+        private boolean isIgnoredPath(String path) {
+            if (StringUtils.isEmpty(path)) {
+                return false;
+            }
+            if (ignoredPaths.contains(path)) {
+                return true;
+            }
+            String parentPath = StringUtils.substringBeforeLast(path, "/");
+            return isIgnoredPath(parentPath);
         }
 
         @Override
         public void endElement(String uri, String localName, String qName) throws SAXException {
-            Map<String,Object> element = elements.pop();
-            helper.ensureDefaultPrimaryType(element);
+            paths.pop();
         }
 
         @Override

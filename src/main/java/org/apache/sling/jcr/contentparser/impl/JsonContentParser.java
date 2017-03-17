@@ -35,6 +35,7 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 
+import org.apache.sling.jcr.contentparser.ContentHandler;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
@@ -45,7 +46,12 @@ import org.apache.sling.jcr.contentparser.ParserOptions;
  */
 public final class JsonContentParser implements ContentParser {
     
-    private final ParserHelper helper;    
+    private final ParserHelper helper;
+    /*
+     * Implementation note: This parser uses JsonReader instead of the (more memory-efficient) 
+     * JsonParser Stream API because otherwise it would not be possible to report parent resources
+     * including all properties properly before their children.
+     */
     private final JsonReaderFactory jsonReaderFactory;
     
     public JsonContentParser(ParserOptions options) {
@@ -57,22 +63,25 @@ public final class JsonContentParser implements ContentParser {
     }
     
     @Override
-    public Map<String,Object> parse(InputStream is) throws IOException, ParseException {
+    public void parse(ContentHandler handler, InputStream is) throws IOException, ParseException {
         try (JsonReader reader = jsonReaderFactory.createReader(is)) {
-            return toMap(reader.readObject());
+            parse(handler, reader.readObject(), "/");
         }
         catch (JsonParsingException ex) {
             throw new ParseException("Error parsing JSON content.", ex);
         }
     }
-    
-    private Map<String,Object> toMap(JsonObject object) {
-        Map<String,Object> map = new LinkedHashMap<>();
+
+    private void parse(ContentHandler handler, JsonObject object, String path) {
+        // parse JSON object
+        Map<String,Object> properties = new HashMap<>();
+        Map<String,JsonObject> children = new LinkedHashMap<>();
         for (Map.Entry<String, JsonValue> entry : object.entrySet()) {
             String childName = entry.getKey();
             Object value = convertValue(entry.getValue());
+            boolean isResource = (value instanceof JsonObject);
             boolean ignore = false;
-            if (value instanceof Map) {
+            if (isResource) {
                 ignore = helper.ignoreResource(childName);
             }
             else {
@@ -80,11 +89,24 @@ public final class JsonContentParser implements ContentParser {
                 ignore = helper.ignoreProperty(childName);
             }
             if (!ignore) {
-                map.put(childName, value);
+                if (isResource) {
+                    children.put(childName, (JsonObject)value);
+                }
+                else {
+                    properties.put(childName, value);
+                }
             }
         }
-        helper.ensureDefaultPrimaryType(map);
-        return map;
+        helper.ensureDefaultPrimaryType(properties);
+        
+        // report current JSON object
+        handler.resource(path, properties);
+        
+        // parse and report children
+        for (Map.Entry<String,JsonObject> entry : children.entrySet()) {
+            String childPath = helper.concatenatePath(path, entry.getKey());;
+            parse(handler, entry.getValue(), childPath);
+        }
     }
     
     private Object convertValue(JsonValue value) {
@@ -120,7 +142,7 @@ public final class JsonContentParser implements ContentParser {
                 }
                 return helper.convertSingleTypeArray(values);
             case OBJECT:
-                return toMap((JsonObject)value);
+                return (JsonObject)value;
             default:
                 throw new ParseException("Unexpected JSON value type: " + value.getValueType());
         }

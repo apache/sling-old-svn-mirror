@@ -16,8 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Parser for repository content serialized e.g. as JSON or JCR XML.
- */
-@org.osgi.annotation.versioning.Version("1.0.0")
 package org.apache.sling.jcr.contentparser;
+
+import java.util.Map;
+
+/**
+ * Handler that gets notified while parsing content with {@link ContentParser}.
+ * The resources are always reported in order of their paths as found in the content fragment.
+ * Parents are always reported before their children.
+ */
+public interface ContentHandler {
+
+    /**
+     * Resource found in parsed content.
+     * @param path Path of resource inside the content fragment. The root resource from the content fragment has a path "/".
+     * @param properties Resource properties
+     */
+    void resource(String path, Map<String,Object> properties);
+    
+}
