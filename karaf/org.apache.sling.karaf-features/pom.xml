@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-repoinit</artifactId>
-      <version>${project.version}</version>
+      <version>0.2.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
