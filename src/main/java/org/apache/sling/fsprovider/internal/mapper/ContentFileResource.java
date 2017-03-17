@@ -106,7 +106,7 @@ public final class ContentFileResource extends AbstractResource {
         else if (type == ValueMap.class) {
             return (AdapterType)contentFile.getValueMap();
         }
-        else if (type == Node.class && contentFile.isResource()) {
+        else if (type == Node.class) {
             // support a subset of JCR API for content file resources
             return (AdapterType)new FsNode(contentFile, getResourceResolver());
         }

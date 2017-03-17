@@ -29,8 +29,8 @@ import org.apache.commons.collections.map.LRUMap;
  */
 public final class ContentFileCache {
 
-    private final Map<String,Map<String,Object>> contentCache;
-    private final Map<String,Object> NULL_MAP = Collections.emptyMap();
+    private final Map<String,ContentElement> contentCache;
+    private final ContentElement NULL_ELEMENT = new ContentElementImpl(null, Collections.<String,Object>emptyMap());
     
     /**
      * @param maxSize Cache size. 0 = caching disabled.
@@ -51,21 +51,21 @@ public final class ContentFileCache {
      * @param file File
      * @return Content or null
      */
-    public Map<String,Object> get(String path, File file) {
-        Map<String,Object> content = null;
+    public ContentElement get(String path, File file) {
+        ContentElement content = null;
         if (contentCache != null) {
             content = contentCache.get(path);
         }
         if (content == null) {
             content = ContentFileParserUtil.parse(file);
             if (content == null) {
-                content = NULL_MAP;
+                content = NULL_ELEMENT;
             }
             if (contentCache != null) {
                 contentCache.put(path, content);
             }
         }
-        if (content == NULL_MAP) {
+        if (content == NULL_ELEMENT) {
             return null;
         }
         else {

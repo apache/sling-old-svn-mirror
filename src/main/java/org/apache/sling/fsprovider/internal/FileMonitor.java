@@ -30,6 +30,7 @@ import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.fsprovider.internal.mapper.ContentFile;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
@@ -258,20 +259,19 @@ public final class FileMonitor extends TimerTask {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private List<ResourceChange> collectResourceChanges(final Monitorable monitorable, final ChangeType changeType) {
         List<ResourceChange> changes = new ArrayList<>();
         if (monitorable.status instanceof ContentFileStatus) {
             ContentFile contentFile = ((ContentFileStatus)monitorable.status).contentFile;
             if (changeType == ChangeType.CHANGED) {
-                Map<String,Object> content = (Map<String,Object>)contentFile.getContent();
+                ContentElement content = contentFile.getContent();
                 // we cannot easily report the diff of resource changes between two content files
                 // so we simulate a removal of the toplevel node and then add all nodes contained in the current content file again.
                 changes.add(buildContentResourceChange(ChangeType.REMOVED,  transformPath(monitorable.path)));
                 addContentResourceChanges(changes, ChangeType.ADDED, content, transformPath(monitorable.path));
             }
             else {
-                addContentResourceChanges(changes, changeType, (Map<String,Object>)contentFile.getContent(), transformPath(monitorable.path));
+                addContentResourceChanges(changes, changeType, contentFile.getContent(), transformPath(monitorable.path));
             }
         }
         else {
@@ -279,16 +279,13 @@ public final class FileMonitor extends TimerTask {
         }
         return changes;
     }
-    @SuppressWarnings("unchecked")
     private void addContentResourceChanges(final List<ResourceChange> changes, final ChangeType changeType,
-            final Map<String,Object> content, final String path) {
+            final ContentElement content, final String path) {
         changes.add(buildContentResourceChange(changeType,  path));
         if (content != null) {
-            for (Map.Entry<String,Object> entry : content.entrySet()) {
-                if (entry.getValue() instanceof Map) {
-                    String childPath = path + "/" + entry.getKey();
-                    addContentResourceChanges(changes, changeType, (Map<String,Object>)entry.getValue(), childPath);
-                }
+            for (Map.Entry<String,ContentElement> entry : content.getChildren().entrySet()) {
+                String childPath = path + "/" + entry.getKey();
+                addContentResourceChanges(changes, changeType, entry.getValue(), childPath);
             }
         }
     }

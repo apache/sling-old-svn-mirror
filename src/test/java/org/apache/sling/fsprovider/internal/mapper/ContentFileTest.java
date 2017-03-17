@@ -24,9 +24,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.junit.Test;
 
@@ -34,7 +34,6 @@ public class ContentFileTest {
     
     private ContentFileCache contentFileCache = new ContentFileCache(0);
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testRootContent() {
         File file = new File("src/test/resources/fs-test/folder2/content.json");
@@ -45,16 +44,15 @@ public class ContentFileTest {
         
         assertTrue(underTest.hasContent());
 
-        Map<String,Object> content = (Map<String,Object>)underTest.getContent();
-        assertEquals("app:Page", content.get("jcr:primaryType"));
-        assertEquals("app:PageContent", ((Map<String,Object>)content.get("jcr:content")).get("jcr:primaryType"));
+        ContentElement content = underTest.getContent();
+        assertEquals("app:Page", content.getProperties().get("jcr:primaryType"));
+        assertEquals("app:PageContent", content.getChild("jcr:content").getProperties().get("jcr:primaryType"));
 
         ValueMap props = underTest.getValueMap();
         assertEquals("app:Page", props.get("jcr:primaryType"));
         assertNull(props.get("jcr:content"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testContentLevel1() {
         File file = new File("src/test/resources/fs-test/folder2/content.json");
@@ -65,14 +63,13 @@ public class ContentFileTest {
         
         assertTrue(underTest.hasContent());
 
-        Map<String,Object> content = (Map<String,Object>)underTest.getContent();
-        assertEquals("app:PageContent", content.get("jcr:primaryType"));
+        ContentElement content = underTest.getContent();
+        assertEquals("app:PageContent", content.getProperties().get("jcr:primaryType"));
 
         ValueMap props = underTest.getValueMap();
         assertEquals("app:PageContent", props.get("jcr:primaryType"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testContentLevel5() {
         File file = new File("src/test/resources/fs-test/folder2/content.json");
@@ -83,8 +80,8 @@ public class ContentFileTest {
         
         assertTrue(underTest.hasContent());
 
-        Map<String,Object> content = (Map<String,Object>)underTest.getContent();
-        assertEquals("nt:resource", content.get("jcr:primaryType"));
+        ContentElement content = underTest.getContent();
+        assertEquals("nt:resource", content.getProperties().get("jcr:primaryType"));
 
         ValueMap props = underTest.getValueMap();
         assertEquals("nt:resource", props.get("jcr:primaryType"));
@@ -98,11 +95,7 @@ public class ContentFileTest {
         assertEquals(file, underTest.getFile());
         assertEquals("jcr:content/jcr:title", underTest.getSubPath());
         
-        assertTrue(underTest.hasContent());
-
-        assertEquals("English", underTest.getContent());
-
-        assertTrue(underTest.getValueMap().isEmpty());
+        assertFalse(underTest.hasContent());
     }
 
     @Test

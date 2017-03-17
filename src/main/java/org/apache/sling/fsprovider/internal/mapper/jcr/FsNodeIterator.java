@@ -24,10 +24,9 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.fsprovider.internal.mapper.ContentFile;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 
 /**
  * Simplified implementation of read-only content access via the JCR API.
@@ -36,20 +35,13 @@ class FsNodeIterator implements NodeIterator {
     
     private final ContentFile contentFile;
     private final ResourceResolver resolver;
-    private final Iterator<Map.Entry<String,Map<String,Object>>> children;
+    private final Iterator<Map.Entry<String,ContentElement>> children;
 
-    @SuppressWarnings("unchecked")
     public FsNodeIterator(ContentFile contentFile, ResourceResolver resolver) {
         this.contentFile = contentFile;
         this.resolver = resolver;
-        Map<String,Object> content = (Map<String,Object>)contentFile.getContent();
-        this.children = IteratorUtils.filteredIterator(content.entrySet().iterator(), new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                Map.Entry<String,Object> entry = (Map.Entry<String,Object>)object;
-                return (entry.getValue() instanceof Map);
-            }
-        });
+        ContentElement content = contentFile.getContent();
+        this.children = content.getChildren().entrySet().iterator();
     }
 
     public boolean hasNext() {
@@ -62,7 +54,7 @@ class FsNodeIterator implements NodeIterator {
 
     @Override
     public Node nextNode() {
-        Map.Entry<String,Map<String,Object>> nextEntry = children.next();
+        Map.Entry<String,ContentElement> nextEntry = children.next();
         return new FsNode(contentFile.navigateToRelative(nextEntry.getKey()), resolver);
     }
 

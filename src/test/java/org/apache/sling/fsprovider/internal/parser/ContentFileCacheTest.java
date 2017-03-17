@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
-import java.util.Map;
 
 import org.junit.experimental.theories.DataPoint;
 import org.junit.experimental.theories.Theories;
@@ -44,7 +43,7 @@ public class ContentFileCacheTest {
     public void testCache(int cacheSize) {
         ContentFileCache underTest = new ContentFileCache(cacheSize);
         
-        Map<String,Object> content1 = underTest.get("/fs-test/folder2/content", new File("src/test/resources/fs-test/folder2/content.json"));
+        ContentElement content1 = underTest.get("/fs-test/folder2/content", new File("src/test/resources/fs-test/folder2/content.json"));
         assertNotNull(content1);
         
         switch (cacheSize) {
@@ -57,7 +56,7 @@ public class ContentFileCacheTest {
             break;
         }
 
-        Map<String,Object> content2 = underTest.get("/fs-test/folder1/file1a", new File("src/test/resources/fs-test/folder1/file1a.txt"));
+        ContentElement content2 = underTest.get("/fs-test/folder1/file1a", new File("src/test/resources/fs-test/folder1/file1a.txt"));
         assertNull(content2);
 
         switch (cacheSize) {

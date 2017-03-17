@@ -22,10 +22,9 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapUtil;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 /**
@@ -38,7 +37,7 @@ public final class ContentFile {
     private final String subPath;
     private final ContentFileCache contentFileCache;
     private boolean contentInitialized;
-    private Object content;
+    private ContentElement content;
     private ValueMap valueMap;
     
     /**
@@ -79,10 +78,15 @@ public final class ContentFile {
      * Content object referenced by sub path.
      * @return Map if resource, property value if property.
      */
-    public Object getContent() {
+    public ContentElement getContent() {
         if (!contentInitialized) {
-            Map<String,Object> rootContent = contentFileCache.get(path, file);
-            content = getDeepContent(rootContent, subPath);
+            ContentElement rootContent = contentFileCache.get(path, file);
+            if (subPath == null) {
+                content = rootContent;
+            }
+            else {
+                content = rootContent.getChild(subPath);
+            }
             contentInitialized = true;
         }
         return content;
@@ -96,21 +100,13 @@ public final class ContentFile {
     }
     
     /**
-     * @return true if content references resource map.
-     */
-    public boolean isResource() {
-        return (getContent() instanceof Map);
-    }
-    
-    /**
      * @return ValueMap for resource. Never null.
      */
-    @SuppressWarnings("unchecked")
     public ValueMap getValueMap() {
         if (valueMap == null) {
-            Object currentContent = getContent();
-            if (currentContent instanceof Map) {
-                valueMap = ValueMapUtil.toValueMap((Map<String,Object>)currentContent);
+            ContentElement currentContent = getContent();
+            if (currentContent != null) {
+                valueMap = ValueMapUtil.toValueMap(currentContent.getProperties());
             }
             else {
                 valueMap = ValueMap.EMPTY;
@@ -122,18 +118,8 @@ public final class ContentFile {
     /**
      * @return Child maps.
      */
-    @SuppressWarnings("unchecked")
-    public Iterator<Map.Entry<String,Map<String,Object>>> getChildren() {
-        if (!isResource()) {
-            return IteratorUtils.emptyIterator();
-        }
-        return IteratorUtils.filteredIterator(((Map)getContent()).entrySet().iterator(), new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                Map.Entry<String,Object> entry = (Map.Entry<String,Object>)object;
-                return entry.getValue() instanceof Map;
-            }
-        });
+    public Iterator<Map.Entry<String,ContentElement>> getChildren() {
+        return getContent().getChildren().entrySet().iterator();
     }
     
     /**
@@ -161,30 +147,4 @@ public final class ContentFile {
         return new ContentFile(file, path, absoluteSubPath, contentFileCache);
     }
         
-    @SuppressWarnings("unchecked")
-    private static Object getDeepContent(Object object, String subPath) {
-        if (object == null) {
-            return null;
-        }
-        if (subPath == null) {
-            return object;
-        }
-        if (!(object instanceof Map)) {
-            return null;
-        }
-        String name;
-        String remainingSubPath;
-        int slashIndex = subPath.indexOf('/');
-        if (slashIndex >= 0) {
-            name = subPath.substring(0, slashIndex);
-            remainingSubPath = subPath.substring(slashIndex + 1);
-        }
-        else {
-            name = subPath;
-            remainingSubPath = null;
-        }
-        Object subObject = ((Map<String,Object>)object).get(name);
-        return getDeepContent(subObject, remainingSubPath);
-    }
-    
 }

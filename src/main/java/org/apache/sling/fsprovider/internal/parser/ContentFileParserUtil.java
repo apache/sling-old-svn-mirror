@@ -26,7 +26,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.jcr.contentparser.ContentParser;
@@ -65,7 +64,7 @@ class ContentFileParserUtil {
      * @param file File. Type is detected automatically.
      * @return Content or null if content could not be parsed.
      */
-    public static Map<String,Object> parse(File file) {
+    public static ContentElement parse(File file) {
         if (!file.exists()) {
             return null;
         }
@@ -83,10 +82,12 @@ class ContentFileParserUtil {
         return null;
     }
     
-    private static Map<String,Object> parse(ContentParser contentParser, File file) throws IOException {
+    private static ContentElement parse(ContentParser contentParser, File file) throws IOException {
         try (FileInputStream fis = new FileInputStream(file);
                 BufferedInputStream bis = new BufferedInputStream(fis)) {
-            return contentParser.parse(bis);
+            ContentElementHandler handler = new ContentElementHandler();
+            contentParser.parse(handler, bis);
+            return handler.getRoot();
         }
     }
 
