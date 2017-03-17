@@ -86,6 +86,7 @@ import org.apache.sling.commons.json.io.JSONRenderer;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONObject {
     
     /** A renderer with default settings, used to avoid having to create

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.0.0")
+@Version("1.0.1")
 package org.apache.sling.commons.json.sling;
 
 import org.osgi.annotation.versioning.Version;

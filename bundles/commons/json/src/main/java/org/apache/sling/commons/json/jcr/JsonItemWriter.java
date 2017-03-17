@@ -38,6 +38,7 @@ import org.apache.sling.commons.json.io.JSONWriter;
 /**
  * Dumps JCR Items as JSON data. The dump methods are threadsafe.
  */
+@Deprecated
 public class JsonItemWriter {
 
     private static DateFormat calendarFormat;

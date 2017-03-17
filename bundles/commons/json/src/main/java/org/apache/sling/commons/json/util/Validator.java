@@ -25,6 +25,7 @@ import org.apache.sling.commons.json.JSONTokener;
 /**
  * Utility class for validating JSON text.
  */
+@Deprecated
 public class Validator {
 
     /**

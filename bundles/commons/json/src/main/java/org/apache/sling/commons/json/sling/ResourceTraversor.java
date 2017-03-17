@@ -26,6 +26,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
+@Deprecated
 public class ResourceTraversor {
 
     public static final class Entry {

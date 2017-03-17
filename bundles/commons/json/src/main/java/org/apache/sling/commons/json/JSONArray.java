@@ -81,6 +81,7 @@ import org.apache.sling.commons.json.io.JSONRenderer;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONArray {
 
     /** Default renderer */
