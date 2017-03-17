@@ -16,35 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentparser;
+package org.apache.sling.jcr.contentparser.impl.mapsupport;
+
+import java.util.Map;
 
 /**
- * Content types.
+ * Represents a resource or node in the content hierarchy.
  */
-public enum ContentType {
+public interface ContentElement {
 
     /**
-     * JSON content.
+     * @return Resource name. The root resource has no name (null).
      */
-    JSON("json"),
-
+    String getName();
+    
     /**
-     * JCR XML content (FileVault XML).
+     * Properties of this resource.
+     * @return Properties (keys, values)
      */
-    JCR_XML("jcr.xml");
-
-
-    private final String extension;
-
-    private ContentType(String extension) {
-        this.extension = extension;
-    }
-
+    Map<String, Object> getProperties();
+    
     /**
-     * @return Extension
+     * Get children of current resource. The Map preserves the ordering of children.
+     * @return Children (child names, child objects)
      */
-    public String getExtension() {
-        return extension;
-    }
-
+    Map<String, ContentElement> getChildren();
+    
+    /**
+     * Get child or descendant
+     * @param path Relative path to address child or one of it's descendants (use "/" as hierarchy separator).
+     * @return Child or null if no child found with this path
+     */
+    ContentElement getChild(String path);
+    
 }

@@ -20,7 +20,6 @@ package org.apache.sling.jcr.contentparser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Parses repository content from a file.
@@ -29,12 +28,12 @@ import java.util.Map;
 public interface ContentParser {
 
     /**
-     * Parse content.
-     * @param is Stream with serialized content
-     * @return Content as Map
+     * Parse content in a "stream-based" way. Each resource that is found in the content is reported to the contentHandler.
+     * @param contentHandler Content handler that accepts the parsed content.
+     * @param inputStream Stream with serialized content
      * @throws IOException When I/O error occurs.
      * @throws ParseException When parsing error occurs.
      */
-    Map<String,Object> parse(InputStream is) throws IOException, ParseException;
+    void parse(ContentHandler contentHandler, InputStream inputStream) throws IOException, ParseException;
 
 }

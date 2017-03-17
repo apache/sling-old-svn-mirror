@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Options for content filer parser.
+ * Options for content parser.
  */
 public final class ParserOptions {
     
@@ -60,7 +60,7 @@ public final class ParserOptions {
     }
 
     /**
-     * Some content file formats like JSON do not contain information to identify date/time values.
+     * Some content formats like JSON do not contain information to identify date/time values.
      * Instead they have to be detected by heuristics by trying to parse every string value.
      * This mode is disabled by default.
      * @param value Activate calendar value detection

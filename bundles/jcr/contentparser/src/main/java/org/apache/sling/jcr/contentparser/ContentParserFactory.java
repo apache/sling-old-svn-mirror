@@ -22,7 +22,7 @@ import org.apache.sling.jcr.contentparser.impl.JcrXmlContentParser;
 import org.apache.sling.jcr.contentparser.impl.JsonContentParser;
 
 /**
- * Factory for content file parsers.
+ * Factory for content parsers.
  */
 public final class ContentParserFactory {
 
