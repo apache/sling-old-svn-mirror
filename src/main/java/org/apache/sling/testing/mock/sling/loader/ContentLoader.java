@@ -18,7 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.loader;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -27,7 +26,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 public final class ContentLoader {
 
     private static final String CONTENTTYPE_OCTET_STREAM = "application/octet-stream";
-    private static final String JCR_DATA_PLACEHOLDER = ":jcr:data";
 
     private static final Set<String> IGNORED_NAMES = ImmutableSet.of(
             JcrConstants.JCR_MIXINTYPES,
@@ -177,12 +174,12 @@ public final class ContentLoader {
                 throw new IllegalArgumentException("Resource does already exist: " + destPath);
             }
 
-            Map<String,Object> content = JSON_PARSER.parse(inputStream);
-            Resource resource = this.createResource(parentResource, childName, content);
+            LoaderContentHandler contentHandler = new LoaderContentHandler(destPath, resourceResolver);
+            JSON_PARSER.parse(contentHandler, inputStream);
             if (autoCommit) {
                 resourceResolver.commit();
             }
-            return resource;
+            return resourceResolver.getResource(destPath);
         } catch (ParseException ex) {
             throw new RuntimeException(ex);
         } catch (IOException ex) {
@@ -206,41 +203,6 @@ public final class ContentLoader {
         } catch (PersistenceException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Resource createResource(Resource parentResource, String childName, Map<String,Object> content) throws IOException {
-        
-        // collect all properties first
-        boolean hasJcrData = false;
-        Map<String, Object> props = new HashMap<String, Object>();
-        for (Map.Entry<String,Object> entry : content.entrySet()) {
-            final String name = entry.getKey();
-            if (StringUtils.equals(name, JCR_DATA_PLACEHOLDER)) {
-                hasJcrData = true;
-            }
-            else if (!(entry.getValue() instanceof Map)) {
-                props.put(name, entry.getValue());
-            }
-        }
-        
-        // create resource
-        Resource resource = resourceResolver.create(parentResource, childName, props);
-        
-        if (hasJcrData) {
-            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-            // we cannot import binary data here - but to avoid complaints by JCR we create it with empty binary data
-            valueMap.put(JcrConstants.JCR_DATA, new ByteArrayInputStream(new byte[0]));
-        }
-
-        // add child resources
-        for (Map.Entry<String,Object> entry : content.entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                createResource(resource, entry.getKey(), (Map<String,Object>)entry.getValue());
-            }
-        }
-
-        return resource;
     }
 
     /**
