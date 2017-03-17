@@ -172,8 +172,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                         adapterImplementations.add(adapterType, implType);
                     }
 
-                    ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType,
-                            annotation.condition());
+                    ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                     regs.add(reg);
 
                     for (String resourceType : resourceTypes) {
