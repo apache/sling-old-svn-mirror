@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
-@Version("1.1.0")
-package org.apache.sling.scripting.sightly;
+@Version("1.0.0")
+package org.apache.sling.scripting.sightly.engine;
 
 import org.osgi.annotation.versioning.Version;

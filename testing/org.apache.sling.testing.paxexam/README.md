@@ -129,3 +129,5 @@ Create a test class (extend `TestSupport` to use helper methods and `Option`s) a
 using a version from project (`pom.xml`):
 
     SlingOptions.versionResolver.setVersionFromProject(SLING_GROUP_ID, "org.apache.sling.jcr.oak.server");
+
+**NOTE:** When using `slingLaunchpadOakTar()` or `slingLaunchpadOakMongo()` without _working directory_, _HTTP port_ and _Mongo URI_ make sure to clean up file system and database after each test and do not run tests in parallel to prevent interferences between tests.

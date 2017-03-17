@@ -777,4 +777,16 @@
             file="templates/jsp-templates.xml"
             translations="templates/jsp-templates.properties"/>
     </extension>    
+    
+    <extension point="org.eclipse.ui.keywords">
+      <keyword id="org.apache.sling.ide.eclipse" label="sling ide"/>
+    </extension>
+    
+    <extension point="org.eclipse.ui.preferencePages">
+      <page id="org.apache.sling.ide.eclipse.ui.SlingIdePreferencePage"
+            class="org.apache.sling.ide.eclipse.ui.SlingIdePreferencePage"
+            name="Sling IDE">
+         <keywordReference id="org.apache.sling.ide.eclipse"/>
+      </page>
+    </extension>
 </plugin>    

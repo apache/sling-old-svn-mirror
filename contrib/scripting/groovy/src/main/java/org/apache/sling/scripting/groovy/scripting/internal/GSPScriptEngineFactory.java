@@ -31,13 +31,15 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.codehaus.groovy.util.ReleaseInfo;
 
 /**
- * Script engine for Groovy Scripting Pages.
+ * Script engine for Groovy Server Pages.
  */
 @Component
 @Service
 @Properties({
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="service.description", value="GSP Script Engine"),
+    @Property(name="extensions", value = {"gsp"}),
+    @Property(name="names", value = {"gsp", "GSP"}),
     @Property(name="compatible.javax.script.name", value="groovy")
 })
 public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
@@ -50,7 +52,7 @@ public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public String getLanguageName() {
-        return "Groovy Scripting Pages";
+        return "Groovy Server Pages";
     }
     
     @Override

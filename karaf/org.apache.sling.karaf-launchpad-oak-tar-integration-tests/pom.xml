@@ -41,6 +41,12 @@
     <repoinit.filename>${project.basedir}/src/test/resources/repoinit.txt</repoinit.filename>
   </properties>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests</url>
+  </scm>
+
   <dependencies>
     <!-- javax -->
     <dependency>

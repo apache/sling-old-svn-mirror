@@ -394,7 +394,7 @@
     <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.UserConfigurationImpl</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName</configfile>
     <configfile finalname="/etc/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.karaf-repoinit/${project.version}</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.karaf-repoinit/0.2.1-SNAPSHOT</bundle>
     <!-- dependencies -->
     <feature>webconsole</feature>
     <feature version="${project.version}">sling</feature>

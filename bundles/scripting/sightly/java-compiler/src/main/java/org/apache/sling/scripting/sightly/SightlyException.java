@@ -14,8 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
-@Version("1.1.0")
 package org.apache.sling.scripting.sightly;
 
-import org.osgi.annotation.versioning.Version;
+/**
+ * Exceptions caused by the HTL engine.
+ */
+public class SightlyException extends RuntimeException {
+
+    public SightlyException() {
+    }
+
+    public SightlyException(String message) {
+        super(message);
+    }
+
+    public SightlyException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SightlyException(Throwable cause) {
+        super(cause);
+    }
+}

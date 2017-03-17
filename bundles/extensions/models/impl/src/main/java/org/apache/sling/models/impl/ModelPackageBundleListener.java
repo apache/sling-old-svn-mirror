@@ -173,7 +173,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                     for (String resourceType : resourceTypes) {
                         if (StringUtils.isNotEmpty(resourceType)) {
                             for (Class<?> adaptable : annotation.adaptables()) {
-                                adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
+                                adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
                                 ExportServlet.ExportedObjectAccessor accessor = null;
                                 if (adaptable == Resource.class) {
                                     accessor = new ExportServlet.ResourceAccessor(implType);

@@ -101,7 +101,6 @@
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/fsclassloader</module>
-        <module>bundles/commons/fscontentparser</module>
         <module>bundles/commons/compiler</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
@@ -127,6 +126,7 @@
         <module>bundles/jcr/api</module>
         <module>bundles/jcr/base</module>
         <module>bundles/jcr/contentloader</module>
+        <module>bundles/jcr/contentparser</module>
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
         -->
@@ -151,12 +151,12 @@
         <!-- Scripting Support -->
         <module>bundles/scripting/api</module>
         <module>bundles/scripting/core</module>
-        <module>bundles/scripting/el-wrapper</module>
+        <module>bundles/scripting/el-api</module>
         <module>bundles/scripting/javascript</module>
         <module>bundles/scripting/jsp</module>
+        <module>bundles/scripting/jsp-api</module>
         <module>bundles/scripting/jsp-taglib</module>
         <module>bundles/scripting/jsp-jstl</module>
-        <module>bundles/scripting/jsp-wrapper</module>
         <module>bundles/scripting/sightly</module>
 
         <!-- Extensions -->

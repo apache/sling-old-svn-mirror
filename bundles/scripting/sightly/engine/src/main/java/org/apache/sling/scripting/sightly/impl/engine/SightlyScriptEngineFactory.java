@@ -43,6 +43,9 @@ import org.slf4j.LoggerFactory;
 @Component(
         service = ScriptEngineFactory.class,
         property = {
+                "extensions=html",
+                "names=htl",
+                "names=HTL",
                 Constants.SERVICE_DESCRIPTION + "=HTL Templating Engine",
                 "compatible.javax.script.name=sly"
         }
@@ -70,14 +73,14 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public final static String LANGUAGE_NAME = "The HTL Templating Language";
 
-    public final static String LANGUAGE_VERSION = "1.0";
+    public final static String LANGUAGE_VERSION = "1.3";
 
     public final static String EXTENSION = "html";
 
     public static final String SIGHTLY_CONFIG_FILE = "/sightly.config";
 
     public SightlyScriptEngineFactory() {
-        setNames(SHORT_NAME);
+        setNames("htl", "HTL", SHORT_NAME);
         setExtensions(EXTENSION);
     }
 

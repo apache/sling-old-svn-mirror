@@ -73,7 +73,7 @@
         <org.apache.sling.scripting.sightly.compiler.version>1.0.9-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.version>
         <org.apache.sling.scripting.sightly.compiler.java.version>1.0.9-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
         <org.apache.sling.scripting.sightly.version>1.0.33-SNAPSHOT</org.apache.sling.scripting.sightly.version>
-        <org.apache.sling.scripting.sightly.js.provider.version>1.0.19-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
+        <org.apache.sling.scripting.sightly.js.provider.version>1.0.21-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
         <org.apache.sling.scripting.sightly.models.provider.version>1.0.7-SNAPSHOT</org.apache.sling.scripting.sightly.models.provider.version>
     </properties>
 

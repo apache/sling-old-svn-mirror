@@ -47,8 +47,8 @@ public class SlingOptions {
         return composite(
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.jetty").version(versionResolver),
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.http.servlet-api").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.jsp-wrapper").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.el-wrapper").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.jsp-api").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.scripting.el-api").version(versionResolver),
             config()
         );
     }
@@ -425,19 +425,6 @@ public class SlingOptions {
             sling(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.urlrewriter").version(versionResolver),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.urlrewritefilter").version(versionResolver)
-        );
-    }
-
-    public static Option slingExtensionValidation() {
-        return composite(
-            sling(),
-            slingExtensionI18n(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.api").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.core").version(versionResolver),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").version(versionResolver),
-            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
-                .put("user.mapping", new String[]{"org.apache.sling.validation.core=sling-validation"})
-                .asOption()
         );
     }
 
@@ -853,7 +840,7 @@ public class SlingOptions {
             mavenBundle().groupId("com.composum.sling.core").artifactId("composum-sling-package-manager").version(versionResolver),
             mavenBundle().groupId("org.apache.jackrabbit.vault").artifactId("org.apache.jackrabbit.vault").version(versionResolver),
             factoryConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment")
-                .put("whitelist.bundles", new String[]{"com.composum.core.commons"})
+                .put("whitelist.bundles", new String[]{"com.composum.core.commons", "com.composum.core.pckgmgr"})
                 .put("whitelist.name", "composum")
                 .asOption()
         );
@@ -879,6 +866,26 @@ public class SlingOptions {
                 .put("localIndexDir", localIndexDir)
                 .asOption(),
             mavenBundle().groupId("org.slf4j").artifactId("log4j-over-slf4j").version(versionResolver) // OAK-5921
+        );
+    }
+
+    public static Option slingLaunchpadOakMongo(final String workingDirectory, final int httpPort, final String mongouri) {
+        final String slingHome = String.format("%s/sling", workingDirectory);
+        final String repositoryHome = String.format("%s/repository", slingHome);
+        final String localIndexDir = String.format("%s/index", repositoryHome);
+        return composite(
+            slingLaunchpadOak(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(versionResolver),
+            mavenBundle().groupId("org.mongodb").artifactId("mongo-java-driver").version(versionResolver),
+            mavenBundle().groupId("com.h2database").artifactId("h2-mvstore").version(versionResolver),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.jcr.oak.server").version(versionResolver),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
+                .put("localIndexDir", localIndexDir)
+                .asOption(),
+            newConfiguration("org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService")
+                .put("db", "sling")
+                .put("mongouri", mongouri)
+                .asOption()
         );
     }
 

@@ -75,11 +75,12 @@ public class MergedValidationModelTest {
         modelBuilder.childResource(childResourceBuilder.nameRegex("originalNameNotOverwritten").build(
                 "nameNotOverwritten"));
         ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
-        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(
-                new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"),
-                new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten")));
-        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(new ChildResourceNameRegexMatcher(
-                "overwrittenNameToOverwrite"), new ChildResourceNameRegexMatcher("originalNameNotOverwritten")));
+        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten"))));
+        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ChildResourceNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ChildResourceNameRegexMatcher("originalNameNotOverwritten"))));
     }
 
     @Test

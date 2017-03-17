@@ -25,15 +25,21 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>30</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.karaf-repoinit</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling - Karaf repoinit</name>
   <description>Apache Sling repoinit statements for provisioning with Apache Karaf</description>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-repoinit</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-repoinit</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-repoinit</url>
+  </scm>
 
   <build>
     <plugins>

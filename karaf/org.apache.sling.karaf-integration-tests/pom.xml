@@ -41,6 +41,12 @@
     <org.ops4j.pax.exam.version>4.10.0</org.ops4j.pax.exam.version>
   </properties>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-integration-tests</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-integration-tests</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-integration-tests</url>
+  </scm>
+
   <dependencies>
     <!-- javax -->
     <dependency>
