@@ -34,8 +34,8 @@ public class SlingVersionResolver implements VersionResolver {
     public static final String SLING_GROUP_ID = "org.apache.sling";
 
     public SlingVersionResolver() {
-        versions.put("org.apache.sling:org.apache.sling.scripting.jsp-api", "1.0.0");
-        versions.put("org.apache.sling:org.apache.sling.scripting.el-api", "1.0.0");
+        versions.put("org.apache.sling:org.apache.sling.scripting.jsp-api", "1.0.1-SNAPSHOT");
+        versions.put("org.apache.sling:org.apache.sling.scripting.el-api", "1.0.1-SNAPSHOT");
         versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.14");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.8");
         versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.4.2");
@@ -157,14 +157,14 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.jcr.davex", "1.3.8");
         versions.put("org.apache.sling:org.apache.sling.jcr.jackrabbit.accessmanager", "2.1.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.jackrabbit.usermanager", "2.2.4");
-        versions.put("org.apache.sling:org.apache.sling.jcr.oak.server", "1.1.4");
+        versions.put("org.apache.sling:org.apache.sling.jcr.oak.server", "1.1.5-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.jcr.registration", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.repoinit", "1.1.4");
         versions.put("org.apache.sling:org.apache.sling.jcr.resource", "2.9.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webconsole", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.jcr.webdav", "2.3.8");
         versions.put("org.apache.sling:org.apache.sling.jmx.provider", "1.0.2");
-        versions.put("org.apache.sling:org.apache.sling.karaf-repoinit", "0.2.0");
+        versions.put("org.apache.sling:org.apache.sling.karaf-repoinit", "0.2.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.launchpad.content", "2.0.8");
         versions.put("org.apache.sling:org.apache.sling.models.api", "1.3.2");
         versions.put("org.apache.sling:org.apache.sling.models.impl", "1.3.8");
@@ -177,7 +177,7 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.query", "3.0.0");
         versions.put("org.apache.sling:org.apache.sling.repoinit.parser", "1.1.0");
         versions.put("org.apache.sling:org.apache.sling.resource.inventory", "1.0.6");
-        versions.put("org.apache.sling:org.apache.sling.resource.presence", "0.0.2");
+        versions.put("org.apache.sling:org.apache.sling.resource.presence", "0.0.3-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.resourcemerger", "1.3.2");
         versions.put("org.apache.sling:org.apache.sling.resourceresolver", "1.5.20");
         versions.put("org.apache.sling:org.apache.sling.rewriter", "1.2.0");
@@ -186,14 +186,14 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.sling:org.apache.sling.scripting.groovy", "1.0.2");
         versions.put("org.apache.sling:org.apache.sling.scripting.java", "2.1.2");
         versions.put("org.apache.sling:org.apache.sling.scripting.javascript", "2.0.30");
-        versions.put("org.apache.sling:org.apache.sling.scripting.jsp", "2.3.0");
+        versions.put("org.apache.sling:org.apache.sling.scripting.jsp", "2.3.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.scripting.jsp.taglib", "2.2.6");
         versions.put("org.apache.sling:org.apache.sling.scripting.sightly", "1.0.32");
         versions.put("org.apache.sling:org.apache.sling.scripting.sightly.compiler", "1.0.8");
         versions.put("org.apache.sling:org.apache.sling.scripting.sightly.compiler.java", "1.0.8");
         versions.put("org.apache.sling:org.apache.sling.scripting.sightly.js.provider", "1.0.20");
         versions.put("org.apache.sling:org.apache.sling.scripting.sightly.models.provider", "1.0.6");
-        versions.put("org.apache.sling:org.apache.sling.scripting.thymeleaf", "1.1.0");
+        versions.put("org.apache.sling:org.apache.sling.scripting.thymeleaf", "1.1.1-SNAPSHOT");
         versions.put("org.apache.sling:org.apache.sling.security", "1.1.2");
         versions.put("org.apache.sling:org.apache.sling.serviceusermapper", "1.2.4");
         versions.put("org.apache.sling:org.apache.sling.servlets.get", "2.1.22");
