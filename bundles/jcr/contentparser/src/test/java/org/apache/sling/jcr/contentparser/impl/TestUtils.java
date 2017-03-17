@@ -22,9 +22,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.jcr.contentparser.Content;
 import org.apache.sling.jcr.contentparser.ContentParser;
 
 public final class TestUtils {
@@ -33,24 +32,7 @@ public final class TestUtils {
         // static methods only
     }
 
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> getDeep(Map<String, Object> map, String path) {
-      String name = StringUtils.substringBefore(path, "/");
-      Object object = map.get(name);
-      if (object == null || !(object instanceof Map)) {
-        return null;
-      }
-      String remainingPath = StringUtils.substringAfter(path, "/");
-      Map<String, Object> childMap = (Map<String, Object>)object;
-      if (StringUtils.isEmpty(remainingPath)) {
-        return childMap;
-      }
-      else {
-        return getDeep(childMap, remainingPath);
-      }
-    }
-    
-    public static Map<String,Object> parse(ContentParser contentParser, File file) throws IOException {
+    public static Content parse(ContentParser contentParser, File file) throws IOException {
         try (FileInputStream fis = new FileInputStream(file);
                 BufferedInputStream bis = new BufferedInputStream(fis)) {
             return contentParser.parse(bis);

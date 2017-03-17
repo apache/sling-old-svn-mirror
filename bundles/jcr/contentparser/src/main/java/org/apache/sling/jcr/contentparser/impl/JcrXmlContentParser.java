@@ -20,16 +20,16 @@ package org.apache.sling.jcr.contentparser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
-import java.util.Stack;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.sling.jcr.contentparser.Content;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
@@ -54,7 +54,7 @@ public final class JcrXmlContentParser implements ContentParser {
     }
     
     @Override
-    public Map<String,Object> parse(InputStream is) throws IOException, ParseException {
+    public Content parse(InputStream is) throws IOException, ParseException {
         try {
             XmlHandler xmlHandler = new XmlHandler();
             SAXParser parser = saxParserFactory.newSAXParser();
@@ -82,12 +82,12 @@ public final class JcrXmlContentParser implements ContentParser {
      * Parses XML stream to Map.
      */
     class XmlHandler extends DefaultHandler {
-        private final Map<String,Object> content = new LinkedHashMap<>();
-        private final Stack<Map<String,Object>> elements = new Stack<>();
+        private final Content root = new ContentImpl(null);
+        private final Deque<Content> elements = new ArrayDeque<>();
         private SAXParseException error;
         
-        public Map<String,Object> getContent() {
-            return content;
+        public Content getContent() {
+            return root;
         }
         
         public boolean hasError() {
@@ -102,27 +102,28 @@ public final class JcrXmlContentParser implements ContentParser {
         public void startElement(String uri, String localName, String qName, Attributes attributes)
                 throws SAXException {
             
-            // prepare map for element
-            Map<String,Object> element;
+            // prepare new element
+            Content element;
             if (elements.isEmpty()) {
-                element = content;
+                element = root;
             }
             else {
-                element = new HashMap<>();
                 String resourceName = decodeName(qName);
+                element = new ContentImpl(resourceName);
                 if (!helper.ignoreResource(resourceName)) {
-                    elements.peek().put(resourceName, element);
+                    elements.peek().getChildren().put(resourceName, element);
                 }
             }
             elements.push(element);
             
             // get attributes
+            Map<String,Object> properties = element.getProperties();
             for (int i=0; i<attributes.getLength(); i++) {
                 String propertyName = helper.cleanupPropertyName(decodeName(attributes.getQName(i)));
                 if (!helper.ignoreProperty(propertyName)) {
                     Object value = JcrXmlValueConverter.parseValue(propertyName, attributes.getValue(i));
                     if (value != null) {
-                        element.put(propertyName, value);
+                        properties.put(propertyName, value);
                     }
                 }
             }
@@ -130,7 +131,7 @@ public final class JcrXmlContentParser implements ContentParser {
 
         @Override
         public void endElement(String uri, String localName, String qName) throws SAXException {
-            Map<String,Object> element = elements.pop();
+            Content element = elements.pop();
             helper.ensureDefaultPrimaryType(element);
         }
 

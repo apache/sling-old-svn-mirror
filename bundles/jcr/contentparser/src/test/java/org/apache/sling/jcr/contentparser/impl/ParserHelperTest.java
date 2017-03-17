@@ -28,10 +28,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.sling.jcr.contentparser.Content;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.junit.Test;
@@ -43,36 +42,36 @@ public class ParserHelperTest {
 
     @Test
     public void testEnsureDefaultPrimaryType() {
-        Map<String,Object> content = new HashMap<>();
-        content.put("prop1", "value1");
+        Content content = new ContentImpl(null);
+        content.getProperties().put("prop1", "value1");
 
         ParserHelper underTest = new ParserHelper(new ParserOptions());
         underTest.ensureDefaultPrimaryType(content);
         
-        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1", JCR_PRIMARYTYPE, DEFAULT_PRIMARY_TYPE), content);
+        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1", JCR_PRIMARYTYPE, DEFAULT_PRIMARY_TYPE), content.getProperties());
     }
 
     @Test
     public void testEnsureDefaultPrimaryType_Disabled() {
-        Map<String,Object> content = new HashMap<>();
-        content.put("prop1", "value1");
+        Content content = new ContentImpl(null);
+        content.getProperties().put("prop1", "value1");
 
         ParserHelper underTest = new ParserHelper(new ParserOptions().defaultPrimaryType(null));
         underTest.ensureDefaultPrimaryType(content);
         
-        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1"), content);
+        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1"), content.getProperties());
     }
 
     @Test
     public void testEnsureDefaultPrimaryType_AlreadySet() {
-        Map<String,Object> content = new HashMap<>();
-        content.put("prop1", "value1");
-        content.put(JCR_PRIMARYTYPE, "type1");
+        Content content = new ContentImpl(null);
+        content.getProperties().put("prop1", "value1");
+        content.getProperties().put(JCR_PRIMARYTYPE, "type1");
 
         ParserHelper underTest = new ParserHelper(new ParserOptions());
         underTest.ensureDefaultPrimaryType(content);
         
-        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1", JCR_PRIMARYTYPE, "type1"), content);
+        assertEquals(ImmutableMap.<String,Object>of("prop1", "value1", JCR_PRIMARYTYPE, "type1"), content.getProperties());
     }
 
     @Test
