@@ -35,6 +35,12 @@
   <name>Apache Sling - Karaf repoinit</name>
   <description>Apache Sling repoinit statements for provisioning with Apache Karaf</description>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-repoinit</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-repoinit</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-repoinit</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
