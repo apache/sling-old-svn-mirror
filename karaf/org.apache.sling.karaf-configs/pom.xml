@@ -34,6 +34,12 @@
   <name>Apache Sling - Karaf Configs</name>
   <description>Apache Sling configurations for provisioning with Apache Karaf</description>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-configs</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-configs</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-configs</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
