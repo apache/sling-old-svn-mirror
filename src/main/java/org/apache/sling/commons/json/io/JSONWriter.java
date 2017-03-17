@@ -61,6 +61,7 @@ SOFTWARE.
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONWriter {
 
     // This was previously 20 - increased while creating

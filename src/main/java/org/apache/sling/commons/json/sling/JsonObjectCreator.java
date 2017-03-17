@@ -38,6 +38,7 @@ import org.apache.sling.commons.json.JSONObject;
  * Creates a JSONObject from a resource
  *
  */
+@Deprecated
 public abstract class JsonObjectCreator {
 
     /**

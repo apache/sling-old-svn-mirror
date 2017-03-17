@@ -37,6 +37,7 @@ import java.util.ArrayList;
  * @author vidar@idium.no
  * @since Apr 17, 2009 6:55:30 PM
  */
+@Deprecated
 public class JsonJcrNode extends JSONObject {
 
     private Node node;

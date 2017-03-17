@@ -35,6 +35,7 @@ import org.apache.sling.commons.json.JSONString;
  *  we should write newer code using streams, as much as
  *  possible.
  */
+@Deprecated
 public class JSONRenderer {
 
     /** Rendering options */

@@ -5,6 +5,7 @@ package org.apache.sling.commons.json;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONException extends Exception {
     private static final long serialVersionUID = 8262447656274268887L;
 

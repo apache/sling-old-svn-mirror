@@ -37,6 +37,7 @@ import org.apache.sling.commons.json.JSONObject;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class XML {
 
     /** The Character '&amp;'. */
