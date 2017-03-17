@@ -159,9 +159,9 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
                                 ExportServlet.ExportedObjectAccessor accessor = null;
                                 if (adaptable == Resource.class) {
-                                    accessor = ExportServlet.RESOURCE_ACCESSOR;
+                                    accessor = new ExportServlet.ResourceAccessor(adapterTypes[0]);
                                 } else if (adaptable == SlingHttpServletRequest.class) {
-                                    accessor = ExportServlet.REQUEST_ACCESSOR;
+                                    accessor = new ExportServlet.RequestAccessor(adapterTypes[0]);
                                 }
                                 Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
                                 if (exporterAnnotation != null) {

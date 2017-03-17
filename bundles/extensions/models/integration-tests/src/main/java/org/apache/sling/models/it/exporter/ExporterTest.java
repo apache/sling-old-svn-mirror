@@ -56,6 +56,7 @@ public class ExporterTest {
     private SlingRequestProcessor slingRequestProcessor;
 
     private final String baseComponentPath = "/content/exp/baseComponent";
+    private final String doubledComponentPath = "/content/exp/doubledComponent";
     private final String childComponentPath = "/content/exp/childComponent";
     private final String extendedComponentPath = "/content/exp/extendedComponent";
     private final String interfaceComponentPath = "/content/exp/interfaceComponent";
@@ -124,6 +125,11 @@ public class ExporterTest {
                     "sling/exp-request/interface");
             ResourceUtil.getOrCreateResource(adminResolver, interfaceRequestComponentPath, properties, null, false);
             properties.clear();
+
+            properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
+                    "sling/exp/doubled");
+            ResourceUtil.getOrCreateResource(adminResolver, doubledComponentPath, properties, null, false);
+
 
             adminResolver.commit();
         } finally {
@@ -281,6 +287,30 @@ public class ExporterTest {
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(interfaceRequestComponentPath, obj.getString("id"));
             Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
+        } finally {
+            if (resolver != null && resolver.isLive()) {
+                resolver.close();
+            }
+        }
+    }
+
+    @Test
+    public void testDoubledServlets() throws Exception {
+        ResourceResolver resolver = null;
+        try {
+            resolver = rrFactory.getAdministrativeResourceResolver(null);
+            FakeResponse response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(doubledComponentPath + ".firstmodel.json"), response, resolver);
+
+            JSONObject obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
+            Assert.assertEquals("first", obj.getString("value"));
+
+            response = new FakeResponse();
+            slingRequestProcessor.processRequest(new FakeRequest(doubledComponentPath + ".secondmodel.json"), response, resolver);
+            obj = new JSONObject(response.getStringWriter().toString());
+            Assert.assertEquals("application/json", response.getContentType());
+            Assert.assertEquals("second", obj.getString("value"));
         } finally {
             if (resolver != null && resolver.isLive()) {
                 resolver.close();

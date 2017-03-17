@@ -124,7 +124,9 @@
                             org.apache.sling.models.it.exporter.ExtendedComponent,
                             org.apache.sling.models.it.exporter.BaseRequestComponent,
                             org.apache.sling.models.it.exporter.RequestComponentImpl,
-                            org.apache.sling.models.it.exporter.ExtendedRequestComponent
+                            org.apache.sling.models.it.exporter.ExtendedRequestComponent,
+                            org.apache.sling.models.it.exporter.DoubledFirstComponent,
+                            org.apache.sling.models.it.exporter.DoubledSecondComponent
                         </Sling-Model-Classes>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                         <Export-Package>org.apache.sling.models.it</Export-Package>
