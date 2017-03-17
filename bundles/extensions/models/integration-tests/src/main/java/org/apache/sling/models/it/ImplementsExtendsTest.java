@@ -90,7 +90,7 @@ public class ImplementsExtendsTest {
     @Test
     public void testImplementsInterfaceModel_ImplClassNotMapped() {
         ImplementsInterfacePropertyModel model = adapterManager.getAdapter(resource, ImplementsInterfacePropertyModel.class);
-        assertNull(model);
+        assertNotNull(model); 
     }
 
     /**

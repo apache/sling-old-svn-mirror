@@ -164,7 +164,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                     }
                     // if any exporter is present and the implType is not an adapter, we add it implicitly. Annotations are not inherited
                     // to subclasses so its 1:1 between implType and its exporters
-                    if (exporters != null && !ArrayUtils.contains(adapterTypes, implType)) {
+                    if (!ArrayUtils.contains(adapterTypes, implType)) {
                         adapterTypes = (Class<?>[]) ArrayUtils.add(adapterTypes, implType);
                     }
 
