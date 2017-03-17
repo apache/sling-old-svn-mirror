@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.fsprovider.internal.ContentFileExtensions;
 import org.apache.sling.fsprovider.internal.FsResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 public final class ContentFileResourceMapper implements FsResourceMapper {
@@ -105,10 +106,10 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
 
         // get child resources from content fragments in content file
         List<ContentFile> children = new ArrayList<>();
-        if (parentContentFile.hasContent() && parentContentFile.isResource()) {
-            Iterator<Map.Entry<String,Map<String,Object>>> childMaps = parentContentFile.getChildren();
+        if (parentContentFile.hasContent()) {
+            Iterator<Map.Entry<String,ContentElement>> childMaps = parentContentFile.getChildren();
             while (childMaps.hasNext()) {
-                Map.Entry<String,Map<String,Object>> entry = childMaps.next();
+                Map.Entry<String,ContentElement> entry = childMaps.next();
                 children.add(parentContentFile.navigateToRelative(entry.getKey()));
             }
         }

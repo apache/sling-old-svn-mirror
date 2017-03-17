@@ -38,6 +38,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.fsprovider.internal.mapper.ContentFile;
 import org.apache.sling.fsprovider.internal.mapper.FileResource;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
+import org.apache.sling.fsprovider.internal.parser.ContentElementImpl;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -261,47 +263,44 @@ public final class FileMonitor extends TimerTask {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private List<ResourceChange> collectResourceChanges(final Monitorable monitorable, final String changeType) {
         List<ResourceChange> changes = new ArrayList<>();
         if (monitorable.status instanceof ContentFileStatus) {
             ContentFile contentFile = ((ContentFileStatus)monitorable.status).contentFile;
             if (StringUtils.equals(changeType, TOPIC_RESOURCE_CHANGED)) {
-                Map<String,Object> content = (Map<String,Object>)contentFile.getContent();
+                ContentElement content = contentFile.getContent();
                 // we cannot easily report the diff of resource changes between two content files
                 // so we simulate a removal of the toplevel node and then add all nodes contained in the current content file again.
                 changes.add(buildContentResourceChange(TOPIC_RESOURCE_REMOVED, content, transformPath(monitorable.path)));
                 addContentResourceChanges(changes, TOPIC_RESOURCE_ADDED, content, transformPath(monitorable.path));
             }
             else {
-                addContentResourceChanges(changes, changeType, (Map<String,Object>)contentFile.getContent(), transformPath(monitorable.path));
+                addContentResourceChanges(changes, changeType, contentFile.getContent(), transformPath(monitorable.path));
             }
         }
         else {
-            Map<String,Object> content = new HashMap<>();
-            content.put("sling:resourceType", monitorable.status instanceof FileStatus ?
+            Map<String,Object> props = new HashMap<>();
+            props.put("sling:resourceType", monitorable.status instanceof FileStatus ?
                     FileResource.RESOURCE_TYPE_FILE : FileResource.RESOURCE_TYPE_FOLDER);
+            ContentElement content = new ContentElementImpl(null, props);
             changes.add(buildContentResourceChange(changeType, content, transformPath(monitorable.path)));
         }
         return changes;
     }
-    @SuppressWarnings("unchecked")
     private void addContentResourceChanges(final List<ResourceChange> changes, final String changeType,
-            final Map<String,Object> content, final String path) {
+            final ContentElement content, final String path) {
         changes.add(buildContentResourceChange(changeType, content, path));
         if (content != null) {
-            for (Map.Entry<String,Object> entry : content.entrySet()) {
-                if (entry.getValue() instanceof Map) {
-                    String childPath = path + "/" + entry.getKey();
-                    addContentResourceChanges(changes, changeType, (Map<String,Object>)entry.getValue(), childPath);
-                }
+            for (Map.Entry<String,ContentElement> entry : content.getChildren().entrySet()) {
+                String childPath = path + "/" + entry.getKey();
+                addContentResourceChanges(changes, changeType, entry.getValue(), childPath);
             }
         }
     }
-    private ResourceChange buildContentResourceChange(final String changeType, final Map<String,Object> content, final String path) {
+    private ResourceChange buildContentResourceChange(final String changeType, final ContentElement content, final String path) {
         ResourceChange change = new ResourceChange();
         change.path = path;
-        change.resourceType = content != null ? (String)content.get("sling:resourceType") : null;
+        change.resourceType = content != null ? (String)content.getProperties().get("sling:resourceType") : null;
         change.topic = changeType;
         return change;
     }

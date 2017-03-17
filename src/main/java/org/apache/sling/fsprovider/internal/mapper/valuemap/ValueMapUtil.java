@@ -38,12 +38,8 @@ public final class ValueMapUtil {
     public static ValueMap toValueMap(Map<String,Object> content) {
         Map<String,Object> props = new HashMap<>();
         
-        for (Map.Entry<String, Object> entry : ((Map<String,Object>)content).entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                // skip child resources
-                continue;
-            }
-            else if (entry.getValue() instanceof Collection) {
+        for (Map.Entry<String, Object> entry : content.entrySet()) {
+            if (entry.getValue() instanceof Collection) {
                 // convert lists to arrays
                 props.put(entry.getKey(), ((Collection)entry.getValue()).toArray());
             }

@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.fsprovider.internal.FsResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +95,9 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
         // get children from content resource of parent
         ContentFile parentContentFile = getContentFile(parentPath, null);
         if (parentContentFile != null) {
-            Iterator<Map.Entry<String,Map<String,Object>>> childMaps = parentContentFile.getChildren();
+            Iterator<Map.Entry<String,ContentElement>> childMaps = parentContentFile.getChildren();
             while (childMaps.hasNext()) {
-                Map.Entry<String,Map<String,Object>> entry = childMaps.next();
+                Map.Entry<String,ContentElement> entry = childMaps.next();
                 String childPath = parentPath + "/" + entry.getKey();
                 if (pathMatches(childPath)) {
                     childPaths.add(childPath);
