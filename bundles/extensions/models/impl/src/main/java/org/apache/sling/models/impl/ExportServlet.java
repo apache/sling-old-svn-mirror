@@ -182,17 +182,33 @@ class ExportServlet extends SlingSafeMethodsServlet {
         String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException;
     }
 
-    public static final ExportedObjectAccessor RESOURCE_ACCESSOR = new ExportedObjectAccessor() {
-        @Override
-        public String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException {
-            return modelFactory.exportModelForResource(request.getResource(), exporterName, String.class, options);
-        }
-    };
+    public static final class ResourceAccessor implements ExportedObjectAccessor {
 
-    public static final ExportedObjectAccessor REQUEST_ACCESSOR = new ExportedObjectAccessor() {
+        private final Class<?> adapterClass;
+
+        public ResourceAccessor(Class<?> adapterClass) {
+            this.adapterClass = adapterClass;
+        }
+
         @Override
         public String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException {
-            return modelFactory.exportModelForRequest(request, exporterName, String.class, options);
+            Object adapter = modelFactory.createModel(request.getResource(), adapterClass);
+            return modelFactory.exportModel(adapter, exporterName, String.class, options);
+        }
+    }
+
+    public static final class RequestAccessor implements ExportedObjectAccessor {
+
+        private final Class<?> adapterClass;
+
+        public RequestAccessor(Class<?> adapterClass) {
+            this.adapterClass = adapterClass;
+        }
+
+        @Override
+        public String getExportedString(SlingHttpServletRequest request, Map<String, String> options, ModelFactory modelFactory, String exporterName) throws ExportException, MissingExporterException {
+            Object adapter = modelFactory.createModel(request, adapterClass);
+            return modelFactory.exportModel(adapter, exporterName, String.class, options);
         }
     };
 

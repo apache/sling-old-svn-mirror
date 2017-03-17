@@ -26,6 +26,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.AdapterFactory;
@@ -146,34 +147,51 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 }
                 // register adapter only if given adapters are valid
                 if (validateAdapterClasses(implType, adapterTypes)) {
+                    String[] resourceTypes = annotation.resourceType();
+
+                    Exporter[] exporters = null;
+                    Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                    if (exportersAnnotation != null) {
+                        exporters = exportersAnnotation.value();
+                    }
+                    Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                    if (exporterAnnotation != null) {
+                        if (exporters != null) {
+                            exporters = (Exporter[]) ArrayUtils.add(exporters, exporterAnnotation);
+                        } else {
+                            exporters = new Exporter[] { exporterAnnotation };
+                        }
+                    }
+                    // if any exporter is present and the implType is not an adapter, we add it implicitly. Annotations are not inherited
+                    // to subclasses so its 1:1 between implType and its exporters
+                    if (!ArrayUtils.contains(adapterTypes, implType)) {
+                        adapterTypes = (Class<?>[]) ArrayUtils.add(adapterTypes, implType);
+                    }
+
                     for (Class<?> adapterType : adapterTypes) {
                         adapterImplementations.add(adapterType, implType);
                     }
+
                     ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                     regs.add(reg);
 
-                    String[] resourceTypes = annotation.resourceType();
                     for (String resourceType : resourceTypes) {
                         if (StringUtils.isNotEmpty(resourceType)) {
                             for (Class<?> adaptable : annotation.adaptables()) {
                                 adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
-                                ExportServlet.ExportedObjectAccessor accessor = null;
-                                if (adaptable == Resource.class) {
-                                    accessor = ExportServlet.RESOURCE_ACCESSOR;
-                                } else if (adaptable == SlingHttpServletRequest.class) {
-                                    accessor = ExportServlet.REQUEST_ACCESSOR;
-                                }
-                                Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
-                                if (exporterAnnotation != null) {
-                                    registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
-                                }
-                                Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
-                                if (exportersAnnotation != null) {
-                                    for (Exporter ann : exportersAnnotation.value()) {
+
+                                if (exporters != null) {
+                                    ExportServlet.ExportedObjectAccessor accessor = null;
+                                    if (adaptable == Resource.class) {
+                                        accessor = new ExportServlet.ResourceAccessor(implType);
+                                    } else if (adaptable == SlingHttpServletRequest.class) {
+                                        accessor = new ExportServlet.RequestAccessor(implType);
+                                    }
+
+                                    for (Exporter ann : exporters) {
                                         registerExporter(bundle, implType, resourceType, ann, regs, accessor);
                                     }
                                 }
-
                             }
                         }
                     }
