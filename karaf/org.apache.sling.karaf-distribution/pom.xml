@@ -35,6 +35,12 @@
   <name>Apache Sling - Karaf Distribution</name>
   <description>Apache Sling Karaf Distribution</description>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-distribution</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-distribution</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-distribution</url>
+  </scm>
+
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
