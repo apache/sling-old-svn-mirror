@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * Parser for repository content stored in files (e.g. JSON, JCR XML).
+ * Parser for repository content serialized e.g. as JSON or JCR XML.
  */
 @org.osgi.annotation.versioning.Version("1.0.0")
 package org.apache.sling.jcr.contentparser;

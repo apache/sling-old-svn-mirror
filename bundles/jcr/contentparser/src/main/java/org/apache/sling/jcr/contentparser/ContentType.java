@@ -29,7 +29,7 @@ public enum ContentType {
     JSON("json"),
 
     /**
-     * JCR XML content.
+     * JCR XML content (FileVault XML).
      */
     JCR_XML("jcr.xml");
 
