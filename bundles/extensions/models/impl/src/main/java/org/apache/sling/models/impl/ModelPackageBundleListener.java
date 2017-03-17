@@ -176,9 +176,9 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, adapterTypes[0]);
                                 ExportServlet.ExportedObjectAccessor accessor = null;
                                 if (adaptable == Resource.class) {
-                                    accessor = new ExportServlet.ResourceAccessor(adapterTypes[0]);
+                                    accessor = new ExportServlet.ResourceAccessor(implType);
                                 } else if (adaptable == SlingHttpServletRequest.class) {
-                                    accessor = new ExportServlet.RequestAccessor(adapterTypes[0]);
+                                    accessor = new ExportServlet.RequestAccessor(implType);
                                 }
 
                                 if (exporters != null) {
