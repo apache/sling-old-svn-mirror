@@ -88,9 +88,9 @@ public class ImplementsExtendsTest {
      * Ensure that the implementation class itself cannot be adapted to if it is not part of the "adapter" property in the annotation.
      */
     @Test
-    public void testImplementsInterfaceModel_ImplClassNotMapped() {
+    public void testImplementsInterfaceModel_ImplClassImplicitlyMapped() {
         ImplementsInterfacePropertyModel model = adapterManager.getAdapter(resource, ImplementsInterfacePropertyModel.class);
-        assertNotNull(model); 
+        assertNotNull(model);
     }
 
     /**
