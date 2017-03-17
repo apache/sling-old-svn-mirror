@@ -20,7 +20,6 @@ package org.apache.sling.fsprovider.internal.mapper.valuemap;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class ValueMapUtilTest {
 
@@ -38,7 +36,6 @@ public class ValueMapUtilTest {
         Map<String,Object> content = new HashMap<>();
         content.put("stringProp", "abc");
         content.put("intProp", 123);
-        content.put("childNode", ImmutableMap.<String,Object>of());
         content.put("stringArray", new String[] { "a", "b", "c" });
         content.put("stringList", ImmutableList.of("ab", "cd"));
         content.put("intList", ImmutableList.of(12, 34));
@@ -46,7 +43,6 @@ public class ValueMapUtilTest {
         ValueMap props = ValueMapUtil.toValueMap(content);
         assertEquals("abc", props.get("stringProp", String.class));
         assertEquals((Integer)123, props.get("intProp", 0));
-        assertNull(props.get("childNode"));
         assertArrayEquals(new String[] { "a", "b", "c" }, props.get("stringArray", String[].class));
         assertArrayEquals(new String[] { "ab", "cd" }, props.get("stringList", String[].class));
         assertArrayEquals(new Integer[] { 12, 34 }, props.get("intList", Integer[].class));
