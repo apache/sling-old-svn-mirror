@@ -428,19 +428,6 @@ public class SlingOptions {
         );
     }
 
-    public static Option slingExtensionValidation() {
-        return composite(
-            sling(),
-            slingExtensionI18n(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.api").version(versionResolver),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.core").version(versionResolver),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").version(versionResolver),
-            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
-                .put("user.mapping", new String[]{"org.apache.sling.validation.core=sling-validation"})
-                .asOption()
-        );
-    }
-
     public static Option slingExtensionXss() {
         return composite(
             sling(),
