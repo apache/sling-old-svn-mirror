@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-
 package org.apache.sling.commons.contentdetection.internal;
 
-
-import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.tika.detect.Detector;
@@ -27,16 +24,18 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-@Component
-@Service(value = {ContentAwareMimeTypeService.class})
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Content Aware MIME Type Service"),
-        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-        @Property(name = "detection.mode", value = "tika") }
+@Component(
+    property = {
+        Constants.SERVICE_DESCRIPTION + "=Apache Sling Content Aware MIME Type Service",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        "detection.mode=tika"
+    }
 )
 public class ContentAwareMimeTypeServiceImpl implements  ContentAwareMimeTypeService {
 

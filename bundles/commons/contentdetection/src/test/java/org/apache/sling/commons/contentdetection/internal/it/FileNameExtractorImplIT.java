@@ -24,11 +24,13 @@ import javax.inject.Inject;
 import org.apache.sling.commons.contentdetection.FileNameExtractor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
-public class FileNameExtractorImplIT {
+@ExamReactorStrategy(PerClass.class)
+public class FileNameExtractorImplIT extends ContentdetectionTestSupport{
 
     @Inject
     private FileNameExtractor fileNameExtractor;
@@ -40,8 +42,4 @@ public class FileNameExtractorImplIT {
         assertEquals(expectedFileName, fileNameExtractor.extract(rawPath));
     }
 
-    @org.ops4j.pax.exam.Configuration
-    public Option[] config() {
-        return U.paxConfig();
-    }
 }

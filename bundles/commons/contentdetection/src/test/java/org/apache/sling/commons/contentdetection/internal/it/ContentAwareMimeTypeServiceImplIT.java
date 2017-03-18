@@ -32,14 +32,16 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.contentdetection.ContentAwareMimeTypeService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
-public class ContentAwareMimeTypeServiceImplIT {
+@ExamReactorStrategy(PerClass.class)
+public class ContentAwareMimeTypeServiceImplIT extends ContentdetectionTestSupport {
 
     @Inject
-    private ContentAwareMimeTypeService contentAwaremimeTypeService;
+    private ContentAwareMimeTypeService contentAwareMimeTypeService;
     
     class NonMarkableStream extends BufferedInputStream {
         NonMarkableStream(InputStream is) {
@@ -65,9 +67,9 @@ public class ContentAwareMimeTypeServiceImplIT {
         String mimeTypeName = "test.mp3";
         String mimeType = "audio/mpeg";
         assertEquals("Expecting mp3 type without InputStream parameter",
-                mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName));
+                mimeType, contentAwareMimeTypeService.getMimeType(mimeTypeName));
         assertEquals("Expecting mp3 type with null InputStream parameter",
-                mimeType, contentAwaremimeTypeService.getMimeType(mimeTypeName, null));
+                mimeType, contentAwareMimeTypeService.getMimeType(mimeTypeName, null));
     }
 
     @Test
@@ -78,7 +80,7 @@ public class ContentAwareMimeTypeServiceImplIT {
         assertNotNull("Expecting stream to be found:" + filename, s);
         InputStream originalStream = null;
         try {
-            assertEquals("audio/x-wav", contentAwaremimeTypeService.getMimeType(filename, s));
+            assertEquals("audio/x-wav", contentAwareMimeTypeService.getMimeType(filename, s));
             originalStream = getClass().getResourceAsStream(path);
             assertNotNull("Expecting stream to be found:" + filename, originalStream);
             assertTrue("Expecting content to be unchanged", IOUtils.contentEquals(s, originalStream));
@@ -92,14 +94,10 @@ public class ContentAwareMimeTypeServiceImplIT {
     public void nonMarkableStreamDetectionShouldFail() throws IOException{
         final InputStream nms = new NonMarkableStream(new ByteArrayInputStream("1234567890".getBytes()));
         try {
-            contentAwaremimeTypeService.getMimeType("foo.txt", nms);
+            contentAwareMimeTypeService.getMimeType("foo.txt", nms);
         } finally {
             IOUtils.closeQuietly(nms);
         }
     }
-    
-    @org.ops4j.pax.exam.Configuration
-    public Option[] config() {
-        return U.paxConfig();
-    }
+
 }
