@@ -63,8 +63,8 @@ public class ValidationTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.test-services").versionAsInProject(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", new String[]{
-                    "org.apache.sling.validation.core=sling-readall",
-                    "org.apache.sling.validation.test-services=sling-readall"
+                    "org.apache.sling.validation.core=sling-validation",
+                    "org.apache.sling.validation.test-services=sling-validation"
                 })
                 .asOption(),
             // testing
