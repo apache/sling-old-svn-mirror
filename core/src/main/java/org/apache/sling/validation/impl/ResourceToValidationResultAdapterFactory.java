@@ -40,7 +40,7 @@ public class ResourceToValidationResultAdapterFactory implements AdapterFactory 
         AdapterType adapter = null;
         if (adaptable instanceof Resource) {
             final Resource resource = (Resource) adaptable;
-            if (type == ValidationFailure.class) {
+            if (type == ValidationResult.class) {
                 return (AdapterType)getValidationResultFromCache(resource);
             } else {
                 LOG.warn("Cannot handle adapter {}", type.getName());
@@ -55,7 +55,7 @@ public class ResourceToValidationResultAdapterFactory implements AdapterFactory 
         resource.getResourceMetadata().put(KEY_RESOURCE_METADATA, validationResult);
     }
     
-    private ValidationFailure getValidationResultFromCache(Resource resource) {
-        return (ValidationFailure) resource.getResourceMetadata().get(KEY_RESOURCE_METADATA);
+    private ValidationResult getValidationResultFromCache(Resource resource) {
+        return (ValidationResult) resource.getResourceMetadata().get(KEY_RESOURCE_METADATA);
     }
 }
