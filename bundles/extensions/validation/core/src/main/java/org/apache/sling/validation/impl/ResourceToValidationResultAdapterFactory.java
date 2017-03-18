@@ -33,7 +33,7 @@ public class ResourceToValidationResultAdapterFactory implements AdapterFactory 
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceToValidationResultAdapterFactory.class);
     
-    private static final @Nonnull String KEY_RESOURCE_METADATA = "sling.validationResult";
+    private static final @Nonnull String KEY_RESOURCE_METADATA = "sling.validation.result";
 
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
