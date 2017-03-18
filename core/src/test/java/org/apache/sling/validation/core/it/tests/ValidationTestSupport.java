@@ -25,10 +25,8 @@ import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.testservices.ResourcePresence;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.util.Filter;
 import org.ops4j.pax.exam.util.PathUtils;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionI18n;
@@ -53,10 +51,6 @@ public class ValidationTestSupport extends TestSupport {
 
     @Inject
     protected ValidationService validationService;
-
-    @Inject
-    @Filter(value = "(path=/apps/sling/validation/models/model1)", timeout = 10000)
-    protected ResourcePresence resourcePresence;
 
     @Configuration
     public Option[] configuration() {
