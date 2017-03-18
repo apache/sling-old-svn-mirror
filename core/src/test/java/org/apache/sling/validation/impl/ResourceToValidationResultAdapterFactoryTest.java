@@ -39,7 +39,7 @@ public class ResourceToValidationResultAdapterFactoryTest {
         when(result.getFailures()).thenReturn(Collections.emptyList());
         final Resource resource = mock(Resource.class);
         final ResourceMetadata metadata = mock(ResourceMetadata.class);
-        when(metadata.get("sling.validationResult")).thenReturn(result);
+        when(metadata.get("sling.validation.result")).thenReturn(result);
         when(resource.getResourceMetadata()).thenReturn(metadata);
         final ResourceToValidationResultAdapterFactory factory = new ResourceToValidationResultAdapterFactory();
         final ValidationResult adapter = factory.getAdapter(resource, ValidationResult.class);
