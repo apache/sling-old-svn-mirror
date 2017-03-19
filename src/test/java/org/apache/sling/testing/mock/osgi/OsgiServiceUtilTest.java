@@ -31,14 +31,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +42,12 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -222,32 +219,31 @@ public class OsgiServiceUtilTest {
         // no methods
     }
 
-    @Component
-    @Service(ServiceInterface1.class)
-    @Property(name = Constants.SERVICE_RANKING, intValue = 100)
+    @Component(service = ServiceInterface1.class,
+            property = Constants.SERVICE_RANKING + ":Integer=100")
     public static class Service1 implements ServiceInterface1 {
         // dummy interface
     }
 
-    @Component
-    @Service({ ServiceInterface2.class, ServiceInterface3.class })
-    @Property(name = Constants.SERVICE_RANKING, intValue = 200)
+    @Component(service = { ServiceInterface2.class, ServiceInterface3.class },
+            property = Constants.SERVICE_RANKING + ":Integer=200")
     public static class Service2 implements ServiceInterface2, ServiceInterface3 {
         // dummy interface
     }
 
-    @Component
-    @References({ @Reference(name = "reference2", referenceInterface = ServiceInterface2.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE) })
+    @Component(reference = { @Reference(name = "reference2", service = ServiceInterface2.class, cardinality = ReferenceCardinality.AT_LEAST_ONE,
+            bind="bindReference2", unbind="unbindReference2") })
     public static class Service3 {
 
-        @Reference
+        @Reference(bind="bindReference1", unbind="unbindReference1")
         private ServiceInterface1 reference1;
-        @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+        @Reference(cardinality = ReferenceCardinality.OPTIONAL, bind="bindReference1Optional", unbind="unbindReference1Optional")
         private ServiceInterface1Optional reference1Optional;
 
         private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
 
-        @Reference(name = "reference3", referenceInterface = ServiceInterface3.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
+        @Reference(name = "reference3", service = ServiceInterface3.class, cardinality = ReferenceCardinality.MULTIPLE,
+                bind="bindReference3", unbind="unbindReference3")
         private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
         private List<Map<String, Object>> reference3Configs = new ArrayList<Map<String, Object>>();
 
@@ -399,18 +395,19 @@ public class OsgiServiceUtilTest {
 
     }
 
-    @Component
-    @References({ @Reference(name = "reference2", referenceInterface = ServiceInterface2.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE) })
+    @Component(reference = { @Reference(name = "reference2", service = ServiceInterface2.class, cardinality = ReferenceCardinality.AT_LEAST_ONE,
+            bind="bindReference2", unbind="unbindReference2") })
     public static class Service3StaticGreedy {
 
-        @Reference
+        @Reference(bind="bindReference1", unbind="unbindReference1")
         private ServiceInterface1 reference1;
-        @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+        @Reference(cardinality = ReferenceCardinality.OPTIONAL, bind="bindReference1Optional", unbind="unbindReference1Optional")
         private ServiceInterface1Optional reference1Optional;
 
         private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
 
-        @Reference(name = "reference3", referenceInterface = ServiceInterface3.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
+        @Reference(name = "reference3", service = ServiceInterface3.class, cardinality = ReferenceCardinality.MULTIPLE,
+                bind="bindReference3", unbind="unbindReference3")
         private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
         private List<Map<String, Object>> reference3Configs = new ArrayList<Map<String, Object>>();
 
@@ -501,8 +498,7 @@ public class OsgiServiceUtilTest {
 
     }
 
-    @Component
-    @Reference(referenceInterface = ServiceInterface1.class, name = "customName", bind = "customBind", unbind = "customUnbind")
+    @Component(reference = @Reference(service = ServiceInterface1.class, name = "customName", bind = "customBind", unbind = "customUnbind"))
     public static class Service4 {
 
         private ServiceInterface1 reference1;
@@ -521,8 +517,7 @@ public class OsgiServiceUtilTest {
 
     }
 
-    @Component
-    @Service({ ServiceInterface5.class })
+    @Component(service = { ServiceInterface5.class })
     public static class Service5 implements ServiceInterface5 {
 
         @Override
@@ -537,8 +532,7 @@ public class OsgiServiceUtilTest {
 
     }
 
-    @Component
-    @Service(value=ServiceFactory1.class, serviceFactory=true)
+    @Component(service = ServiceFactory1.class, servicefactory = true)
     public static class ServiceFactory1 {
         
     }
