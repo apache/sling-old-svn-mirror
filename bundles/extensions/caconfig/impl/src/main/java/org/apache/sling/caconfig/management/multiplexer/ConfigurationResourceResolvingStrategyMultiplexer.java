@@ -19,11 +19,13 @@
 package org.apache.sling.caconfig.management.multiplexer;
 
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Detects all {@link ConfigurationResourceResolvingStrategy} implementations in the container
  * and consolidates their result based on service ranking.
  */
+@ProviderType
 public interface ConfigurationResourceResolvingStrategyMultiplexer extends ConfigurationResourceResolvingStrategy {
 
     // inherits all methods from {@link ConfigurationResourceResolvingStrategy}

@@ -19,11 +19,13 @@
 package org.apache.sling.caconfig.management.multiplexer;
 
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Detects all {@link ConfigurationMetadataProvider} implementations in the container
  * and consolidates their result based on service ranking.
  */
+@ProviderType
 public interface ConfigurationMetadataProviderMultiplexer extends ConfigurationMetadataProvider {
 
     // inherits all methods from {@link ConfigurationMetadataProvider}
