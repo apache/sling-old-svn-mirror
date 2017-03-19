@@ -233,13 +233,13 @@ public class DefaultConfigurationResourceResolvingStrategy implements Configurat
         }
         
         if (ref != null && !isAllowedConfigPath(ref)) {
-            log.warn("Ignoring reference to {} from {} - not in allowed paths.",
+            log.debug("Ignoring reference to {} from {} - not in allowed paths.",
                     contextResource.getConfigRef(), contextResource.getResource().getPath());
             ref = null;
         }
 
         if (ref != null && isFallbackConfigPath(ref)) {
-            log.warn("Ignoring reference to {} from {} - already a fallback path.",
+            log.debug("Ignoring reference to {} from {} - already a fallback path.",
                     contextResource.getConfigRef(), contextResource.getResource().getPath());
             ref = null;
         }
