@@ -43,7 +43,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.PathEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.PathParentExpandIterator;
