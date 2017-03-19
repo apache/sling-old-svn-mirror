@@ -28,9 +28,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolver;
-import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationMetadataProviderMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.osgi.service.component.annotations.Activate;
@@ -51,7 +51,7 @@ public class ConfigurationResolverImpl implements ConfigurationResolver, Configu
     @Reference
     private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
     @Reference
-    private ConfigurationOverrideManager configurationOverrideManager;
+    private ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     @Reference
     private ConfigurationMetadataProviderMultiplexer configurationMetadataProvider;
     
@@ -83,7 +83,7 @@ public class ConfigurationResolverImpl implements ConfigurationResolver, Configu
     public ConfigurationBuilder get(Resource resource) {
         return new ConfigurationBuilderImpl(resource, this,
                 configurationResourceResolvingStrategy, configurationPersistenceStrategy,
-                configurationInheritanceStrategy, configurationOverrideManager, configurationMetadataProvider,
+                configurationInheritanceStrategy, configurationOverrideMultiplexer, configurationMetadataProvider,
                 configBucketNames);
     }
 

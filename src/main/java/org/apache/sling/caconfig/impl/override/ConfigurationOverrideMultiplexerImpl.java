@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.impl.ConfigurationResourceWrapper;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
 import org.apache.sling.commons.osgi.Order;
@@ -46,19 +47,19 @@ import org.slf4j.LoggerFactory;
  * Detects all {@link ConfigurationOverrideProvider} implementations in the container
  * and consolidates their result based on service ranking.
  */
-@Component(service = ConfigurationOverrideManager.class,
+@Component(service = ConfigurationOverrideMultiplexer.class,
 reference={
         @Reference(name="configurationOverrideProvider", service=ConfigurationOverrideProvider.class,
                 bind="bindConfigurationOverrideProvider", unbind="unbindConfigurationOverrideProvider",
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ConfigurationOverrideManager implements ChangeListener {
+public class ConfigurationOverrideMultiplexerImpl implements ConfigurationOverrideMultiplexer, ChangeListener {
 
     private RankedServices<ConfigurationOverrideProvider> items = new RankedServices<>(Order.DESCENDING, this);
     private volatile Collection<OverrideItem> allOverrides = Collections.emptyList();
     
-    private static final Logger log = LoggerFactory.getLogger(ConfigurationOverrideManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationOverrideMultiplexerImpl.class);
     
     protected void bindConfigurationOverrideProvider(ConfigurationOverrideProvider item, Map<String, Object> props) {
         items.bind(item, props);

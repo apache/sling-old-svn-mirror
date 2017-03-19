@@ -25,8 +25,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 
 final class ValueInfoImpl<T> implements ValueInfo<T> {
@@ -41,13 +41,13 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
     private final List<Resource> configurationResourceInheritanceChain;
     private final Resource contextResource;
     private final String configName;
-    private final ConfigurationOverrideManager configurationOverrideManager;
+    private final ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     private final boolean isAllOverridden;
     
     public ValueInfoImpl(String name, T value, T effectiveValue, PropertyMetadata<T> propertyMetadata,
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
             List<Resource> configurationResourceInheritanceChain,
-            Resource contextResource, String configName, ConfigurationOverrideManager configurationOverrideManager,
+            Resource contextResource, String configName, ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
             boolean isAllOverridden) {
         this.name = name;
         this.value = value;
@@ -59,7 +59,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         this.configurationResourceInheritanceChain = configurationResourceInheritanceChain;
         this.contextResource = contextResource;
         this.configName = configName;
-        this.configurationOverrideManager = configurationOverrideManager;
+        this.configurationOverrideMultiplexer = configurationOverrideMultiplexer;
         this.isAllOverridden = isAllOverridden;
     }
     
@@ -159,7 +159,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         if (isAllOverridden) {
             return true;
         }
-        Map<String,Object> overrideProperties = configurationOverrideManager.overrideProperties(
+        Map<String,Object> overrideProperties = configurationOverrideMultiplexer.overrideProperties(
                     contextResource.getPath(), configName, Collections.<String,Object>emptyMap());
         if (overrideProperties != null) {
             return overrideProperties.containsKey(name)

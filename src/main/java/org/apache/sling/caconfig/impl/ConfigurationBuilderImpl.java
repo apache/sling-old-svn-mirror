@@ -38,7 +38,7 @@ import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.ConfigurationProxy.ChildResolver;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassParser;
-import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
@@ -57,7 +57,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
     private final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy;
     private final ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy;
     private final ConfigurationInheritanceStrategy configurationInheritanceStrategy;
-    private final ConfigurationOverrideManager configurationOverrideManager;
+    private final ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     private final ConfigurationMetadataProvider configurationMetadataProvider;
     private final Collection<String> configBucketNames;
 
@@ -70,7 +70,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             final ConfigurationResourceResolvingStrategy configurationResourceResolvingStrategy,
             final ConfigurationPersistenceStrategyMultiplexer configurationPersistenceStrategy,
             final ConfigurationInheritanceStrategy configurationInheritanceStrategy,
-            final ConfigurationOverrideManager configurationOverrideManager,
+            final ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
             final ConfigurationMetadataProvider configurationMetadataProvider,
             final Collection<String> configBucketNames) {
         this.contentResource = resource;
@@ -78,7 +78,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         this.configurationResourceResolvingStrategy = configurationResourceResolvingStrategy;
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configurationInheritanceStrategy = configurationInheritanceStrategy;
-        this.configurationOverrideManager = configurationOverrideManager;
+        this.configurationOverrideMultiplexer = configurationOverrideMultiplexer;
         this.configurationMetadataProvider = configurationMetadataProvider;
         this.configBucketNames = configBucketNames;
     }
@@ -185,7 +185,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             // apply resource inheritance
             configResource = configurationInheritanceStrategy.getResource(transformedResources);
             // apply overrides
-            configResource = configurationOverrideManager.overrideProperties(contentResource.getPath(), name, configResource);
+            configResource = configurationOverrideMultiplexer.overrideProperties(contentResource.getPath(), name, configResource);
             // build name
             if (configResource != null && isCollection) {
                 conversionName = conversionName + "/" + configResource.getName();

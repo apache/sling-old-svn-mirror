@@ -36,12 +36,12 @@ import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.impl.ConfigurationResourceResolverConfig;
-import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationMetadataProviderMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
@@ -68,7 +68,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     @Reference
     private ConfigurationInheritanceStrategyMultiplexer configurationInheritanceStrategy;
     @Reference
-    private ConfigurationOverrideManager configurationOverrideManager;
+    private ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     @Reference
     private ConfigurationResourceResolverConfig configurationResourceResolverConfig;
 
@@ -114,13 +114,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 resettableConfigResourceInheritanceChain.reset();
                 return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                         applyPersistence(resettableConfigResourceInheritanceChain, false),
-                        resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, false, null);
+                        resource, configName, this, configurationOverrideMultiplexer, configurationPersistenceStrategy, false, null);
             }
         }
         if (configMetadata != null) {
             // if no config resource found but config metadata exist return empty config data with default values
             return new ConfigurationDataImpl(configMetadata,
-                    resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, false);
+                    resource, configName, this, configurationOverrideMultiplexer, configurationPersistenceStrategy, false);
         }
         return null;
     }
@@ -181,7 +181,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     resettableConfigResourceInheritanceChain.reset();
                     configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
                             applyPersistence(resettableConfigResourceInheritanceChain, true),
-                            resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy,
+                            resource, configName, this, configurationOverrideMultiplexer, configurationPersistenceStrategy,
                             true, untransformedConfigResource.getName()));
                 }
             }
@@ -236,7 +236,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         Resource configResource = configurationInheritanceStrategy.getResource(transformedConfigResources);
         
         // apply overrides
-        return configurationOverrideManager.overrideProperties(contextPath, configName, configResource);
+        return configurationOverrideMultiplexer.overrideProperties(contextPath, configName, configResource);
     }
 
     @Override
@@ -275,7 +275,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         if (configMetadata != null) {
             return new ConfigurationDataImpl(configMetadata,
-                    resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, true);
+                    resource, configName, this, configurationOverrideMultiplexer, configurationPersistenceStrategy, true);
         }
         return null;
     }
