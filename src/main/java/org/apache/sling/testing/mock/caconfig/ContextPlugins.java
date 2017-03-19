@@ -24,7 +24,6 @@ import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrateg
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassConfigurationMetadataProvider;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.impl.ConfigurationManagerImpl;
-import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolverImpl;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
@@ -36,7 +35,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Mock context plugins.
- * The plugin supports both 1.0/1.1 and 1.2+ version of the Impl/SPI.
+ * The plugin supports all versions from 1.0 to the most recent versions of the Impl/SPI.
  */
 @ProviderType
 public final class ContextPlugins {
@@ -82,7 +81,7 @@ public final class ContextPlugins {
         
         if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl")) {
             // fallback to impl 1.1
-            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer");
+            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer", true);
         }
         
         context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
@@ -103,7 +102,12 @@ public final class ContextPlugins {
      * @param context Sling context
      */
     private static void registerConfigurationResolver(SlingContextImpl context) {
-        context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
+        
+        if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexerImpl")) {
+            // fallback to impl 1.2
+            registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer", true);
+        }
+
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
         
         // only required for impl 1.2+
@@ -133,13 +137,22 @@ public final class ContextPlugins {
     }
 
     private static boolean registerByClassName(SlingContextImpl context, String className) {
+        return registerByClassName(context, className, false);
+    }
+
+    private static boolean registerByClassName(SlingContextImpl context, String className, boolean mandatory) {
         try {
             Class<?> clazz = Class.forName(className);
             context.registerInjectActivateService(clazz.newInstance());
             return true;
         }
         catch (ClassNotFoundException ex) {
-            return false;
+            if (mandatory) {
+                throw new RuntimeException(ex.getMessage(), ex);
+            }
+            else {
+                return false;
+            }
         }
         catch (InstantiationException ex) {
             throw new RuntimeException(ex);
