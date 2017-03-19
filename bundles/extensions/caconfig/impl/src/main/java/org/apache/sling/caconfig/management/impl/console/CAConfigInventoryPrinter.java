@@ -35,7 +35,7 @@ import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.ConfigurationOverrideProvider;
-import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.osgi.framework.BundleContext;
@@ -75,7 +75,8 @@ public class CAConfigInventoryPrinter implements InventoryPrinter {
         printSPISection(pw, ConfigurationResourceResolvingStrategy.class, "Configuration Resource Resolving Strategies");
         printSPISection(pw, CollectionInheritanceDecider.class, "Collection Inheritance Deciders");
         printSPISection(pw, ConfigurationInheritanceStrategy.class, "Configuration Inheritance Strategies");
-        printSPISection(pw, ConfigurationPersistenceStrategy.class, "Configuration Persistance Strategies");
+        printSPISection(pw, ConfigurationPersistenceStrategy2.class, "Configuration Persistance Strategies",
+                new ConfigurationPersistenceStrategyPrinter());
         printSPISection(pw, ConfigurationMetadataProvider.class, "Configuration Metadata Providers",
                 new ConfigurationMetadataPrinter());
         printSPISection(pw, ConfigurationOverrideProvider.class, "Configuration Override Providers",

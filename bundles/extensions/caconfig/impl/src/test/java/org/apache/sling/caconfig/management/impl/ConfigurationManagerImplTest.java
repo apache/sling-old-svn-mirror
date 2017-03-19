@@ -94,47 +94,47 @@ public class ConfigurationManagerImplTest {
         contextResourceNoConfig = context.create().resource("/content/testNoConfig",
                 PROPERTY_CONFIG_REF, "/conf/testNoConfig");
         
-        context.create().resource(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NAME),
+        context.create().resource(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NAME),
                 "prop1", "value1",
                 "prop4", true);
-        context.create().resource(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/sling:configs/" + CONFIG_COL_NAME) + "/1"),
                 "prop1", "value1");
-        context.create().resource(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_COL_NAME + "/2"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/sling:configs/" + CONFIG_COL_NAME) + "/2"),
                 "prop4", true);
         
         // test fixture with resource collection inheritance on level 2
-        context.create().resource(getConfigCollectionParentPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME),
+        context.create().resource(getConfigCollectionParentResolvePath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME),
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
-        context.create().resource(getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME) + "/1"),
                 "prop1", "value1_level2");
         
         // test fixture with property inheritance and resource collection inheritance on level 3
-        context.create().resource(getConfigPropsPath("/conf/test/level2/level3/sling:configs/" + CONFIG_NAME),
+        context.create().resource(getConfigResolvePath("/conf/test/level2/level3/sling:configs/" + CONFIG_NAME),
                 "prop4", false,
                 "prop5", "value5_level3",
                 PROPERTY_CONFIG_PROPERTY_INHERIT, true);
-        context.create().resource(getConfigCollectionParentPath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME),
+        context.create().resource(getConfigCollectionParentResolvePath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME),
                 PROPERTY_CONFIG_COLLECTION_INHERIT, true);
-        context.create().resource(getConfigPropsPath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME + "/1"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME) + "/1"),
                 "prop4", false,
                 "prop5", "value5_level3",
                 PROPERTY_CONFIG_PROPERTY_INHERIT, true);
 
         // test fixture nested configuration
-        context.create().resource(getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME),
+        context.create().resource(getConfigResolvePath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME),
                 "prop1", "value1",
                 "prop4", true);
-        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSub"),
+        context.create().resource(getConfigResolvePath(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSub"),
                 "prop1", "propSubValue1",
                 "prop4", true);
-        context.create().resource(getConfigPropsPath(getConfigPropsPath(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSub") + "/propSubLevel2"),
+        context.create().resource(getConfigResolvePath(getConfigResolvePath(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSub") + "/propSubLevel2"),
                 "prop1", "propSubLevel2Value1",
                 "prop4", true);
-        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList/item1"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList") + "/item1"),
                 "prop1", "propSubListValue1.1");
-        context.create().resource(getConfigPropsPath(getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList/item2"),
+        context.create().resource(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath("/conf/test/level2/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList") + "/item2"),
                 "prop1", "propSubListValue1.2");
-        context.create().resource(getConfigPropsPath(getConfigPropsPath(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList/item1") + "/propSub"),
+        context.create().resource(getConfigResolvePath(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME) + "/propSubList") + "/item1") + "/propSub"),
                 "prop1", "propSubList1_proSubValue1",
                 "prop4", true);
         
@@ -194,15 +194,27 @@ public class ConfigurationManagerImplTest {
         when(configurationMetadataProvider.getConfigurationNames()).thenReturn(ImmutableSortedSet.of(CONFIG_NAME, CONFIG_COL_NAME, CONFIG_NESTED_NAME));
     }
     
-    protected String getConfigPropsPath(String path) {
+    protected String getConfigResolvePath(String path) {
         return path;
     }
     
-    protected String getConfigPropsPersistPath(String path) {
+    protected String getConfigPersistPath(String path) {
         return path;
     }
     
-    protected String getConfigCollectionParentPath(String path) {
+    protected String getConfigCollectionParentResolvePath(String path) {
+        return path;
+    }
+    
+    protected String getConfigCollectionParentPersistPath(String path) {
+        return path;
+    }
+    
+    protected String getConfigCollectionItemResolvePath(String path) {
+        return path;
+    }
+    
+    protected String getConfigCollectionItemPersistPath(String path) {
         return path;
     }
     
@@ -235,7 +247,7 @@ public class ConfigurationManagerImplTest {
         assertEquals("value1", configData.getEffectiveValues().get("prop1", String.class));
         assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", 0));
 
-        String configPath = getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NAME);
+        String configPath = getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NAME);
         assertEquals(configPath, configData.getValueInfo("prop1").getConfigSourcePath());
         assertTrue(configData.getValueInfo("prop1").isInherited());
         assertFalse(configData.getValueInfo("prop3").isInherited());
@@ -262,8 +274,8 @@ public class ConfigurationManagerImplTest {
         assertFalse(configData.getEffectiveValues().get("prop4", Boolean.class));
         assertEquals("value5_level3", configData.getEffectiveValues().get("prop5", String.class));
 
-        String configPath = getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NAME);
-        String configPathLevel3 = getConfigPropsPath("/conf/test/level2/level3/sling:configs/" + CONFIG_NAME);
+        String configPath = getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NAME);
+        String configPathLevel3 = getConfigResolvePath("/conf/test/level2/level3/sling:configs/" + CONFIG_NAME);
         assertTrue(configData.getValueInfo("prop1").isInherited());
         assertEquals(configPath, configData.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData.getValueInfo("prop2").isInherited());
@@ -373,7 +385,7 @@ public class ConfigurationManagerImplTest {
         assertEquals("value1_level2", configData1.getEffectiveValues().get("prop1", String.class));
         assertEquals((Integer)5, configData1.getEffectiveValues().get("prop3", 0));
 
-        String configPath1 = getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME + "/1");
+        String configPath1 = getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME) + "/1");
         assertFalse(configData1.getValueInfo("prop1").isInherited());
         assertEquals(configPath1, configData1.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData1.getValueInfo("prop3").isInherited());
@@ -384,7 +396,7 @@ public class ConfigurationManagerImplTest {
         assertNull(configData2.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
 
-        String configPath2 = getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_COL_NAME + "/2");
+        String configPath2 = getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/sling:configs/" + CONFIG_COL_NAME) + "/2");
         assertTrue(configData2.getValueInfo("prop4").isInherited());
         assertEquals(configPath2, configData2.getValueInfo("prop4").getConfigSourcePath());
         assertFalse(configData2.getValueInfo("prop3").isInherited());
@@ -415,8 +427,8 @@ public class ConfigurationManagerImplTest {
         assertFalse(configData1.getEffectiveValues().get("prop4", Boolean.class));
         assertEquals("value5_level3", configData1.getEffectiveValues().get("prop5", String.class));
 
-        String configPathLevel2 = getConfigPropsPath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME + "/1");
-        String configPathLevel3 = getConfigPropsPath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME + "/1");
+        String configPathLevel2 = getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/level2/sling:configs/" + CONFIG_COL_NAME) + "/1");
+        String configPathLevel3 = getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/level2/level3/sling:configs/" + CONFIG_COL_NAME) + "/1");
         assertTrue(configData1.getValueInfo("prop1").isInherited());
         assertEquals(configPathLevel2, configData1.getValueInfo("prop1").getConfigSourcePath());
         assertFalse(configData1.getValueInfo("prop2").isInherited());
@@ -433,7 +445,7 @@ public class ConfigurationManagerImplTest {
         assertNull(configData2.getValues().get("prop1", String.class));
         assertEquals((Integer)5, configData2.getEffectiveValues().get("prop3", 0));
 
-        String configPath2 = getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_COL_NAME + "/2");
+        String configPath2 = getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath("/conf/test/sling:configs/" + CONFIG_COL_NAME) + "/2");
         assertTrue(configData2.getValueInfo("prop4").isInherited());
         assertEquals(configPath2, configData2.getValueInfo("prop4").getConfigSourcePath());
         assertFalse(configData2.getValueInfo("prop3").isInherited());
@@ -520,7 +532,7 @@ public class ConfigurationManagerImplTest {
                 new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1")));
         context.resourceResolver().commit();
 
-        String configPath = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_NAME);
+        String configPath = getConfigPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_NAME);
         ValueMap props = context.resourceResolver().getResource(configPath).getValueMap();
         assertEquals("value1", props.get("prop1"));
     }
@@ -534,11 +546,11 @@ public class ConfigurationManagerImplTest {
         ));
         context.resourceResolver().commit();
 
-        String configPath0 = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/0");
+        String configPath0 = getConfigCollectionItemPersistPath(getConfigCollectionParentPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME) + "/0");
         ValueMap props0 = context.resourceResolver().getResource(configPath0).getValueMap();
         assertEquals("value1", props0.get("prop1"));
 
-        String configPath1 = getConfigPropsPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME + "/1");
+        String configPath1 = getConfigCollectionItemPersistPath(getConfigCollectionParentPersistPath("/conf/testNoConfig/sling:configs/" + CONFIG_COL_NAME) + "/1");
         ValueMap props1 = context.resourceResolver().getResource(configPath1).getValueMap();
         assertEquals((Integer)5, props1.get("prop2"));
     }
@@ -696,14 +708,14 @@ public class ConfigurationManagerImplTest {
     
     @Test
     public void testGetConfigurationMetadata_Nested_Sub() {
-        ConfigurationMetadata configMetadataSub = underTest.getConfigurationMetadata(getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSub");
+        ConfigurationMetadata configMetadataSub = underTest.getConfigurationMetadata(getConfigResolvePath(CONFIG_NESTED_NAME) + "/propSub");
         assertNotNull(configMetadataSub);
         assertEquals("propSub", configMetadataSub.getName());
     }
     
     @Test
     public void testGetConfigurationMetadata_Nested_SubLevel2() {
-        ConfigurationMetadata configMetadataSubLevel2 = underTest.getConfigurationMetadata(getConfigPropsPath(getConfigPropsPath(CONFIG_NESTED_NAME)
+        ConfigurationMetadata configMetadataSubLevel2 = underTest.getConfigurationMetadata(getConfigResolvePath(getConfigResolvePath(CONFIG_NESTED_NAME)
                 + "/propSub") + "/propSubLevel2");
         assertNotNull(configMetadataSubLevel2);
         assertEquals("propSubLevel2", configMetadataSubLevel2.getName());
@@ -711,7 +723,7 @@ public class ConfigurationManagerImplTest {
     
     @Test
     public void testGetConfigurationMetadata_Nested_SubList() {
-        ConfigurationMetadata configMetadataSubList = underTest.getConfigurationMetadata(getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSubList");
+        ConfigurationMetadata configMetadataSubList = underTest.getConfigurationMetadata(getConfigResolvePath(CONFIG_NESTED_NAME) + "/propSubList");
         assertNotNull(configMetadataSubList);
         assertEquals("propSubList", configMetadataSubList.getName());
     }
@@ -720,11 +732,11 @@ public class ConfigurationManagerImplTest {
     public void testGetConfigurationMetadata_Nested_SubList_Sub() throws Exception {
         // delete resource already existing in test fixture to test with non-existing resource but existing collection item as parent
         context.resourceResolver().delete(context.resourceResolver().getResource(
-                getConfigPropsPath(getConfigPropsPath(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME)
-                        + "/propSubList/item1") + "/propSub")));
+                getConfigResolvePath(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME)
+                        + "/propSubList") + "/item1") + "/propSub")));
 
-        ConfigurationMetadata subListDataItem1Sub = underTest.getConfigurationMetadata(getConfigPropsPath(getConfigPropsPath(CONFIG_NESTED_NAME)
-                + "/propSubList/item1") + "/propSub");
+        ConfigurationMetadata subListDataItem1Sub = underTest.getConfigurationMetadata(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath(CONFIG_NESTED_NAME)
+                + "/propSubList") + "/item1") + "/propSub");
         assertNotNull(subListDataItem1Sub);
         assertEquals("propSub", subListDataItem1Sub.getName());
     }
@@ -733,33 +745,34 @@ public class ConfigurationManagerImplTest {
     public void testGetConfigurationMetadata_Nested_SubList_SubLevel2() throws Exception {
         // delete resource already existing in test fixture to test with non-existing resource but existing collection item as parent
         context.resourceResolver().delete(context.resourceResolver().getResource(
-                getConfigPropsPath(getConfigPropsPath(getConfigPropsPath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME)
-                        + "/propSubList/item1") + "/propSub")));
+                getConfigResolvePath(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath("/conf/test/sling:configs/" + CONFIG_NESTED_NAME)
+                        + "/propSubList") + "/item1") + "/propSub")));
 
-        ConfigurationMetadata subListDataItem1SubLevel2 = underTest.getConfigurationMetadata(getConfigPropsPath(getConfigPropsPath(getConfigPropsPath(CONFIG_NESTED_NAME)
-                + "/propSubList/item1") + "/propSub") + "/propSubLevel2");
+        ConfigurationMetadata subListDataItem1SubLevel2 = underTest.getConfigurationMetadata(getConfigResolvePath(getConfigCollectionItemResolvePath(getConfigCollectionParentResolvePath(getConfigResolvePath(CONFIG_NESTED_NAME)
+                + "/propSubList") + "/item1") + "/propSub") + "/propSubLevel2");
         assertNotNull(subListDataItem1SubLevel2);
         assertEquals("propSubLevel2", subListDataItem1SubLevel2.getName());
     }
     
     @Test
     public void testNewCollectionItem_Nested_SubList() {
-        ConfigurationData configData = underTest.newCollectionItem(contextResource, getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSubList");
-        assertEquals(getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSubList", configData.getConfigName());
+        ConfigurationData configData = underTest.newCollectionItem(contextResource, getConfigResolvePath(CONFIG_NESTED_NAME) + "/propSubList");
+        assertEquals(getConfigResolvePath(CONFIG_NESTED_NAME) + "/propSubList", configData.getConfigName());
         
         assertNull(configData.getValues().get("prop1", String.class));
         assertEquals("defValueSubList", configData.getEffectiveValues().get("prop1", String.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetPersistenceResourcePath() {
-        assertEquals(getConfigPropsPath("/a/b/c"), underTest.getPersistenceResourcePath("/a/b/c"));
-        assertEquals(getConfigPropsPath("a/b"), underTest.getPersistenceResourcePath("a/b"));
+        assertEquals(getConfigResolvePath("/a/b/c"), underTest.getPersistenceResourcePath("/a/b/c"));
+        assertEquals(getConfigResolvePath("a/b"), underTest.getPersistenceResourcePath("a/b"));
     }
         
     @Test
     public void testPersistConfiguration_Nested() throws Exception {
-        underTest.persistConfiguration(contextResourceLevel2, getConfigPropsPath(getConfigPropsPath(CONFIG_NESTED_NAME)
+        underTest.persistConfiguration(contextResourceLevel2, getConfigResolvePath(getConfigResolvePath(CONFIG_NESTED_NAME)
                 + "/propSub") + "/propSubLevel2",
                 new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1_persist")));
         context.resourceResolver().commit();
@@ -776,7 +789,7 @@ public class ConfigurationManagerImplTest {
 
     @Test
     public void testPersistConfigurationCollection_Nested() throws Exception {
-        underTest.persistConfigurationCollection(contextResourceLevel2, getConfigPropsPath(CONFIG_NESTED_NAME) + "/propSubList",
+        underTest.persistConfigurationCollection(contextResourceLevel2, getConfigResolvePath(CONFIG_NESTED_NAME) + "/propSubList",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value1_persist")).collectionItemName("item1"),
                         new ConfigurationPersistData(ImmutableMap.<String, Object>of("prop1", "value2_persist")).collectionItemName("item2"),

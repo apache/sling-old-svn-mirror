@@ -28,8 +28,10 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * Defines how configuration data is stored in the configuration resource.
  * This SPI allows application to define their own content structure and node types to be used for configuration data storage.
+ * @deprecated Please use {@link ConfigurationPersistenceStrategy2} instead.
  */
 @ConsumerType
+@Deprecated
 public interface ConfigurationPersistenceStrategy {
 
     /**

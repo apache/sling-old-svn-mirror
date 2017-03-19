@@ -30,7 +30,7 @@ import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
-import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -55,7 +55,7 @@ public class ConfigurationDataImplTest {
     private ConfigurationOverrideManager configurationOverrideManager;
     @Mock
     private ConfigurationManager configurationManager;
-    private ConfigurationPersistenceStrategy configurationPersistenceStrategy;
+    private ConfigurationPersistenceStrategy2 configurationPersistenceStrategy;
     
     private Resource configResource;
     private ConfigurationMetadata configMetadata;

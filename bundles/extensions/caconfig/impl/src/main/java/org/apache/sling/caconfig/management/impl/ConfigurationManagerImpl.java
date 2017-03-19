@@ -23,8 +23,10 @@ import static org.apache.sling.caconfig.impl.ConfigurationNameConstants.CONFIGS_
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -40,6 +42,7 @@ import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ConfigNameUtil;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
@@ -82,11 +85,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         Resource configResource = null;
         
         Iterator<Resource> configResourceInheritanceChain = configurationResourceResolvingStrategy
-                .getResourceInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), configName);;
+                .getResourceInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), configName);
         
         if (configResourceInheritanceChain != null) {
             ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-            configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
+            configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, false);
             if (configResource != null) {
                 // get writeback resource for "reverse inheritance detection"
                 Resource writebackConfigResource = null;
@@ -110,7 +113,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 }
                 resettableConfigResourceInheritanceChain.reset();
                 return new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
-                        applyPersistence(resettableConfigResourceInheritanceChain),
+                        applyPersistence(resettableConfigResourceInheritanceChain, false),
                         resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy, false, null);
             }
         }
@@ -132,15 +135,24 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         ConfigurationMetadata configMetadata = getConfigurationMetadata(configName);
         List<ConfigurationData> configData = new ArrayList<>();
 
+        // get all possible colection parent config names
+        Collection<String> collectionParentConfigNames = configurationPersistenceStrategy.getAllCollectionParentConfigNames(configName);
+
         // get configuration resource items
-        Collection<Iterator<Resource>> configResourceInheritanceChains = configurationResourceResolvingStrategy
-                    .getResourceCollectionInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), configName);   
+        List<Iterator<Resource>> configResourceInheritanceChains = new ArrayList<>();
+        for (String collectionParentConfigName : collectionParentConfigNames) {
+            Collection<Iterator<Resource>> result = configurationResourceResolvingStrategy
+                    .getResourceCollectionInheritanceChain(resource, configurationResourceResolverConfig.configBucketNames(), collectionParentConfigName);
+            if (result != null) {
+                configResourceInheritanceChains.addAll(result);
+            }
+        }
 
         String writebackConfigResourceCollectionParentPath = null;
         if (configResourceInheritanceChains != null) {
             for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
                 ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-                Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain);
+                Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, true);
                 resettableConfigResourceInheritanceChain.reset();
                 Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
                 if (configResource != null) {
@@ -151,10 +163,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
                         writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, configBucketName, configName);
                         if (writebackConfigResourceCollectionParentPath != null) {
+                            writebackConfigResourceCollectionParentPath = configurationPersistenceStrategy.getCollectionParentResourcePath(writebackConfigResourceCollectionParentPath);
                             writebackConfigResourcePath = writebackConfigResourceCollectionParentPath + "/" + untransformedConfigResource.getName();
                             writebackConfigResource = configResource.getResourceResolver().getResource(writebackConfigResourcePath);
                             if (writebackConfigResource != null) {
-                                writebackConfigResource = configurationPersistenceStrategy.getResource(writebackConfigResource);
+                                writebackConfigResource = configurationPersistenceStrategy.getCollectionItemResource(writebackConfigResource);
                                 break;
                             }
                         }
@@ -167,7 +180,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                     }
                     resettableConfigResourceInheritanceChain.reset();
                     configData.add(new ConfigurationDataImpl(configMetadata, configResource, writebackConfigResource,
-                            applyPersistence(resettableConfigResourceInheritanceChain),
+                            applyPersistence(resettableConfigResourceInheritanceChain, true),
                             resource, configName, this, configurationOverrideManager, configurationPersistenceStrategy,
                             true, untransformedConfigResource.getName()));
                 }
@@ -192,7 +205,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
     
     @SuppressWarnings("unchecked")
-    private Iterator<Resource> applyPersistence(Iterator<Resource> configResourceInheritanceChain) {
+    private Iterator<Resource> applyPersistence(final Iterator<Resource> configResourceInheritanceChain, final boolean isCollection) {
         if (configResourceInheritanceChain == null) {
             return null;
         }
@@ -200,18 +213,24 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 new Transformer() {
                     @Override
                     public Object transform(Object input) {
-                        return configurationPersistenceStrategy.getResource((Resource)input);
+                        if (isCollection) {
+                            return configurationPersistenceStrategy.getCollectionItemResource((Resource)input);
+                        }
+                        else {
+                            return configurationPersistenceStrategy.getResource((Resource)input);
+                        }
                     }
                 });
     }
 
-    private Resource applyPersistenceAndInheritance(String contextPath, String configName, Iterator<Resource> configResourceInheritanceChain) {
+    private Resource applyPersistenceAndInheritance(String contextPath, String configName, Iterator<Resource> configResourceInheritanceChain,
+            boolean isCollection) {
         if (configResourceInheritanceChain == null) {
             return null;
         }
         
         // apply configuration persistence transformation
-        Iterator<Resource> transformedConfigResources = applyPersistence(configResourceInheritanceChain);
+        Iterator<Resource> transformedConfigResources = applyPersistence(configResourceInheritanceChain, isCollection);
         
         // apply resource inheritance
         Resource configResource = configurationInheritanceStrategy.getResource(transformedConfigResources);
@@ -316,27 +335,38 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     
     private ConfigurationMetadata getNestedConfigurationMetadata(ConfigurationMetadata configMetadata, String configName, String partialConfigName) {
         if (StringUtils.startsWith(configName, partialConfigName + "/")) {
-            String prefixToRemove;
+            
+            // depending on different persistence strategies config names can be transformed differently - try all combinations here
+            Set<String> prefixesToRemove = new LinkedHashSet<>();
             if (configMetadata.isCollection()) {
                 String collectionItemName = StringUtils.substringBefore(StringUtils.substringAfter(configName, partialConfigName + "/"), "/");
-                prefixToRemove = configurationPersistenceStrategy.getResourcePath(partialConfigName + "/" + collectionItemName) + "/";
+                for (String collectionParentConfigName : configurationPersistenceStrategy.getAllCollectionParentConfigNames(partialConfigName)) {
+                    for (String collectionItemConfigName : configurationPersistenceStrategy.getAllCollectionItemConfigNames(collectionItemName)) {
+                        prefixesToRemove.add(collectionParentConfigName  + "/" + collectionItemConfigName + "/");
+                    }
+                }
             }
             else {
-                prefixToRemove = configurationPersistenceStrategy.getResourcePath(partialConfigName) + "/";
+                for (String configNameItem : configurationPersistenceStrategy.getAllConfigNames(partialConfigName)) {
+                    prefixesToRemove.add(configNameItem + "/");
+                }
             }
-            String remainingConfigName = StringUtils.substringAfter(configName, prefixToRemove);
-            // try direct match
-            ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, remainingConfigName);
-            if (nestedConfigMetadata != null) {
-                return nestedConfigMetadata;
-            }
-            // try to find partial match for deeper nestings
-            for (String partialRemainingConfigName : ConfigNameUtil.getAllPartialConfigNameVariations(remainingConfigName)) {
-                ConfigurationMetadata partialConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, partialRemainingConfigName);
-                if (partialConfigMetadata != null) {
-                    nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, remainingConfigName, partialRemainingConfigName);
-                    if (nestedConfigMetadata != null) {
-                        return nestedConfigMetadata;
+            
+            for (String prefixToRemove : prefixesToRemove) {
+                String remainingConfigName = StringUtils.substringAfter(configName, prefixToRemove);
+                // try direct match
+                ConfigurationMetadata nestedConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, remainingConfigName);
+                if (nestedConfigMetadata != null) {
+                    return nestedConfigMetadata;
+                }
+                // try to find partial match for deeper nestings
+                for (String partialRemainingConfigName : ConfigNameUtil.getAllPartialConfigNameVariations(remainingConfigName)) {
+                    ConfigurationMetadata partialConfigMetadata = getNestedConfigurationMetadataFromProperty(configMetadata, partialRemainingConfigName);
+                    if (partialConfigMetadata != null) {
+                        nestedConfigMetadata = getNestedConfigurationMetadata(partialConfigMetadata, remainingConfigName, partialRemainingConfigName);
+                        if (nestedConfigMetadata != null) {
+                            return nestedConfigMetadata;
+                        }
                     }
                 }
             }

@@ -26,10 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.caconfig.impl.ConfigurationPersistenceStrategyBridge;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
-import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,7 +40,7 @@ import org.osgi.framework.Constants;
 
 import com.google.common.collect.ImmutableList;
 
-public class ConfigurationPersistenceStrategyMultiplexerTest {
+public class ConfigurationPersistenceStrategyMultiplexerImplTest {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -50,7 +52,8 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
     
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
+        context.registerInjectActivateService(new ConfigurationPersistenceStrategyBridge());
         resource1 = context.create().resource("/conf/test1");
         resource2 = context.create().resource("/conf/test2");
     }
@@ -81,11 +84,13 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         assertTrue(underTest.deleteConfiguration(context.resourceResolver(), "/conf/test1"));
     }
     
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultipleStrategies() {
         
-        // strategy 1
-        context.registerService(ConfigurationPersistenceStrategy.class, new ConfigurationPersistenceStrategy() {
+        // strategy 1 (using old ConfigurationPersistenceStrategy with bridge to  ConfigurationPersistenceStrategy2)
+        context.registerService(org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy.class,
+                new org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy() {
             @Override
             public Resource getResource(Resource resource) {
                 return resource2;
@@ -111,13 +116,41 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
         }, Constants.SERVICE_RANKING, 2000);
         
         // strategy 2
-        context.registerService(ConfigurationPersistenceStrategy.class, new ConfigurationPersistenceStrategy() {
+        context.registerService(ConfigurationPersistenceStrategy2.class, new ConfigurationPersistenceStrategy2() {
             @Override
             public Resource getResource(Resource resource) {
                 return resource1;
             }
             @Override
+            public Resource getCollectionParentResource(Resource resource) {
+                return resource1;
+            }
+            @Override
+            public Resource getCollectionItemResource(Resource resource) {
+                return resource1;
+            }
+            @Override
             public String getResourcePath(String resourcePath) {
+                return resource1.getPath();
+            }
+            @Override
+            public String getCollectionParentResourcePath(String resourcePath) {
+                return resource1.getPath();
+            }
+            @Override
+            public String getCollectionItemResourcePath(String resourcePath) {
+                return resource1.getPath();
+            }
+            @Override
+            public String getConfigName(String configName, Resource relatedConfigResource) {
+                return resource1.getPath();
+            }
+            @Override
+            public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
+                return resource1.getPath();
+            }
+            @Override
+            public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
                 return resource1.getPath();
             }
             @Override
@@ -134,11 +167,20 @@ public class ConfigurationPersistenceStrategyMultiplexerTest {
             public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
                 return true;
             }
-
         }, Constants.SERVICE_RANKING, 1000);
         
         assertSame(resource2, underTest.getResource(resource1));
+        assertSame(resource2, underTest.getCollectionParentResource(resource1));
+        assertSame(resource2, underTest.getCollectionItemResource(resource1));
         assertEquals(resource2.getPath(), underTest.getResourcePath(resource1.getPath()));
+        assertEquals(resource2.getPath(), underTest.getCollectionParentResourcePath(resource1.getPath()));
+        assertEquals(resource2.getPath(), underTest.getCollectionItemResourcePath(resource1.getPath()));
+        assertEquals(resource2.getPath(), underTest.getConfigName(resource1.getPath(), null));
+        assertEquals(resource2.getPath(), underTest.getCollectionParentConfigName(resource1.getPath(), null));
+        assertEquals(resource2.getPath(), underTest.getCollectionItemConfigName(resource1.getPath(), null));
+        assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllConfigNames(resource1.getPath())));
+        assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllCollectionParentConfigNames(resource1.getPath())));
+        assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllCollectionItemConfigNames(resource1.getPath())));
         assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
         assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/testCol",
                 new ConfigurationCollectionPersistData(ImmutableList.of(

@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * SPI for applications hooking into the configuration infrastructure for parameterizing and customizing.
+ * Multiplexer services provide aggregated access to all implementations of the related SPI interface.
  */
-@org.osgi.annotation.versioning.Version("2.1.0")
-package org.apache.sling.caconfig.spi;
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.sling.caconfig.management.multiplexer;

@@ -16,139 +16,118 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.impl.def;
+package org.apache.sling.caconfig.management.impl;
 
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.caconfig.resource.impl.util.MapUtil;
-import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.metatype.annotations.AttributeDefinition;
-import org.osgi.service.metatype.annotations.Designate;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The default persistence strategy is quite simple: directly use the configuration resources.
- * All existing properties are removed when new properties are stored in a singleton config resource.
- * All existing child resources are removed when a new configs are stored for collection config resources. 
+ * This is a variant of {@link org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy}
+ * which reads and stores data from a sub-resources named "jcr:content".
+ * 
+ * Difference to {@link CustomConfigurationPersistenceStrategy}:
+ * - For configuration collections jcr:content is added only for the parent, not for each item
+ * - For nested configuration jcr:content is not duplicated in the path
  */
-@Component(service = ConfigurationPersistenceStrategy2.class)
-@Designate(ocd=DefaultConfigurationPersistenceStrategy.Config.class)
-public class DefaultConfigurationPersistenceStrategy implements ConfigurationPersistenceStrategy2 {
-
-    @ObjectClassDefinition(name="Apache Sling Context-Aware Configuration Default Resource Persistence Strategy",
-            description="Directly uses configuration resources for storing configuration data.")
-    static @interface Config {
-        
-        @AttributeDefinition(name="Enabled",
-                      description = "Enable this configuration resource persistence strategy.")
-        boolean enabled() default true;
-
-    }
-
-    private volatile Config config;
+public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPersistenceStrategy2 {
     
-    private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationPersistenceStrategy.class);
+    private static final String DEFAULT_RESOURCE_TYPE = JcrConstants.NT_UNSTRUCTURED;    
+    private static final String CHILD_NODE_NAME = JcrConstants.JCR_CONTENT;
+    private static final Pattern JCR_CONTENT_PATTERN = Pattern.compile("(.*/)?" + Pattern.quote(CHILD_NODE_NAME) + "(/.*)?");
     
-    @Activate
-    private void activate(ComponentContext componentContext, Config config) {
-        this.config = config; 
-    }
-        
     @Override
     public Resource getResource(Resource resource) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(resource.getPath())) {
+            return resource;
         }
-        return resource;
+        else {
+            return resource.getChild(CHILD_NODE_NAME);
+        }
     }
-    
+
     @Override
     public Resource getCollectionParentResource(Resource resource) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(resource.getPath())) {
+            return resource;
         }
-        return resource;
+        else {
+            return resource.getChild(CHILD_NODE_NAME);
+        }
     }
 
     @Override
     public Resource getCollectionItemResource(Resource resource) {
-        if (!config.enabled()) {
-            return null;
-        }
         return resource;
     }
 
     @Override
     public String getResourcePath(String resourcePath) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(resourcePath)) {
+            return resourcePath;
         }
-        return resourcePath;
+        else {
+            return resourcePath + "/" + CHILD_NODE_NAME;
+        }
     }
 
     @Override
     public String getCollectionParentResourcePath(String resourcePath) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(resourcePath)) {
+            return resourcePath;
         }
-        return resourcePath;
+        else {
+            return resourcePath + "/" + CHILD_NODE_NAME;
+        }
     }
 
     @Override
     public String getCollectionItemResourcePath(String resourcePath) {
-        if (!config.enabled()) {
-            return null;
-        }
         return resourcePath;
     }
 
     @Override
     public String getConfigName(String configName, Resource relatedConfigResource) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(configName)) {
+            return configName;
         }
-        return configName;
+        else {
+            return configName + "/" + CHILD_NODE_NAME;
+        }
     }
 
     @Override
     public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
-        if (!config.enabled()) {
-            return null;
+        if (containsJcrContent(configName)) {
+            return configName;
         }
-        return configName;
+        else {
+            return configName + "/" + CHILD_NODE_NAME;
+        }
     }
 
     @Override
     public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
-        if (!config.enabled()) {
-            return null;
-        }
         return configName;
     }
     
     @Override
     public boolean persistConfiguration(ResourceResolver resourceResolver, String configResourcePath,
             ConfigurationPersistData data) {
-        if (!config.enabled()) {
-            return false;
-        }
-        getOrCreateResource(resourceResolver, configResourcePath, data.getProperties());
+        getOrCreateResource(resourceResolver, getResourcePath(configResourcePath), data.getProperties());
         commit(resourceResolver);
         return true;
     }
@@ -156,10 +135,8 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     @Override
     public boolean persistConfigurationCollection(ResourceResolver resourceResolver, String configResourceCollectionParentPath,
             ConfigurationCollectionPersistData data) {
-        if (!config.enabled()) {
-            return false;
-        }
-        Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, data.getProperties()); 
+        String parentPath = getCollectionParentResourcePath(configResourceCollectionParentPath);
+        Resource configResourceParent = getOrCreateResource(resourceResolver, parentPath, ValueMap.EMPTY);
         
         // delete existing children and create new ones
         deleteChildren(configResourceParent);
@@ -168,19 +145,20 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             getOrCreateResource(resourceResolver, path, item.getProperties());
         }
         
+        // if resource collection parent properties are given replace them as well
+        if (data.getProperties() != null) {
+            replaceProperties(configResourceParent, data.getProperties());
+        }
+        
         commit(resourceResolver);
         return true;
     }
-
+    
     @Override
     public boolean deleteConfiguration(ResourceResolver resourceResolver, String configResourcePath) {
-        if (!config.enabled()) {
-            return false;
-        }
         Resource resource = resourceResolver.getResource(configResourcePath);
         if (resource != null) {
             try {
-                log.trace("! Delete resource {}", resource.getPath());
                 resourceResolver.delete(resource);
             }
             catch (PersistenceException ex) {
@@ -190,13 +168,11 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         commit(resourceResolver);
         return true;
     }
-    
+
     private Resource getOrCreateResource(ResourceResolver resourceResolver, String path, Map<String,Object> properties) {
         try {
-            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, (String)null, (String)null, false);
-            if (properties != null) {
-                replaceProperties(resource, properties);
-            }
+            Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, path, DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_TYPE, false);
+            replaceProperties(resource, properties);
             return resource;
         }
         catch (PersistenceException ex) {
@@ -208,7 +184,6 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         ResourceResolver resourceResolver = resource.getResourceResolver();
         try {
             for (Resource child : resource.getChildren()) {
-                log.trace("! Delete resource {}", child.getPath());
                 resourceResolver.delete(child);
             }
         }
@@ -218,19 +193,17 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
     
     private void replaceProperties(Resource resource, Map<String,Object> properties) {
-        if (log.isTraceEnabled()) {
-            log.trace("! Store properties for resource {}: {}", resource.getPath(), MapUtil.traceOutput(properties));
-        }
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
-        // remove all existing properties that are not filterd
-        Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());
-        PropertiesFilterUtil.removeIgnoredProperties(propertyNamesToRemove);
-        for (String propertyName : propertyNamesToRemove) {
+        // remove all existing properties that do not have jcr: namespace
+        for (String propertyName : new HashSet<>(modValueMap.keySet())) {
+            if (StringUtils.startsWith(propertyName, "jcr:")) {
+                continue;
+            }
             modValueMap.remove(propertyName);
         }
         modValueMap.putAll(properties);
     }
-    
+
     private void commit(ResourceResolver resourceResolver) {
         try {
             resourceResolver.commit();
@@ -238,6 +211,10 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         catch (PersistenceException ex) {
             throw new ConfigurationPersistenceException("Unable to save configuration: " + ex.getMessage(), ex);
         }
+    }
+
+    static boolean containsJcrContent(String path) {
+        return JCR_CONTENT_PATTERN.matcher(path).matches();
     }
 
 }

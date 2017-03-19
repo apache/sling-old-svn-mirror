@@ -18,6 +18,8 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import static org.apache.sling.caconfig.management.impl.CustomConfigurationPersistenceStrategy2.containsJcrContent;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.junit.Before;
@@ -29,45 +31,65 @@ import org.osgi.framework.Constants;
  * Test {@link ConfigurationManagerImpl} with custom persistence.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ConfigurationManagerImplCustomPersistenceTest extends ConfigurationManagerImplTest {
+public class ConfigurationManagerImplCustomPersistence2Test extends ConfigurationManagerImplTest {
     
     @Before
     public void setUpCustomPersistence() {
         // custom strategy which redirects all config resources to a jcr:content subnode
         context.registerService(ConfigurationPersistenceStrategy2.class,
-                new CustomConfigurationPersistenceStrategy(), Constants.SERVICE_RANKING, 2000);
+                new CustomConfigurationPersistenceStrategy2(), Constants.SERVICE_RANKING, 2000);
     }
 
     @Override
     protected String getConfigResolvePath(String path) {
-        return replaceBucketName(path) + "/jcr:content";
+        if (containsJcrContent(path)) {
+            return replaceBucketName(path);
+        }
+        else {
+            return replaceBucketName(path) + "/jcr:content";
+        }
     }
     
     @Override
     protected String getConfigPersistPath(String path) {
-        return path + "/jcr:content";
+        if (containsJcrContent(path)) {
+            return path;
+        }
+        else {
+            return path + "/jcr:content";
+        }
     }
     
     @Override
     protected String getConfigCollectionParentResolvePath(String path) {
-        return replaceBucketName(path);
+        if (containsJcrContent(path)) {
+            return replaceBucketName(path);
+        }
+        else {
+            return replaceBucketName(path) + "/jcr:content";
+        }
     }
     
     @Override
     protected String getConfigCollectionParentPersistPath(String path) {
-        return path;
+        if (containsJcrContent(path)) {
+            return path;
+        }
+        else {
+            return path + "/jcr:content";
+        }
     }
     
     @Override
     protected String getConfigCollectionItemResolvePath(String path) {
-        return replaceBucketName(path) + "/jcr:content";
+        return path;
     }
     
     @Override
     protected String getConfigCollectionItemPersistPath(String path) {
-        return path + "/jcr:content";
+        return path;
     }
-
+    
     private String replaceBucketName(String path) {
         return StringUtils.replace(path, "/sling:configs/", "/settings/");
     }
