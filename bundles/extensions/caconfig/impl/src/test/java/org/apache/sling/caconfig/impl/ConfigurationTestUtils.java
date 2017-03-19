@@ -22,7 +22,7 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationInheritanceStrategy;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexerImpl;
-import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
+import org.apache.sling.caconfig.impl.override.ConfigurationOverrideMultiplexerImpl;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceTestUtils;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -43,7 +43,7 @@ public final class ConfigurationTestUtils {
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
         context.registerInjectActivateService(new DefaultConfigurationInheritanceStrategy());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexerImpl());
-        context.registerInjectActivateService(new ConfigurationOverrideManager());
+        context.registerInjectActivateService(new ConfigurationOverrideMultiplexerImpl());
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexerImpl());
         return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }
@@ -57,7 +57,7 @@ public final class ConfigurationTestUtils {
         ConfigurationResourceTestUtils.registerConfigurationResourceResolverWithoutDefaultImpl(context);
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
         context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexerImpl());
-        context.registerInjectActivateService(new ConfigurationOverrideManager());
+        context.registerInjectActivateService(new ConfigurationOverrideMultiplexerImpl());
         context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexerImpl());
         return context.registerInjectActivateService(new ConfigurationResolverImpl(), properties);
     }

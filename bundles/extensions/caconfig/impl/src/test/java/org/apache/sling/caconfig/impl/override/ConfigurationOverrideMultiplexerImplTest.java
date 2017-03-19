@@ -32,16 +32,16 @@ import org.osgi.framework.Constants;
 
 import com.google.common.collect.ImmutableMap;
 
-public class ConfigurationOverrideManagerTest {
+public class ConfigurationOverrideMultiplexerImplTest {
     
     @Rule
     public SlingContext context = new SlingContext();
     
-    private ConfigurationOverrideManager underTest;
+    private ConfigurationOverrideMultiplexerImpl underTest;
     
     @Before
     public void setUp() {
-        underTest = context.registerInjectActivateService(new ConfigurationOverrideManager());
+        underTest = context.registerInjectActivateService(new ConfigurationOverrideMultiplexerImpl());
     }
 
     @Test
