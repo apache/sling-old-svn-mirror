@@ -103,8 +103,10 @@ public interface ConfigurationManager {
     /**
      * Rewrite given resource path or configuration name according to current persistence strategies.
      * @param configResourcePath Resource path or config name
-     * @return Rewritten resoure path or config name
+     * @return Rewritten resource path or config name
+     * @deprecated Please use {@link org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer} instead.
      */
+    @Deprecated
     @CheckForNull String getPersistenceResourcePath(@Nonnull String configResourcePath);
     
 }

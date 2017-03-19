@@ -29,7 +29,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
-import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
@@ -38,7 +38,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-
 public class DefaultConfigurationPersistenceStrategyTest {
 
     @Rule
@@ -46,25 +45,37 @@ public class DefaultConfigurationPersistenceStrategyTest {
     
     @Test
     public void testGetResource() {
-        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         Resource resource = context.create().resource("/conf/test");
-        Resource result = underTest.getResource(resource);
-        assertSame(resource, result);
+        assertSame(resource, underTest.getResource(resource));
+        assertSame(resource, underTest.getCollectionParentResource(resource));
+        assertSame(resource, underTest.getCollectionItemResource(resource));
     }
 
     @Test
     public void testGetResourcePath() {
-        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         String path = "/conf/test";
-        String result = underTest.getResourcePath(path);
-        assertEquals(path, result);
+        assertEquals(path, underTest.getResourcePath(path));
+        assertEquals(path, underTest.getCollectionParentResourcePath(path));
+        assertEquals(path, underTest.getCollectionItemResourcePath(path));
+    }
+    
+    @Test
+    public void testGetConfigName() throws Exception {
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        
+        String path = "test";
+        assertEquals(path, underTest.getConfigName(path, null));
+        assertEquals(path, underTest.getCollectionParentConfigName(path, null));
+        assertEquals(path, underTest.getCollectionItemConfigName(path, null));
     }
 
     @Test
     public void testPersistConfiguration() throws Exception {
-        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         // store config data
         assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test",
@@ -90,7 +101,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
 
     @Test
     public void testPersistConfigurationCollection() throws Exception {
-        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         // store new config collection items
         assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
@@ -126,7 +137,7 @@ public class DefaultConfigurationPersistenceStrategyTest {
 
     @Test
     public void testDisabled() {
-        ConfigurationPersistenceStrategy underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy(),
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy(),
                 "enabled", false);
         
         Resource resource = context.create().resource("/conf/test");

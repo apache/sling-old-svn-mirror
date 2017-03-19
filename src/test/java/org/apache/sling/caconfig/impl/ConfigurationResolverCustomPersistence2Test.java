@@ -34,7 +34,7 @@ import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.example.ListConfig;
 import org.apache.sling.caconfig.example.NestedConfig;
 import org.apache.sling.caconfig.example.SimpleConfig;
-import org.apache.sling.caconfig.management.impl.CustomConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.management.impl.CustomConfigurationPersistenceStrategy2;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -45,7 +45,7 @@ import org.osgi.framework.Constants;
 /**
  * Test {@link ConfigurationResolver} with annotation classes for reading the config.
  */
-public class ConfigurationResolverCustomPersistenceTest {
+public class ConfigurationResolverCustomPersistence2Test {
 
     @Rule
     public SlingContext context = new SlingContext();
@@ -62,7 +62,7 @@ public class ConfigurationResolverCustomPersistenceTest {
 
         // custom strategy which redirects all config resources to a jcr:content subnode
         context.registerService(ConfigurationPersistenceStrategy2.class,
-                new CustomConfigurationPersistenceStrategy(), Constants.SERVICE_RANKING, 2000);
+                new CustomConfigurationPersistenceStrategy2(), Constants.SERVICE_RANKING, 2000);
         
         // content resources
         context.build().resource("/content/site1", PROPERTY_CONFIG_REF, "/conf/content/site1");
@@ -124,11 +124,11 @@ public class ConfigurationResolverCustomPersistenceTest {
 
     @Test
     public void testConfig_List() {
-        context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.ListConfig")
+        context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.ListConfig/jcr:content")
             .siblingsMode()
-            .resource("1/jcr:content", "stringParam", "configValue1.1")
-            .resource("2/jcr:content", "stringParam", "configValue1.2")
-            .resource("3/jcr:content", "stringParam", "configValue1.3");
+            .resource("1", "stringParam", "configValue1.1")
+            .resource("2", "stringParam", "configValue1.2")
+            .resource("3", "stringParam", "configValue1.3");
 
         Collection<ListConfig> cfgList = underTest.get(site1Page1).asCollection(ListConfig.class);
 
@@ -144,13 +144,13 @@ public class ConfigurationResolverCustomPersistenceTest {
         context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.NestedConfig")
             .resource("jcr:content", "stringParam", "configValue3")
                 .siblingsMode()
-                .resource("subConfig/jcr:content", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
+                .resource("subConfig", "stringParam", "configValue4", "intParam", 444, "boolParam", true)
                 .hierarchyMode()
                 .resource("subListConfig")
                     .siblingsMode()
-                    .resource("1/jcr:content", "stringParam", "configValue2.1")
-                    .resource("2/jcr:content", "stringParam", "configValue2.2")
-                    .resource("3/jcr:content", "stringParam", "configValue2.3");
+                    .resource("1", "stringParam", "configValue2.1")
+                    .resource("2", "stringParam", "configValue2.2")
+                    .resource("3", "stringParam", "configValue2.3");
 
         NestedConfig cfg = underTest.get(site1Page1).as(NestedConfig.class);
 

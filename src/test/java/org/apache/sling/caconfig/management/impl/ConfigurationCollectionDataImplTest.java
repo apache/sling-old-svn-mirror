@@ -46,7 +46,7 @@ public class ConfigurationCollectionDataImplTest {
         Map<String,Object> props = ImmutableMap.<String,Object>of("jcr:primaryType", "test", "prop1", "value1"); 
         ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", items, "/path1", props);
         
-        assertEquals("name1", underTest.getConfigName());;
+        assertEquals("name1", underTest.getConfigName());
         assertSame(items, underTest.getItems());
         assertEquals("/path1", underTest.getResourcePath());
         assertEquals(ImmutableMap.<String,Object>of("prop1", "value1"), underTest.getProperties());
@@ -56,7 +56,7 @@ public class ConfigurationCollectionDataImplTest {
     public void testEmpty() {
         ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", ImmutableList.<ConfigurationData>of(), "/path1", null);
         
-        assertEquals("name1", underTest.getConfigName());;
+        assertEquals("name1", underTest.getConfigName());
         assertTrue(underTest.getItems().isEmpty());
         assertEquals("/path1", underTest.getResourcePath());
         assertTrue(underTest.getProperties().isEmpty());

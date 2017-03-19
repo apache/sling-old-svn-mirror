@@ -30,7 +30,7 @@ import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager;
-import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationPersistenceStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
