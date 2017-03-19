@@ -38,7 +38,7 @@ public final class ConfigurationResourceTestUtils {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
         context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
         context.registerInjectActivateService(new DefaultConfigurationResourceResolvingStrategy());
-        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexerImpl());
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
     
@@ -49,7 +49,7 @@ public final class ConfigurationResourceTestUtils {
      */
     public static ConfigurationResourceResolver registerConfigurationResourceResolverWithoutDefaultImpl(SlingContext context) {
         context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
-        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
+        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexerImpl());
         return context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
     

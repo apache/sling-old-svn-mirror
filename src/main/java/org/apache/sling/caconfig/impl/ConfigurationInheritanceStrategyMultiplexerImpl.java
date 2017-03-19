@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.collections.ResettableListIterator;
 import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationInheritanceStrategy;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -45,7 +46,7 @@ reference={
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ConfigurationInheritanceStrategyMultiplexer implements ConfigurationInheritanceStrategy {
+public class ConfigurationInheritanceStrategyMultiplexerImpl implements ConfigurationInheritanceStrategyMultiplexer {
 
     private RankedServices<ConfigurationInheritanceStrategy> items = new RankedServices<>(Order.DESCENDING);
     

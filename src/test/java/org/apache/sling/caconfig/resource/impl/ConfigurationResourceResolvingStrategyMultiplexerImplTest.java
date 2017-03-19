@@ -46,7 +46,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
-public class ConfigurationResourceResolvingStrategyMultiplexerTest {
+public class ConfigurationResourceResolvingStrategyMultiplexerImplTest {
 
     private static final String BUCKET = "sling:test";
     private static final Collection<String> BUCKETS = Collections.singleton(BUCKET);
@@ -54,7 +54,7 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     @Rule
     public SlingContext context = new SlingContext();
     
-    private ConfigurationResourceResolvingStrategyMultiplexer underTest;
+    private ConfigurationResourceResolvingStrategyMultiplexerImpl underTest;
     
     private Resource site1Page1;
 
@@ -62,7 +62,7 @@ public class ConfigurationResourceResolvingStrategyMultiplexerTest {
     public void setUp() {
         context.registerInjectActivateService(new DefaultContextPathStrategy());
         context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
-        underTest = context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexerImpl());
 
         // content resources
         context.build()

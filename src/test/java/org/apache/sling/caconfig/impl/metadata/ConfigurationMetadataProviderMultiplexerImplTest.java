@@ -40,18 +40,18 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class ConfigurationMetadataProviderMultiplexerTest {
+public class ConfigurationMetadataProviderMultiplexerImplTest {
 
     @Rule
     public SlingContext context = new SlingContext();
     
-    private ConfigurationMetadataProviderMultiplexer underTest;
+    private ConfigurationMetadataProviderMultiplexerImpl underTest;
 
     @Before
     public void setUp() {
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
-        underTest = context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
+        underTest = context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexerImpl());
     }
     
     @Test

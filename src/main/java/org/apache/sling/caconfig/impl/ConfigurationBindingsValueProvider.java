@@ -29,7 +29,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.caconfig.ConfigurationBuilder;
-import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
