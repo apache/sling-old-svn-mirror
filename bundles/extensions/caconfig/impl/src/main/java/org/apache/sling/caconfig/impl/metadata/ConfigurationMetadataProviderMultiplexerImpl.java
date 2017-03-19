@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.commons.osgi.Order;
@@ -43,7 +44,7 @@ reference={
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ConfigurationMetadataProviderMultiplexer implements ConfigurationMetadataProvider {
+public class ConfigurationMetadataProviderMultiplexerImpl implements ConfigurationMetadataProviderMultiplexer {
     
     private RankedServices<ConfigurationMetadataProvider> items = new RankedServices<>(Order.DESCENDING);
         

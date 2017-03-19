@@ -44,7 +44,7 @@ import org.mockito.stubbing.Answer;
 import com.google.common.collect.ImmutableList;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ConfigurationInheritanceStrategyMultiplexerTest {
+public class ConfigurationInheritanceStrategyMultiplexerImplTest {
     
     @Rule
     public SlingContext context = new SlingContext();
@@ -60,7 +60,7 @@ public class ConfigurationInheritanceStrategyMultiplexerTest {
     @Before
     public void setUp() {
         resources = ImmutableList.of(resource1, resource2).iterator();
-        underTest = context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexer());
+        underTest = context.registerInjectActivateService(new ConfigurationInheritanceStrategyMultiplexerImpl());
     }
 
     @Test

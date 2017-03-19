@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.management.multiplexer.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.spi.ConfigurationResourceResolvingStrategy;
 import org.apache.sling.commons.osgi.Order;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -43,7 +44,7 @@ reference={
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ConfigurationResourceResolvingStrategyMultiplexer implements ConfigurationResourceResolvingStrategy {
+public class ConfigurationResourceResolvingStrategyMultiplexerImpl implements ConfigurationResourceResolvingStrategyMultiplexer {
     
     private RankedServices<ConfigurationResourceResolvingStrategy> items = new RankedServices<>(Order.DESCENDING);
         
