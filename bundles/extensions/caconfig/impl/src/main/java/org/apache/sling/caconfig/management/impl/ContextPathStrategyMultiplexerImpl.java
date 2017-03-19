@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.management.multiplexer.ContextPathStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.util.ResourceEliminateDuplicatesIterator;
 import org.apache.sling.caconfig.resource.impl.util.ResourcePathCollatingIterator;
 import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
@@ -42,14 +42,15 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * Detects all {@link ContextPathStrategy} implementations in the container
  * and consolidates their result based on service ranking.
  */
-@Component(service = ContextPathStrategyMultiplexer.class,
+@SuppressWarnings("deprecation")
+@Component(service = { ContextPathStrategyMultiplexer.class, org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer.class },
 reference={
         @Reference(name="contextPathStrategy", service=ContextPathStrategy.class,
                 bind="bindContextPathStrategy", unbind="unbindContextPathStrategy",
                 cardinality=ReferenceCardinality.MULTIPLE,
                 policy=ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
 })
-public class ContextPathStrategyMultiplexerImpl implements ContextPathStrategyMultiplexer {
+public class ContextPathStrategyMultiplexerImpl implements ContextPathStrategyMultiplexer, org.apache.sling.caconfig.management.ContextPathStrategyMultiplexer {
     
     private RankedServices<ContextPathStrategy> items = new RankedServices<>(Order.DESCENDING);
         
