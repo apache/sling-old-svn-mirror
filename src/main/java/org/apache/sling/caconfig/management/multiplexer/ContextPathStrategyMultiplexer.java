@@ -19,11 +19,13 @@
 package org.apache.sling.caconfig.management.multiplexer;
 
 import org.apache.sling.caconfig.resource.spi.ContextPathStrategy;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Detects all {@link ContextPathStrategy} implementations in the container
  * and consolidates their result based on service ranking.
  */
+@ProviderType
 public interface ContextPathStrategyMultiplexer extends ContextPathStrategy {
 
     // inherits all methods from {@link ContextPathStrategy}

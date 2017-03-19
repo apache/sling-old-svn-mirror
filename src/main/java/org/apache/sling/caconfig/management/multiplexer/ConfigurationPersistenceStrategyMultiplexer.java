@@ -23,11 +23,13 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Detects all {@link ConfigurationPersistenceStrategy2} implementations in the container
  * and consolidates their result based on service ranking.
  */
+@ProviderType
 public interface ConfigurationPersistenceStrategyMultiplexer extends ConfigurationPersistenceStrategy2 {
     
     /**

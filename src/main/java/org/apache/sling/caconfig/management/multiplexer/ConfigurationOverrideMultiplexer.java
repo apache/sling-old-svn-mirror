@@ -24,11 +24,13 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Detects all {@link org.apache.sling.caconfig.spi.ConfigurationOverrideProvider} implementations in the container
  * and consolidates their result based on service ranking.
  */
+@ProviderType
 public interface ConfigurationOverrideMultiplexer {
 
     /**
