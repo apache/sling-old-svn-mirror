@@ -22,10 +22,8 @@ import org.apache.sling.caconfig.impl.ConfigurationBuilderAdapterFactory;
 import org.apache.sling.caconfig.impl.ConfigurationResolverImpl;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassConfigurationMetadataProvider;
-import org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.impl.ConfigurationManagerImpl;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolverImpl;
-import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer;
 import org.apache.sling.caconfig.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.impl.def.DefaultContextPathStrategy;
 import org.apache.sling.testing.mock.osgi.context.AbstractContextPlugin;
@@ -81,10 +79,14 @@ public final class ContextPlugins {
         
         if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl")) {
             // fallback to impl 1.1
-            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer", true);
+            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer");
         }
         
-        context.registerInjectActivateService(new ConfigurationResourceResolvingStrategyMultiplexer());
+        if (!registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexerImpl")) {
+            // fallback to impl 1.2
+            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexer");
+        }
+        
         context.registerInjectActivateService(new ConfigurationResourceResolverImpl());
     }
 
@@ -105,16 +107,23 @@ public final class ContextPlugins {
         
         if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexerImpl")) {
             // fallback to impl 1.2
-            registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer", true);
+            registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer");
         }
 
-        context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexer());
+        if (!registerByClassName(context, "org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexerImpl")) {
+            // fallback to impl 1.2
+            registerByClassName(context, "org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexer");
+        }
         
-        // only required for impl 1.2+
-        registerByClassName(context, "org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer");
+        if (!registerByClassName(context, "org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexerImpl")) {
+            // fallback to impl 1.2 (not existing in 1.1 or below)
+            registerByClassName(context, "org.apache.sling.caconfig.impl.ConfigurationInheritanceStrategyMultiplexer");
+        }
         
-        // only required for impl 1.2+
-        registerByClassName(context, "org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager");
+        if (!registerByClassName(context, "org.apache.sling.caconfig.impl.override.ConfigurationOverrideMultiplexerImpl")) {
+            // fallback to impl 1.2 (not existing in 1.1 or below)
+            registerByClassName(context, "org.apache.sling.caconfig.impl.override.ConfigurationOverrideManager");
+        }
 
         context.registerInjectActivateService(new ConfigurationResolverImpl());
         context.registerInjectActivateService(new ConfigurationBuilderAdapterFactory());
@@ -137,22 +146,13 @@ public final class ContextPlugins {
     }
 
     private static boolean registerByClassName(SlingContextImpl context, String className) {
-        return registerByClassName(context, className, false);
-    }
-
-    private static boolean registerByClassName(SlingContextImpl context, String className, boolean mandatory) {
         try {
             Class<?> clazz = Class.forName(className);
             context.registerInjectActivateService(clazz.newInstance());
             return true;
         }
         catch (ClassNotFoundException ex) {
-            if (mandatory) {
-                throw new RuntimeException(ex.getMessage(), ex);
-            }
-            else {
-                return false;
-            }
+            return false;
         }
         catch (InstantiationException ex) {
             throw new RuntimeException(ex);
