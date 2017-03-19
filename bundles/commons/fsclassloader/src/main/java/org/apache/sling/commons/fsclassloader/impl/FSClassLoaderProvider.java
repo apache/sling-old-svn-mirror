@@ -36,17 +36,10 @@ import java.util.Map;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.ClassLoaderWriterListener;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.fsclassloader.FSClassLoaderMBean;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -55,6 +48,11 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +61,10 @@ import org.slf4j.LoggerFactory;
  * which uses the file system to store and read class files from.
  *
  */
-@Component
-@Service(value = { ClassLoaderWriter.class }, serviceFactory = true)
-@Property(name = Constants.SERVICE_RANKING, intValue = 100)
+@Component(service = ClassLoaderWriter.class, scope = ServiceScope.BUNDLE,
+    property = {
+            Constants.SERVICE_RANKING + ":Integer=100"
+    })
 public class FSClassLoaderProvider implements ClassLoaderWriter {
 
 	private static final String LISTENER_FILTER = "(" + Constants.OBJECTCLASS + "="
@@ -86,8 +85,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	@Reference(referenceInterface = DynamicClassLoaderManager.class, bind = "bindDynamicClassLoaderManager", unbind = "unbindDynamicClassLoaderManager")
-	private ServiceReference dynamicClassLoaderManager;
+	@Reference(service = DynamicClassLoaderManager.class)
+	private ServiceReference<DynamicClassLoaderManager> dynamicClassLoaderManager;
 
 	/** The bundle asking for this service instance */
 	private Bundle callerBundle;
@@ -96,7 +95,7 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 
 	/**
 	 * Activate this component. Create the root directory.
-	 * 
+	 *
 	 * @param componentContext
 	 * @throws MalformedURLException
 	 * @throws InvalidSyntaxException
@@ -112,7 +111,7 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 		this.callerBundle = componentContext.getUsingBundle();
 
 		classLoaderWriterListeners.clear();
-		if (this.classLoaderWriterServiceListener != null) {
+		if (classLoaderWriterServiceListener != null) {
 			componentContext.getBundleContext().removeServiceListener(classLoaderWriterServiceListener);
 			classLoaderWriterServiceListener = null;
 		}
@@ -129,7 +128,7 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 			}
 
 			private Long getId(ServiceReference<ClassLoaderWriterListener> reference) {
-				return PropertiesUtil.toLong(reference.getProperty(Constants.SERVICE_ID), -1);
+			    return (Long)reference.getProperty(Constants.SERVICE_ID);
 			}
 		};
 		componentContext.getBundleContext().addServiceListener(classLoaderWriterServiceListener, LISTENER_FILTER);
@@ -159,7 +158,7 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 		this.root = null;
 		this.rootURL = null;
 		this.destroyClassLoader();
-		if (this.classLoaderWriterServiceListener != null) {
+		if (classLoaderWriterServiceListener != null) {
 			componentContext.getBundleContext().removeServiceListener(classLoaderWriterServiceListener);
 		}
 		if (mbeanRegistration != null) {
@@ -168,31 +167,12 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 		}
 	}
 
-	/**
-	 * Called to handle binding the DynamicClassLoaderManager service reference
-	 */
-	@SuppressWarnings("unused")
-	private void bindDynamicClassLoaderManager(final ServiceReference ref) {
-		this.dynamicClassLoaderManager = ref;
-	}
-
-	/**
-	 * Called to handle unbinding of the DynamicClassLoaderManager service
-	 * reference
-	 */
-	@SuppressWarnings("unused")
-	private void unbindDynamicClassLoaderManager(final ServiceReference ref) {
-		if (this.dynamicClassLoaderManager == ref) {
-			this.dynamicClassLoaderManager = null;
-		}
-	}
-
 	private void destroyClassLoader() {
 		final ClassLoader rcl = this.loader;
 		if (rcl != null) {
 			this.loader = null;
 
-			final ServiceReference localDynamicClassLoaderManager = this.dynamicClassLoaderManager;
+			final ServiceReference<DynamicClassLoaderManager> localDynamicClassLoaderManager = this.dynamicClassLoaderManager;
 			final Bundle localCallerBundle = this.callerBundle;
 			if (localDynamicClassLoaderManager != null && localCallerBundle != null) {
 				localCallerBundle.getBundleContext().ungetService(localDynamicClassLoaderManager);
@@ -203,13 +183,14 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
 	 */
-	public ClassLoader getClassLoader() {
+	@Override
+    public ClassLoader getClassLoader() {
 		synchronized (this) {
 			if (loader == null || !loader.isLive()) {
 				this.destroyClassLoader();
 				// get the dynamic class loader for the bundle using this
 				// class loader writer
-				final DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) this.callerBundle.getBundleContext()
+				final DynamicClassLoaderManager dclm = this.callerBundle.getBundleContext()
 						.getService(this.dynamicClassLoaderManager);
 
 				loader = new FSDynamicClassLoader(new URL[] { this.rootURL }, dclm.getDynamicClassLoader());
@@ -251,7 +232,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
 	 */
-	public boolean delete(final String name) {
+	@Override
+    public boolean delete(final String name) {
 		final String path = cleanPath(name);
 		final File file = new File(path);
 		if (file.exists()) {
@@ -283,7 +265,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
 	 */
-	public OutputStream getOutputStream(final String name) {
+	@Override
+    public OutputStream getOutputStream(final String name) {
 		logger.debug("Get stream for {}", name);
 		final String path = cleanPath(name);
 		final File file = new File(path);
@@ -305,7 +288,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String,
 	 *      java.lang.String)
 	 */
-	public boolean rename(final String oldName, final String newName) {
+	@Override
+    public boolean rename(final String oldName, final String newName) {
 		logger.debug("Rename {} to {}", oldName, newName);
 		final String oldPath = cleanPath(oldName);
 		final String newPath = cleanPath(newName);
@@ -321,7 +305,7 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * Clean the path by converting slashes to the correct format and prefixing
 	 * the root directory.
-	 * 
+	 *
 	 * @param path
 	 *            The path
 	 * @return The file path
@@ -343,7 +327,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
 	 */
-	public InputStream getInputStream(final String name) throws IOException {
+	@Override
+    public InputStream getInputStream(final String name) throws IOException {
 		logger.debug("Get input stream of {}", name);
 		final String path = cleanPath(name);
 		final File file = new File(path);
@@ -353,7 +338,8 @@ public class FSClassLoaderProvider implements ClassLoaderWriter {
 	/**
 	 * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
 	 */
-	public long getLastModified(final String name) {
+	@Override
+    public long getLastModified(final String name) {
 		logger.debug("Get last modified of {}", name);
 		final String path = cleanPath(name);
 		final File file = new File(path);

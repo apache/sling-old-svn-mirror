@@ -22,9 +22,12 @@ package org.apache.sling.commons.fsclassloader;
 import java.io.IOException;
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * MBean interface for interacting with the FSClassLoader
  */
+@ProviderType
 public interface FSClassLoaderMBean {
 
 	/**
@@ -35,14 +38,14 @@ public interface FSClassLoaderMBean {
 	/**
 	 * Gets the root directory at which the FSClassloader is creating it's
 	 * cached files
-	 * 
+	 *
 	 * @return the file system classloader root
 	 */
 	String getFSClassLoaderRoot();
 
 	/**
 	 * Get the total count of scripts in the FSClassLoader cache
-	 * 
+	 *
 	 * @return the total number of scripts
 	 * @throws IOException
 	 */
@@ -50,7 +53,7 @@ public interface FSClassLoaderMBean {
 
 	/**
 	 * Gets the scripts in the FSClassLoaderCache
-	 * 
+	 *
 	 * @return the scripts from the FSClassLoaderCache
 	 * @throws IOException
 	 */

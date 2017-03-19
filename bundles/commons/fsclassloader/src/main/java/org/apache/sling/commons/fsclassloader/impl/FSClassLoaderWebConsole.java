@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,15 +36,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,14 +49,15 @@ import org.slf4j.LoggerFactory;
  * Web Console for the FileSystem Class Loader. Allows users to download Java
  * and Class files.
  */
-@Component
-@Service
-@Properties({ @Property(name = "service.description", value = "Web Console for the FileSystem Class Loader"),
-		@Property(name = "service.vendor", value = "The Apache Software Foundation"),
-		@Property(name = "felix.webconsole.label", value = FSClassLoaderWebConsole.APP_ROOT),
-		@Property(name = "felix.webconsole.title", value = "File System Class Loader"),
-		@Property(name = "felix.webconsole.css", value = { FSClassLoaderWebConsole.RES_LOC + "/prettify.css" }),
-		@Property(name = "felix.webconsole.category", value = "Sling") })
+@Component(service = Servlet.class,
+    property = {
+         "service.description=Web Console for the FileSystem Class Loader",
+		 "service.vendor=The Apache Software Foundation",
+		 "felix.webconsole.label=" + FSClassLoaderWebConsole.APP_ROOT,
+		 "felix.webconsole.title=File System Class Loader",
+		 "felix.webconsole.css=" + FSClassLoaderWebConsole.RES_LOC + "/prettify.css",
+		 "felix.webconsole.category=Sling"
+})
 public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 
 	static final String APP_ROOT = "fsclassloader";
@@ -104,7 +103,8 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	 *
 	 * @see javax.servlet.Servlet#destroy()
 	 */
-	public void destroy() {
+	@Override
+    public void destroy() {
 	}
 
 	/*
@@ -113,7 +113,8 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	 * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest,
 	 * javax.servlet.ServletResponse)
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+	@Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String file = request.getParameter("download");
 		File toDownload = new File(root + file);
@@ -191,7 +192,8 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	 *
 	 * @see javax.servlet.Servlet#getServletConfig()
 	 */
-	public ServletConfig getServletConfig() {
+	@Override
+    public ServletConfig getServletConfig() {
 		return this.config;
 	}
 
@@ -200,7 +202,8 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	 *
 	 * @see javax.servlet.Servlet#getServletInfo()
 	 */
-	public String getServletInfo() {
+	@Override
+    public String getServletInfo() {
 		return "";
 	}
 
@@ -219,7 +222,8 @@ public class FSClassLoaderWebConsole extends AbstractWebConsolePlugin {
 	 *
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
-	public void init(ServletConfig config) throws ServletException {
+	@Override
+    public void init(ServletConfig config) throws ServletException {
 		this.config = config;
 	}
 
