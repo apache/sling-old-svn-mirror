@@ -33,21 +33,19 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-@Service(SlingRepository.class)
+@Component(service = SlingRepository.class)
 public final class OakMockSlingRepository implements SlingRepository {
 
     private static final String ADMIN_NAME = "admin";

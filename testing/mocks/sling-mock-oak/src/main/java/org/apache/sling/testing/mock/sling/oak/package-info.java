@@ -19,5 +19,5 @@
 /**
  * Sling Mock Jackrabbit Oak-based Resource Resolver
  */
-@org.osgi.annotation.versioning.Version("2.0")
+@org.osgi.annotation.versioning.Version("2.0.1")
 package org.apache.sling.testing.mock.sling.oak;

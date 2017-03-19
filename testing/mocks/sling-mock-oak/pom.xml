@@ -49,12 +49,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <version>${sling-mock.version}</version>
@@ -130,19 +124,6 @@
                 <extensions>true</extensions>
             </plugin>
       
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-scr-scrdescriptor</id>
-                        <goals>
-                            <goal>scr</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-  
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
