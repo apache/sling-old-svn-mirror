@@ -26,18 +26,16 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Mock {@link SlingRepository} implementation.
  */
-@Component
-@Service(SlingRepository.class)
+@Component(service = SlingRepository.class)
 public final class MockJcrSlingRepository implements SlingRepository {
 
     private Repository repository;
