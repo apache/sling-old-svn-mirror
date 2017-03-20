@@ -33,4 +33,5 @@
     whitelist.name="composum"
     whitelist.bundles=[
       "com.composum.core.commons",\
+      "com.composum.core.pckgmgr"\
     ]
