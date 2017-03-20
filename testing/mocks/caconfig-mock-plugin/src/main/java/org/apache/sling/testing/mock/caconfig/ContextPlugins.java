@@ -109,6 +109,9 @@ public final class ContextPlugins {
             // fallback to impl 1.2
             registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexer");
         }
+        
+        // only required for impl 1.3+
+        registerByClassName(context, "org.apache.sling.caconfig.impl.ConfigurationPersistenceStrategyBridge");
 
         if (!registerByClassName(context, "org.apache.sling.caconfig.impl.metadata.ConfigurationMetadataProviderMultiplexerImpl")) {
             // fallback to impl 1.2
