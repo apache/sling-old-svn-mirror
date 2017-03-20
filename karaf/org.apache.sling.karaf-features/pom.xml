@@ -40,6 +40,7 @@
     <org.apache.jackrabbit.version>2.14.0</org.apache.jackrabbit.version>
     <org.apache.jackrabbit.oak.version>1.6.1</org.apache.jackrabbit.oak.version>
     <org.apache.tika.version>1.14</org.apache.tika.version>
+    <org.apache.sling.karaf-repoinit.version>0.2.0</org.apache.sling.karaf-repoinit.version>
   </properties>
 
   <scm>
@@ -90,7 +91,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-repoinit</artifactId>
-      <version>0.2.1-SNAPSHOT</version>
+      <version>${org.apache.sling.karaf-repoinit.version}</version>
     </dependency>
   </dependencies>
 
