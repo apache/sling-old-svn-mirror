@@ -22,8 +22,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
+import org.osgi.annotation.versioning.ProviderType;
 
 /** Retrieves the validation model. */
+@ProviderType
 public interface ValidationModelRetriever {
     /**
      * A model for the given resourceType at the given resourcePath
