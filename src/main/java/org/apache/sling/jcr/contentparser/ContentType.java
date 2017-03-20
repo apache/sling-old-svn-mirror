@@ -18,9 +18,12 @@
  */
 package org.apache.sling.jcr.contentparser;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Content types.
  */
+@ProviderType
 public enum ContentType {
 
     /**

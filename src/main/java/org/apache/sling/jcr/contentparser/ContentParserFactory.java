@@ -20,10 +20,12 @@ package org.apache.sling.jcr.contentparser;
 
 import org.apache.sling.jcr.contentparser.impl.JcrXmlContentParser;
 import org.apache.sling.jcr.contentparser.impl.JsonContentParser;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Factory for content parsers.
  */
+@ProviderType
 public final class ContentParserFactory {
 
     private ContentParserFactory() {

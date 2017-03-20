@@ -23,9 +23,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Options for content parser.
  */
+@ProviderType
 public final class ParserOptions {
     
     /**

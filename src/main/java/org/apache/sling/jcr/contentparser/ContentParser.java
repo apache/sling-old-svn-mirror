@@ -21,10 +21,13 @@ package org.apache.sling.jcr.contentparser;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Parses repository content from a file.
  * Implementations have to be thread-safe.
  */
+@ProviderType
 public interface ContentParser {
 
     /**

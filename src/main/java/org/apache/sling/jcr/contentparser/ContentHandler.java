@@ -20,11 +20,14 @@ package org.apache.sling.jcr.contentparser;
 
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * Handler that gets notified while parsing content with {@link ContentParser}.
  * The resources are always reported in order of their paths as found in the content fragment.
  * Parents are always reported before their children.
  */
+@ConsumerType
 public interface ContentHandler {
 
     /**
