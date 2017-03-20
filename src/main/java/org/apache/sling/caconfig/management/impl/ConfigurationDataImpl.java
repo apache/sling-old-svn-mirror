@@ -175,14 +175,15 @@ final class ConfigurationDataImpl implements ConfigurationData {
         for (PropertyMetadata<?> propertyMetadata : configMetadata.getPropertyMetadata().values()) {
             if (propertyMetadata.isNestedConfiguration()) {
                 ConfigurationMetadata nestedConfigMetadata = propertyMetadata.getConfigurationMetadata();
+                String relatedConfigPath = resolvedConfigurationResource != null ? resolvedConfigurationResource.getPath() : null;
                 String nestedConfigName;
                 if (configResourceCollection) {
-                    nestedConfigName = configurationPersistenceStrategy.getCollectionParentConfigName(configName, resolvedConfigurationResource)
-                            + "/" + configurationPersistenceStrategy.getCollectionItemConfigName(getCollectionItemName(), resolvedConfigurationResource)
+                    nestedConfigName = configurationPersistenceStrategy.getCollectionParentConfigName(configName, relatedConfigPath)
+                            + "/" + configurationPersistenceStrategy.getCollectionItemConfigName(getCollectionItemName(), relatedConfigPath)
                             + "/" + nestedConfigMetadata.getName();
                 }
                 else {
-                    nestedConfigName = configurationPersistenceStrategy.getConfigName(configName, resolvedConfigurationResource) + "/" + nestedConfigMetadata.getName();
+                    nestedConfigName = configurationPersistenceStrategy.getConfigName(configName, relatedConfigPath) + "/" + nestedConfigMetadata.getName();
                 }
                 if (propertyMetadata.getType().equals(ConfigurationMetadata.class)) {
                     ConfigurationData configData = configurationManager.getConfiguration(contextResource, nestedConfigName);

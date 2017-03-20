@@ -74,17 +74,17 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     }
 
     @Override
-    public String getConfigName(String configName, Resource relatedConfigResource) {
+    public String getConfigName(String configName, String relatedConfigPath) {
         return configName + "/" + CHILD_NODE_NAME;
     }
 
     @Override
-    public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
         return configName;
     }
 
     @Override
-    public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
         return configName + "/" + CHILD_NODE_NAME;
     }
     

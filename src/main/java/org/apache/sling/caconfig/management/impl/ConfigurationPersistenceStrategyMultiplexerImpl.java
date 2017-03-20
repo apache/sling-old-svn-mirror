@@ -130,9 +130,9 @@ public class ConfigurationPersistenceStrategyMultiplexerImpl implements Configur
     }
 
     @Override
-    public String getConfigName(String configName, Resource relatedConfigResource) {
+    public String getConfigName(String configName, String relatedConfigPath) {
         for (ConfigurationPersistenceStrategy2 item : items) {
-            String result = item.getConfigName(configName, relatedConfigResource);
+            String result = item.getConfigName(configName, relatedConfigPath);
             if (result != null) {
                 return result;
             }
@@ -141,9 +141,9 @@ public class ConfigurationPersistenceStrategyMultiplexerImpl implements Configur
     }
 
     @Override
-    public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
         for (ConfigurationPersistenceStrategy2 item : items) {
-            String result = item.getCollectionParentConfigName(configName, relatedConfigResource);
+            String result = item.getCollectionParentConfigName(configName, relatedConfigPath);
             if (result != null) {
                 return result;
             }
@@ -152,9 +152,9 @@ public class ConfigurationPersistenceStrategyMultiplexerImpl implements Configur
     }
 
     @Override
-    public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
         for (ConfigurationPersistenceStrategy2 item : items) {
-            String result = item.getCollectionItemConfigName(configName, relatedConfigResource);
+            String result = item.getCollectionItemConfigName(configName, relatedConfigPath);
             if (result != null) {
                 return result;
             }

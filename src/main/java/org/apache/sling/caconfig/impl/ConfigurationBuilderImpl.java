@@ -282,11 +282,12 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             return ConfigurationProxy.get(resource, clazz, new ChildResolver() {
                 private ConfigurationBuilder getConfiguration(String nestedConfigName) {
                     String childName;
+                    String relatedConfigPath = resource != null ? resource.getPath() : null;
                     if (isCollection) {
-                        childName = configurationPersistenceStrategy.getCollectionItemConfigName(configName, resource) + "/" + nestedConfigName;
+                        childName = configurationPersistenceStrategy.getCollectionItemConfigName(configName, relatedConfigPath) + "/" + nestedConfigName;
                     }
                     else {
-                        childName = configurationPersistenceStrategy.getConfigName(configName, resource) + "/" + nestedConfigName;
+                        childName = configurationPersistenceStrategy.getConfigName(configName, relatedConfigPath) + "/" + nestedConfigName;
                     }
                     return configurationResolver.get(contentResource).name(childName);
                 }
