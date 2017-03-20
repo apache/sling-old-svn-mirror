@@ -18,9 +18,12 @@
  */
 package org.apache.sling.jcr.contentparser;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Parsing exception.
  */
+@ProviderType
 public final class ParseException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
