@@ -30,7 +30,7 @@
     <packaging>bundle</packaging>
     <version>1.0.1-SNAPSHOT</version>
 
-    <name>Apache Sling Content Parser</name>
+    <name>Apache Sling JCR Content Parser</name>
     <description>
         Parser for JCR repository content stored in files (e.g. JSON, FileVault XML).
     </description>
