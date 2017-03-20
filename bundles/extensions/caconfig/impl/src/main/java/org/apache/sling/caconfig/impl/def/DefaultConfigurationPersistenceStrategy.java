@@ -121,7 +121,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
-    public String getConfigName(String configName, Resource relatedConfigResource) {
+    public String getConfigName(String configName, String relatedConfigPath) {
         if (!config.enabled()) {
             return null;
         }
@@ -129,7 +129,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
-    public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
         if (!config.enabled()) {
             return null;
         }
@@ -137,7 +137,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
     }
 
     @Override
-    public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
+    public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
         if (!config.enabled()) {
             return null;
         }

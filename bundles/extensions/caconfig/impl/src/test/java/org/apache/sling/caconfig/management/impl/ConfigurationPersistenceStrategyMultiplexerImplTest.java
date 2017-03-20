@@ -142,15 +142,15 @@ public class ConfigurationPersistenceStrategyMultiplexerImplTest {
                 return resource1.getPath();
             }
             @Override
-            public String getConfigName(String configName, Resource relatedConfigResource) {
+            public String getConfigName(String configName, String relatedConfigPath) {
                 return resource1.getPath();
             }
             @Override
-            public String getCollectionParentConfigName(String configName, Resource relatedConfigResource) {
+            public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
                 return resource1.getPath();
             }
             @Override
-            public String getCollectionItemConfigName(String configName, Resource relatedConfigResource) {
+            public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
                 return resource1.getPath();
             }
             @Override
