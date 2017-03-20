@@ -160,7 +160,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.paxexam</artifactId>
-      <version>0.0.5-SNAPSHOT</version>
+      <version>0.0.4</version>
       <scope>provided</scope>
     </dependency>
     <!-- Thymeleaf -->
