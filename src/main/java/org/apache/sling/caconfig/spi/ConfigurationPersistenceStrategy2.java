@@ -84,31 +84,31 @@ public interface ConfigurationPersistenceStrategy2 {
      * Allows the strategy to transform the given configuration name for nested configurations according to it's persistent strategies,
      * e.g. fetching the data from a child resource instead of the given resource. 
      * @param configName Configuration name
-     * @param relatedConfigResource A configuration resource that was resolved in context of this configuration name.
+     * @param relatedConfigPath Path of a configuration resource that was resolved in context of this configuration name.
      *     This can be used to detect if the persistence strategy supports the configuration location. If null it should be assumed that it matches.
      * @return Transformed configuration name. If null is returned this strategy does not support the given configuration resource path.
      */
-    @CheckForNull String getConfigName(@Nonnull String configName, @CheckForNull Resource relatedConfigResource);
+    @CheckForNull String getConfigName(@Nonnull String configName, @CheckForNull String relatedConfigPath);
     
     /**
      * Allows the strategy to transform the given configuration name for nested configurations according to it's persistent strategies,
      * e.g. fetching the data from a child resource instead of the given resource. 
      * @param configName Configuration name
-     * @param relatedConfigResource A configuration resource that was resolved in context of this configuration name.
+     * @param relatedConfigPath Path of a configuration resource that was resolved in context of this configuration name.
      *     This can be used to detect if the persistence strategy supports the configuration location. If null it should be assumed that it matches.
      * @return Transformed configuration name. If null is returned this strategy does not support the given configuration resource path.
      */
-    @CheckForNull String getCollectionParentConfigName(@Nonnull String configName, @CheckForNull Resource relatedConfigResource);
+    @CheckForNull String getCollectionParentConfigName(@Nonnull String configName, @CheckForNull String relatedConfigPath);
 
     /**
      * Allows the strategy to transform the given configuration name for nested configurations according to it's persistent strategies,
      * e.g. fetching the data from a child resource instead of the given resource. 
      * @param configName Configuration name
-     * @param relatedConfigResource A configuration resource that was resolved in context of this configuration name.
+     * @param relatedConfigPath Path of a configuration resource that was resolved in context of this configuration name.
      *     This can be used to detect if the persistence strategy supports the configuration location. If null it should be assumed that it matches.
      * @return Transformed configuration name. If null is returned this strategy does not support the given configuration resource path.
      */
-    @CheckForNull String getCollectionItemConfigName(@Nonnull String configName, @CheckForNull Resource relatedConfigResource);
+    @CheckForNull String getCollectionItemConfigName(@Nonnull String configName, @CheckForNull String relatedConfigPath);
     
     /**
      * Stores configuration data for a singleton configuration resource.
