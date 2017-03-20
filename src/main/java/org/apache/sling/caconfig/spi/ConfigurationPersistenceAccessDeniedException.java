@@ -21,17 +21,17 @@ package org.apache.sling.caconfig.spi;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * Is thrown when configuration cannot be persisted.
+ * Is thrown when configuration cannot be persisted because the user is not allowed to write to repository.
  */
 @ProviderType
-public class ConfigurationPersistenceException extends RuntimeException {
+public final class ConfigurationPersistenceAccessDeniedException extends ConfigurationPersistenceException {
     private static final long serialVersionUID = 1L;
 
-    public ConfigurationPersistenceException(String message, Throwable cause) {
+    public ConfigurationPersistenceAccessDeniedException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ConfigurationPersistenceException(String message) {
+    public ConfigurationPersistenceAccessDeniedException(String message) {
         super(message);
     }
 
