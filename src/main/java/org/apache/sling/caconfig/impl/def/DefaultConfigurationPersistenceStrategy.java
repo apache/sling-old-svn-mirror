@@ -151,7 +151,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             return false;
         }
         getOrCreateResource(resourceResolver, configResourcePath, data.getProperties());
-        commit(resourceResolver);
+        commit(resourceResolver, configResourcePath);
         return true;
     }
 
@@ -170,7 +170,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             getOrCreateResource(resourceResolver, path, item.getProperties());
         }
         
-        commit(resourceResolver);
+        commit(resourceResolver, configResourceCollectionParentPath);
         return true;
     }
 
@@ -186,10 +186,10 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
                 resourceResolver.delete(resource);
             }
             catch (PersistenceException ex) {
-                throw convertPeristenceException("Unable to delete configuration at " + configResourcePath, ex);
+                throw convertPersistenceException("Unable to delete configuration at " + configResourcePath, ex);
             }
         }
-        commit(resourceResolver);
+        commit(resourceResolver, configResourcePath);
         return true;
     }
     
@@ -202,7 +202,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             return resource;
         }
         catch (PersistenceException ex) {
-            throw convertPeristenceException("Unable to persist configuration to " + path, ex);
+            throw convertPersistenceException("Unable to persist configuration to " + path, ex);
         }
     }
 
@@ -215,7 +215,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             }
         }
         catch (PersistenceException ex) {
-            throw convertPeristenceException("Unable to remove children from " + resource.getPath(), ex);
+            throw convertPersistenceException("Unable to remove children from " + resource.getPath(), ex);
         }
     }
     
@@ -225,7 +225,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         }
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
         if (modValueMap == null) {
-            throw new ConfigurationPersistenceAccessDeniedException("Unable to write properties to " + resource.getPath() + " - access is read-only.");
+            throw new ConfigurationPersistenceAccessDeniedException("No write access: Unable to store configuration data to " + resource.getPath() + ".");
         }
         // remove all existing properties that are not filterd
         Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());
@@ -236,19 +236,19 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         modValueMap.putAll(properties);
     }
     
-    private void commit(ResourceResolver resourceResolver) {
+    private void commit(ResourceResolver resourceResolver, String relatedResourcePath) {
         try {
             resourceResolver.commit();
         }
         catch (PersistenceException ex) {
-            throw convertPeristenceException("Unable to commit configuration changes: " + ex.getMessage(), ex);
+            throw convertPersistenceException("Unable to persist configuration changes to " + relatedResourcePath, ex);
         }
     }
     
-    private ConfigurationPersistenceException convertPeristenceException(String message, PersistenceException ex) {
+    private ConfigurationPersistenceException convertPersistenceException(String message, PersistenceException ex) {
         if (StringUtils.equals(ex.getCause().getClass().getName(), "javax.jcr.AccessDeniedException")) {
             // detect if commit failed due to read-only access to repository 
-            return new ConfigurationPersistenceAccessDeniedException(message, ex);
+            return new ConfigurationPersistenceAccessDeniedException("No write access: " + message, ex);
         }
         return new ConfigurationPersistenceException(message, ex);
     }
